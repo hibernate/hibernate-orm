@@ -6,6 +6,7 @@ package org.hibernate.query.restriction;
 
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.FetchParent;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
@@ -27,6 +28,6 @@ record PathElement<X, U, V>(Path<? super X, U> parent, SingularAttribute<? super
 
 	@Override
 	public FetchParent<?, V> fetch(Root<? extends X> root) {
-		return parent.fetch( root ).fetch( attribute );
+		return parent.fetch( root ).fetch( attribute, JoinType.LEFT );
 	}
 }

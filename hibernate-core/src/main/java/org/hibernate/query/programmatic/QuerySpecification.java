@@ -4,9 +4,12 @@
  */
 package org.hibernate.query.programmatic;
 
+import jakarta.persistence.EntityManager;
+
 import org.hibernate.Incubating;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.SharedSessionContract;
+import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.restriction.Restriction;
@@ -33,12 +36,22 @@ public interface QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	QuerySpecification<T> restrict(Restriction<T> restriction);
+	QuerySpecification<T> restrict(Restriction<? super T> restriction);
 
 	/**
 	 * Finalize the building and create executable query instance.
 	 */
-	CommonQueryContract createQuery(SharedSessionContract session);
+	CommonQueryContract createQuery(Session session);
+
+	/**
+	 * Finalize the building and create executable query instance.
+	 */
+	CommonQueryContract createQuery(StatelessSession session);
+
+	/**
+	 * Finalize the building and create executable query instance.
+	 */
+	CommonQueryContract createQuery(EntityManager entityManager);
 
 	/**
 	 * Validate the query.
@@ -47,7 +60,9 @@ public interface QuerySpecification<T> {
 		// Extremely temporary implementation.
 		// We don't actually want to open a session here,
 		// nor create an instance of CommonQueryContract.
-		try ( var session = ((SessionFactoryImplementor) factory).openTemporarySession() ) {
+		final SessionFactoryImplementor factoryImplementor =
+				(SessionFactoryImplementor) factory;
+		try ( var session = factoryImplementor.openTemporarySession() ) {
 			createQuery( session );
 		}
 	}

@@ -947,7 +947,7 @@ public class SqmUtil {
 	public static <X> SqmPredicate restriction(
 			SqmSelectStatement<X> sqmStatement,
 			Class<X> resultType,
-			Restriction<X> restriction) {
+			Restriction<? super X> restriction) {
 		//noinspection unchecked
 		final JpaRoot<X> root = (JpaRoot<X>) sqmStatement.getRoot( 0, resultType );
 		return  (SqmPredicate) restriction.toPredicate( root, sqmStatement.nodeBuilder() );

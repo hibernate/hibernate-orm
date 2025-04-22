@@ -4,9 +4,12 @@
  */
 package org.hibernate.query.programmatic.internal;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.QueryException;
+import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
@@ -64,7 +67,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public SelectionSpecification<T> restrict(Restriction<T> restriction) {
+	public SelectionSpecification<T> restrict(Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, root) -> {
 			final SqmPredicate sqmPredicate = SqmUtil.restriction( sqmStatement, resultType, restriction );
 			sqmStatement.getQuerySpec().applyPredicate( sqmPredicate );
@@ -86,7 +89,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public SelectionSpecification<T> sort(Order<T> order) {
+	public SelectionSpecification<T> sort(Order<? super T> order) {
 		specifications.add( (sqmStatement, root) -> {
 			addOrder( order, sqmStatement );
 		} );
@@ -94,7 +97,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public final SelectionSpecification<T> resort(Order<T> order) {
+	public final SelectionSpecification<T> resort(Order<? super T> order) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			addOrder( order, sqmStatement );
@@ -103,7 +106,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public final SelectionSpecification<T> resort(List<Order<T>> orders) {
+	public final SelectionSpecification<T> resort(List<Order<? super T>> orders) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			orders.forEach( order -> addOrder( order, sqmStatement ) );
@@ -111,7 +114,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 		return this;
 	}
 
-	private static <T> void addOrder(Order<T> order, SqmSelectStatement<T> sqmStatement) {
+	private static <T> void addOrder(Order<? super T> order, SqmSelectStatement<T> sqmStatement) {
 		final SqmSortSpecification sortSpecification = SqmUtil.sortSpecification( sqmStatement, order );
 		final var querySpec = sqmStatement.getQuerySpec();
 		if ( querySpec.getOrderByClause() == null ) {
@@ -121,6 +124,15 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
+	public SelectionQuery<T> createQuery(Session session) {
+		return createQuery( (SharedSessionContract) session );
+	}
+
+	@Override
+	public SelectionQuery<T> createQuery(StatelessSession session) {
+		return createQuery( (SharedSessionContract) session );
+	}
+
 	public SelectionQuery<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
 		final SqmSelectStatement<T> sqmStatement;
@@ -143,6 +155,11 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, sqmRoot ) );
 		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, sessionImpl );
+	}
+
+	@Override
+	public SelectionQuery<T> createQuery(EntityManager entityManager) {
+		return createQuery( (SharedSessionContract) entityManager );
 	}
 
 	/**

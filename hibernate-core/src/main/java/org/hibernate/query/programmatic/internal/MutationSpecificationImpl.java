@@ -4,10 +4,13 @@
  */
 package org.hibernate.query.programmatic.internal;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.AssertionFailure;
+import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.programmatic.MutationSpecification;
 import org.hibernate.query.IllegalMutationQueryException;
@@ -62,7 +65,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
-	public MutationSpecification<T> restrict(Restriction<T> restriction) {
+	public MutationSpecification<T> restrict(Restriction<? super T> restriction) {
 		specifications.add( (sqmStatement, mutationTargetRoot) -> {
 			final SqmPredicate sqmPredicate = (SqmPredicate) restriction.toPredicate(
 					mutationTargetRoot,
@@ -81,6 +84,15 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
+	public MutationQuery createQuery(Session session) {
+		return createQuery( (SharedSessionContract) session );
+	}
+
+	@Override
+	public MutationQuery createQuery(StatelessSession session) {
+		return createQuery( (SharedSessionContract) session );
+	}
+
 	public MutationQuery createQuery(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
 		final SqmDeleteOrUpdateStatement<T> sqmStatement;
@@ -99,6 +111,11 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, mutationTargetRoot ) );
 		return new QuerySqmImpl<>( sqmStatement, true, null, sessionImpl );
+	}
+
+	@Override
+	public MutationQuery createQuery(EntityManager entityManager) {
+		return createQuery( (SharedSessionContract) entityManager );
 	}
 
 	/**

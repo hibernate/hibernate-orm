@@ -272,6 +272,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		return this.lazySession.get().findMultiple( entityGraph, ids, options );
+	}
+
+	@Override
 	public <T> T get(Class<T> entityType, Object id) {
 		return this.lazySession.get().get( entityType, id );
 	}

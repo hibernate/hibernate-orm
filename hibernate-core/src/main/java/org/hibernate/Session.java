@@ -598,6 +598,46 @@ public interface Session extends SharedSessionContract, EntityManager {
 	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
 
 	/**
+	 * Return the persistent instances of the root entity of the given {@link EntityGraph}
+	 * with the given identifiers as a list, fetching the associations specified by the
+	 * graph, which is interpreted as a {@linkplain org.hibernate.graph.GraphSemantic#LOAD
+	 * load graph}. The position of an instance in the returned list matches the position of
+	 * its identifier in the given list of identifiers, and the returned list contains a null
+	 * value if there is no persistent instance matching a given identifier. If an instance
+	 * is already associated with the session, that instance is returned. This method never
+	 * returns an uninitialized instance.
+	 * <p>
+	 * Every object returned by {@code findMultiple()} is either an unproxied instance of the
+	 * given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This method accepts {@link BatchSize} as an option, allowing control over the number of
+	 * records retrieved in a single database request. The performance impact of setting a batch
+	 * size depends on whether a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which {@linkplain org.hibernate.dialect.Dialect#supportsStandardArrays
+	 *     support standard SQL arrays}, a smaller batch size might be extremely inefficient
+	 *     compared to a very large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
+	 *     in long SQL statements with many JDBC parameters.
+	 * </ul>
+	 * <p>
+	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
+	 * {@link MultiIdentifierLoadAccess}.
+	 *
+	 * @param entityGraph the entity graph interpreted as a load graph
+	 * @param ids the list of identifiers
+	 * @param options options, if any
+	 *
+	 * @return an ordered list of persistent instances, with null elements representing missing
+	 *         entities, whose positions in the list match the positions of their ids in the
+	 *         given list of identifiers
+	 * @see #byMultipleIds(Class)
+	 * @since 7.0
+	 */
+	<E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options);
+
+	/**
 	 * Read the persistent state associated with the given identifier into the given
 	 * transient instance.
 	 *

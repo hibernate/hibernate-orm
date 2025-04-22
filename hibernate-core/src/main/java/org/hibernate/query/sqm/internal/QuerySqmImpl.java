@@ -106,6 +106,7 @@ import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionF
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
+import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
 
 /**
@@ -244,6 +245,14 @@ public class QuerySqmImpl<R>
 				bindCriteriaParameter( wrapper );
 			}
 		}
+
+		validateQuery( expectedResultType, sqm, hql );
+
+		resultType = expectedResultType;
+		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
+	}
+
+	private static <R> void validateQuery(Class<R> expectedResultType, SqmStatement<R> sqm, String hql) {
 		if ( sqm instanceof SqmSelectStatement<R> selectStatement ) {
 			final SqmQueryPart<R> queryPart = selectStatement.getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
@@ -257,9 +266,6 @@ public class QuerySqmImpl<R>
 			}
 			update.validate( hql );
 		}
-
-		resultType = expectedResultType;
-		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
 	}
 
 	@Override

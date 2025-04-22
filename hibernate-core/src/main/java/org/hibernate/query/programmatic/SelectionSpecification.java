@@ -177,7 +177,11 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return a new criteria query
 	 */
+	@Override
 	CriteriaQuery<T> buildCriteriaQuery(CriteriaBuilder builder);
+
+	@Override
+	SelectionSpecification<T> validate(CriteriaBuilder builder);
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,

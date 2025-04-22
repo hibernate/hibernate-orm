@@ -214,7 +214,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		final SqmQueryPart<R> queryPart = sqm.getQueryPart();
 		// For criteria queries, we have to validate the fetch structure here
 		queryPart.validateQueryStructureAndFetchOwners();
-		validateCriteriaQuery( queryPart );
+		SqmUtil.validateCriteriaQuery( queryPart );
 		sqm.validateResultType( resultType );
 
 		setComment( hql );

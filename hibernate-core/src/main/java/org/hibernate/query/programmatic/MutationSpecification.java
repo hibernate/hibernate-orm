@@ -76,6 +76,9 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	@Override
 	MutationQuery createQuery(StatelessSession session);
 
+	@Override
+	MutationSpecification<T> validate(CriteriaBuilder builder);
+
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain MutationQuery} based on a base HQL statement,

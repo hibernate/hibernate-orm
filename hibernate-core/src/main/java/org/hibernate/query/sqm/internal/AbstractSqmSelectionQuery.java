@@ -33,10 +33,6 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
-import org.hibernate.query.sqm.tree.select.SqmQueryPart;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -418,33 +414,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 				elements[i] = selections.get( i ).getAlias();
 			}
 			return elements;
-		}
-	}
-
-	protected static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
-			if ( sqmQuerySpec.getSelectClause().getSelections().isEmpty() ) {
-				// make sure there is at least one root
-				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
-				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-					throw new IllegalArgumentException( "Criteria did not define any query roots" );
-				}
-				// if there is a single root, use that as the selection
-				if ( sqmRoots.size() == 1 ) {
-					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
-				}
-				else {
-					throw new IllegalArgumentException( "Criteria has multiple query roots" );
-				}
-			}
-		}
-		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
-			for ( SqmQueryPart<?> part : queryGroup.getQueryParts() ) {
-				validateCriteriaQuery( part );
-			}
-		}
-		else {
-			assert false;
 		}
 	}
 

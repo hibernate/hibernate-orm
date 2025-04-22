@@ -98,6 +98,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		castResult( declaration );
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
+		handleSorting( declaration, paramTypes, containerType );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
@@ -118,7 +119,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	void createQuery(StringBuilder declaration) {
-		if ( returnTypeClass != null && !isReactive() && hasRestriction() ) {
+		if ( isUsingSpecification() ) {
 			declaration
 					.append( "\t\t\t.createQuery(" )
 					.append( localSessionName() )
@@ -142,8 +143,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 	}
 
-	private void createSpecification(StringBuilder declaration) {
-		if ( returnTypeClass != null && !isReactive() && hasRestriction() ) {
+	@Override
+	void createSpecification(StringBuilder declaration) {
+		if ( returnTypeClass != null && isUsingSpecification() ) {
 			declaration
 					.append( annotationMetaEntity.importType( specificationType() ) )
 					.append( ".create(" )
@@ -156,12 +158,9 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	boolean isUsingSpecification() {
-		return returnTypeClass != null && !isReactive() && hasRestriction();
-	}
-
-	private boolean hasRestriction() {
-		return parameterTypes().stream()
-				.anyMatch( type -> isRestrictionParam( type ) || isRangeParam( type ) );
+		return returnTypeClass != null
+			&& !isReactive()
+			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	private String createQueryMethod() {

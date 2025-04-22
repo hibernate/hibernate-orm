@@ -80,7 +80,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	@Override
 	void createQuery(StringBuilder declaration) {
-		if ( !isReactive() && hasRestriction() ) {
+		if ( isUsingSpecification() ) {
 			declaration
 					.append( "\t\t\t.createQuery(" )
 					.append( localSessionName() )
@@ -95,8 +95,9 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		}
 	}
 
+	@Override
 	void createSpecification(StringBuilder declaration) {
-		if ( !isReactive() && hasRestriction() ) {
+		if ( isUsingSpecification() ) {
 			declaration
 					.append( annotationMetaEntity.importType( specificationType() ) )
 					.append( ".create(_query)\n" );
@@ -105,12 +106,8 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	@Override
 	boolean isUsingSpecification() {
-		return !isReactive() && hasRestriction();
-	}
-
-	private boolean hasRestriction() {
-		return parameterTypes().stream()
-				.anyMatch( type -> isRestrictionParam( type ) || isRangeParam( type ) );
+		return !isReactive()
+			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {

@@ -110,6 +110,17 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				.orElse("");
 	}
 
+	boolean hasRestriction() {
+		return paramTypes.stream()
+				.anyMatch( type -> isRestrictionParam( type )
+								|| isRangeParam( type ) );
+	}
+
+	boolean hasOrder() {
+		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
+			|| !orderBys.isEmpty();
+	}
+
 	String strip(final String fullType) {
 		String type = fullType;
 		// strip off type annotations
@@ -264,10 +275,23 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
+	void handleSorting(
+			StringBuilder declaration, List<String> paramTypes,
+			@Nullable String containerType) {
+		if ( !isJakartaCursoredPage(containerType)
+				&& isUsingSpecification()
+				&& hasOrdering(paramTypes) ) {
+			declaration
+					.append("\t\t\t.resort(_orders)\n");
+		}
+	}
+
 	boolean applyOrder(
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType, boolean unwrapped) {
-		if ( !isJakartaCursoredPage(containerType) && hasOrdering(paramTypes) ) {
+		if ( !isJakartaCursoredPage(containerType)
+				&& !isUsingSpecification()
+				&& hasOrdering(paramTypes) ) {
 			unwrapQuery( declaration, unwrapped );
 			declaration
 					.append("\t\t\t.setOrder(_orders)\n");
@@ -461,6 +485,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	void createQuery(StringBuilder declaration) {}
 
+	void createSpecification(StringBuilder declaration) {}
+
 	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {}
 
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
@@ -521,6 +547,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 					.append(".requestTotal()\n\t\t\t\t\t\t? ");
+			// TODO: indentation is all messed up here!
+			createSpecification( declaration );
+			handleRestrictionParameters( declaration, paramTypes );
 			createQuery( declaration );
 			setParameters( declaration, paramTypes, "\t\t\t\t\t");
 			if ( isUsingEntityManager() ) {

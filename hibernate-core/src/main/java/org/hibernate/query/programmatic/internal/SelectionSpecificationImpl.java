@@ -6,6 +6,8 @@ package org.hibernate.query.programmatic.internal;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
@@ -19,6 +21,7 @@ import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -135,10 +138,15 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 
 	public SelectionQuery<T> createQuery(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final SqmSelectStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
+		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, sessionImpl );
+	}
+
+	private SqmSelectStatement<T> build(QueryEngine queryEngine) {
 		final SqmSelectStatement<T> sqmStatement;
 		final SqmRoot<T> sqmRoot;
 		if ( hql != null ) {
-			sqmStatement = resolveSqmTree( hql, resultType, sessionImpl.getFactory().getQueryEngine() );
+			sqmStatement = resolveSqmTree( hql, resultType, queryEngine );
 			sqmRoot = extractRoot( sqmStatement, resultType, hql );
 		}
 		else if ( criteriaQuery != null ) {
@@ -146,7 +154,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 			sqmRoot = extractRoot( sqmStatement, resultType, "criteria query" );
 		}
 		else {
-			var builder = sessionImpl.getCriteriaBuilder();
+			var builder = queryEngine.getCriteriaBuilder();
 			var query = builder.createQuery( resultType );
 			var root = query.from( resultType );
 			query.select( root );
@@ -154,12 +162,18 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 			sqmStatement = (SqmSelectStatement<T>) query;
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, sqmRoot ) );
-		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, sessionImpl );
+		return sqmStatement;
 	}
 
 	@Override
 	public SelectionQuery<T> createQuery(EntityManager entityManager) {
 		return createQuery( (SharedSessionContract) entityManager );
+	}
+
+	@Override
+	public CriteriaQuery<T> buildCriteriaQuery(CriteriaBuilder builder) {
+		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		return build( nodeBuilder.getQueryEngine() );
 	}
 
 	/**

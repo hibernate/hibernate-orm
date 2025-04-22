@@ -5,8 +5,11 @@
 package org.hibernate.query.programmatic.internal;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
@@ -18,6 +21,7 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -95,10 +99,15 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 
 	public MutationQuery createQuery(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final SqmDeleteOrUpdateStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
+		return new QuerySqmImpl<>( sqmStatement, true, null, sessionImpl );
+	}
+
+	private SqmDeleteOrUpdateStatement<T> build(QueryEngine queryEngine) {
 		final SqmDeleteOrUpdateStatement<T> sqmStatement;
 		final SqmRoot<T> mutationTargetRoot;
 		if ( hql != null ) {
-			sqmStatement = resolveSqmTree( hql, sessionImpl.getFactory().getQueryEngine() );
+			sqmStatement = resolveSqmTree( hql, queryEngine );
 			mutationTargetRoot = resolveSqmRoot( sqmStatement, mutationTarget );
 		}
 		else if ( deleteOrUpdateStatement != null ) {
@@ -110,12 +119,18 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 			throw new AssertionFailure( "No HQL or criteria" );
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, mutationTargetRoot ) );
-		return new QuerySqmImpl<>( sqmStatement, true, null, sessionImpl );
+		return sqmStatement;
 	}
 
 	@Override
 	public MutationQuery createQuery(EntityManager entityManager) {
 		return createQuery( (SharedSessionContract) entityManager );
+	}
+
+	@Override
+	public CommonAbstractCriteria buildCriteriaQuery(CriteriaBuilder builder) {
+		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
+		return build( nodeBuilder.getQueryEngine() );
 	}
 
 	/**

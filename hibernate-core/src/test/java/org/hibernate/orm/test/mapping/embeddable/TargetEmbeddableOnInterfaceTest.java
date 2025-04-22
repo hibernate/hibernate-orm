@@ -13,9 +13,11 @@ import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.offset;
+
 
 /**
  * @author Jan Schatteman
@@ -27,19 +29,18 @@ public class TargetEmbeddableOnInterfaceTest {
 	@Test
 	public void testLifecycle(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			City cluj = new City();
-			cluj.setName("Cluj");
-			cluj.setCoordinates(new GPS(46.77120, 23.62360));
+			City city = new City();
+			city.setName("Cluj");
+			city.setCoordinates( new GPS(46.77120, 23.62360 ) );
 
-			session.persist(cluj);
+			session.persist( city );
 		} );
 
 		factoryScope.inTransaction( (session) -> {
-			City cluj = session.find(City.class, 1L);
-			assert cluj.getCoordinates() instanceof GPS;
-
-			assertEquals(46.77120, cluj.getCoordinates().x(), 0.00001);
-			assertEquals(23.62360, cluj.getCoordinates().y(), 0.00001);
+			City city = session.find(City.class, 1L);
+			assert city.getCoordinates() instanceof GPS;
+			assertThat( city.getCoordinates().x() ).isCloseTo( 46.77120, offset( 0.00001 ) );
+			assertThat( city.getCoordinates().y() ).isCloseTo( 23.62360, offset( 0.00001 ) );
 		} );
 	}
 

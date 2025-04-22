@@ -24,9 +24,9 @@ import java.util.List;
  * {@link SelectionQuery#addRestriction(Restriction)}.
  * <pre>
  * SelectionSpecification.create(Book.class)
- *         .addRestriction(Restriction.like(Book_.title, "%Hibernate%", false))
- *         .addRestriction(Restriction.greaterThan(Book_.pages, 100))
- *         .setOrder(Order.desc(Book_.title))
+ *         .restrict(Restriction.like(Book_.title, "%Hibernate%", false))
+ *         .restrict(Restriction.greaterThan(Book_.pages, 100))
+ *         .sort(Order.desc(Book_.title))
  *         .createQuery(session)
  *         .getResultList();
  * </pre>
@@ -50,7 +50,7 @@ import java.util.List;
  *
  * @see org.hibernate.query.programmatic.SelectionSpecification
  * @see org.hibernate.query.programmatic.MutationSpecification
- * @see org.hibernate.query.programmatic.QuerySpecification#addRestriction(Restriction)
+ * @see org.hibernate.query.programmatic.QuerySpecification#restrict(Restriction)
  *
  * @see Path
  * @see Order

@@ -21,12 +21,12 @@ import org.hibernate.query.restriction.Restriction;
  * Specialization of {@link QuerySpecification} for programmatic customization of
  * {@linkplain MutationQuery mutation queries}.
  * <p>
- * The method {@link #addRestriction(Restriction)} allows application of additional
+ * The method {@link #restrict(Restriction)} allows application of additional
  * {@linkplain Restriction filtering} to the mutated entity. The static factory
  * methods of {@link Restriction} are used to express filtering criteria of various
  * kinds.
  * <p>
- * Once all {@linkplain #addRestriction restrictions} are specified, call
+ * Once all {@linkplain #restrict restrictions} are specified, call
  * {@link #createQuery createQuery()} to obtain an {@linkplain SelectionQuery
  * executable mutation query object}.
  *
@@ -43,7 +43,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 * Covariant override.
 	 */
 	@Override
-	MutationSpecification<T> addRestriction(Restriction<T> restriction);
+	MutationSpecification<T> restrict(Restriction<T> restriction);
 
 	/**
 	 * A function capable of modifying or augmenting a criteria query.
@@ -62,7 +62,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	MutationSpecification<T> addAugmentation(Augmentation<T> augmentation);
+	MutationSpecification<T> augment(Augmentation<T> augmentation);
 
 	/**
 	 * Finalize the building and create the {@linkplain SelectionQuery} instance.
@@ -73,7 +73,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain MutationQuery} based on a base HQL statement,
-	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
+	 * allowing the addition of {@linkplain MutationSpecification#restrict restrictions}.
 	 *
 	 * @param hql The base HQL query (expected to be an {@code update} or {@code delete} query).
 	 * @param mutationTarget The entity which is the target of the mutation.
@@ -91,7 +91,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain MutationQuery} based on the given criteria update,
-	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
+	 * allowing the addition of {@linkplain MutationSpecification#restrict restrictions}.
 	 *
 	 * @param criteriaUpdate The criteria update query
 	 *
@@ -104,7 +104,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 	/**
 	 * Returns a specification reference which can be used to programmatically,
 	 * iteratively build a {@linkplain MutationQuery} based on the given criteria delete,
-	 * allowing the addition of {@linkplain MutationSpecification#addRestriction restrictions}.
+	 * allowing the addition of {@linkplain MutationSpecification#restrict restrictions}.
 	 *
 	 * @param criteriaDelete The criteria delete query
 	 *

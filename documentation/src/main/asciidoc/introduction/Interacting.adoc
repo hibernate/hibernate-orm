@@ -1061,16 +1061,16 @@ var selection =
 
 // add programmatic restrictions:
 if (titlePattern != null)
-    selection.addRestriction(Restriction.like(Book_.title, namePattern));
+    selection.restrict(Restriction.like(Book_.title, namePattern));
 if (isbns != null && !isbns.isEmpty())
-    selection.addRestriction(Restriction.in(Book_.isbn, isbns));
+    selection.restrict(Restriction.in(Book_.isbn, isbns));
 
 // add programmatic ordering:
-if (orderByTitle) selection.addOrdering(Order.asc(Book_.title));
-if (orderByIsbn) selection.addOrdering(Order.asc(Book_.isbn));
+if (orderByTitle) selection.sort(Order.asc(Book_.title));
+if (orderByIsbn) selection.sort(Order.asc(Book_.isbn));
 
 // add programmatic association fetching:
-if (fetchPublisher) selection.addFetching(Path.from(Book.class).to(Book_.publisher));
+if (fetchPublisher) selection.fetch(Path.from(Book.class).to(Book_.publisher));
 
 // execute the query in the given session:
 List<Book> matchingBooks = selection.createQuery(session).getResultList();
@@ -1088,10 +1088,10 @@ We need the following methods of link:{doc-javadoc-url}org/hibernate/query/progr
 |===
 | Method name | Purpose
 
-| `addRestriction()` | Add a restriction on the query results
-| `setOrder()`, `addOrder()` | Specify how the query results should be ordered
-| `addFetching()` | Add a fetched association
-| `addAugmentation()` | Add a custom function which directly manipulates the query
+| `restrict()` | Add a `Restriction` on the query results
+| `sort()`, `resort()` | Specify how the query results should be ordered
+| `fetch()` | Add a fetched association `Path`
+| `augment()` | Add a custom function which directly manipulates the query
 |===
 
 Alternatively, `Restriction` and `Order` can be used with <<paging-and-ordering,generated query or finder methods>>, and even with link:{doc-data-repositories-url}[Jakarta Data repositories].
@@ -1102,9 +1102,9 @@ The interface link:{doc-javadoc-url}org/hibernate/query/restriction/Path.html[`P
 ----
 List<Book> booksForPublisher =
         SelectionSpecification.create(Book.class)
-                .addRestriction(Path.from(Book.class).to(Book_.publisher).to(Publisher_.name)
+                .restrict(Path.from(Book.class).to(Book_.publisher).to(Publisher_.name)
                                 .equalTo(publisherName))
-                .addFetching(Path.from(Book.class).to(Book_.publisher))
+                .fetch(Path.from(Book.class).to(Book_.publisher))
                 .createQuery(session)
                 .getResultList();
 ----
@@ -1115,7 +1115,7 @@ When `Restriction`, `Path`, and `Order` aren't expressive enough, we can _augmen
 ----
 var books =
         SelectionSpecification.create(Book.class)
-              .addAugmentation((builder, query, book) ->
+              .augment((builder, query, book) ->
                       // augment the query via JPA Criteria API
                       query.where(builder.like(book.get(Book_.title), titlePattern)))
                           .orderBy(builder.asc(book.get(Book_.isbn)))
@@ -1129,7 +1129,7 @@ For really advanced cases, `addAugmentation()` works quite nicely with <<criteri
 ----
 var books =
         SelectionSpecification.create(Book.class)
-              .addAugmentation((builder, query, book) ->
+              .augment((builder, query, book) ->
                   // eliminate explicit references to 'builder'
                   new CriteriaDefinition<>(query) {{
                       where(like(entity.get(BasicEntity_.title), titlePattern),

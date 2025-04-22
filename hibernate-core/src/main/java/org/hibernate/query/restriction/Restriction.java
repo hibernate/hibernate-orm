@@ -12,7 +12,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.query.Order;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.range.Range;
 
@@ -21,7 +20,7 @@ import java.util.List;
 /**
  * A rule for restricting query results. This allows restrictions to be added to
  * a {@link org.hibernate.query.programmatic.SelectionSpecification} by calling
- * {@link SelectionQuery#addRestriction(Restriction)}.
+ * {@link org.hibernate.query.programmatic.SelectionSpecification#restrict(Restriction)}.
  * <pre>
  * SelectionSpecification.create(Book.class)
  *         .restrict(Restriction.like(Book_.title, "%Hibernate%", false))

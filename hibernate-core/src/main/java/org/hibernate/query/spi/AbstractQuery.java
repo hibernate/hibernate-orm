@@ -39,7 +39,6 @@ import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
@@ -298,11 +297,6 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public Query<R> setOrder(Order<? super R> order) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> addRestriction(Restriction<? super R> restriction) {
 		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 

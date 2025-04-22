@@ -47,7 +47,6 @@ import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -778,12 +777,6 @@ public class QuerySqmImpl<R>
 	@Override
 	public Query<R> setOrder(Order<? super R> order) {
 		super.setOrder(order);
-		return this;
-	}
-
-	@Override
-	public Query<R> addRestriction(Restriction<? super R> restriction) {
-		super.addRestriction( restriction );
 		return this;
 	}
 

@@ -31,7 +31,6 @@ import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -307,12 +306,6 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Incubating
 	public SqmSelectionQueryImplementor<R> setOrder(Order<? super R> order) {
 		getDelegate().setOrder( order );
-		return this;
-	}
-
-	@Override
-	public SqmSelectionQueryImplementor<R> addRestriction(Restriction<? super R> restriction) {
-		getDelegate().addRestriction( restriction );
 		return this;
 	}
 

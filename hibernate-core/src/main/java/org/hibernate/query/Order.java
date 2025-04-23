@@ -15,11 +15,11 @@ import static org.hibernate.query.SortDirection.ASCENDING;
 import static org.hibernate.query.SortDirection.DESCENDING;
 
 /**
- * A rule for sorting a query result set.
- * <p>
- * This is a convenience class which allows query result ordering rules to be
- * passed around the system before being applied to a {@link Query} by calling
- * {@link org.hibernate.query.specification.SelectionSpecification#sort(Order)}.
+ * A rule for sorting a query result set. This allows query result ordering
+ * rules to be passed around the system before being applied to a
+ * {@link org.hibernate.query.specification.QuerySpecification} by calling
+ * {@link org.hibernate.query.specification.SelectionSpecification#sort(Order)
+ * sort()}.
  * <pre>
  * SelectionSpecification.create(Book.class,
  *             "from Book b join b.authors a where a.name = :name")
@@ -30,7 +30,8 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  * </pre>
  * <p>
  * {@code Order}s may be stacked using {@link List#of} and
- * {@link org.hibernate.query.specification.SelectionSpecification#resort(List)}.
+ * {@link org.hibernate.query.specification.SelectionSpecification#resort(List)
+ * resort()}.
  * <pre>
  * SelectionSpecification.create(Book.class,
  *             "from Book b join b.authors a where a.name = :name")

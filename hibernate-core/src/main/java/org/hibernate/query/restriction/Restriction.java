@@ -19,8 +19,9 @@ import java.util.List;
 
 /**
  * A rule for restricting query results. This allows restrictions to be added to
- * a {@link org.hibernate.query.specification.SelectionSpecification} by calling
- * {@link org.hibernate.query.specification.SelectionSpecification#restrict(Restriction)}.
+ * a {@link org.hibernate.query.specification.QuerySpecification} by calling
+ * {@link org.hibernate.query.specification.QuerySpecification#restrict(Restriction)
+ * restrict()}.
  * <pre>
  * SelectionSpecification.create(Book.class)
  *         .restrict(Restriction.like(Book_.title, "%Hibernate%", false))

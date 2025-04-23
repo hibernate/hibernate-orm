@@ -872,31 +872,26 @@ public class SqmUtil {
 	private static SqmSortSpecification createSortSpecification(
 			SqmSelectStatement<?> sqm, Order<?> order, List<SqmSelectableNode<?>> items, SqmSelectableNode<?> selected) {
 		final NodeBuilder builder = sqm.nodeBuilder();
-		if ( order.getEntityClass() == null ) {
+		if ( order.entityClass() == null ) {
 			// ordering by an element of the select list
 			return new SqmSortSpecification(
-					new SqmAliasedNodeRef( order.getElement(), builder.getIntegerType(), builder ),
-					order.getDirection(),
-					order.getNullPrecedence(),
-					order.isCaseInsensitive()
+					new SqmAliasedNodeRef( order.element(), builder.getIntegerType(), builder ),
+					order.direction(), order.nullPrecedence(), !order.caseSensitive()
 			);
 		}
 		else {
 			// ordering by an attribute of the returned entity
 			if ( items.size() <= 1) {
 				if ( selected instanceof SqmFrom<?, ?> root ) {
-					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
+					if ( !order.entityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
-					final StringTokenizer tokens = new StringTokenizer( order.getAttributeName(), "." );
+					final StringTokenizer tokens = new StringTokenizer( order.attributeName(), "." );
 					SqmPath<?> path = root;
 					while ( tokens.hasMoreTokens() ) {
 						path = path.get( tokens.nextToken() );
 					}
-					return builder.sort( path,
-							order.getDirection(),
-							order.getNullPrecedence(),
-							order.isCaseInsensitive() );
+					return builder.sort( path, order.direction(), order.nullPrecedence(), !order.caseSensitive() );
 				}
 				else {
 					throw new IllegalQueryOperationException("Select item was not an entity type");
@@ -909,7 +904,7 @@ public class SqmUtil {
 	}
 
 	private static SqmSelectableNode<?> selectedNode(SqmSelectStatement<?> sqm, Order<?> order) {
-		final int element = order.getElement();
+		final int element = order.element();
 		if ( element < 1) {
 			throw new IllegalQueryOperationException("Cannot order by element " + element
 					+ " (the first select item is element 1)");
@@ -917,7 +912,7 @@ public class SqmUtil {
 		final var selectionItems = sqm.getQuerySpec().getSelectClause().getSelectionItems();
 		final int items = selectionItems.size();
 		if ( items == 0 && element == 1 ) {
-			if ( order.getEntityClass() == null || sqm.getQuerySpec().getRootList().size() > 1 ) {
+			if ( order.entityClass() == null || sqm.getQuerySpec().getRootList().size() > 1 ) {
 				throw new IllegalQueryOperationException("Cannot order by element " + element
 						+ " (there is no select list)");
 			}

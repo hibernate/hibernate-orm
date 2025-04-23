@@ -279,25 +279,13 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType) {
 		if ( !isJakartaCursoredPage(containerType)
-				&& isUsingSpecification()
 				&& hasOrdering(paramTypes) ) {
+			if ( !isUsingSpecification() ) {
+				throw new AssertionError();
+			}
 			declaration
-					.append("\t\t\t.resort(_orders)\n");
+					.append("\t_spec.resort(_orders);\n");
 		}
-	}
-
-	boolean applyOrder(
-			StringBuilder declaration, List<String> paramTypes,
-			@Nullable String containerType, boolean unwrapped) {
-		if ( !isJakartaCursoredPage(containerType)
-				&& !isUsingSpecification()
-				&& hasOrdering(paramTypes) ) {
-			unwrapQuery( declaration, unwrapped );
-			declaration
-					.append("\t\t\t.setOrder(_orders)\n");
-			return true;
-		}
-		return unwrapped;
 	}
 
 	void handlePageParameters(
@@ -322,25 +310,25 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			if ( isRestrictionParam(paramType) ) {
 				if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
 					declaration
-							.append( "\t\t\t.restrict(" )
+							.append( "\t_spec.restrict(" )
 							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
 							.append( ".all(" )
 							.append( paramName )
-							.append( "))\n" );
+							.append( "));\n" );
 
 				}
 				else {
 					declaration
-							.append( "\t\t\t.restrict(" )
+							.append( "\t_spec.restrict(" )
 							.append( paramName )
-							.append( ")\n" );
+							.append( ");\n" );
 				}
 			}
 			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
 				final TypeElement entityElement = annotationMetaEntity.getContext().getElementUtils()
 						.getTypeElement( returnTypeName );
 				declaration
-						.append("\t\t\t.restrict(")
+						.append("\t_spec.restrict(")
 						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
 						.append(".restrict(")
 						.append(annotationMetaEntity.importType(
@@ -349,7 +337,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						.append(paramName)
 						.append(", ")
 						.append(paramName)
-						.append("))\n");
+						.append("));\n");
 			}
 		}
 	}
@@ -387,7 +375,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	}
 
 	void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
-		if ( !unwrapped && isUsingEntityManager() && !isUsingSpecification() ) {
+		if ( !unwrapped && isUsingEntityManager() ) {
 			declaration
 					.append("\t\t\t.unwrap(")
 					.append(annotationMetaEntity.importType(HIB_SELECTION_QUERY))
@@ -547,9 +535,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 					.append(".requestTotal()\n\t\t\t\t\t\t? ");
-			// TODO: indentation is all messed up here!
-			createSpecification( declaration );
-			handleRestrictionParameters( declaration, paramTypes );
 			createQuery( declaration );
 			setParameters( declaration, paramTypes, "\t\t\t\t\t");
 			if ( isUsingEntityManager() ) {
@@ -784,7 +769,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					}
 					break;
 				default:
-					if ( isUsingEntityManager() && !unwrapped && mustUnwrap && !isUsingSpecification() ) {
+					if ( isUsingEntityManager() && !unwrapped && mustUnwrap ) {
 						declaration
 								.append("\t\t\t.unwrap(")
 								.append(annotationMetaEntity.importType(containerType))

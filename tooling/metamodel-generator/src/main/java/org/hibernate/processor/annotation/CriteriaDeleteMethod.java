@@ -54,9 +54,9 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	@Override
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
-		tryReturn(declaration);
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
+		tryReturn(declaration);
 		createQuery( declaration );
 		execute( declaration );
 	}

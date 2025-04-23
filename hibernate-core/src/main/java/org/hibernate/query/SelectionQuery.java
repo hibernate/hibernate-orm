@@ -597,32 +597,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * If the result type of this query is an entity class, add one or more
-	 * {@linkplain Order rules} for ordering the query results.
-	 *
-	 * @param orderList one or more instances of {@link Order}
-	 *
-	 * @see Order
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
-
-	/**
-	 * If the result type of this query is an entity class, add a
-	 * {@linkplain Order rule} for ordering the query results.
-	 *
-	 * @param order an instance of {@link Order}
-	 *
-	 * @see Order
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> setOrder(Order<? super R> order);
-
-	/**
 	 * Specifies whether follow-on locking should be applied
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);

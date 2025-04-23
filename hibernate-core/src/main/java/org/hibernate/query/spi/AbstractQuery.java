@@ -9,7 +9,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,8 +35,6 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.Order;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -288,16 +285,6 @@ public abstract class AbstractQuery<R>
 		getSession().checkOpen();
 		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
-	}
-
-	@Override
-	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> setOrder(Order<? super R> order) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 
 	@Override

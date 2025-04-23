@@ -20,7 +20,7 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  * <p>
  * This is a convenience class which allows query result ordering rules to be
  * passed around the system before being applied to a {@link Query} by calling
- * {@link org.hibernate.query.programmatic.SelectionSpecification#sort(Order)}.
+ * {@link org.hibernate.query.specification.SelectionSpecification#sort(Order)}.
  * <pre>
  * SelectionSpecification.create(Book.class,
  *             "from Book b join b.authors a where a.name = :name")
@@ -31,7 +31,7 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  * </pre>
  * <p>
  * {@code Order}s may be stacked using {@link List#of} and
- * {@link org.hibernate.query.programmatic.SelectionSpecification#resort(List)}.
+ * {@link org.hibernate.query.specification.SelectionSpecification#resort(List)}.
  * <pre>
  * SelectionSpecification.create(Book.class,
  *             "from Book b join b.authors a where a.name = :name")
@@ -52,8 +52,8 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  *          used by Hibernate Data Repositories to implement Jakarta Data
  *          query methods.
  *
- * @see org.hibernate.query.programmatic.SelectionSpecification#sort(Order)
- * @see org.hibernate.query.programmatic.SelectionSpecification#resort(List)
+ * @see org.hibernate.query.specification.SelectionSpecification#sort(Order)
+ * @see org.hibernate.query.specification.SelectionSpecification#resort(List)
  * @see org.hibernate.query.restriction.Restriction
  *
  * @author Gavin King

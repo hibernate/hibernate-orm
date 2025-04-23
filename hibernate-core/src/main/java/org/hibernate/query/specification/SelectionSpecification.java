@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.programmatic;
+package org.hibernate.query.specification;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -15,7 +15,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.programmatic.internal.SelectionSpecificationImpl;
+import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 

@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Version;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -16,9 +17,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import org.hibernate.query.programmatic.SelectionSpecification;
 import static org.hibernate.query.Order.asc;
 import static org.hibernate.query.Order.desc;
+import static org.hibernate.query.range.Range.containing;
+import static org.hibernate.query.range.Range.greaterThan;
+import static org.hibernate.query.range.Range.singleCaseInsensitiveValue;
 import static org.hibernate.query.restriction.Path.from;
 import static org.hibernate.query.restriction.Restriction.all;
 import static org.hibernate.query.restriction.Restriction.any;
@@ -32,9 +35,6 @@ import static org.hibernate.query.restriction.Restriction.in;
 import static org.hibernate.query.restriction.Restriction.like;
 import static org.hibernate.query.restriction.Restriction.restrict;
 import static org.hibernate.query.restriction.Restriction.unrestricted;
-import static org.hibernate.query.range.Range.containing;
-import static org.hibernate.query.range.Range.greaterThan;
-import static org.hibernate.query.range.Range.singleCaseInsensitiveValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
@@ -66,8 +66,8 @@ public class RestrictionTest {
 		List<Book> books = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
 						.restrict( like( title, "%Hibernate%" ) )
+						.sort( desc( title ) )
 						.createQuery( session )
-						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 2, books.size() );
 		assertEquals( "Java Persistence with Hibernate", books.get(0).title );
@@ -75,8 +75,8 @@ public class RestrictionTest {
 		List<Book> booksByIsbn = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
 						.restrict( in( isbn, List.of("9781932394153", "9781617290459") ) )
+						.sort( asc( title ) )
 						.createQuery( session )
-						.setOrder( asc( title ) )
 						.getResultList() );
 		assertEquals( 2, booksByIsbn.size() );
 		assertEquals( "Hibernate in Action", booksByIsbn.get(0).title );
@@ -199,29 +199,29 @@ public class RestrictionTest {
 		List<Book> booksInIsbn = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
 						.restrict( from(Book.class).to(isbn).in( List.of("9781932394153", "9781617290459") ) )
+						.sort( desc( isbn ) )
 						.createQuery( session )
-						.setOrder( desc( isbn ) )
 						.getResultList() );
 		assertEquals( 2, booksInIsbn.size() );
 		List<Book> booksWithPub = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
 						.restrict( from(Book.class).to(publisher).to(name).equalTo("Manning") )
+						.sort( desc( title ) )
 						.createQuery( session )
-						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 2, booksWithPub.size() );
 		List<Book> noBookWithPub = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
 						.restrict( from(Book.class).to(publisher).to(name).notEqualTo("Manning") )
+						.sort( desc( title ) )
 						.createQuery( session )
-						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 0, noBookWithPub.size() );
 		List<Book> books = scope.fromSession( session ->
 				SelectionSpecification.create( Book.class, "from Book" )
 						.restrict( from(Book.class).to(title).restrict( containing("hibernate", false) ) )
+						.sort( desc( title ) )
 						.createQuery( session )
-						.setOrder( desc( title ) )
 						.getResultList() );
 		assertEquals( 2, books.size() );
 		List<Book> booksWithPubVersion = scope.fromSession( session ->

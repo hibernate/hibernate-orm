@@ -31,6 +31,8 @@ import java.util.List;
  * <li>Refinement or replacement of the query sorting criteria is possible via the methods
  *     {@link #sort(Order)} and {@link #resort(List)}, together with the static
  *     factory methods of {@link Order}.
+ * <li>The method {@link #fetch(Path)} adds the {@linkplain Path path} of an association
+ *     to be fetched by the query.
  * </ul>
  * <p>
  * Once all {@linkplain #sort sorting} and {@linkplain #restrict restrictions}

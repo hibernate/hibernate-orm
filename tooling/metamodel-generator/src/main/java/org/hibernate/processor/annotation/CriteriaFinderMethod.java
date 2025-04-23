@@ -56,13 +56,12 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 				.append('\n');
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes );
-		handleSorting( declaration, paramTypes, containerType );
+		collectOrdering( declaration, paramTypes, containerType );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
+		boolean unwrapped = initiallyUnwrapped();
 		unwrapped = enableFetchProfile( declaration, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}
@@ -83,7 +82,9 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String createQueryMethod() {
-		return isUsingEntityManager() || isReactive() || isUnspecializedQueryType(containerType)
+		return isUsingEntityManager()
+			|| isReactive()
+			|| isUnspecializedQueryType(containerType)
 				? "createQuery"
 				: "createSelectionQuery";
 	}

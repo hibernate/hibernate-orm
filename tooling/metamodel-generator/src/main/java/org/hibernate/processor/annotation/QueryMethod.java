@@ -94,15 +94,14 @@ public class QueryMethod extends AbstractQueryMethod {
 		preamble( declaration, paramTypes );
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes );
-		handleSorting( declaration, paramTypes, containerType );
+		collectOrdering( declaration, paramTypes, containerType );
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		execute( declaration, !isUsingEntityManager() );
+		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
@@ -117,20 +116,23 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	void createQuery(StringBuilder declaration) {
-		if ( isUsingSpecification() ) {
-			declaration
-					.append(localSessionName())
-					.append(".createQuery(_spec.buildCriteria(")
-					.append(localSessionName());
+		final boolean specification = isUsingSpecification();
+		if ( specification ) {
 			if ( isReactive() ) {
-				declaration.append(".getFactory()");
+				declaration
+						.append(localSessionName())
+						.append(".createQuery(_spec.buildCriteria(")
+						.append(localSessionName())
+						.append(".getFactory().getCriteriaBuilder()))\n");
 			}
-			declaration
-					.append(".getCriteriaBuilder()") // TODO no such method in Reactive!
-					.append( "))\n" );
+			else {
+				declaration
+						.append("_spec.createQuery(")
+						.append(localSessionName())
+						.append(")\n");
+			}
 		}
 		else {
-			// can't use Specification
 			declaration
 					.append(localSessionName())
 					.append('.')

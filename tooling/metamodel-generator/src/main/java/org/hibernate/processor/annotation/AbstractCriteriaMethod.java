@@ -80,19 +80,28 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append(".")
-				.append(createQueryMethod())
-				.append('(');
-		if (isUsingSpecification() ) {
+		final boolean specification = isUsingSpecification();
+		if ( specification && !isReactive() ) {
 			declaration
-					.append("_spec.buildCriteria(_builder)");
+					.append("_spec.createQuery(")
+					.append(localSessionName())
+					.append(")\n");
 		}
 		else {
-			declaration.append("_query");
+			declaration
+					.append(localSessionName())
+					.append(".")
+					.append(createQueryMethod())
+					.append('(');
+			if ( specification ) {
+				declaration
+						.append("_spec.buildCriteria(_builder)");
+			}
+			else {
+				declaration.append("_query");
+			}
+			declaration.append(")\n");
 		}
-		declaration.append(")\n");
 	}
 
 	@Override

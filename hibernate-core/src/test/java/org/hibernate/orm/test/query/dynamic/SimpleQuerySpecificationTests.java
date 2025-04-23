@@ -284,7 +284,7 @@ public class SimpleQuerySpecificationTests {
 				MutationSpecification.create( BasicEntity.class,
 								"delete BasicEntity" )
 						.validate( factory.getCriteriaBuilder() )
-						.buildCriteriaQuery( factory.getCriteriaBuilder() );
+						.buildCriteria( factory.getCriteriaBuilder() );
 	}
 
 	@Test
@@ -294,6 +294,6 @@ public class SimpleQuerySpecificationTests {
 				SelectionSpecification.create( BasicEntity.class,
 								"from BasicEntity" )
 						.validate( factory.getCriteriaBuilder() )
-						.buildCriteriaQuery( factory.getCriteriaBuilder() );
+						.buildCriteria( factory.getCriteriaBuilder() );
 	}
 }

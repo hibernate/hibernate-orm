@@ -63,7 +63,7 @@ public interface QuerySpecification<T> {
 	 *
 	 * @return a new criteria query
 	 */
-	CommonAbstractCriteria buildCriteriaQuery(CriteriaBuilder builder);
+	CommonAbstractCriteria buildCriteria(CriteriaBuilder builder);
 
 	/**
 	 * Validate the query.

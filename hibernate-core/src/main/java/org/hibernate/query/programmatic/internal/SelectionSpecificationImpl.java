@@ -172,7 +172,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	}
 
 	@Override
-	public CriteriaQuery<T> buildCriteriaQuery(CriteriaBuilder builder) {
+	public CriteriaQuery<T> buildCriteria(CriteriaBuilder builder) {
 		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
 	}

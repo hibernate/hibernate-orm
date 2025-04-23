@@ -120,7 +120,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		if ( isUsingSpecification() ) {
 			declaration
 					.append(localSessionName())
-					.append(".createQuery(_spec.buildCriteriaQuery(")
+					.append(".createQuery(_spec.buildCriteria(")
 					.append(localSessionName());
 			if ( isReactive() ) {
 				declaration.append(".getFactory()");

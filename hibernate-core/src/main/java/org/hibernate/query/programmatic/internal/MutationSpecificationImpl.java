@@ -129,7 +129,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	}
 
 	@Override
-	public CommonAbstractCriteria buildCriteriaQuery(CriteriaBuilder builder) {
+	public CommonAbstractCriteria buildCriteria(CriteriaBuilder builder) {
 		final NodeBuilder nodeBuilder = (NodeBuilder) builder;
 		return build( nodeBuilder.getQueryEngine() );
 	}

@@ -87,7 +87,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append('(');
 		if (isUsingSpecification() ) {
 			declaration
-					.append("_spec.buildCriteriaQuery(_builder)");
+					.append("_spec.buildCriteria(_builder)");
 		}
 		else {
 			declaration.append("_query");

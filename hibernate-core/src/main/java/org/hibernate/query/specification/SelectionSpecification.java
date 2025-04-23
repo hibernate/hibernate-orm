@@ -5,6 +5,7 @@
 package org.hibernate.query.specification;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
@@ -59,7 +60,7 @@ import java.util.List;
  * @since 7.0
  */
 @Incubating
-public interface SelectionSpecification<T> extends QuerySpecification<T> {
+public interface SelectionSpecification<T> extends QuerySpecification<T>, TypedQueryReference<T> {
 	/**
 	 * Adds an ordering to the selection specification.
 	 * Appended to any previous ordering.
@@ -184,6 +185,9 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 
 	@Override
 	SelectionSpecification<T> validate(CriteriaBuilder builder);
+
+	@Override
+	Class<T> getResultType();
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,

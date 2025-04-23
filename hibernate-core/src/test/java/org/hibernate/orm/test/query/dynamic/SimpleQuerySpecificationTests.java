@@ -296,4 +296,21 @@ public class SimpleQuerySpecificationTests {
 						.validate( factory.getCriteriaBuilder() )
 						.buildCriteria( factory.getCriteriaBuilder() );
 	}
+
+	@Test
+	void testUseAsTypedQueryRef(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		factoryScope.inTransaction( (session) -> {
+			sqlCollector.clear();
+			var spec = SelectionSpecification.create( BasicEntity.class )
+					.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
+					.sort( Order.asc( BasicEntity_.position ) );
+			session.createQuery(spec).getResultList();
+		} );
+
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+	}
+
 }

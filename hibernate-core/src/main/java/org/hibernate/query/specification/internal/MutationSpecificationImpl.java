@@ -5,6 +5,7 @@
 package org.hibernate.query.specification.internal;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -46,7 +47,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  *
  * @author Steve Ebersole
  */
-public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
+public class MutationSpecificationImpl<T> implements MutationSpecification<T>, TypedQueryReference<Void> {
 
 	private final List<BiConsumer<SqmDeleteOrUpdateStatement<T>, SqmRoot<T>>> specifications = new ArrayList<>();
 	private final String hql;
@@ -84,6 +85,11 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 	@Override
 	public Map<String,Object> getHints() {
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public TypedQueryReference<Void> reference() {
+		return this;
 	}
 
 	@Override

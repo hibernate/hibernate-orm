@@ -5,6 +5,7 @@
 package org.hibernate.query.specification.internal;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 
@@ -51,7 +52,7 @@ import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
  *
  * @author Steve Ebersole
  */
-public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> {
+public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>, TypedQueryReference<T> {
 	private final Class<T> resultType;
 	private final String hql;
 	private final CriteriaQuery<T> criteriaQuery;
@@ -88,6 +89,11 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 	@Override
 	public Map<String,Object> getHints() {
 		return Collections.emptyMap();
+	}
+
+	@Override
+	public TypedQueryReference<T> reference() {
+		return this;
 	}
 
 	@Override

@@ -306,7 +306,7 @@ public class SimpleQuerySpecificationTests {
 			var spec = SelectionSpecification.create( BasicEntity.class )
 					.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
 					.sort( Order.asc( BasicEntity_.position ) );
-			session.createQuery(spec).getResultList();
+			session.createQuery(spec.reference()).getResultList();
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );

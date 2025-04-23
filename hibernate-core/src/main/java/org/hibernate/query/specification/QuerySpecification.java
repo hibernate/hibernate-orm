@@ -5,6 +5,7 @@
 package org.hibernate.query.specification;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 
@@ -87,4 +88,11 @@ public interface QuerySpecification<T> {
 	 * @throws Exception if it ain't all good
 	 */
 	QuerySpecification<T> validate(CriteriaBuilder builder);
+
+	/**
+	 * Obtain a {@linkplain TypedQueryReference reference}
+	 * to this specification which may be passed along to
+	 * {@link EntityManager#createQuery(TypedQueryReference)}.
+	 */
+	TypedQueryReference<?> reference();
 }

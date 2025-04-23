@@ -305,17 +305,11 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int i = 0; i < getters.length; i++ ) {
 				final Member getter = getters[i];
 				final Member setter = setters[i];
-				boolean found = false;
 				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( getter.getModifiers() ) ) {
 					foreignPackageClassInfo.getters.add( getter );
-					found = true;
 				}
 				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( setter.getModifiers() ) ) {
 					foreignPackageClassInfo.setters.add( setter );
-					found = true;
-				}
-				if ( found ) {
-					foreignPackageClassInfo.propertyNames.add( propertyNames[i] );
 				}
 			}
 			if ( foreignPackageClassInfo.getters.isEmpty() && foreignPackageClassInfo.setters.isEmpty() ) {
@@ -351,7 +345,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 											TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
 													getterType
 											),
-											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
+											Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
 									)
 									.withParameter( foreignPackageClassInfo.clazz )
 									.intercept(
@@ -377,7 +371,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							builder = builder.defineMethod(
 											"set_" + setter.getName(),
 											TypeDescription.Generic.VOID,
-											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
+											Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
 									)
 									.withParameter( foreignPackageClassInfo.clazz )
 									.withParameter( setterType )

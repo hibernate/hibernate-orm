@@ -15,6 +15,7 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 import org.hibernate.query.restriction.Path;
@@ -40,7 +41,8 @@ import java.util.List;
  * are specified, call {@link #createQuery createQuery()} to obtain an
  * {@linkplain SelectionQuery executable selection query object}.
  * <pre>
- * SelectionSpecification.create(Book.class, "from Book where discontinued = false")
+ * SelectionSpecification.create(Book.class,
+ *             "from Book where discontinued = false")
  *         .restrict(Restriction.contains(Book_.title, "hibernate", false))
  *         .sort(Order.desc(Book_.title))
  *         .fetch(Path.from(Book.class).to(Book_publisher))
@@ -52,6 +54,17 @@ import java.util.List;
  * A {@code SelectionSpecification} always represents a query which returns a singe root
  * entity. The restriction and ordering criteria are interpreted as applying to the field
  * and properties of this root entity.
+ * <p>
+ * This interface, together with {@link Order} and {@link Page}, provides a streamlined
+ * API for offset-based pagination. For example, given a list of {@code Order}s in
+ * {@code orderList}, and the {@code currentPage}, we may write:
+ * <pre>
+ * SelectionSpecification.create(Book.class, "from Book where ... ")
+ *         .resort(orderList)
+ *         .createQuery(session)
+ *                 .setPage(currentPage)
+ *                 .getResultList();
+ * </pre>
  *
  * @param <T> The entity type returned by the query
  *
@@ -93,9 +106,6 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	SelectionSpecification<T> resort(List<Order<? super T>> orders);
 
-	/**
-	 * Covariant override.
-	 */
 	@Override
 	SelectionSpecification<T> restrict(Restriction<? super T> restriction);
 
@@ -155,15 +165,9 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 */
 	SelectionSpecification<T> augment(Augmentation<T> augmentation);
 
-	/**
-	 * Covariant override.
-	 */
 	@Override
 	SelectionQuery<T> createQuery(Session session);
 
-	/**
-	 * Covariant override.
-	 */
 	@Override
 	SelectionQuery<T> createQuery(StatelessSession session);
 

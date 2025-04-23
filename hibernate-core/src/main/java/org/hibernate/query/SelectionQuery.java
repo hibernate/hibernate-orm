@@ -99,19 +99,16 @@ import org.hibernate.graph.GraphSemantic;
  * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
  * {@code @OneToOne} association belonging to an entity returned by the query.
  * <p>
- * Finally, two alternative approaches to pagination are available:
+ * Finally, three alternative approaches to pagination are available:
  * <ol>
  * <li>
- * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
- * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
- * pagination, at a slightly higher semantic level than the ancient but dependable
- * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
- * <pre>
- * session.createSelectionQuery("from Book", Book.class)
- *         .setOrder(Order.desc(Book_.title))
- *         .setPage(Page.first(50))
- *         .getResultList();
- * </pre>
+ * The ancient but dependable operations {@link #setFirstResult(int)} and
+ * {@link #setMaxResults(int)} are the standard approach blessed by the JPA
+ * specification.
+ * <li>
+ * {@link org.hibernate.query.specification.SelectionSpecification SelectionSpecification}
+ * and {@link #setPage(Page)}, together with {@link Order} and {@link Page}, provide
+ * a streamlined API for offset-based pagination, at a slightly higher semantic level.
  * <li>
  * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
  * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,

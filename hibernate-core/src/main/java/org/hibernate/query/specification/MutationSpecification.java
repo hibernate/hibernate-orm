@@ -27,6 +27,13 @@ import org.hibernate.query.restriction.Restriction;
  * {@linkplain Restriction filtering} to the mutated entity. The static factory
  * methods of {@link Restriction} are used to express filtering criteria of various
  * kinds.
+ * <pre>
+ * MutationSpecification.create(Book.class, "delete from Book")
+ *         .restrict(Restriction.lessThan(Book_.publicationDate,
+ *                                        LocalDate.ofYearDay(2000,1)))
+ *         .createQuery(session)
+ *         .executeUpdate();
+ * </pre>
  * <p>
  * Once all {@linkplain #restrict restrictions} are specified, call
  * {@link #createQuery createQuery()} to obtain an {@linkplain MutationQuery
@@ -41,9 +48,6 @@ import org.hibernate.query.restriction.Restriction;
 @Incubating
 public interface MutationSpecification<T> extends QuerySpecification<T> {
 
-	/**
-	 * Covariant override.
-	 */
 	@Override
 	MutationSpecification<T> restrict(Restriction<? super T> restriction);
 

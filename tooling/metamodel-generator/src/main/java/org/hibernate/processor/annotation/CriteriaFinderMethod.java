@@ -54,17 +54,16 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
-		collectOrdering( declaration, paramTypes );
-		tryReturn( declaration, paramTypes, containerType );
-		castResult( declaration );
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes );
 		handleSorting( declaration, paramTypes, containerType );
+		tryReturn( declaration, paramTypes, containerType );
+		castResult( declaration );
 		createQuery( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
 		boolean unwrapped = !isUsingEntityManager();
 		unwrapped = enableFetchProfile( declaration, unwrapped );
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}
 

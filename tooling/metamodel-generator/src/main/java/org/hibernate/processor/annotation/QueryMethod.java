@@ -92,19 +92,17 @@ public class QueryMethod extends AbstractQueryMethod {
 		comment( declaration );
 		modifiers( paramTypes, declaration );
 		preamble( declaration, paramTypes );
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
 		collectOrdering( declaration, paramTypes );
+		handleSorting( declaration, paramTypes, containerType );
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
-		createSpecification( declaration );
-		handleRestrictionParameters( declaration, paramTypes );
-		handleSorting( declaration, paramTypes, containerType );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
-		execute( declaration, unwrapped );
+		execute( declaration, !isUsingEntityManager() );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
@@ -121,9 +119,15 @@ public class QueryMethod extends AbstractQueryMethod {
 	void createQuery(StringBuilder declaration) {
 		if ( isUsingSpecification() ) {
 			declaration
-					.append( "\t\t\t.createQuery(" )
-					.append( localSessionName() )
-					.append( ")\n" );
+					.append(localSessionName())
+					.append(".createQuery(_spec.buildCriteriaQuery(")
+					.append(localSessionName());
+			if ( isReactive() ) {
+				declaration.append(".getFactory()");
+			}
+			declaration
+					.append(".getCriteriaBuilder()") // TODO no such method in Reactive!
+					.append( "))\n" );
 		}
 		else {
 			// can't use Specification
@@ -147,19 +151,19 @@ public class QueryMethod extends AbstractQueryMethod {
 	void createSpecification(StringBuilder declaration) {
 		if ( returnTypeClass != null && isUsingSpecification() ) {
 			declaration
+					.append( "\tvar _spec = " )
 					.append( annotationMetaEntity.importType( specificationType() ) )
 					.append( ".create(" )
 					.append( annotationMetaEntity.importType( returnTypeClass ) )
 					.append( ".class, " )
 					.append( getConstantName() )
-					.append( ")\n" );
+					.append( ");\n" );
 		}
 	}
 
 	@Override
 	boolean isUsingSpecification() {
 		return returnTypeClass != null
-			&& !isReactive()
 			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 

@@ -80,34 +80,35 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	@Override
 	void createQuery(StringBuilder declaration) {
-		if ( isUsingSpecification() ) {
+		declaration
+				.append(localSessionName())
+				.append(".")
+				.append(createQueryMethod())
+				.append('(');
+		if (isUsingSpecification() ) {
 			declaration
-					.append( "\t\t\t.createQuery(" )
-					.append( localSessionName() )
-					.append( ")\n" );
+					.append("_spec.buildCriteriaQuery(_builder)");
 		}
 		else {
-			declaration
-					.append(localSessionName())
-					.append(".")
-					.append(createQueryMethod())
-					.append("(_query)\n");
+			declaration.append("_query");
 		}
+		declaration.append(")\n");
 	}
 
 	@Override
 	void createSpecification(StringBuilder declaration) {
 		if ( isUsingSpecification() ) {
 			declaration
+					.append( "\tvar _spec = " )
 					.append( annotationMetaEntity.importType( specificationType() ) )
-					.append( ".create(_query)\n" );
+					.append( ".create(_query);\n" );
 		}
 	}
 
 	@Override
 	boolean isUsingSpecification() {
-		return !isReactive()
-			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
+		return hasRestriction()
+			|| hasOrder() && !isJakartaCursoredPage(containerType);
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {
@@ -126,10 +127,11 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void createBuilder(StringBuilder declaration) {
 		declaration
 				.append("\tvar _builder = ")
-				.append(localSessionName())
-				.append(isUsingEntityManager()
-						? ".getEntityManagerFactory()"
-						: ".getFactory()")
+				.append(localSessionName());
+		if ( isReactive() ) {
+			declaration.append(".getFactory()");
+		}
+		declaration
 				.append(".getCriteriaBuilder();\n");
 	}
 

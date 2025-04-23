@@ -2,21 +2,20 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.bytecode.enhancement.optimizer;
+package org.hibernate.orm.test.bytecode.enhancement.optimizer.parent;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 
-@Entity(name = "ParentEntity")
+@Entity(name = "Parent")
 @Inheritance(strategy = InheritanceType.JOINED)
-public class ParentEntity  {
-
+public class Ancestor {
 	@Id
 	private Long id;
 
-	private String field;
+	private String name;
 
 	public Long getId() {
 		return id;
@@ -26,11 +25,11 @@ public class ParentEntity  {
 		this.id = id;
 	}
 
-	public String getField() {
-		return field;
+	public String getName() {
+		return name;
 	}
 
-	public void setField(String field) {
-		this.field = field;
+	public void setName(String name) {
+		this.name = name;
 	}
 }

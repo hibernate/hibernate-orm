@@ -16,7 +16,22 @@ import org.hibernate.query.restriction.Restriction;
 
 /**
  * Commonality for all query specifications which allow iterative,
- * programmatic building of a query.
+ * programmatic building of a query. A specification allows
+ * {@linkplain #restrict restrictions},
+ * {@linkplain SelectionSpecification#restrict sorting}, and
+ * {@linkplain SelectionSpecification#fetch fetching} to be added to
+ * a predefined HQL or criteria query.
+ * <ul>
+ * <li>{@link #createQuery(EntityManager)} obtains an executable
+ *     query object associated with the given session.
+ * <li>{@link #buildCriteria(CriteriaBuilder)} transforms the
+ *     specification to a {@link CommonAbstractCriteria criteria query}.
+ * <li>{@link #validate(CriteriaBuilder)} validates the query without
+ *     executing it.
+ * </ul>
+ * <p>
+ * This is the abstract base type of {@link SelectionSpecification}
+ * and {@link MutationSpecification}.
  *
  * @apiNote Query specifications only support a single root entity.
  *

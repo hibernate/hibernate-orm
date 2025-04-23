@@ -400,7 +400,7 @@ List<Book> matchingBooks = selection.createQuery(session).getResultList();
 Notice that:
 
 - The link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] interface has static methods for constructing a variety of different kinds of restriction in a completely typesafe way.
-- Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] class has a variety of static methods for constructing different kinds of ordering criteria.
+- Similarly, the link:{doc-javadoc-url}org/hibernate/query/Order.html[`Order`] interface has a variety of static methods for constructing different kinds of sorting criteria.
 
 We need the following methods of link:{doc-javadoc-url}org/hibernate/query/programmatic/SelectionSpecification.html[`SelectionSpecification`]:
 

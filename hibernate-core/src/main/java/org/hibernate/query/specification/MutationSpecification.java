@@ -39,7 +39,7 @@ import org.hibernate.query.restriction.Restriction;
  * @since 7.0
  */
 @Incubating
-public interface MutationSpecification<T> extends QuerySpecification<T>, TypedQueryReference<Void> {
+public interface MutationSpecification<T> extends QuerySpecification<T> {
 
 	/**
 	 * Covariant override.
@@ -82,7 +82,7 @@ public interface MutationSpecification<T> extends QuerySpecification<T>, TypedQu
 	MutationSpecification<T> validate(CriteriaBuilder builder);
 
 	@Override
-	Class<Void> getResultType();
+	TypedQueryReference<Void> reference();
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,

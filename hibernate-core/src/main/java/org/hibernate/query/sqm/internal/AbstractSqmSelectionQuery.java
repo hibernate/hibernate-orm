@@ -12,7 +12,6 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SelectionQuery;
@@ -27,7 +26,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -44,15 +42,12 @@ import java.util.List;
 import jakarta.persistence.TupleElement;
 import jakarta.persistence.criteria.CompoundSelection;
 
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
-import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
-import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
 /**
  * @author Gavin King
@@ -175,41 +170,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 					.setBindValue( value, criteriaParameter.getAnticipatedType() );
 		}
 	}
-
-	@Override
-	public SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList) {
-		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
-		selectStatement.orderBy( orderList.stream().map( order -> sortSpecification( selectStatement, order ) )
-				.collect( toList() ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( selectStatement );
-		return this;
-	}
-
-
-	@Override
-	public SelectionQuery<R> setOrder(Order<? super R> order) {
-		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
-		selectStatement.orderBy( sortSpecification( selectStatement, order ) );
-		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-		//       simply cache the new SQM as if it were a criteria query, and remove this:
-		getQueryOptions().setQueryPlanCachingEnabled( false );
-		setSqmStatement( selectStatement );
-		return this;
-	}
-
-//	@Override
-//	public SelectionQuery<R> addRestriction(Restriction<? super R> restriction) {
-//		final SqmSelectStatement<R> selectStatement = getSqmSelectStatement().copy( noParamCopyContext( SqmQuerySource.CRITERIA ) );
-//		restriction.apply( selectStatement, selectStatement.<R>getRoot( 0, getExpectedResultType() ) );
-//		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
-//		//       simply cache the new SQM as if it were a criteria query, and remove this:
-//		getQueryOptions().setQueryPlanCachingEnabled( false );
-//		setSqmStatement( selectStatement );
-//		return this;
-//	}
 
 	@Override
 	public SelectionQuery<R> setPage(Page page) {

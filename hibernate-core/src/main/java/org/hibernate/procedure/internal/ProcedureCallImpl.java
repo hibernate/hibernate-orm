@@ -44,7 +44,6 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.Order;
 import org.hibernate.query.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -409,16 +408,6 @@ public class ProcedureCallImpl<R>
 	@Override
 	public QueryParameterBindings getParameterBindings() {
 		return parameterBindings;
-	}
-
-	@Override
-	public Query<R> setOrder(List<? extends Order<? super R>> orderList) {
-		throw new UnsupportedOperationException("Ordering not supported for stored procedure calls");
-	}
-
-	@Override
-	public Query<R> setOrder(Order<? super R> order) {
-		throw new UnsupportedOperationException("Ordering not supported for stored procedure calls");
 	}
 
 

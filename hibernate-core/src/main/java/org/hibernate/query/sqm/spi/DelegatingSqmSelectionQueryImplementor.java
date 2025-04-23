@@ -24,7 +24,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryFlushMode;
@@ -292,20 +291,6 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public SqmSelectionQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
 		getDelegate().setLockMode( alias, lockMode );
-		return this;
-	}
-
-	@Override
-	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(List<? extends Order<? super R>> orders) {
-		getDelegate().setOrder( orders );
-		return this;
-	}
-
-	@Override
-	@Incubating
-	public SqmSelectionQueryImplementor<R> setOrder(Order<? super R> order) {
-		getDelegate().setOrder( order );
 		return this;
 	}
 

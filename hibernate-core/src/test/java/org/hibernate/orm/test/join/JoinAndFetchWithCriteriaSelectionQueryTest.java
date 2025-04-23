@@ -12,6 +12,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.Order;
 
+import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -135,9 +136,9 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute( "title" );
 			query.select( from ).distinct( true );
 
-			List<Book> books = session
-					.createSelectionQuery( query )
-					.setOrder( Order.asc( title ) )
+			List<Book> books = SelectionSpecification.create( query )
+					.sort( Order.asc( title ) )
+					.createQuery( session )
 					.getResultList();
 			assertThat( books ).containsExactly( leftHand, timeWar );
 			assertThat( Hibernate.isInitialized( books.get( 0 ).getAuthors() ) ).isTrue();
@@ -169,9 +170,9 @@ class JoinAndFetchWithCriteriaSelectionQueryTest {
 			SingularAttribute<? super Book, ?> title = bookType.findSingularAttribute( "title" );
 			query.select( from ).distinct( true );
 
-			List<Book> books = session
-					.createSelectionQuery( query )
-					.setOrder( Order.asc( title ) )
+			List<Book> books = SelectionSpecification.create( query )
+					.sort( Order.asc( title ) )
+					.createQuery( session )
 					.getResultList();
 			assertThat( books ).containsExactly( leftHand, timeWar );
 			assertThat( Hibernate.isInitialized( books.get( 0 ).getAuthors() ) ).isTrue();

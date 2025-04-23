@@ -928,11 +928,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> setLockMode(LockModeType lockMode);
 
-	@Override @Incubating
-	Query<R> setOrder(List<? extends Order<? super R>> orderList);
-
-	@Override @Incubating
-	Query<R> setOrder(Order<? super R> order);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods

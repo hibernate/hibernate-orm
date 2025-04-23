@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.programmatic;
+package org.hibernate.query.specification;
 
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.programmatic.internal.MutationSpecificationImpl;
+import org.hibernate.query.specification.internal.MutationSpecificationImpl;
 import org.hibernate.query.restriction.Restriction;
 
 /**

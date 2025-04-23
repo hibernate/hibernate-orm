@@ -75,7 +75,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	abstract String createQueryMethod();
 
 	String specificationType() {
-		return "org.hibernate.query.programmatic.SelectionSpecification";
+		return "org.hibernate.query.specification.SelectionSpecification";
 	}
 
 	@Override

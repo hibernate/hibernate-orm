@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.programmatic.internal;
+package org.hibernate.query.specification.internal;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -13,10 +13,11 @@ import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.programmatic.SelectionSpecification;
+import org.hibernate.query.specification.SelectionSpecification;
 import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -28,8 +29,11 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -159,8 +163,8 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 			var query = builder.createQuery( resultType );
 			var root = query.from( resultType );
 			query.select( root );
-			sqmRoot = (SqmRoot<T>) root;
-			sqmStatement = (SqmSelectStatement<T>) query;
+			sqmRoot = root;
+			sqmStatement = query;
 		}
 		specifications.forEach( consumer -> consumer.accept( sqmStatement, sqmRoot ) );
 		return sqmStatement;
@@ -222,7 +226,17 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 		if ( sqmRoots.size() > 1 ) {
 			throw new QueryException( "Query defined multiple roots", hql );
 		}
+
 		final SqmRoot<?> sqmRoot = sqmRoots.iterator().next();
+		validateRoot( sqmRoot, resultType, hql );
+		// for later, to support select lists
+		//validateResultType( sqmStatement, sqmRoot, resultType, hql );
+
+		//noinspection unchecked
+		return (SqmRoot<T>) sqmRoot;
+	}
+
+	private void validateRoot(SqmRoot<?> sqmRoot, Class<T> resultType, String hql) {
 		if ( sqmRoot.getJavaType() != null
 			&& !Map.class.isAssignableFrom( sqmRoot.getJavaType() )
 			&& !resultType.isAssignableFrom( sqmRoot.getJavaType() ) ) {
@@ -236,7 +250,65 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 					hql
 			);
 		}
-		//noinspection unchecked
-		return (SqmRoot<T>) sqmRoot;
+	}
+
+	/**
+	 * For future, allowing explicit select list.
+	 */
+	private void validateResultType(
+			SqmSelectStatement<T> sqmStatement,
+			SqmRoot<?> sqmRoot,
+			Class<T> resultType,
+			String hql) {
+		if ( resultType == null || Object.class.equals( resultType ) || resultType.isArray() ) {
+			// Nothing to validate in these cases
+			return;
+		}
+
+		final Class<?> rootJavaType = sqmRoot.getJavaType();
+		assert rootJavaType != null;
+
+		if ( Map.class.isAssignableFrom( rootJavaType ) ) {
+			if ( Map.class.isAssignableFrom( resultType ) ) {
+				// dynamic model and Map was requested, totally fine
+				return;
+			}
+		}
+
+		final SqmSelectClause sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
+		final List<SqmSelection<?>> sqmSelections = sqmSelectClause.getSelections();
+		if ( CollectionHelper.isEmpty( sqmSelections ) ) {
+			// implicit select clause, verify that resultType matches the root type
+			if ( resultType.isAssignableFrom( rootJavaType ) ) {
+				// it does, we are fine
+				return;
+			}
+		}
+		else if ( sqmSelections.size() > 1 ) {
+			// we have to assume we can.
+			// the Query will ultimately complain if not, but this is the most we can do here
+			return;
+		}
+		else {
+			assert sqmSelections.size() == 1;
+			final JavaType<?> nodeJavaType = sqmSelections.get( 0 ).getNodeJavaType();
+			if ( nodeJavaType == null ) {
+				// again, we have to assume we can
+				return;
+			}
+			else if ( resultType.isAssignableFrom( nodeJavaType.getJavaTypeClass() ) ) {
+				// it matches the selection type, we are fine
+				return;
+			}
+		}
+
+		throw new QueryException(
+				String.format(
+						Locale.ROOT,
+						"Specified result-type [%s] is not valid for this SelectionSpecification",
+						resultType.getName()
+				),
+				hql
+		);
 	}
 }

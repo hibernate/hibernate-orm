@@ -19,8 +19,8 @@ import java.util.List;
 
 /**
  * A rule for restricting query results. This allows restrictions to be added to
- * a {@link org.hibernate.query.programmatic.SelectionSpecification} by calling
- * {@link org.hibernate.query.programmatic.SelectionSpecification#restrict(Restriction)}.
+ * a {@link org.hibernate.query.specification.SelectionSpecification} by calling
+ * {@link org.hibernate.query.specification.SelectionSpecification#restrict(Restriction)}.
  * <pre>
  * SelectionSpecification.create(Book.class)
  *         .restrict(Restriction.like(Book_.title, "%Hibernate%", false))
@@ -47,9 +47,9 @@ import java.util.List;
  *          is used by Hibernate Data Repositories to implement Jakarta Data
  *          query methods.
  *
- * @see org.hibernate.query.programmatic.SelectionSpecification
- * @see org.hibernate.query.programmatic.MutationSpecification
- * @see org.hibernate.query.programmatic.QuerySpecification#restrict(Restriction)
+ * @see org.hibernate.query.specification.SelectionSpecification
+ * @see org.hibernate.query.specification.MutationSpecification
+ * @see org.hibernate.query.specification.QuerySpecification#restrict(Restriction)
  *
  * @see Path
  * @see Order

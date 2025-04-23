@@ -79,7 +79,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String specificationType() {
-		return "org.hibernate.query.programmatic.MutationSpecification";
+		return "org.hibernate.query.specification.MutationSpecification";
 	}
 
 	private void execute(StringBuilder declaration) {

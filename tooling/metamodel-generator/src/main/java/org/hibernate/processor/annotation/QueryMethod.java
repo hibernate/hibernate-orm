@@ -110,8 +110,8 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	String specificationType() {
 		return isUpdate
-				? "org.hibernate.query.programmatic.MutationSpecification"
-				: "org.hibernate.query.programmatic.SelectionSpecification";
+				? "org.hibernate.query.specification.MutationSpecification"
+				: "org.hibernate.query.specification.SelectionSpecification";
 	}
 
 	@Override

@@ -33,8 +33,10 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
@@ -67,6 +69,21 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T> {
 		this.deleteOrUpdateStatement = (SqmDeleteStatement<T>) criteriaQuery;
 		this.mutationTarget = deleteOrUpdateStatement.getTarget().getManagedType().getJavaType();
 		this.hql = null;
+	}
+
+	@Override
+	public String getName() {
+		return null;
+	}
+
+	@Override
+	public Class<Void> getResultType() {
+		return Void.class;
+	}
+
+	@Override
+	public Map<String,Object> getHints() {
+		return Collections.emptyMap();
 	}
 
 	@Override

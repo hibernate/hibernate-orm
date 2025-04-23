@@ -4,11 +4,13 @@
  */
 package org.hibernate.query.specification;
 
+import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Root;
+
 import org.hibernate.Incubating;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
@@ -37,7 +39,7 @@ import org.hibernate.query.restriction.Restriction;
  * @since 7.0
  */
 @Incubating
-public interface MutationSpecification<T> extends QuerySpecification<T> {
+public interface MutationSpecification<T> extends QuerySpecification<T>, TypedQueryReference<Void> {
 
 	/**
 	 * Covariant override.
@@ -78,6 +80,9 @@ public interface MutationSpecification<T> extends QuerySpecification<T> {
 
 	@Override
 	MutationSpecification<T> validate(CriteriaBuilder builder);
+
+	@Override
+	Class<Void> getResultType();
 
 	/**
 	 * Returns a specification reference which can be used to programmatically,

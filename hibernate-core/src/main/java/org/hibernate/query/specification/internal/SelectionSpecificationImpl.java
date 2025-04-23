@@ -36,6 +36,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -72,6 +73,21 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T> 
 		this.resultType = criteriaQuery.getResultType();
 		this.hql = null;
 		this.criteriaQuery = criteriaQuery;
+	}
+
+	@Override
+	public String getName() {
+		return null;
+	}
+
+	@Override
+	public Class<T> getResultType() {
+		return resultType;
+	}
+
+	@Override
+	public Map<String,Object> getHints() {
+		return Collections.emptyMap();
 	}
 
 	@Override

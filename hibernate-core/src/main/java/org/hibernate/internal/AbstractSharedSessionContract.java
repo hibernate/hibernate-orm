@@ -10,6 +10,8 @@ import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
@@ -71,6 +73,8 @@ import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.programmatic.MutationSpecification;
+import org.hibernate.query.programmatic.SelectionSpecification;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
@@ -901,15 +905,25 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <R> QueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference) {
 		checksBeforeQueryCreation();
-		@SuppressWarnings("unchecked")
-		// this cast is fine because of all our impls of TypedQueryReference return Class<R>
-		final Class<R> resultType = (Class<R>) typedQueryReference.getResultType();
-		final QueryImplementor<R> query =
-				buildNamedQuery( typedQueryReference.getName(),
-						memento -> createSqmQueryImplementor( resultType, memento ),
-						memento -> createNativeQueryImplementor( resultType, memento ) );
-		typedQueryReference.getHints().forEach( query::setHint );
-		return query;
+		if ( typedQueryReference instanceof SelectionSpecification<R> specification ) {
+			final CriteriaQuery<R> query = specification.buildCriteria( getCriteriaBuilder() );
+			return new QuerySqmImpl<>( (SqmStatement<R>) query, specification.getResultType(), this );
+		}
+		else if ( typedQueryReference instanceof MutationSpecification<?> specification ) {
+			final CommonAbstractCriteria query = specification.buildCriteria( getCriteriaBuilder() );
+			return new QuerySqmImpl<>( (SqmStatement<R>) query, (Class<R>) specification.getResultType(), this );
+		}
+		else {
+			@SuppressWarnings("unchecked")
+			// this cast is fine because of all our impls of TypedQueryReference return Class<R>
+			final Class<R> resultType = (Class<R>) typedQueryReference.getResultType();
+			final QueryImplementor<R> query =
+					buildNamedQuery( typedQueryReference.getName(),
+							memento -> createSqmQueryImplementor( resultType, memento ),
+							memento -> createNativeQueryImplementor( resultType, memento ) );
+			typedQueryReference.getHints().forEach( query::setHint );
+			return query;
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

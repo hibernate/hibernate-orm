@@ -5,15 +5,14 @@
 package org.hibernate.orm.test.bytecode.enhancement.optimizer;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import org.hibernate.orm.test.bytecode.enhancement.optimizer.parent.Ancestor;
 
-@Entity(name = "ParentEntity")
+@Entity(name = "AncestorEntity")
 @Inheritance(strategy = InheritanceType.JOINED)
-public class ParentEntity  {
+public class AncestorEntity extends Ancestor {
 
-	@Id
 	private Long id;
 
 	private String field;

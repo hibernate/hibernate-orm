@@ -6,7 +6,6 @@ package org.hibernate.orm.test.bytecode.enhancement.optimizer;
 
 import org.hibernate.orm.test.bytecode.enhancement.optimizer.child.ChildEntity;
 import org.hibernate.query.Query;
-
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -22,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		ChildEntity.class,
 })
 @SessionFactory
-@Jira( "https://hibernate.atlassian.net/browse/HHH-19059" )
+@Jira("https://hibernate.atlassian.net/browse/HHH-19372")
 @BytecodeEnhanced
 public class HierarchyBytecodeOptimizerTest {
 
@@ -33,13 +32,17 @@ public class HierarchyBytecodeOptimizerTest {
 		childEntity.setField( "field" );
 		childEntity.setChieldField( "childField" );
 
-		scope.inTransaction( session -> session.persist( childEntity ) );
+		scope.inTransaction( session -> {
+			session.persist( childEntity );
+		} );
 
 		scope.inTransaction( session -> {
-			Query<ChildEntity> query = session.createQuery( "select c from ChildEntity c where c.field = :field", ChildEntity.class);
+			Query<ChildEntity> query = session.createQuery( "select c from ChildEntity c where c.field = :field",
+					ChildEntity.class );
 			query.setParameter( "field", "field" );
 			assertThat( query.uniqueResult() ).isNotNull();
 		} );
+
 	}
 
 	@AfterAll

@@ -280,6 +280,10 @@ However, the preferred approach is to <<stateless-session-multiple,explicitly ba
 The `Transaction` interface leaks the SPI type `TransactionStatus` via `getStatus()`, and the JTA-defined type `Synchronization` via `registerSynchronization()`, which breaks layering in a fairly harmless way.
 New operations were added to the `Transaction` interface, allowing code to inspect the status of the transaction or register callbacks without the use of layer-breaking operations.
 
+[NOTE]
+====
+This feature is considered incubating.
+====
 
 [[schema-manager-populate]]
 == Data population

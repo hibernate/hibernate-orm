@@ -90,6 +90,11 @@ class Person {
 }
 ----
 
+[NOTE]
+====
+This feature is considered incubating.
+====
+
 See the link:{userGuideBase}#embeddable-column-naming[User Guide] for details.
 
 
@@ -162,7 +167,7 @@ MutationQuery<Book> qry = MutationSpecification.create(
 
 [NOTE]
 ====
-These APIs are considered incubating.
+This feature is considered incubating.
 ====
 
 See the link:{userGuideBase}#QuerySpecification[User Guide] for details.
@@ -172,6 +177,11 @@ See the link:{userGuideBase}#QuerySpecification[User Guide] for details.
 == Direct access to first-level cache
 
 The new operation `Session.getManagedEntities()` allows the application to iterate over all entities in the first-level cache, or over all entities of a given type.
+
+[NOTE]
+====
+This feature is considered incubating.
+====
 
 
 [[enum-checks]]
@@ -224,6 +234,11 @@ entity.
 
 Second, it allows mixing of explicit and implicit value strategies.
 
+[NOTE]
+====
+This feature is considered incubating.
+====
+
 See the link:{userGuideBase}#associations-any[User Guide] for details.
 
 
@@ -231,6 +246,11 @@ See the link:{userGuideBase}#associations-any[User Guide] for details.
 == StatelessSession and Batch Operations
 
 `StatelessSession` now supports explicit batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
+
+[NOTE]
+====
+This feature is considered incubating.
+====
 
 
 [[stateless-session-cache]]

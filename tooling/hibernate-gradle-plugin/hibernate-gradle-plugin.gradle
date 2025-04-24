@@ -86,9 +86,6 @@ tasks.register("releasePerform") {
 	dependsOn tasks.publishPlugins
 }
 
-// local publishing (SNAPSHOT testing)
-tasks.publish.dependsOn tasks.publishPlugins
-
 
 // local publishing (SNAPSHOT testing)
 publishing {

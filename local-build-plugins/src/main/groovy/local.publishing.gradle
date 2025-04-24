@@ -64,6 +64,7 @@ publishingExtension.publications.configureEach {
 
 publishingExtension.repositories {
     maven {
+        name = "staging"
         url = rootProject.layout.buildDirectory.dir("staging-deploy${File.separator}maven")
     }
 }

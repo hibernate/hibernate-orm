@@ -4507,6 +4507,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does the database support user defined types?
+	 *
+	 * @see org.hibernate.annotations.Struct
+	 *
+	 * @since 7.1
+	 */
+	public boolean supportsUserDefinedTypes() {
+		return false;
+	}
+
+	/**
 	 * Does this database have native support for ANSI SQL standard arrays which
 	 * are expressed in terms of the element type name: {@code integer array}.
 	 *

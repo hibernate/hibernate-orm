@@ -331,7 +331,9 @@ was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibern
 * Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
 * Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
 * Removed incubating `setOrder()` from `SelectionQuery()` in favor of `SelectionSpecification.sort()`
-* `PostgreSQLIntervalSecondJdbcType` was moved to an internal package--use `@JdbcTypeCode(INTERVAL_SECOND)`
+* Various JDBC types were moved to an internal package -- use `@JdbcTypeCode` instead of `@JdbcType` to map your attributes to these types.
+  For example use `@JdbcTypeCode(SqlTypes.INTERVAL_SECOND)` instead of `@JdbcType(PostgreSQLIntervalSecondJdbcType.class)`.
+  Other moved types include `PostgreSQLEnumJdbcType`, `PostgreSQLOrdinalEnumJdbcType`, `PostgreSQLUUIDJdbcType`, `DB2StructJdbcType`, `H2DurationIntervalSecondJdbcType`, `H2JsonJdbcType`, `OracleBooleanJdbcType`, `OracleEnumJdbcType`, `OracleJsonJdbcType`, `OracleOrdinalEnumJdbcType`, `OracleReflectionStructJdbcType`, `OracleXmlJdbcType`.
 
 
 

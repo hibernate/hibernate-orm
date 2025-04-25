@@ -578,14 +578,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.jsonObject_gaussdb();
 		functionFactory.jsonObjectAgg_gaussdb( true );
 
-		functionFactory.xmlelement();
-		functionFactory.xmlcomment();
-		functionFactory.xmlforest();
-		functionFactory.xmlconcat();
-		functionFactory.xmlpi();
-		functionFactory.xmlquery_gaussdb();
-		functionFactory.xmlexists();
-
 		functionFactory.makeDateTimeTimestamp();
 		// Note that GaussDB doesn't support the OVER clause for ordered set-aggregate functions
 		functionFactory.inverseDistributionOrderedSetAggregates();

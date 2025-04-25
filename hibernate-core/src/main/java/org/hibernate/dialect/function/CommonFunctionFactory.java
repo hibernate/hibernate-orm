@@ -14,7 +14,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.array.*;
 import org.hibernate.dialect.function.json.*;
 import org.hibernate.dialect.function.xml.DB2XmlTableFunction;
-import org.hibernate.dialect.function.xml.GaussDBXmlQueryFunction;
 import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
@@ -4341,13 +4340,6 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlquery_postgresql() {
 		functionRegistry.register( "xmlquery", new PostgreSQLXmlQueryFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * GaussDB xmlquery() function
-	 */
-	public void xmlquery_gaussdb() {
-		functionRegistry.register( "xmlquery", new GaussDBXmlQueryFunction( typeConfiguration ) );
 	}
 
 	/**

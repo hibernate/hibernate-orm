@@ -269,6 +269,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsUserDefinedTypes() {
+		return true;
+	}
+
+	@Override
 	protected boolean supportsPredicateAsExpression() {
 		return getDB2Version().isSameOrAfter( 11 );
 	}

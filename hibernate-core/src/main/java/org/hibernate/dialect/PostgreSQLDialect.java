@@ -1133,6 +1133,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsUserDefinedTypes() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsStandardArrays() {
 		return true;
 	}

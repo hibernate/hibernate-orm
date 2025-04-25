@@ -328,24 +328,35 @@ public class NativeQueryImpl<R>
 				setTupleTransformerForResultType( resultType );
 			}
 			else {
-				checkResultType( resultType );
+				checkResultType( resultType, resultSetMapping );
 			}
 		}
 	}
 
-	private void checkResultType(Class<R> resultType) {
-		switch ( resultSetMapping.getNumberOfResultBuilders() ) {
-			case 0:
-				throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
-			case 1:
-				final Class<?> actualResultJavaType =
-						resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
-				if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
-					throw buildIncompatibleException( resultType, actualResultJavaType );
-				}
-				break;
-			default:
-				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+	private void checkResultType(Class<R> resultType, ResultSetMapping resultSetMapping) {
+		// resultType can be null if any of the deprecated methods were used to create the query
+		if ( resultType != null && !isResultTypeAlwaysAllowed( resultType )) {
+			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
+				case 0:
+					if ( !resultSetMapping.isDynamic() ) {
+						throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
+					}
+					break;
+				case 1:
+					final Class<?> actualResultJavaType =
+							resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
+					if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
+						throw buildIncompatibleException( resultType, actualResultJavaType );
+					}
+					break;
+				default:
+					for ( ResultBuilder resultBuilder : resultSetMapping.getResultBuilders() ) {
+						final Class rbJavaType = resultBuilder.getJavaType();
+						if ( !resultType.isAssignableFrom( rbJavaType ) ) {
+							throw new IllegalArgumentException( "The result set mapping of the typed query doesn't match the declared return type" );
+						}
+					}
+			}
 		}
 	}
 
@@ -716,6 +727,7 @@ public class NativeQueryImpl<R>
 		else {
 			mapping = resultSetMapping;
 		}
+		checkResultType( resultType, mapping );
 		return isCacheableQuery()
 				? getInterpretationCache()
 						.resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )

@@ -330,6 +330,8 @@ Hibernate now reports many more kinds of `DiagnosticEvent` to JFR.
 was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
 * Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
 * Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
+* Removed incubating `setOrder()` from `SelectionQuery()` in favor of `SelectionSpecification.sort()`
+* `PostgreSQLIntervalSecondJdbcType` was moved to an internal package--use `@JdbcTypeCode(INTERVAL_SECOND)`
 
 
 

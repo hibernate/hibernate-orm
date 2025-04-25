@@ -565,37 +565,19 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.array_gaussdb();
 		functionFactory.arrayAggregate();
 		functionFactory.arrayRemoveIndex_gaussdb();
-		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_gaussdb();
 		functionFactory.arrayPrepend_gaussdb();
 		functionFactory.arrayAppend_gaussdb();
 		functionFactory.arrayContains_gaussdb();
 		functionFactory.arrayIntersects_gaussdb();
-		functionFactory.arrayGet_bracket();
 		functionFactory.arrayRemove_gaussdb();
 		functionFactory.arraySlice_operator();
 		functionFactory.arrayReplace_gaussdb();
 		functionFactory.arraySet_gaussdb();
-		functionFactory.arrayTrim_gaussdb();
 		functionFactory.arrayFill_gaussdb();
-		functionFactory.arrayPosition_gaussdb();
 
-		functionFactory.jsonValue_gaussdb(true);
-		functionFactory.jsonQuery_gaussdb();
-		functionFactory.jsonExists_gaussdb();
-		functionFactory.jsonArray();
 		functionFactory.jsonObject_gaussdb();
-		functionFactory.jsonArrayAgg_gaussdb( true );
 		functionFactory.jsonObjectAgg_gaussdb( true );
-		functionFactory.jsonTable();
-
-		functionFactory.jsonSet_gaussdb();
-		functionFactory.jsonRemove_gaussdb();
-		functionFactory.jsonReplace_gaussdb();
-		functionFactory.jsonInsert_gaussdb();
-		functionFactory.jsonArray_gaussdb();
-		functionFactory.jsonMergepatch_gaussdb();
-		functionFactory.jsonArrayInsert_gauss();
 
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
@@ -605,7 +587,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.xmlquery_gaussdb();
 		functionFactory.xmlexists();
 		functionFactory.xmlagg();
-		functionFactory.xmltable( true );
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that GaussDB doesn't support the OVER clause for ordered set-aggregate functions
@@ -632,8 +613,6 @@ public class GaussDBDialect extends Dialect {
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		functionFactory.dateTrunc();
-
-		functionFactory.unnest( null, "ordinality" );
 
 		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "sha256(?1)" );
@@ -1058,6 +1037,11 @@ public class GaussDBDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsExpectedLobUsagePattern() {
+		return false;
+	}
+
+	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		return NationalizationSupport.IMPLICIT;
 	}
@@ -1127,7 +1111,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return GaussDBAggregateSupport.valueOf( this );
+		return null;
 	}
 
 	@Override
@@ -1327,7 +1311,12 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public boolean supportsRecursiveCTE() {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean supportsOrderByInSubquery() {
+		return false;
 	}
 
 	@Override

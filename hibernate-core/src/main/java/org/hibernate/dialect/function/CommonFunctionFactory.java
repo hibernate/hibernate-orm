@@ -2768,7 +2768,6 @@ public class CommonFunctionFactory {
 	 * GaussDB array contains operator
 	 */
 	public void arrayContains_gaussdb() {
-		functionRegistry.register( "array_contains", new GaussDBArrayContainsOperatorFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_contains_nullable", new GaussDBArrayContainsOperatorFunction( true, typeConfiguration ) );
 		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
@@ -2857,13 +2856,6 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayPosition_postgresql() {
 		functionRegistry.register( "array_position", new PostgreSQLArrayPositionFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * GaussDB array_position() function
-	 */
-	public void arrayPosition_gaussdb() {
-		functionRegistry.register( "array_position", new GaussDBArrayPositionFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -3343,13 +3335,6 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayTrim_oracle() {
 		functionRegistry.register( "array_trim", new OracleArrayTrimFunction() );
-	}
-
-	/**
-	 * GaussDB array_trim() emulation for versions before 14
-	 */
-	public void arrayTrim_gaussdb() {
-		functionRegistry.register( "array_trim", new GaussDBArrayTrimFunction() );
 	}
 
 	/**

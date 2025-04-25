@@ -16,7 +16,7 @@ public class GaussDBIdentityColumnSupport extends IdentityColumnSupportImpl {
 	public static final GaussDBIdentityColumnSupport INSTANCE = new GaussDBIdentityColumnSupport();
 	@Override
 	public boolean supportsIdentityColumns() {
-		return true;
+		return false;
 	}
 
 	@Override

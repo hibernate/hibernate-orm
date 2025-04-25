@@ -79,7 +79,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 
 	@Override
 	public Class<Void> getResultType() {
-		return Void.class;
+		return null;
 	}
 
 	@Override

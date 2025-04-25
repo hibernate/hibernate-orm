@@ -4,11 +4,12 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+
+import static java.util.Collections.emptySet;
 
 /**
  * @author Steve Ebersole
@@ -40,6 +41,6 @@ public class LazySet<T> {
 	}
 
 	public Set<T> getUnderlyingSet() {
-		return set == null ? Collections.emptySet() : set;
+		return set == null ? emptySet() : set;
 	}
 }

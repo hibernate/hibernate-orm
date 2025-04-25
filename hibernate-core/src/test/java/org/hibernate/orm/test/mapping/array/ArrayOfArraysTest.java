@@ -9,6 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
@@ -39,6 +40,7 @@ public class ArrayOfArraysTest {
 	@ServiceRegistry( settings = @Setting( name = AvailableSettings.HBM2DDL_AUTO, value = "create-drop" ) )
 	@Test
 	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "Unable to find server array type for provided name bytes" )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Method com.huawei.gaussdb.jdbc.jdbc.PgArray.getArrayImpl(long,int,Map) is not yet implemented.")
 	public void testDoubleByteArrayWorks(SessionFactoryScope scope) {
 		final Long id = scope.fromTransaction( session -> {
 			final EntityWithDoubleByteArray entity = new EntityWithDoubleByteArray();

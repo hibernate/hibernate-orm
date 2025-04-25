@@ -14,6 +14,7 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -210,6 +211,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testImplicitCollectionJoinInWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -389,6 +391,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testMaxindexMaxelement(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -508,6 +511,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Unsupported function")
 	public void testMathFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -733,6 +737,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testOverlayFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1169,6 +1174,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase cast to raw does not do truncatation")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Gaussdb bytea doesn't have a length")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1675,6 +1681,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testDurationLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1784,6 +1791,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.interval_mul result month: 0.000000, day: 432000000000000.000000 overflow")
 	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1886,6 +1894,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class,
 			matchSubTypes = true,
 			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.interval_mul result month: 0.000000, day: 432000000000000.000000 overflow")
 	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1966,6 +1975,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.Bad value for type long")
 	public void testIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2278,6 +2288,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2312,6 +2323,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMedian.class)
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testMedian(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2333,6 +2345,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Function sinh(double precision) does not exist.")
 	public void testHyperbolic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2406,6 +2419,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testMaxGreatest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

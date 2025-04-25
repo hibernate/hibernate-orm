@@ -24,6 +24,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -35,6 +36,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +60,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(settings = @Setting(name = QuerySettings.XML_FUNCTIONS_ENABLED, value = "true"))
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18497")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class XmlFunctionTests {
 
 	XmlHolder entity;

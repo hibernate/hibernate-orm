@@ -8,6 +8,8 @@ elif [ "$RDBMS" == 'mariadb' ]; then
   bash $DIR/../docker_db.sh mariadb
 elif [ "$RDBMS" == 'postgresql' ]; then
   bash $DIR/../docker_db.sh postgresql
+elif [ "$RDBMS" == 'gaussdb' ]; then
+  bash $DIR/../docker_db.sh gaussdb
 elif [ "$RDBMS" == 'edb' ]; then
   bash $DIR/../docker_db.sh edb
 elif [ "$RDBMS" == 'db2' ]; then

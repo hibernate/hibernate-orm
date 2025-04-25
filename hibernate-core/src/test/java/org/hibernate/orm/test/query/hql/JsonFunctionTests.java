@@ -18,6 +18,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -71,6 +72,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ServiceRegistry(settings = @Setting(name = QuerySettings.JSON_FUNCTIONS_ENABLED, value = "true"))
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18496")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class JsonFunctionTests {
 
 	JsonHolder entity;
@@ -217,6 +219,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonQueryNestedPath.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Not support $.theNestedObjects[*].id")
 	public void testJsonQueryNested(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -418,6 +421,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonObjectAgg.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Gauss has different behavior")
 	public void testJsonObjectAggNullFilter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -460,6 +464,7 @@ public class JsonFunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 15, matchSubTypes = true, reason = "CockroachDB has no way to throw an error on duplicate json object keys.")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.not supported")
 	public void testJsonObjectAggUniqueKeys(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -621,6 +626,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different function definition")
 	public void testJsonMergepatch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -638,6 +644,7 @@ public class JsonFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonMergepatch.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.gauss has different behavior")
 	public void testJsonMergepatchVarargs(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -33,6 +33,8 @@ import org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.junit.jupiter.api.Test;
 
 
@@ -80,6 +82,7 @@ public class ScannerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testCustomScanner() throws Exception {
 		File defaultPar = buildDefaultPar();
 		File explicitPar = buildExplicitPar();

@@ -14,6 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -560,6 +561,9 @@ public class QueryAndSQLTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "type:resolved.If you operate a table with the same name as the system view under the schema, "
+					+ "you will be redirected to the system view and an error will be reported.")
 	public void testDiscriminator(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

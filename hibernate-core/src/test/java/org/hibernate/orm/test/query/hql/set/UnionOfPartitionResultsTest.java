@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query.hql.set;
 
 import java.time.LocalDate;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -14,6 +15,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -30,6 +32,7 @@ import jakarta.persistence.ManyToOne;
 )
 @SessionFactory
 @JiraKey( "HHH-18069" )
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class UnionOfPartitionResultsTest {
 
 	@Test

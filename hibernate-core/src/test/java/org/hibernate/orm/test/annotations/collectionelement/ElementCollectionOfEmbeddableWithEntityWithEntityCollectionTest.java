@@ -13,12 +13,14 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.Event;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.Plan;
 import org.hibernate.orm.test.annotations.collectionelement.ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.SubPlan;
+import org.hibernate.dialect.GaussDBDialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +82,9 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "type:resolved.If you operate a table with the same name as the system view under the schema, "
+					+ "you will be redirected to the system view and an error will be reported.")
 	public void testInitializeCollection(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		statementInspector.clear();

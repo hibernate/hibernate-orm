@@ -10,11 +10,13 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,6 +73,7 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.gauss's bug")
 	public void testCriteria() {
 		inTransaction(
 				s -> {
@@ -96,6 +99,7 @@ public class PagingAndLockingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 //	@Ignore( "Support for locking on native-sql queries not yet implemented" )
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.not support")
 	public void testNativeSql() {
 		inTransaction(
 				session -> {

@@ -1073,27 +1073,7 @@ public class GaussDBDialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		appender.appendSql( datetimeFormat( format ).result() );
-	}
-
-	public Replacer datetimeFormat(String format) {
-		return OracleDialect.datetimeFormat( format, true, false )
-				.replace("SSSSSS", "US")
-				.replace("SSSSS", "US")
-				.replace("SSSS", "US")
-				.replace("SSS", "MS")
-				.replace("SS", "MS")
-				.replace("S", "MS")
-				//use ISO day in week, as per DateTimeFormatter
-				.replace("ee", "ID")
-				.replace("e", "fmID")
-				//TZR is TZ
-				.replace("zzz", "TZ")
-				.replace("zz", "TZ")
-				.replace("z", "TZ")
-				.replace("xxx", "OF")
-				.replace("xx", "OF")
-				.replace("x", "OF");
+		throw new UnsupportedOperationException( "GaussDB not support datetime format yet" );
 	}
 
 	@Override

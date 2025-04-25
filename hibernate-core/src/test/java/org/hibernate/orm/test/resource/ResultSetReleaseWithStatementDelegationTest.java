@@ -11,11 +11,11 @@ import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,7 +39,7 @@ import java.lang.invoke.MethodHandles;
 				provider = ResultSetReleaseWithStatementDelegationTest.ConnectionProviderDelegateProvider.class)
 )
 @SessionFactory
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @JiraKey( "HHH-19280" )
 class ResultSetReleaseWithStatementDelegationTest {
 

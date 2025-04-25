@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.function.json;
 
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -11,19 +14,17 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.Iterator;
-import java.util.Map;
-
 
 /**
  * PostgreSQL json_query function.
  */
 public class GaussDBJsonExistsFunction extends JsonExistsFunction {
 
-	public GaussDBJsonExistsFunction(TypeConfiguration typeConfiguration,
-									 boolean supportsJsonPathExpression,
-									 boolean supportsJsonPathPassingClause) {
-		super(typeConfiguration, supportsJsonPathExpression, supportsJsonPathPassingClause);
+	public GaussDBJsonExistsFunction(
+			TypeConfiguration typeConfiguration,
+			boolean supportsJsonPathExpression,
+			boolean supportsJsonPathPassingClause) {
+		super( typeConfiguration, supportsJsonPathExpression, supportsJsonPathPassingClause );
 	}
 
 	@Override
@@ -43,11 +44,17 @@ public class GaussDBJsonExistsFunction extends JsonExistsFunction {
 			final Map<String, Expression> passingExpressions = passingClause.getPassingExpressions();
 			final Iterator<Map.Entry<String, Expression>> iterator = passingExpressions.entrySet().iterator();
 			Map.Entry<String, Expression> entry = iterator.next();
-			literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
+			literalValue = literalValue.replace(
+					"$" + entry.getKey(),
+					walker.getLiteralValue( entry.getValue() ).toString()
+			);
 			while ( iterator.hasNext() ) {
 				entry = iterator.next();
 				sqlAppender.appendSql( ',' );
-				literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
+				literalValue = literalValue.replace(
+						"$" + entry.getKey(),
+						walker.getLiteralValue( entry.getValue() ).toString()
+				);
 			}
 		}
 

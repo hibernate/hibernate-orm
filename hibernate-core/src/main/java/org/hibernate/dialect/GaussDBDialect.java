@@ -585,7 +585,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.xmlpi();
 		functionFactory.xmlquery_gaussdb();
 		functionFactory.xmlexists();
-		functionFactory.xmlagg();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that GaussDB doesn't support the OVER clause for ordered set-aggregate functions

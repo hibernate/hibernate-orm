@@ -217,7 +217,7 @@ gaussdb() {
     # config param
     CONTAINER_NAME=opengauss
     IMAGE=opengauss/opengauss:7.0.0-RC1
-    PORT=5432
+    PORT=8000
     DB_USER=hibernate_orm_test
     DB_PASSWORD=Hibernate_orm_test@1234
     DB_NAME=hibernate_orm_test
@@ -230,7 +230,7 @@ gaussdb() {
     -e GS_NODENAME=opengauss \
     -e GS_PORT=${PORT} \
     -e GS_CGROUP_DISABLE=YES \
-    -p ${PORT}:5432 \
+    -p ${PORT}:8000 \
     -d ${IMAGE}
 
     echo "wait OpenGauss starting..."
@@ -246,11 +246,9 @@ gaussdb() {
       "
 
     echo "Initialization completed"
-    echo "connection information£º"
+    echo "connection information"
     echo "    Host:     localhost"
     echo "    Port:     ${PORT}"
-    echo "    Username: ${DB_USER}"
-    echo "    Password: ${DB_PASSWORD}"
     echo "    Database: ${DB_NAME}"
 }
 

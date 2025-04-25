@@ -5,6 +5,7 @@
 package org.hibernate.query.sql.internal;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -126,6 +127,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
+import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.getDescriptorByPrimitiveType;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
@@ -331,25 +333,54 @@ public class NativeQueryImpl<R>
 				setTupleTransformerForResultType( resultType );
 			}
 			else {
-				checkResultType( resultType );
+				checkResultType( resultType, resultSetMapping );
 			}
 		}
 	}
 
-	private void checkResultType(Class<R> resultType) {
-		switch ( resultSetMapping.getNumberOfResultBuilders() ) {
-			case 0:
-				throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
-			case 1:
-				final Class<?> actualResultJavaType =
-						resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
-				if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
-					throw buildIncompatibleException( resultType, actualResultJavaType );
-				}
-				break;
-			default:
-				throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+	private void checkResultType(Class<R> resultType, ResultSetMapping resultSetMapping) {
+		// resultType can be null if any of the deprecated methods were used to create the query
+		if ( resultType != null && !isResultTypeAlwaysAllowed( resultType )) {
+			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
+				case 0:
+					if ( !resultSetMapping.isDynamic() ) {
+						throw new IllegalArgumentException( "Named query exists, but did not specify a resultClass" );
+					}
+					break;
+				case 1:
+					final Class<?> actualResultJavaType =
+							resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
+					if ( actualResultJavaType != null && !resultType.isAssignableFrom( actualResultJavaType ) ) {
+						throw buildIncompatibleException( resultType, actualResultJavaType );
+					}
+					break;
+				default:
+					// The return type has to be a class with an appropriate constructor, i.e. one whose parameter types match
+					// the types of the result builders. If none such constructor is found, throw an IAE
+					if ( !validConstructorFoundForResultType( resultType, resultSetMapping ) ) {
+						throw new IllegalArgumentException( "The declared return type for a multi-valued result set mapping should be Object[], Map, List, or Tuple" );
+					}
+			}
 		}
+	}
+
+	private boolean validConstructorFoundForResultType(Class<R> resultType, ResultSetMapping resultSetMapping) {
+		// Only 1 constructor with the right number of parameters is allowed (see NativeQueryConstructorTransformer)
+		Constructor<?> constructor = resultType.getConstructors()[0];
+		if ( constructor.getParameterCount() != resultSetMapping.getNumberOfResultBuilders() ) {
+			return false;
+		}
+		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
+		Class<?>[] paramTypes = constructor.getParameterTypes();
+		for ( int i = 0; i < resultBuilders.size(); i++ ) {
+			if (
+					resultBuilders.get( i ).getJavaType() != ( paramTypes[i].isPrimitive() ?
+							getDescriptorByPrimitiveType(paramTypes[i] ).getWrapperClass() :
+							paramTypes[i]) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	protected <T> void setTupleTransformerForResultType(Class<T> resultClass) {
@@ -747,6 +778,7 @@ public class NativeQueryImpl<R>
 		else {
 			mapping = resultSetMapping;
 		}
+		checkResultType( resultType, mapping );
 		return isCacheableQuery()
 				? getInterpretationCache()
 						.resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )

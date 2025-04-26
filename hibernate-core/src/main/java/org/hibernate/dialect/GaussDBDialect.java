@@ -552,7 +552,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.insert_overlay();
 		functionFactory.overlay();
 		functionFactory.soundex(); //was introduced apparently
-		functionFactory.format_toChar_gauss();
+		functionFactory.format_toChar_gaussdb();
 
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();

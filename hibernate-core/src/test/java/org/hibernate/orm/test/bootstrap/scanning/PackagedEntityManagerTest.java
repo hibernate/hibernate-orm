@@ -11,7 +11,6 @@ import java.util.Properties;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
@@ -38,7 +37,6 @@ import org.hibernate.orm.test.jpa.pack.various.Airplane;
 import org.hibernate.orm.test.jpa.pack.various.Seat;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +63,6 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Gavin King
  * @author Hardy Ferentschik
  */
-@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	private EntityManagerFactory emf;
 	@AfterEach

@@ -2577,7 +2577,7 @@ public class CommonFunctionFactory {
 	 *
 	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
 	 */
-	public void format_toChar_gauss() {
+	public void format_toChar_gaussdb() {
 		functionRegistry.register( "format", new GaussDBFormatFunction( "to_char", typeConfiguration ) );
 	}
 
@@ -3441,13 +3441,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB json_value() function
-	 */
-	public void jsonValue_gaussdb(boolean supportsStandard) {
-		functionRegistry.register( "json_value", new GaussDBJsonValueFunction( typeConfiguration ) );
-	}
-
-	/**
 	 * CockroachDB json_value() function
 	 */
 	public void jsonValue_cockroachdb() {
@@ -3487,13 +3480,6 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonQuery() {
 		functionRegistry.register( "json_query", new JsonQueryFunction( typeConfiguration, true, true ) );
-	}
-
-	/**
-	 * GaussDB json_query() function
-	 */
-	public void jsonQuery_gaussdb() {
-		functionRegistry.register( "json_query", new GaussDBJsonQueryFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -3707,13 +3693,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB json_array() function
-	 */
-	public void jsonArray_gaussdb() {
-		functionRegistry.register( "json_array", new GaussDBJsonArrayFunction( typeConfiguration ) );
-	}
-
-	/**
 	 * SAP HANA json_array() function
 	 */
 	public void jsonArray_hana() {
@@ -3774,13 +3753,6 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayAgg_postgresql(boolean supportsStandard) {
 		functionRegistry.register( "json_arrayagg", new PostgreSQLJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
-	}
-
-	/**
-	 * GaussDB json_arrayagg() function
-	 */
-	public void jsonArrayAgg_gaussdb(boolean supportsStandard) {
-		functionRegistry.register( "json_arrayagg", new GaussDBJsonArrayAggFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
@@ -3882,13 +3854,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB json_set() function
-	 */
-	public void jsonSet_gaussdb() {
-		functionRegistry.register( "json_set", new GaussDBJsonSetFunction( typeConfiguration ) );
-	}
-
-	/**
 	 * MySQL json_set() function
 	 */
 	public void jsonSet_mysql() {
@@ -3924,13 +3889,6 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonRemove_postgresql() {
 		functionRegistry.register( "json_remove", new PostgreSQLJsonRemoveFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * GaussDB json_remove() function
-	 */
-	public void jsonRemove_gaussdb() {
-		functionRegistry.register( "json_remove", new GaussDBJsonRemoveFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -3978,13 +3936,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB json_replace() function
-	 */
-	public void jsonReplace_gaussdb() {
-		functionRegistry.register( "json_replace", new GaussDBJsonReplaceFunction( typeConfiguration ) );
-	}
-
-	/**
 	 * MySQL json_replace() function
 	 */
 	public void jsonReplace_mysql() {
@@ -4020,13 +3971,6 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonInsert_postgresql() {
 		functionRegistry.register( "json_insert", new PostgreSQLJsonInsertFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * GaussDB json_insert() function
-	 */
-	public void jsonInsert_gaussdb() {
-		functionRegistry.register( "json_insert", new GaussDBJsonInsertFunction( typeConfiguration ) );
 	}
 
 	/**
@@ -4140,13 +4084,6 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayInsert_postgresql() {
 		functionRegistry.register( "json_array_insert", new PostgreSQLJsonArrayInsertFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * gauss json_array_insert() function
-	 */
-	public void jsonArrayInsert_gauss() {
-		functionRegistry.register( "json_array_insert", new GaussDBJsonArrayInsertFunction( typeConfiguration ) );
 	}
 
 	/**

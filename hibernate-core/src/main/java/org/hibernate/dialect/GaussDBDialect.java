@@ -523,6 +523,7 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.moreHyperbolic();
 		functionFactory.cbrt();
 		functionFactory.pi();
+		functionFactory.log10_log();
 		functionFactory.trim2();
 		functionFactory.repeat();
 		functionFactory.initcap();

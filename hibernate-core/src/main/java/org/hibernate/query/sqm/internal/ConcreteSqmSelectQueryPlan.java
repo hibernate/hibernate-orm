@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -66,9 +65,9 @@ import static org.hibernate.query.sqm.internal.SqmUtil.generateJdbcParamsXref;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 
 /**
- * Standard Hibernate implementation of SelectQueryPlan for SQM-backed
- * {@link Query} implementations, which means
- * HQL/JPQL or {@link jakarta.persistence.criteria.CriteriaQuery}
+ * Standard implementation of {@link SelectQueryPlan} for SQM-backed
+ * implementations of {@link org.hibernate.query.Query}, that is, for
+ * HQL/JPQL or for {@link jakarta.persistence.criteria.CriteriaQuery}.
  *
  * @author Steve Ebersole
  */

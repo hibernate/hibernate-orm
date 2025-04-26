@@ -660,7 +660,18 @@ for (var result : results) {
 ----
 Notice that we're able to declare the `record` right before the line which executes the query.
 
-Now, this is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
+This works just as well with queries written in SQL:
+
+[source,java]
+----
+record BookInfo(String isbn, String title, int pages) {}
+
+List<BookInfo> resultList =
+        session.createNativeQuery("select title, isbn, pages from Book", BookInfo.class)
+            .getResultList();
+----
+
+Now, this approach is only _superficially_ more typesafe, since the query itself is not checked statically, and so we can't say it's objectively better.
 But perhaps you find it more aesthetically pleasing.
 And if we're going to be passing query results around the system, the use of a `record` type is _much_ better.
 

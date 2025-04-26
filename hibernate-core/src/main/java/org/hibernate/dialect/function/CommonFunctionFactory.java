@@ -3560,13 +3560,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * json_exists() function
-	 */
-	public void jsonExists_gaussdb() {
-		functionRegistry.register( "json_exists", new GaussDBJsonExistsFunction( typeConfiguration, false, false ) );
-	}
-
-	/**
 	 * json_exists() function that doesn't support the passing clause
 	 */
 	public void jsonExists_no_passing() {
@@ -3847,13 +3840,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB json_objectagg() function
-	 */
-	public void jsonObjectAgg_gaussdb(boolean supportsStandard) {
-		functionRegistry.register( "json_objectagg", new GaussDBJsonObjectAggFunction( supportsStandard, typeConfiguration ) );
-	}
-
-	/**
 	 * MySQL json_objectagg() function
 	 */
 	public void jsonObjectAgg_mysql() {
@@ -4082,13 +4068,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * GaussDB json_mergepatch() function
-	 */
-	public void jsonMergepatch_gaussdb() {
-		functionRegistry.register( "json_mergepatch", new GaussDBJsonMergepatchFunction( typeConfiguration ) );
-	}
-
-	/**
 	 * MySQL json_mergepatch() function
 	 */
 	public void jsonMergepatch_mysql() {
@@ -4116,13 +4095,6 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonArrayAppend_postgresql(boolean supportsLax) {
 		functionRegistry.register( "json_array_append", new PostgreSQLJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
-	}
-
-	/**
-	 * GaussDB json_array_append() function
-	 */
-	public void jsonArrayAppend_gaussdb(boolean supportsLax) {
-		functionRegistry.register( "json_array_append", new GaussDBJsonArrayAppendFunction( supportsLax, typeConfiguration ) );
 	}
 
 	/**

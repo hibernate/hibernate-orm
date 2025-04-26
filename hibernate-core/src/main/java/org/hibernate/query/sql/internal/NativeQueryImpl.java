@@ -356,6 +356,15 @@ public class NativeQueryImpl<R>
 		}
 	}
 
+	/**
+	 * If the result type of the query is {@link Tuple}, {@link Map}, {@link List},
+	 * or any record or class type with an appropriate constructor which is NOT a
+	 * registered basic type, then we attempt to repackage the result tuple as an
+	 * instance of the result type using an appropriate {@link TupleTransformer}.
+	 *
+	 * @param resultClass The requested result type of the query
+	 * @return A {@link TupleTransformer} responsible for repackaging the result type
+	 */
 	protected @Nullable TupleTransformer<?> determineTupleTransformerForResultType(Class<?> resultClass) {
 		if ( Tuple.class.equals( resultClass ) ) {
 			return NativeQueryTupleTransformer.INSTANCE;
@@ -369,7 +378,8 @@ public class NativeQueryImpl<R>
 		else if ( resultClass != Object.class && resultClass != Object[].class ) {
 			// TODO: this is extremely fragile and probably a bug
 			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {
-				// not a basic type
+				// not a basic type, so something we can attempt
+				// to instantiate to repackage the results
 				return new NativeQueryConstructorTransformer<>( resultClass );
 			}
 		}

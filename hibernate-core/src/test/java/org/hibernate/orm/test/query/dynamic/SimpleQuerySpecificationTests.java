@@ -177,6 +177,22 @@ public class SimpleQuerySpecificationTests {
 	}
 
 	@Test
+	void testSimpleMutationRestrictionStatelessAsReference(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+		var deleteBasicEntity = MutationSpecification
+				.create( BasicEntity.class, "delete BasicEntity" )
+				.restrict( Restriction.restrict( BasicEntity_.position, Range.closed( 1, 5 ) ) )
+				.reference();
+		factoryScope.inStatelessTransaction( statelessSession -> {
+			sqlCollector.clear();
+			statelessSession.createQuery( deleteBasicEntity ).executeUpdate();
+		} );
+
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.position between ? and ?" );
+	}
+
+	@Test
 	void testRootEntityForm(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 

@@ -1222,6 +1222,14 @@ public class SqmUtil {
 		}
 	}
 
+	/**
+	 * Any query result can be represented as a {@link Tuple}, {@link List}, or {@link Map},
+	 * simply by repackaging the result tuple. Also, any query result is assignable to
+	 * {@code Object}, or can be returned as an instance of {@code Object[]}.
+	 *
+	 * @see ConcreteSqmSelectQueryPlan#determineRowTransformer
+	 * @see org.hibernate.query.sql.internal.NativeQueryImpl#determineTupleTransformerForResultType
+	 */
 	public static boolean isResultTypeAlwaysAllowed(Class<?> expectedResultClass) {
 		return expectedResultClass == null
 			|| expectedResultClass == Object.class

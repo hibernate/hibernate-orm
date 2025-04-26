@@ -16,8 +16,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.dialect.GaussDBDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -31,7 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class StatelessSessionVersioningTest {
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	void testIdentity(SessionFactoryScope scope) {
 		Dialect dialect = scope.getMetadataImplementor().getDatabase().getDialect();
 		scope.inStatelessTransaction(s -> {

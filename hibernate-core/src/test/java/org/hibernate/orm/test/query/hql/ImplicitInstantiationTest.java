@@ -55,11 +55,28 @@ public class ImplicitInstantiationTest {
 	}
 
 	@Test
-	public void testSqlRecordInstantiationWithoutAlias(SessionFactoryScope scope) {
+	public void testSqlRecordInstantiationWithoutMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
 					Record result = (Record) session.createNativeQuery( "select id, upper(name) as name from thingy_table", Record.class)
+							.addSynchronizedEntityClass(Thing.class)
+							.getSingleResult();
+					assertEquals( result.id(), 1L );
+					assertEquals( result.name(), "THING" );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
+	@Test
+	public void testSqlRecordInstantiationWithMapping(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					Record result = (Record) session.createNativeQuery( "select id, upper(name) as name from thingy_table", Record.class)
+							.addScalar("id", Long.class)
+							.addScalar("name", String.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
 					assertEquals( result.id(), 1L );

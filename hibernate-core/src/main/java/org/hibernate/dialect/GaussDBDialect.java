@@ -520,10 +520,6 @@ public class GaussDBDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.log();
 		functionFactory.mod_operator();
-		functionFactory.log10();
-		functionFactory.tanh();
-		functionFactory.sinh();
-		functionFactory.cosh();
 		functionFactory.moreHyperbolic();
 		functionFactory.cbrt();
 		functionFactory.pi();

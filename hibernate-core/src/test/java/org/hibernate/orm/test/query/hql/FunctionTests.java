@@ -1021,7 +1021,7 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09' as Date)", Date.class).getSingleResult(), instanceOf(Date.class) );
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp)", Timestamp.class).getSingleResult(), instanceOf(Timestamp.class) );
 
-					assertThat( session.createQuery("select cast(date 1911-10-09 as String)", String.class).getSingleResult(), is("1911-10-09") );
+					assertThat( session.createQuery("select cast(date 1911-10-09 as String)", String.class).getSingleResult(), anyOf( is("1911-10-09"), is("1911-10-09 00:00:00") ) );
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)", String.class).getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12.13.14") ) );
 					assertThat( session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)", String.class).getSingleResult(), anyOf( startsWith("1911-10-09 12:13:14"), startsWith("1911-10-09-12.13.14") ) );
 
@@ -1222,7 +1222,8 @@ public class FunctionTests {
 					session.createQuery("select str(e.id), str(e.theInt), str(e.theDouble) from EntityOfBasics e", Object[].class)
 							.list();
 					assertThat( session.createQuery("select str(69)", String.class).getSingleResult(), is("69") );
-					assertThat( session.createQuery("select str(date 1911-10-09)", String.class).getSingleResult(), is("1911-10-09") );
+					// str() do not specify the standard of date & time format
+					assertThat( session.createQuery("select str(date 1911-10-09)", String.class).getSingleResult(), anyOf( is("1911-10-09"), is( "1911-10-09 00:00:00" ) ) );
 					assertThat( session.createQuery("select str(time 12:13:14)", String.class).getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000"), is( "12.13.14") ) );
 				}
 		);
@@ -2288,7 +2289,6 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2323,7 +2323,6 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsMedian.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testMedian(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2345,7 +2344,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Function sinh(double precision) does not exist.")
 	public void testHyperbolic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

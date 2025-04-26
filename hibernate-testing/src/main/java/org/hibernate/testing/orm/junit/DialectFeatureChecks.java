@@ -535,6 +535,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect
+					|| dialect instanceof GaussDBDialect
 					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) );
 		}
 	}

@@ -36,7 +36,7 @@ public class GaussDBJsonValueFunction extends JsonValueFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
-		if (arguments.returningType() != null) {
+		if ( arguments.returningType() != null ) {
 			sqlAppender.appendSql( "(" );
 		}
 		arguments.jsonDocument().accept( walker );
@@ -48,17 +48,19 @@ public class GaussDBJsonValueFunction extends JsonValueFunction {
 			final Map<String, Expression> passingExpressions = passingClause.getPassingExpressions();
 			final Iterator<Map.Entry<String, Expression>> iterator = passingExpressions.entrySet().iterator();
 			Map.Entry<String, Expression> entry = iterator.next();
-			literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
+			literalValue = literalValue.replace( "$" + entry.getKey(),
+					walker.getLiteralValue( entry.getValue() ).toString() );
 			while ( iterator.hasNext() ) {
 				entry = iterator.next();
 				sqlAppender.appendSql( ',' );
-				literalValue = literalValue.replace( "$"+entry.getKey(), walker.getLiteralValue( entry.getValue()).toString() );
+				literalValue = literalValue.replace( "$" + entry.getKey(),
+						walker.getLiteralValue( entry.getValue() ).toString() );
 			}
 		}
 
 		sqlAppender.append( JsonHelper.parseJsonPath( literalValue ) );
 		sqlAppender.appendSql( "}'" );
-		if (arguments.returningType() != null) {
+		if ( arguments.returningType() != null ) {
 			sqlAppender.appendSql( ")::" );
 			arguments.returningType().accept( walker );
 		}

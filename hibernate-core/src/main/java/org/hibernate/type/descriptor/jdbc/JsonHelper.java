@@ -98,6 +98,33 @@ public class JsonHelper {
 		return sb.toString();
 	}
 
+	public static String parseJsonPath(String path) {
+		if (path == null || !path.startsWith("$")) {
+			throw new IllegalArgumentException("Invalid JSON path");
+		}
+
+		List<String> result = new ArrayList<>();
+		String[] parts = path.substring(1).split("\\.");
+
+		for (String part : parts) {
+			while (part.contains("[")) {
+				int start = part.indexOf("[");
+				int end = part.indexOf("]", start);
+				if (end == -1) {
+					throw new IllegalArgumentException("Invalid JSON path format");
+				}
+				result.add(part.substring(0, start));
+				result.add(part.substring(start + 1, end));
+				part = part.substring(end + 1);
+			}
+			if (!part.isEmpty()) {
+				result.add(part);
+			}
+		}
+
+		return String.join(",", result);
+	}
+
 	private static void toString(EmbeddableMappingType embeddableMappingType, Object value, WrapperOptions options, JsonAppender appender) {
 		toString( embeddableMappingType, options, appender, value, '{' );
 		appender.append( '}' );
@@ -1626,30 +1653,4 @@ public class JsonHelper {
 		}
 	}
 
-	public static String parseJsonPath(String path) {
-		if (path == null || !path.startsWith("$")) {
-			throw new IllegalArgumentException("Invalid JSON path");
-		}
-
-		List<String> result = new ArrayList<>();
-		String[] parts = path.substring(1).split("\\.");
-
-		for (String part : parts) {
-			while (part.contains("[")) {
-				int start = part.indexOf("[");
-				int end = part.indexOf("]", start);
-				if (end == -1) {
-					throw new IllegalArgumentException("Invalid JSON path format");
-				}
-				result.add(part.substring(0, start));
-				result.add(part.substring(start + 1, end));
-				part = part.substring(end + 1);
-			}
-			if (!part.isEmpty()) {
-				result.add(part);
-			}
-		}
-
-		return String.join(",", result);
-	}
 }

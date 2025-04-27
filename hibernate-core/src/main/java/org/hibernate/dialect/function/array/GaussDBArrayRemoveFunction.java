@@ -15,6 +15,7 @@ import java.util.List;
 
 /**
  * Gaussdb array_remove function.
+ * @author chenzhida
  */
 public class GaussDBArrayRemoveFunction extends AbstractArrayRemoveFunction {
 

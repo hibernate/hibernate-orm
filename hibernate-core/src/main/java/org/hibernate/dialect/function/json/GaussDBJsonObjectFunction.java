@@ -16,6 +16,7 @@ import java.util.List;
 
 /**
  * Gaussdb json_object function.
+ * @author chenzhida
  *
  * Notes: Original code of this class is based on PostgreSQLJsonObjectFunction.
  */

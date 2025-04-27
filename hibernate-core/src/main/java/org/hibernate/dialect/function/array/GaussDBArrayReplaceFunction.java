@@ -15,6 +15,7 @@ import java.util.List;
 
 /**
  * Gaussdb array_replace function.
+ * @author chenzhida
  */
 public class GaussDBArrayReplaceFunction extends ArrayReplaceUnnestFunction {
 

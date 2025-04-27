@@ -21,6 +21,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 
 /**
  * Gaussdb array_set function.
+ * @author chenzhida
  */
 public class GaussDBArraySetFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 

@@ -17,6 +17,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * PostgreSQL json_query function.
+ * @author chenzhida
+ *
  */
 public class GaussDBJsonExistsFunction extends JsonExistsFunction {
 

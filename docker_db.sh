@@ -1130,7 +1130,7 @@ if [ -z ${1} ]; then
     echo -e "\toracle"
     echo -e "\toracle_23"
     echo -e "\toracle_21"
-    echo -e "\tgauss"
+    echo -e "\tgaussdb"
     echo -e "\tpostgresql"
     echo -e "\tpostgresql_17"
     echo -e "\tpostgresql_16"

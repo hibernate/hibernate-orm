@@ -58,7 +58,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
 /**
  * A format function with support for composite temporal expressions.
  *
- * @author Christian Beikov
+ * @author chenzhida
  *
  * Notes: Original code of this class is based on FormatFunction.
  *

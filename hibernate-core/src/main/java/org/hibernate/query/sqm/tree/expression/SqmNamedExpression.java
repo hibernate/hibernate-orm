@@ -9,6 +9,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
 /**
  * A named expression. Used when the name of the expression matters
  * e.g. in XML generation.
@@ -59,5 +61,17 @@ public class SqmNamedExpression<T> extends AbstractSqmExpression<T> {
 		expression.appendHqlString( hql, context );
 		hql.append( " as " );
 		hql.append( name );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmNamedExpression<?> that
+			&& Objects.equals( this.name, that.name )
+			&& Objects.equals( this.expression, that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( expression, name );
 	}
 }

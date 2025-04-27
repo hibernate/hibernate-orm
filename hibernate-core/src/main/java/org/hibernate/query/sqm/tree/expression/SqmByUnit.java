@@ -10,6 +10,8 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
 /**
  * @author Gavin King
  */
@@ -58,10 +60,23 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitByUnit( this );
 	}
+
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		duration.appendHqlString( hql, context );
 		hql.append( " by " );
 		hql.append( unit.getUnit() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmByUnit that
+			&& Objects.equals( this.unit, that.unit )
+			&& Objects.equals( this.duration, that.duration );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( unit, duration );
 	}
 }

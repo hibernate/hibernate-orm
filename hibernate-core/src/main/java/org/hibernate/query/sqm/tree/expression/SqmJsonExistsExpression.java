@@ -180,11 +180,12 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 		getArguments().get( 1 ).appendHqlString( hql, context );
 
 		appendPassingExpressionHqlString( hql, context );
-		switch ( errorBehavior ) {
-			case ERROR -> hql.append( " error on error" );
-			case TRUE -> hql.append( " true on error" );
-			case FALSE -> hql.append( " false on error" );
-		}
+		hql.append( switch ( errorBehavior ) {
+			case ERROR -> " error on error";
+			case TRUE -> " true on error";
+			case FALSE -> " false on error";
+			case UNSPECIFIED -> "";
+		} );
 		hql.append( ')' );
 	}
 }

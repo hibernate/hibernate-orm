@@ -6,8 +6,8 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -18,6 +18,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * @author Steve Ebersole
@@ -97,6 +99,16 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCoalesce<?> that
+			&& Objects.equals( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int hashCode() {
+		return arguments.hashCode();
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
@@ -108,17 +120,17 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	private SqmExpression<T> firstOrNull() {
-		if ( CollectionHelper.isEmpty( arguments ) ) {
+		if ( isEmpty( arguments ) ) {
 			return null;
 		}
-
-		//noinspection unchecked
-		return (SqmExpression<T>) arguments.get( 0 );
+		else {
+			//noinspection unchecked
+			return (SqmExpression<T>) arguments.get( 0 );
+		}
 	}
 
 	@Override
 	public SqmCoalesce<T> value(Expression<? extends T> value) {
-		//noinspection unchecked
 		value( (SqmExpression<? extends T>) value );
 		return this;
 	}
@@ -126,7 +138,7 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	@Override
 	public SqmCoalesce<T> value(JpaExpression<? extends T> value) {
 		//noinspection unchecked
-		value( (SqmExpression) value );
+		value( (SqmExpression<T>) value );
 		return this;
 	}
 
@@ -139,5 +151,4 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		}
 		return this;
 	}
-
 }

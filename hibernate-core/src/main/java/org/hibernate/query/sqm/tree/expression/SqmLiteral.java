@@ -13,6 +13,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Objects;
+
 import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscapedString;
 
 /**
@@ -99,4 +101,14 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		}
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLiteral<?> that
+			&& Objects.equals( value, that.value );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( value );
+	}
 }

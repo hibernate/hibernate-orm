@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.Objects;
-
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -17,6 +15,8 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+
+import java.util.Objects;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
@@ -137,39 +137,33 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		if ( getName() == null ) {
-			hql.append( ':' ).append( context.resolveParameterName( this ) );
-		}
-		else {
-			hql.append( ':' ).append( getName() );
-		}
+		hql.append( ':' ).append( name( context ) );
+	}
+
+	private String name(SqmRenderContext context) {
+		return name == null ? context.resolveParameterName( this ) : name;
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		else if ( o == null ) {
-			return false;
-		}
-		else if ( !(o instanceof JpaCriteriaParameter<?> that) ) {
-			return false;
-		}
-		else {
-			return Objects.equals( name, that.name );
-		}
+	public int compareTo(SqmParameter parameter) {
+		return parameter instanceof JpaCriteriaParameter
+				? Integer.compare( hashCode(), parameter.hashCode() )
+				: 1;
+	}
+
+	// we can use value equality if the parameter has a name
+	// otherwise we must fall back to identity equality
+
+	@Override
+	public boolean equals(Object object) {
+		return this == object
+			|| object instanceof JpaCriteriaParameter<?> that
+				&& this.name != null && that.name != null
+				&& Objects.equals( this.name, that.name );
 	}
 
 	@Override
 	public int hashCode() {
-		return name == null ? super.hashCode() : Objects.hash( name );
-	}
-
-	@Override
-	public int compareTo(SqmParameter anotherParameter) {
-		return anotherParameter instanceof JpaCriteriaParameter
-				? Integer.compare( hashCode(), anotherParameter.hashCode() )
-				: 1;
+		return name == null ? super.hashCode() : name.hashCode();
 	}
 }

@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
@@ -102,5 +103,17 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 		hql.append( " over (" );
 		window.appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmOver<?> sqmOver
+			&& Objects.equals( expression, sqmOver.expression )
+			&& Objects.equals( window, sqmOver.window );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( expression, window );
 	}
 }

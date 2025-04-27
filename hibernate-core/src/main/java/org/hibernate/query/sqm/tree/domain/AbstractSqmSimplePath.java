@@ -10,6 +10,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 
+
 /**
  * @author Steve Ebersole
  */

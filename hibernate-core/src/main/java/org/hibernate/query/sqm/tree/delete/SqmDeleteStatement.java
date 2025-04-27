@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.delete;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.query.criteria.JpaCriteriaDelete;
@@ -41,7 +42,7 @@ public class SqmDeleteStatement<T>
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						!nodeBuilder.isJpaQueryComplianceEnabled(),
 						nodeBuilder
 				),
@@ -111,6 +112,20 @@ public class SqmDeleteStatement<T>
 		SqmFromClause.appendJoins( root, hql, context );
 		SqmFromClause.appendTreatJoins( root, hql, context );
 		super.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object node) {
+		return node instanceof SqmDeleteStatement<?> that
+			&& super.equals( node )
+			&& Objects.equals( this.getTarget(), that.getTarget() )
+			&& Objects.equals( this.getWhereClause(), that.getWhereClause() )
+			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), getTarget(), getWhereClause(), getCteStatements() );
 	}
 
 	@Override

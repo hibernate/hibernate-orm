@@ -169,6 +169,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		this( criteria, session.isCriteriaCopyTreeEnabled(), expectedResultType, session );
 	}
 
+	/**
+	 * Form used for criteria queries
+	 */
 	public SqmSelectionQueryImpl(
 			SqmSelectStatement<R> criteria,
 			boolean copyAst,
@@ -177,27 +180,10 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 		super( session );
 		this.expectedResultType = expectedResultType;
 		hql = CRITERIA_HQL_STRING;
-		if ( copyAst ) {
-			sqm = criteria.copy( SqmCopyContext.simpleContext() );
-			if ( session.isCriteriaPlanCacheEnabled() ) {
-				queryStringCacheKey = sqm.toHqlString();
-				setQueryPlanCacheable( true );
-			}
-			else {
-				queryStringCacheKey = sqm;
-			}
-		}
-		else {
-			sqm = criteria;
-			if ( session.isCriteriaPlanCacheEnabled() ) {
-				queryStringCacheKey = sqm.toHqlString();
-			}
-			else {
-				queryStringCacheKey = sqm;
-			}
-			// Cache immutable query plans by default
-			setQueryPlanCacheable( true );
-		}
+		sqm = copyAst ? criteria.copy( SqmCopyContext.simpleContext() ) : criteria;
+		queryStringCacheKey = sqm;
+		// Cache immutable query plans by default
+		setQueryPlanCacheable( !copyAst || session.isCriteriaPlanCacheEnabled() );
 
 		domainParameterXref = DomainParameterXref.from( sqm );
 		parameterMetadata = domainParameterXref.hasParameters()

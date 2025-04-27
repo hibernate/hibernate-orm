@@ -16,6 +16,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import java.util.Objects;
+
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
 
 /**
@@ -99,4 +101,14 @@ public class SqmLiteralEntityType<T>
 		hql.append( entityType.getName() );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLiteralEntityType<?> that
+			&& Objects.equals( this.entityType.getName(), that.entityType.getName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return entityType.getName().hashCode();
+	}
 }

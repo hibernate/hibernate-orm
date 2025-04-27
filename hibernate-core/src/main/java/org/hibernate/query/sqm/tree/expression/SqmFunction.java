@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -182,7 +183,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	private SqmFunctionPath<T> getFunctionPath() {
 		SqmFunctionPath<T> path = functionPath;
 		if ( path == null ) {
-			path = functionPath = new SqmFunctionPath<T>( this );
+			path = functionPath = new SqmFunctionPath<>( this );
 		}
 		return path;
 	}
@@ -201,5 +202,17 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return getFunctionPath().resolveIndexedAccess( selector, isTerminal, creationState );
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmFunction<?> that
+			&& Objects.equals( this.functionName, that.functionName )
+			&& Objects.equals( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( functionName, arguments );
 	}
 }

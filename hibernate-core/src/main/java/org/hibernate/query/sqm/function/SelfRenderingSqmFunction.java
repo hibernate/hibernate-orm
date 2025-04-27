@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.function;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -256,4 +257,15 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		}
 	}
 
+	@Override
+	// TODO: override on all subtypes
+	public boolean equals(Object other) {
+		return other instanceof SelfRenderingSqmAggregateFunction<?> that
+			&& Objects.equals( this.toHqlString(), that.toHqlString() );
+	}
+
+	@Override
+	public int hashCode() {
+		return toHqlString().hashCode();
+	}
 }

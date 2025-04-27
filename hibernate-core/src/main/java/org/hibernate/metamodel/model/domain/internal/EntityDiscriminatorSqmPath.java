@@ -17,6 +17,8 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.Objects;
+
 /**
  * {@link SqmPath} specialization for an entity discriminator
  *
@@ -66,10 +68,19 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		if ( ! entityDescriptor.hasSubclasses() ) {
-			return walker.visitEntityTypeLiteralExpression( new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
-		}
+		return entityDescriptor.hasSubclasses()
+				? walker.visitDiscriminatorPath( this )
+				: walker.visitEntityTypeLiteralExpression( new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
+	}
 
-		return walker.visitDiscriminatorPath( this );
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof EntityDiscriminatorSqmPath<?> that
+			&& Objects.equals( this.getLhs(), that.getLhs() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getLhs().hashCode();
 	}
 }

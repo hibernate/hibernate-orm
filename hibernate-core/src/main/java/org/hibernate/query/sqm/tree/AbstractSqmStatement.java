@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -18,6 +17,8 @@ import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 
 import jakarta.persistence.criteria.ParameterExpression;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
 /**
@@ -77,7 +78,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 			return collectParameters( this );
 		}
 
-		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
+		return parameters == null ? emptySet() : unmodifiableSet( parameters );
 	}
 
 	@Override
@@ -96,5 +97,12 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		return getSqmParameters().stream()
 				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
 				.collect( Collectors.toSet() );
+	}
+
+	private int aliasCounter = 0;
+
+	@Override
+	public String generateAlias() {
+		return "_" + (++aliasCounter);
 	}
 }

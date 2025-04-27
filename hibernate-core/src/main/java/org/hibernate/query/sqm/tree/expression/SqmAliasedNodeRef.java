@@ -11,6 +11,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
+import java.util.Objects;
+
 /**
  * Models a reference to a {@link org.hibernate.query.sqm.tree.select.SqmAliasedNode}
  * used in the order-by or group-by clause by either position or alias,
@@ -78,5 +80,18 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 		else {
 			hql.append( navigablePath.getLocalName() );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmAliasedNodeRef that
+			&& position == that.position
+			&& Objects.equals( navigablePath == null ? null : navigablePath.getLocalName(),
+				that.navigablePath == null ? null : that.navigablePath.getLocalName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( position, navigablePath == null ? null : navigablePath.getLocalName() );
 	}
 }

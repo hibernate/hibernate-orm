@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.cte;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -339,12 +340,12 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 		if ( getMaterialization() != CteMaterialization.UNDEFINED ) {
 			hql.append( getMaterialization() ).append( ' ' );
 		}
-		if ( getCteDefinition() instanceof SqmSubQuery<?> ) {
-			( (SqmSubQuery<?>) getCteDefinition() ).appendHqlString( hql, context );
+		if ( getCteDefinition() instanceof SqmSubQuery<?> subQuery ) {
+			subQuery.appendHqlString( hql, context );
 		}
-		else {
+		else if ( getCteDefinition() instanceof SqmSelectStatement<?> selectStatement ) {
 			hql.append( '(' );
-			( (SqmSelectStatement<?>) getCteDefinition() ).appendHqlString( hql, context );
+			selectStatement.appendHqlString( hql, context );
 			hql.append( ')' );
 		}
 		String separator;
@@ -403,5 +404,28 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 				hql.append( getCyclePathAttributeName() );
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteStatement<?> that
+			&& Objects.equals( cteTable, that.cteTable )
+			&& Objects.equals( cteDefinition, that.cteDefinition )
+			&& materialization == that.materialization
+			&& searchClauseKind == that.searchClauseKind
+			&& Objects.equals( searchBySpecifications, that.searchBySpecifications )
+			&& Objects.equals( searchAttributeName, that.searchAttributeName )
+			&& Objects.equals( cycleAttributes, that.cycleAttributes )
+			&& Objects.equals( cycleMarkAttributeName, that.cycleMarkAttributeName )
+			&& Objects.equals( cyclePathAttributeName, that.cyclePathAttributeName )
+			&& Objects.equals( cycleValue, that.cycleValue )
+			&& Objects.equals( noCycleValue, that.noCycleValue );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( cteTable, cteDefinition, materialization,
+				searchClauseKind, searchBySpecifications, searchAttributeName,
+				cycleAttributes, cycleMarkAttributeName, cyclePathAttributeName, cycleValue, noCycleValue );
 	}
 }

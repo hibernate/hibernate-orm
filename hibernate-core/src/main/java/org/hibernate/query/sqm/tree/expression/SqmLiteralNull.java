@@ -57,4 +57,14 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( "null" );
 	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLiteralNull;
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;
+	}
 }

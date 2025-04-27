@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.query.sqm.DynamicInstantiationNature;
@@ -294,6 +295,18 @@ public class SqmDynamicInstantiation<T>
 		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmDynamicInstantiation<?> that
+			&& Objects.equals( instantiationTarget, that.instantiationTarget )
+			&& Objects.equals( arguments, that.arguments );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( instantiationTarget, arguments );
+	}
+
 	@SuppressWarnings("unused")
 	public SqmDynamicInstantiation<T> makeShallowCopy() {
 		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );
@@ -307,6 +320,18 @@ public class SqmDynamicInstantiation<T>
 		private DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, JavaType<T> javaType) {
 			this.nature = nature;
 			this.javaType = javaType;
+		}
+
+		@Override
+		public boolean equals(Object object) {
+			return object instanceof DynamicInstantiationTargetImpl<?> that
+				&& nature == that.nature
+				&& Objects.equals( javaType, that.javaType );
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash( nature, javaType );
 		}
 
 		@Override

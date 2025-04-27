@@ -58,6 +58,8 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 
 	boolean hasJoins();
 
+	int getNumberOfJoins();
+
 	/**
 	 * The joins associated with this SqmFrom
 	 */

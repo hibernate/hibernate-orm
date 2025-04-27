@@ -93,11 +93,9 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	public void applyPredicate(SqmPredicate predicate) {
-		if ( predicate == null ) {
-			return;
+		if ( predicate != null ) {
+			initAndGetWhereClause().applyPredicate( predicate );
 		}
-
-		initAndGetWhereClause().applyPredicate( predicate );
 	}
 
 	public void setWhereClause(SqmWhereClause whereClause) {

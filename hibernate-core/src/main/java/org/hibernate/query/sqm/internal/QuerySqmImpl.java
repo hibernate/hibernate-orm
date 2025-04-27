@@ -205,30 +205,13 @@ public class QuerySqmImpl<R>
 			SqmStatement<R> criteria,
 			boolean copyAst,
 			Class<R> expectedResultType,
-			SharedSessionContractImplementor producer) {
-		super( producer );
+			SharedSessionContractImplementor session) {
+		super( session );
 		hql = CRITERIA_HQL_STRING;
-		if ( copyAst ) {
-			sqm = criteria.copy( SqmCopyContext.simpleContext() );
-			if ( producer.isCriteriaPlanCacheEnabled() ) {
-				queryStringCacheKey = sqm.toHqlString();
-				setQueryPlanCacheable( true );
-			}
-			else {
-				queryStringCacheKey = sqm;
-			}
-		}
-		else {
-			sqm = criteria;
-			if ( producer.isCriteriaPlanCacheEnabled() ) {
-				queryStringCacheKey = sqm.toHqlString();
-			}
-			else {
-				queryStringCacheKey = sqm;
-			}
-			// Cache immutable query plans by default
-			setQueryPlanCacheable( true );
-		}
+		sqm = copyAst ? criteria.copy( SqmCopyContext.simpleContext() ) : criteria;
+		queryStringCacheKey = sqm;
+		// Cache immutable query plans by default
+		setQueryPlanCacheable( !copyAst || session.isCriteriaPlanCacheEnabled() );
 
 		setComment( hql );
 
@@ -236,7 +219,7 @@ public class QuerySqmImpl<R>
 		parameterMetadata = !domainParameterXref.hasParameters()
 				? ParameterMetadataImpl.EMPTY
 				: new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
-		parameterBindings = parameterMetadata.createBindings( producer.getFactory() );
+		parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {

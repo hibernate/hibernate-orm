@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.Objects;
+
 /**
  * @author Christian Beikov
  */
@@ -98,5 +100,17 @@ public class SqmCteRoot<T> extends SqmRoot<T> implements JpaRoot<T> {
 	@Override
 	public SqmCorrelatedRoot<T> createCorrelation() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteRoot<?> that
+			&& super.equals( object )
+			&& Objects.equals( this.cte, that.cte );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), cte );
 	}
 }

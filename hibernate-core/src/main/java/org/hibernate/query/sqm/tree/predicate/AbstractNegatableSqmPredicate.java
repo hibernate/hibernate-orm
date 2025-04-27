@@ -7,6 +7,8 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 
+import java.util.Objects;
+
 /**
  * @author Steve Ebersole
  */
@@ -33,7 +35,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 
 	@Override
 	public void negate() {
-		this.negated = !this.negated;
+		negated = !negated;
 	}
 
 	protected abstract SqmNegatablePredicate createNegatedNode();
@@ -45,4 +47,18 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		return createNegatedNode();
 	}
 
+	@Override
+	// for safety only, overridden on all subtypes
+	public boolean equals(Object other) {
+		return other instanceof AbstractNegatableSqmPredicate that
+			&& this.negated == that.negated
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.toHqlString(), that.toHqlString() );
+	}
+
+	@Override
+	// for safety only, overridden on all subtypes
+	public int hashCode() {
+		return Objects.hash( getClass(), negated );
+	}
 }

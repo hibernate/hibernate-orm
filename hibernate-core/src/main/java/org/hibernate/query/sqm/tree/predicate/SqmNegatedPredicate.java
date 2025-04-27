@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -72,6 +73,17 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 		hql.append( "not (" );
 		wrappedPredicate.appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmNegatedPredicate that
+			&& Objects.equals( wrappedPredicate, that.wrappedPredicate );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( wrappedPredicate );
 	}
 
 	@Override

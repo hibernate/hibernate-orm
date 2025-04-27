@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -145,5 +146,17 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	@Override
 	public String getAlias() {
 		return null;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmSelectClause that
+			&& distinct == that.distinct
+			&& Objects.equals( this.selections, that.selections );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( distinct, selections );
 	}
 }

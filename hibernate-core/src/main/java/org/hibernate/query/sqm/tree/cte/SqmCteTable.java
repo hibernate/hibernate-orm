@@ -97,11 +97,11 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 
 	@Override
 	public String getName() {
-		if ( Character.isDigit( name.charAt( 0 ) ) ) {
-			// Created through JPA criteria without an explicit name
-			return null;
-		}
-		return name;
+		// TODO: this is extremely fragile!
+		//       better to distinguish between generated and explicit aliases
+		return name.charAt( 0 ) == '_'
+				? null // Created through JPA criteria without an explicit name
+				: name;
 	}
 
 	@Override

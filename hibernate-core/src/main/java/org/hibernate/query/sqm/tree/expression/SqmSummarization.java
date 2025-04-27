@@ -65,6 +65,7 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		ROLLUP,
 		CUBE
 	}
+
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( kind );

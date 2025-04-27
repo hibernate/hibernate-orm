@@ -10,6 +10,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
 /**
  * Represents a named query parameter in the SQM tree.
  *
@@ -77,14 +79,24 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append( ':' );
-		hql.append( getName() );
+		hql.append( ':' ).append( getName() );
 	}
 
 	@Override
 	public int compareTo(SqmParameter anotherParameter) {
-		return anotherParameter instanceof SqmNamedParameter<?>
-				? getName().compareTo( ( (SqmNamedParameter<?>) anotherParameter ).getName() )
+		return anotherParameter instanceof SqmNamedParameter<?> namedParameter
+				? getName().compareTo( namedParameter.getName() )
 				: -1;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmNamedParameter<?> that
+			&& Objects.equals( name, that.name );
+	}
+
+	@Override
+	public int hashCode() {
+		return name.hashCode();
 	}
 }

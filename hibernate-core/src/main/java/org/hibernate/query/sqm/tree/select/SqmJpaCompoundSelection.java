@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -143,6 +144,17 @@ public class SqmJpaCompoundSelection<T>
 			hql.append(", ");
 			selectableNodes.get( i ).appendHqlString( hql, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmJpaCompoundSelection<?> that
+			&& Objects.equals( selectableNodes, that.selectableNodes );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( selectableNodes );
 	}
 
 	@Override

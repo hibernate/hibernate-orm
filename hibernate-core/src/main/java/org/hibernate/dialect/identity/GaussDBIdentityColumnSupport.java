@@ -4,8 +4,6 @@
  */
 package org.hibernate.dialect.identity;
 
-import static org.hibernate.internal.util.StringHelper.unquote;
-
 /**
  * @author liubao
  *
@@ -16,17 +14,12 @@ public class GaussDBIdentityColumnSupport extends IdentityColumnSupportImpl {
 	public static final GaussDBIdentityColumnSupport INSTANCE = new GaussDBIdentityColumnSupport();
 
 	@Override
-	public boolean supportsIdentityColumns() {
-		return false;
-	}
-
-	@Override
 	public String getIdentitySelectString(String table, String column, int type) {
-		return "select currval('" + unquote(table) + '_' + unquote(column) + "_seq')";
+		return "";
 	}
 
 	@Override
 	public String getIdentityColumnString(int type) {
-		return "generated always as identity";
+		return "";
 	}
 }

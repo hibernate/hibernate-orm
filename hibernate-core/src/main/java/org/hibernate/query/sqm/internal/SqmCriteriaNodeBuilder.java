@@ -577,8 +577,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmPredicate wrap(Expression<Boolean> expression) {
-		return expression instanceof SqmPredicate
-				? (SqmPredicate) expression
+		return expression instanceof SqmPredicate predicate
+				? predicate
 				: new SqmBooleanExpressionPredicate( (SqmExpression<Boolean>) expression, this );
 	}
 
@@ -607,7 +607,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
 		final boolean validToOneRef =
 				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
-				&& toOneReference instanceof EntitySqmPathSource;
+						&& toOneReference instanceof EntitySqmPathSource;
 		if ( !validToOneRef ) {
 			throw new FunctionArgumentException(
 					String.format(
@@ -670,8 +670,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			CriteriaQuery<? extends T> left,
 			CriteriaQuery<? extends T> right) {
 		assert operator == SetOperator.UNION || operator == SetOperator.UNION_ALL;
-		assert left instanceof SqmSelectStatement;
-		assert right instanceof SqmSelectStatement;
 		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
 		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
 
@@ -707,8 +705,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			CriteriaQuery<? super T> left,
 			CriteriaQuery<? super T> right) {
 		assert operator == SetOperator.INTERSECT || operator == SetOperator.INTERSECT_ALL;
-		assert left instanceof SqmSelectStatement;
-		assert right instanceof SqmSelectStatement;
 		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
 		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
 
@@ -744,8 +740,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			CriteriaQuery<T> left,
 			CriteriaQuery<?> right) {
 		assert operator == SetOperator.EXCEPT || operator == SetOperator.EXCEPT_ALL;
-		assert left instanceof SqmSelectStatement;
-		assert right instanceof SqmSelectStatement;
 		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
 		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
 

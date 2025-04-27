@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.insert;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						false,
 						nodeBuilder
 				),
@@ -187,5 +188,22 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		if ( conflictClause != null ) {
 			conflictClause.appendHqlString( hql, context );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( !(object instanceof SqmInsertSelectStatement<?> that) ) {
+			return false;
+		}
+		return Objects.equals( selectQueryPart, that.selectQueryPart )
+			&& Objects.equals( this.getTarget(), that.getTarget() )
+			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
+			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( selectQueryPart, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
 	}
 }

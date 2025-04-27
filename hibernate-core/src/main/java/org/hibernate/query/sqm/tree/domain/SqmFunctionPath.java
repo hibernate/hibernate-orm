@@ -29,6 +29,8 @@ import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Type;
 
+import java.util.Objects;
+
 import static java.util.Arrays.asList;
 
 public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
@@ -159,5 +161,17 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	@Override
 	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new TreatException( "Embeddable paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFunctionPath<?> that
+			&& super.equals( object )
+			&& Objects.equals( function, that.function );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), function );
 	}
 }

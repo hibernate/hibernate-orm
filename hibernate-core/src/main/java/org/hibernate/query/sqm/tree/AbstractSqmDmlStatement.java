@@ -10,7 +10,6 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -94,21 +93,21 @@ public abstract class AbstractSqmDmlStatement<E>
 
 	@Override
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
+		return withInternal( generateAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override

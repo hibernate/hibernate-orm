@@ -15,6 +15,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -24,6 +25,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -41,7 +43,7 @@ import org.junit.jupiter.api.Test;
 public class LazyBasicFieldMergeTest {
 
 	@Test
-//	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Manager manager = new Manager();

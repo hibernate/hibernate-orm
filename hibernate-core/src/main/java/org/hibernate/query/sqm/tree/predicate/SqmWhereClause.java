@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -70,5 +71,16 @@ public class SqmWhereClause implements SqmPredicateCollection {
 	@Override
 	public String toString() {
 		return "where " + predicate;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmWhereClause that
+			&& Objects.equals( this.predicate, that.predicate );
+	}
+
+	@Override
+	public int hashCode() {
+		return predicate == null ? 0 : predicate.hashCode();
 	}
 }

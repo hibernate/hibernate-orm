@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaWindow;
@@ -285,5 +286,26 @@ public class SqmWindow extends AbstractSqmNode implements JpaWindow, SqmVisitabl
 			default:
 				throw new UnsupportedOperationException( "Unsupported frame kind: " + kind );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( !(object instanceof SqmWindow sqmWindow) ) {
+			return false;
+		}
+		return Objects.equals( partitions, sqmWindow.partitions )
+			&& Objects.equals( orderList, sqmWindow.orderList )
+			&& mode == sqmWindow.mode
+			&& startKind == sqmWindow.startKind
+			&& Objects.equals( startExpression, sqmWindow.startExpression )
+			&& endKind == sqmWindow.endKind
+			&& Objects.equals( endExpression, sqmWindow.endExpression )
+			&& exclusion == sqmWindow.exclusion;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( partitions, orderList, mode, startKind, startExpression, endKind, endExpression,
+				exclusion );
 	}
 }

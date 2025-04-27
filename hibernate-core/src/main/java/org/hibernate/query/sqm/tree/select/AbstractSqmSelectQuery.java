@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -19,7 +20,6 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -123,21 +123,21 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
+		return withInternal( generateAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override
@@ -282,12 +282,11 @@ public abstract class AbstractSqmSelectQuery<T>
 		return addRoot(
 				new SqmRoot<>(
 						nodeBuilder().getDomainModel().entity( entityClass ),
-						null,
+						generateAlias(),
 						true,
 						nodeBuilder()
 				)
 		);
-
 	}
 
 	@Override
@@ -318,14 +317,21 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> SqmRoot<X> from(EntityType<X> entityType) {
-		return addRoot( new SqmRoot<>( (EntityDomainType<X>) entityType, null, true, nodeBuilder() ) );
+		return addRoot(
+				new SqmRoot<>(
+						(EntityDomainType<X>) entityType,
+						generateAlias(),
+						true,
+						nodeBuilder()
+				)
+		);
 	}
 
 	private void validateComplianceFromSubQuery() {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
-					"The JPA specification does not support subqueries in the from clause. " +
-							"Please disable the JPA query compliance if you want to use this feature." );
+					"The JPA specification does not support subqueries in the from clause. "
+					+ "Please disable the JPA query compliance if you want to use this feature." );
 		}
 	}
 
@@ -417,6 +423,19 @@ public abstract class AbstractSqmSelectQuery<T>
 			hql.setLength( hql.length() - 2 );
 		}
 		sqmQueryPart.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmSelectQuery<?> that
+			&& Objects.equals( this.resultType, that.resultType ) // for performance!
+			&& Objects.equals( this.sqmQueryPart, that.sqmQueryPart )
+			&& Objects.equals( this.cteStatements, that.cteStatements );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( cteStatements, sqmQueryPart );
 	}
 
 	@SuppressWarnings("unchecked")

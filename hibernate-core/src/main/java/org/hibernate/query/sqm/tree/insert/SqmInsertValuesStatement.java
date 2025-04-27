@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.query.criteria.JpaConflictClause;
@@ -46,7 +47,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						false,
 						nodeBuilder
 				),
@@ -192,7 +193,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 			appendValues( valuesList.get( i ), hql, context );
 		}
 		hql.append( ')' );
-		final SqmConflictClause conflictClause = getConflictClause();
+		final SqmConflictClause<?> conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
 			conflictClause.appendHqlString( hql, context );
 		}
@@ -207,5 +208,22 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 			expressions.get( i ).appendHqlString( sb, context );
 		}
 		sb.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( !(object instanceof SqmInsertValuesStatement<?> that) ) {
+			return false;
+		}
+		return Objects.equals( valuesList, that.valuesList )
+			&& Objects.equals( this.getTarget(), that.getTarget() )
+			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
+			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( valuesList, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
 	}
 }

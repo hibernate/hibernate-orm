@@ -16,7 +16,6 @@ import java.time.ZonedDateTime;
 import org.hibernate.dialect.CockroachDialect;
 
 import org.hamcrest.number.IsCloseTo;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -517,7 +516,6 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.Bad value for type long : 00:00:00")
 	public void testIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

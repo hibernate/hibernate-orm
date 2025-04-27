@@ -479,30 +479,19 @@ public class GaussDBDialect extends Dialect {
 		if ( unit == null ) {
 			return "(?3-?2)";
 		}
-		if ( toTemporalType == TemporalType.DATE && fromTemporalType == TemporalType.DATE ) {
-			// special case: subtraction of two dates
-			// results in an integer number of days
-			// instead of an INTERVAL
-			return switch (unit) {
-				case YEAR, MONTH, QUARTER -> "extract(" + translateDurationField( unit ) + " from age(?3,?2))";
-				default -> "(?3-?2)" + DAY.conversionFactor( unit, this );
-			};
-		}
-		else {
-			return switch (unit) {
-				case YEAR -> "extract(year from ?3-?2)";
-				case QUARTER -> "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
-				case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-				case WEEK -> "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
-				case DAY -> "extract(day from ?3-?2)";
-				// in order to avoid multiple calls to extract(),
-				// we use extract(epoch from x - y) * factor for
-				// all the following units:
-				case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
-						"extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
-				default -> throw new SemanticException( "Unrecognized field: " + unit );
-			};
-		}
+		return switch (unit) {
+			case YEAR -> "extract(year from ?3-?2)";
+			case QUARTER -> "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
+			case MONTH -> "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+			case WEEK -> "(extract(day from ?3-?2)/7)"; // week is not supported by extract() when the argument is a duration
+			case DAY -> "extract(day from ?3-?2)";
+			// in order to avoid multiple calls to extract(),
+			// we use extract(epoch from x - y) * factor for
+			// all the following units:
+			case HOUR, MINUTE, SECOND, NANOSECOND, NATIVE ->
+					"extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
+			default -> throw new SemanticException( "Unrecognized field: " + unit );
+		};
 	}
 
 	@Override

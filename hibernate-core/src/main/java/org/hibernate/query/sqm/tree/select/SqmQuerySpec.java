@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.Internal;
@@ -595,10 +596,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				hql.append( "distinct " );
 			}
 			final List<SqmSelection<?>> selections = selectClause.getSelections();
-			selections.get( 0 ).appendHqlString( hql, context );
-			for ( int i = 1; i < selections.size(); i++ ) {
-				hql.append( ", " );
-				selections.get( i ).appendHqlString( hql, context );
+			if ( !selections.isEmpty() ) {
+				selections.get( 0 ).appendHqlString( hql, context );
+				for ( int i = 1; i < selections.size(); i++ ) {
+					hql.append( ", " );
+					selections.get( i ).appendHqlString( hql, context );
+				}
 			}
 		}
 		if ( fromClause != null ) {
@@ -675,5 +678,23 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmQuerySpec<?> that
+			&& super.equals( other )
+			&& Objects.equals( this.fromClause, that.fromClause )
+			&& Objects.equals( this.selectClause, that.selectClause )
+			&& Objects.equals( this.whereClause, that.whereClause )
+			&& Objects.equals( this.groupByClauseExpressions, that.groupByClauseExpressions )
+			&& Objects.equals( this.havingClausePredicate, that.havingClausePredicate );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(),
+				fromClause, selectClause, whereClause,
+				groupByClauseExpressions, havingClausePredicate );
 	}
 }

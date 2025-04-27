@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import java.util.Objects;
+
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
@@ -141,4 +143,16 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		rhsOperand.appendHqlString( hql, context );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBinaryArithmetic<?> that
+			&& this.operator == that.operator
+			&& Objects.equals( this.lhsOperand, that.lhsOperand )
+			&& Objects.equals( this.rhsOperand, that.rhsOperand );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( lhsOperand, rhsOperand, operator );
+	}
 }

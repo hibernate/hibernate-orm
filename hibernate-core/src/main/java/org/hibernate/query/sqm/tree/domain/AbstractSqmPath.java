@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.hibernate.AssertionFailure;
@@ -45,8 +46,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	/**
 	 * For HQL and Criteria processing - used to track reusable paths relative to this path.
-	 * E.g., given `p.mate.mate` the SqmRoot identified by `p` would
-	 * have a reusable path for the `p.mate` path.
+	 * E.g., given {@code p.mate.mate} the {@code SqmRoot} identified by {@code p} would
+	 * have a reusable path for the {@code p.mate} path.
 	 */
 	private Map<String, SqmPath<?>> reusablePaths;
 
@@ -338,6 +339,22 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmPath<?> that
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.navigablePath, that.navigablePath )
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() );
+//			&& Objects.equals( this.lhs, that.lhs );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( navigablePath, getExplicitAlias() );
+//		return lhs == null ? 0 : lhs.hashCode();
+//		return navigablePath.hashCode();
+//		return Objects.hash( navigablePath, lhs );
+	}
 
 	@Override
 	public String toString() {

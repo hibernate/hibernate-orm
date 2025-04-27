@@ -16,6 +16,8 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
 
+import java.util.Objects;
+
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
@@ -123,5 +125,18 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 				!isNegated(),
 				nodeBuilder()
 		);
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmInSubQueryPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.testExpression, that.testExpression )
+			&& Objects.equals( this.subQueryExpression, that.subQueryExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( testExpression, subQueryExpression, isNegated() );
 	}
 }

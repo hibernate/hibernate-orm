@@ -162,7 +162,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 	@Override
 	public void validate() {
-		for ( Map.Entry<QueryParameter<?>, QueryParameterBinding<?>> entry : parameterBindingMap.entrySet() ) {
+		for ( var entry : parameterBindingMap.entrySet() ) {
 			if ( !entry.getValue().isBound() ) {
 				final QueryParameter<?> queryParameter = entry.getKey();
 				if ( queryParameter.isNamed() ) {

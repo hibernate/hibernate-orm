@@ -13,10 +13,10 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  * Models a parameter expression declared in the query.
  *
  * @implNote Each usage of a given named/positional query parameter
- * will result in a unique SqmParameter instance, each will simply
- * use to the same binding.  This is important to distinguish usage
- * of the same parameter in different clauses which effects the
- * rendering and value binding.
+ * will result in a unique {@code SqmParameter} instance, each will
+ * simply use to the same binding. This is important to distinguish
+ * usage of the same parameter in different clauses which effects
+ * the rendering and value binding.
  *
  * @author Steve Ebersole
  */

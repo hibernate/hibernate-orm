@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.identity;
 
+
 /**
  * @author liubao
  *
@@ -20,6 +21,6 @@ public class GaussDBIdentityColumnSupport extends IdentityColumnSupportImpl {
 
 	@Override
 	public String getIdentityColumnString(int type) {
-		return "";
+		return  "";
 	}
 }

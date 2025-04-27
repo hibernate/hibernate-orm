@@ -8,7 +8,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.query.Query;
 import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -28,7 +27,6 @@ import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -218,7 +216,6 @@ public class SubQueryInFromTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resovling.not support")
 	public void testEmbedded(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

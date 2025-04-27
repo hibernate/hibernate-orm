@@ -89,7 +89,6 @@ public class DateArrayTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TableWithDateArrays tableRecord;
@@ -108,7 +107,6 @@ public class DateArrayTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithDateArrays> tq = em.createNamedQuery( "TableWithDateArrays.JPQL.getById", TableWithDateArrays.class );
@@ -131,7 +129,6 @@ public class DateArrayTest {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testNativeQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithDateArrays> tq = em.createNamedQuery( "TableWithDateArrays.Native.getById", TableWithDateArrays.class );

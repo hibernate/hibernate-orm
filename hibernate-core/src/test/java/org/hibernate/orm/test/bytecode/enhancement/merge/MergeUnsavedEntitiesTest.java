@@ -9,8 +9,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.dialect.GaussDBDialect;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -109,7 +109,7 @@ public class MergeUnsavedEntitiesTest {
 
 	@Test
 	@Jira("HHH-18177")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support identity generation")
 	public void testMergeTransientInstanceWithGeneratedId(SessionFactoryScope scope) {
 		Book merged = scope.fromTransaction(
 				session -> {

@@ -41,7 +41,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class CompositeIdAndMergeTest {
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support identity key generation")
 	public void testMerge(SessionFactoryScope scope) {
 		Integer lineItemIndex = 2;
 		Order persistedOrder = scope.fromTransaction(

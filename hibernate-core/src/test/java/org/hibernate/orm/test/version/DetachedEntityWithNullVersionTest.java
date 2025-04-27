@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.PropertyValueException;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -17,7 +16,6 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -49,7 +47,6 @@ public class DetachedEntityWithNullVersionTest {
 	private static final String ITEM_UPDATED_NAME = "updated name";
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testMergeDetachedEntityWithIdentityId(SessionFactoryScope scope) {
 		IdentityGeneratedIdItem item = new IdentityGeneratedIdItem();
 		persistItem( scope, item );

@@ -104,7 +104,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	 *           in order to allow correct parameter handing.
 	 */
 	public SqmSelectStatement(SqmSelectStatement<T> original) {
-		super( original.getQueryPart(), original.getCteStatementMap(), original.getResultType(), original.nodeBuilder() );
+		super( original.getQueryPart(),
+				original.getCteStatementMap(),
+				original.getResultType(),
+				original.nodeBuilder() );
 		this.querySource = CRITERIA;
 	}
 
@@ -268,8 +271,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
 		if ( criteria instanceof SqmSubQuery<?> ) {
 			throw new IllegalArgumentException(
-					"Invalid query type provided to root query 'with' method, " +
-							"expecting a root query to use as CTE instead found a subquery"
+					"Invalid query type provided to root query 'with' method, "
+					+ "expecting a root query to use as CTE instead found a subquery"
 			);
 		}
 		return super.withInternal( name, criteria );
@@ -284,8 +287,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			AbstractQuery<X>> recursiveCriteriaProducer) {
 		if ( baseCriteria instanceof SqmSubQuery<?> ) {
 			throw new IllegalArgumentException(
-					"Invalid query type provided to root query 'with' method, " +
-							"expecting a root query to use as CTE instead found a subquery"
+					"Invalid query type provided to root query 'with' method, "
+					+ "expecting a root query to use as CTE instead found a subquery"
 			);
 		}
 		return super.withInternal( name, baseCriteria, unionDistinct, recursiveCriteriaProducer );
@@ -517,13 +520,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	public SqmSelectStatement<Long> createCountQuery() {
 		final SqmSelectStatement<?> copy = createCopy( noParamCopyContext(), Object.class );
 		final SqmQueryPart<?> queryPart = copy.getQueryPart();
-		final SqmQuerySpec<?> querySpec;
 		//TODO: detect queries with no 'group by', but aggregate functions
 		//      in 'select' list (we don't even need to hit the database to
 		//      know they return exactly one row)
-		if ( queryPart.isSimpleQueryPart()
-				&& !( querySpec = (SqmQuerySpec<?>) queryPart ).isDistinct()
+		if ( queryPart instanceof SqmQuerySpec<?> querySpec
+				&& !querySpec.isDistinct()
 				&& querySpec.getGroupingExpressions().isEmpty() ) {
+			// we can just remove any fetch joins and
+			// replace the select list with count(*)
 			for ( SqmRoot<?> root : querySpec.getRootList() ) {
 				root.removeLeftFetchJoins();
 			}
@@ -534,10 +538,11 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			return (SqmSelectStatement<Long>) copy;
 		}
 		else {
+			// we have to wrap query in an outer query
 			//TODO: do some deeper analysis for unions (simplify their select lists)
 			aliasSelections( queryPart );
-			final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
 			final SqmSelectStatement<Long> query = nodeBuilder().createQuery( Long.class );
+			final SqmSubQuery<?> subquery = new SqmSubQuery<>( query, queryPart, null, nodeBuilder() );
 			query.from( subquery );
 			query.select( nodeBuilder().count() );
 			if ( subquery.getFetch() == null && subquery.getOffset() == null ) {
@@ -576,6 +581,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		return query;
 	}
 
+	/**
+	 * Add synthetic aliases to all elements of the {@code select}
+	 * list, allowing the query to be reused as a subquery.
+	 */
 	private <S> void aliasSelections(SqmQueryPart<S> queryPart) {
 		if ( queryPart.isSimpleQueryPart() ) {
 			final SqmQuerySpec<S> querySpec = queryPart.getFirstQuerySpec();
@@ -599,8 +608,18 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 				aliasSelection( selectionItem, newSelections );
 			}
 		}
-		else {
+		// careful, if we don't want to reinsert the same selection
+		// with a different hash (because we modified the alias) or
+		// we'll get a broken LinkedHashSet containing dupe elements
+		else if ( !newSelections.contains( selection ) ) {
 			newSelections.add( selection.alias( "c" + newSelections.size() ) );
 		}
+	}
+
+	private int aliasCounter = 0;
+
+	@Override
+	public String generateAlias() {
+		return "_" + (++aliasCounter);
 	}
 }

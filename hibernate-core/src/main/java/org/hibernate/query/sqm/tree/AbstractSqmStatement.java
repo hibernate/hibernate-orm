@@ -92,4 +92,11 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 		assert querySource == SqmQuerySource.CRITERIA;
 		return SqmUtil.getParameters( this );
 	}
+
+	private int aliasCounter = 0;
+
+	@Override
+	public String generateAlias() {
+		return "_" + (++aliasCounter);
+	}
 }

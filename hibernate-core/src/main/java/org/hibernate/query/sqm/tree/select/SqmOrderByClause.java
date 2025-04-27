@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -84,5 +85,16 @@ public class SqmOrderByClause implements Serializable {
 				this.hasPositionalSortItem = true;
 			}
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmOrderByClause that
+			&& Objects.equals( this.sortSpecifications, that.sortSpecifications );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( sortSpecifications );
 	}
 }

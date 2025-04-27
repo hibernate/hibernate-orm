@@ -17,6 +17,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
+import java.util.Objects;
+
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
 
 /**
@@ -86,5 +88,16 @@ public class SqmLiteralEmbeddableType<T>
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( embeddableDomainType.getTypeName() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLiteralEmbeddableType<?> that
+			&& Objects.equals( embeddableDomainType.getTypeName(), that.embeddableDomainType.getTypeName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return embeddableDomainType.getTypeName().hashCode();
 	}
 }

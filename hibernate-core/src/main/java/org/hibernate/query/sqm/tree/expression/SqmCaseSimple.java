@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -171,6 +172,18 @@ public class SqmCaseSimple<T, R>
 		hql.append( " end" );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCaseSimple<?, ?> that
+			&& Objects.equals( this.fixture, that.fixture )
+			&& Objects.equals( this.whenFragments, that.whenFragments )
+			&& Objects.equals( this.otherwise, that.otherwise );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( fixture, whenFragments, otherwise );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

@@ -10,6 +10,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import java.util.Objects;
+
 /**
  * @author Gavin King
  */
@@ -63,6 +65,19 @@ public class SqmTruthnessPredicate extends AbstractNegatableSqmPredicate {
 			hql.append( "not " );
 		}
 		hql.append( getBooleanValue() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmTruthnessPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.value == that.value
+			&& Objects.equals( this.expression, that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), value, expression );
 	}
 
 	@Override

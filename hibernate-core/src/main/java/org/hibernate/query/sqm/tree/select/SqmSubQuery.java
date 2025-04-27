@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -771,4 +772,20 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSubQuery<?> that
+			&& Objects.equals( this.alias, that.alias )
+			&& super.equals( object );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), alias );
+	}
+
+	@Override
+	public String generateAlias() {
+		return parent.generateAlias();
+	}
 }

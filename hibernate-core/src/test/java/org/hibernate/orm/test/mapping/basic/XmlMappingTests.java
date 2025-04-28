@@ -100,7 +100,7 @@ public abstract class XmlMappingTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB don't support this xml feature")
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
@@ -125,7 +125,7 @@ public abstract class XmlMappingTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB don't support this xml feature")
 	public void verifyReadWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -143,7 +143,7 @@ public abstract class XmlMappingTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
 	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB doesn't support comparing CLOBs with the = operator")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) ->  {

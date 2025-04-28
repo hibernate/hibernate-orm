@@ -61,7 +61,6 @@ public class InsertConflictTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict do\"")
 	public void testOnConflictDoNothing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -86,7 +85,6 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(\"")
 	public void testOnConflictDoUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -114,7 +112,6 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateWithWhere(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -134,6 +131,10 @@ public class InsertConflictTests {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
 					else {
 						assertEquals( 0, updated );
 					}
@@ -145,7 +146,6 @@ public class InsertConflictTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateWithWhereCriteria(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -171,6 +171,10 @@ public class InsertConflictTests {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
 					else {
 						assertEquals( 0, updated );
 					}
@@ -181,7 +185,6 @@ public class InsertConflictTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict do\"")
 	public void testOnConflictDoNothingMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -209,7 +212,6 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolving.syntax error at or near \"conflict(")
 	public void testOnConflictDoUpdateMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -238,7 +240,6 @@ public class InsertConflictTests {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUpsertOrMerge.class)
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "MERGE into a table that has a self-referential FK does not work")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "syntax error at or near \"conflict(\"")
 	public void testOnConflictDoUpdateWithWhereMultiTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -256,6 +257,10 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {

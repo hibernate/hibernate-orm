@@ -114,7 +114,7 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 
 	@Override
 	protected void visitConflictClause(ConflictClause conflictClause) {
-		visitStandardConflictClause( conflictClause );
+		visitOnDuplicateKeyConflictClauseWithDoNothing( conflictClause );
 	}
 
 	@Override

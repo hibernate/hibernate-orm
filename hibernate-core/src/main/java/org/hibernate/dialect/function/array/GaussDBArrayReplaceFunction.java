@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import java.util.List;
 
 /**
- * Gaussdb array_replace function.
+ * GaussDB array_replace function.
  * @author chenzhida
  */
 public class GaussDBArrayReplaceFunction extends ArrayReplaceUnnestFunction {

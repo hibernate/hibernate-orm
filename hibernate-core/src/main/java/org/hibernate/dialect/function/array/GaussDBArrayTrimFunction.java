@@ -13,7 +13,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import java.util.List;
 
 /**
- * Gaussdb array_trim function.
+ * GaussDB array_trim function.
  * @author chenzhida
  *
  * Notes: Original code of this class is based on PostgreSQLArrayTrimEmulation.

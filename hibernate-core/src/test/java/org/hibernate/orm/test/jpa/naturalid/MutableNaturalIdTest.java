@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.jpa.naturalid;
 
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 
@@ -27,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		reason = "Hana do not support identity key generation")
 @SkipForDialect(dialectClass = AltibaseDialect.class,
 		reason = "Altibase do not support identity key generation")
-@SkipForDialect(dialectClass = GaussDBDialect.class,
-		reason = "Gauss do not support identity key generation")
 public class MutableNaturalIdTest extends AbstractJPATest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

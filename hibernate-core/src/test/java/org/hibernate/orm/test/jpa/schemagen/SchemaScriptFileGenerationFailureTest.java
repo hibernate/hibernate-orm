@@ -66,7 +66,7 @@ public class SchemaScriptFileGenerationFailureTest {
 	@JiraKey(value = "HHH-12192")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true,
 			reason = "on postgres we send 'set client_min_messages = WARNING'")
-	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.on gauss we send 'set client_min_messages = WARNING'")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "on gauss we send 'set client_min_messages = WARNING'")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();

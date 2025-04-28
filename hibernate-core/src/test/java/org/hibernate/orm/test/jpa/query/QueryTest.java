@@ -579,7 +579,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey("HHH-18033")
-	@SkipForDialect(value = GaussDBDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	public void testNativeQueryContainsQuotedSemicolonWithLimit() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -606,7 +605,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = SybaseDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	@SkipForDialect(value = DB2Dialect.class, comment = "Doesn't support semicolon as ending of statement")
-	@SkipForDialect(value = GaussDBDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

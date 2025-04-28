@@ -148,8 +148,8 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public int compareTo(SqmParameter parameter) {
-		return parameter instanceof JpaCriteriaParameter
+	public int compareTo(SqmParameter<T> parameter) {
+		return parameter instanceof JpaCriteriaParameter<T>
 				? Integer.compare( hashCode(), parameter.hashCode() )
 				: 1;
 	}

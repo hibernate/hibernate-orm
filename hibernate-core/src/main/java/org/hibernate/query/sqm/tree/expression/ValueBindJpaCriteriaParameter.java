@@ -51,7 +51,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 
 	@Override
 	// TODO: fix this
-	public int compareTo(SqmParameter parameter) {
+	public int compareTo(SqmParameter<T> parameter) {
 		return this == parameter ? 0 : 1;
 	}
 

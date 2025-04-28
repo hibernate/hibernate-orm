@@ -75,21 +75,21 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 * support any previous extensions
 	 */
 	@Override
-	default int compareTo(SqmParameter<T> anotherParameter) {
-		if ( this instanceof SqmNamedParameter<?> one ) {
-			return anotherParameter instanceof SqmNamedParameter<?>
-					? one.getName().compareTo( anotherParameter.getName() )
+	default int compareTo(SqmParameter<T> parameter) {
+		if ( this instanceof SqmNamedParameter<T> one ) {
+			return parameter instanceof SqmNamedParameter<?>
+					? one.getName().compareTo( parameter.getName() )
 					: -1;
 		}
-		else if ( this instanceof SqmPositionalParameter<?> one ) {
-			return anotherParameter instanceof SqmPositionalParameter<?>
-					? one.getPosition().compareTo( anotherParameter.getPosition() )
+		else if ( this instanceof SqmPositionalParameter<T> one ) {
+			return parameter instanceof SqmPositionalParameter<?>
+					? one.getPosition().compareTo( parameter.getPosition() )
 					: 1;
 		}
-		else if ( this instanceof SqmJpaCriteriaParameterWrapper
-				&& anotherParameter instanceof SqmJpaCriteriaParameterWrapper ) {
-			return Integer.compare( this.hashCode(), anotherParameter.hashCode() );
+		else if ( this instanceof SqmJpaCriteriaParameterWrapper<T>
+				&& parameter instanceof SqmJpaCriteriaParameterWrapper<T> ) {
+			return Integer.compare( this.hashCode(), parameter.hashCode() );
 		}
-		throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + anotherParameter );
+		throw new HibernateException( "Unexpected SqmParameter type for comparison : " + this + " & " + parameter );
 	}
 }

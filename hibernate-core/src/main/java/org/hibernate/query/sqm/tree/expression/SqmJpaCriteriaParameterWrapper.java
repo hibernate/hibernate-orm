@@ -129,8 +129,8 @@ public class SqmJpaCriteriaParameterWrapper<T>
 	}
 
 	@Override
-	public int compareTo(SqmParameter anotherParameter) {
-		return anotherParameter instanceof SqmJpaCriteriaParameterWrapper<?> wrapper
+	public int compareTo(SqmParameter<T> parameter) {
+		return parameter instanceof SqmJpaCriteriaParameterWrapper<T> wrapper
 				? getJpaCriteriaParameter().compareTo( wrapper.getJpaCriteriaParameter() )
 				: 1;
 	}

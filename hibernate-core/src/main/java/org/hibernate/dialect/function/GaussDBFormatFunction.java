@@ -33,8 +33,8 @@ import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
+import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
-import org.hibernate.sql.ast.tree.predicate.LessThanPredicate;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -481,8 +481,9 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				final CaseSearchedExpression minuteStart = new CaseSearchedExpression( stringType );
 				minuteStart.getWhenFragments().add(
 						new CaseSearchedExpression.WhenFragment(
-								new LessThanPredicate(
+								new BetweenPredicate(
 										minutes,
+										new QueryLiteral<>( Integer.MIN_VALUE, integerType ),
 										new QueryLiteral<>( 10, integerType ),
 										false,
 										null
@@ -546,8 +547,9 @@ public class GaussDBFormatFunction extends AbstractSqmFunctionDescriptor impleme
 				final CaseSearchedExpression minuteStart = new CaseSearchedExpression( stringType );
 				minuteStart.getWhenFragments().add(
 						new CaseSearchedExpression.WhenFragment(
-								new LessThanPredicate(
+								new BetweenPredicate(
 										minutes,
+										new QueryLiteral<>( Integer.MIN_VALUE, integerType ),
 										new QueryLiteral<>( 10, integerType ),
 										false,
 										null

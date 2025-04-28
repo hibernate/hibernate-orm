@@ -103,8 +103,42 @@ tasks.withType(PublishToMavenLocal).configureEach {
     }
 }
 
+def buildMavenMetadataXmlURI(groupId,artifactId) {
+    def snapshotRepo = "https://oss.sonatype.org/content/repositories/snapshots/"
+    def mavenRepo = "https://repo.maven.apache.org/maven2/"
+    def metadataXml = "${groupId.replace(".", "/")}/${artifactId}/maven-metadata.xml"
+
+    if (ormBuildDetails.hibernateVersion.isSnapshot) {
+        return "${snapshotRepo}${metadataXml}"
+    } else {
+        return "${mavenRepo}${metadataXml}"
+    }
+}
+
+/*
+ Needed because when publishing to the local staging folder the
+ maven-metadata.xml generated does not contain all the previous published versions
+ */
+def downloadMavenMetadataFile(groupId, artifactId) {
+
+    def destinationFolderName = "staging-deploy${File.separator}maven${File.separator}${groupId.replace(".", File.separator)}${File.separator}${artifactId}"
+    def destinationFolder = rootProject.layout.buildDirectory.dir(destinationFolderName).get()
+
+    def asFile = destinationFolder.getAsFile()
+    if (!asFile.exists()) {
+        asFile.mkdirs()
+    }
+    def destinationFile = new File(asFile.toString() + "/maven-metadata.xml")
+
+    def metadataFileURI = buildMavenMetadataXmlURI(groupId, artifactId)
+    new URI(metadataFileURI).toURL().withInputStream {
+        i -> destinationFile.withOutputStream { it << i }
+    }
+}
+
 tasks.withType(PublishToMavenRepository).configureEach {
     doFirst {
+        downloadMavenMetadataFile(publication.groupId, publication.artifactId)
         logger.lifecycle("PublishToMavenRepository ({} : {})", publication.name, repository.name)
         logger.lifecycle("    - {} : {} : {} ", publication.groupId, publication.artifactId, publication.pom.packaging)
         logger.lifecycle("    - artifacts ({})...", publication.artifacts.size())

@@ -5,8 +5,6 @@
 package org.hibernate.orm.test.merge;
 
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.dialect.GaussDBDialect;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,7 +46,6 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support identity key generation")
 	public void testMerge() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Post post = entityManager.find(Post.class, 1L);

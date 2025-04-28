@@ -7,7 +7,6 @@ package org.hibernate.orm.test.cid;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;

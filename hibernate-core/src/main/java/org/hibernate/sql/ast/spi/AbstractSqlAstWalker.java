@@ -603,5 +603,4 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
 		throw new UnsupportedOperationException();
 	}
-
 }

@@ -28,8 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		StatelessSessionVersioningTest.UUIDVersioned.class})
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class StatelessSessionVersioningTest {
-	@Test
-	void testIdentity(SessionFactoryScope scope) {
+	@Test void testIdentity(SessionFactoryScope scope) {
 		Dialect dialect = scope.getMetadataImplementor().getDatabase().getDialect();
 		scope.inStatelessTransaction(s -> {
 			IdentityVersioned v = new IdentityVersioned();

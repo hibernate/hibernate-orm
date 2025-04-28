@@ -10,6 +10,7 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -91,9 +92,10 @@ public abstract class AbstractSqmDmlStatement<E>
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( generateAlias(), criteria );
+		// Use of acquireUniqueAlias() results in interpretation cache miss
+		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override

@@ -103,6 +103,6 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 
 	@Override
 	public String generateAlias() {
-		return "_" + (++aliasCounter);
+		return "t_" + (++aliasCounter);
 	}
 }

@@ -596,6 +596,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public String generateAlias() {
-		return "_" + (++aliasCounter);
+		return "t_" + (++aliasCounter);
 	}
 }

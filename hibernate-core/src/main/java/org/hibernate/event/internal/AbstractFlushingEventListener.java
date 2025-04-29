@@ -147,7 +147,7 @@ public abstract class AbstractFlushingEventListener {
 		// into Nullability, instead of abusing the Cascade infrastructure)
 		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 			final EntityEntry entry = me.getValue();
-			if ( flushable( entry ) ) {
+			if ( checkable( entry ) ) {
 				Cascade.cascade(
 						CascadingActions.CHECK_ON_FLUSH,
 						CascadePoint.BEFORE_FLUSH,
@@ -165,6 +165,12 @@ public abstract class AbstractFlushingEventListener {
 		return status == Status.MANAGED
 			|| status == Status.SAVING
 			|| status == Status.READ_ONLY; // debatable, see HHH-19398
+	}
+
+	private static boolean checkable(EntityEntry entry) {
+		final Status status = entry.getStatus();
+		return status == Status.MANAGED
+			|| status == Status.SAVING;
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)

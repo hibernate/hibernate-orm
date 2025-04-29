@@ -40,7 +40,6 @@ import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.TableGroupFilterAliasGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -66,6 +65,8 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
+
+import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
 
 /**
  * A strategy for persisting a mapped {@linkplain jakarta.persistence.Entity
@@ -189,7 +190,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	String getJpaEntityName();
 
 	default String getImportedName() {
-		return getJpaEntityName() != null ? getJpaEntityName() : StringHelper.unqualifyEntityName( getEntityName() );
+		final String entityName = getJpaEntityName();
+		return entityName == null
+				? unqualifyEntityName( getEntityName() )
+				: entityName;
 	}
 
 	/**

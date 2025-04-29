@@ -352,6 +352,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	/**
+	 * Determine whether this entity has any many-to-one or one-to-one associations.
+	 *
+	 * @return True if the entity has a many-to-one or one-to-one association;
+	 * false otherwise.
+	 *
+	 * @since 7
+	 */
+	boolean hasToOnes();
+
+	/**
 	 * Determine whether this entity has any owned collections.
 	 *
 	 * @return True if the entity has an owned collection;

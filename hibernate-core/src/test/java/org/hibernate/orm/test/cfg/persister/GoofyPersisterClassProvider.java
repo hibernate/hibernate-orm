@@ -305,6 +305,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean hasToOnes() {
+			return false;
+		}
+
+		@Override
 		public boolean isMutable() {
 			return false;
 		}

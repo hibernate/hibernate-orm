@@ -17,18 +17,18 @@ repositories {
     }
 }
 
-dependencies {
-    // NOTE : The version used here is irrelevant in terms of testing the plugin.
-    // We just need a resolvable version
-    implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
-}
-
 sourceSets {
     mySpecialSourceSet {
         java {
             srcDirs "src/mySpecialSourceSet/java"
         }
     }
+}
+
+dependencies {
+    // NOTE : The version used here is irrelevant in terms of testing the plugin.
+    // We just need a resolvable version
+    mySpecialSourceSetImplementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
 }
 
 hibernate {

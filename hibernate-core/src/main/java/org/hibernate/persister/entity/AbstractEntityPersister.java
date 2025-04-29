@@ -2253,11 +2253,13 @@ public abstract class AbstractEntityPersister
 		if ( tableNumber == 0 ) {
 			return rootAlias;
 		}
-		final StringBuilder alias = new StringBuilder().append( rootAlias );
-		if ( !rootAlias.endsWith( "_" ) ) {
-			alias.append( '_' );
+		else {
+			final var alias = new StringBuilder().append( rootAlias );
+			if ( !rootAlias.endsWith( "_" ) ) {
+				alias.append( '_' );
+			}
+			return alias.append( tableNumber ).append( '_' ).toString();
 		}
-		return alias.append( tableNumber ).append( '_' ).toString();
 	}
 
 	private int getSubclassPropertyIndex(String propertyName) {

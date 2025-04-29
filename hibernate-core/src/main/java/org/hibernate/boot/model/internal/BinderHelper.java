@@ -713,10 +713,11 @@ public class BinderHelper {
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {
+		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 		PersistentClass current = persistentClass;
 		while ( current != null ) {
 			try {
-				context.getMetadataCollector().getPhysicalColumnName( current.getTable(), columnName );
+				metadataCollector.getPhysicalColumnName( current.getTable(), columnName );
 				return current;
 			}
 			catch (MappingException me) {
@@ -724,7 +725,7 @@ public class BinderHelper {
 			}
 			for ( Join join : current.getJoins() ) {
 				try {
-					context.getMetadataCollector().getPhysicalColumnName( join.getTable(), columnName );
+					metadataCollector.getPhysicalColumnName( join.getTable(), columnName );
 					return join;
 				}
 				catch (MappingException me) {
@@ -785,9 +786,8 @@ public class BinderHelper {
 		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
 		firstDiscriminatorColumn.linkWithValue( discriminatorDescriptor );
 
-		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
-				.resolve()
-				.getRelationalJavaType();
+		final JavaType<?> discriminatorJavaType =
+				discriminatorDescriptor.resolve().getRelationalJavaType();
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
@@ -801,7 +801,8 @@ public class BinderHelper {
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
 
-		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues =
+				property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
 		if ( anyDiscriminatorImplicitValues != null ) {
 			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
@@ -848,7 +849,6 @@ public class BinderHelper {
 			ClassDetails declaringClass,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MetadataBuildingContext context) {
-		boolean retrieve = false;
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -857,16 +857,10 @@ public class BinderHelper {
 				);
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
-				retrieve = true;
+				return context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
 			}
 		}
-
-		if ( retrieve ) {
-			return context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
-		}
-		else {
-			return null;
-		}
+		return null;
 	}
 
 	public static String getPath(PropertyHolder holder, PropertyData property) {
@@ -874,14 +868,14 @@ public class BinderHelper {
 	}
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
-		final Map<String,String> ret = new HashMap<>();
+		final Map<String,String> result = new HashMap<>();
 		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
 			final String table = aliasAnnotation.table();
 			if ( isNotBlank( table ) ) {
-				ret.put( aliasAnnotation.alias(), table );
+				result.put( aliasAnnotation.alias(), table );
 			}
 		}
-		return ret;
+		return result;
 	}
 
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){

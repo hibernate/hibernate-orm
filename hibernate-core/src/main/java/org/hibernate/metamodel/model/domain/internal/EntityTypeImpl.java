@@ -14,13 +14,13 @@ import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -28,9 +28,7 @@ import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.isCompatible;
@@ -71,16 +69,15 @@ public class EntityTypeImpl<J>
 		this.jpaEntityName = jpaEntityName;
 		this.metamodel = metamodel;
 
+		discriminatorPathSource = entityDiscriminatorPathSource( metamodel );
+	}
+
+	private EntityDiscriminatorSqmPathSource<?> entityDiscriminatorPathSource(JpaMetamodelImplementor metamodel) {
 		final EntityPersister entityDescriptor =
 				metamodel.getMappingMetamodel()
 						.getEntityDescriptor( getHibernateEntityName() );
-		final DiscriminatorMetadata discriminatorMetadata = entityDescriptor.getTypeDiscriminatorMetadata();
-		final SqmDomainType<?> discriminatorType =
-				discriminatorMetadata != null
-						? (SqmDomainType<?>) discriminatorMetadata.getResolutionType()
-						: metamodel.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
-
-		discriminatorPathSource = discriminatorType == null ? null
+		final DiscriminatorType<?> discriminatorType = entityDescriptor.getDiscriminatorDomainType();
+		return discriminatorType == null ? null
 				: new EntityDiscriminatorSqmPathSource<>( discriminatorType, this, entityDescriptor );
 	}
 

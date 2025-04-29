@@ -44,6 +44,7 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -1502,12 +1503,28 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	String selectFragment(String alias, String suffix);
 
 	/**
+	 * The type of the discriminator, or {@code null} if the entity does not have a discriminator.
+	 *
+	 * @return a {@link DiscriminatorType} or {@code null}
+	 *
+	 * @see #getDiscriminatorType()
+	 *
+	 * @since 7
+	 */
+	DiscriminatorType<?> getDiscriminatorDomainType();
+
+	/**
 	 * Retrieve the information needed to properly deal with this entity's discriminator
 	 * in a query.
 	 *
 	 * @return The entity discriminator metadata
+	 *
+	 * @deprecated Since {@link DiscriminatorMetadata} is deprecated
 	 */
-	DiscriminatorMetadata getTypeDiscriminatorMetadata();
+	@Deprecated(since = "6.2", forRemoval = true)
+	default DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		return this::getDiscriminatorDomainType;
+	}
 
 	/**
 	 * Given a property path, return the corresponding column name(s).

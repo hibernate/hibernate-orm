@@ -59,7 +59,7 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		final EntityMappingType indicatedEntity = matchingValueDetails.getIndicatedEntity();
 		//noinspection unchecked
 		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
+			&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
 				? (O) indicatedEntity.getJavaType().getJavaTypeClass()
 				: (O) indicatedEntity.getEntityName();
 	}

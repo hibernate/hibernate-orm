@@ -53,7 +53,6 @@ import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -383,7 +382,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public MappingMetamodel getMetamodel() {
+	public MappingMetamodelImplementor getMetamodel() {
 		return metamodel;
 	}
 

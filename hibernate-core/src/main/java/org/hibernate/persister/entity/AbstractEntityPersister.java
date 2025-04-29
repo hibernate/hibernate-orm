@@ -125,7 +125,6 @@ import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -252,7 +251,6 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.io.Serializable;
@@ -2204,49 +2202,40 @@ public abstract class AbstractEntityPersister
 		return propertyMapping.getColumnNames( propertyName );
 	}
 
-	private DiscriminatorType<?> discriminatorType;
+	private DiscriminatorType<?> discriminatorDomainType;
 
-	protected DiscriminatorType<?> resolveDiscriminatorType() {
-		if ( discriminatorType == null ) {
-			discriminatorType = buildDiscriminatorType();
+	@Override
+	public DiscriminatorType<?> getDiscriminatorDomainType() {
+		if ( discriminatorDomainType == null ) {
+			discriminatorDomainType = buildDiscriminatorType();
 		}
-		return discriminatorType;
+		return discriminatorDomainType;
 	}
 
 	private DiscriminatorType<?> buildDiscriminatorType() {
-		final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
-		if ( underlingJdbcMapping == null ) {
-			return null;
-		}
-
-		final JavaTypeRegistry javaTypeRegistry = factory.getTypeConfiguration().getJavaTypeRegistry();
-
-		final JavaType<Object> domainJavaType;
-		if ( representationStrategy.getMode() == POJO
-				&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() ) ) {
-			domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-		}
-		else {
-			domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
-		}
-
-		//noinspection rawtypes
-		final DiscriminatorConverter converter = new UnifiedAnyDiscriminatorConverter<>(
-				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
-				domainJavaType,
-				underlingJdbcMapping.getRelationalJavaType(),
-				getSubclassByDiscriminatorValue(),
-				null,
-				factory.getMappingMetamodel()
-		);
-
-		//noinspection unchecked,rawtypes
-		return new DiscriminatorTypeImpl( underlingJdbcMapping, converter );
+		final BasicType<?> underlyingJdbcMapping = getDiscriminatorType();
+		return underlyingJdbcMapping == null
+				? null
+				: new DiscriminatorTypeImpl<>(
+						underlyingJdbcMapping,
+						new UnifiedAnyDiscriminatorConverter<>(
+								getNavigableRole()
+										.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+								factory.getTypeConfiguration().getJavaTypeRegistry()
+										.resolveDescriptor( discriminatedType() ),
+								underlyingJdbcMapping.getRelationalJavaType(),
+								getSubclassByDiscriminatorValue(),
+								null,
+								factory.getMappingMetamodel()
+						)
+				);
 	}
 
-	@Override
-	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
-		return this::buildDiscriminatorType;
+	private Class<?> discriminatedType() {
+		return representationStrategy.getMode() == POJO
+			&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() )
+				? Class.class
+				: String.class;
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {
@@ -5038,7 +5027,7 @@ public abstract class AbstractEntityPersister
 					length,
 					precision,
 					scale,
-					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
+					getDiscriminatorDomainType()
 			);
 		}
 	}

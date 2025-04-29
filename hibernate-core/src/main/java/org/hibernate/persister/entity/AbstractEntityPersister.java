@@ -3751,6 +3751,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean hasCascadePersist() {
+		return entityMetamodel.hasCascadePersist();
+	}
+
+	@Override
 	public boolean hasCascadeDelete() {
 		return entityMetamodel.hasCascadeDelete();
 	}

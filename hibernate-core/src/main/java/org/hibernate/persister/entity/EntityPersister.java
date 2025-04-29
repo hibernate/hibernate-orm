@@ -337,7 +337,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * (non-{@linkplain org.hibernate.engine.spi.CascadeStyles#NONE none}) cascading.
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#NONE cascading} operations.
 	 *
 	 * @return True if the entity has any properties with a cascade other than NONE;
 	 *         false otherwise (aka, no cascading).
@@ -346,15 +346,21 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Determine whether this entity has any
-	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#PERSIST persist cascading}.
 	 *
-	 * @return True if the entity has any properties with a cascade other than NONE;
+	 * @return True if the entity has any properties with a cascade PERSIST or ALL;
 	 *         false otherwise.
 	 */
-	default boolean hasCascadeDelete() {
-		//bad default implementation for compatibility
-		return hasCascades();
-	}
+	boolean hasCascadePersist();
+
+	/**
+	 * Determine whether this entity has any
+	 * {@linkplain org.hibernate.engine.spi.CascadeStyles#DELETE delete cascading}.
+	 *
+	 * @return True if the entity has any properties with a cascade REMOVE or ALL;
+	 *         false otherwise.
+	 */
+	boolean hasCascadeDelete();
 
 	/**
 	 * Determine whether this entity has any many-to-one or one-to-one associations.
@@ -372,10 +378,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * @return True if the entity has an owned collection;
 	 * false otherwise.
 	 */
-	default boolean hasOwnedCollections() {
-		//bad default implementation for compatibility
-		return hasCollections();
-	}
+	boolean hasOwnedCollections();
 
 	/**
 	 * Determine whether instances of this entity are considered mutable.

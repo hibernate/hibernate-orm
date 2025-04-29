@@ -305,7 +305,22 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean hasCascadeDelete() {
+			return false;
+		}
+
+		@Override
 		public boolean hasToOnes() {
+			return false;
+		}
+
+		@Override
+		public boolean hasCascadePersist() {
+			return false;
+		}
+
+		@Override
+		public boolean hasOwnedCollections() {
 			return false;
 		}
 

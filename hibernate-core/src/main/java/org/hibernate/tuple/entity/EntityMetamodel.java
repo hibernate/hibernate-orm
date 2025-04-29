@@ -128,6 +128,7 @@ public class EntityMetamodel implements Serializable {
 	private boolean lazy; //not final because proxy factory creation can fail
 	private final boolean hasCascades;
 	private final boolean hasToOnes;
+	private final boolean hasCascadePersist;
 	private final boolean hasCascadeDelete;
 	private final boolean mutable;
 	private final boolean isAbstract;
@@ -242,6 +243,7 @@ public class EntityMetamodel implements Serializable {
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
 		boolean foundToOne = false;
+		boolean foundCascadePersist = false;
 		boolean foundCascadeDelete = false;
 		boolean foundCollection = false;
 		boolean foundOwnedCollection = false;
@@ -378,6 +380,10 @@ public class EntityMetamodel implements Serializable {
 			if ( cascadeStyles[i] != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
+			if ( cascadeStyles[i].doCascade(CascadingActions.PERSIST)
+					|| cascadeStyles[i].doCascade(CascadingActions.PERSIST_ON_FLUSH) ) {
+				foundCascadePersist = true;
+			}
 			if ( cascadeStyles[i].doCascade(CascadingActions.REMOVE) ) {
 				foundCascadeDelete = true;
 			}
@@ -420,6 +426,7 @@ public class EntityMetamodel implements Serializable {
 
 		hasCascades = foundCascade;
 		hasToOnes = foundToOne;
+		hasCascadePersist = foundCascadePersist;
 		hasCascadeDelete = foundCascadeDelete;
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
@@ -766,6 +773,10 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean hasCascadeDelete() {
 		return hasCascadeDelete;
+	}
+
+	public boolean hasCascadePersist() {
+		return hasCascadePersist;
 	}
 
 	public boolean isMutable() {

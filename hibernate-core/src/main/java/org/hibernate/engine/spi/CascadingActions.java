@@ -284,6 +284,11 @@ public class CascadingActions {
 		}
 
 		@Override
+		public boolean anythingToCascade(EntityPersister persister) {
+			return persister.hasCascadePersist();
+		}
+
+		@Override
 		public String toString() {
 			return "ACTION_PERSIST";
 		}
@@ -324,6 +329,11 @@ public class CascadingActions {
 		@Override
 		public boolean performOnLazyProperty() {
 			return false;
+		}
+
+		@Override
+		public boolean anythingToCascade(EntityPersister persister) {
+			return persister.hasCascadePersist();
 		}
 
 		@Override
@@ -380,6 +390,9 @@ public class CascadingActions {
 
 		@Override
 		public boolean anythingToCascade(EntityPersister persister) {
+			// Must override the implementation from the superclass
+			// because transient checking happens even for entities
+			// with cascade NONE on all associations
 			// if the entity has no associations, we can just ignore it
 			return persister.hasToOnes()
 				|| persister.hasOwnedCollections();
@@ -387,6 +400,9 @@ public class CascadingActions {
 
 		@Override
 		public boolean appliesTo(Type type, CascadeStyle style) {
+			// Very important to override the implementation from
+			// the superclass, because CHECK_ON_FLUSH is the only
+			// style that executes for fields with cascade NONE
 			return super.appliesTo( type, style )
 				// we only care about associations here,
 				// but they can hide inside embeddables

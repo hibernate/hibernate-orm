@@ -84,7 +84,7 @@ public final class Cascade {
 			final EntityPersister persister,
 			final Object parent,
 			final T anything) throws HibernateException {
-		if ( persister.hasCascades() || action == CHECK_ON_FLUSH ) { // performance opt
+		if ( action.anythingToCascade( persister ) ) { // performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
@@ -118,7 +118,7 @@ public final class Cascade {
 								&& !persister.getBytecodeEnhancementMetadata()
 										.isAttributeLoaded( parent, propertyName );
 
-				if ( style.doCascade( action ) ) {
+				if ( action.appliesTo( type, style ) ) {
 					final Object child;
 					if ( isUninitializedProperty  ) {
 						assert enhancedForLazyLoading;
@@ -435,8 +435,9 @@ public final class Cascade {
 		for ( int i = 0; i < types.length; i++ ) {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			final String subPropertyName = propertyNames[i];
-			if ( componentPropertyStyle.doCascade( action )
-					|| componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
+			final Type subPropertyType = types[i];
+			if ( action.appliesTo( subPropertyType, componentPropertyStyle )
+				|| componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
 				if ( children == null ) {
 					// Get children on demand.
 					children = componentType.getPropertyValues( child, eventSource );
@@ -448,7 +449,7 @@ public final class Cascade {
 						componentPath,
 						parent,
 						children[i],
-						types[i],
+						subPropertyType,
 						componentPropertyStyle,
 						subPropertyName,
 						anything,

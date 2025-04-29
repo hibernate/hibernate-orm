@@ -3746,6 +3746,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean hasToOnes() {
+		return entityMetamodel.hasToOnes();
+	}
+
+	@Override
 	public boolean hasCascadeDelete() {
 		return entityMetamodel.hasCascadeDelete();
 	}

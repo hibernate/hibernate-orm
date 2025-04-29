@@ -17,7 +17,9 @@ import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
@@ -71,6 +73,11 @@ public class CascadingActions {
 		public boolean deleteOrphans() {
 			// orphans should be deleted during delete
 			return true;
+		}
+
+		@Override
+		public boolean anythingToCascade(EntityPersister persister) {
+			return persister.hasCascadeDelete();
 		}
 
 		@Override
@@ -372,6 +379,21 @@ public class CascadingActions {
 		}
 
 		@Override
+		public boolean anythingToCascade(EntityPersister persister) {
+			// if the entity has no associations, we can just ignore it
+			return persister.hasToOnes()
+				|| persister.hasOwnedCollections();
+		}
+
+		@Override
+		public boolean appliesTo(Type type, CascadeStyle style) {
+			return super.appliesTo( type, style )
+				// we only care about associations here,
+				// but they can hide inside embeddables
+				&& ( type.isComponentType() || type.isAssociationType() );
+		}
+
+		@Override
 		public boolean deleteOrphans() {
 			return false;
 		}
@@ -456,6 +478,18 @@ public class CascadingActions {
 		@Override
 		public boolean performOnLazyProperty() {
 			return true;
+		}
+
+		@Override
+		public boolean anythingToCascade(EntityPersister persister) {
+			// if the entity has cascade NONE everywhere, we can ignore it
+			// TODO: the persister could track which kinds of cascade it has
+			return persister.hasCascades();
+		}
+
+		@Override
+		public boolean appliesTo(Type type, CascadeStyle style) {
+			return style.doCascade( this );
 		}
 	}
 

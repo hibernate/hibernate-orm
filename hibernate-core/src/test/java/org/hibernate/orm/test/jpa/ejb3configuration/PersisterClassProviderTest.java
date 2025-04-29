@@ -330,6 +330,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean hasToOnes() {
+			return false;
+		}
+
+		@Override
 		public boolean isMutable() {
 			return false;
 		}

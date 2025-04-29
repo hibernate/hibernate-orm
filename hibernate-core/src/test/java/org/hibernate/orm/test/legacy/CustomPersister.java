@@ -257,6 +257,11 @@ public 	class CustomPersister implements EntityPersister {
 		return false;
 	}
 
+	@Override
+	public boolean hasToOnes() {
+		return false;
+	}
+
 	public boolean isMutable() {
 		return true;
 	}

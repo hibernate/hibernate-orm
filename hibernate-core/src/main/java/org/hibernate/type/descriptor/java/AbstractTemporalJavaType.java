@@ -5,9 +5,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
-import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Comparator;
 
 import jakarta.persistence.TemporalType;
@@ -65,9 +63,14 @@ public abstract class AbstractTemporalJavaType<T>
 	}
 
 	public static Time millisToSqlTime(long millis) {
-		final LocalTime localTime = Instant.ofEpochMilli( millis ).atZone( ZoneId.systemDefault() ).toLocalTime();
-		final Time time = Time.valueOf( localTime );
-		time.setTime( time.getTime() + localTime.getNano() / 1_000_000 );
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( millis );
+		calendar.set(Calendar.YEAR, 1970);
+		calendar.set(Calendar.MONTH, 0);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+		final Time time = new Time(millis);
+		time.setTime( calendar.getTimeInMillis()  );
 		return time;
 	}
 

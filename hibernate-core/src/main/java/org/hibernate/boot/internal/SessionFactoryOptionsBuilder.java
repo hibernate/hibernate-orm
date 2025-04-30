@@ -133,7 +133,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
-	private static boolean osonExtensionEnabled;
 
 	// integration
 	private Object beanManagerReference;
@@ -307,10 +306,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
 		);
 
-		osonExtensionEnabled = !getBoolean( ORACLE_OSON_DISABLED ,settings);
-
 		jsonFormatMapper = determineJsonFormatMapper(
 				settings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
+				!getBoolean( ORACLE_OSON_DISABLED ,settings),
 				strategySelector
 		);
 
@@ -794,15 +792,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {
+	private static FormatMapper determineJsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector strategySelector) {
 		return strategySelector.resolveDefaultableStrategy(
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
 					// Prefer the OSON Jackson FormatMapper by default if available
-					final FormatMapper jsonJacksonFormatMapper = (osonExtensionEnabled && JacksonIntegration.isJacksonOsonExtensionAvailable())
-							? getOsonJacksonFormatMapperOrNull()
-							: getJsonJacksonFormatMapperOrNull();
+					final FormatMapper jsonJacksonFormatMapper =
+							(osonExtensionEnabled && JacksonIntegration.isJacksonOsonExtensionAvailable())
+									? getOsonJacksonFormatMapperOrNull()
+									: getJsonJacksonFormatMapperOrNull();
 					return jsonJacksonFormatMapper != null ? jsonJacksonFormatMapper : getJakartaJsonBFormatMapperOrNull();
 				}
 		);

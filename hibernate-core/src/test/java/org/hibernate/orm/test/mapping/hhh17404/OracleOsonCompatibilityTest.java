@@ -4,6 +4,9 @@
  */
 package org.hibernate.orm.test.mapping.hhh17404;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -21,6 +24,11 @@ import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -67,16 +75,37 @@ public abstract class OracleOsonCompatibilityTest {
 	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					// force creation of a BLOB column type by creating the table ourselves
+					// force creation of a column type by creating the table ourselves
 					session.createNativeQuery( session.getDialect().getDropTableString( "TEST_OSON_COMPAT" ) )
 							.executeUpdate();
-					session.createNativeQuery( "CREATE TABLE TEST_OSON_COMPAT (id NUMBER, jsonName " + jsonType + " CHECK (jsonName is json)  ,primary key (id))" )
-							.executeUpdate();
+					StringBuilder create = new StringBuilder();
+					create.append("CREATE TABLE TEST_OSON_COMPAT (");
+					create.append( "id NUMBER").append(',');
+					create.append( "payload ").append(jsonType).append(" CHECK (payload is null or json)").append(',');
+					create.append( "primary key (id))");
+					session.createNativeQuery(create.toString()).executeUpdate();
 
-					String insert = "INSERT INTO TEST_OSON_COMPAT (id, jsonName) VALUES(:id,:json)";
-					String jsonstr = "{\"string\":\"john\"}";
-					session.createNativeQuery(insert).setParameter("id",1)
-							.setParameter( "json", jsonstr).executeUpdate();
+					String insert = "INSERT INTO TEST_OSON_COMPAT (id, payload) VALUES(:id,:json)";
+
+					LocalDateTime theLocalDateTime = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 );
+					LocalDate theLocalDate = LocalDate.of( 2000, 1, 1 );
+					LocalTime theLocalTime = LocalTime.of( 1, 0, 0 );
+					UUID uuid = UUID.fromString("53886a8a-7082-4879-b430-25cb94415be8");
+					String theString = "john";
+
+					StringBuilder j = new StringBuilder();
+					j.append( "{" );
+					j.append( "\"jsonString\":\"").append(theString).append("\"," );
+					j.append( "\"theUuid\":\"").append(uuid).append("\"," );
+					j.append( "\"theLocalDateTime\":\"").append(theLocalDateTime).append("\"," );
+					j.append( "\"theLocalDate\":\"").append(theLocalDate).append("\"," );
+					j.append( "\"theLocalTime\":\"").append(theLocalTime).append("\"" );
+					j.append( "}" );
+
+					session.createNativeQuery(insert)
+							.setParameter("id",1)
+							.setParameter( "json", j.toString())
+							.executeUpdate();
 				}
 		);
 	}
@@ -95,7 +124,8 @@ public abstract class OracleOsonCompatibilityTest {
 		scope.inTransaction(
 				(session) -> {
 					JsonEntity entity = session.find( OracleOsonCompatibilityTest.JsonEntity.class, 1 );
-					assertThat( entity.jsonName.getString(), is( "john" ) );
+					assertThat( entity.payload.jsonString.getString(), is( "john" ) );
+					assertThat( entity.payload.theUuid, is( "53886a8a-7082-4879-b430-25cb94415be8" ) );
 				}
 		);
 	}
@@ -105,15 +135,53 @@ public abstract class OracleOsonCompatibilityTest {
 	public static class JsonEntity {
 		@Id
 		private Integer id;
+
 		@JdbcTypeCode( SqlTypes.JSON )
-		private JsonMappingTests.StringNode jsonName;
+		private JsonEntityPayload payload;
 
 		public JsonEntity() {
-			super();
 		}
-		public JsonEntity(Integer id,  JsonMappingTests.StringNode node) {
+
+		public JsonEntity(Integer id, JsonEntityPayload payload) {
 			this.id = id;
-			this.jsonName = node;
+			this.payload = payload;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public JsonEntityPayload getPayload() {
+			return payload;
+		}
+
+		public void setPayload(JsonEntityPayload payload) {
+			this.payload = payload;
+		}
+
+	}
+	@Embeddable
+	@Access( AccessType.PROPERTY )
+	public static class JsonEntityPayload {
+		private JsonMappingTests.StringNode jsonString;
+		private UUID theUuid;
+		private LocalDateTime theLocalDateTime;
+		private LocalDate theLocalDate;
+		private LocalTime theLocalTime;
+
+		public JsonEntityPayload() {
+
+		}
+		public JsonEntityPayload(JsonMappingTests.StringNode jsonString, UUID theUuid, LocalDateTime theLocalDateTime, LocalDate theLocalDate, LocalTime theLocalTime) {
+			this.jsonString = jsonString;
+			this.theUuid = theUuid;
+			this.theLocalDateTime = theLocalDateTime;
+			this.theLocalDate = theLocalDate;
+			this.theLocalTime = theLocalTime;
 		}
 	}
 }

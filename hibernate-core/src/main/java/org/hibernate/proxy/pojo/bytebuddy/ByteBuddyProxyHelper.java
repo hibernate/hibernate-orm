@@ -54,7 +54,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 		Collections.addAll( key, interfaces );
 
-		final String proxyClassName = persistentClass.getTypeName() + "$" + PROXY_NAMING_SUFFIX;
+		final String proxyClassName = getClassNameWithSuffix( persistentClass, persistentClass.getTypeName(), PROXY_NAMING_SUFFIX );
 		return byteBuddyState.loadProxy( persistentClass, proxyClassName,
 				proxyBuilder( TypeDescription.ForLoadedType.of( persistentClass ), new TypeList.Generic.ForLoadedTypes( interfaces ) ) );
 	}
@@ -187,16 +187,24 @@ public class ByteBuddyProxyHelper implements Serializable {
 		}
 	}
 
+	private static String getClassNameWithSuffix(Class<?> clazz, String name, String suffix) {
+		return getClassNameWithCodeSourceLocationHashCode(clazz, name) + "$" + suffix;
+	}
+
 	public static String getClassNameWithSuffix(Class<?> clazz, String suffix) {
 		return getClassNameWithCodeSourceLocationHashCode(clazz) + "$" + suffix;
 	}
 
 	private static String getClassNameWithCodeSourceLocationHashCode(Class<?> clazz) {
+		return getClassNameWithCodeSourceLocationHashCode( clazz, clazz.getName() );
+	}
+
+	private static String getClassNameWithCodeSourceLocationHashCode(Class<?> clazz, String className) {
 		final java.security.CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
 		if ( codeSource == null ) {
-			return clazz.getName();
+			return className;
 		}
 		final URL url = codeSource.getLocation();
-		return url == null ? clazz.getName() : clazz.getName() + url.toString().hashCode();
+		return url == null ? className : className + url.toString().hashCode();
 	}
 }

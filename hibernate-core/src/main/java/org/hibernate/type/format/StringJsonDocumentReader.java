@@ -129,6 +129,8 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 					this.processingStates.push( JsonProcessingState.ARRAY );
 				}
 				break;
+			default:
+				throw new IllegalStateException( "Unexpected JsonProcessingState " + marker );
 		}
 	}
 

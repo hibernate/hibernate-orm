@@ -24,7 +24,7 @@ public class OracleJsonJdbcType extends OracleJsonBlobJdbcType {
 	 */
 	public static final OracleJsonJdbcType INSTANCE = new OracleJsonJdbcType( null );
 
-	OracleJsonJdbcType(EmbeddableMappingType embeddableMappingType) {
+	protected OracleJsonJdbcType(EmbeddableMappingType embeddableMappingType) {
 		super( embeddableMappingType );
 	}
 

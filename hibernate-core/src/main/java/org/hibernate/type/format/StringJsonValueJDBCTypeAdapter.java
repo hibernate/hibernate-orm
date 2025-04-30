@@ -4,8 +4,6 @@
  */
 package org.hibernate.type.format;
 
-import org.hibernate.dialect.StructAttributeValues;
-import org.hibernate.dialect.StructHelper;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
@@ -19,10 +17,12 @@ import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.StructAttributeValues;
+import org.hibernate.type.descriptor.jdbc.StructHelper;
 
 import java.sql.SQLException;
 
-import static org.hibernate.dialect.StructHelper.instantiate;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 
 /**
  * JDBC type adapter for String-based JSON document reader.

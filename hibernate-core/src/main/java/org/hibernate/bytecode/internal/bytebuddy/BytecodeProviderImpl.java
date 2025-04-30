@@ -306,11 +306,26 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int i = 0; i < getters.length; i++ ) {
 				final Member getter = getters[i];
 				final Member setter = setters[i];
-				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( getter.getModifiers() ) ) {
-					foreignPackageClassInfo.getters.add( getter );
+				boolean addPropertyname = false;
+				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz  ) {
+					if( !Modifier.isPublic( getter.getModifiers())) {
+						foreignPackageClassInfo.getters.add( getter );
+					}
+					else {
+						addPropertyname = true;
+					}
 				}
-				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( setter.getModifiers() ) ) {
-					foreignPackageClassInfo.setters.add( setter );
+				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz  ) {
+					if(!Modifier.isPublic( setter.getModifiers() )) {
+						foreignPackageClassInfo.setters.add( setter );
+					}
+					else {
+						addPropertyname = true;
+					}
+
+				}
+				if ( addPropertyname ) {
+					foreignPackageClassInfo.propertyNames.add( propertyNames[i] );
 				}
 			}
 			if ( foreignPackageClassInfo.getters.isEmpty() && foreignPackageClassInfo.setters.isEmpty() ) {

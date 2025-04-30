@@ -501,7 +501,7 @@ public interface UserType<J> {
 
 	/**
 	 * A mapped {@link JdbcType}. By default, the {@code JdbcType}
-	 * registered under our {@link #getSqlType() type code}.
+	 * registered under our {@linkplain #getSqlType type code}.
 	 */
 	@Incubating
 	default JdbcType getJdbcType(TypeConfiguration typeConfiguration) {

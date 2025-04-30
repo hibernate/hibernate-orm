@@ -34,7 +34,7 @@ public class OracleJdbcHelper {
 	public static boolean isOsonAvailable(ServiceRegistry serviceRegistry) {
 		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
-			classLoaderService.classForName( "oracle.sql.json.OracleJsonFactory" );
+			classLoaderService.classForName( "oracle.jdbc.provider.oson.OsonFactory" );
 			return true;
 		}
 		catch (ClassLoadingException ex) {

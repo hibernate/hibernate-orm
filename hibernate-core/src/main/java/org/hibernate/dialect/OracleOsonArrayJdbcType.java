@@ -209,14 +209,16 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
-				} catch (SQLException exc) {
+				}
+				catch (SQLException exc) {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
 						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 						return fromString( rs.getBytes( paramIndex ), options );
-					} else {
+					}
+					else {
 						throw exc;
 					}
 				}
@@ -232,14 +234,16 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
-				} catch (SQLException exc) {
+				}
+				catch (SQLException exc) {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
 						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 						return fromString( statement.getBytes( index ), options );
-					} else {
+					}
+					else {
 						throw exc;
 					}
 				}
@@ -256,14 +260,16 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 						OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
 					}
-				} catch (SQLException exc) {
+				}
+				catch (SQLException exc) {
 					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
 						// This may happen if we are fetching data from an existing schema
 						// that uses BLOB for JSON column In that case we assume bytes are
 						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
 						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
 						return fromString( statement.getBytes( name ), options );
-					} else {
+					}
+					else {
 						throw exc;
 					}
 				}

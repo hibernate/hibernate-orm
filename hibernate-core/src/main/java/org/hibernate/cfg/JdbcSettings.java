@@ -452,6 +452,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	/**
 	 * When enabled, specifies that JDBC statement warnings should be logged.
 	 * <p>
+	 * Logging of JDBC warnings may also be controlled via the log category
+	 * {@value org.hibernate.engine.jdbc.spi.SQLExceptionLogging#WARN_NAME}.
+	 * <p>
 	 * The default is determined by
 	 * {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}.
 	 *
@@ -463,6 +466,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 
 	/**
 	 * When enabled, specifies that JDBC errors should be logged before being rethrown.
+	 * <p>
+	 * Logging of JDBC errors may also be controlled via the log category
+	 * {@value org.hibernate.engine.jdbc.spi.SQLExceptionLogging#ERROR_NAME}.
 	 *
 	 * @settingDefault {@code true}
 	 *

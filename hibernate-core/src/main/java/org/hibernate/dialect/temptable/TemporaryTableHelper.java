@@ -172,7 +172,11 @@ public class TemporaryTableHelper {
 		}
 	}
 
-
+	/**
+	 * Differs from
+	 * {@link org.hibernate.engine.jdbc.spi.SqlExceptionHelper.StandardWarningHandler}
+	 * because it logs only at DEBUG level.
+	 */
 	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER =
 			new SqlExceptionHelper.WarningHandlerLoggingSupport() {
 				public boolean doProcess() {

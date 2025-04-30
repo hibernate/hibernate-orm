@@ -4,7 +4,6 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -16,9 +15,9 @@ import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
-import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.engine.jdbc.spi.SQLExceptionLogging.ERROR_LOG;
+import static org.hibernate.engine.jdbc.spi.SQLExceptionLogging.WARNING_LOG;
 import org.jboss.logging.Logger.Level;
 
 /**
@@ -27,11 +26,6 @@ import org.jboss.logging.Logger.Level;
  * @author Steve Ebersole
  */
 public class SqlExceptionHelper {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			SqlExceptionHelper.class.getName()
-	);
 
 	private final boolean logWarnings;
 	private final boolean logErrors;
@@ -142,18 +136,18 @@ public class SqlExceptionHelper {
 	 */
 	public void logExceptions(SQLException sqlException, String message) {
 		if ( logErrors) {
-			if ( LOG.isEnabled( Level.WARN ) ) {
+			if ( ERROR_LOG.isEnabled( Level.WARN ) ) {
 				SQLException currentException = sqlException;
 				while ( currentException != null ) {
 					if ( !isDuplicate( currentException, sqlException ) ) {
-						LOG.warn( errorCodeMessage( sqlException ) );
-						LOG.warn( sqlException.getMessage() );
+						ERROR_LOG.logErrorCodes( sqlException.getErrorCode(), sqlException.getSQLState() );
+						ERROR_LOG.warn( sqlException.getMessage() );
 					}
 					currentException = currentException.getNextException();
 				}
 			}
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( message, sqlException );
+			if ( ERROR_LOG.isDebugEnabled() ) {
+				ERROR_LOG.debug( message, sqlException );
 			}
 		}
 	}
@@ -175,18 +169,10 @@ public class SqlExceptionHelper {
 		return false;
 	}
 
-	private static String errorCodeMessage(SQLException sqlException) {
-		return "ErrorCode: "
-				+ sqlException.getErrorCode()
-				+ ", SQLState: "
-				+ sqlException.getSQLState()
-				+ ( sqlException instanceof SQLWarning ? " [warning]" : " [error]" );
-	}
-
 	// SQLWarning ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Contract for handling {@linkplain SQLWarning warnings}
+	 * Contract for handling {@linkplain SQLWarning warnings}.
 	 */
 	public interface WarningHandler {
 		/**
@@ -218,8 +204,11 @@ public class SqlExceptionHelper {
 	 */
 	public abstract static class WarningHandlerLoggingSupport implements WarningHandler {
 		@Override
-		public final void handleWarning(SQLWarning warning) {
-			logWarning( errorCodeMessage( warning ), warning.getMessage() );
+		public void handleWarning(SQLWarning warning) {
+			logWarning(
+					"SQL Warning Code: " + warning.getErrorCode() + ", SQLState: " + warning.getSQLState(),
+					warning.getMessage()
+			);
 		}
 
 		/**
@@ -248,18 +237,24 @@ public class SqlExceptionHelper {
 
 		@Override
 		public boolean doProcess() {
-			return LOG.isEnabled( Level.WARN );
+			return WARNING_LOG.isEnabled( Level.WARN );
 		}
 
 		@Override
 		public void prepare(SQLWarning warning) {
-			LOG.debug( introMessage, warning );
+			WARNING_LOG.debug( introMessage, warning );
+		}
+
+		@Override
+		public final void handleWarning(SQLWarning warning) {
+			WARNING_LOG.logErrorCodes( warning.getErrorCode(), warning.getSQLState() );
+			WARNING_LOG.warn( warning.getMessage() );
 		}
 
 		@Override
 		protected void logWarning(String description, String message) {
-			LOG.warn( description );
-			LOG.warn( message );
+			WARNING_LOG.warn( description );
+			WARNING_LOG.warn( message );
 		}
 	}
 
@@ -275,9 +270,7 @@ public class SqlExceptionHelper {
 	 * @param warning The warning to walk
 	 * @param handler The handler
 	 */
-	public void walkWarnings(
-			SQLWarning warning,
-			WarningHandler handler) {
+	public void walkWarnings(SQLWarning warning, WarningHandler handler) {
 		if ( warning != null && handler.doProcess() ) {
 			handler.prepare( warning );
 			while ( warning != null ) {
@@ -310,9 +303,7 @@ public class SqlExceptionHelper {
 	 *
 	 * @see #walkWarnings
 	 */
-	public void handleAndClearWarnings(
-			Connection connection,
-			WarningHandler handler) {
+	public void handleAndClearWarnings(Connection connection, WarningHandler handler) {
 		try {
 			if ( logWarnings ) {
 				walkWarnings( connection.getWarnings(), handler );
@@ -320,14 +311,14 @@ public class SqlExceptionHelper {
 		}
 		catch (SQLException sqle) {
 			// workaround for WebLogic
-			LOG.debug( "could not log warnings", sqle );
+			WARNING_LOG.debug( "could not log warnings", sqle );
 		}
 		try {
 			// Sybase fail if we don't do that, sigh...
 			connection.clearWarnings();
 		}
 		catch (SQLException sqle) {
-			LOG.debug( "could not clear warnings", sqle );
+			WARNING_LOG.debug( "could not clear warnings", sqle );
 		}
 	}
 
@@ -339,9 +330,7 @@ public class SqlExceptionHelper {
 	 *
 	 * @see #walkWarnings
 	 */
-	public void handleAndClearWarnings(
-			Statement statement,
-			WarningHandler handler) {
+	public void handleAndClearWarnings(Statement statement, WarningHandler handler) {
 		// See HHH-9174. Statement.getWarnings() can be an expensive call for some JDBC drivers.
 		// Don't do it unless the log level would actually allow a warning to be logged.
 		if ( logWarnings ) {
@@ -350,7 +339,7 @@ public class SqlExceptionHelper {
 			}
 			catch (SQLException sqlException) {
 				// workaround for WebLogic
-				LOG.debug( "could not log warnings", sqlException );
+				WARNING_LOG.debug( "could not log warnings", sqlException );
 			}
 		}
 		try {
@@ -358,7 +347,7 @@ public class SqlExceptionHelper {
 			statement.clearWarnings();
 		}
 		catch (SQLException sqle) {
-			LOG.debug( "could not clear warnings", sqle );
+			WARNING_LOG.debug( "could not clear warnings", sqle );
 		}
 	}
 }

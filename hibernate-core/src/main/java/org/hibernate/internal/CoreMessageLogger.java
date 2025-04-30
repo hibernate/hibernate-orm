@@ -291,9 +291,9 @@ public interface CoreMessageLogger extends BasicLogger {
 			SessionFactoryImplementor factory,
 			SessionFactoryImplementor factory2);
 
-	@LogMessage(level = WARN)
-	@Message(value = "SQL Error: %s, SQLState: %s", id = 247)
-	void sqlWarning(int errorCode, String sqlState);
+//	@LogMessage(level = WARN)
+//	@Message(value = "SQL Error: %s, SQLState: %s", id = 247)
+//	void sqlWarning(int errorCode, String sqlState);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Start time: %s", id = 251)

@@ -6,6 +6,7 @@ package org.hibernate.proxy.pojo.bytebuddy;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -184,5 +185,18 @@ public class ByteBuddyProxyHelper implements Serializable {
 					)
 			);
 		}
+	}
+
+	public static String getClassNameWithSuffix(Class<?> clazz, String suffix) {
+		return getClassNameWithCodeSourceLocationHashCode(clazz) + "$" + suffix;
+	}
+
+	private static String getClassNameWithCodeSourceLocationHashCode(Class<?> clazz) {
+		final java.security.CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+		if ( codeSource == null ) {
+			return clazz.getName();
+		}
+		final URL url = codeSource.getLocation();
+		return url == null ? clazz.getName() : clazz.getName() + url.toString().hashCode();
 	}
 }

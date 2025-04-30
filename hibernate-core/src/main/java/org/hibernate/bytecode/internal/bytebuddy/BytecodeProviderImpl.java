@@ -148,7 +148,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( clazz, INSTANTIATOR_PROXY_NAMING_SUFFIX );
 				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 						.with( namingStrategy )
 						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
@@ -210,7 +210,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( clazz, INSTANTIATOR_PROXY_NAMING_SUFFIX );
 				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 						.with( namingStrategy )
 						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
@@ -236,7 +236,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
 		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
 
-		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( propertyNames, getters, setters );
+		final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( clazz, OPTIMIZER_PROXY_NAMING_SUFFIX )
+								+ encodeName( propertyNames, getters, setters );
 		final Class<?> bulkAccessor;
 		if ( className.getBytes( StandardCharsets.UTF_8 ).length >= 0x10000 ) {
 			// The JVM has a 64K byte limit on class name length, so fallback to random name if encoding exceeds that
@@ -322,7 +323,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final ForeignPackageClassInfo foreignPackageClassInfo = foreignPackageClassInfos.get( i );
 			final Class<?> newSuperClass = superClass;
 
-			final String className = foreignPackageClassInfo.clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
+			final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( foreignPackageClassInfo.clazz, OPTIMIZER_PROXY_NAMING_SUFFIX ) + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
 			superClass = byteBuddyState.load(
 					foreignPackageClassInfo.clazz,
 					className,

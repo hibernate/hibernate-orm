@@ -185,7 +185,8 @@ public class JsonHelper {
 					writer.startObject();
 					serializeMapping(  (EmbeddableMappingType)attributeMapping.getMappedType(), values[i], options,writer);
 					writer.endObject();
-				} else {
+				}
+				else {
 					serialize(attributeMapping.getMappedType(), values[i], options, writer);
 				}
 

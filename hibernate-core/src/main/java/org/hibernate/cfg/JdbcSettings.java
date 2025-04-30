@@ -462,6 +462,16 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String LOG_JDBC_WARNINGS = "hibernate.jdbc.log.warnings";
 
 	/**
+	 * When enabled, specifies that JDBC errors should be logged before being rethrown.
+	 *
+	 * @settingDefault {@code true}
+	 *
+	 * @since 7
+	 */
+	@Incubating // this was added for symmetry with LOG_JDBC_WARNINGS
+	String LOG_JDBC_ERRORS = "hibernate.jdbc.log.errors";
+
+	/**
 	 * Specifies the {@linkplain java.util.TimeZone time zone} to use in the JDBC driver,
 	 * which is supposed to match the database timezone.
 	 * <p>

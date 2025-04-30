@@ -35,6 +35,9 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
+import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
+import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeLobCreatorBuilder;
 
 /**
@@ -70,18 +73,20 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	public JdbcEnvironmentImpl(final ServiceRegistryImplementor serviceRegistry, final Dialect dialect) {
 		this.dialect = dialect;
 
-		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
+		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
-		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
+		final ConfigurationService cfgService = configurationService( serviceRegistry );
 
-		NameQualifierSupport nameQualifierSupport = dialect.getNameQualifierSupport();
-		if ( nameQualifierSupport == null ) {
-			// assume both catalogs and schemas are supported
-			nameQualifierSupport = NameQualifierSupport.BOTH;
-		}
-		this.nameQualifierSupport = nameQualifierSupport;
+		final NameQualifierSupport dialectNameQualifierSupport = dialect.getNameQualifierSupport();
+		nameQualifierSupport =
+				dialectNameQualifierSupport == null
+						? NameQualifierSupport.BOTH  // assume both catalogs and schemas are supported
+						: dialectNameQualifierSupport;
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
+		sqlExceptionHelper =
+				buildSqlExceptionHelper( dialect,
+						logWarnings( cfgService, dialect ),
+						logErrors( cfgService ) );
 
 		final IdentifierHelperBuilder identifierHelperBuilder =
 				identifierHelperBuilder( cfgService, nameQualifierSupport );
@@ -89,56 +94,53 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		final ExtractedDatabaseMetaDataImpl.Builder metaDataBuilder =
 				new ExtractedDatabaseMetaDataImpl.Builder( this, false, null );
 
-		this.identifierHelper = identifierHelper( dialect, identifierHelperBuilder, metaDataBuilder );
+		identifierHelper = identifierHelper( dialect, identifierHelperBuilder, metaDataBuilder );
 
-		this.extractedMetaDataSupport = metaDataBuilder.build();
+		extractedMetaDataSupport = metaDataBuilder.build();
 
-		this.currentCatalog = identifierHelper.toIdentifier(
-				cfgService.getSetting( AvailableSettings.DEFAULT_CATALOG, StandardConverters.STRING )
-		);
-		this.currentSchema = Identifier.toIdentifier(
-				cfgService.getSetting( AvailableSettings.DEFAULT_SCHEMA, StandardConverters.STRING )
-		);
+		currentCatalog = identifierHelper.toIdentifier( cfgService.getSetting( DEFAULT_CATALOG, STRING ) );
+		currentSchema = Identifier.toIdentifier( cfgService.getSetting( DEFAULT_SCHEMA, STRING ) );
 
-		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
+		qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport );
 
-		this.lobCreatorBuilder = makeLobCreatorBuilder( dialect );
+		lobCreatorBuilder = makeLobCreatorBuilder( dialect );
+	}
+
+	private static ConfigurationService configurationService(ServiceRegistryImplementor serviceRegistry) {
+		return serviceRegistry.requireService( ConfigurationService.class );
 	}
 
 	private IdentifierHelperBuilder identifierHelperBuilder(
 			ConfigurationService cfgService, NameQualifierSupport nameQualifierSupport) {
-		final IdentifierHelperBuilder identifierHelperBuilder = IdentifierHelperBuilder.from( this );
-		identifierHelperBuilder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
-		identifierHelperBuilder.setSkipGlobalQuotingForColumnDefinitions( globalQuotingSkippedForColumnDefinitions(
-				cfgService ) );
-		identifierHelperBuilder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
-		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
-		return identifierHelperBuilder;
+		final IdentifierHelperBuilder builder = IdentifierHelperBuilder.from( this );
+		builder.setGloballyQuoteIdentifiers( globalQuoting( cfgService ) );
+		builder.setSkipGlobalQuotingForColumnDefinitions( globalQuotingSkippedForColumnDefinitions( cfgService ) );
+		builder.setAutoQuoteKeywords( autoKeywordQuoting( cfgService ) );
+		builder.setNameQualifierSupport( nameQualifierSupport );
+		return builder;
 	}
 
 	private static IdentifierHelper identifierHelper(
 			Dialect dialect,
-			IdentifierHelperBuilder identifierHelperBuilder,
+			IdentifierHelperBuilder builder,
 			ExtractedDatabaseMetaDataImpl.Builder dbMetaDataBuilder) {
 		try {
-			final IdentifierHelper identifierHelper = dialect.buildIdentifierHelper( identifierHelperBuilder, null );
+			final IdentifierHelper helper = dialect.buildIdentifierHelper( builder, null );
 			dbMetaDataBuilder.setSupportsNamedParameters( dialect.supportsNamedParameters( null ) );
-			if ( identifierHelper != null ) {
-				return identifierHelper;
+			if ( helper != null ) {
+				return helper;
 			}
 		}
 		catch (SQLException sqle) {
 			// should never ever happen
 			log.debug( "There was a problem accessing DatabaseMetaData in building the JdbcEnvironment", sqle );
 		}
-		return identifierHelperBuilder.build();
+		return builder.build();
 	}
 
 	private static SqlAstTranslatorFactory resolveSqlAstTranslatorFactory(Dialect dialect) {
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = dialect.getSqlAstTranslatorFactory();
-		return sqlAstTranslatorFactory != null
-				? sqlAstTranslatorFactory
-				: new StandardSqlAstTranslatorFactory();
+		return sqlAstTranslatorFactory == null ? new StandardSqlAstTranslatorFactory() : sqlAstTranslatorFactory;
 	}
 
 	private static boolean logWarnings(ConfigurationService cfgService, Dialect dialect) {
@@ -146,6 +148,14 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				AvailableSettings.LOG_JDBC_WARNINGS,
 				StandardConverters.BOOLEAN,
 				dialect.isJdbcLogWarningsEnabledByDefault()
+		);
+	}
+
+	private static boolean logErrors(ConfigurationService cfgService) {
+		return cfgService.getSetting(
+				AvailableSettings.LOG_JDBC_ERRORS,
+				StandardConverters.BOOLEAN,
+				true
 		);
 	}
 
@@ -182,29 +192,27 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
 		this.dialect = dialect;
 
-		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
+		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, false );
+		sqlExceptionHelper = buildSqlExceptionHelper( dialect, false, true );
 
-		this.nameQualifierSupport = nameQualifierSupport( databaseMetaData, dialect );
+		nameQualifierSupport = nameQualifierSupport( databaseMetaData, dialect );
 
-		this.identifierHelper = identifierHelper( databaseMetaData, dialect );
+		identifierHelper = identifierHelper( databaseMetaData, dialect );
 
-		this.extractedMetaDataSupport =
+		extractedMetaDataSupport =
 				new ExtractedDatabaseMetaDataImpl.Builder( this, true, jdbcConnectionAccess )
 						.apply( databaseMetaData )
 						.setSupportsNamedParameters( databaseMetaData.supportsNamedParameters() )
 						.build();
 
-		this.currentCatalog = null;
-		this.currentSchema = null;
+		currentCatalog = null;
+		currentSchema = null;
 
-		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl(
-				nameQualifierSupport,
-				databaseMetaData
-		);
+		qualifiedObjectNameFormatter =
+				new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport, databaseMetaData );
 
-		this.lobCreatorBuilder = makeLobCreatorBuilder( dialect );
+		lobCreatorBuilder = makeLobCreatorBuilder( dialect );
 	}
 
 	private IdentifierHelper identifierHelper(DatabaseMetaData databaseMetaData, Dialect dialect) {
@@ -278,21 +286,22 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
 		this.dialect = dialect;
 
-		this.sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
+		sqlAstTranslatorFactory = resolveSqlAstTranslatorFactory( dialect );
 
-		final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
+		final ConfigurationService cfgService = configurationService( serviceRegistry );
 
-		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, logWarnings( cfgService, dialect ) );
+		sqlExceptionHelper =
+				buildSqlExceptionHelper( dialect,
+						logWarnings( cfgService, dialect ),
+						logErrors( cfgService ) );
 
-		NameQualifierSupport nameQualifierSupport = nameQualifierSupport( databaseMetaData,
-				dialect );
-		this.nameQualifierSupport = nameQualifierSupport;
+		nameQualifierSupport = nameQualifierSupport( databaseMetaData, dialect );
 
 		final IdentifierHelperBuilder identifierHelperBuilder =
 				identifierHelperBuilder( cfgService, nameQualifierSupport );
-		this.identifierHelper = identifierHelper( dialect, databaseMetaData, identifierHelperBuilder );
+		identifierHelper = identifierHelper( dialect, databaseMetaData, identifierHelperBuilder );
 
-		this.extractedMetaDataSupport =
+		extractedMetaDataSupport =
 				new ExtractedDatabaseMetaDataImpl.Builder( this, true, jdbcConnectionAccess )
 						.apply( databaseMetaData )
 						.setConnectionSchemaName( determineCurrentSchemaName( databaseMetaData, serviceRegistry, dialect ) )
@@ -300,19 +309,13 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 						.build();
 
 		// and that current-catalog and current-schema happen after it
-		this.currentCatalog = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionCatalogName() );
-		this.currentSchema = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionSchemaName() );
+		currentCatalog = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionCatalogName() );
+		currentSchema = identifierHelper.toIdentifier( extractedMetaDataSupport.getConnectionSchemaName() );
 
-		this.qualifiedObjectNameFormatter = new QualifiedObjectNameFormatterStandardImpl(
-				nameQualifierSupport,
-				databaseMetaData
-		);
+		qualifiedObjectNameFormatter =
+				new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport, databaseMetaData );
 
-		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder(
-				dialect,
-				cfgService.getSettings(),
-				databaseMetaData.getConnection()
-		);
+		lobCreatorBuilder = makeLobCreatorBuilder( dialect, cfgService.getSettings(), databaseMetaData.getConnection() );
 	}
 
 	private static IdentifierHelper identifierHelper(
@@ -358,12 +361,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 								dialect.getSchemaNameResolver() );
 	}
 
-	private static SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings) {
+	private static SqlExceptionHelper buildSqlExceptionHelper(Dialect dialect, boolean logWarnings, boolean logErrors) {
 		final SQLExceptionConversionDelegate dialectDelegate = dialect.buildSQLExceptionConversionDelegate();
 		final SQLExceptionConversionDelegate[] delegates = dialectDelegate == null
 				? new SQLExceptionConversionDelegate[] { new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) }
 				: new SQLExceptionConversionDelegate[] { dialectDelegate, new SQLExceptionTypeDelegate( dialect ), new SQLStateConversionDelegate( dialect ) };
-		return new SqlExceptionHelper( new StandardSQLExceptionConverter( delegates ), logWarnings );
+		return new SqlExceptionHelper( new StandardSQLExceptionConverter( delegates ), logWarnings, logErrors );
 	}
 
 	@Override

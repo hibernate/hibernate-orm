@@ -31,6 +31,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 
 /**
  *
@@ -169,7 +170,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 
 			private boolean useUtf8(WrapperOptions options) {
 				return getEmbeddableMappingType() == null
-					&& !options.getJsonFormatMapper().supportsTargetType( OracleOsonJacksonHelper.READER_CLASS );
+					&& !options.getJsonFormatMapper().supportsSourceType(OracleOsonJacksonHelper.READER_CLASS );
 			}
 
 			private X doExtraction(OracleJsonDatum datum,  WrapperOptions options) throws SQLException {
@@ -196,74 +197,106 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 				);
 			}
 
-			@Override
-			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+			private byte[] getBytesFromResultSetByIndex(ResultSet rs, int index) throws SQLException {
+				// This can be a BLOB or a CLOB. getBytes is not supported on CLOB
+				// and getString is not supported on BLOB. W have to try both
 				try {
-					if ( useUtf8( options ) ) {
-						return fromString( rs.getBytes( paramIndex ), options );
-					}
-					else {
-						OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
-						return doExtraction( ojd, options );
-					}
-				} catch (SQLException exc) {
-					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
-						// This may happen if we are fetching data from an existing schema
-						// that uses BLOB for JSON column In that case we assume bytes are
-						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
-						return fromString( rs.getBytes( paramIndex ), options );
-					} else {
-						throw exc;
-					}
+					return rs.getBytes( index);
+				} catch (SQLFeatureNotSupportedException nse) {
+					return rs.getString( index).getBytes();
+				}
+			}
+
+			private byte[] getBytesFromStatementByIndex(CallableStatement st, int index) throws SQLException {
+				// This can be a BLOB or a CLOB. getBytes is not supported on CLOB
+				// and getString is not supported on BLOB. W have to try both
+				try {
+					return st.getBytes( index);
+				} catch (SQLFeatureNotSupportedException nse) {
+
+								return st.getString( index).getBytes();
+				}
+			}
+			private byte[] getBytesFromStatementByName(CallableStatement st, String columnName) throws SQLException {
+				// This can be a BLOB or a CLOB. getBytes is not supported on CLOB
+				// and getString is not supported on BLOB. W have to try both
+				try {
+					return st.getBytes( columnName);
+				} catch (SQLFeatureNotSupportedException nse) {
+					return st.getString( columnName).getBytes();
 				}
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				try {
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					if ( useUtf8( options ) ) {
-						return fromString( statement.getBytes( index ), options );
+						return fromString(getBytesFromResultSetByIndex(rs, paramIndex), options );
 					}
 					else {
+						try {
+						OracleJsonDatum ojd = rs.getObject( paramIndex, OracleJsonDatum.class );
+						return doExtraction( ojd, options );
+						} catch (SQLException exc) {
+							if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+								// This may happen if we are fetching data from an existing schema
+								// that uses BLOB for JSON column In that case we assume bytes are
+								// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
+								LOG.invalidJSONColumnType( OracleType.BLOB.getName(), OracleType.JSON.getName() );
+								return fromString(getBytesFromResultSetByIndex(rs, paramIndex), options );
+							} else {
+								throw exc;
+							}
+						}
+					}
+			}
+
+			@Override
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+					if ( useUtf8( options ) ) {
+						return fromString(getBytesFromStatementByIndex(statement, index), options);
+					}
+					else {
+						try {
 						OracleJsonDatum ojd = statement.getObject( index, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
+						} catch (SQLException exc) {
+							if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+								// This may happen if we are fetching data from an existing schema
+								// that uses BLOB for JSON column In that case we assume bytes are
+								// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
+								LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+								return fromString(getBytesFromStatementByIndex(statement, index), options);
+							} else {
+								throw exc;
+							}
+						}
 					}
-				} catch (SQLException exc) {
-					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
-						// This may happen if we are fetching data from an existing schema
-						// that uses BLOB for JSON column In that case we assume bytes are
-						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
-						return fromString( statement.getBytes( index ), options);
-					} else {
-						throw exc;
-					}
-				}
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				try {
+
 					if ( useUtf8( options ) ) {
-						return fromString( statement.getBytes( name ), options );
+						return fromString(getBytesFromStatementByName(statement, name), options);
 					}
 					else {
+						try {
 						OracleJsonDatum ojd = statement.getObject( name, OracleJsonDatum.class );
 						return doExtraction( ojd, options );
+						} catch (SQLException exc) {
+							if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
+								// This may happen if we are fetching data from an existing schema
+								// that uses BLOB for JSON column In that case we assume bytes are
+								// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
+								LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
+								return fromString(getBytesFromStatementByName(statement, name), options);
+							} else {
+								throw exc;
+							}
+						}
 					}
-				} catch (SQLException exc) {
-					if ( exc.getErrorCode() == DatabaseError.JDBC_ERROR_BASE + DatabaseError.EOJ_INVALID_COLUMN_TYPE) {
-						// This may happen if we are fetching data from an existing schema
-						// that uses BLOB for JSON column In that case we assume bytes are
-						// UTF-8 bytes (i.e not OSON) and we fall back to previous String-based implementation
-						LOG.invalidJSONColumnType( OracleType.CLOB.getName(), OracleType.JSON.getName() );
-						return fromString( statement.getBytes( name ), options);
-					} else {
-						throw exc;
-					}
-				}
+
 
 			}
 

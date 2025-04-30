@@ -9,6 +9,7 @@ import oracle.jdbc.driver.DatabaseError;
 import oracle.sql.json.OracleJsonDatum;
 import oracle.sql.json.OracleJsonGenerator;
 
+import org.hibernate.dialect.type.OracleJsonArrayJdbcType;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -22,6 +23,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonHelper;
 import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;

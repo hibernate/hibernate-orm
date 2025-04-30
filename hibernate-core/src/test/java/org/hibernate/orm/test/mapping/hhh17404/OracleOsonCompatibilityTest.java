@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.hhh17404;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -13,7 +11,6 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.DialectSpecificSettings;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.orm.test.mapping.basic.JsonMappingTests;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -21,7 +18,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.SqlTypes;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,11 +28,10 @@ import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.testing.orm.junit.DialectContext.getDialect;
 
 /**
- * This test class is about testing that legacy schema that use BLO for JSON column
- * can be safely read even when Oracle Oson extention is in place.
+ * This test class is about testing that legacy schema that use BLOB or CLOB for JSON columns
+ * can be safely read even when Oracle Oson extension is in place.
  * In Such a situation, the JSON type will expect JSON a JSON column and should
  * silently fall back to String deserialization.
  *
@@ -53,11 +48,13 @@ public abstract class OracleOsonCompatibilityTest {
 			super( "JSON" );
 		}
 	}
+
 	public static class OracleBlobAsOsonCompatibilityTest extends OracleOsonCompatibilityTest {
 		public OracleBlobAsOsonCompatibilityTest() {
 			super( "BLOB" );
 		}
 	}
+
 	public static class OracleClobAsOsonCompatibilityTest extends OracleOsonCompatibilityTest {
 		public OracleClobAsOsonCompatibilityTest() {
 			super( "CLOB" );
@@ -76,14 +73,14 @@ public abstract class OracleOsonCompatibilityTest {
 		scope.inTransaction(
 				(session) -> {
 					// force creation of a column type by creating the table ourselves
-					session.createNativeQuery( session.getDialect().getDropTableString( "TEST_OSON_COMPAT" ) )
+					session.createNativeMutationQuery( session.getDialect().getDropTableString( "TEST_OSON_COMPAT" ) )
 							.executeUpdate();
 					StringBuilder create = new StringBuilder();
 					create.append("CREATE TABLE TEST_OSON_COMPAT (");
 					create.append( "id NUMBER").append(',');
-					create.append( "payload ").append(jsonType).append(" CHECK (payload is null or json)").append(',');
+					create.append( "payload ").append(jsonType).append(',');
 					create.append( "primary key (id))");
-					session.createNativeQuery(create.toString()).executeUpdate();
+					session.createNativeMutationQuery(create.toString()).executeUpdate();
 
 					String insert = "INSERT INTO TEST_OSON_COMPAT (id, payload) VALUES(:id,:json)";
 
@@ -102,19 +99,11 @@ public abstract class OracleOsonCompatibilityTest {
 					j.append( "\"theLocalTime\":\"").append(theLocalTime).append("\"" );
 					j.append( "}" );
 
-					session.createNativeQuery(insert)
-							.setParameter("id",1)
-							.setParameter( "json", j.toString())
+					final Object json = jsonType.equals( "BLOB" ) ? j.toString().getBytes() : j.toString();
+					session.createNativeMutationQuery( insert )
+							.setParameter( "id", 1 )
+							.setParameter( "json", json )
 							.executeUpdate();
-				}
-		);
-	}
-
-	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createNativeQuery( getDialect().getDropTableString( "TEST_OSON_COMPAT" ) ).executeUpdate();
 				}
 		);
 	}
@@ -124,8 +113,8 @@ public abstract class OracleOsonCompatibilityTest {
 		scope.inTransaction(
 				(session) -> {
 					JsonEntity entity = session.find( OracleOsonCompatibilityTest.JsonEntity.class, 1 );
-					assertThat( entity.payload.jsonString.getString(), is( "john" ) );
-					assertThat( entity.payload.theUuid, is( "53886a8a-7082-4879-b430-25cb94415be8" ) );
+					assertThat( entity.payload.jsonString, is( "john" ) );
+					assertThat( entity.payload.theUuid.toString(), is( "53886a8a-7082-4879-b430-25cb94415be8" ) );
 				}
 		);
 	}
@@ -138,14 +127,6 @@ public abstract class OracleOsonCompatibilityTest {
 
 		@JdbcTypeCode( SqlTypes.JSON )
 		private JsonEntityPayload payload;
-
-		public JsonEntity() {
-		}
-
-		public JsonEntity(Integer id, JsonEntityPayload payload) {
-			this.id = id;
-			this.payload = payload;
-		}
 
 		public Integer getId() {
 			return id;
@@ -162,26 +143,14 @@ public abstract class OracleOsonCompatibilityTest {
 		public void setPayload(JsonEntityPayload payload) {
 			this.payload = payload;
 		}
-
 	}
+
 	@Embeddable
-	@Access( AccessType.PROPERTY )
 	public static class JsonEntityPayload {
-		private JsonMappingTests.StringNode jsonString;
+		private String jsonString;
 		private UUID theUuid;
 		private LocalDateTime theLocalDateTime;
 		private LocalDate theLocalDate;
 		private LocalTime theLocalTime;
-
-		public JsonEntityPayload() {
-
-		}
-		public JsonEntityPayload(JsonMappingTests.StringNode jsonString, UUID theUuid, LocalDateTime theLocalDateTime, LocalDate theLocalDate, LocalTime theLocalTime) {
-			this.jsonString = jsonString;
-			this.theUuid = theUuid;
-			this.theLocalDateTime = theLocalDateTime;
-			this.theLocalDate = theLocalDate;
-			this.theLocalTime = theLocalTime;
-		}
 	}
 }

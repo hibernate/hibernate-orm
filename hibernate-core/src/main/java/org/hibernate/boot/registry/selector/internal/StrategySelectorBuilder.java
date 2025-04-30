@@ -313,7 +313,7 @@ public class StrategySelectorBuilder {
 				JacksonJsonFormatMapper.SHORT_NAME,
 				JacksonJsonFormatMapper.class
 		);
-		if (JacksonIntegration.isJacksonOsonExtensionAvailable() ) {
+		if ( JacksonIntegration.isJacksonOsonExtensionAvailable() ) {
 			strategySelector.registerStrategyImplementor(
 					FormatMapper.class,
 					JacksonOsonFormatMapper.SHORT_NAME,

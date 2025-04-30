@@ -94,6 +94,7 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
 import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
@@ -132,6 +133,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
+	private static boolean osonExtensionEnabled;
 
 	// integration
 	private Object beanManagerReference;
@@ -305,10 +307,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
 		);
 
+		osonExtensionEnabled = !getBoolean( ORACLE_OSON_DISABLED ,settings);
+
 		jsonFormatMapper = determineJsonFormatMapper(
 				settings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
 				strategySelector
 		);
+
 		xmlFormatMapper = determineXmlFormatMapper(
 				settings.get( AvailableSettings.XML_FORMAT_MAPPER ),
 				strategySelector,
@@ -795,7 +800,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				setting,
 				(Callable<FormatMapper>) () -> {
 					// Prefer the OSON Jackson FormatMapper by default if available
-					final FormatMapper jsonJacksonFormatMapper = JacksonIntegration.isJacksonOsonExtensionAvailable()
+					final FormatMapper jsonJacksonFormatMapper = (osonExtensionEnabled && JacksonIntegration.isJacksonOsonExtensionAvailable())
 							? getOsonJacksonFormatMapperOrNull()
 							: getJsonJacksonFormatMapperOrNull();
 					return jsonJacksonFormatMapper != null ? jsonJacksonFormatMapper : getJakartaJsonBFormatMapperOrNull();

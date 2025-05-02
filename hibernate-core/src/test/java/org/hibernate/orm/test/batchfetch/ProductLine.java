@@ -10,10 +10,16 @@ import java.util.Set;
  * @author Gavin King
  */
 public class ProductLine {
-
-	private String id;
+	private Integer id;
 	private String description;
 	private Set models = new HashSet();
+
+	public ProductLine() {
+	}
+
+	public ProductLine(String description) {
+		this.description = description;
+	}
 
 	public String getDescription() {
 		return description;
@@ -21,10 +27,10 @@ public class ProductLine {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public String getId() {
+	public Integer getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 	public Set getModels() {

@@ -105,7 +105,7 @@ import static org.junit.Assert.assertEquals;
 				"/org/hibernate/orm/test/hql/ComponentContainer.hbm.xml",
 				"/org/hibernate/orm/test/hql/VariousKeywordPropertyEntity.hbm.xml",
 				"/org/hibernate/orm/test/hql/Constructor.hbm.xml",
-				"/org/hibernate/orm/test/batchfetch/ProductLine.hbm.xml",
+				"/org/hibernate/orm/test/batchfetch/ProductLine.xml",
 				"/org/hibernate/orm/test/cid/Customer.hbm.xml",
 				"/org/hibernate/orm/test/cid/Order.hbm.xml",
 				"/org/hibernate/orm/test/cid/LineItem.hbm.xml",

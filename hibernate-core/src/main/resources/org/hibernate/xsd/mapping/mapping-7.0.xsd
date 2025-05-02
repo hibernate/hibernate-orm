@@ -3313,6 +3313,9 @@
                 </xsd:sequence>
             </xsd:choice>
 
+            <!-- @BatchSize -->
+            <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
+
             <xsd:element name="sql-restriction" type="xsd:string" minOccurs="0"/>
 
             <xsd:element name="sql-insert" type="orm:custom-sql" minOccurs="0"/>

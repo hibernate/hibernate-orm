@@ -84,14 +84,9 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 					int index,
 					WrapperOptions wrapperOptions) throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, wrapperOptions );
-				try {
-					// supposed to be supported in JDBC 4.2
-					st.setObject( index, instant, Types.TIMESTAMP_WITH_TIMEZONE );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					st.setTimestamp( index, Timestamp.from( instant ), UTC_CALENDAR );
-				}
+				// some jdbc drivers may support java.time.Instant directly but
+				// this is the only standard support in the jdbc 4.2 specification
+				st.setTimestamp( index, Timestamp.from( instant ), UTC_CALENDAR );
 			}
 
 			@Override
@@ -102,14 +97,9 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 					WrapperOptions wrapperOptions)
 					throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, wrapperOptions );
-				try {
-					// supposed to be supported in JDBC 4.2
-					st.setObject( name, instant, Types.TIMESTAMP_WITH_TIMEZONE );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					st.setTimestamp( name, Timestamp.from( instant ), UTC_CALENDAR );
-				}
+				// some jdbc drivers may support java.time.Instant directly but
+				// this is the only standard support in the jdbc 4.2 specification
+				st.setTimestamp( name, Timestamp.from( instant ), UTC_CALENDAR );
 			}
 		};
 	}
@@ -119,38 +109,23 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
-				try {
-					// supposed to be supported in JDBC 4.2
-					return javaType.wrap( rs.getObject( position, Instant.class ), wrapperOptions );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					return javaType.wrap( rs.getTimestamp( position, UTC_CALENDAR ), wrapperOptions );
-				}
+				// some jdbc drivers may support java.time.Instant directly but
+				// this is the only standard support in the jdbc 4.2 specification
+				return javaType.wrap( rs.getTimestamp( position, UTC_CALENDAR ), wrapperOptions );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
-				try {
-					// supposed to be supported in JDBC 4.2
-					return javaType.wrap( statement.getObject( position, Instant.class ), wrapperOptions );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					return javaType.wrap( statement.getTimestamp( position, UTC_CALENDAR ), wrapperOptions );
-				}
+				// some jdbc drivers may support java.time.Instant directly but
+				// this is the only standard support in the jdbc 4.2 specification
+				return javaType.wrap( statement.getTimestamp( position, UTC_CALENDAR ), wrapperOptions );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
-				try {
-					// supposed to be supported in JDBC 4.2
-					return javaType.wrap( statement.getObject( name, Instant.class ), wrapperOptions );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					return javaType.wrap( statement.getTimestamp( name, UTC_CALENDAR ), wrapperOptions );
-				}
+				// some jdbc drivers may support java.time.Instant directly but
+				// this is the only standard support in the jdbc 4.2 specification
+				return javaType.wrap( statement.getTimestamp( name, UTC_CALENDAR ), wrapperOptions );
 			}
 		};
 	}

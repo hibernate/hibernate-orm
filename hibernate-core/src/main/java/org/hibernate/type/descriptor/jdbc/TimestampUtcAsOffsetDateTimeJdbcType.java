@@ -83,7 +83,6 @@ public class TimestampUtcAsOffsetDateTimeJdbcType implements JdbcType {
 					int index,
 					WrapperOptions wrapperOptions) throws SQLException {
 				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
-				// supposed to be supported in JDBC 4.2
 				st.setObject( index, dateTime.withOffsetSameInstant( ZoneOffset.UTC ), Types.TIMESTAMP_WITH_TIMEZONE );
 			}
 
@@ -95,7 +94,6 @@ public class TimestampUtcAsOffsetDateTimeJdbcType implements JdbcType {
 					WrapperOptions wrapperOptions)
 					throws SQLException {
 				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, wrapperOptions );
-				// supposed to be supported in JDBC 4.2
 				st.setObject( name, dateTime.withOffsetSameInstant( ZoneOffset.UTC ), Types.TIMESTAMP_WITH_TIMEZONE );
 			}
 		};

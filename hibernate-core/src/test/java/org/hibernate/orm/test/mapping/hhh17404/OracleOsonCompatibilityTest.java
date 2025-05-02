@@ -64,6 +64,12 @@ public abstract class OracleOsonCompatibilityTest {
 
 	private final String jsonType;
 
+	private final LocalDateTime theLocalDateTime = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 );
+	private final LocalDate theLocalDate = LocalDate.of( 2000, 1, 1 );
+	private final LocalTime theLocalTime = LocalTime.of( 1, 0, 0 );
+	private final UUID uuid = UUID.fromString("53886a8a-7082-4879-b430-25cb94415be8");
+	private final String theString = "john";
+
 	public OracleOsonCompatibilityTest(String jsonType) {
 		this.jsonType = jsonType;
 	}
@@ -84,11 +90,7 @@ public abstract class OracleOsonCompatibilityTest {
 
 					String insert = "INSERT INTO TEST_OSON_COMPAT (id, payload) VALUES(:id,:json)";
 
-					LocalDateTime theLocalDateTime = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 );
-					LocalDate theLocalDate = LocalDate.of( 2000, 1, 1 );
-					LocalTime theLocalTime = LocalTime.of( 1, 0, 0 );
-					UUID uuid = UUID.fromString("53886a8a-7082-4879-b430-25cb94415be8");
-					String theString = "john";
+
 
 					StringBuilder j = new StringBuilder();
 					j.append( "{" );
@@ -115,6 +117,9 @@ public abstract class OracleOsonCompatibilityTest {
 					JsonEntity entity = session.find( OracleOsonCompatibilityTest.JsonEntity.class, 1 );
 					assertThat( entity.payload.jsonString, is( "john" ) );
 					assertThat( entity.payload.theUuid.toString(), is( "53886a8a-7082-4879-b430-25cb94415be8" ) );
+					assertThat( entity.payload.theLocalDateTime, is( theLocalDateTime ) );
+					assertThat( entity.payload.theLocalTime, is( theLocalTime ) );
+					assertThat( entity.payload.theLocalDate, is( theLocalDate ) );
 				}
 		);
 	}

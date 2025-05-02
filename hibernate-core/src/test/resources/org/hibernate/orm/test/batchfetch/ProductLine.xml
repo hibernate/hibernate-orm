@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<!--
+
+      This mapping demonstrates the use of batch fetching
+      for collections and entities.
+
+    -->
+	<package>org.hibernate.orm.test.batchfetch</package>
+
+	<entity class="ProductLine">
+		<batch-size>64</batch-size>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="description">
+				<column nullable="false" length="200"/>
+			</basic>
+			<one-to-many name="models" mapped-by="productLine" target-entity="Model" fetch="LAZY">
+				<batch-size>64</batch-size>
+				<cascade>
+					<cascade-all/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<entity class="Model">
+		<batch-size>64</batch-size>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="name">
+				<column nullable="false" length="25"/>
+			</basic>
+			<basic name="description">
+				<column nullable="false" length="200"/>
+			</basic>
+			<many-to-one name="productLine" optional="false" fetch="LAZY">
+				<join-column name="product_fk"/>
+			</many-to-one>
+		</attributes>
+	</entity>
+</entity-mappings>

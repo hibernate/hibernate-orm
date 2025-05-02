@@ -11,6 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
@@ -60,6 +61,14 @@ public class CommonPluralAttributeProcessing {
 						xmlDocumentContext
 				);
 			}
+		}
+
+		if ( jaxbPluralAttribute.getBatchSize() != null ) {
+			final BatchSizeAnnotation batchSizeAnnotation = (BatchSizeAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.BATCH_SIZE,
+					buildingContext
+			);
+			batchSizeAnnotation.size( jaxbPluralAttribute.getBatchSize() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

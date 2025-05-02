@@ -26,6 +26,8 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbCollectionIdImpl getCollectionId();
 	void setCollectionId(JaxbCollectionIdImpl id);
 
+	Integer getBatchSize();
+	void setBatchSize(Integer size);
 
 	LimitedCollectionClassification getClassification();
 	void setClassification(LimitedCollectionClassification value);

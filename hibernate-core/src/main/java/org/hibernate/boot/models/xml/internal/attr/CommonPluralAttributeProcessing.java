@@ -201,8 +201,7 @@ public class CommonPluralAttributeProcessing {
 	private static FetchMode interpretFetchMode(JaxbPluralFetchModeImpl fetchMode) {
 		return switch ( fetchMode ) {
 			case JOIN -> FetchMode.JOIN;
-			case SELECT -> FetchMode.SELECT;
-			case SUBSELECT -> FetchMode.SELECT;
+			case SELECT, SUBSELECT -> FetchMode.SELECT;
 		};
 	}
 
@@ -211,15 +210,16 @@ public class CommonPluralAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final JaxbOrderColumnImpl jaxbOrderColumn = jaxbPluralAttribute.getOrderColumn();
-		if ( jaxbOrderColumn == null ) {
-			return;
+		if ( jaxbOrderColumn != null
+			|| jaxbPluralAttribute.getClassification() == LimitedCollectionClassification.LIST ) {
+			final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
+					JpaAnnotations.ORDER_COLUMN,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+
+			if ( jaxbOrderColumn != null ) {
+				orderColumnAnn.apply( jaxbOrderColumn, xmlDocumentContext );
+			}
 		}
-
-		final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
-				JpaAnnotations.ORDER_COLUMN,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-
-		orderColumnAnn.apply( jaxbOrderColumn, xmlDocumentContext );
 	}
 }

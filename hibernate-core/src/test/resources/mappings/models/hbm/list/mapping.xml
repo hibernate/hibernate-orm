@@ -22,7 +22,6 @@
             </one-to-many>
 
             <many-to-many name="admins" classification="LIST" target-entity="User">
-                <order-column/>
                 <join-table name="root_admins">
                     <join-column name="root_fk"/>
                     <inverse-join-column name="user_fk"/>
@@ -30,7 +29,6 @@
             </many-to-many>
 
             <element-collection name="tags" classification="LIST" target-class="java.lang.String">
-                <order-column/>
                 <column name="txt"/>
                 <collection-table>
                     <join-column name="root_fk"/>

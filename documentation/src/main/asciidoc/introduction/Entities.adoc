@@ -534,11 +534,12 @@ The JPA specification defines a quite limited set of basic types:
 | Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc
 | Strings | `java.lang` | `String`
 | Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
+| UUIDs | `java.util` | `UUID`
 | Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`, `Year`
 | Deprecated date/time types 💀 | `java.util` | `Date`, `Calendar`
 | Deprecated JDBC date/time types 💀 | `java.sql` | `Date`, `Time`, `Timestamp`
 | Binary and character arrays | | `byte[]`, `char[]`
-| UUIDs | `java.util` | `UUID`
+| Binary and character wrapper arrays 💀 | `java.lang` | `Byte[]`, `Character[]`
 | Enumerated types | | Any `enum`
 | Serializable types | | Any type which implements `java.io.Serializable`
 |====
@@ -547,6 +548,13 @@ The JPA specification defines a quite limited set of basic types:
 // .Please don't use `Date`!
 ====
 We're begging you to use types from the `java.time` package instead of anything which inherits `java.util.Date`.
+====
+
+[WARNING]
+====
+The use of `Byte[]` and `Character[]` as basic types was deprecated by Jakarta Persistence 3.2.
+Hibernate does not allow `null` elements in such arrays.
+Use `byte[]` or `char[]` instead.
 ====
 
 [CAUTION]

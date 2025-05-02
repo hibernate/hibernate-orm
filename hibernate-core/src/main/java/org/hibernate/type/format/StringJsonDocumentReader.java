@@ -222,6 +222,11 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 															"] in current processing state " +
 															this.processingStates.getCurrent() );
 					}
+				default: {
+					throw new IllegalStateException( "unexpected marker ["+
+													marker +
+													"] at position " + this.position );
+				}
 			}
 		}
 		throw new IllegalStateException( "unexpected end of JSON ["+

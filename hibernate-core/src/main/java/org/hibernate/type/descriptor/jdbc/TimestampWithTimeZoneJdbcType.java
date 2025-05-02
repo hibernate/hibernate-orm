@@ -16,10 +16,8 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.OffsetDateTime;
-import java.util.Calendar;
 
 /**
  * Descriptor for {@link Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE} handling.
@@ -74,24 +72,8 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					X value,
 					int index,
 					WrapperOptions options) throws SQLException {
-				try {
-					final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
-					// supposed to be supported in JDBC 4.2
-					st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
-					if ( value instanceof Calendar calendar ) {
-						st.setTimestamp( index, timestamp, calendar );
-					}
-					else if ( options.getJdbcTimeZone() != null ) {
-						st.setTimestamp( index, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
-					}
-					else {
-						st.setTimestamp( index, timestamp );
-					}
-				}
+				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
+				st.setObject( index, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 			}
 
 			@Override
@@ -101,24 +83,8 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					String name,
 					WrapperOptions options)
 					throws SQLException {
-				try {
-					final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
-					// supposed to be supported in JDBC 4.2
-					st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
-					if ( value instanceof Calendar calendar ) {
-						st.setTimestamp( name, timestamp, calendar );
-					}
-					else if ( options.getJdbcTimeZone() != null ) {
-						st.setTimestamp( name, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
-					}
-					else {
-						st.setTimestamp( name, timestamp );
-					}
-				}
+				final OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
+				st.setObject( name, dateTime, Types.TIMESTAMP_WITH_TIMEZONE );
 			}
 		};
 	}
@@ -128,44 +94,17 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int position, WrapperOptions options) throws SQLException {
-				try {
-					// supposed to be supported in JDBC 4.2
-					return javaType.wrap( rs.getObject( position, OffsetDateTime.class ), options );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					return options.getJdbcTimeZone() != null ?
-							javaType.wrap( rs.getTimestamp( position, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-							javaType.wrap( rs.getTimestamp( position ), options );
-				}
+				return javaType.wrap( rs.getObject( position, OffsetDateTime.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int position, WrapperOptions options) throws SQLException {
-				try {
-					// supposed to be supported in JDBC 4.2
-					return javaType.wrap( statement.getObject( position, OffsetDateTime.class ), options );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					return options.getJdbcTimeZone() != null ?
-							javaType.wrap( statement.getTimestamp( position, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-							javaType.wrap( statement.getTimestamp( position ), options );
-				}
+				return javaType.wrap( statement.getObject( position, OffsetDateTime.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				try {
-					// supposed to be supported in JDBC 4.2
-					return javaType.wrap( statement.getObject( name, OffsetDateTime.class ), options );
-				}
-				catch (SQLException|AbstractMethodError e) {
-					// fall back to treating it as a JDBC Timestamp
-					return options.getJdbcTimeZone() != null ?
-							javaType.wrap( statement.getTimestamp( name, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-							javaType.wrap( statement.getTimestamp( name ), options );
-				}
+				return javaType.wrap( statement.getObject( name, OffsetDateTime.class ), options );
 			}
 		};
 	}

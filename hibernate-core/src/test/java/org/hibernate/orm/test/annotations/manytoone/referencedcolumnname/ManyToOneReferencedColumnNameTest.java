@@ -9,10 +9,12 @@ import java.math.BigDecimal;
 import org.hibernate.Session;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.GaussDBDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 /**
@@ -21,6 +23,7 @@ import org.junit.Test;
 public class ManyToOneReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testRecoverableExceptionInFkOrdering() throws Exception {
 		//SF should not blow up
 		Vendor v = new Vendor();

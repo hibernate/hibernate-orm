@@ -4,7 +4,13 @@
  */
 package org.hibernate.orm.test.merge;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,8 +23,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -30,7 +34,7 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
+		return new Class<?>[] {
 				Post.class,
 				PostComment.class,
 		};
@@ -38,21 +42,26 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 
 	@Before
 	public void setUp() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			entityManager.persist(
-					new Post("High-Performance Java Persistence").setId(1L)
-			);
-		});
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					entityManager.persist(
+							new Post( "High-Performance Java Persistence" ).setId( 1L )
+					);
+				}
+		);
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testMerge() {
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Post post = entityManager.find(Post.class, 1L);
-			post.addComment(new PostComment("This post rocks!", post));
-			post.getComments().isEmpty();
-			entityManager.merge(post);
-		});
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					Post post = entityManager.find( Post.class, 1L );
+					post.addComment( new PostComment( "This post rocks!", post ) );
+					post.getComments().isEmpty();
+					entityManager.merge( post );
+				}
+		);
 	}
 
 	@Entity
@@ -101,15 +110,15 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 		}
 
 		public Post addComment(PostComment comment) {
-			comments.add(comment);
-			comment.setPost(this);
+			comments.add( comment );
+			comment.setPost( this );
 
 			return this;
 		}
 
 		public Post removeComment(PostComment comment) {
-			comments.remove(comment);
-			comment.setPost(null);
+			comments.remove( comment );
+			comment.setPost( null );
 
 			return this;
 		}
@@ -165,9 +174,13 @@ public class BidirectionalOneToManyMergeTest extends org.hibernate.orm.test.jpa.
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof PostComment)) return false;
-			return id != null && id.equals(((PostComment) o).getId());
+			if ( this == o ) {
+				return true;
+			}
+			if ( !( o instanceof PostComment ) ) {
+				return false;
+			}
+			return id != null && id.equals( ( (PostComment) o ).getId() );
 		}
 
 		@Override

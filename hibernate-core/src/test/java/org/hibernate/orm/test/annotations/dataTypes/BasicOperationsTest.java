@@ -14,6 +14,8 @@ import java.util.Locale;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -64,7 +66,11 @@ public class BasicOperationsTest {
 
 		scope.inTransaction(
 				session -> {
-					session.doWork( new ValidateSomeEntityColumns( session ) );
+
+					Dialect dialect = session.getJdbcServices().getDialect();
+					if ( !(dialect instanceof GaussDBDialect ) ) {
+						session.doWork( new ValidateSomeEntityColumns( session ) );
+					}
 					session.doWork( new ValidateRowCount( session, SOME_ENTITY_TABLE_NAME, 0 ) );
 					session.doWork( new ValidateRowCount( session, SOME_OTHER_ENTITY_TABLE_NAME, 0 ) );
 

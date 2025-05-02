@@ -7,6 +7,16 @@ package org.hibernate.orm.test.annotations.manytoone;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
@@ -15,14 +25,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.transaction.TransactionUtil;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -40,32 +42,37 @@ public class ManyToOneMapsIdFlushModeTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testFlushModeCommitWithMapsIdAndIdentity() {
-		final ParentEntity parent = TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.setFlushMode( FlushModeType.COMMIT );
+		final ParentEntity parent = TransactionUtil.doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					entityManager.setFlushMode( FlushModeType.COMMIT );
 
-			final ParentEntity parentEntity = new ParentEntity();
-			parentEntity.setData( "test" );
+					final ParentEntity parentEntity = new ParentEntity();
+					parentEntity.setData( "test" );
 
-			final ChildEntity childEntity = new ChildEntity();
-			parentEntity.addChild( childEntity );
+					final ChildEntity childEntity = new ChildEntity();
+					parentEntity.addChild( childEntity );
 
-			entityManager.persist( parentEntity );
-			entityManager.persist( childEntity );
+					entityManager.persist( parentEntity );
+					entityManager.persist( childEntity );
 
-			return parentEntity;
-		} );
+					return parentEntity;
+				}
+		);
 
-		TransactionUtil.doInJPA( this::entityManagerFactory, entityManager -> {
-			final ParentEntity parentEntity = entityManager.find( ParentEntity.class, parent.getId() );
-			assertNotNull( parentEntity );
-			assertNotNull( parentEntity.getChildren() );
-			assertTrue( !parentEntity.getChildren().isEmpty() );
+		TransactionUtil.doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					final ParentEntity parentEntity = entityManager.find( ParentEntity.class, parent.getId() );
+					assertNotNull( parentEntity );
+					assertNotNull( parentEntity.getChildren() );
+					assertTrue( !parentEntity.getChildren().isEmpty() );
 
-			final ChildEntity childEntity = parentEntity.getChildren().iterator().next();
-			assertNotNull( childEntity );
-			assertEquals( parentEntity.getId(), childEntity.getId() );
-		} );
+					final ChildEntity childEntity = parentEntity.getChildren().iterator().next();
+					assertNotNull( childEntity );
+					assertEquals( parentEntity.getId(), childEntity.getId() );
+				}
+		);
 	}
 
 	@Entity(name = "ParentEntity")

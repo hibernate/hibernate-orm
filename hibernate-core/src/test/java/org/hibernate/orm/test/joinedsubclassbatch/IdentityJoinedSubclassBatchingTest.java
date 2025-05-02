@@ -10,15 +10,17 @@ import java.math.BigDecimal;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.GaussDBDialect;
 
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -32,7 +34,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
-
 
 
 /**
@@ -53,6 +54,7 @@ import jakarta.persistence.ManyToOne;
 @ServiceRegistry(
 		settings = @Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "20")
 )
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class IdentityJoinedSubclassBatchingTest {
 
 

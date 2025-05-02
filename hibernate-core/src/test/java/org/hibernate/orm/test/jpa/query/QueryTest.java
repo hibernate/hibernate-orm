@@ -28,6 +28,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -381,6 +382,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullPositionalParameter() throws Exception {
@@ -416,6 +418,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-10161")
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
@@ -467,6 +470,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullNamedParameter() throws Exception {
@@ -502,6 +506,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-10161")
 	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
+	@SkipForDialect(value = GaussDBDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot determine the parameter types and bind type is unknown because the value is null")
 	public void testNativeQueryNullNamedParameterParameter() throws Exception {
@@ -574,6 +579,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@JiraKey("HHH-18033")
+	@SkipForDialect(value = GaussDBDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	public void testNativeQueryContainsQuotedSemicolonWithLimit() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -600,6 +606,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = SybaseDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	@SkipForDialect(value = DB2Dialect.class, comment = "Doesn't support semicolon as ending of statement")
+	@SkipForDialect(value = GaussDBDialect.class, comment = "Doesn't support semicolon as ending of statement")
 	public void testNativeQueryContainsQuotedSemicolonAndEndsWithSemicolonWithLimit() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

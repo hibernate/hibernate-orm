@@ -7,11 +7,13 @@ package org.hibernate.orm.test.annotations.manytoone;
 import org.hibernate.boot.beanvalidation.ValidationMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.GaussDBDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import jakarta.persistence.CascadeType;
@@ -43,6 +45,7 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testSave() {
 		inTransaction(
 				session -> {

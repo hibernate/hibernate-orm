@@ -4,15 +4,8 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
-
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
+import org.hibernate.dialect.GaussDBDialect;
 
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
@@ -21,7 +14,16 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 
 /**
  * @author Guillaume Smet
@@ -34,23 +36,27 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 @BytecodeEnhanced
-@CustomEnhancementContext( {EnhancerTestContext.class, LazyInitializationWithoutInlineDirtyTrackingTest.NoInlineDirtyTrackingContext.class} )
+@CustomEnhancementContext({
+		EnhancerTestContext.class,
+		LazyInitializationWithoutInlineDirtyTrackingTest.NoInlineDirtyTrackingContext.class
+})
 public class LazyInitializationWithoutInlineDirtyTrackingTest {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			File file = new File();
 			file.setId( 1L );
 			file.setName( "file" );
-			file.setBytes( new byte[]{ 0 } );
+			file.setBytes( new byte[] { 0 } );
 
 			s.persist( file );
 		} );
 
 		scope.inTransaction( s -> {
 			File file = s.find( File.class, 1L );
-			file.setBytes( new byte[]{ 1 } );
+			file.setBytes( new byte[] { 1 } );
 			s.persist( file );
 		} );
 	}

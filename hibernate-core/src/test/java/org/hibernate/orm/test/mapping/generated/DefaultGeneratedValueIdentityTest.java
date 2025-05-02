@@ -28,6 +28,7 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.OnExecutionGenerator;
 
@@ -37,6 +38,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -50,16 +52,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class)
-@RequiresDialectFeature( feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class )
-@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
-@DomainModel( annotatedClasses = DefaultGeneratedValueIdentityTest.TheEntity.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class)
+@DomainModel(annotatedClasses = DefaultGeneratedValueIdentityTest.TheEntity.class)
 @SessionFactory
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class DefaultGeneratedValueIdentityTest {
 
 	@Test
-	@JiraKey( "HHH-12671" )
+	@JiraKey("HHH-12671")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testGenerationWithIdentityInsert(SessionFactoryScope scope) {
 		final TheEntity theEntity = new TheEntity();
 
@@ -137,20 +140,20 @@ public class DefaultGeneratedValueIdentityTest {
 		scope.inTransaction( (s) -> s.createQuery( "delete TheEntity" ).executeUpdate() );
 	}
 
-	@Entity( name = "TheEntity" )
+	@Entity(name = "TheEntity")
 	public static class TheEntity {
 		@Id
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Integer id;
 
 		@Generated
-		@ColumnDefault( "CURRENT_TIMESTAMP" )
-		@Column( nullable = false )
+		@ColumnDefault("CURRENT_TIMESTAMP")
+		@Column(nullable = false)
 		private Date createdDate;
 
-		@Generated(event = { EventType.INSERT, EventType.UPDATE})
-		@ColumnDefault( "CURRENT_TIMESTAMP" )
-		@Column( nullable = false )
+		@Generated(event = { EventType.INSERT, EventType.UPDATE })
+		@ColumnDefault("CURRENT_TIMESTAMP")
+		@Column(nullable = false)
 		private Calendar alwaysDate;
 
 		@CreationTimestamp

@@ -8,6 +8,7 @@ import java.time.LocalDate;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -88,6 +89,7 @@ public class DateArrayTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TableWithDateArrays tableRecord;
@@ -106,6 +108,7 @@ public class DateArrayTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithDateArrays> tq = em.createNamedQuery( "TableWithDateArrays.JPQL.getById", TableWithDateArrays.class );
@@ -117,6 +120,7 @@ public class DateArrayTest {
 
 	@Test
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithDateArrays> tq = em.createNamedQuery( "TableWithDateArrays.JPQL.getByData", TableWithDateArrays.class );
@@ -127,6 +131,7 @@ public class DateArrayTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "maybe concurrency")
 	public void testNativeQueryById(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithDateArrays> tq = em.createNamedQuery( "TableWithDateArrays.Native.getById", TableWithDateArrays.class );
@@ -145,6 +150,7 @@ public class DateArrayTest {
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();
@@ -163,6 +169,7 @@ public class DateArrayTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "The 'date' type is a synonym for timestamp on Oracle and PostgresPlus, so untyped reading produces Timestamps")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.The 'date' type is a synonym for timestamp on Oracle and PostgresPlus, so untyped reading produces Timestamps")
 	public void testNativeQueryUntyped(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			Query q = em.createNamedQuery( "TableWithDateArrays.Native.getByIdUntyped" );

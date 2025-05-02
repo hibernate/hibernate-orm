@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.xml.hbm;
 
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.HANADialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -31,6 +32,7 @@ import org.junit.jupiter.api.Test;
 public class HbmWithIdentityTest {
 	@Test
 	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testManyToOneAndInterface(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {

@@ -11,20 +11,22 @@ import java.io.UncheckedIOException;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.GaussDBDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.JiraKeyGroup;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@JiraKeyGroup( value = {
-		@JiraKey( value = "HHH-14530" ),
-		@JiraKey( value = "HHH-14529" )
-} )
+@JiraKeyGroup(value = {
+		@JiraKey(value = "HHH-14530"),
+		@JiraKey(value = "HHH-14529")
+})
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 
@@ -47,6 +49,7 @@ public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testPreParsedOrmXml() {
 		// Just check that the entity can be persisted, which means the mapping file was taken into account
 		NonAnnotatedEntity persistedEntity = new NonAnnotatedEntity( "someName" );

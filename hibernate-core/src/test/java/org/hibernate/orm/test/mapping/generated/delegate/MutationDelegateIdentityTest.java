@@ -14,6 +14,7 @@ import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -35,6 +36,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -56,18 +58,19 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Marco Belladelli
  */
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		MutationDelegateIdentityTest.IdentityOnly.class,
 		MutationDelegateIdentityTest.IdentityAndValues.class,
 		MutationDelegateIdentityTest.IdentityAndValuesAndRowId.class,
 		MutationDelegateIdentityTest.IdentityAndValuesAndRowIdAndNaturalId.class,
-} )
-@SessionFactory( useCollectingStatementInspector = true )
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
+})
+@SessionFactory(useCollectingStatementInspector = true)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 // Batch size is only enabled to make sure it's ignored when using mutation delegates
-@ServiceRegistry( settings = @Setting( name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5" ) )
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5"))
 public class MutationDelegateIdentityTest {
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testInsertGeneratedIdentityOnly(SessionFactoryScope scope) {
 		final GeneratedValuesMutationDelegate delegate = getDelegate( scope, IdentityOnly.class, MutationType.INSERT );
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
@@ -88,6 +91,7 @@ public class MutationDelegateIdentityTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testInsertGeneratedValuesAndIdentity(SessionFactoryScope scope) {
 		final GeneratedValuesMutationDelegate delegate = getDelegate(
 				scope,
@@ -115,6 +119,7 @@ public class MutationDelegateIdentityTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testUpdateGeneratedValuesAndIdentity(SessionFactoryScope scope) {
 		final GeneratedValuesMutationDelegate delegate = getDelegate(
 				scope,
@@ -147,6 +152,7 @@ public class MutationDelegateIdentityTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testInsertGeneratedValuesAndIdentityAndRowId(SessionFactoryScope scope) {
 		final GeneratedValuesMutationDelegate delegate = getDelegate(
 				scope,
@@ -198,6 +204,7 @@ public class MutationDelegateIdentityTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testInsertGeneratedValuesAndIdentityAndRowIdAndNaturalId(SessionFactoryScope scope) {
 		final GeneratedValuesMutationDelegate delegate = getDelegate(
 				scope,
@@ -252,7 +259,11 @@ public class MutationDelegateIdentityTest {
 
 	@RegisterExtension
 	public LoggerInspectionExtension logger = LoggerInspectionExtension.builder().setLogger(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqlExceptionHelper.class.getName() )
+			Logger.getMessageLogger(
+					MethodHandles.lookup(),
+					CoreMessageLogger.class,
+					SqlExceptionHelper.class.getName()
+			)
 	).build();
 
 	@BeforeAll
@@ -261,10 +272,10 @@ public class MutationDelegateIdentityTest {
 		triggerable.reset();
 	}
 
-	@Entity( name = "IdentityOnly" )
+	@Entity(name = "IdentityOnly")
 	public static class IdentityOnly {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
 		private String name;
@@ -278,18 +289,18 @@ public class MutationDelegateIdentityTest {
 		}
 	}
 
-	@Entity( name = "IdentityAndValues" )
-	@SuppressWarnings( "unused" )
+	@Entity(name = "IdentityAndValues")
+	@SuppressWarnings("unused")
 	public static class IdentityAndValues {
 		@Id
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
-		@Generated( event = EventType.INSERT )
-		@ColumnDefault( "'default_name'" )
+		@Generated(event = EventType.INSERT)
+		@ColumnDefault("'default_name'")
 		private String name;
 
-		@UpdateTimestamp( source = SourceType.DB )
+		@UpdateTimestamp(source = SourceType.DB)
 		private Date updateDate;
 
 		private String data;
@@ -312,19 +323,19 @@ public class MutationDelegateIdentityTest {
 	}
 
 	@RowId
-	@Entity( name = "IdentityAndValuesAndRowId" )
-	@SuppressWarnings( "unused" )
+	@Entity(name = "IdentityAndValuesAndRowId")
+	@SuppressWarnings("unused")
 	public static class IdentityAndValuesAndRowId {
 		@Id
-		@Column( name = "id_column" )
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@Column(name = "id_column")
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
-		@Generated( event = EventType.INSERT )
-		@ColumnDefault( "'default_name'" )
+		@Generated(event = EventType.INSERT)
+		@ColumnDefault("'default_name'")
 		private String name;
 
-		@UpdateTimestamp( source = SourceType.DB )
+		@UpdateTimestamp(source = SourceType.DB)
 		private Date updateDate;
 
 		private String data;
@@ -347,16 +358,16 @@ public class MutationDelegateIdentityTest {
 	}
 
 	@RowId
-	@Entity( name = "IdentityAndValuesAndRowIdAndNaturalId" )
-	@SuppressWarnings( "unused" )
+	@Entity(name = "IdentityAndValuesAndRowIdAndNaturalId")
+	@SuppressWarnings("unused")
 	public static class IdentityAndValuesAndRowIdAndNaturalId {
 		@Id
-		@Column( name = "id_column" )
-		@GeneratedValue( strategy = GenerationType.IDENTITY )
+		@Column(name = "id_column")
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 
-		@Generated( event = EventType.INSERT )
-		@ColumnDefault( "'default_name'" )
+		@Generated(event = EventType.INSERT)
+		@ColumnDefault("'default_name'")
 		private String name;
 
 		@NaturalId

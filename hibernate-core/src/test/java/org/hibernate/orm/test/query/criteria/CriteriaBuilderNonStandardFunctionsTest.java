@@ -17,6 +17,7 @@ import java.util.List;
 import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
@@ -344,6 +345,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach has unreliable support for numeric types in log function")
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Unsupported function.")
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -417,6 +419,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "type:resolved.Function sinh(double precision) does not exist.")
 	public void testHyperbolic(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

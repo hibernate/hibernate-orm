@@ -4,11 +4,12 @@
  */
 package org.hibernate.orm.test.annotations.lob;
 
-import org.hibernate.dialect.*;
-import org.junit.Test;
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -41,7 +42,10 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 			return getCompiledCodeClass().newInstance();
 		}
 		catch (Exception ex) {
-			throw new RuntimeException( "Could not create an instance of type " + getCompiledCodeClass().getName(), ex );
+			throw new RuntimeException(
+					"Could not create an instance of type " + getCompiledCodeClass().getName(),
+					ex
+			);
 		}
 	}
 
@@ -55,21 +59,27 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		book.setEditor( editor );
 		book.setCode2( new char[] { 'r' } );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( book );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					session.persist( book );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
-			assertNotNull( loadedBook.getEditor() );
-			assertEquals( book.getEditor().getName(), loadedBook.getEditor().getName() );
-			loadedBook.setEditor( null );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
+					assertNotNull( loadedBook.getEditor() );
+					assertEquals( book.getEditor().getName(), loadedBook.getEditor().getName() );
+					loadedBook.setEditor( null );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
-			assertNull( loadedBook.getEditor() );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					B loadedBook = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
+					assertNull( loadedBook.getEditor() );
+				}
+		);
 	}
 
 	@Test
@@ -81,62 +91,75 @@ public abstract class AbstractLobTest<B extends AbstractBook, C extends Abstract
 		book.setCode( new Character[] { 'a', 'b', 'c' } );
 		book.setCode2( new char[] { 'a', 'b', 'c' } );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( book );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					session.persist( book );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			B b2 = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
-			assertNotNull( b2 );
-			assertEquals( b2.getFullText(), book.getFullText() );
-			assertEquals( b2.getCode()[1].charValue(), book.getCode()[1].charValue() );
-			assertEquals( b2.getCode2()[2], book.getCode2()[2] );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					B b2 = getBookClass().cast( session.get( getBookClass(), getId( book ) ) );
+					assertNotNull( b2 );
+					assertEquals( b2.getFullText(), book.getFullText() );
+					assertEquals( b2.getCode()[1].charValue(), book.getCode()[1].charValue() );
+					assertEquals( b2.getCode2()[2], book.getCode2()[2] );
+				}
+		);
 	}
 
 	@Test
+	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testBlob() throws Exception {
 
 		C cc = createCompiledCode();
 		Byte[] header = new Byte[2];
-		header[0] = new Byte( ( byte ) 3 );
-		header[1] = new Byte( ( byte ) 0 );
+		header[0] = new Byte( (byte) 3 );
+		header[1] = new Byte( (byte) 0 );
 		cc.setHeader( header );
 		int codeSize = 5;
 		byte[] full = new byte[codeSize];
 		for ( int i = 0; i < codeSize; i++ ) {
-			full[i] = ( byte ) ( 1 + i );
+			full[i] = (byte) ( 1 + i );
 		}
 		cc.setFullCode( full );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( cc );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					session.persist( cc );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
-			assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
-			assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
+					assertEquals( recompiled.getHeader()[1], cc.getHeader()[1] );
+					assertEquals( recompiled.getFullCode()[codeSize - 1], cc.getFullCode()[codeSize - 1] );
+				}
+		);
 	}
 
 	@Test
-	@SkipForDialect( SybaseDialect.class )
+	@SkipForDialect(SybaseDialect.class)
 	public void testBinary() throws Exception {
 
 		C cc = createCompiledCode();
 		byte[] metadata = new byte[2];
-		metadata[0] = ( byte ) 3;
-		metadata[1] = ( byte ) 0;
+		metadata[0] = (byte) 3;
+		metadata[1] = (byte) 0;
 		cc.setMetadata( metadata );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( cc );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					session.persist( cc );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
-			assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
-		} );
+		doInHibernate(
+				this::sessionFactory, session -> {
+					C recompiled = getCompiledCodeClass().cast( session.get( getCompiledCodeClass(), getId( cc ) ) );
+					assertEquals( recompiled.getMetadata()[1], cc.getMetadata()[1] );
+				}
+		);
 	}
 }

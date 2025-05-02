@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -24,6 +23,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -35,6 +35,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,13 +52,14 @@ import org.xml.sax.SAXException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DomainModel( annotatedClasses = {
+@DomainModel(annotatedClasses = {
 		XmlFunctionTests.XmlHolder.class,
 		EntityOfBasics.class
 })
 @ServiceRegistry(settings = @Setting(name = QuerySettings.XML_FUNCTIONS_ENABLED, value = "true"))
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-18497")
+@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 public class XmlFunctionTests {
 
 	XmlHolder entity;
@@ -84,7 +86,7 @@ public class XmlFunctionTests {
 									Map.of( "id", 3, "name", "val3" )
 							)
 					);
-					em.persist(entity);
+					em.persist( entity );
 
 					EntityOfBasics e1 = new EntityOfBasics();
 					e1.setId( 1 );
@@ -118,21 +120,24 @@ public class XmlFunctionTests {
 		scope.inTransaction(
 				session -> {
 					Tuple tuple = session.createQuery(
-									"select " +
-											"xmlelement(name empty), " +
-											"xmlelement(name `the-element`), " +
-											"xmlelement(name myElement, 'myContent'), " +
-											"xmlelement(name myElement, xmlattributes('123' as attr1)), " +
-											"xmlelement(name myElement, xmlattributes('123' as attr1, '456' as `attr-2`)), " +
-											"xmlelement(name myElement, xmlattributes('123' as attr1), 'myContent', xmlelement(name empty))",
-									Tuple.class
-							).getSingleResult();
+							"select " +
+									"xmlelement(name empty), " +
+									"xmlelement(name `the-element`), " +
+									"xmlelement(name myElement, 'myContent'), " +
+									"xmlelement(name myElement, xmlattributes('123' as attr1)), " +
+									"xmlelement(name myElement, xmlattributes('123' as attr1, '456' as `attr-2`)), " +
+									"xmlelement(name myElement, xmlattributes('123' as attr1), 'myContent', xmlelement(name empty))",
+							Tuple.class
+					).getSingleResult();
 					assertXmlEquals( "<empty/>", tuple.get( 0, String.class ) );
-					assertXmlEquals( "<the-element/>", tuple.get( 1 , String.class ) );
+					assertXmlEquals( "<the-element/>", tuple.get( 1, String.class ) );
 					assertXmlEquals( "<myElement>myContent</myElement>", tuple.get( 2, String.class ) );
 					assertXmlEquals( "<myElement attr1=\"123\"/>", tuple.get( 3, String.class ) );
 					assertXmlEquals( "<myElement attr1=\"123\" attr-2=\"456\"/>", tuple.get( 4, String.class ) );
-					assertXmlEquals( "<myElement attr1=\"123\">myContent<empty/></myElement>", tuple.get( 5, String.class ) );
+					assertXmlEquals(
+							"<myElement attr1=\"123\">myContent<empty/></myElement>",
+							tuple.get( 5, String.class )
+					);
 				}
 		);
 	}
@@ -149,7 +154,7 @@ public class XmlFunctionTests {
 							Tuple.class
 					).getSingleResult();
 					assertXmlEquals( "<!--Abc--><a/>", tuple.get( 0, String.class ) + "<a/>" );
-					assertXmlEquals( "<!--<>--><a/>", tuple.get( 1 , String.class ) + "<a/>" );
+					assertXmlEquals( "<!--<>--><a/>", tuple.get( 1, String.class ) + "<a/>" );
 				}
 		);
 	}
@@ -165,8 +170,14 @@ public class XmlFunctionTests {
 									"from EntityOfBasics e where e.id = 1",
 							Tuple.class
 					).getSingleResult();
-					assertXmlEquals( "<r><e1>123</e1><e2>text</e2></r>", "<r>" + tuple.get( 0, String.class ) + "</r>" );
-					assertXmlEquals( "<r><id>1</id><theString>Dog</theString></r>", "<r>" + tuple.get( 1, String.class ) + "</r>" );
+					assertXmlEquals(
+							"<r><e1>123</e1><e2>text</e2></r>",
+							"<r>" + tuple.get( 0, String.class ) + "</r>"
+					);
+					assertXmlEquals(
+							"<r><id>1</id><theString>Dog</theString></r>",
+							"<r>" + tuple.get( 1, String.class ) + "</r>"
+					);
 				}
 		);
 	}
@@ -182,8 +193,14 @@ public class XmlFunctionTests {
 									"from EntityOfBasics e where e.id = 1",
 							Tuple.class
 					).getSingleResult();
-					assertXmlEquals( "<r><e1>123</e1><e2>text</e2></r>", "<r>" + tuple.get( 0, String.class ) + "</r>" );
-					assertXmlEquals( "<r><id>1</id><theString>Dog</theString></r>", "<r>" + tuple.get( 1, String.class ) + "</r>" );
+					assertXmlEquals(
+							"<r><e1>123</e1><e2>text</e2></r>",
+							"<r>" + tuple.get( 0, String.class ) + "</r>"
+					);
+					assertXmlEquals(
+							"<r><id>1</id><theString>Dog</theString></r>",
+							"<r>" + tuple.get( 1, String.class ) + "</r>"
+					);
 				}
 		);
 	}
@@ -297,7 +314,7 @@ public class XmlFunctionTests {
 		final TransformerFactory tf = TransformerFactory.newInstance();
 		try {
 			final Transformer transformer = tf.newTransformer();
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
 			transformer.setOutputProperty( OutputKeys.INDENT, "yes" );
 			final StringWriter writer = new StringWriter();
 			transformer.transform( new DOMSource( document ), new StreamResult( writer ) );

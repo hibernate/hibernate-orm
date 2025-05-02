@@ -10,8 +10,9 @@ import java.util.Map;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -99,6 +100,7 @@ public abstract class XmlMappingTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()
@@ -123,6 +125,7 @@ public abstract class XmlMappingTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void verifyReadWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -140,9 +143,10 @@ public abstract class XmlMappingTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase doesn't support comparing LOBs with the = operator")
 	@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "Oracle doesn't support comparing JSON with the = operator")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase doesn't support comparing CLOBs with the = operator")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void verifyComparisonWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) ->  {
+				(session) -> {
 					EntityWithXml entityWithJson = session.createQuery(
 									"from EntityWithXml e where e.stringMap = :param",
 									EntityWithXml.class
@@ -164,14 +168,14 @@ public abstract class XmlMappingTests {
 		private Integer id;
 
 		//tag::basic-xml-example[]
-		@JdbcTypeCode( SqlTypes.SQLXML )
+		@JdbcTypeCode(SqlTypes.SQLXML)
 		private Map<String, StringNode> stringMap;
 		//end::basic-xml-example[]
 
-		@JdbcTypeCode( SqlTypes.SQLXML )
+		@JdbcTypeCode(SqlTypes.SQLXML)
 		private Map<StringNode, StringNode> objectMap;
 
-		@JdbcTypeCode( SqlTypes.SQLXML )
+		@JdbcTypeCode(SqlTypes.SQLXML)
 		private List<StringNode> list;
 
 		public EntityWithXml() {

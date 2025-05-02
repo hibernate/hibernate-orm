@@ -65,6 +65,7 @@ import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.LessThanPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
@@ -601,6 +602,12 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitCustomTableDelete(TableDeleteCustomSql tableDelete) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitLessThanPredicate(LessThanPredicate lessThanPredicate) {
+
 		throw new UnsupportedOperationException();
 	}
 }

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.lob;
 
 import java.util.Arrays;
 
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,6 +30,7 @@ public abstract class LongByteArrayTest {
 	private static final int ARRAY_SIZE = 10000;
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testBoundedLongByteArrayAccess(SessionFactoryScope scope) {
 		byte[] original = buildRecursively( ARRAY_SIZE, true );
 		byte[] changed = buildRecursively( ARRAY_SIZE, false );
@@ -79,6 +81,7 @@ public abstract class LongByteArrayTest {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase returns byte[]{0}")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testEmptyArray(SessionFactoryScope scope) {
 		byte[] empty = new byte[] {};
 
@@ -102,6 +105,7 @@ public abstract class LongByteArrayTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testSaving(SessionFactoryScope scope) {
 		byte[] value = buildRecursively( ARRAY_SIZE, true );
 

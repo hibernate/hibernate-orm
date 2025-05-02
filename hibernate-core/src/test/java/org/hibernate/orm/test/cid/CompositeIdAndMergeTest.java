@@ -7,10 +7,13 @@ package org.hibernate.orm.test.cid;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.GaussDBDialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -38,6 +41,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class CompositeIdAndMergeTest {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testMerge(SessionFactoryScope scope) {
 		Integer lineItemIndex = 2;
 		Order persistedOrder = scope.fromTransaction(

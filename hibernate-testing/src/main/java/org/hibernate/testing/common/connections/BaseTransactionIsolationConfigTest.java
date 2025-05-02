@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.service.spi.Configurable;
@@ -16,6 +17,7 @@ import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +32,7 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsNumeric() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -54,6 +57,7 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsNumericString() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -78,6 +82,7 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsName() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );
@@ -102,6 +107,7 @@ public abstract class BaseTransactionIsolationConfigTest extends BaseUnitTestCas
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class, reason = "Looks like SERIALIZABLE is not supported")
 	public void testSettingIsolationAsNameAlt() throws Exception {
 		Properties properties = Environment.getProperties();
 		augmentConfigurationSettings( properties );

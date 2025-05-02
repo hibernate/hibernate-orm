@@ -8,6 +8,7 @@ import java.util.Arrays;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -48,6 +49,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@org.hibernate.testing.orm.junit.SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testSaving() {
 		byte[] testData = "test data".getBytes();
 

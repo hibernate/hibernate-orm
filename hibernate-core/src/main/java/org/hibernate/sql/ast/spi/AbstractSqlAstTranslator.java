@@ -172,6 +172,7 @@ import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.LessThanPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
@@ -7543,6 +7544,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		betweenPredicate.getLowerBound().accept( this );
 		appendSql( " and " );
 		betweenPredicate.getUpperBound().accept( this );
+	}
+
+	@Override
+	public void visitLessThanPredicate(LessThanPredicate lessThanPredicate) {
+
+		lessThanPredicate.getExpression().accept( this );
+		appendSql( " < " );
+		lessThanPredicate.getUpperBound().accept( this );
 	}
 
 	@Override

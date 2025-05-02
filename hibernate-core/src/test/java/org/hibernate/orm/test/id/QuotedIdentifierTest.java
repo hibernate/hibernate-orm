@@ -4,13 +4,7 @@
  */
 package org.hibernate.orm.test.id;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsIdentityColumns;
@@ -20,6 +14,13 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -37,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class QuotedIdentifierTest {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void testDirectIdPropertyAccess(SessionFactoryScope scope) {
 		QuotedIdentifier quotedIdentifier = new QuotedIdentifier();
 		scope.inTransaction( session -> {

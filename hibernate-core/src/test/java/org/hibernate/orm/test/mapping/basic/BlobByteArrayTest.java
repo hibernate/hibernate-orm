@@ -4,13 +4,15 @@
  */
 package org.hibernate.orm.test.mapping.basic;
 
+import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertArrayEquals;
@@ -23,26 +25,31 @@ public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Product.class
+				Product.class
 		};
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "opengauss don't support")
 	public void test() {
-		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
-			final Product product = new Product();
-			product.setId(1);
-			product.setName("Mobile phone");
-			product.setImage(new byte[] {1, 2, 3});
+		Integer productId = doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					final Product product = new Product();
+					product.setId( 1 );
+					product.setName( "Mobile phone" );
+					product.setImage( new byte[] { 1, 2, 3 } );
 
-			entityManager.persist(product);
-			return product.getId();
-		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find(Product.class, productId);
+					entityManager.persist( product );
+					return product.getId();
+				}
+		);
+		doInJPA(
+				this::entityManagerFactory, entityManager -> {
+					Product product = entityManager.find( Product.class, productId );
 
-			assertArrayEquals(new byte[] {1, 2, 3}, product.getImage());
-		});
+					assertArrayEquals( new byte[] { 1, 2, 3 }, product.getImage() );
+				}
+		);
 	}
 
 	//tag::basic-blob-byte-array-example[]
@@ -59,7 +66,7 @@ public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::basic-blob-byte-array-example[]
+		//end::basic-blob-byte-array-example[]
 		public Integer getId() {
 			return id;
 		}

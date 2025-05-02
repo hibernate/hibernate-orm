@@ -11,9 +11,11 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.AbstractCollection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -1624,4 +1626,30 @@ public class JsonHelper {
 		}
 	}
 
+	public static String parseJsonPath(String path) {
+		if (path == null || !path.startsWith("$")) {
+			throw new IllegalArgumentException("Invalid JSON path");
+		}
+
+		List<String> result = new ArrayList<>();
+		String[] parts = path.substring(1).split("\\.");
+
+		for (String part : parts) {
+			while (part.contains("[")) {
+				int start = part.indexOf("[");
+				int end = part.indexOf("]", start);
+				if (end == -1) {
+					throw new IllegalArgumentException("Invalid JSON path format");
+				}
+				result.add(part.substring(0, start));
+				result.add(part.substring(start + 1, end));
+				part = part.substring(end + 1);
+			}
+			if (!part.isEmpty()) {
+				result.add(part);
+			}
+		}
+
+		return String.join(",", result);
+	}
 }

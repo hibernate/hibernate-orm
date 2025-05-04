@@ -473,6 +473,10 @@ public class SessionImpl
 			}
 		}
 		finally {
+			if ( actionQueue.hasAfterTransactionActions() && !isTransactionInProgress() ) {
+				log.warn( "Closing session with unprocessed clean up bulk operations, forcing their execution" );
+				actionQueue.executePendingBulkOperationCleanUpActions();
+			}
 			final StatisticsImplementor statistics = getSessionFactory().getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.closeSession();

@@ -17,6 +17,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import java.io.IOException;
@@ -190,9 +191,12 @@ public final class ClassWriter {
 		else if (argument instanceof AnnotationMirror childAnnotation) {
 			printAnnotation( childAnnotation, pw );
 		}
+		else if (argument instanceof TypeMirror) {
+			pw.print(argument);
+			pw.print(".class");
+		}
 		else if (argument instanceof List) {
-			final List<? extends AnnotationValue> list =
-					(List<? extends AnnotationValue>) argument;
+			final var list = (List<? extends AnnotationValue>) argument;
 			pw.print('{');
 			boolean first = true;
 			for (AnnotationValue listedValue : list) {

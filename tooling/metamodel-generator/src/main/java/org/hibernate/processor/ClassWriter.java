@@ -15,6 +15,7 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import java.io.IOException;
@@ -173,6 +174,10 @@ public final class ClassWriter {
 		else if (argument instanceof AnnotationMirror) {
 			AnnotationMirror childAnnotation = (AnnotationMirror) argument;
 			printAnnotation( childAnnotation, pw );
+		}
+		else if (argument instanceof TypeMirror) {
+			pw.print(argument);
+			pw.print(".class");
 		}
 		else if (argument instanceof List) {
 			final List<? extends AnnotationValue> list =

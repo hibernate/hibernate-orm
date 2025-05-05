@@ -16,7 +16,6 @@ import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
@@ -31,13 +30,11 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 
 import static java.util.Collections.EMPTY_LIST;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
-import static org.hibernate.engine.spi.CascadingActions.CHECK_ON_FLUSH;
 import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
@@ -217,11 +214,7 @@ public final class Cascade {
 
 		if ( child != null ) {
 			if ( type instanceof EntityType || type instanceof CollectionType || type instanceof AnyType ) {
-				final AssociationType associationType = (AssociationType) type;
-				final boolean unownedTransient = eventSource.getSessionFactory()
-						.getSessionFactoryOptions()
-						.isUnownedAssociationTransientCheck();
-				if ( cascadeAssociationNow( action, cascadePoint, associationType, eventSource.getFactory(), unownedTransient ) ) {
+				if ( action.cascadeNow( cascadePoint, (AssociationType) type, eventSource.getFactory() ) ) {
 					cascadeAssociation(
 							action,
 							cascadePoint,
@@ -386,33 +379,6 @@ public final class Cascade {
 	private static boolean isLogicalOneToOne(Type type) {
 		return type instanceof EntityType entityType
 			&& entityType.isLogicalOneToOne();
-	}
-
-	private static boolean cascadeAssociationNow(
-			CascadingAction<?> action,
-			CascadePoint cascadePoint,
-			AssociationType associationType,
-			SessionFactoryImplementor factory,
-			boolean unownedTransient) {
-		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint )
-			// For check on flush, we should only check unowned associations when strictness is enforced
-			&& ( action != CHECK_ON_FLUSH || unownedTransient || !isUnownedAssociation( associationType, factory ) );
-	}
-
-	private static boolean isUnownedAssociation(AssociationType associationType, SessionFactoryImplementor factory) {
-		if ( associationType instanceof ManyToOneType manyToOne ) {
-			// logical one-to-one + non-null unique key property name indicates unowned
-			return manyToOne.isLogicalOneToOne() && manyToOne.getRHSUniqueKeyPropertyName() != null;
-		}
-		else if ( associationType instanceof OneToOneType oneToOne ) {
-			// constrained false + non-null unique key property name indicates unowned
-			return oneToOne.isNullable() && oneToOne.getRHSUniqueKeyPropertyName() != null;
-		}
-		else if ( associationType instanceof CollectionType collectionType ) {
-			// for collections, we can ask the persister if we're on the inverse side
-			return collectionType.isInverse( factory );
-		}
-		return false;
 	}
 
 	private static <T> void cascadeComponent(

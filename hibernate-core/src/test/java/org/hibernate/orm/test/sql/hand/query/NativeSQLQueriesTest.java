@@ -38,6 +38,8 @@ import org.hibernate.orm.test.sql.hand.TextHolder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.JiraGroup;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
@@ -59,6 +61,7 @@ import static org.hibernate.testing.orm.junit.ExtraAssertions.assertClassAssigna
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -934,6 +937,32 @@ public class NativeSQLQueriesTest {
 							.uniqueResult();
 					assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );
 					session.remove( gavin );
+				}
+		);
+	}
+
+	@Test
+	@JiraGroup(
+			{
+					@Jira("https://hibernate.atlassian.net/browse/HHH-19376"),
+					@Jira("https://hibernate.atlassian.net/browse/HHH-19383")
+			}
+	)
+	public void testMutateResultSetMapping(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String sql = "SELECT p.*, COUNT(*) OVER() AS total_count "
+								+ "FROM Person p "
+								+ "WHERE p.name ILIKE :name "
+								+ "ORDER BY p.id";
+					// Declare Person as result type
+					NativeQuery<Person> query = session.createNativeQuery(sql, Person.class);
+					query.setParameter("name", "Ja%");
+					query.setMaxResults(2);
+					query.setFirstResult(0);
+					// Now mutate the result set mapping and verify an Exception is thrown
+					assertThrows( IllegalArgumentException.class,
+							() -> query.addScalar( "total_count", StandardBasicTypes.LONG).list() );
 				}
 		);
 	}

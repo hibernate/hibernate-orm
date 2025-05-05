@@ -7,8 +7,10 @@ package org.hibernate.engine.spi;
 import java.util.Iterator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
@@ -77,4 +79,14 @@ public interface CascadingAction<T> {
 	 * @since 7
 	 */
 	boolean appliesTo(Type type, CascadeStyle style);
+
+	/**
+	 * Does this action cascade to the given association at the given {@link CascadePoint}?
+	 *
+	 * @since 7
+	 */
+	boolean cascadeNow(
+			CascadePoint cascadePoint,
+			AssociationType associationType,
+			SessionFactoryImplementor factory);
 }

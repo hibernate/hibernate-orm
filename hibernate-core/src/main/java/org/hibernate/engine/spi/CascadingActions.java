@@ -11,6 +11,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
@@ -18,7 +19,10 @@ import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
@@ -395,7 +399,12 @@ public class CascadingActions {
 			// with cascade NONE on all associations
 			// if the entity has no associations, we can just ignore it
 			return persister.hasToOnes()
-				|| persister.hasOwnedCollections();
+				|| persister.hasOwnedCollections()
+				// when hibernate.unowned_association_transient_check
+				// is enabled, we have to check unowned associations
+				|| persister.hasCollections()
+					&& persister.getFactory().getSessionFactoryOptions()
+							.isUnownedAssociationTransientCheck();
 		}
 
 		@Override
@@ -407,6 +416,32 @@ public class CascadingActions {
 				// we only care about associations here,
 				// but they can hide inside embeddables
 				&& ( type.isComponentType() || type.isAssociationType() );
+		}
+
+		@Override
+		public boolean cascadeNow(
+				CascadePoint cascadePoint,
+				AssociationType associationType,
+				SessionFactoryImplementor factory) {
+			return super.cascadeNow( cascadePoint, associationType, factory )
+				&& ( factory.getSessionFactoryOptions().isUnownedAssociationTransientCheck()
+						|| !isUnownedAssociation( associationType, factory ) );
+		}
+
+		private static boolean isUnownedAssociation(AssociationType associationType, SessionFactoryImplementor factory) {
+			if ( associationType instanceof ManyToOneType manyToOne ) {
+				// logical one-to-one + non-null unique key property name indicates unowned
+				return manyToOne.isLogicalOneToOne() && manyToOne.getRHSUniqueKeyPropertyName() != null;
+			}
+			else if ( associationType instanceof OneToOneType oneToOne ) {
+				// constrained false + non-null unique key property name indicates unowned
+				return oneToOne.isNullable() && oneToOne.getRHSUniqueKeyPropertyName() != null;
+			}
+			else if ( associationType instanceof CollectionType collectionType ) {
+				// for collections, we can ask the persister if we're on the inverse side
+				return collectionType.isInverse( factory );
+			}
+			return false;
 		}
 
 		@Override
@@ -506,6 +541,14 @@ public class CascadingActions {
 		@Override
 		public boolean appliesTo(Type type, CascadeStyle style) {
 			return style.doCascade( this );
+		}
+
+		@Override
+		public boolean cascadeNow(
+				CascadePoint cascadePoint,
+				AssociationType associationType,
+				SessionFactoryImplementor factory) {
+			return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
 		}
 	}
 

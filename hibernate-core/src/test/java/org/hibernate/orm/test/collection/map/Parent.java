@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class Parent {
 	private String name;
-	private Map children = new HashMap();
+	private Map<String,Child> children = new HashMap<>();
 
 	public Parent() {
 	}
@@ -30,11 +30,11 @@ public class Parent {
 		this.name = name;
 	}
 
-	public Map getChildren() {
+	public Map<String,Child> getChildren() {
 		return children;
 	}
 
-	public void setChildren(Map children) {
+	public void setChildren(Map<String,Child> children) {
 		this.children = children;
 	}
 

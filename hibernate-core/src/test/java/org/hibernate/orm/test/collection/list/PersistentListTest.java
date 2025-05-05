@@ -32,9 +32,8 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/list/Mappings.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/collection/list/Mappings.xml")
 @SessionFactory
 public class PersistentListTest {
 
@@ -131,9 +130,9 @@ public class PersistentListTest {
 							connection -> {
 								SimpleSelect select = new SimpleSelect( sessionFactory )
 										.setTableName( collectionPersister.getTableName() )
-										.addColumn( "order_id" )
-										.addColumn( "INDX" )
-										.addColumn( "PRD_CODE" );
+										.addColumn( "order_fk" )
+										.addColumn( "list_index" )
+										.addColumn( "prod_code" );
 								final String sql = select.toStatementString();
 								PreparedStatement preparedStatement = ( (SessionImplementor) session2 ).getJdbcCoordinator()
 										.getStatementPreparer()

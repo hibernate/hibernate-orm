@@ -6,12 +6,14 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
@@ -38,6 +40,7 @@ import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
@@ -211,6 +214,10 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setCascade(String cascade) {
 		this.cascade = cascade;
+	}
+
+	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
+		cascade = cascadeTypes == null ? null : renderCascadeTypeList( cascadeTypes );
 	}
 
 	public void setName(String name) {

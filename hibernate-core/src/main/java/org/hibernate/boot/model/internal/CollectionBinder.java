@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -89,6 +90,7 @@ import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.LAZY;
+import static org.hibernate.annotations.CascadeType.DELETE_ORPHAN;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
@@ -97,11 +99,11 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFrom
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
-import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
@@ -152,7 +154,7 @@ public abstract class CollectionBinder {
 	protected MemberDetails property;
 	private TypeDetails collectionElementType;
 	private TypeDetails targetEntity;
-	private String cascadeStrategy;
+	private EnumSet<CascadeType> cascadeTypes;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
 	private CacheLayout queryCacheLayout;
@@ -459,12 +461,9 @@ public abstract class CollectionBinder {
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = nullIfEmpty( oneToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( oneToManyAnn.targetEntity() );
-			collectionBinder.setCascadeStrategy( getCascadeStrategy(
-					oneToManyAnn.cascade(),
-					hibernateCascade,
-					oneToManyAnn.orphanRemoval(),
-					context
-			) );
+			collectionBinder.setCascadeStrategy(
+					aggregateCascadeTypes( oneToManyAnn.cascade(), hibernateCascade,
+							oneToManyAnn.orphanRemoval(), context ) );
 			collectionBinder.setOneToMany( true );
 		}
 		else if ( elementCollectionAnn != null ) {
@@ -480,23 +479,15 @@ public abstract class CollectionBinder {
 		else if ( manyToManyAnn != null ) {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( manyToManyAnn.targetEntity() );
-			collectionBinder.setCascadeStrategy( getCascadeStrategy(
-					manyToManyAnn.cascade(),
-					hibernateCascade,
-					false,
-					context
-			) );
+			collectionBinder.setCascadeStrategy(
+					aggregateCascadeTypes( manyToManyAnn.cascade(), hibernateCascade, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else if ( property.hasDirectAnnotationUsage( ManyToAny.class ) ) {
 			mappedBy = null;
 			collectionBinder.setTargetEntity( ClassDetails.VOID_CLASS_DETAILS );
-			collectionBinder.setCascadeStrategy( getCascadeStrategy(
-					null,
-					hibernateCascade,
-					false,
-					context
-			) );
+			collectionBinder.setCascadeStrategy(
+					aggregateCascadeTypes( null, hibernateCascade, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else {
@@ -752,8 +743,8 @@ public abstract class CollectionBinder {
 		this.insertable = insertable;
 	}
 
-	private void setCascadeStrategy(String cascadeStrategy) {
-		this.cascadeStrategy = cascadeStrategy;
+	private void setCascadeStrategy(EnumSet<CascadeType> cascadeTypes) {
+		this.cascadeTypes = cascadeTypes;
 	}
 
 	private void setAccessType(AccessType accessType) {
@@ -1213,8 +1204,8 @@ public abstract class CollectionBinder {
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( collection );
-		binder.setCascade( cascadeStrategy );
-		if ( cascadeStrategy != null && cascadeStrategy.contains( "delete-orphan" ) ) {
+		binder.setCascade( cascadeTypes );
+		if ( cascadeTypes != null && cascadeTypes.contains( DELETE_ORPHAN ) ) {
 			collection.setOrphanDelete( true );
 		}
 		binder.setLazy( collection.isLazy() );

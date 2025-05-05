@@ -902,26 +902,29 @@ public class BinderHelper {
 		};
 	}
 
-	public static String getCascadeStrategy(
-			jakarta.persistence.CascadeType[] ejbCascades,
-			Cascade hibernateCascadeAnnotation,
+	public static EnumSet<CascadeType> aggregateCascadeTypes(
+			jakarta.persistence.CascadeType[] cascadeTypes,
+			Cascade cascadeAnnotation,
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
-		final EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
+		final EnumSet<CascadeType> cascades =
+				convertToHibernateCascadeType( cascadeTypes );
 		final CascadeType[] hibernateCascades =
-				hibernateCascadeAnnotation == null ? null : hibernateCascadeAnnotation.value();
+				cascadeAnnotation == null
+						? null
+						: cascadeAnnotation.value();
 		if ( !isEmpty( hibernateCascades ) ) {
-			addAll( cascadeTypes, hibernateCascades );
+			addAll( cascades, hibernateCascades );
 		}
 		if ( orphanRemoval ) {
-			cascadeTypes.add( CascadeType.DELETE_ORPHAN );
-			cascadeTypes.add( CascadeType.REMOVE );
+			cascades.add( CascadeType.DELETE_ORPHAN );
+			cascades.add( CascadeType.REMOVE );
 		}
-		if ( cascadeTypes.contains( CascadeType.REPLICATE ) ) {
+		if ( cascades.contains( CascadeType.REPLICATE ) ) {
 			warnAboutDeprecatedCascadeType( CascadeType.REPLICATE );
 		}
-		cascadeTypes.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
-		return renderCascadeTypeList( cascadeTypes );
+		cascades.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
+		return cascades;
 	}
 
 	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
@@ -945,7 +948,7 @@ public class BinderHelper {
 		};
 	}
 
-	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
+	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
 		final StringBuilder cascade = new StringBuilder();
 		for ( CascadeType cascadeType : cascadeTypes ) {
 			cascade.append( "," );

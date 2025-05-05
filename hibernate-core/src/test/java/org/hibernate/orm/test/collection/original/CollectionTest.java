@@ -28,10 +28,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(xmlMappings = {
 		"org/hibernate/orm/test/collection/original/UserPermissions.hbm.xml",
-		"org/hibernate/orm/test/collection/original/Zoo.hbm.xml",
+		"org/hibernate/orm/test/collection/original/Zoo.xml",
 })
 @SessionFactory
 public class CollectionTest {

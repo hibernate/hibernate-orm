@@ -67,6 +67,10 @@ publishingExtension.repositories {
         name = "staging"
         url = rootProject.layout.buildDirectory.dir("staging-deploy${File.separator}maven")
     }
+    maven {
+        name = 'snapshots'
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

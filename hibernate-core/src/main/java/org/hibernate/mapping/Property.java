@@ -38,6 +38,7 @@ import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
  * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
@@ -184,17 +185,23 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCascadeStyle(String cascade) {
-		if ( cascade==null || cascade.equals("none") ) {
+		if ( cascade==null || cascade.equals("none") || isBlank(cascade) ) {
 			return CascadeStyles.NONE;
 		}
 		else {
 			final StringTokenizer tokens = new StringTokenizer(cascade, ", ");
-			final CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
-			int i=0;
-			while ( tokens.hasMoreTokens() ) {
-				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+			final int length = tokens.countTokens();
+			if ( length == 1) {
+				return CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
-			return new CascadeStyles.MultipleCascadeStyle(styles);
+			else {
+				final CascadeStyle[] styles = new CascadeStyle[length];
+				int i = 0;
+				while ( tokens.hasMoreTokens() ) {
+					styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+				}
+				return new CascadeStyles.MultipleCascadeStyle( styles );
+			}
 		}
 	}
 

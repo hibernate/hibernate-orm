@@ -4295,7 +4295,7 @@ public abstract class AbstractEntityPersister
 
 	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {
 		final BytecodeLazyAttributeInterceptor interceptor =
-				getEntityMetamodel().getBytecodeEnhancementMetadata()
+				entityMetamodel.getBytecodeEnhancementMetadata()
 						.extractLazyInterceptor( entity );
 		if ( interceptor != null ) {
 			interceptor.setSession( session );
@@ -4338,9 +4338,9 @@ public abstract class AbstractEntityPersister
 			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
 			//		- we may need something similar here...
 			for ( EntityMappingType subclassMappingType : subclassMappingTypes.values() ) {
-				if ( subclassMappingType.getEntityPersister().getRepresentationStrategy()
-						.getInstantiator().isSameClass(instance ) ) {
-					return subclassMappingType.getEntityPersister();
+				final EntityPersister persister = subclassMappingType.getEntityPersister();
+				if ( persister.getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
+					return persister;
 				}
 			}
 		}

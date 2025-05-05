@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/idbag/Mappings.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/collection/idbag/Mappings.xml"
 )
 @SessionFactory
 public class PersistentIdBagTest {

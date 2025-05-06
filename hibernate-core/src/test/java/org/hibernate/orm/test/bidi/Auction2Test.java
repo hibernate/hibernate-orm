@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,15 +25,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(
 		feature = DialectFeatureChecks.SupportsExistsInSelectCheck.class,
 		comment = "dialect does not support exist predicates in the select clause"
 )
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/bidi/Auction2.hbm.xml"
-)
+@DomainModel(xmlMappings = "org/hibernate/orm/test/bidi/Auction2.xml")
 @SessionFactory
-public class AuctionTest2 {
+public class Auction2Test {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
 	public void testLazy(SessionFactoryScope scope) {
@@ -58,7 +62,7 @@ public class AuctionTest2 {
 				session -> {
 					Bid b = session.getReference( Bid.class, bidId );
 					assertFalse( Hibernate.isInitialized( b ) );
-					Auction a = session.get( Auction.class, aid );
+					Auction a = session.find( Auction.class, aid );
 					assertFalse( Hibernate.isInitialized( a.getBids() ) );
 					assertFalse( Hibernate.isInitialized( a.getSuccessfulBid() ) );
 					assertSame( a.getBids().iterator().next(), b );
@@ -103,9 +107,9 @@ public class AuctionTest2 {
 					Auction a = session.getReference( Auction.class, aid );
 					assertFalse( Hibernate.isInitialized( b ) );
 					assertFalse( Hibernate.isInitialized( a ) );
-					assertSame( session.get( Bid.class, bidId ), b );
+					assertSame( session.find( Bid.class, bidId ), b );
 					assertTrue( Hibernate.isInitialized( b ) );
-					assertSame( session.get( Auction.class, aid ), a );
+					assertSame( session.find( Auction.class, aid ), a );
 					assertTrue( Hibernate.isInitialized( a ) );
 					assertSame( b, a.getSuccessfulBid() );
 					assertSame( a, a.getSuccessfulBid().getItem() );

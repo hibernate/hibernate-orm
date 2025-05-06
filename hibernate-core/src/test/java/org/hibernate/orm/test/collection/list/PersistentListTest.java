@@ -85,9 +85,9 @@ public class PersistentListTest {
 							connection -> {
 								SimpleSelect select = new SimpleSelect( sessionFactory )
 										.setTableName( collectionPersister.getTableName() )
-										.addColumn( "NAME" )
-										.addColumn( "LIST_INDEX" )
-										.addRestriction( "NAME", ComparisonRestriction.Operator.NE, "?" );
+										.addColumn( "name" )
+										.addColumn( "list_index" )
+										.addRestriction( "name", ComparisonRestriction.Operator.NE, "?" );
 								final String sql = select.toStatementString();
 								PreparedStatement preparedStatement = session2.getJdbcCoordinator()										.getStatementPreparer()
 										.prepareStatement( sql );
@@ -98,9 +98,9 @@ public class PersistentListTest {
 								Map<String, Integer> valueMap = new HashMap<String, Integer>();
 								while ( resultSet.next() ) {
 									final String name = resultSet.getString( 1 );
-									assertFalse( "NAME column was null", resultSet.wasNull() );
+									assertFalse( "`name` column was null", resultSet.wasNull() );
 									final int position = resultSet.getInt( 2 );
-									assertFalse( "LIST_INDEX column was null", resultSet.wasNull() );
+									assertFalse( "`list_index` column was null", resultSet.wasNull() );
 									valueMap.put( name, position );
 								}
 								assertEquals( 2, valueMap.size() );

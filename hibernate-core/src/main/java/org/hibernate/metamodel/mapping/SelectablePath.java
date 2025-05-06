@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -122,16 +122,11 @@ public class SelectablePath implements Serializable, DotIdentifierSequence {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof SelectablePath that) ) {
 			return false;
 		}
-
-		SelectablePath that = (SelectablePath) o;
-
-		if ( !Objects.equals( parent, that.parent ) ) {
-			return false;
-		}
-		return name.equals( that.name );
+		return Objects.equals( parent, that.parent )
+			&& name.equals( that.name );
 	}
 
 	@Override

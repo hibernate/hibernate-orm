@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -16,22 +16,22 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public class EntityAssembler implements DomainResultAssembler {
-	private final JavaType javaType;
+public class EntityAssembler<T> implements DomainResultAssembler<T> {
+	private final JavaType<T> javaType;
 	private final EntityInitializer<InitializerData> initializer;
 
-	public EntityAssembler(JavaType javaType, EntityInitializer<?> initializer) {
+	public EntityAssembler(JavaType<T> javaType, EntityInitializer<?> initializer) {
 		this.javaType = javaType;
 		this.initializer = (EntityInitializer<InitializerData>) initializer;
 	}
 
 	@Override
-	public JavaType getAssembledJavaType() {
+	public JavaType<T> getAssembledJavaType() {
 		return javaType;
 	}
 
 	@Override
-	public Object assemble(RowProcessingState rowProcessingState) {
+	public T assemble(RowProcessingState rowProcessingState) {
 		// Ensure that the instance really is initialized
 		// This is important for key-many-to-ones that are part of a collection key fk,
 		// as the instance is needed for resolveKey before initializing the instance in RowReader
@@ -40,7 +40,8 @@ public class EntityAssembler implements DomainResultAssembler {
 		if ( state == Initializer.State.KEY_RESOLVED ) {
 			initializer.resolveInstance( data );
 		}
-		return initializer.getResolvedInstance( data );
+		//noinspection unchecked
+		return (T) initializer.getResolvedInstance( data );
 	}
 
 	@Override
@@ -54,7 +55,7 @@ public class EntityAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public void forEachResultAssembler(BiConsumer consumer, Object arg) {
+	public <X> void forEachResultAssembler(BiConsumer<Initializer<?>, X> consumer, X arg) {
 		if ( initializer.isResultInitializer() ) {
 			consumer.accept( initializer, arg );
 		}

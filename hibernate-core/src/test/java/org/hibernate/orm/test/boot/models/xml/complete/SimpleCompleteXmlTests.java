@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
@@ -14,7 +14,7 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -40,8 +40,8 @@ public class SimpleCompleteXmlTests {
 		managedResourcesBuilder.addXmlMappings( "mappings/models/complete/simple-complete.xml" );
 		final ManagedResources managedResources = managedResourcesBuilder.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 
@@ -64,7 +64,7 @@ public class SimpleCompleteXmlTests {
 
 		validateSqlInsert( classDetails.getDirectAnnotationUsage( SQLInsert.class ));
 
-		validateFilterUsage( classDetails.getAnnotationUsage( Filter.class, sourceModelBuildingContext ) );
+		validateFilterUsage( classDetails.getAnnotationUsage( Filter.class, ModelsContext ) );
 	}
 
 	private void validateFilterUsage(Filter filter) {

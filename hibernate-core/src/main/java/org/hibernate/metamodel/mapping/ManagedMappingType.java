@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -97,10 +97,9 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 		final int end = getNumberOfAttributeMappings();
 		for ( int i = 0; i < end; i++ ) {
 			final MappingType mappedType = getAttributeMapping( i ).getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType ) {
-				if ( ( (EmbeddableMappingType) mappedType ).anyRequiresAggregateColumnWriter() ) {
-					return true;
-				}
+			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType
+					&& embeddableMappingType.anyRequiresAggregateColumnWriter() ) {
+				return true;
 			}
 		}
 		return false;
@@ -132,14 +131,14 @@ public interface ManagedMappingType extends MappingType, FetchableContainer {
 			final FetchOptions mappedFetchOptions = attributeMapping.getMappedFetchOptions();
 			if ( mappedFetchOptions.getTiming() == FetchTiming.IMMEDIATE
 					&& mappedFetchOptions.getStyle() == FetchStyle.JOIN ) {
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					final CollectionPersister collectionDescriptor = ( (PluralAttributeMapping) attributeMapping ).getCollectionDescriptor();
+				if ( attributeMapping instanceof PluralAttributeMapping pluralAttributeMapping ) {
+					final CollectionPersister collectionDescriptor = pluralAttributeMapping.getCollectionDescriptor();
 					if ( collectionDescriptor.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}
 				}
-				else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-					final EntityMappingType entityMappingType = ( (ToOneAttributeMapping) attributeMapping ).getEntityMappingType();
+				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+					final EntityMappingType entityMappingType = toOneAttributeMapping.getEntityMappingType();
 					if ( entityMappingType.isAffectedByEnabledFilters( visitedTypes, influencers, onlyApplyForLoadByKey ) ) {
 						return true;
 					}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -81,16 +82,12 @@ public class DeleteCoordinatorSoft extends AbstractDeleteCoordinator {
 	private void applySoftDelete(
 			SoftDeleteMapping softDeleteMapping,
 			TableUpdateBuilderStandard<MutationOperation> tableUpdateBuilder) {
-		tableUpdateBuilder.addLiteralRestriction(
-				softDeleteMapping.getSelectionExpression(),
-				softDeleteMapping.getNonDeletedLiteralText(),
-				softDeleteMapping.getJdbcMapping()
-		);
-		tableUpdateBuilder.addValueColumn(
-				softDeleteMapping.getSelectionExpression(),
-				softDeleteMapping.getDeletedLiteralText(),
-				softDeleteMapping.getJdbcMapping()
-		);
+		final ColumnReference softDeleteColumnReference = new ColumnReference( tableUpdateBuilder.getMutatingTable(), softDeleteMapping );
+
+		// apply the assignment
+		tableUpdateBuilder.addValueColumn( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
+		// apply the restriction
+		tableUpdateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
 	}
 
 	protected void applyOptimisticLocking(

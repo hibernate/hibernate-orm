@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -18,13 +18,13 @@ public class ListIndexJdbcTypeCodeAnnotation implements ListIndexJdbcTypeCode {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ListIndexJdbcTypeCodeAnnotation(SourceModelBuildingContext modelContext) {
+	public ListIndexJdbcTypeCodeAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ListIndexJdbcTypeCodeAnnotation(ListIndexJdbcTypeCode annotation, SourceModelBuildingContext modelContext) {
+	public ListIndexJdbcTypeCodeAnnotation(ListIndexJdbcTypeCode annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
@@ -33,7 +33,7 @@ public class ListIndexJdbcTypeCodeAnnotation implements ListIndexJdbcTypeCode {
 	 */
 	public ListIndexJdbcTypeCodeAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (int) attributeValues.get( "value" );
 	}
 

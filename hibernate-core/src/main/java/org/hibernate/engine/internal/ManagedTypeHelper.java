@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -98,8 +98,7 @@ public final class ManagedTypeHelper {
 	 * @return true if and only if the entity implements {@link ManagedEntity}
 	 */
 	public static boolean isManagedEntity(final Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asManagedEntity() != null;
 		}
 		return false;
@@ -109,8 +108,7 @@ public final class ManagedTypeHelper {
 	 * @return true if and only if the entity implements {@link HibernateProxy}
 	 */
 	public static boolean isHibernateProxy(final Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asHibernateProxy() != null;
 		}
 		return false;
@@ -121,8 +119,7 @@ public final class ManagedTypeHelper {
 	 * @return true if and only if the entity implements {@see PersistentAttributeInterceptable}
 	 */
 	public static boolean isPersistentAttributeInterceptable(final Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asPersistentAttributeInterceptable() != null;
 		}
 		return false;
@@ -133,8 +130,7 @@ public final class ManagedTypeHelper {
 	 * @return true if and only if the entity implements {@see SelfDirtinessTracker}
 	 */
 	public static boolean isSelfDirtinessTracker(final Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asSelfDirtinessTracker() != null;
 		}
 		return false;
@@ -145,8 +141,7 @@ public final class ManagedTypeHelper {
 	 * @return true if and only if the entity implements {@see CompositeOwner}
 	 */
 	public static boolean isCompositeOwner(final Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asCompositeOwner() != null;
 		}
 		return false;
@@ -157,8 +152,7 @@ public final class ManagedTypeHelper {
 	 * @return true if and only if the entity implements {@see CompositeTracker}
 	 */
 	public static boolean isCompositeTracker(final @Nullable Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asCompositeTracker() != null;
 		}
 		return false;
@@ -188,8 +182,7 @@ public final class ManagedTypeHelper {
 			final Object entity,
 			final PersistentAttributeInterceptableAction<T> action,
 			final T optionalParam) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final PersistentAttributeInterceptable e = t.asPersistentAttributeInterceptable();
 			if ( e != null ) {
 				action.accept( e, optionalParam );
@@ -205,8 +198,7 @@ public final class ManagedTypeHelper {
 	 * @param action
 	 */
 	public static void processIfSelfDirtinessTracker(final Object entity, final SelfDirtinessTrackerConsumer action) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final SelfDirtinessTracker e = t.asSelfDirtinessTracker();
 			if ( e != null ) {
 				action.accept( e );
@@ -215,8 +207,7 @@ public final class ManagedTypeHelper {
 	}
 
 	public static void processIfManagedEntity(final Object entity, final ManagedEntityConsumer action) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final ManagedEntity e = t.asManagedEntity();
 			if ( e != null ) {
 				action.accept( e );
@@ -250,8 +241,7 @@ public final class ManagedTypeHelper {
 			final Object entity,
 			final SelfDirtinessTrackerAction<T> action,
 			final T optionalParam) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			final PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final SelfDirtinessTracker e = t.asSelfDirtinessTracker();
 			if ( e != null ) {
 				action.accept( e, optionalParam );
@@ -275,8 +265,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static PersistentAttributeInterceptable asPersistentAttributeInterceptable(final Object entity) {
 		Objects.requireNonNull( entity );
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final PersistentAttributeInterceptable e = t.asPersistentAttributeInterceptable();
 			if ( e != null ) {
 				return e;
@@ -286,8 +275,7 @@ public final class ManagedTypeHelper {
 	}
 
 	public static PersistentAttributeInterceptable asPersistentAttributeInterceptableOrNull(final Object entity) {
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			return t.asPersistentAttributeInterceptable();
 		}
 		return null;
@@ -302,8 +290,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static HibernateProxy asHibernateProxy(final Object entity) {
 		Objects.requireNonNull( entity );
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final HibernateProxy e = t.asHibernateProxy();
 			if ( e != null ) {
 				return e;
@@ -321,8 +308,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static ManagedEntity asManagedEntity(final Object entity) {
 		Objects.requireNonNull( entity );
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final ManagedEntity e = t.asManagedEntity();
 			if ( e != null ) {
 				return e;
@@ -340,8 +326,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static CompositeTracker asCompositeTracker(final Object entity) {
 		Objects.requireNonNull( entity );
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final CompositeTracker e = t.asCompositeTracker();
 			if ( e != null ) {
 				return e;
@@ -359,8 +344,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static CompositeOwner asCompositeOwner(final Object entity) {
 		Objects.requireNonNull( entity );
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final CompositeOwner e = t.asCompositeOwner();
 			if ( e != null ) {
 				return e;
@@ -378,8 +362,7 @@ public final class ManagedTypeHelper {
 	 */
 	public static SelfDirtinessTracker asSelfDirtinessTracker(final Object entity) {
 		Objects.requireNonNull( entity );
-		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
+		if ( entity instanceof PrimeAmongSecondarySupertypes t ) {
 			final SelfDirtinessTracker e = t.asSelfDirtinessTracker();
 			if ( e != null ) {
 				return e;

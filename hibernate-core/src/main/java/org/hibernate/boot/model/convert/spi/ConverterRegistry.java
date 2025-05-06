@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.spi;
@@ -20,7 +20,7 @@ public interface ConverterRegistry {
 	/**
 	 * Apply the descriptor for an {@link AttributeConverter}
 	 */
-	void addAttributeConverter(ConverterDescriptor descriptor);
+	void addAttributeConverter(ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Apply an {@link AttributeConverter}

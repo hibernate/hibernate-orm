@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -7,6 +7,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeKeyBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeKeyManyToOneType;
 import org.hibernate.boot.model.JavaTypeDescriptor;
@@ -42,23 +43,26 @@ class IdClassSource implements EmbeddableSource {
 
 		this.attributeSources = new ArrayList<>();
 		for ( Object attribute : rootEntitySource.jaxbEntityMapping().getCompositeId().getKeyPropertyOrKeyManyToOne() ) {
-			if ( attribute instanceof JaxbHbmCompositeKeyBasicAttributeType ) {
+			if ( attribute instanceof JaxbHbmCompositeKeyBasicAttributeType compositeKeyBasicAttributeType ) {
 				attributeSources.add(
 						new CompositeIdentifierSingularAttributeSourceBasicImpl(
 								sourceMappingDocument,
 								this,
-								(JaxbHbmCompositeKeyBasicAttributeType) attribute
+								compositeKeyBasicAttributeType
 						)
 				);
 			}
-			else {
+			else if ( attribute instanceof JaxbHbmCompositeKeyManyToOneType compositeKeyManyToOneAttribute ) {
 				attributeSources.add(
 						new CompositeIdentifierSingularAttributeSourceManyToOneImpl(
 								sourceMappingDocument,
 								this,
-								(JaxbHbmCompositeKeyManyToOneType) attribute
+								compositeKeyManyToOneAttribute
 						)
 				);
+			}
+			else {
+				throw new AssertionFailure( "Unexpected attribute type" );
 			}
 		}
 	}

@@ -1,14 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -17,12 +17,12 @@ import org.hibernate.spi.NavigablePath;
 public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbeddedValuedSimplePath<S>
 		implements SqmTreatedPath<T, S> {
 	private final SqmPath<T> wrappedPath;
-	private final EmbeddableDomainType<S> treatTarget;
+	private final SqmEmbeddableDomainType<S> treatTarget;
 
-	@SuppressWarnings( { "unchecked" } )
+	@SuppressWarnings("unchecked")
 	public SqmTreatedEmbeddedValuedSimplePath(
 			SqmPath<T> wrappedPath,
-			EmbeddableDomainType<S> treatTarget) {
+			SqmEmbeddableDomainType<S> treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs( treatTarget.getTypeName() ),
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
@@ -33,11 +33,11 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 		this.treatTarget = treatTarget;
 	}
 
-	@SuppressWarnings( { "unchecked" } )
+	@SuppressWarnings("unchecked")
 	private SqmTreatedEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPath<T> wrappedPath,
-			EmbeddableDomainType<S> treatTarget) {
+			SqmEmbeddableDomainType<S> treatTarget) {
 		super(
 				navigablePath,
 				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
@@ -67,7 +67,7 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	}
 
 	@Override
-	public EmbeddableDomainType<S> getTreatTarget() {
+	public SqmTreatableDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
 
@@ -82,13 +82,13 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<S> getResolvedModel() {
 		return treatTarget;
 	}
 
 	@Override
-	public EmbeddableDomainType<S> getReferencedPathSource() {
-		return getTreatTarget();
+	public SqmTreatableDomainType<S> getReferencedPathSource() {
+		return treatTarget;
 	}
 
 	@Override
@@ -109,11 +109,11 @@ public class SqmTreatedEmbeddedValuedSimplePath<T, S extends T> extends SqmEmbed
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getTypeName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( treatTarget.getTypeName() );
+		hql.append( ')' );
 	}
 }

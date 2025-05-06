@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -22,11 +22,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         the defaulted value of a database column.
  * </ul>
  * <p>
+ * For example, this field will be populated with the value {@code "new"} by
+ * the database when the entity is inserted:
+ * <pre>
+ * &#064;Generated &#064;ColumnDefault(value = "'new'")
+ * private String status;
+ * </pre>
+ * <p>
  * If {@code @Generated} is not used, a {@code default} value can cause state
  * held in memory to lose synchronization with the database.
  *
  * @author Steve Ebersole
  *
+ * @see Generated
  * @see GeneratedColumn
  * @see DialectOverride.ColumnDefault
  */

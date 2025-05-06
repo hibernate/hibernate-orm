@@ -1,21 +1,28 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.named;
 
+import jakarta.persistence.Query;
 import org.hibernate.Incubating;
 
 /**
- * Contract for Query impls that can be converted to a named query memento to be
- * stored in the {@link NamedObjectRepository}
+ * Contract for {@linkplain org.hibernate.query.spi.QueryImplementor query implementations}
+ * which can be converted to {@linkplain  NamedQueryMemento named query mementos} for storage
+ * in the {@link NamedObjectRepository}.
  *
  * @author Steve Ebersole
+ *
+ * @see NamedQueryMemento
  */
 @Incubating
 public interface NameableQuery {
 	/**
-	 * Convert the query into the memento
+	 * Convert this query into the memento.
+	 *
+	 * @see org.hibernate.SessionFactory#addNamedQuery(String, Query)
+	 * @see NamedObjectRepository#registerNamedQuery(String, Query)
 	 */
 	NamedQueryMemento<?> toMemento(String name);
 }

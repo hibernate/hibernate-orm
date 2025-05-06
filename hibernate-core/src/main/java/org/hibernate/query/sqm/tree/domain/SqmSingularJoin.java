@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -8,9 +8,8 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -23,9 +22,11 @@ import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
  */
 public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements SqmSingularValuedJoin<O,T> {
 
+	private final SqmSingularPersistentAttribute<? super O, T> attribute;
+
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
-			SingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -39,6 +40,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 				fetched,
 				nodeBuilder
 		);
+		attribute = joinedNavigable;
 	}
 
 	@Override
@@ -49,12 +51,13 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	protected SqmSingularJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			SingularPersistentAttribute<O, T> joinedNavigable,
+			SqmSingularPersistentAttribute<? super O, T> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		attribute = joinedNavigable;
 	}
 
 	@Override
@@ -81,12 +84,22 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public SingularPersistentAttribute<O, T> getModel() {
-		return (SingularPersistentAttribute<O, T>) super.getNodeType();
+	public SqmPathSource<T> getNodeType() {
+		return getReferencedPathSource();
 	}
 
 	@Override
-	public SingularPersistentAttribute<O, T> getAttribute() {
+	public SqmPathSource<T> getReferencedPathSource() {
+		return getModel().getSqmPathSource();
+	}
+
+	@Override
+	public SqmSingularPersistentAttribute<? super O, T> getModel() {
+		return attribute;
+	}
+
+	@Override
+	public SqmSingularPersistentAttribute<? super O, T> getAttribute() {
 		return getModel();
 	}
 
@@ -115,8 +128,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedSingularJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+			if ( treatTarget instanceof SqmTreatableDomainType<S> treatableDomainType ) {
+				return addTreat( new SqmTreatedSingularJoin<>( this, treatableDomainType, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
@@ -129,7 +142,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedSingularJoin<O, T, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedSingularJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedSingularJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -40,6 +40,16 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLStructCastingJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -53,7 +63,11 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -76,6 +90,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -143,6 +159,17 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	protected final PostgreSQLDriverKind driverKind;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// Requires the use of xmltable which is not supported in check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public PostgreSQLLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -217,6 +244,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			case NCHAR:
 			case VARCHAR:
 			case NVARCHAR:
+				return "varchar";
 			case LONG32VARCHAR:
 			case LONG32NVARCHAR:
 				return "text";
@@ -632,7 +660,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.arrayToString_postgresql();
 
 		if ( getVersion().isSameOrAfter( 17 ) ) {
-			functionFactory.jsonValue();
+			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
 			functionFactory.jsonExists();
 			functionFactory.jsonObject();
@@ -642,7 +670,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			functionFactory.jsonTable();
 		}
 		else {
-			functionFactory.jsonValue_postgresql();
+			functionFactory.jsonValue_postgresql( false );
 			functionFactory.jsonQuery_postgresql();
 			functionFactory.jsonExists_postgresql();
 			if ( getVersion().isSameOrAfter( 16 ) ) {
@@ -708,12 +736,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		functionFactory.dateTrunc();
 
-		if ( getVersion().isSameOrAfter( 17 ) ) {
-			functionFactory.unnest( null, "ordinality" );
-		}
-		else {
-			functionFactory.unnest_postgresql();
-		}
+		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
 		functionFactory.generateSeries( null, "ordinality", false );
 	}
 
@@ -873,24 +896,13 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		if (lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString(aliases);
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString(aliases);
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch ( lockMode ) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	@Override
@@ -932,6 +944,14 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// Workaround for postgres bug #1453
 		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
+	}
+
+	@Override
+	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
+		final String castTypeName = typeConfiguration.getDdlTypeRegistry()
+				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), typeConfiguration.getDdlTypeRegistry() );
+		return "cast(null as " + castTypeName + ")";
 	}
 
 	@Override
@@ -1298,14 +1318,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			default:
-				return lockString;
-		}
+		return switch ( timeout ) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default -> lockString;
+		};
 	}
 
 	@Override
@@ -1536,6 +1553,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		return uniqueDelegate;
 	}
 
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return postgresqlTableExporter;
+	}
+
 	/**
 	 * @return {@code true}, but only because we can "batch" truncate
 	 */
@@ -1589,4 +1611,35 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getVersion().isSameOrAfter( 9, 4 );
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleUsingClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public boolean supportsRecursiveSearchClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
 }

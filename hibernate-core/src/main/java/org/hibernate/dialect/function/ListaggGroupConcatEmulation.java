@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -7,7 +7,7 @@ package org.hibernate.dialect.function;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -74,13 +74,13 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( "group_concat(" );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinct.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;
@@ -110,8 +110,8 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 		if ( sqlAstArguments.size() != 1 ) {
 			SqlAstNode separator = sqlAstArguments.get( 1 );
 			// group_concat doesn't support the overflow clause, so we just omit it
-			if ( separator instanceof Overflow ) {
-				separator = ( (Overflow) separator ).getSeparatorExpression();
+			if ( separator instanceof Overflow overflow ) {
+				separator = overflow.getSeparatorExpression();
 			}
 			sqlAppender.appendSql( " separator " );
 			separator.accept( translator );

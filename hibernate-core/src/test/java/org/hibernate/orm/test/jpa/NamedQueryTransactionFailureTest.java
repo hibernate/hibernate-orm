@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa;
@@ -20,7 +20,6 @@ import org.mockito.Mockito;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -59,7 +58,7 @@ public class NamedQueryTransactionFailureTest extends BaseEntityManagerFunctiona
 		TransactionCoordinator.TransactionDriver transactionDriver = Mockito.mock( TransactionCoordinator.TransactionDriver.class);
 		when( transactionCoordinator.getTransactionDriverControl() ).thenReturn( transactionDriver );
 		when( transactionCoordinator.isActive() ).thenReturn( true );
-		when( transactionDriver.isActive( anyBoolean() ) ).thenReturn( false );
+		when( transactionDriver.isActive() ).thenReturn( false );
 
 		doNothing().when( transactionCoordinator ).pulse();
 

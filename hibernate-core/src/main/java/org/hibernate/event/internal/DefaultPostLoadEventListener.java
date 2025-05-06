@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -10,21 +10,17 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * We do two things here:
- * <ul>
- * <li>Call {@link Lifecycle} interface if necessary</li>
- * <li>Perform needed {@link EntityEntry#getLockMode()} related processing</li>
- * </ul>
+ * Performs needed {@link EntityEntry#getLockMode()}-related processing.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -55,9 +51,7 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			if ( persister.isVersioned() ) {
 				switch ( lockMode ) {
 					case PESSIMISTIC_FORCE_INCREMENT:
-						final Object nextVersion =
-								persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
-						entry.forceLocked( entity, nextVersion );
+						OptimisticLockHelper.forceVersionIncrement( entity, entry, session );
 						break;
 					case OPTIMISTIC_FORCE_INCREMENT:
 						session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( entity ) );
@@ -71,14 +65,6 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 				throw new HibernateException("[" + lockMode
 						+ "] not supported for non-versioned entities [" + persister.getEntityName() + "]");
 			}
-		}
-
-		invokeLoadLifecycle( event, session );
-	}
-
-	protected void invokeLoadLifecycle(PostLoadEvent event, EventSource session) {
-		if ( event.getPersister().implementsLifecycle() ) {
-			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
 		}
 	}
 }

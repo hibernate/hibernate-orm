@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -80,18 +80,14 @@ public abstract class AbstractDomainPath implements DomainPath {
 					)
 			);
 		}
-		else if ( referenceModelPart instanceof EntityValuedModelPart ) {
-			final ModelPart subPart;
-			if ( ELEMENT_TOKEN.equals( modelPartName ) ) {
-				subPart = ( (EntityValuedModelPart) referenceModelPart ).getEntityMappingType().getIdentifierMapping();
-			}
-			else {
-				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( modelPartName );
-			}
+		else if ( referenceModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			final ModelPart subPart =
+					ELEMENT_TOKEN.equals( modelPartName )
+							? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
+							: entityValuedModelPart.findSubPart( modelPartName );
 			return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 		}
-		else if ( referenceModelPart instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) referenceModelPart;
+		else if ( referenceModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			if ( embeddableValuedModelPart.getFetchableName()
 					.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
 				final int size = embeddableValuedModelPart.getNumberOfFetchables();
@@ -156,15 +152,11 @@ public abstract class AbstractDomainPath implements DomainPath {
 					creationState
 			);
 		}
-		else if ( referenceModelPart instanceof EntityValuedModelPart ) {
-			ModelPart subPart;
-			if ( ELEMENT_TOKEN.equals( modelPartName ) ) {
-				subPart = ( (EntityValuedModelPart) referenceModelPart ).getEntityMappingType().getIdentifierMapping();
-			}
-			else {
-				// Default to using the foreign key of an entity valued model part
-				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( ForeignKeyDescriptor.PART_NAME );
-			}
+		else if ( referenceModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			final ModelPart subPart = ELEMENT_TOKEN.equals( modelPartName )
+					? entityValuedModelPart.getEntityMappingType().getIdentifierMapping()
+					// Default to using the foreign key of an entity valued model part
+					: entityValuedModelPart.findSubPart( ForeignKeyDescriptor.PART_NAME );
 			apply(
 					subPart,
 					ast,
@@ -176,9 +168,9 @@ public abstract class AbstractDomainPath implements DomainPath {
 					creationState
 			);
 		}
-		else if ( referenceModelPart instanceof EmbeddableValuedModelPart ) {
+		else if ( referenceModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			addSortSpecification(
-					(EmbeddableValuedModelPart) referenceModelPart,
+					embeddableValuedModelPart,
 					ast,
 					tableGroup,
 					collation,

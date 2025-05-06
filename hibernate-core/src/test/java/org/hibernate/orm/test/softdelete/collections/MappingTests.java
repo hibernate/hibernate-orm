@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete.collections;
@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
  */
 @DomainModel(annotatedClasses = { CollectionOwner.class, CollectionOwned.class })
 @SessionFactory(exportSchema = false)
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "JUnitMalformedDeclaration"})
 public class MappingTests {
 
 	@Test

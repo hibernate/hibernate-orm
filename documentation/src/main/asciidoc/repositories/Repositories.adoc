@@ -131,6 +131,7 @@ interface Library {
 
 This is our first example of a repository.
 
+[[repository-interfaces]]
 === Repository interfaces
 
 A _repository interface_ is an interface written by you, the application programmer, and annotated `@Repository`.
@@ -165,6 +166,7 @@ We'll discuss each of these kinds of method soon.
 But first we need to ask a more basic question: how are persistence operations organized into repositories, and how do repository interfaces relate to entity types?
 The--perhaps surprising--answer is: it's completely up to you.
 
+[[organizing-repository-operations]]
 === Organizing persistence operations
 
 Jakarta Data lets you freely assign persistence operations to repositories according to your own preference.
@@ -493,10 +495,10 @@ The JPQL specification provides the `select new` construct for this.
 
 [source,java]
 ----
-@Query("select new AuthorBookRecord(b.isbn, a.ssn, a.name, b.title " +
+@Query("select new AuthorBookSummary(b.isbn, a.ssn, a.name, b.title " +
        "from Author a join books b " +
        "where title like :pattern")
-List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+List<AuthorBookSummary> summariesForTitle(String pattern);
 ----
 
 Note that the `from` clause is required here, since it's impossible to infer the queried entity type from the return type of the repository method.
@@ -509,7 +511,7 @@ Since this is quite verbose, Hibernate doesn't require the use of `select new`, 
 @Query("select isbn, ssn, name, title " +
        "from Author join books " +
        "where title like :pattern")
-List<AuthorBookSummary> summariesForTitle(@Pattern String pattern);
+List<AuthorBookSummary> summariesForTitle(String pattern);
 ----
 ====
 
@@ -536,6 +538,7 @@ List<String> booksByTitle(String pattern);
 
 Unfortunately, native SQL queries cannot be validated at compile time, so if there's anything wrong with our SQL, we won't find out until we run our program.
 
+[[by-and-param]]
 === `@By` and `@Param`
 
 Query methods match method parameters to entity fields or query parameters by name.

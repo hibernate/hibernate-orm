@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
@@ -75,7 +75,7 @@ public class ScrollableResultsConsumer<R> implements ResultsConsumer<ScrollableR
 	private boolean containsCollectionFetches(JdbcValuesMapping valuesMapping) {
 		final List<DomainResult<?>> domainResults = valuesMapping.getDomainResults();
 		for ( DomainResult<?> domainResult : domainResults ) {
-			if ( domainResult instanceof EntityResult && ( (EntityResult) domainResult ).containsCollectionFetches() ) {
+			if ( domainResult instanceof EntityResult entityResult && entityResult.containsCollectionFetches() ) {
 				return true;
 			}
 		}

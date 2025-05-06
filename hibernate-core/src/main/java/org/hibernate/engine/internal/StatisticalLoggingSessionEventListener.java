@@ -1,20 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
-import org.hibernate.BaseSessionEventListener;
+import org.hibernate.SessionEventListener;
+import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * @see org.hibernate.cfg.AvailableSettings#LOG_SESSION_METRICS
+ * Tracks and logs certain session-level metrics.
  *
  * @author Steve Ebersole
  */
-public class StatisticalLoggingSessionEventListener extends BaseSessionEventListener {
-	private static final Logger log = Logger.getLogger( StatisticalLoggingSessionEventListener.class );
+public class StatisticalLoggingSessionEventListener implements SessionEventListener {
+	private static final CoreMessageLogger log = messageLogger( "org.hibernate.session.metrics" );
 
 	/**
 	 * Used by SettingsFactory (in conjunction with stats being enabled) to determine whether to apply this listener
@@ -22,7 +23,7 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 	 * @return {@code true} if logging is enabled for this listener.
 	 */
 	public static boolean isLoggingEnabled() {
-		return log.isInfoEnabled();
+		return log.isDebugEnabled();
 	}
 
 	// cumulative state ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,21 +275,8 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 
 	@Override
 	public void end() {
-		if ( log.isInfoEnabled() ) {
-			log.infof(
-					"Session Metrics {\n" +
-							"    %s nanoseconds spent acquiring %s JDBC connections;\n" +
-							"    %s nanoseconds spent releasing %s JDBC connections;\n" +
-							"    %s nanoseconds spent preparing %s JDBC statements;\n" +
-							"    %s nanoseconds spent executing %s JDBC statements;\n" +
-							"    %s nanoseconds spent executing %s JDBC batches;\n" +
-							"    %s nanoseconds spent performing %s L2C puts;\n" +
-							"    %s nanoseconds spent performing %s L2C hits;\n" +
-							"    %s nanoseconds spent performing %s L2C misses;\n" +
-							"    %s nanoseconds spent executing %s flushes (flushing a total of %s entities and %s collections);\n" +
-							"    %s nanoseconds spent executing %s pre-partial-flushes;\n" +
-							"    %s nanoseconds spent executing %s partial-flushes (flushing a total of %s entities and %s collections)\n" +
-							"}",
+		if ( isLoggingEnabled() ) {
+			log.sessionMetrics(
 					jdbcConnectionAcquisitionTime,
 					jdbcConnectionAcquisitionCount,
 					jdbcConnectionReleaseTime,

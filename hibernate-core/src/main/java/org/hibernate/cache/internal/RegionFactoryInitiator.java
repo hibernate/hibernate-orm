@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -43,21 +43,19 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	@Override
 	public RegionFactory initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final RegionFactory regionFactory = resolveRegionFactory( configurationValues, registry );
-
 		if ( regionFactory instanceof NoCachingRegionFactory ) {
 			LOG.noRegionFactory();
 		}
 		else {
 			LOG.regionFactory( regionFactory.getClass().getTypeName() );
 		}
-
 		return regionFactory;
 	}
 
 
 	protected RegionFactory resolveRegionFactory(Map<String,Object> configurationValues, ServiceRegistryImplementor registry) {
-		final Properties p = new Properties();
-		p.putAll( configurationValues );
+		final Properties properties = new Properties();
+		properties.putAll( configurationValues );
 
 		final Boolean useSecondLevelCache = ConfigurationHelper.getBooleanWrapper(
 				AvailableSettings.USE_SECOND_LEVEL_CACHE,
@@ -95,7 +93,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 				RegionFactory.class,
 				setting,
 				(RegionFactory) null,
-				new StrategyCreatorRegionFactoryImpl( p )
+				new StrategyCreatorRegionFactoryImpl( properties )
 		);
 
 		if ( regionFactory != null ) {
@@ -112,7 +110,6 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			final RegionFactory registeredFactory = selector.resolveStrategy( RegionFactory.class, implementors.iterator().next() );
 			configurationValues.put( AvailableSettings.CACHE_REGION_FACTORY, registeredFactory );
 			configurationValues.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-
 			return registeredFactory;
 		}
 		else {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
@@ -15,6 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -63,16 +64,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  *     }
  *
  *     &#64;Override
- *     public Period nullSafeGet(ResultSet rs, int position,
- *                               SharedSessionContractImplementor session)
+ *     public Period nullSafeGet(ResultSet rs, int position, WrapperOptions options)
  *                 throws SQLException {
  *         String string = rs.getString(position);
  *         return rs.wasNull() ? null : Period.parse(string);
  *     }
  *
  *     &#64;Override
- *     public void nullSafeSet(PreparedStatement st, Period value, int index,
- *                             SharedSessionContractImplementor session)
+ *     public void nullSafeSet(PreparedStatement st, Period value, int index, WrapperOptions options)
  *                 throws SQLException {
  *         if ( value == null ) {
  *             st.setNull(index, VARCHAR);
@@ -169,16 +168,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  *     }
  *
  *     &#64;Override
- *     public BitSet nullSafeGet(ResultSet rs, int position,
- *                               SharedSessionContractImplementor session)
+ *     public BitSet nullSafeGet(ResultSet rs, int position, WrapperOptions options)
  *                 throws SQLException {
  *         String string = rs.getString(position);
  *         return rs.wasNull()? null : parseBitSet(columnValue);
  *     }
  *
  *     &#64;Override
- *     public void nullSafeSet(PreparedStatement st, BitSet bitSet, int index,
- *                             SharedSessionContractImplementor session)
+ *     public void nullSafeSet(PreparedStatement st, BitSet bitSet, int index, WrapperOptions options)
  *                 throws SQLException {
  *         if (bitSet == null) {
  *             st.setNull(index, VARCHAR);
@@ -296,7 +293,7 @@ public interface UserType<J> {
 	 *
 	 * @param owner since Hibernate 6, this is always null
 	 *
-	 * @deprecated Implement {@link #nullSafeGet(ResultSet, int, SharedSessionContractImplementor)}
+	 * @deprecated Implement {@link #nullSafeGet(ResultSet, int, WrapperOptions)}
 	 */
 	@Deprecated(since = "7", forRemoval = true)
 	default J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated Object owner)
@@ -314,7 +311,7 @@ public interface UserType<J> {
 	 *           given {@code position} and with the
 	 *           {@linkplain #returnedClass returned class}.
 	 */
-	default J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	default J nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		J result = rs.getObject( position, returnedClass() );
 		return rs.wasNull() ? null : result;
@@ -330,8 +327,27 @@ public interface UserType<J> {
 	 *           {@link PreparedStatement#setObject(int, Object, int)}
 	 *           with the given {@code position} and {@code value} and
 	 *           with the {@linkplain #getSqlType SQL type}.
+	 *
+	 * @deprecated Implement {@link #nullSafeSet(PreparedStatement, Object, int, WrapperOptions)}
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	default void nullSafeSet(PreparedStatement st, J value, int position, SharedSessionContractImplementor session)
+			throws SQLException {
+		nullSafeSet( st, value, position, (WrapperOptions) session );
+	}
+
+	/**
+	 * Write an instance of the Java class mapped by this custom type
+	 * to the given JDBC {@link PreparedStatement}. Implementors must
+	 * handle null values of the Java class. A multi-column type should
+	 * be written to parameters starting from {@code index}.
+	 *
+	 * @implNote The default implementation calls
+	 *           {@link PreparedStatement#setObject(int, Object, int)}
+	 *           with the given {@code position} and {@code value} and
+	 *           with the {@linkplain #getSqlType SQL type}.
+	 */
+	default void nullSafeSet(PreparedStatement st, J value, int position, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( position, getSqlType() );
@@ -485,7 +501,7 @@ public interface UserType<J> {
 
 	/**
 	 * A mapped {@link JdbcType}. By default, the {@code JdbcType}
-	 * registered under our {@link #getSqlType() type code}.
+	 * registered under our {@linkplain #getSqlType type code}.
 	 */
 	@Incubating
 	default JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
@@ -506,6 +522,21 @@ public interface UserType<J> {
 	 */
 	@Incubating
 	default BasicValueConverter<J, Object> getValueConverter() {
+		return null;
+	}
+
+	/**
+	 * Is this a comparable type in HQL? A type is comparable if it may be
+	 * used with comparison operators like {@code >=}, and with {@code max()}
+	 * and {@code min()}.
+	 *
+	 * @return {@code null} by default to indicate that the assigned
+	 *         {@code JdbcType} should decide
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	default Boolean isComparable() {
 		return null;
 	}
 }

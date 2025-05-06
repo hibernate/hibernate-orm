@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -64,7 +64,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// delete does cascade to uninitialized collections
-			return getAllElementsIterator( session, collectionType, collection );
+			return getAllElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -112,7 +112,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// lock doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -149,7 +149,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// refresh doesn't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -185,7 +185,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// evicts don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -226,7 +226,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// merges don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -263,7 +263,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// persists don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -306,7 +306,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// persists don't cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -367,7 +367,7 @@ public class CascadingActions {
 				return emptyIterator();
 			}
 			else {
-				return getLoadedElementsIterator( session, collectionType, collection );
+				return getLoadedElementsIterator( collectionType, collection );
 			}
 		}
 
@@ -438,7 +438,7 @@ public class CascadingActions {
 				CollectionType collectionType,
 				Object collection) {
 			// replicate does cascade to uninitialized collections
-			return getLoadedElementsIterator( session, collectionType, collection );
+			return getLoadedElementsIterator( collectionType, collection );
 		}
 
 		@Override
@@ -463,14 +463,11 @@ public class CascadingActions {
 	 * Given a collection, get an iterator of all its children, loading them
 	 * from the database if necessary.
 	 *
-	 * @param session The session within which the cascade is occurring.
 	 * @param collectionType The mapping type of the collection.
 	 * @param collection The collection instance.
-	 *
 	 * @return The children iterator.
 	 */
 	public static Iterator<?> getAllElementsIterator(
-			EventSource session,
 			CollectionType collectionType,
 			Object collection) {
 		return collectionType.getElementsIterator( collection );
@@ -481,22 +478,34 @@ public class CascadingActions {
 	 * any new elements from the database.
 	 */
 	public static Iterator<?> getLoadedElementsIterator(
-			SharedSessionContractImplementor session,
 			CollectionType collectionType,
 			Object collection) {
-		if ( collectionIsInitialized( collection ) ) {
+		if ( collection instanceof PersistentCollection<?> persistentCollection
+				&& !persistentCollection.wasInitialized() ) {
+			// does not handle arrays (that's ok, cos they can't be lazy)
+			// or newly instantiated collections, so we can do the cast
+			return persistentCollection.queuedAdditionIterator();
+		}
+		else {
 			// handles arrays and newly instantiated collections
 			return collectionType.getElementsIterator( collection );
 		}
-		else {
-			// does not handle arrays (that's ok, cos they can't be lazy)
-			// or newly instantiated collections, so we can do the cast
-			return ((PersistentCollection<?>) collection).queuedAdditionIterator();
-		}
 	}
 
-	private static boolean collectionIsInitialized(Object collection) {
-		return !(collection instanceof PersistentCollection)
-			|| ((PersistentCollection<?>) collection).wasInitialized();
+	@Deprecated(forRemoval = true, since = "7.0")
+	public static Iterator<?> getAllElementsIterator(
+			EventSource session,
+			CollectionType collectionType,
+			Object collection) {
+		return getAllElementsIterator( collectionType, collection );
 	}
+
+	@Deprecated(forRemoval = true, since = "7.0")
+	public static Iterator<?> getLoadedElementsIterator(
+			SharedSessionContractImplementor session,
+			CollectionType collectionType,
+			Object collection) {
+		return getLoadedElementsIterator( collectionType, collection );
+	}
+
 }

@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -70,12 +71,12 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( navigablePath == null ) {
-			sb.append( position );
+			hql.append( position );
 		}
 		else {
-			sb.append( navigablePath.getLocalName() );
+			hql.append( navigablePath.getLocalName() );
 		}
 	}
 }

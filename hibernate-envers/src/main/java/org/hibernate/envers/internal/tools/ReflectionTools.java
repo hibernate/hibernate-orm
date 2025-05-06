@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.tools;
@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.tools.Pair;
-import org.hibernate.internal.util.collections.ConcurrentReferenceHashMap;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
@@ -151,5 +150,10 @@ public abstract class ReflectionTools {
 		catch (Exception e) {
 			throw new ClassLoadingException( "Unable to load class [" + name + "]", e );
 		}
+	}
+
+	public static void reset() {
+		SETTER_CACHE.clear();
+		GETTER_CACHE.clear();
 	}
 }

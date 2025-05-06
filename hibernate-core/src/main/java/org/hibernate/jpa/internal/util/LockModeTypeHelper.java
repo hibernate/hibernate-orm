@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
@@ -30,17 +30,18 @@ public final class LockModeTypeHelper {
 		if ( value == null ) {
 			return LockMode.NONE;
 		}
-		if (value instanceof LockMode) {
-			return (LockMode) value;
+		else if ( value instanceof LockMode lockMode ) {
+			return lockMode;
 		}
-		else if (value instanceof LockModeType) {
-			return getLockMode( (LockModeType) value );
+		else if ( value instanceof LockModeType lockModeType ) {
+			return getLockMode( lockModeType );
 		}
-		else if (value instanceof String) {
-			return LockMode.fromExternalForm( (String) value );
+		else if ( value instanceof String string ) {
+			return LockMode.fromExternalForm( string );
 		}
-
-		throw new IllegalArgumentException( "Unknown lock mode source: '" + value + "'; can't convert from value of type " + value.getClass() );
+		else {
+			throw new IllegalArgumentException( "Could not interpret '" + value.getClass().getName() + "' as a LockMode" );
+		}
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational.internal;
@@ -82,7 +82,7 @@ public class SqlStringGenerationContextImpl
 		if ( nameQualifierSupport.supportsCatalogs() ) {
 			actualDefaultCatalog = identifierHelper.toIdentifier( defaultCatalog );
 			if ( actualDefaultCatalog == null ) {
-				actualDefaultCatalog = implicitNamespaceName.getCatalog();
+				actualDefaultCatalog = implicitNamespaceName.catalog();
 			}
 		}
 
@@ -90,7 +90,7 @@ public class SqlStringGenerationContextImpl
 		if ( nameQualifierSupport.supportsSchemas() ) {
 			actualDefaultSchema = identifierHelper.toIdentifier( defaultSchema );
 			if ( defaultSchema == null ) {
-				actualDefaultSchema = implicitNamespaceName.getSchema();
+				actualDefaultSchema = implicitNamespaceName.schema();
 			}
 		}
 

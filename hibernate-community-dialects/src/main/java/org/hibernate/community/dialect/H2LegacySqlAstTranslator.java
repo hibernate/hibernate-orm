@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -203,21 +203,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowConstructor() {
-		return getDialect().getVersion().isSameOrAfter( 2 );
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return getDialect().getVersion().isSameOrAfter( 2 );
-	}
-
-	@Override
 	protected String getArrayContainsFunction() {
 		return "array_contains";
 	}
@@ -356,34 +341,8 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		// Just a guess
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		// Seems that before, this was buggy
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 200 );
-	}
-
-	@Override
-	protected boolean supportsNullPrecedence() {
-		// Support for nulls clause in listagg was added in 2.0
-		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
+	protected boolean allowsNullPrecedence() {
+		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().supportsNullPrecedence();
 	}
 
 	private boolean supportsOffsetFetchClause() {
@@ -394,15 +353,5 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
-	}
-
-	@Override
-	protected boolean supportsJoinInMutationStatementSubquery() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 197 );
 	}
 }

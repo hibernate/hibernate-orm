@@ -1,16 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,18 +21,19 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 /**
@@ -50,54 +48,48 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 	public SingleUniqueKeyEntityLoaderStandard(
 			EntityMappingType entityDescriptor,
-			SingularAttributeMapping uniqueKeyAttribute,
+			SingularAttributeMapping uniqueKeyMapping,
 			LoadQueryInfluencers loadQueryInfluencers) {
 		this.entityDescriptor = entityDescriptor;
-		this.uniqueKeyAttributePath = getAttributePath( uniqueKeyAttribute );
-		if ( uniqueKeyAttribute instanceof ToOneAttributeMapping ) {
-			this.uniqueKeyAttribute = ( (ToOneAttributeMapping) uniqueKeyAttribute ).getForeignKeyDescriptor();
-		}
-		else {
-			this.uniqueKeyAttribute = uniqueKeyAttribute;
-		}
+		uniqueKeyAttributePath = getAttributePath( uniqueKeyMapping );
+		uniqueKeyAttribute =
+				uniqueKeyMapping instanceof ToOneAttributeMapping toOneAttributeMapping
+						? toOneAttributeMapping.getForeignKeyDescriptor()
+						: uniqueKeyMapping;
 
-		final SessionFactoryImplementor sessionFactory = entityDescriptor.getEntityPersister().getFactory();
+		final SessionFactoryImplementor factory = entityDescriptor.getEntityPersister().getFactory();
 		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
-				Collections.emptyList(),
-				uniqueKeyAttribute,
+				emptyList(),
+				uniqueKeyMapping,
 				null,
 				loadQueryInfluencers,
 				LockOptions.NONE,
 				builder::add,
-				sessionFactory
+				factory
 		);
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		this.jdbcParameters = builder.build();
-		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
+		jdbcParameters = builder.build();
+		jdbcSelect = getJdbcSelect( factory, sqlAst, JdbcParameterBindings.NO_BINDINGS );
 	}
 
 	private static String getAttributePath(AttributeMapping attribute) {
 		ManagedMappingType declaringType = attribute.getDeclaringType();
 		if ( declaringType instanceof EmbeddableMappingType ) {
-			final StringBuilder sb = new StringBuilder();
-			sb.append( attribute.getAttributeName() );
+			final StringBuilder path = new StringBuilder();
+			path.append( attribute.getAttributeName() );
 			do {
-				final EmbeddableValuedModelPart embeddedValueMapping = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+				final EmbeddableValuedModelPart embeddedValueMapping =
+						( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
 				attribute = embeddedValueMapping.asAttributeMapping();
 				if ( attribute == null ) {
 					break;
 				}
-				sb.insert( 0, '.' );
-				sb.insert( 0, attribute.getAttributeName() );
+				path.insert( 0, '.' );
+				path.insert( 0, attribute.getAttributeName() );
 				declaringType = attribute.getDeclaringType();
 			} while ( declaringType instanceof EmbeddableMappingType );
-			return sb.toString();
+			return path.toString();
 		}
 		return attribute.getAttributeName();
 	}
@@ -113,86 +105,70 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
-				ukValue,
-				uniqueKeyAttribute,
-				jdbcParameters,
-				session
-		);
-		assert offset == jdbcParameters.size();
-		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParameterBindings,
-				new SingleUKEntityLoaderExecutionContext( uniqueKeyAttributePath, ukValue, session, readOnly ),
-				RowTransformerSingularReturnImpl.instance(),
-				null,
-				ListResultsConsumer.UniqueSemantic.FILTER,
-				1
-		);
-
-		switch ( list.size() ) {
-			case 0:
-				return null;
-			case 1:
-				//noinspection unchecked
-				return (T) list.get( 0 );
-		}
-		throw new HibernateException(
-				"More than one row with the given identifier was found: " +
-						ukValue +
-						", for class: " +
-						entityDescriptor.getEntityName()
-		);
+		final JdbcParameterBindings bindings = jdbcParameterBindings( ukValue, jdbcParameters, session );
+		final List<T> list = list( jdbcSelect, bindings,
+				new SingleUKEntityLoaderExecutionContext( uniqueKeyAttributePath, ukValue, session, readOnly ) );
+		return switch ( list.size() ) {
+			case 0 -> null;
+			case 1 -> list.get( 0 );
+			default -> throw new HibernateException( "More than one row with the given identifier was found: "
+								+ ukValue + ", for class: " + entityDescriptor.getEntityName() );
+		};
 	}
 
 	@Override
 	public Object resolveId(Object ukValue, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-
+		final SessionFactoryImplementor factory = session.getFactory();
 		// todo (6.0) : cache the SQL AST and JdbcParameters
-		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelectByUniqueKey(
 				entityDescriptor,
 				singletonList( entityDescriptor.getIdentifierMapping() ),
 				uniqueKeyAttribute,
 				null,
-				new LoadQueryInfluencers( sessionFactory ),
+				new LoadQueryInfluencers( factory ),
 				LockOptions.NONE,
-				jdbcParametersBuilder::add,
-				sessionFactory
+				builder::add,
+				factory
 		);
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
-				ukValue,
-				uniqueKeyAttribute,
-				jdbcParameters,
-				session
-		);
-		assert offset == jdbcParameters.size();
-		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( jdbcParameterBindings, QueryOptions.NONE );
-
-		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParameterBindings,
-				new NoCallbackExecutionContext( session ),
-				RowTransformerSingularReturnImpl.instance(),
-				null,
-				ListResultsConsumer.UniqueSemantic.FILTER,
-				1
-		);
-
+		final JdbcParameterBindings bindings = jdbcParameterBindings( ukValue, builder.build(), session );
+		final JdbcOperationQuerySelect jdbcSelect = getJdbcSelect( factory, sqlAst, bindings );
+		final List<Object> list = list( jdbcSelect, bindings, new NoCallbackExecutionContext( session ) );
 		assert list.size() == 1;
-
 		return list.get( 0 );
+	}
+
+	private JdbcParameterBindings jdbcParameterBindings(
+			Object ukValue,
+			JdbcParametersList parameters,
+			SharedSessionContractImplementor session) {
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( parameters.size() );
+		final int offset = bindings.registerParametersForEachJdbcValue( ukValue, uniqueKeyAttribute, parameters, session );
+		assert offset == parameters.size();
+		return bindings;
+	}
+
+	private static <T> List<T> list(
+			JdbcOperationQuerySelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) {
+		return executionContext.getSession().getJdbcServices().getJdbcSelectExecutor()
+				.list(
+						jdbcSelect,
+						jdbcParameterBindings,
+						executionContext,
+						RowTransformerSingularReturnImpl.instance(),
+						null,
+						ListResultsConsumer.UniqueSemantic.FILTER,
+						1
+				);
+	}
+
+	private static JdbcOperationQuerySelect getJdbcSelect
+			(SessionFactoryImplementor factory, SelectStatement sqlAst, JdbcParameterBindings jdbcParameterBindings) {
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildSelectTranslator( factory, sqlAst )
+				.translate( jdbcParameterBindings, QueryOptions.NONE );
 	}
 
 	private static class SingleUKEntityLoaderExecutionContext extends BaseExecutionContext {
@@ -209,8 +185,12 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			super( session );
 			this.uniqueKeyAttributePath = uniqueKeyAttributePath;
 			this.uniqueKey = uniqueKey;
-			//Careful, readOnly is possibly null
-			this.queryOptions = readOnly == null ? QueryOptions.NONE : readOnly ? QueryOptions.READ_ONLY : QueryOptions.READ_WRITE;
+			if ( readOnly == null ) { //Careful, readOnly is possibly null
+				queryOptions = QueryOptions.NONE;
+			}
+			else {
+				queryOptions = readOnly ? QueryOptions.READ_ONLY : QueryOptions.READ_WRITE;
+			}
 			callback = new CallbackImpl();
 		}
 

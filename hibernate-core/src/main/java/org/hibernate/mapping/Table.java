@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -92,8 +92,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			Identifier physicalTableName,
 			boolean isAbstract) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
+		this.catalog = namespace.getPhysicalName().catalog();
+		this.schema = namespace.getPhysicalName().schema();
 		this.name = physicalTableName;
 		this.isAbstract = isAbstract;
 	}
@@ -105,8 +105,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			String subselect,
 			boolean isAbstract) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
+		this.catalog = namespace.getPhysicalName().catalog();
+		this.schema = namespace.getPhysicalName().schema();
 		this.name = physicalTableName;
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
@@ -114,8 +114,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public Table(String contributor, Namespace namespace, String subselect, boolean isAbstract) {
 		this.contributor = contributor;
-		this.catalog = namespace.getPhysicalName().getCatalog();
-		this.schema = namespace.getPhysicalName().getSchema();
+		this.catalog = namespace.getPhysicalName().catalog();
+		this.schema = namespace.getPhysicalName().schema();
 		this.subselect = subselect;
 		this.isAbstract = isAbstract;
 	}

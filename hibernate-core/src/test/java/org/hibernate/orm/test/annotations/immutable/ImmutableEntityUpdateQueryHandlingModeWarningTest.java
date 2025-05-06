@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.immutable;
@@ -17,7 +17,9 @@ import org.junit.Test;
 import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Map;
 
+import static org.hibernate.cfg.QuerySettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
@@ -36,13 +38,17 @@ public class ImmutableEntityUpdateQueryHandlingModeWarningTest extends BaseNonCo
 		return new Class[] { Country.class, State.class, Photo.class };
 	}
 
+	@Override
+	protected void addSettings(Map<String, Object> settings) {
+		settings.put( IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE, "warning" );
+	}
+
 	@Test
 	public void testBulkUpdate(){
 		Country _country = doInHibernate( this::sessionFactory, session -> {
 			Country country = new Country();
 			country.setName("Germany");
 			session.persist(country);
-
 			return country;
 		} );
 
@@ -57,7 +63,7 @@ public class ImmutableEntityUpdateQueryHandlingModeWarningTest extends BaseNonCo
 			.executeUpdate();
 		} );
 
-		assertEquals( "HHH000487: The query: [update Country set name = :name] attempts to update an immutable entity: [Country]", triggerable.triggerMessage() );
+		assertEquals( "HHH000487: The query [update Country set name = :name] updates an immutable entity: [Country]", triggerable.triggerMessage() );
 
 		doInHibernate( this::sessionFactory, session -> {
 			Country country = session.find(Country.class, _country.getId());

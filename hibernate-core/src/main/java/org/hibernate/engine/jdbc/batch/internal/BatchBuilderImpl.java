@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.batch.internal;
 
-import java.util.Collections;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
@@ -15,11 +14,12 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
-import static org.hibernate.jdbc.Expectations.NONE;
 
 /**
  * A builder for {@link Batch} instances.
@@ -134,8 +134,8 @@ public class BatchBuilderImpl implements BatchBuilder {
 								null,
 								sql,
 								false,
-								NONE,
-								Collections.emptyList()
+								Expectation.None.INSTANCE,
+								emptyList()
 						),
 						session
 				),

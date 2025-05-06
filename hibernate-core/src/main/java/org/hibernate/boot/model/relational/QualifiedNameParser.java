@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
@@ -30,23 +30,23 @@ public class QualifiedNameParser {
 		private final String qualifiedText;
 
 		public NameParts(Identifier catalogName, Identifier schemaName, Identifier objectName) {
-			if ( objectName == null ) {
-				throw new IllegalArgumentException( "Name cannot be null" );
-			}
-
+			Objects.requireNonNull( objectName, "Name cannot be null" );
 			this.catalogName = catalogName;
 			this.schemaName = schemaName;
 			this.objectName = objectName;
+			qualifiedText = toQualifiedText( catalogName, schemaName, objectName );
+		}
 
-			StringBuilder buff = new StringBuilder();
+		private static String toQualifiedText(Identifier catalogName, Identifier schemaName, Identifier objectName) {
+			final StringBuilder qualified = new StringBuilder();
 			if ( catalogName != null ) {
-				buff.append( catalogName ).append( '.' );
+				qualified.append( catalogName ).append( '.' );
 			}
 			if ( schemaName != null ) {
-				buff.append( schemaName ).append( '.' );
+				qualified.append( schemaName ).append( '.' );
 			}
-			buff.append( objectName );
-			qualifiedText = buff.toString();
+			qualified.append( objectName );
+			return qualified.toString();
 		}
 
 		@Override
@@ -75,28 +75,21 @@ public class QualifiedNameParser {
 		}
 
 		@Override
-		@SuppressWarnings("SimplifiableIfStatement")
 		public boolean equals(Object o) {
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if ( !(o instanceof NameParts that) ) {
 				return false;
 			}
-
-			NameParts that = (NameParts) o;
-
-			return Objects.equals( this.getCatalogName(), that.getCatalogName() )
-				&& Objects.equals( this.getSchemaName(), that.getSchemaName() )
-				&& Objects.equals( this.getObjectName(), that.getObjectName() );
+			return Objects.equals( this.catalogName, that.catalogName )
+				&& Objects.equals( this.schemaName, that.schemaName )
+				&& Objects.equals( this.objectName, that.objectName );
 		}
 
 		@Override
 		public int hashCode() {
-			int result = getCatalogName() != null ? getCatalogName().hashCode() : 0;
-			result = 31 * result + ( getSchemaName() != null ? getSchemaName().hashCode() : 0);
-			result = 31 * result + getObjectName().hashCode();
-			return result;
+			return Objects.hash(  catalogName, schemaName, objectName );
 		}
 	}
 

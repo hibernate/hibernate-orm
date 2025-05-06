@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -10,10 +10,11 @@ import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.FastSessionServices;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Base class for actions relating to insert/update/delete of an entity
@@ -101,7 +102,7 @@ public abstract class EntityAction
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return id instanceof DelayedPostInsertIdentifier ? (DelayedPostInsertIdentifier) id : null;
+		return id instanceof DelayedPostInsertIdentifier identifier ? identifier : null;
 	}
 
 	/**
@@ -143,7 +144,7 @@ public abstract class EntityAction
 
 	@Override
 	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) + MessageHelper.infoString( entityName, id );
+		return unqualify( getClass().getName() ) + infoString( entityName, id );
 	}
 
 	@Override
@@ -185,16 +186,16 @@ public abstract class EntityAction
 		}
 	}
 
-	protected EventSource eventSource() {
-		return getSession();
+	protected final EventSource eventSource() {
+		return session;
 	}
 
 	/**
 	 * Convenience method for all subclasses.
-	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 * @return the {@link EventListenerGroups} instance from the {@code SessionFactory}.
 	 */
-	protected FastSessionServices getFastSessionServices() {
-		return session.getFactory().getFastSessionServices();
+	protected EventListenerGroups getEventListenerGroups() {
+		return session.getFactory().getEventListenerGroups();
 	}
 
 }

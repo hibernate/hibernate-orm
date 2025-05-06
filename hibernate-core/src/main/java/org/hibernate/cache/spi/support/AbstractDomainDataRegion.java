@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -200,20 +200,20 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	}
 
 	protected void releaseDataAccess(EntityDataAccess cacheAccess) {
-		if ( cacheAccess instanceof Destructible ) {
-			( (Destructible) cacheAccess ).destroy();
+		if ( cacheAccess instanceof Destructible destructible ) {
+			destructible.destroy();
 		}
 	}
 
 	protected void releaseDataAccess(NaturalIdDataAccess cacheAccess) {
-		if ( cacheAccess instanceof Destructible ) {
-			( (Destructible) cacheAccess ).destroy();
+		if ( cacheAccess instanceof Destructible destructible ) {
+			destructible.destroy();
 		}
 	}
 
 	protected void releaseDataAccess(CollectionDataAccess cacheAccess) {
-		if ( cacheAccess instanceof Destructible ) {
-			( (Destructible) cacheAccess ).destroy();
+		if ( cacheAccess instanceof Destructible destructible ) {
+			destructible.destroy();
 		}
 	}
 

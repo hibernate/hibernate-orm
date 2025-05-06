@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -15,8 +15,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
@@ -30,7 +30,7 @@ import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
- * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
+ * The action for performing an entity insertion, for entities not defined to use {@code IDENTITY} generation.
  *
  * @see EntityIdentityInsertAction
  */
@@ -105,12 +105,17 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			final EntityPersister persister = getPersister();
 			final Object instance = getInstance();
-			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert(
-					instance,
-					id,
-					getState(),
-					session
-			);
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+			boolean success = false;
+			final GeneratedValues generatedValues;
+			try {
+				generatedValues = persister.getInsertCoordinator().insert( instance, id, getState(), session );
+				success = true;
+			}
+			finally {
+				eventMonitor.completeEntityInsertEvent( event, id, persister.getEntityName(), success, session );
+			}
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {
@@ -181,9 +186,9 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {
-		SharedSessionContractImplementor session = getSession();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final SharedSessionContractImplementor session = getSession();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		boolean insert = false;
 		try {
@@ -192,43 +197,37 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			return insert;
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cacheAccessStrategy,
 					getPersister(),
 					insert,
-					EventManager.CacheActionDescription.ENTITY_INSERT
+					EventMonitor.CacheActionDescription.ENTITY_INSERT
 			);
 			session.getEventListenerManager().cachePutEnd();
 		}
 	}
 
 	protected void postInsert() {
-		getFastSessionServices()
+		getEventListenerGroups()
 				.eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
 	private PostInsertEvent newPostInsertEvent() {
-		return new PostInsertEvent(
-				getInstance(),
-				getId(),
-				getState(),
-				getPersister(),
-				eventSource()
-		);
+		return new PostInsertEvent( getInstance(), getId(), getState(), getPersister(), eventSource() );
 	}
 
 	protected void postCommitInsert(boolean success) {
-		getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT
+		getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent,
 						success ? PostInsertEventListener::onPostInsert : this::postCommitOnFailure );
 	}
 
 	private void postCommitOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
-		if ( listener instanceof PostCommitInsertEventListener ) {
-			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
+			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event
@@ -238,7 +237,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 
 	protected boolean preInsert() {
 		final EventListenerGroup<PreInsertEventListener> listenerGroup
-				= getFastSessionServices().eventListenerGroup_PRE_INSERT;
+				= getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
 		}
@@ -257,7 +256,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final EntityDataAccess cache = persister.getCacheAccessStrategy();
-			SessionFactoryImplementor factory = session.getFactory();
+			final SessionFactoryImplementor factory = session.getFactory();
 			final Object ck = cache.generateCacheKey( getId(), persister, factory, session.getTenantIdentifier() );
 			final boolean put = cacheAfterInsert( cache, ck );
 
@@ -273,10 +272,10 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	protected boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
-		SharedSessionContractImplementor session = getSession();
+		final SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		boolean afterInsert = false;
 		try {
 			eventListenerManager.cachePutStart();
@@ -284,13 +283,13 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 			return afterInsert;
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cache,
 					getPersister(),
 					afterInsert,
-					EventManager.CacheActionDescription.ENTITY_AFTER_INSERT
+					EventMonitor.CacheActionDescription.ENTITY_AFTER_INSERT
 			);
 			eventListenerManager.cachePutEnd();
 		}
@@ -299,7 +298,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	@Override
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group
-				= getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
+				= getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;

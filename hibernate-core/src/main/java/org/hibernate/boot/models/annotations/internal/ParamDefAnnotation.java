@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -20,14 +20,14 @@ public class ParamDefAnnotation implements ParamDef {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ParamDefAnnotation(SourceModelBuildingContext modelContext) {
+	public ParamDefAnnotation(ModelsContext modelContext) {
 		this.resolver = java.util.function.Supplier.class;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ParamDefAnnotation(ParamDef annotation, SourceModelBuildingContext modelContext) {
+	public ParamDefAnnotation(ParamDef annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.type = annotation.type();
 		this.resolver = annotation.resolver();
@@ -36,7 +36,7 @@ public class ParamDefAnnotation implements ParamDef {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ParamDefAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ParamDefAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.type = (Class<?>) attributeValues.get( "type" );
 		this.resolver = (Class<? extends java.util.function.Supplier>) attributeValues.get( "resolver" );

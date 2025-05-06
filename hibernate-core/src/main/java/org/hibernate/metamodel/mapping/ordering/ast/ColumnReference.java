@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
@@ -109,16 +109,14 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 
 	TableReference getTableReference(TableGroup tableGroup) {
 		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) modelPart;
+		if ( modelPart instanceof PluralAttributeMapping pluralAttribute ) {
 			if ( !pluralAttribute.getCollectionDescriptor().hasManyToManyOrdering() ) {
 				return tableGroup.getPrimaryTableReference();
 			}
 
 			final MappingType elementMappingType = pluralAttribute.getElementDescriptor().getPartMappingType();
 
-			if ( elementMappingType instanceof EntityPersister) {
-				final EntityPersister entityPersister = (EntityPersister) elementMappingType;
+			if ( elementMappingType instanceof EntityPersister entityPersister ) {
 				final String tableName = entityPersister.getTableNameForColumn( columnExpression );
 				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
 			}

@@ -5,14 +5,22 @@ The _static metamodel generator_ is a standard part of JPA.
 // It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
 We've actually already seen its handiwork in the code examples <<main-hibernate,earlier>>: it's the author of the class `Book_`, which contains the static metamodel of the <<book,entity class>> `Book`.
 
+Hibernate comes with an annotation processor which does much more than just this.
+It's capable of automatically generating:
+
+- <<static-metamodel,JPA metamodel>> classes, as we've already seen,
+- link:{doc-data-repositories-url}#data-static-metamodel[Jakarta Data metamodel] classes,
+- static <<generated-query-methods,query methods>> and <<generated-finder-methods,finder methods>>, and
+- implementations of <<static-or-instance,repository interfaces>>, including link:{doc-data-repositories-url}#repository-interfaces[Jakarta Data repositories].
+
 [[metamodel-generator]]
 .Hibernate Processor
 ****
 
-:generator: https://hibernate.org/orm/tooling/
+:generator: https://hibernate.org/orm/processor/
 :generator-guide: {doc-user-guide-url}#tooling-modelgen
 
-{generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a _static metamodel_.
+{generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a6072[_static metamodel_].
 That is, it produces a typed model of the persistent classes in our program, giving us a type safe way to refer to their attributes in Java code.
 In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
 
@@ -31,7 +39,7 @@ The static metamodel itself is undeniably useful and elegant.
 
 And it turns out that there was quite a lot of unlocked potential there.
 Since Hibernate 6.3 the Processor has started taking on a much bigger role.
-Today, it even contains a complete implementation of the Jakarta Data specification.
+Today, it even contains a link:{doc-data-repositories-url}[complete implementation of the Jakarta Data specification].
 
 Now, you still don't have to use the Hibernate Processor with Hibernate—the APIs we just mentioned still also accept plain strings—but we find that it works well with Gradle and integrates smoothly with our IDE, and the advantage in type-safety is compelling.
 ****
@@ -41,6 +49,17 @@ Now, you still don't have to use the Hibernate Processor with Hibernate—the AP
 We've already seen how to set up the annotation processor in the <<hello-hibernate,Gradle build>> we saw earlier.
 For more details on how to integrate the Hibernate Processor, check out the {generator-guide}[Static Metamodel Generator] section in the User Guide.
 ====
+
+[[static-metamodel]]
+=== The static metamodel
+
+We've already seen several ways to use the JPA static metamodel.
+Metamodel references are useful for expressing, in a completely type-safe way:
+
+- <<criteria-queries,Criteria queries>>,
+- eager fetching via an <<entity-graph,entity graph>>,
+- dynamic <<restrictions-and-ordering,restriction and sorting>>, and
+- references to named <<named-queries,queries>> and named entity graphs.
 
 Here's an example of the sort of code that's generated for an entity class, as mandated by the JPA specification:
 
@@ -169,17 +188,10 @@ Actually, Hibernate Processor doesn't require that such annotations be applied t
 We've already been using metamodel references like `Book_.authors` and `Book.AUTHORS` in the previous chapters.
 So now let's see what else Hibernate Processor can do for us.
 
-[NOTE]
-====
-The functionality we're about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification.
-Therefore, there's massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
-On the other hand, Jakarta Data can't do _everything_ described below, and in particular it doesn't yet come with built-in support for stateful persistence contexts or reactive sessions.
+[[finders-queries-repositories]]
+=== Finder methods, query methods, and repositories
 
-We've therefore opted _not_ to rewrite this chapter in a Jakarta Data-centric way, and instead refer you to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories].
-====
-
-Automatic generation of _finder methods_ and _query methods_ is a relatively new feature of Hibernate Processor, and an extension to the functionality defined by the JPA specification.
-In this chapter, we're going to explore these features.
+Automatic generation of _finder methods_ and _query methods_ is a relatively new feature of Hibernate Processor--originally introduced as an experiment--which ultimately grew into a whole new way to use Hibernate.
 
 We're going to meet three different kinds of generated method:
 
@@ -192,7 +204,25 @@ We're also going to see two ways that these methods can be called:
 - as static methods of a generated abstract class, or
 - as <<static-or-instance,instance methods of an interface>> with a generated implementation which may even be <<cdi-bean-injection,injected>>.
 
-To whet our appetites, let's see how this works for a `@NamedQuery`.
+Back in <<organizing-persistence>>, we walked you through a few different ways to organize your code with the help of Hibernate Processor.
+That journey terminated at the idea of a repository, but we emphasized that you aren't required to stay all the way to the end of the line.
+Repositories are a sweet spot for many users, but they might not be your sweet spot, and that's OK.
+Hibernate Processor is perfectly happy to generate `static` implementations of `@HQL`, `@SQL`, and `@Find` methods, eliminating the need to inject or instantiate a repository object.
+
+.Hibernate Processor and Jakarta Data
+****
+// For many years we've followed a three-step process: implement, learn from experience, and then standardize.
+//
+The functionality we're about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification.
+Therefore, there's massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
+On the other hand, Jakarta Data can't do _everything_ described below, and in particular it doesn't yet come with built-in support for stateful persistence contexts or reactive sessions.
+// We are currently working hard to standardize these capabilities, but writing great specifications takes time.
+
+We've therefore opted _not_ to rewrite this chapter in a Jakarta Data-centric way, and instead refer you to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories] for information about the standard Jakarta Data APIs.
+
+As Jakarta Data matures, even more of this functionality might be made obsolete, at least in the form described here.
+We're working hard to make that happen.
+****
 
 [CAUTION]
 ====
@@ -200,6 +230,8 @@ The functionality described in the rest of this chapter depends on the use of th
 Hibernate Processor is not currently able to generate finder methods and query methods for entities declared completely in XML, and it's not able to validate HQL which queries such entities.
 (On the other hand, the <<object-relational-mapping,O/R mappings>> may be specified in XML, since they're not needed by the Processor.)
 ====
+
+To whet our appetites, let's see how it works for a `@NamedQuery`.
 
 [[generated-named-queries]]
 === Named queries and Hibernate Processor
@@ -304,7 +336,7 @@ Hibernate Processor defaults to using `EntityManager` as the session type, but o
 
 - `Session`,
 - `StatelessSession`, or
-- `Mutiny.Session` from Hibernate Reactive.
+- `Mutiny.Session` or `Mutiny.StatelessSession` from Hibernate Reactive.
 
 The real value of all this is in the checks which can now be done at compile time.
 Hibernate Processor verifies that the parameters of our abstract method declaration match the parameters of the HQL query, for example:
@@ -555,6 +587,24 @@ The `@Pattern` annotation may be applied to a parameter of type `String`, indica
 List<Book> getBooksByTitle(@Pattern String title, Type type);
 ----
 
+Even better, a parameter may be of type `Range<T>`, where `T` is the type of the matching field.
+
+[source,java]
+----
+@Find
+List<Book> getBooksByTitle(Range<String> title, Type type);
+----
+
+The link:{doc-javadoc-url}org/hibernate/query/range/Range.html[`Range`] interface has a variety of `static` methods the caller may use to construct different kinds of ranges.
+For example, `Range.pattern()` constructs a `Range` representing a pattern.
+
+[source,java]
+----
+List<Book> books =
+        // returns books with titles beginning with "hibernate"
+        queries.getBooksByTitle(Range.prefix("hibernate", false), type);
+----
+
 A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
 [source,java]
@@ -588,7 +638,7 @@ This lets us declare which associations of `Book` should be pre-fetched by annot
 // ----
 
 [[paging-and-ordering]]
-=== Paging and ordering
+=== Paging, ordering, and restrictions
 
 Optionally, a query method--or a finder method which returns multiple results--may have additional "magic" parameters which do not map to query parameters:
 
@@ -603,6 +653,7 @@ Optionally, a query method--or a finder method which returns multiple results--m
 | `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
 | `List<Object[]>` +
 (or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))
+| `Restriction<? super E>` | Specifies a restriction used to filter query results | Restriction.startsWith("Hibernate")
 |===
 
 Thus, if we redefine our earlier query method as follows:
@@ -636,8 +687,28 @@ interface Queries {
 }
 ----
 
-This gives some dynamic control over query execution, but what if we would like direct control over the `Query` object?
-Well, let's talk about the return type.
+Similarly, we may define a query method which accepts an arbitrary ``Restriction``:
+
+[source,java]
+----
+interface Queries {
+    @Find
+    List<Book> findBooks(Restriction<? super Book> restriction, Order<? super Book>... order);
+}
+----
+
+As we <<restrictions-and-ordering,saw earlier>>, the `Restriction` interface has a variety of `static` methods for constructing restrictions.
+
+[source,java]
+----
+List<Book> books =
+        // returns books with titles beginning with "hibernate", sorted by title
+        queries.findBooks(Restriction.startsWith(Book_.title, "hibernate", false),
+                          Order.asc(Book_.title));
+----
+
+This gives some dynamic control over query execution.
+We'll see <<return-query-from-method-example,below>> that it's even possible for the caller to gain direct control over the `Query` object.
 
 [[key-based-paging]]
 === Key-based pagination
@@ -722,6 +793,7 @@ List<IsbnTitle> listIsbnAndTitleForEachBook(Page page);
 
 A query method might even return `TypedQuery` or `SelectionQuery`:
 
+[[return-query-from-method-example]]
 [source,java]
 ----
 @HQL("where title like :title")

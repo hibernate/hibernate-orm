@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
@@ -95,7 +95,7 @@ public class LazyGroupWithInheritanceTest {
 
 					// todo (HHH-11147) : this is a regression from 4.x
 					//		- the condition is that the association from Order to Customer points to the non-root
-					//			entity (Customer) rather than one of its concrete sub-types (DomesticCustomer,
+					//			entity (Customer) rather than one of its concrete subtypes (DomesticCustomer,
 					//			ForeignCustomer).  We'd have to read the "other table" to be able to resolve the
 					// 			concrete type.  The same holds true for associations to versioned entities as well.
 					//			The only viable solution I see would be to join to the "other side" and read the

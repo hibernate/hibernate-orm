@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.unit;
@@ -12,7 +12,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -46,35 +45,7 @@ public class CockroachDialectVersionTest {
 	@Test
 	@JiraKey(value = "HHH-15511")
 	public void testCockroachDialectVersionParsing() {
-		String failMsg = "HHH000511: The database version version for the Cockroach Dialect could not be determined ... should have been logged";
-
-		CockroachDBTestDialect testDialect = new CockroachDBTestDialect( null );
-		Assertions.assertTrue( triggerable.wasTriggered(), failMsg);
-		DatabaseVersion dv = testDialect.getVersion();
-		assertNotNull( dv );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMajorVersion(), dv.getMajor() );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMinorVersion(), dv.getMinor() );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMicroVersion(), dv.getMicro() );
-		triggerable.reset();
-
-		testDialect = new CockroachDBTestDialect( "" );
-		Assertions.assertTrue( triggerable.wasTriggered(), failMsg);
-		dv = testDialect.getVersion();
-		assertNotNull( dv );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMajorVersion(), dv.getMajor() );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMinorVersion(), dv.getMinor() );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMicroVersion(), dv.getMicro() );
-		triggerable.reset();
-
-		testDialect = new CockroachDBTestDialect( "Some version lacking string" );
-		Assertions.assertTrue( triggerable.wasTriggered(), failMsg);
-		dv = testDialect.getVersion();
-		assertNotNull( dv );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMajorVersion(), dv.getMajor() );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMinorVersion(), dv.getMinor() );
-		assertEquals( testDialect.getMinimumVersion().getDatabaseMicroVersion(), dv.getMicro() );
-		triggerable.reset();
-
+		DatabaseVersion dv;
 		// using a fictitious major version, to avoid minimum version warnings
 		Dialect dialect = new CockroachDBTestDialect( "CockroachDB CCL v99.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)" );
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -26,7 +26,7 @@ import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.pagination.LegacyHSQLLimitHandler;
+import org.hibernate.community.dialect.pagination.LegacyHSQLLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -41,7 +41,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
@@ -797,7 +797,7 @@ public class HSQLLegacyDialect extends Dialect {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, int timeout, EventSource session)
+		public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, JDBCException {
 			if ( getLockMode().greaterThan( LockMode.READ ) ) {
 				LOG.hsqldbSupportsOnlyReadCommittedIsolation();
@@ -927,6 +927,7 @@ public class HSQLLegacyDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
+		builder.setAutoQuoteDollar(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
 	}
 
@@ -944,4 +945,36 @@ public class HSQLLegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Doesn't support correlations in the WITH clause
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

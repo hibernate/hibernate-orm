@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -12,18 +12,6 @@ import org.hibernate.Interceptor;
  * @author Steve Ebersole
  */
 public interface SessionEventSettings {
-
-	/**
-	 * Controls whether {@linkplain org.hibernate.stat.SessionStatistics session metrics}
-	 * should be {@linkplain org.hibernate.engine.internal.StatisticalLoggingSessionEventListener
-	 * logged} for any session in which statistics are being collected.
-	 * <p>
-	 * By default, logging of session metrics is disabled unless {@link StatisticsSettings#GENERATE_STATISTICS}
-	 * is enabled.
-	 *
-	 * @settingDefault Defined by {@link StatisticsSettings#GENERATE_STATISTICS}
-	 */
-	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
 	/**
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to
@@ -75,4 +63,12 @@ public interface SessionEventSettings {
 	 * @since 5.2
 	 */
 	String SESSION_SCOPED_INTERCEPTOR = "hibernate.session_factory.session_scoped_interceptor";
+
+	/**
+	 * @deprecated This setting is now ignored. Enable the log category
+	 *             {@code org.hibernate.session.metrics} to automatically
+	 *             collect and log session-level metrics.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 }

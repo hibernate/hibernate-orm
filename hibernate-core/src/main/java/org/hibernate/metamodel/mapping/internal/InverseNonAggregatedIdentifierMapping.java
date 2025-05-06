@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -201,10 +201,7 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	@Override
 	public Object getIdentifier(Object entity, MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
-			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
-					null,
-					null//sessionFactory
-			);
+			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( null );
 			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
@@ -264,10 +261,10 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( position );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( position );
 			Object o = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
-				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-						.getEntityPersister();
+			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+				final EntityPersister entityPersister =
+						toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );

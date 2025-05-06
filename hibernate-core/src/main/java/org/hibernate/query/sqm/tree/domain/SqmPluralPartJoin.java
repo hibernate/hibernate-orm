@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -67,7 +67,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmFrom<?, O> lhsCopy = (SqmFrom<?, O>) getLhs().copy( context );
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmPluralPartJoin<O, T> path = context.registerCopy(
 				this,
 				new SqmPluralPartJoin<>(
@@ -121,7 +121,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
 		return treat;
 	}
@@ -137,7 +137,7 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedPluralPartJoin( this, (SqmEntityDomainType<?>) treatTarget, alias ) );
 		}
 		return treat;
 	}

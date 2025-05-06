@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
@@ -13,7 +13,9 @@ import org.hibernate.sql.model.ast.TableInsert;
  *
  * @author Steve Ebersole
  */
-public interface TableInsertBuilder extends TableMutationBuilder<TableInsert>, ColumnValuesTableMutationBuilder,
+public interface TableInsertBuilder
+		extends TableMutationBuilder<TableInsert>,
+		ColumnValuesTableMutationBuilder<TableInsert>,
 		SelectableConsumer {
 
 

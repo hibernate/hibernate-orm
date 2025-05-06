@@ -1,28 +1,37 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationList;
+import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldDescription.InDefinedShape;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.MethodList;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeDescription.Generic;
-import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
@@ -58,9 +67,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
+import static net.bytebuddy.matcher.ElementMatchers.isGetter;
+import static net.bytebuddy.matcher.ElementMatchers.isSetter;
+import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -152,6 +167,18 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private DynamicType.Builder<?> doEnhance(Supplier<DynamicType.Builder<?>> builderSupplier, TypeDescription managedCtClass) {
+		// skip if the class was already enhanced. This is very common in WildFly as classloading is highly concurrent.
+		// We need to ensure that no class is instrumented multiple times as that might result in incorrect bytecode.
+		// N.B. there is a second check below using a different approach: checking for the marker interfaces,
+		// which does not address the case of extended bytecode enhancement
+		// (because it enhances classes that do not end up with these marker interfaces).
+		// I'm currently inclined to keep both checks, as one is safer and the other has better backwards compatibility.
+		if ( managedCtClass.getDeclaredAnnotations().isAnnotationPresent( EnhancementInfo.class ) ) {
+			verifyVersions( managedCtClass, enhancementContext );
+			log.debugf( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
+			return null;
+		}
+
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
 			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
@@ -168,12 +195,12 @@ public class EnhancerImpl implements Enhancer {
 		if ( alreadyEnhanced( managedCtClass ) ) {
 			verifyVersions( managedCtClass, enhancementContext );
 
-			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
+			log.debugf( "Skipping enhancement of [%s]: it's already implementing 'Managed'", managedCtClass.getName() );
 			return null;
 		}
 
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
-			if ( checkUnsupportedAttributeNaming( managedCtClass ) ) {
+			if ( checkUnsupportedAttributeNaming( managedCtClass, enhancementContext ) ) {
 				// do not enhance classes with mismatched names for PROPERTY-access persistent attributes
 				return null;
 			}
@@ -212,6 +239,21 @@ public class EnhancerImpl implements Enhancer {
 					EnhancerConstants.USE_TRACKER_FIELD_NAME,
 					EnhancerConstants.USE_TRACKER_GETTER_NAME,
 					EnhancerConstants.USE_TRACKER_SETTER_NAME
+			);
+
+			builder = addFieldWithGetterAndSetter(
+					builder,
+					constants.TypeIntegerPrimitive,
+					EnhancerConstants.INSTANCE_ID_FIELD_NAME,
+					EnhancerConstants.INSTANCE_ID_GETTER_NAME,
+					EnhancerConstants.INSTANCE_ID_SETTER_NAME
+			);
+
+			builder = addSetPersistenceInfoMethod(
+					builder,
+					constants.TypeEntityEntry,
+					constants.TypeManagedEntity,
+					constants.TypeIntegerPrimitive
 			);
 
 			builder = addInterceptorHandling( builder, managedCtClass );
@@ -337,7 +379,7 @@ public class EnhancerImpl implements Enhancer {
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
-			if ( checkUnsupportedAttributeNaming( managedCtClass ) ) {
+			if ( checkUnsupportedAttributeNaming( managedCtClass, enhancementContext ) ) {
 				// do not enhance classes with mismatched names for PROPERTY-access persistent attributes
 				return null;
 			}
@@ -375,9 +417,8 @@ public class EnhancerImpl implements Enhancer {
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
-
 			// Check for HHH-16572 (PROPERTY attributes with mismatched field and method names)
-			if ( checkUnsupportedAttributeNaming( managedCtClass ) ) {
+			if ( checkUnsupportedAttributeNaming( managedCtClass, enhancementContext ) ) {
 				return null;
 			}
 
@@ -398,18 +439,103 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	/**
+	 * Utility that determines the access-type of a mapped class based on an explicit annotation
+	 * or guessing it from the placement of its identifier property. Implementation should be
+	 * aligned with {@code InheritanceState#determineDefaultAccessType()}.
+	 *
+	 * @return the {@link AccessType} used by the mapped class
+	 *
+	 * @implNote this does not fully account for embeddables, as they should inherit the access-type
+	 * from the entities they're used in - defaulting to PROPERTY to always run the accessor check
+	 */
+	private static AccessType determineDefaultAccessType(TypeDefinition typeDefinition) {
+		for ( TypeDefinition candidate = typeDefinition; candidate != null && !candidate.represents( Object.class ); candidate = candidate.getSuperClass() ) {
+			final AnnotationList annotations = candidate.asErasure().getDeclaredAnnotations();
+			if ( hasMappingAnnotation( annotations ) ) {
+				final AnnotationDescription.Loadable<Access> access = annotations.ofType( Access.class );
+				if ( access != null ) {
+					return access.load().value();
+				}
+			}
+		}
+		// Guess from identifier.
+		// FIX: Shouldn't this be determined by the first attribute (i.e., field or property) with annotations,
+		// but without an explicit Access annotation, according to JPA 2.0 spec 2.3.1: Default Access Type?
+		for ( TypeDefinition candidate = typeDefinition; candidate != null && !candidate.represents( Object.class ); candidate = candidate.getSuperClass() ) {
+			final AnnotationList annotations = candidate.asErasure().getDeclaredAnnotations();
+			if ( hasMappingAnnotation( annotations ) ) {
+				for ( FieldDescription ctField : candidate.getDeclaredFields() ) {
+					if ( !Modifier.isStatic( ctField.getModifiers() ) ) {
+						final AnnotationList annotationList = ctField.getDeclaredAnnotations();
+						if ( annotationList.isAnnotationPresent( Id.class ) || annotationList.isAnnotationPresent( EmbeddedId.class ) ) {
+							return AccessType.FIELD;
+						}
+					}
+				}
+			}
+		}
+		// We can assume AccessType.PROPERTY here
+		return AccessType.PROPERTY;
+	}
+
+	/**
+	 * Determines the access-type of the given annotation source if an explicit {@link Access} annotation
+	 * is present, otherwise defaults to the provided {@code defaultAccessType}
+	 */
+	private static AccessType determineAccessType(AnnotationSource annotationSource, AccessType defaultAccessType) {
+		final AnnotationDescription.Loadable<Access> access = annotationSource.getDeclaredAnnotations().ofType( Access.class );
+		return access != null ? access.load().value() : defaultAccessType;
+	}
+
+	private static boolean hasMappingAnnotation(AnnotationList annotations) {
+		return annotations.isAnnotationPresent( Entity.class )
+				|| annotations.isAnnotationPresent( MappedSuperclass.class )
+				|| annotations.isAnnotationPresent( Embeddable.class );
+	}
+
+	private static boolean isPersistentMethod(MethodDescription method) {
+		final AnnotationList annotations = method.getDeclaredAnnotations();
+		if ( annotations.isAnnotationPresent( Transient.class ) ) {
+			return false;
+		}
+
+		return annotations.stream().noneMatch( a -> IGNORED_PERSISTENCE_ANNOTATIONS.contains( a.getAnnotationType().getName() ) );
+	}
+
+	private static final Set<String> IGNORED_PERSISTENCE_ANNOTATIONS = Set.of(
+			"jakarta.persistence.PostLoad",
+			"jakarta.persistence.PostPersist",
+			"jakarta.persistence.PostRemove",
+			"jakarta.persistence.PostUpdate",
+			"jakarta.persistence.PrePersist",
+			"jakarta.persistence.PreRemove",
+			"jakarta.persistence.PreUpdate"
+	);
+
+	private static boolean containsField(Generic type, String fieldName) {
+		do {
+			if ( !type.getDeclaredFields().filter( not( isStatic() ).and( named( fieldName ) ) ).isEmpty() ) {
+				return true;
+			}
+			type = type.getSuperClass();
+		}
+		while ( type != null && !type.represents( Object.class ) );
+		return false;
+	}
+
+	/**
 	 * Check whether an entity class ({@code managedCtClass}) has mismatched names between a persistent field and its
 	 * getter/setter when using {@link AccessType#PROPERTY}, which Hibernate does not currently support for enhancement.
-	 * See https://hibernate.atlassian.net/browse/HHH-16572
+	 * See <a href="https://hibernate.atlassian.net/browse/HHH-16572">HHH-16572</a>
 	 *
-	 * @return {@code true} if enhancement of the class must be {@link org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy#SKIP skipped}
+	 * @return {@code true} if enhancement of the class must be {@link UnsupportedEnhancementStrategy#SKIP skipped}
 	 * because it has mismatched names.
 	 * {@code false} if enhancement of the class must proceed, either because it doesn't have any mismatched names,
-	 * or because {@link org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy#LEGACY legacy mode} was opted into.
-	 * @throws EnhancementException if enhancement of the class must {@link org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy#FAIL abort} because it has mismatched names.
+	 * or because {@link UnsupportedEnhancementStrategy#LEGACY legacy mode} was opted into.
+	 * @throws EnhancementException if enhancement of the class must {@link UnsupportedEnhancementStrategy#FAIL abort} because it has mismatched names.
 	 */
 	@SuppressWarnings("deprecation")
-	private boolean checkUnsupportedAttributeNaming(TypeDescription managedCtClass) {
+	private static boolean checkUnsupportedAttributeNaming(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {
 		var strategy = enhancementContext.getUnsupportedEnhancementStrategy();
 		if ( UnsupportedEnhancementStrategy.LEGACY.equals( strategy ) ) {
 			// Don't check anything and act as if there was nothing unsupported in the class.
@@ -433,76 +559,74 @@ public class EnhancerImpl implements Enhancer {
 		//
 		// Check name of the getter/setter method with persistence annotation and getter/setter method name that doesn't refer to an entity field
 		// and will return false.  If the property accessor method(s) are named to match the field name(s), return true.
-		boolean propertyHasAnnotation = false;
-		MethodGraph.Linked methodGraph = MethodGraph.Compiler.Default.forJavaHierarchy().compile((TypeDefinition) managedCtClass);
-		for (MethodGraph.Node node : methodGraph.listNodes()) {
-			MethodDescription methodDescription = node.getRepresentative();
-			if (methodDescription.getDeclaringType().represents(Object.class)) { // skip class java.lang.Object methods
+		final AccessType defaultAccessType = determineDefaultAccessType( managedCtClass );
+		final MethodList<?> methods = MethodGraph.Compiler.DEFAULT.compile( (TypeDefinition) managedCtClass )
+				.listNodes()
+				.asMethodList()
+				.filter( isGetter().or( isSetter() ) );
+		for ( final MethodDescription methodDescription : methods ) {
+			if ( methodDescription.getDeclaringType().represents( Object.class )
+				|| determineAccessType( methodDescription, defaultAccessType ) != AccessType.PROPERTY ) {
+				// We only need to check this for AccessType.PROPERTY
 				continue;
 			}
 
-			String methodName = methodDescription.getActualName();
-			if (methodName.equals("") ||
-					(!methodName.startsWith("get") && !methodName.startsWith("set") && !methodName.startsWith("is"))) {
-				continue;
-			}
-			String methodFieldName;
-			if (methodName.startsWith("is")) { // skip past "is"
-				methodFieldName = methodName.substring(2);
-			}
-			else if (methodName.startsWith("get") ||
-					methodName.startsWith("set")) { // skip past "get" or "set"
-				methodFieldName = methodName.substring(3);
+			final String methodName = methodDescription.getActualName();
+			String fieldName;
+			if ( methodName.startsWith( "get" ) || methodName.startsWith( "set" ) ) {
+				fieldName = methodName.substring( 3 );
 			}
 			else {
-				// not a property accessor method so ignore it
-				continue;
+				assert methodName.startsWith( "is" );
+				fieldName = methodName.substring( 2 );
 			}
-			boolean propertyNameMatchesFieldName = false;
-			// convert field letter to lower case
-			methodFieldName = methodFieldName.substring(0, 1).toLowerCase() + methodFieldName.substring(1);
-			TypeList typeList = methodDescription.getDeclaredAnnotations().asTypeList();
-			if (typeList.stream().anyMatch(typeDefinitions ->
-					(typeDefinitions.getName().equals("jakarta.persistence.Transient")))) {
-				// transient property so ignore it
-				continue;
-			}
-			if (typeList.stream().anyMatch(typeDefinitions ->
-					(typeDefinitions.getName().contains("jakarta.persistence")))) {
-				propertyHasAnnotation = true;
-			}
-			for (FieldDescription ctField : methodDescription.getDeclaringType().getDeclaredFields()) {
-				if (!Modifier.isStatic(ctField.getModifiers())) {
-					AnnotatedFieldDescription annotatedField = new AnnotatedFieldDescription(enhancementContext, ctField);
-					boolean containsPropertyAccessorMethods = false;
-					if (enhancementContext.isPersistentField(annotatedField)) {
-						if (methodFieldName.equals(ctField.getActualName())) {
-							propertyNameMatchesFieldName = true;
-							break;
-						}
-					}
-				}
-			}
-			if ( propertyHasAnnotation && !propertyNameMatchesFieldName ) {
-				switch ( strategy ) {
-					case SKIP:
+			// convert first field letter to lower case
+			fieldName = getJavaBeansFieldName( fieldName );
+			if ( fieldName != null && isPersistentMethod( methodDescription )
+				&& !containsField( managedCtClass.asGenericType(), fieldName ) ) {
+				// We shouldn't even be in this method if using LEGACY, see top of this method.
+				return switch ( strategy ) {
+					case SKIP -> {
 						log.debugf(
 								"Skipping enhancement of [%s] because no field named [%s] could be found for property accessor method [%s]."
-										+ " To fix this, make sure all property accessor methods have a matching field.",
-								managedCtClass.getName(), methodFieldName, methodDescription.getName() );
-						return true;
-					case FAIL:
-						throw new EnhancementException( String.format(
-								"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s]."
-										+ " To fix this, make sure all property accessor methods have a matching field.",
-								managedCtClass.getName(), methodFieldName, methodDescription.getName() ) );
-					default:
-						// We shouldn't even be in this method if using LEGACY, see top of this method.
-						throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
-				}
+								+ " To fix this, make sure all property accessor methods have a matching field.",
+								managedCtClass.getName(),
+								fieldName,
+								methodDescription.getName()
+						);
+						yield true;
+					}
+					case FAIL -> throw new EnhancementException( String.format(
+							"Enhancement of [%s] failed because no field named [%s] could be found for property accessor method [%s]."
+							+ " To fix this, make sure all property accessor methods have a matching field.",
+							managedCtClass.getName(),
+							fieldName,
+							methodDescription.getName()
+					) );
+					default -> throw new AssertionFailure( "Unexpected strategy at this point: " + strategy );
+				};
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * If the first two characters are upper case, assume all characters are upper case to be returned as is.
+	 * Otherwise, return the name with the first character converted to lower case and the remaining part returned as is.
+	 *
+	 * @param name is the property accessor name to be updated following Persistence property name rules.
+	 * @return name that follows JavaBeans rules, or {@code null} if the provided string is empty
+	 */
+	private static @Nullable String getJavaBeansFieldName(String name) {
+		if ( name.isEmpty() ) {
+			return null;
+		}
+		if ( name.length() > 1 && Character.isUpperCase( name.charAt( 1 ) ) && Character.isUpperCase( name.charAt( 0 ) ) ) {
+			return name;
+		}
+		final char[] chars = name.toCharArray();
+		chars[0] = Character.toLowerCase( chars[0] );
+		return new String( chars );
 	}
 
 	private static void verifyVersions(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {
@@ -577,6 +701,19 @@ public class EnhancerImpl implements Enhancer {
 				.defineMethod( setterName, constants.TypeVoid, constants.methodModifierPUBLIC )
 						.withParameters( type )
 						.intercept( FieldAccessor.ofField( fieldName ) );
+	}
+
+	private DynamicType.Builder<?> addSetPersistenceInfoMethod(
+			DynamicType.Builder<?> builder,
+			TypeDefinition entityEntryType,
+			TypeDefinition managedEntityType,
+			TypeDefinition intType) {
+		return builder
+				// returns previous entity entry
+				.defineMethod( EnhancerConstants.PERSISTENCE_INFO_SETTER_NAME, entityEntryType, constants.methodModifierPUBLIC )
+				// previous, next, instance-id
+				.withParameters( entityEntryType, managedEntityType, managedEntityType, intType )
+				.intercept( constants.implementationSetPersistenceInfo );
 	}
 
 	private List<AnnotatedFieldDescription> collectCollectionFields(TypeDescription managedCtClass) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -12,7 +12,7 @@ import org.hibernate.boot.models.annotations.spi.IndexCollector;
 import org.hibernate.boot.models.annotations.spi.UniqueConstraintCollector;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.TableGenerator;
 
@@ -40,7 +40,7 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public TableGeneratorJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public TableGeneratorJpaAnnotation(ModelsContext modelContext) {
 		this( "", modelContext );
 	}
 
@@ -51,7 +51,7 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	 *     <li>{@linkplain jakarta.persistence.GeneratedValue#generator()} set to a non-empty String, but with no matching {@linkplain TableGenerator}</li>
 	 * </ol>
 	 */
-	public TableGeneratorJpaAnnotation(String name, SourceModelBuildingContext modelContext) {
+	public TableGeneratorJpaAnnotation(String name, ModelsContext modelContext) {
 		this.name = name;
 		this.table = "";
 		this.catalog = "";
@@ -69,7 +69,7 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public TableGeneratorJpaAnnotation(TableGenerator annotation, SourceModelBuildingContext modelContext) {
+	public TableGeneratorJpaAnnotation(TableGenerator annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.table = annotation.table();
 		this.catalog = annotation.catalog();
@@ -87,7 +87,7 @@ public class TableGeneratorJpaAnnotation implements TableGenerator, UniqueConstr
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TableGeneratorJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public TableGeneratorJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.table = (String) attributeValues.get( "table" );
 		this.catalog = (String) attributeValues.get( "catalog" );

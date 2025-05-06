@@ -1,16 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.metamodel.EntityType;
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.TupleType;
+import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindingContext;
@@ -238,7 +239,7 @@ public class TypecheckUtil {
 		return jdbcMapping;
 	}
 
-	private static EmbeddableDomainType<?> getEmbeddableType(SqmExpressible<?> expressible) {
+	private static EmbeddableDomainType<?> getEmbeddableType(DomainType<?> expressible) {
 		return expressible instanceof EmbeddableDomainType<?> embeddableDomainType ? embeddableDomainType : null;
 	}
 
@@ -283,7 +284,7 @@ public class TypecheckUtil {
 	}
 
 	private static boolean isDiscriminatorTypeComparable(
-			EntityDiscriminatorSqmPathSource<?> lhsDiscriminator, SqmExpressible<?> rhsType,
+			EntityDiscriminatorSqmPathSource<?> lhsDiscriminator, DomainType<?> rhsType,
 			BindingContext bindingContext) {
 		final String entityName = lhsDiscriminator.getEntityDomainType().getHibernateEntityName();
 		final EntityPersister lhsEntity = bindingContext.getMappingMetamodel().getEntityDescriptor( entityName );
@@ -297,10 +298,13 @@ public class TypecheckUtil {
 			final EntityPersister rhsEntity = bindingContext.getMappingMetamodel().getEntityDescriptor( rhsEntityName );
 			return rhsEntity.getRootEntityName().equals( lhsEntity.getRootEntityName() );
 		}
-		else  {
-			final BasicType<?> discriminatorType = (BasicType<?>)
+		else if ( rhsType instanceof SqmExpressible<?> rhsExpressible ) {
+			final SqmExpressible<?> discriminatorType = (SqmExpressible<?>)
 					lhsDiscriminator.getEntityMapping().getDiscriminatorMapping().getMappedType();
-			return areTypesComparable( discriminatorType, rhsType, bindingContext);
+			return areTypesComparable( discriminatorType, rhsExpressible, bindingContext);
+		}
+		else {
+			throw new AssertionFailure( "Not a SqmExpressible" );
 		}
 	}
 
@@ -491,8 +495,8 @@ public class TypecheckUtil {
 	}
 
 	public static void assertOperable(SqmExpression<?> left, SqmExpression<?> right, BinaryArithmeticOperator op) {
-		final SqmExpressible<?> leftNodeType = left.getNodeType();
-		final SqmExpressible<?> rightNodeType = right.getNodeType();
+		final SqmExpressible<?> leftNodeType = left.getExpressible();
+		final SqmExpressible<?> rightNodeType = right.getExpressible();
 		if ( leftNodeType != null && rightNodeType != null ) {
 			final Class<?> leftJavaType = leftNodeType.getRelationalJavaType().getJavaTypeClass();
 			final Class<?> rightJavaType = rightNodeType.getRelationalJavaType().getJavaTypeClass();
@@ -628,7 +632,7 @@ public class TypecheckUtil {
 	}
 
 	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
-		final SqmExpressible<?> nodeType = expression.getNodeType();
+		final SqmExpressible<?> nodeType = expression.getExpressible();
 		if ( nodeType != null ) {
 			if ( !( nodeType.getSqmType() instanceof JdbcMapping jdbcMapping )
 					|| !jdbcMapping.getJdbcType().isNumber() ) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.JdbcTypeRegistration;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,14 +19,14 @@ public class JdbcTypeRegistrationAnnotation implements JdbcTypeRegistration {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public JdbcTypeRegistrationAnnotation(SourceModelBuildingContext modelContext) {
+	public JdbcTypeRegistrationAnnotation(ModelsContext modelContext) {
 		this.registrationCode = -2147483648;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public JdbcTypeRegistrationAnnotation(JdbcTypeRegistration annotation, SourceModelBuildingContext modelContext) {
+	public JdbcTypeRegistrationAnnotation(JdbcTypeRegistration annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 		this.registrationCode = annotation.registrationCode();
 	}
@@ -36,7 +36,7 @@ public class JdbcTypeRegistrationAnnotation implements JdbcTypeRegistration {
 	 */
 	public JdbcTypeRegistrationAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (Class<? extends org.hibernate.type.descriptor.jdbc.JdbcType>) attributeValues.get( "value" );
 		this.registrationCode = (int) attributeValues.get( "registrationCode" );
 	}

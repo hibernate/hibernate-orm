@@ -1,23 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.hbm.collections.list;
 
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,22 +24,8 @@ import static org.assertj.core.api.Assertions.fail;
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class ListTests {
 	@Test
-	@DomainModel( xmlMappings = "mappings/models/hbm/list/hbm.xml" )
-
-	void testHbmXml(DomainModelScope domainModelScope) {
-		final PersistentClass rootBinding = domainModelScope.getDomainModel().getEntityBinding( Root.class.getName() );
-		validateTags( rootBinding.getProperty( "tags" ) );
-		validateCategories( rootBinding.getProperty( "categories" ) );
-		Property admins = rootBinding.getProperty( "admins" );
-		Table collectionTable = ( (List) admins.getValue() ).getCollectionTable();
-//		collectionTable.getColumns().
-		Property admins2 = rootBinding.getProperty( "admins2" );
-	}
-
-	@Test
-	@ServiceRegistry( settings = @Setting( name = MappingSettings.TRANSFORM_HBM_XML, value = "true" ) )
-	@DomainModel( xmlMappings = "mappings/models/hbm/list/hbm.xml" )
-	void testTransformation(DomainModelScope domainModelScope) {
+	@DomainModel( xmlMappings = "mappings/models/hbm/list/mapping.xml" )
+	void testXml(DomainModelScope domainModelScope) {
 		final PersistentClass rootBinding = domainModelScope.getDomainModel().getEntityBinding( Root.class.getName() );
 		validateTags( rootBinding.getProperty( "tags" ) );
 		validateCategories( rootBinding.getProperty( "categories" ) );

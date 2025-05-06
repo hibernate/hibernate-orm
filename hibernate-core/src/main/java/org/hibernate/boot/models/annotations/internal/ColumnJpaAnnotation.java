@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -15,7 +15,7 @@ import org.hibernate.boot.models.annotations.spi.Commentable;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Column;
 
@@ -51,7 +51,7 @@ public class ColumnJpaAnnotation implements Column,
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.unique = false;
 		this.nullable = true;
@@ -71,7 +71,7 @@ public class ColumnJpaAnnotation implements Column,
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ColumnJpaAnnotation(Column annotation, SourceModelBuildingContext modelContext) {
+	public ColumnJpaAnnotation(Column annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.unique = annotation.unique();
 		this.nullable = annotation.nullable();
@@ -91,7 +91,7 @@ public class ColumnJpaAnnotation implements Column,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ColumnJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.unique = (boolean) attributeValues.get( "unique" );
 		this.nullable = (boolean) attributeValues.get( "nullable" );

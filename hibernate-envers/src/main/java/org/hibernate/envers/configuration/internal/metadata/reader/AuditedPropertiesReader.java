@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
@@ -36,7 +36,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.ElementCollection;
@@ -356,8 +356,8 @@ public class AuditedPropertiesReader {
 			String accessType = entry.getValue();
 			if ( !auditedPropertiesHolder.contains( property ) ) {
 				final Value propertyValue = persistentPropertiesSource.getProperty( property ).getValue();
-				final SourceModelBuildingContext buildingContext = metadataBuildingContext.getSourceModelBuildingContext();
-				final FieldDetails fieldDetails = dynamicFieldDetails( propertiesSource, property, buildingContext );
+				final ModelsContext modelsContext = metadataBuildingContext.getModelsContext();
+				final FieldDetails fieldDetails = dynamicFieldDetails( propertiesSource, property, modelsContext );
 				if ( propertyValue instanceof Component ) {
 					this.addFromComponentProperty(
 							fieldDetails,

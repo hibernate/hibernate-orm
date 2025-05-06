@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand.query;
@@ -834,6 +834,12 @@ public class NativeSQLQueriesTest {
 					session.remove( pete );
 				}
 		);
+	}
+
+	@Test @JiraKey( "HHH-15102" )
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
+	public void testCommentInSQLQuery(SessionFactoryScope scope) {
+		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) --count(*), effectively\nfrom ORGANIZATION" ).getSingleResult() );
 	}
 
 	@Test

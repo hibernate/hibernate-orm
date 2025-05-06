@@ -16,7 +16,7 @@ else
 fi
 
 mysql() {
-  mysql_8_2
+  mysql_9_2
 }
 
 mysql_8_0() {
@@ -34,7 +34,7 @@ mysql_8_0() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -58,7 +58,7 @@ mysql_8_1() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
-        sleep 3
+        sleep 5
     done
     if [ "$n" -ge 5 ]; then
       echo "MySQL failed to start and configure after 15 seconds"
@@ -82,6 +82,30 @@ mysql_8_2() {
         fi
         n=$((n+1))
         echo "Waiting for MySQL to start..."
+        sleep 5
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MySQL failed to start and configure after 15 seconds"
+    else
+      echo "MySQL successfully started"
+    fi
+}
+
+mysql_9_2() {
+    $CONTAINER_CLI rm -f mysql || true
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MYSQL_9_2:-docker.io/mysql:9.2.0} --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --init-connect="SET character_set_client= 'utf8mb4';SET character_set_results = 'utf8mb4'; SET character_set_connection= 'utf8mb4'; SET collation_connection = 'utf8mb4_0900_as_cs';" --log-bin-trust-function-creators=1 --lower_case_table_names=2
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to start..."
         sleep 3
     done
     if [ "$n" -ge 5 ]; then
@@ -92,7 +116,7 @@ mysql_8_2() {
 }
 
 mariadb() {
-  mariadb_11_4
+  mariadb_11_7
 }
 
 mariadb_wait_until_start()
@@ -138,6 +162,12 @@ mariadb_11_4() {
     mariadb_wait_until_start
 }
 
+mariadb_11_7() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_11_7:-docker.io/mariadb:11.7-rc} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    mariadb_wait_until_start
+}
+
 mariadb_verylatest() {
     $CONTAINER_CLI rm -f mariadb || true
     $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_VERYLATEST:-quay.io/mariadb-foundation/mariadb-devel:verylatest} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
@@ -145,13 +175,7 @@ mariadb_verylatest() {
 }
 
 postgresql() {
-  postgresql_16
-}
-
-postgresql_12() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d ${DB_IMAGE_POSTGRESQL_12:-docker.io/postgis/postgis:12-3.4}
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-12-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+  postgresql_17
 }
 
 postgresql_13() {
@@ -180,15 +204,22 @@ postgresql_16() {
     $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-16-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
-edb() {
-    edb_16
+postgresql_17() {
+    $CONTAINER_CLI rm -f postgres || true
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
+      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
+    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-17-pgvector && psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
 }
 
-edb_12() {
+edb() {
+    edb_17
+}
+
+edb_13() {
     $CONTAINER_CLI rm -f edb || true
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:12 -f edb12.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:12
+    (cd edb; $CONTAINER_CLI build -t edb-test:13 -f edb13.Dockerfile .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:13
 }
 
 edb_14() {
@@ -210,6 +241,13 @@ edb_16() {
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
     (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:16
+}
+
+edb_17() {
+    $CONTAINER_CLI rm -f edb || true
+    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+    (cd edb; $CONTAINER_CLI build -t edb-test:17 -f edb17.Dockerfile .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:17
 }
 
 db2() {
@@ -436,6 +474,8 @@ create login $SYBASE_USER with password $SYBASE_PASSWORD
 go
 exec sp_configure 'enable xml', 1
 go
+exec sp_configure 'heap memory per user', 0, '16K'
+go
 exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
 go
 exec sp_dboption $SYBASE_DB, 'allow nulls by default', true
@@ -659,8 +699,6 @@ disable_userland_proxy() {
       sudo service docker stop
       echo "Updating /etc/docker/daemon.json..."
       sudo bash -c "export docker_daemon_json='$docker_daemon_json'; echo \"\${docker_daemon_json/\}/,}\\\"userland-proxy\\\": false}\" > /etc/docker/daemon.json"
-      echo "New docker daemon config:"
-      cat /etc/docker/daemon.json
       echo "Starting docker..."
       sudo service docker start
       echo "Service status:"
@@ -687,7 +725,7 @@ oracle_atps_tls() {
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
 
-  curl -s -X POST "https://${HOST}.oraclecloudapps.com/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE to hibernate_orm_test_$RUNID;"
+  curl -s -X POST "https://${HOST}.oraclecloudapps.com/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant CREATE SESSION, RESOURCE, CREATE VIEW, CREATE SYNONYM, CREATE ANY INDEX, EXECUTE ANY TYPE, CREATE DOMAIN to hibernate_orm_test_$RUNID;"
 }
 
 oracle_db19c() {
@@ -808,7 +846,44 @@ hana() {
 }
 
 cockroachdb() {
-  cockroachdb_24_1
+  cockroachdb_24_3
+}
+
+cockroachdb_24_3() {
+  $CONTAINER_CLI rm -f cockroach || true
+  LOG_CONFIG="
+sinks:
+  stderr:
+    channels: all
+    filter: ERROR
+    redact: false
+    exit-on-error: true
+"
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_3:-cockroachdb/cockroach:v24.3.3} start-single-node \
+    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
+  OUTPUT=
+  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
+        echo "Waiting for CockroachDB to start..."
+        sleep 10
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
+  done
+  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
+  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
+SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
+SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
+SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
+SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
+SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+
+quit
+EOF
+"
+  echo "Cockroachdb successfully started"
 }
 
 cockroachdb_24_1() {
@@ -837,11 +912,10 @@ SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled 
 SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
 SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
 SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '15s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
 
 quit
 EOF
@@ -877,12 +951,12 @@ SET CLUSTER SETTING kv.raft_log.disable_synchronization_unsafe = true;
 SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
 SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
 SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '15s';
+SET CLUSTER SETTING jobs.retention_time = '5s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
 SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
 
 quit
 EOF
@@ -991,13 +1065,15 @@ if [ -z ${1} ]; then
     echo -e "\tdb2_10_5"
     echo -e "\tdb2_spatial"
     echo -e "\tedb"
+    echo -e "\tedb_17"
     echo -e "\tedb_16"
     echo -e "\tedb_15"
     echo -e "\tedb_14"
-    echo -e "\tedb_12"
+    echo -e "\tedb_13"
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_verylatest"
+    echo -e "\tmariadb_11_7"
     echo -e "\tmariadb_11_4"
     echo -e "\tmariadb_11_1"
     echo -e "\tmariadb_10_11"
@@ -1006,6 +1082,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_2"
     echo -e "\tmysql_8_2"
     echo -e "\tmysql_8_1"
     echo -e "\tmysql_8_0"
@@ -1013,11 +1090,11 @@ if [ -z ${1} ]; then
     echo -e "\toracle_23"
     echo -e "\toracle_21"
     echo -e "\tpostgresql"
+    echo -e "\tpostgresql_17"
     echo -e "\tpostgresql_16"
     echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"
     echo -e "\tpostgresql_13"
-    echo -e "\tpostgresql_12"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_4"

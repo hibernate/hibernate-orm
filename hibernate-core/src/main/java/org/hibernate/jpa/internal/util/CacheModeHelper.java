@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal.util;
@@ -42,17 +42,12 @@ public final class CacheModeHelper {
 
 		final boolean get = CacheRetrieveMode.USE == retrieveMode;
 
-		switch ( storeMode ) {
-			case USE:
-				return get ? CacheMode.NORMAL : CacheMode.PUT;
-			case BYPASS:
-				return get ? CacheMode.GET : CacheMode.IGNORE;
-			case REFRESH:
-				// really (get == true) here is a bit of an invalid combo...
-				return CacheMode.REFRESH;
-			default:
-				throw new IllegalStateException( "Unrecognized CacheStoreMode: " + storeMode );
-		}
+		return switch ( storeMode ) {
+			case USE -> get ? CacheMode.NORMAL : CacheMode.PUT;
+			case BYPASS -> get ? CacheMode.GET : CacheMode.IGNORE;
+			// really (get == true) here is a bit of an invalid combo...
+			case REFRESH -> CacheMode.REFRESH;
+		};
 	}
 
 	/**
@@ -74,15 +69,11 @@ public final class CacheModeHelper {
 			cacheMode = DEFAULT_LEGACY_MODE;
 		}
 
-		switch (cacheMode) {
-			case NORMAL:
-			case PUT:
-				return CacheStoreMode.USE;
-			case REFRESH:
-				return CacheStoreMode.REFRESH;
-			default:
-				return CacheStoreMode.BYPASS;
-		}
+		return switch ( cacheMode ) {
+			case NORMAL, PUT -> CacheStoreMode.USE;
+			case REFRESH -> CacheStoreMode.REFRESH;
+			default -> CacheStoreMode.BYPASS;
+		};
 	}
 
 	public static CacheRetrieveMode interpretCacheRetrieveMode(CacheMode cacheMode) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,7 +24,7 @@ public class AnyDiscriminatorValuesAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AnyDiscriminatorValuesAnnotation(SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorValuesAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -32,7 +32,7 @@ public class AnyDiscriminatorValuesAnnotation
 	 */
 	public AnyDiscriminatorValuesAnnotation(
 			AnyDiscriminatorValues annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				HibernateAnnotations.ANY_DISCRIMINATOR_VALUES,
@@ -44,7 +44,7 @@ public class AnyDiscriminatorValuesAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public AnyDiscriminatorValuesAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public AnyDiscriminatorValuesAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (AnyDiscriminatorValue[]) attributeValues.get( "value" );
 	}
 

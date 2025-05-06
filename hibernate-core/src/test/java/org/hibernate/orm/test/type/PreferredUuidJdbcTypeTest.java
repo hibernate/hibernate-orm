@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
@@ -10,7 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgreSQLUUIDJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.context.internal;
@@ -111,10 +111,8 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 
 	private boolean needsWrapping(Session session) {
 		// try to make sure we don't wrap an already wrapped session
-		if ( Proxy.isProxyClass( session.getClass() ) ) {
-			return !( Proxy.getInvocationHandler(session) instanceof TransactionProtectionWrapper );
-		}
-		return true;
+		return !Proxy.isProxyClass( session.getClass() )
+			|| !( Proxy.getInvocationHandler( session ) instanceof TransactionProtectionWrapper );
 	}
 
 	/**

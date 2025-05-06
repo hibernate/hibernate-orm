@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.attr;
@@ -17,7 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -47,9 +47,9 @@ public class AnyTests {
 				.addXmlMappings( "mappings/models/attr/any/simple.xml" )
 				.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, serviceRegistry );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		// Entity3 is mapped by XML
 		final ClassDetails entity3ClassDetails = classDetailsRegistry.resolveClassDetails( Entity3.class.getName() );
@@ -62,7 +62,7 @@ public class AnyTests {
 		assertThat( discrimAnn ).isNotNull();
 		assertThat( discrimAnn.value() ).isEqualTo( DiscriminatorType.INTEGER );
 
-		final AnyDiscriminatorValue[] discriminatorMappings = associationField.getRepeatedAnnotationUsages( AnyDiscriminatorValue.class, sourceModelBuildingContext );
+		final AnyDiscriminatorValue[] discriminatorMappings = associationField.getRepeatedAnnotationUsages( AnyDiscriminatorValue.class, ModelsContext );
 		assertThat( discriminatorMappings ).hasSize( 2 );
 
 		final List<String> mappedEntityNames = Arrays.stream( discriminatorMappings )
@@ -74,7 +74,7 @@ public class AnyTests {
 		assertThat( keyTypeAnn ).isNotNull();
 		assertThat( keyTypeAnn.value() ).isEqualTo( "integer" );
 
-		final JoinColumn keyColumn = associationField.getAnnotationUsage( JoinColumn.class, sourceModelBuildingContext );
+		final JoinColumn keyColumn = associationField.getAnnotationUsage( JoinColumn.class, ModelsContext );
 		assertThat( keyColumn ).isNotNull();
 		assertThat( keyColumn.name() ).isEqualTo( "association_fk" );
 	}

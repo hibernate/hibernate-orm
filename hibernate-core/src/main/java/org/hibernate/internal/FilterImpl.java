@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -7,7 +7,6 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
@@ -19,6 +18,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableMap;
 
 /**
  * Implementation of FilterImpl.  FilterImpl implements the user's
@@ -88,7 +90,7 @@ public class FilterImpl implements Filter, Serializable {
 	}
 
 	public Map<String,?> getParameters() {
-		return parameters == null ? Collections.emptyMap() : Collections.unmodifiableMap( parameters );
+		return parameters == null ? emptyMap() : unmodifiableMap( parameters );
 	}
 
 	/**

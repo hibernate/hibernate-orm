@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -76,9 +76,23 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl domainResultCreationStateImpl = impl( domainResultCreationState );
+		final SqlSelection sqlSelection =
+				sqlSelection( jdbcResultsMetadata, domainResultCreationState, impl( domainResultCreationState ) );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnAlias,
+				attributeMapping.getJdbcMapping(),
+				null,
+				false,
+				!sqlSelection.isVirtual()
+		);
+	}
 
-		final SqlSelection sqlSelection = domainResultCreationStateImpl.resolveSqlSelection(
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationState domainResultCreationState,
+			DomainResultCreationStateImpl domainResultCreationStateImpl) {
+		return domainResultCreationStateImpl.resolveSqlSelection(
 				domainResultCreationStateImpl.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnAlias ),
 						processingState -> {
@@ -89,19 +103,7 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 				),
 				attributeMapping.getJdbcMapping().getJdbcJavaType(),
 				null,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
-		);
-
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				columnAlias,
-				attributeMapping.getJdbcMapping(),
-				null,
-				false,
-				!sqlSelection.isVirtual()
+				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 

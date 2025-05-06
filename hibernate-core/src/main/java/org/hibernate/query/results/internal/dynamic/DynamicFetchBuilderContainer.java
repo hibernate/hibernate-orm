@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
 
 import org.hibernate.query.results.FetchBuilder;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole
@@ -13,22 +14,22 @@ public interface DynamicFetchBuilderContainer {
 	/**
 	 * Locate an explicit fetch definition for the named fetchable
 	 */
-	FetchBuilder findFetchBuilder(String fetchableName);
+	FetchBuilder findFetchBuilder(Fetchable fetchable);
 
 	/**
 	 * Add a property mapped to a single column.
 	 */
-	DynamicFetchBuilderContainer addProperty(String propertyName, String columnAlias);
+	DynamicFetchBuilderContainer addProperty(Fetchable fetchable, String columnAlias);
 
 	/**
 	 * Add a property mapped to multiple columns
 	 */
-	DynamicFetchBuilderContainer addProperty(String propertyName, String... columnAliases);
+	DynamicFetchBuilderContainer addProperty(Fetchable fetchable, String... columnAliases);
 
 	/**
 	 * Add a property whose columns can later be defined using {@link DynamicFetchBuilder#addColumnAlias}
 	 */
-	DynamicFetchBuilder addProperty(String propertyName);
+	DynamicFetchBuilder addProperty(Fetchable fetchable);
 
-	void addFetchBuilder(String propertyName, FetchBuilder fetchBuilder);
+	void addFetchBuilder(Fetchable fetchable, FetchBuilder fetchBuilder);
 }

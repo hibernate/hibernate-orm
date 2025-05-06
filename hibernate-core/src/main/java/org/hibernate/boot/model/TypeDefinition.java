@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
@@ -145,11 +145,11 @@ public class TypeDefinition implements Serializable {
 
 		// support for AttributeConverter would be nice too
 		if ( isKnownType ) {
-			final T typeInstance = instantiateType( bootstrapContext.getServiceRegistry(),
-					context.getBuildingOptions(), name, typeImplementorClass, instanceProducer );
+			final T typeInstance =
+					instantiateType( bootstrapContext.getServiceRegistry(), context.getBuildingOptions(),
+							name, typeImplementorClass, instanceProducer );
 
-			if ( typeInstance instanceof TypeConfigurationAware ) {
-				final TypeConfigurationAware configurationAware = (TypeConfigurationAware) typeInstance;
+			if ( typeInstance instanceof TypeConfigurationAware configurationAware ) {
 				configurationAware.setTypeConfiguration( typeConfiguration );
 			}
 
@@ -332,24 +332,19 @@ public class TypeDefinition implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof TypeDefinition ) ) {
+		if ( !(o instanceof TypeDefinition that) ) {
 			return false;
 		}
 
-		final TypeDefinition that = (TypeDefinition) o;
 		return Objects.equals( this.name, that.name )
-				&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
-				&& Arrays.equals( this.registrationKeys, that.registrationKeys )
-				&& Objects.equals( this.parameters, that.parameters );
+			&& Objects.equals( this.typeImplementorClass, that.typeImplementorClass )
+			&& Arrays.equals( this.registrationKeys, that.registrationKeys )
+			&& Objects.equals( this.parameters, that.parameters );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = name != null ? name.hashCode() : 0;
-		result = 31 * result + ( typeImplementorClass != null ? typeImplementorClass.hashCode() : 0 );
-		result = 31 * result + ( registrationKeys != null ? Arrays.hashCode( registrationKeys ) : 0 );
-		result = 31 * result + ( parameters != null ? parameters.hashCode() : 0 );
-		return result;
+		return Objects.hash( name, typeImplementorClass, registrationKeys, parameters );
 	}
 
 	@Override

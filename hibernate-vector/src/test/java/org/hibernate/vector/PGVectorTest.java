@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.vector;
@@ -8,7 +8,10 @@ import java.util.List;
 
 import org.hibernate.annotations.Array;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -32,7 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = PGVectorTest.VectorEntity.class)
 @SessionFactory
-@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
+@RequiresDialects({
+		@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false),
+		@RequiresDialect(value = CockroachDialect.class, majorVersion = 24, minorVersion = 2)
+})
 public class PGVectorTest {
 
 	private static final float[] V1 = new float[]{ 1, 2, 3 };
@@ -166,6 +172,7 @@ public class PGVectorTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB does not currently support the sum() function on vector type" )
 	public void testVectorSum(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-sum-example[]
@@ -178,6 +185,7 @@ public class PGVectorTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB does not currently support the avg() function on vector type" )
 	public void testVectorAvg(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::vector-avg-example[]

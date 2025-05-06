@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
@@ -7,12 +7,13 @@ package org.hibernate.boot.model.process.internal;
 import java.util.function.Function;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -26,26 +27,24 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
 public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	// todo (6.0) : support explicit JTD?
 	// todo (6.0) : support explicit STD?
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			TimeZoneStorageType timeZoneStorageType,
-			@SuppressWarnings("unused") MetadataBuildingContext context) {
+			MetadataBuildingContext context) {
 
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
-		final JavaType registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
-		final BasicJavaType jtd = (BasicJavaType) registered;
+		final JavaType<E> registered = typeConfiguration.getJavaTypeRegistry().resolveDescriptor( implicitJavaType );
+		final BasicJavaType<E> basicJavaType = (BasicJavaType<E>) registered;
 
-		final JdbcType recommendedJdbcType = jtd.getRecommendedJdbcType(
+		final JdbcType recommendedJdbcType = basicJavaType.getRecommendedJdbcType(
 				new JdbcTypeIndicators() {
 					@Override
 					public TypeConfiguration getTypeConfiguration() {
@@ -105,25 +104,26 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 				}
 		);
 
-		final BasicType<?> basicType = typeConfiguration.getBasicTypeRegistry().resolve( jtd, recommendedJdbcType );
-		final BasicType legacyType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( jtd.getJavaType() );
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<?> basicType = basicTypeRegistry.resolve( basicJavaType, recommendedJdbcType );
+		final BasicType<E> legacyType = basicTypeRegistry.getRegisteredType( basicJavaType.getJavaType() );
 
 		assert legacyType.getJdbcType().getDefaultSqlTypeCode() == recommendedJdbcType.getDefaultSqlTypeCode();
 
-		return new VersionResolution<>( jtd, recommendedJdbcType, basicType, legacyType );
+		return new VersionResolution<>( basicJavaType, recommendedJdbcType, basicType, legacyType );
 	}
 
-	private final JavaType javaType;
+	private final JavaType<E> javaType;
 	private final JdbcType jdbcType;
 
 	private final JdbcMapping jdbcMapping;
-	private final BasicType legacyType;
+	private final BasicType<E> legacyType;
 
 	public VersionResolution(
-			JavaType javaType,
+			JavaType<E> javaType,
 			JdbcType jdbcType,
 			JdbcMapping jdbcMapping,
-			BasicType legacyType) {
+			BasicType<E> legacyType) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
 		this.jdbcMapping = jdbcMapping;
@@ -136,13 +136,11 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public BasicType getLegacyResolvedBasicType() {
+	public BasicType<E> getLegacyResolvedBasicType() {
 		return legacyType;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public JavaType<E> getDomainJavaType() {
 		return javaType;
 	}
@@ -158,7 +156,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	}
 
 	@Override
-	public BasicValueConverter<E,E> getValueConverter() {
+	public BasicValueConverter<E,?> getValueConverter() {
 		return legacyType.getValueConverter();
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -7,7 +7,6 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.Constants;
-import org.hibernate.processor.util.NullnessUtil;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -19,6 +18,7 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
 
+import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.getTargetEntity;
 import static org.hibernate.processor.util.TypeUtils.isBasicAttribute;
 import static org.hibernate.processor.util.TypeUtils.isPropertyGetter;
@@ -71,7 +71,7 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 	public @Nullable DataAnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String returnTypeName = NullnessUtil.castNonNull( returnedElement ).getQualifiedName().toString();
+		final String returnTypeName = castNonNull( returnedElement ).getQualifiedName().toString();
 		final String collection = Constants.COLLECTIONS.get( returnTypeName );
 		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( collection != null ) {

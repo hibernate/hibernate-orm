@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -53,7 +53,7 @@ public class EntityHierarchySourceImpl implements EntityHierarchySource {
 
 	private InheritanceType hierarchyInheritanceType = InheritanceType.NO_INHERITANCE;
 
-	private Set<String> collectedEntityNames = new HashSet<>();
+	private final Set<String> collectedEntityNames = new HashSet<>();
 
 	public EntityHierarchySourceImpl(
 			RootEntitySourceImpl rootEntitySource,

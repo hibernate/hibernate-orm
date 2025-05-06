@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.tuple;
@@ -30,7 +30,7 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			int[] jdbcValuesArrayPositions,
 			String resultVariable,
 			JavaType<T> javaType) {
-		this( jdbcValuesArrayPositions, resultVariable, javaType, (NavigablePath) null );
+		this( jdbcValuesArrayPositions, resultVariable, javaType, null );
 	}
 
 	public TupleResult(

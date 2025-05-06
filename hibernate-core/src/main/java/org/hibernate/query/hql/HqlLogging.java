@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.query.QueryLogging;
 
@@ -23,6 +24,7 @@ import java.lang.invoke.MethodHandles;
 		name = HqlLogging.LOGGER_NAME,
 		description = "Logging related to HQL parsing"
 )
+@Internal
 public interface HqlLogging extends BasicLogger {
 	String LOGGER_NAME = QueryLogging.LOGGER_NAME + ".hql";
 

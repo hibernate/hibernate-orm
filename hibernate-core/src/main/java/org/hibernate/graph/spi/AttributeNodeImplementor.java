@@ -1,79 +1,78 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.spi;
 
-import java.util.Map;
-import java.util.function.BiConsumer;
-import jakarta.persistence.Subgraph;
-
 import org.hibernate.graph.AttributeNode;
-import org.hibernate.graph.SubGraph;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
+
+import java.util.Map;
+
 
 /**
- * Integration version of the {@link AttributeNode} contract
+ * Integration version of the {@link AttributeNode} contract.
+ *
+ * @param <J> The type of the attribute
+ * @param <E> The element type, if this node represents a
+ *        {@linkplain jakarta.persistence.metamodel.PluralAttribute plural attribute},
+ *        or the type of the singular attribute, if it doesn't
+ * @param <K> The map key type, if this node represents a
+ *        {@linkplain jakarta.persistence.metamodel.MapAttribute map attribute}
  *
  * @author Strong Liu
  * @author Steve Ebersole
+ * @author Gavin King
  */
-public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNodeImplementor<J> {
-	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap();
-	Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap();
-
-	default void visitSubGraphs(BiConsumer<Class<? extends J>, SubGraphImplementor<? extends J>> consumer) {
-		getSubGraphMap().forEach( consumer );
-	}
-
-	default void visitKeySubGraphs(BiConsumer<Class<? extends J>, SubGraphImplementor<? extends J>> consumer) {
-		getKeySubGraphMap().forEach( consumer );
-	}
+public interface AttributeNodeImplementor<J, E, K> extends AttributeNode<J>, GraphNodeImplementor<J> {
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs() {
-		return (Map) getSubGraphMap();
-	}
+	AttributeNodeImplementor<J, E, K> makeCopy(boolean mutable);
+
+	/**
+	 * Create a value subgraph, without knowing whether it represents a singular value or
+	 * plural element, rooted at this attribute node.
+	 *
+	 * @apiNote This version is more lenient and is therefore disfavored. Prefer the use
+	 *          of {@link #addSingularSubgraph()} and {@link #addElementSubgraph()}.
+	 */
+	SubGraphImplementor<E> addValueSubgraph();
+
+	/**
+	 * Create a value subgraph representing a singular value rooted at this attribute node.
+	 */
+	SubGraphImplementor<J> addSingularSubgraph();
+
+	/**
+	 * Create a value subgraph representing a plural element rooted at this attribute node.
+	 */
+	SubGraphImplementor<E> addElementSubgraph();
+
+	/**
+	 * Create a key subgraph rooted at this attribute node.
+	 */
+	SubGraphImplementor<K> addKeySubgraph();
+
+	@Override @Deprecated
+	SubGraphImplementor<?> makeSubGraph();
+
+	@Override @Deprecated
+	SubGraphImplementor<?> makeKeySubGraph();
+
+	@Override @Deprecated
+	<S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype);
+
+	@Override @Deprecated
+	<S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
+
+	void merge(AttributeNodeImplementor<J,E,K> other);
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class<? extends J>, SubGraph<? extends J>> getKeySubGraphs() {
-		return (Map) getKeySubGraphMap();
-	}
+	Map<Class<?>, SubGraphImplementor<?>> getSubGraphs();
 
 	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class, Subgraph> getSubgraphs() {
-		return (Map) getSubGraphMap();
-	}
+	Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphs();
 
-	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default Map<Class, Subgraph> getKeySubgraphs() {
-		return (Map) getKeySubGraphMap();
-	}
+	SubGraphImplementor<E> getValueSubgraph();
 
-	@Override
-	AttributeNodeImplementor<J> makeCopy(boolean mutable);
-
-	@Override
-	SubGraphImplementor<J> makeSubGraph();
-
-	@Override
-	SubGraphImplementor<J> makeKeySubGraph();
-
-	@Override
-	<S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subtype);
-
-	@Override
-	<S extends J> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype);
-
-	<S extends J> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype);
-
-	<S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype);
-
-	void merge(AttributeNodeImplementor<?> attributeNode);
-
-	void addSubGraph(SubGraphImplementor<? extends J> subGraph);
+	SubGraphImplementor<K> getKeySubgraph();
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -18,6 +18,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.HSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.HSQLSqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
@@ -28,6 +29,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -62,6 +64,9 @@ import static org.hibernate.type.SqlTypes.NCLOB;
 
 /**
  * A {@linkplain Dialect SQL dialect} for HSQLDB (HyperSQL) 2.6.1 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://hsqldb.org/doc/2.0/guide/index.html">HyperSQL User Guide</a>.
  *
  * @author Christoph Sturm
  * @author Phillip Baird
@@ -222,6 +227,8 @@ public class HSQLDialect extends Dialect {
 				functionContributions.getTypeConfiguration(),
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER
 		) );
+
+		functionFactory.hex( "hex(?1)" );
 	}
 
 	/**
@@ -447,7 +454,8 @@ public class HSQLDialect extends Dialect {
 			// messages may be localized, therefore use the common, non-locale element " table: "
 			new TemplatedViolatedConstraintNameExtractor( sqle ->
 					switch ( extractErrorCode( sqle ) ) {
-						case -8, -9, -104, -177 -> extractUsingTemplate( "; ", " table: ", sqle.getMessage() );
+						case -8, -9, -104, -177, -157 -> extractUsingTemplate( "; ", " table: ", sqle.getMessage() );
+						case -10 -> extractUsingTemplate( " column: ", "\n", sqle.getMessage() );
 						default -> null;
 					});
 
@@ -455,15 +463,22 @@ public class HSQLDialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
+					case -10 ->
+						// Not null constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case -104 ->
 						// Unique constraint violation
-							new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException)
-							);
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -157 ->
+						// Check constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -177 ->
+						// Foreign key constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					default -> null;
 				};
 	}
@@ -712,6 +727,7 @@ public class HSQLDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );
+		builder.setAutoQuoteDollar( true );
 		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
@@ -734,4 +750,36 @@ public class HSQLDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Doesn't support correlations in the WITH clause
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

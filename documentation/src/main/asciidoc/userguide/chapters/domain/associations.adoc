@@ -542,7 +542,7 @@ Hibernate does support a means to refer specifically to the key column (`Person.
 using the special `fk(..)` function.  E.g.
 
 [[associations-not-found-fk-function-example]]
-.Implicit join example
+.FK example
 ====
 [source,java]
 ----

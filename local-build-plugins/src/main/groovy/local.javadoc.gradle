@@ -1,0 +1,50 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+plugins {
+    id "local.module"
+}
+
+tasks.withType(Javadoc).configureEach {
+    def currentYear = new GregorianCalendar().get( Calendar.YEAR )
+
+    inputs.property "ormVersion", project.extensions.ormBuildDetails.hibernateVersion
+    inputs.property "currentYear", currentYear
+
+    // exclude any generated sources and internal packages
+    exclude 'org/hibernate/grammars'
+    include '**/*.java'
+
+    maxMemory = '512m'
+
+    configure( options ) {
+        windowTitle = "Hibernate Javadocs ($project.name)"
+        docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+        stylesheetFile = rootProject.file( "shared/javadoc/stylesheet.css" )
+        bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+
+        // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down
+        // When upgrading versions of the libraries, don't forget to update the file contents in the repository
+        linksOffline 'https://docs.oracle.com/en/java/javase/17/docs/api/', "${project.rootDir}/javadoc/javase17"
+        linksOffline 'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/', "${project.rootDir}/javadoc/jakarta-validation-3.0"
+        linksOffline 'https://jakarta.ee/specifications/cdi/4.0/apidocs/', "${project.rootDir}/javadoc/jakarta-cdi-4.0"
+        linksOffline 'https://jakarta.ee/specifications/platform/11/apidocs/', "${project.rootDir}/javadoc/jakarta-platform-11"
+        linksOffline 'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/', "${project.rootDir}/javadoc/javax-cache-1.0"
+
+        tags(
+                'apiNote:a:API Note:',
+                'implSpec:a:Implementation Specification:',
+                'implNote:a:Implementation Note:',
+                'todo:X',
+                'remove:a:Removal (deprecation):',
+                'settingDefault:f:Default Value:'
+        )
+
+        encoding = 'UTF-8'
+        use = true
+        quiet()
+
+        addBooleanOption('Xdoclint:none', true)
+    }
+}

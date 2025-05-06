@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -43,13 +43,13 @@ public class ImplicitModelPartResultMemento implements ModelPartResultMemento {
 			return new ImplicitModelPartResultBuilderBasic( navigablePath, basicPart );
 		}
 
-		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {
+		if ( referencedModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			// todo (6.0) : can this really happen?
-			return new ImplicitModelPartResultBuilderEmbeddable( navigablePath, (EmbeddableValuedModelPart) referencedModelPart );
+			return new ImplicitModelPartResultBuilderEmbeddable( navigablePath, embeddableValuedModelPart );
 		}
 
-		if ( referencedModelPart instanceof EntityValuedModelPart ) {
-			return new ImplicitModelPartResultBuilderEntity( navigablePath, (EntityValuedModelPart) referencedModelPart );
+		if ( referencedModelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			return new ImplicitModelPartResultBuilderEntity( navigablePath, entityValuedModelPart );
 		}
 
 		throw new IllegalStateException( "Unknown type of model part : "+ referencedModelPart );

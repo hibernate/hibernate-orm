@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
@@ -129,11 +129,10 @@ public enum CollectionClassification {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof CollectionClassification ) {
-			return (CollectionClassification) value;
+		else if ( value instanceof CollectionClassification classification ) {
+			return classification;
 		}
-		else if ( value instanceof String ) {
-			final String string = (String) value;
+		else if ( value instanceof String string ) {
 			for ( CollectionClassification collectionClassification : values() ) {
 				if ( collectionClassification.name().equalsIgnoreCase( string ) ) {
 					return collectionClassification;
@@ -141,8 +140,8 @@ public enum CollectionClassification {
 			}
 			return null;
 		}
-		else if ( value instanceof Class ) {
-			return interpretClass( (Class<?>) value );
+		else if ( value instanceof Class<?> type ) {
+			return interpretClass( type );
 		}
 		else {
 			return null;

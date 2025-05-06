@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.boot;
@@ -11,15 +11,18 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.spi.ServiceException;
 
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Test to verify that a dump configuration error results in an exception being
@@ -32,14 +35,22 @@ public class BootFailureTest {
 
 	@Test
 	public void exceptionOnIllegalPUTest() {
-		Assertions.assertThrows( ServiceException.class, () ->
+		assertThrows( ServiceException.class, () ->
 				bootstrapPersistenceUnit( "IntentionallyBroken" ) );
 	}
 
 	@Test
 	public void exceptionOnIllegalPUWithoutProviderTest() {
-		Assertions.assertThrows( ServiceException.class, () ->
+		assertThrows( ServiceException.class, () ->
 				bootstrapPersistenceUnit( "IntentionallyBrokenWihoutExplicitProvider" ) );
+	}
+
+	@Test
+	public void missingClassPUTest() {
+		assertThrows( HibernateException.class, () ->
+			bootstrapPersistenceUnit( "IntentionallyMissingClass" ),
+			"A HibernateException due to a missing class in the persistence.xml should have been thrown"
+			);
 	}
 
 	private void bootstrapPersistenceUnit(final String puName) {

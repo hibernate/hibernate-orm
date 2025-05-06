@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -15,10 +15,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * A list of {@link Check}s.
  *
+ * @deprecated since {@link Check} is deprecated.
+ *
  * @author Gavin King
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated(since = "7")
 public @interface Checks {
 	Check[] value();
 }

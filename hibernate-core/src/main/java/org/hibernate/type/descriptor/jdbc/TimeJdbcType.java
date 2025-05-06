@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -74,8 +74,8 @@ public class TimeJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Time time = javaType.unwrap( value, Time.class, options );
-				if ( value instanceof Calendar ) {
-					st.setTime( index, time, (Calendar) value );
+				if ( value instanceof Calendar calendar ) {
+					st.setTime( index, time, calendar );
 				}
 				else if ( options.getJdbcTimeZone() != null ) {
 					st.setTime( index, time, Calendar.getInstance( options.getJdbcTimeZone() ) );
@@ -89,8 +89,8 @@ public class TimeJdbcType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final Time time = javaType.unwrap( value, Time.class, options );
-				if ( value instanceof Calendar ) {
-					st.setTime( name, time, (Calendar) value );
+				if ( value instanceof Calendar calendar ) {
+					st.setTime( name, time, calendar );
 				}
 				else if ( options.getJdbcTimeZone() != null ) {
 					st.setTime( name, time, Calendar.getInstance( options.getJdbcTimeZone() ) );

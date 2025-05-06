@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
@@ -466,6 +466,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( value = DialectChecks.SupportsTemporaryTableIdentity.class, comment = "The use of the native generator leads to using identity which also needs to be supported on temporary tables")
+	@SkipForDialect( value = CockroachDialect.class, comment = "See https://hibernate.atlassian.net/browse/HHH-19332")
 	public void testInsertWithManyToOne() {
 		// Make sure the env supports bulk inserts with generated ids...
 		Assumptions.assumeTrue( supportsBulkInsertIdGeneration( Animal.class ), "bulk id generation not supported" );
@@ -726,6 +727,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( value = DialectChecks.SupportsTemporaryTableIdentity.class, comment = "The use of the native generator leads to using identity which also needs to be supported on temporary tables")
+	@SkipForDialect( value = CockroachDialect.class, comment = "See https://hibernate.atlassian.net/browse/HHH-19332")
 	public void testInsertWithSelectListUsingJoins() {
 		// Make sure the env supports bulk inserts with generated ids...
 		Assumptions.assumeTrue( supportsBulkInsertIdGeneration( Animal.class ), "bulk id generation not supported" );

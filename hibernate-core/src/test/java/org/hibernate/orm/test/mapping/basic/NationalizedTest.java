@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -8,31 +8,25 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
+@Jpa(annotatedClasses = NationalizedTest.Product.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnicodeNClob.class)
-public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+public class NationalizedTest {
 
 	@Test
-	public void test() {
-		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
+	public void test(EntityManagerFactoryScope scope) {
+		Integer productId = scope.fromTransaction( entityManager -> {
 			//tag::basic-nationalized-persist-example[]
 			final Product product = new Product();
 			product.setId(1);
@@ -44,7 +38,7 @@ public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 
 			return product.getId();
 		});
-		doInJPA(this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Product product = entityManager.find(Product.class, productId);
 
 			assertEquals("My product®™ warranty 😍", product.getWarranty());

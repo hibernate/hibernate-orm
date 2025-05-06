@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -11,7 +11,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -150,14 +150,14 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		final SqlAstNode arg = sqlAstArguments.get( 0 );
 		sqlAppender.appendSql( countFunctionName );
 		sqlAppender.appendSql( '(' );
 		final SqlTuple tuple;
-		if ( arg instanceof Distinct ) {
+		if ( arg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			final Expression distinctArg = ( (Distinct) arg ).getExpression();
+			final Expression distinctArg = distinct.getExpression();
 			if ( ( tuple = SqlTupleContainer.getSqlTuple( distinctArg ) ) != null ) {
 				final List<? extends Expression> expressions = tuple.getExpressions();
 				// Single element tuple

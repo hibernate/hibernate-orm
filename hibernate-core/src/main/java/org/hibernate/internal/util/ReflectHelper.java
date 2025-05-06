@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -22,6 +23,7 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.property.access.spi.Getter;
@@ -929,5 +931,23 @@ public final class ReflectHelper {
 			&& !resultClass.isPrimitive()
 			&& !resultClass.isEnum()
 			&& !resultClass.isInterface();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> getClass(T instance) {
+		return (Class<T>) instance.getClass();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends Enum<T>> Class<T> getClass(Enum<T> value) {
+		return (Class<T>) value.getClass();
+	}
+
+	@AllowReflection
+	public static <T> Class<T[]> arrayClass(Class<T> clazz) {
+		final Object instance = Array.newInstance( clazz, 0 );
+		@SuppressWarnings("unchecked")
+		final T[] array = (T[]) instance;
+		return getClass( array );
 	}
 }

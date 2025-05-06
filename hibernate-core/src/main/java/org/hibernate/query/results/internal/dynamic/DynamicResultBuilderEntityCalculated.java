@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -138,18 +138,11 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			return false;
 		}
 
-		DynamicResultBuilderEntityCalculated that = (DynamicResultBuilderEntityCalculated) o;
-
-		if ( !navigablePath.equals( that.navigablePath ) ) {
-			return false;
-		}
-		if ( !entityMapping.equals( that.entityMapping ) ) {
-			return false;
-		}
-		if ( !tableAlias.equals( that.tableAlias ) ) {
-			return false;
-		}
-		return explicitLockMode == that.explicitLockMode;
+		final DynamicResultBuilderEntityCalculated that = (DynamicResultBuilderEntityCalculated) o;
+		return navigablePath.equals( that.navigablePath )
+			&& entityMapping.equals( that.entityMapping )
+			&& tableAlias.equals( that.tableAlias )
+			&& explicitLockMode == that.explicitLockMode;
 	}
 
 	@Override

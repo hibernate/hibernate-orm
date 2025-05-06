@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -35,7 +35,7 @@ class SingularAttributeSourceBasicImpl
 	private final AttributeRole attributeRole;
 	private final AttributePath attributePath;
 
-	private ToolingHintContext toolingHintContext;
+	private final ToolingHintContext toolingHintContext;
 
 	SingularAttributeSourceBasicImpl(
 			MappingDocument sourceMappingDocument,

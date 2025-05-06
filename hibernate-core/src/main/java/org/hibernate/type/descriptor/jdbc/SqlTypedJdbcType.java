@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -7,9 +7,9 @@ package org.hibernate.type.descriptor.jdbc;
 /**
  * A {@link JdbcType} with a fixed SQL type name.
  *
- * @see StructJdbcType
- * @see org.hibernate.dialect.OracleArrayJdbcType
- * @see org.hibernate.dialect.OracleNestedTableJdbcType
+ * @see StructuredJdbcType
+ * @see org.hibernate.dialect.type.OracleArrayJdbcType
+ * @see org.hibernate.dialect.type.OracleNestedTableJdbcType
  */
 public interface SqlTypedJdbcType extends JdbcType {
 

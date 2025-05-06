@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -16,7 +16,7 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -326,7 +326,7 @@ public class PropertyContainer {
 	}
 
 	private static boolean discoverTypeWithoutReflection(ClassDetails classDetails, MemberDetails memberDetails) {
-		if ( memberDetails.hasDirectAnnotationUsage( Target.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( TargetEmbeddable.class ) ) {
 			return true;
 		}
 

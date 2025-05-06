@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
@@ -11,7 +11,9 @@ import java.util.Objects;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CacheSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
@@ -28,8 +30,48 @@ import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 
 /**
- * Hibernate extension to the Jakarta Persistence {@link PersistenceConfiguration}
- * contract.
+ * Extends the Jakarta Persistence-defined {@link PersistenceConfiguration}
+ * with operations specific to Hibernate.
+ * <p>
+ * An instance of {@code Configuration} may be obtained simply by
+ * {@linkplain #HibernatePersistenceConfiguration(String) instantiation},
+ * and may be used to aggregate:
+ * <ul>
+ * <li>{@linkplain #property(String, Object) configuration properties}
+ *     from various sources, and
+ * <li>entity O/R mappings, defined in either
+ *     {@linkplain #managedClasses(Class...) annotated classes}, or
+ *     {@linkplain #mappingFiles(Collection) XML mapping documents}.
+ * </ul>
+ * <p>
+ * Standard JPA configuration properties are enumerated by the supertype
+ * {@link PersistenceConfiguration}. All configuration properties understood
+ * by Hibernate are enumerated by {@link AvailableSettings}.
+ * <p>
+ * <pre>
+ * SessionFactory factory = new HibernatePersistenceConfiguration()
+ *     // scan classes for mapping annotations
+ *     .managedClasses(Item.class, Bid.class, User.class)
+ *     // set a configuration property
+ *     .setProperty(PersistenceConfiguration.JDBC_DATASOURCE,
+ *                  "java:comp/env/jdbc/test")
+ *     .buildSessionFactory();
+ * </pre>
+ * <p>
+ * When instantiated, an instance of
+ * {@code HibernatePersistenceConfiguration} has its properties initially
+ * populated from the {@linkplain Environment#getProperties() environment},
+ * including:
+ * <ul>
+ * <li>JVM {@linkplain System#getProperties() system properties}, and
+ * <li>properties specified in {@code hibernate.properties}.
+ * </ul>
+ *
+ * @apiNote The specification explicitly encourages implementors to extend
+ *          {@link PersistenceConfiguration} to accommodate vendor-specific
+ *          extensions in a more typesafe way. Of course, programs which
+ *          desire configuration logic to be portable between JPA providers
+ *          should use {@code PersistenceConfiguration} directly.
  *
  * @author Steve Ebersole
  *
@@ -48,13 +90,17 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 		super( name );
 	}
 
+	/**
+	 * Create a new {@link SessionFactory} based on this configuration.
+	 */
 	@Override
 	public SessionFactory createEntityManagerFactory() {
 		return (SessionFactory) super.createEntityManagerFactory();
 	}
 
 	/**
-	 * Name of the JDBC driver to use for non-Datasource connection
+	 * JDBC driver class name. This setting is ignored when Hibernate is configured
+	 * to obtain connections from a {@link javax.sql.DataSource}.
 	 *
 	 * @see #JDBC_DRIVER
 	 */
@@ -64,7 +110,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * URL to use for non-Datasource JDBC connection
+	 * JDBC URL. This setting is ignored when Hibernate is configured to obtain
+	 * connections from a {@link javax.sql.DataSource}.
 	 *
 	 * @see #JDBC_URL
 	 */
@@ -74,10 +121,12 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * User-name to use for non-Datasource JDBC connection
+	 * Username for JDBC authentication.
 	 *
 	 * @see #JDBC_USER
 	 * @see #jdbcPassword
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	public HibernatePersistenceConfiguration jdbcUsername(String username) {
 		property( JDBC_USER, username );
@@ -85,10 +134,12 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * User-name to use for non-Datasource JDBC connection
+	 * Password for JDBC authentication.
 	 *
 	 * @see #JDBC_PASSWORD
 	 * @see #jdbcUsername
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	public HibernatePersistenceConfiguration jdbcPassword(String password) {
 		property( JDBC_PASSWORD, password );
@@ -96,7 +147,81 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Username and password for JDBC authentication.
+	 *
+	 * @see #JDBC_USER
+	 * @see #JDBC_PASSWORD
+	 * @see #jdbcUsername
+	 * @see #jdbcPassword
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
+	 */
+	public HibernatePersistenceConfiguration jdbcCredentials(String username, String password) {
+		jdbcUsername( username );
+		jdbcPassword( password );
+		return this;
+	}
+
+	/**
+	 * The JDBC connection pool size. This setting is ignored when Hibernate is
+	 * configured to obtain connections from a {@link javax.sql.DataSource}.
+	 *
+	 * @see JdbcSettings#POOL_SIZE
+	 */
+	public HibernatePersistenceConfiguration jdbcPoolSize(int poolSize) {
+		property( JdbcSettings.POOL_SIZE, poolSize );
+		return this;
+	}
+
+	/**
+	 * The JDBC {@linkplain java.sql.Connection#setAutoCommit autocommit mode}
+	 * for pooled connections. This setting is ignored when Hibernate is
+	 * configured to obtain connections from a {@link javax.sql.DataSource}.
+	 *
+	 * @see JdbcSettings#AUTOCOMMIT
+	 */
+	public HibernatePersistenceConfiguration jdbcAutocommit(boolean autocommit) {
+		property( JdbcSettings.AUTOCOMMIT, autocommit );
+		return this;
+	}
+
+	/**
+	 * The JDBC {@linkplain java.sql.Connection#setTransactionIsolation transaction
+	 * isolation level}. This setting is ignored when Hibernate is configured to
+	 * obtain connections from a {@link javax.sql.DataSource}.
+	 * <p>
+	 * Possible values are enumerated by {@link java.sql.Connection}:
+	 * {@link java.sql.Connection#TRANSACTION_READ_UNCOMMITTED},
+	 * {@link java.sql.Connection#TRANSACTION_READ_COMMITTED},
+	 * {@link java.sql.Connection#TRANSACTION_REPEATABLE_READ}, and
+	 * {@link java.sql.Connection#TRANSACTION_SERIALIZABLE}.
+	 *
+	 * @see JdbcSettings#ISOLATION
+	 */
+	public HibernatePersistenceConfiguration jdbcTransactionIsolation(int isolationLevel) {
+		property( JdbcSettings.ISOLATION, isolationLevel );
+		return this;
+	}
+
+	/**
+	 * Enables SQL logging to the console.
+	 * <p>
+	 * Sets {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
+	public HibernatePersistenceConfiguration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		property( JdbcSettings.SHOW_SQL, showSql );
+		property( JdbcSettings.FORMAT_SQL, formatSql );
+		property( JdbcSettings.HIGHLIGHT_SQL, highlightSql );
+		return this;
+	}
+
+	/**
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * all aspects of {@linkplain jakarta.persistence.Query} handling.
 	 *
 	 * @see JpaComplianceSettings#JPA_QUERY_COMPLIANCE
@@ -107,7 +232,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * all aspects of transaction handling.
 	 *
 	 * @see JpaComplianceSettings#JPA_TRANSACTION_COMPLIANCE
@@ -118,7 +243,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * handling around calls to {@linkplain EntityManager#close()},
 	 * {@linkplain EntityManager#isOpen()},
 	 * {@linkplain EntityManagerFactory#close()} and
@@ -132,7 +257,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * handling of proxies.
 	 *
 	 * @see JpaComplianceSettings#JPA_PROXY_COMPLIANCE
@@ -143,7 +268,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * handling of proxies.
 	 *
 	 * @see JpaComplianceSettings#JPA_PROXY_COMPLIANCE
@@ -154,7 +279,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * in terms of collecting all named value generators globally, regardless of location.
 	 *
 	 * @see JpaComplianceSettings#JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE
@@ -165,7 +290,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * the interpretation of {@link jakarta.persistence.OrderBy}.
 	 *
 	 * @see JpaComplianceSettings#JPA_ORDER_BY_MAPPING_COMPLIANCE
@@ -176,7 +301,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Defines whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
+	 * Specifies whether Hibernate will strictly adhere to compliance with Jakarta Persistence for
 	 * the allowed type of identifier value passed to
 	 * {@link jakarta.persistence.EntityManager#getReference} and
 	 * {@link jakarta.persistence.EntityManager#find}
@@ -189,7 +314,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
-	 * Enable/disable Hibernate's caching support
+	 * Enable or disable the second-level and query caches.
 	 */
 	public HibernatePersistenceConfiguration caching(CachingType type) {
 		assert Objects.nonNull( type );

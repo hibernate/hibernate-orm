@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -8,11 +8,16 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -22,7 +27,7 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -169,7 +174,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isInitializeLazyStateOutsideTransactionsEnabled();
 	}
 
-	@Override
+	@Override @Deprecated
 	public TempTableDdlTransactionHandling getTempTableDdlTransactionHandling() {
 		return delegate.getTempTableDdlTransactionHandling();
 	}
@@ -239,7 +244,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isAllowOutOfTransactionUpdateOperations();
 	}
 
-	@Override
+	@Override @Deprecated
 	public boolean isReleaseResourcesOnCloseEnabled() {
 		return delegate.isReleaseResourcesOnCloseEnabled();
 	}
@@ -289,7 +294,7 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isAutoEvictCollectionCache();
 	}
 
-	@Override
+	@Override @Deprecated
 	public SchemaAutoTooling getSchemaAutoTooling() {
 		return delegate.getSchemaAutoTooling();
 	}
@@ -297,11 +302,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public int getJdbcBatchSize() {
 		return delegate.getJdbcBatchSize();
-	}
-
-	@Override
-	public boolean isJdbcBatchVersionedData() {
-		return delegate.isJdbcBatchVersionedData();
 	}
 
 	@Override
@@ -394,6 +394,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isCriteriaCopyTreeEnabled();
 	}
 
+	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
 	public boolean getNativeJdbcParametersIgnored() {
 		return delegate.getNativeJdbcParametersIgnored();
 	}
@@ -411,6 +416,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return delegate.getImmutableEntityUpdateQueryHandlingMode();
+	}
+
+	@Override
+	public boolean allowImmutableEntityUpdate() {
+		return delegate.allowImmutableEntityUpdate();
 	}
 
 	@Override
@@ -524,6 +534,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
+
+	@Override
 	public boolean isPassProcedureParameterNames() {
 		return delegate.isPassProcedureParameterNames();
 	}
@@ -531,5 +546,35 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isPreferJdbcDatetimeTypesInNativeQueriesEnabled() {
 		return delegate.isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+	}
+
+	@Override
+	public CacheStoreMode getCacheStoreMode(Map<String, Object> properties) {
+		return delegate.getCacheStoreMode( properties );
+	}
+
+	@Override
+	public CacheRetrieveMode getCacheRetrieveMode(Map<String, Object> properties) {
+		return delegate.getCacheRetrieveMode( properties );
+	}
+
+	@Override
+	public Map<String, Object> getDefaultSessionProperties() {
+		return delegate.getDefaultSessionProperties();
+	}
+
+	@Override
+	public CacheMode getInitialSessionCacheMode() {
+		return delegate.getInitialSessionCacheMode();
+	}
+
+	@Override
+	public FlushMode getInitialSessionFlushMode() {
+		return delegate.getInitialSessionFlushMode();
+	}
+
+	@Override
+	public LockOptions getDefaultLockOptions() {
+		return delegate.getDefaultLockOptions();
 	}
 }

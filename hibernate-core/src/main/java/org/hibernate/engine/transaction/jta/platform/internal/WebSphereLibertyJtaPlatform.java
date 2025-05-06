@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
@@ -8,7 +8,6 @@ import jakarta.transaction.RollbackException;
 import jakarta.transaction.Status;
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.SystemException;
-import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
@@ -59,11 +58,6 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	public int getCurrentStatus() throws SystemException {
 		return NullnessUtil.castNonNull( retrieveTransactionManager() ).getStatus();
-	}
-
-	@Override
-	public Object getTransactionIdentifier(Transaction transaction) {
-		return transaction;
 	}
 
 	@Override

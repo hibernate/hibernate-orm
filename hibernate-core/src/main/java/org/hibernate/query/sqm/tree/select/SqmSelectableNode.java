@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -7,10 +7,10 @@ package org.hibernate.query.sqm.tree.select;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Selection;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 
 /**
  * Defines a SQM AST node that can be used as a selection in the query,
@@ -33,7 +33,7 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T> {
 	SqmSelectableNode<T> copy(SqmCopyContext context);
 
 	default Integer getTupleLength() {
-		final DomainType<T> sqmType = getNodeType() == null ? null : getNodeType().getSqmType();
+		final SqmDomainType<T> sqmType = getNodeType() == null ? null : getNodeType().getSqmType();
 		return sqmType == null ? 1 : sqmType.getTupleLength();
 	}
 }

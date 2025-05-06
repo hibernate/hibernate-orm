@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
@@ -12,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.boot.archive.internal.UrlInputStreamAccess;
@@ -28,7 +29,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -64,7 +65,7 @@ public class ScanningCoordinator {
 
 		final ClassLoaderAccess classLoaderAccess = new ClassLoaderAccessImpl(
 				bootstrapContext.getJpaTempClassLoader(),
-				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class )
+				bootstrapContext.getClassLoaderService()
 		);
 
 		// NOTE : the idea with JandexInitializer/JandexInitManager was to allow adding classes
@@ -88,10 +89,10 @@ public class ScanningCoordinator {
 
 		if ( scannerSetting == null ) {
 			// No custom Scanner specified, use the StandardScanner
-			final Iterator<ScannerFactory> iterator = bootstrapContext.getServiceRegistry()
-					.requireService( ClassLoaderService.class )
-					.loadJavaServices( ScannerFactory.class )
-					.iterator();
+			final Iterator<ScannerFactory> iterator =
+					bootstrapContext.getClassLoaderService()
+							.loadJavaServices( ScannerFactory.class )
+							.iterator();
 			if ( iterator.hasNext() ) {
 				// todo: check for multiple scanner and in case raise a warning?
 				final ScannerFactory factory = iterator.next();
@@ -103,7 +104,7 @@ public class ScanningCoordinator {
 			}
 		}
 		else {
-			if ( scannerSetting instanceof Scanner ) {
+			if ( scannerSetting instanceof Scanner scanner ) {
 				if ( archiveDescriptorFactory != null ) {
 					throw new IllegalStateException(
 							"A Scanner instance and an ArchiveDescriptorFactory were both specified; please " +
@@ -113,7 +114,7 @@ public class ScanningCoordinator {
 									"Scanner constructor assuming it is statically known."
 					);
 				}
-				return (Scanner) scannerSetting;
+				return scanner;
 			}
 
 			final Class<? extends Scanner> scannerImplClass;
@@ -195,8 +196,7 @@ public class ScanningCoordinator {
 			XmlMappingBinderAccess xmlMappingBinderAccess) {
 
 		final ScanEnvironment scanEnvironment = bootstrapContext.getScanEnvironment();
-		final ClassLoaderService classLoaderService =
-				bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
+		final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 
 
 		// mapping files ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -236,11 +236,10 @@ public class ScanningCoordinator {
 			if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.CONVERTER ) {
 				// converter classes are safe to load because we never enhance them,
 				// and notice we use the ClassLoaderService specifically, not the temp ClassLoader (if any)
+				final Class<? extends AttributeConverter<?, ?>> converterClass =
+						classLoaderService.classForName( classDescriptor.getName() );
 				managedResources.addAttributeConverterDefinition(
-						new ClassBasedConverterDescriptor(
-								classLoaderService.classForName( classDescriptor.getName() ),
-								bootstrapContext.getClassmateContext()
-						)
+						ConverterDescriptors.of( converterClass, bootstrapContext.getClassmateContext() )
 				);
 			}
 			else if ( classDescriptor.getCategorization() == ClassDescriptor.Categorization.MODEL ) {

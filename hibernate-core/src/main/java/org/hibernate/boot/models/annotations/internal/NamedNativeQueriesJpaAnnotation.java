@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
@@ -24,13 +24,13 @@ public class NamedNativeQueriesJpaAnnotation implements NamedNativeQueries, Repe
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedNativeQueriesJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedNativeQueriesJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedNativeQueriesJpaAnnotation(NamedNativeQueries annotation, SourceModelBuildingContext modelContext) {
+	public NamedNativeQueriesJpaAnnotation(NamedNativeQueries annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERIES, "value", modelContext );
 	}
 
@@ -39,7 +39,7 @@ public class NamedNativeQueriesJpaAnnotation implements NamedNativeQueries, Repe
 	 */
 	public NamedNativeQueriesJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (NamedNativeQuery[]) attributeValues.get( "value" );
 	}
 

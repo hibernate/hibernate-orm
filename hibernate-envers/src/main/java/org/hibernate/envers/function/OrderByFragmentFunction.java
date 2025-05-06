@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.function;
@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryEngine;
@@ -196,11 +196,9 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 			final TableGroup tableGroup = ( (FromClauseIndex) walker.getFromClauseAccess() ).findTableGroup(
 					sqmAlias
 			);
-			final CollectionPersister collectionDescriptor = walker.getCreationContext()
-					.getSessionFactory()
-						.getRuntimeMetamodels()
-						.getMappingMetamodel()
-					.findCollectionDescriptor( attributeRole );
+			final CollectionPersister collectionDescriptor =
+					walker.getCreationContext().getMappingMetamodel()
+							.findCollectionDescriptor( attributeRole );
 			final PluralAttributeMapping pluralAttribute = collectionDescriptor.getAttributeMapping();
 			final QuerySpec queryPart = (QuerySpec) ( (SqlAstQueryPartProcessingState) walker.getCurrentProcessingState() ).getInflightQueryPart();
 			final OrderByFragment fragment;

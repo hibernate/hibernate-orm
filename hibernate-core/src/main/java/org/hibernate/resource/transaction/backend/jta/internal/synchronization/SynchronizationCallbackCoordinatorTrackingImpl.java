@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
@@ -35,7 +35,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// 		1) on initialization, and
 		// 		2) after "after completion" handling is finished.
 		//
-		// Here we use that to "clear out" all 'delayed after-completion" state.  The registrationThreadId will
+		// Here we use that to "clear out" all "delayed after-completion" state.  The registrationThreadId will
 		// "lazily" be re-populated on the next synchronizationRegistered call to allow for the potential of the
 		// next Session transaction occurring on a different thread (though that transaction would need to completely
 		// operate on that thread).
@@ -46,7 +46,7 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 	public void afterCompletion(int status) {
 		log.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
 
-		// The whole concept of "tracking" comes down to this code block..
+		// The whole concept of "tracking" comes down to this code block.
 		// Essentially we need to see if we can process the callback immediately.  So here we check whether the
 		// current call is happening on the same thread as the thread under which we registered the Synchronization.
 		// As far as we know, this can only ever happen in the rollback case where the transaction had been rolled

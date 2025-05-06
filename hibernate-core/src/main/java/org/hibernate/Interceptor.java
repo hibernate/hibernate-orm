@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -39,11 +39,14 @@ import org.hibernate.type.Type;
  * Whichever approach is used, the interceptor must be serializable for the
  * {@code Session} to be serializable. This means that {@code SessionFactory}-scoped
  * interceptors should implement {@code readResolve()}.
- * <p>
- * This venerable callback interface, dating to the very earliest days of Hibernate,
- * competes with JPA entity listener callbacks: {@link jakarta.persistence.PostLoad},
- * {@link jakarta.persistence.PrePersist} {@link jakarta.persistence.PreUpdate}, and
- * {@link jakarta.persistence.PreRemove}.
+ *
+ * @apiNote This venerable callback interface, dating from the very earliest days of
+ *          Hibernate, competes with standard JPA entity listener callbacks:
+ *          {@link jakarta.persistence.PostLoad}, {@link jakarta.persistence.PrePersist},
+ *          {@link jakarta.persistence.PreUpdate}, and {@link jakarta.persistence.PreRemove}.
+ *          However, JPA callbacks do not provide the ability to access the previous
+ *          value of an updated property in a {@code @PreUpdate} callback, and do not
+ *          provide a well-defined way to intercept changes to collections.
  *
  * @see SessionBuilder#interceptor(Interceptor)
  * @see SharedSessionBuilder#interceptor()
@@ -54,7 +57,6 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-@SuppressWarnings("unused")
 public interface Interceptor {
 	/**
 	 * Called just before an object is initialized. The interceptor may change the {@code state}, which will
@@ -70,11 +72,8 @@ public interface Interceptor {
 	 * @param types The types of the entity properties, corresponding to the {@code state}.
 	 *
 	 * @return {@code true} if the user modified the {@code state} in any way.
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	default boolean onLoad(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		return false;
 	}
 
@@ -92,13 +91,10 @@ public interface Interceptor {
 	 *
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see Session#persist(Object)
 	 * @see Session#merge(Object)
 	 */
-	default boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	default boolean onPersist(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		return onSave(entity, id, state, propertyNames, types);
 	}
 
@@ -113,12 +109,9 @@ public interface Interceptor {
 	 * @param propertyNames The names of the entity properties.
 	 * @param types The types of the entity properties
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see Session#remove(Object)
 	 */
-	default void onRemove(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	default void onRemove(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		onDelete(entity, id, state, propertyNames, types);
 	}
 
@@ -141,8 +134,6 @@ public interface Interceptor {
 	 *
 	 * @return {@code true} if the user modified the {@code currentState} in any way.
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see Session#flush()
 	 */
 	default boolean onFlushDirty(
@@ -151,7 +142,7 @@ public interface Interceptor {
 			Object[] currentState,
 			Object[] previousState,
 			String[] propertyNames,
-			Type[] types) throws CallbackException {
+			Type[] types) {
 		return false;
 	}
 
@@ -169,16 +160,13 @@ public interface Interceptor {
 	 *
 	 * @return {@code true} if the user modified the {@code state} in any way.
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see Session#persist(Object)
 	 * @see Session#merge(Object)
 	 *
 	 * @deprecated Use {@link #onPersist(Object, Object, Object[], String[], Type[])}
 	 */
 	@Deprecated(since = "6.6")
-	default boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	default boolean onSave(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 		return false;
 	}
 
@@ -193,15 +181,12 @@ public interface Interceptor {
 	 * @param propertyNames The names of the entity properties.
 	 * @param types The types of the entity properties
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see Session#remove(Object)
 	 *
 	 * @deprecated Use {@link #onRemove(Object, Object, Object[], String[], Type[])}
 	 */
 	@Deprecated(since = "6.6")
-	default void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types)
-			throws CallbackException {
+	default void onDelete(Object entity, Object id, Object[] state, String[] propertyNames, Type[] types) {
 	}
 
 	/**
@@ -209,10 +194,8 @@ public interface Interceptor {
 	 *
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default void onCollectionRecreate(Object collection, Object key) throws CallbackException {
+	default void onCollectionRecreate(Object collection, Object key) {
 	}
 
 	/**
@@ -220,10 +203,8 @@ public interface Interceptor {
 	 *
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default void onCollectionRemove(Object collection, Object key) throws CallbackException {
+	default void onCollectionRemove(Object collection, Object key) {
 	}
 
 	/**
@@ -231,29 +212,23 @@ public interface Interceptor {
 	 *
 	 * @param collection The collection instance.
 	 * @param key The collection key value.
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default void onCollectionUpdate(Object collection, Object key) throws CallbackException {
+	default void onCollectionUpdate(Object collection, Object key) {
 	}
 	/**
 	 * Called before a flush.
 	 *
 	 * @param entities The entities to be flushed.
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default void preFlush(Iterator<Object> entities) throws CallbackException {}
+	default void preFlush(Iterator<Object> entities) {}
 
 	/**
 	 * Called after a flush that actually ends in execution of the SQL statements required to synchronize
 	 * in-memory state with the database.
 	 *
 	 * @param entities The entities that were flushed.
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default void postFlush(Iterator<Object> entities) throws CallbackException {}
+	default void postFlush(Iterator<Object> entities) {}
 
 	/**
 	 * Called to distinguish between transient and detached entities. The return value determines the
@@ -288,8 +263,6 @@ public interface Interceptor {
 	 * @param types The types of the entity properties
 	 *
 	 * @return array of dirty property indices or {@code null} to indicate Hibernate should perform default behaviour
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
 	default int[] findDirty(
 			Object entity,
@@ -309,7 +282,7 @@ public interface Interceptor {
 	default Object instantiate(
 			String entityName,
 			EntityRepresentationStrategy representationStrategy,
-			Object id) throws CallbackException {
+			Object id) {
 		return instantiate( entityName, representationStrategy.getMode(), id );
 	}
 
@@ -321,7 +294,7 @@ public interface Interceptor {
 	default Object instantiate(
 			String entityName,
 			RepresentationMode representationMode,
-			Object id) throws CallbackException {
+			Object id) {
 		return null;
 	}
 
@@ -332,11 +305,9 @@ public interface Interceptor {
 	 *
 	 * @return the name of the entity
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see EntityNameResolver
 	 */
-	default String getEntityName(Object object) throws CallbackException {
+	default String getEntityName(Object object) {
 		return null;
 	}
 
@@ -347,10 +318,8 @@ public interface Interceptor {
 	 * @param id the instance identifier
 	 *
 	 * @return a fully initialized entity
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
-	default Object getEntity(String entityName, Object id) throws CallbackException {
+	default Object getEntity(String entityName, Object id) {
 		return null;
 	}
 
@@ -386,8 +355,6 @@ public interface Interceptor {
 	 * @param propertyNames The names of the entity properties.
 	 * @param propertyTypes The types of the entity properties
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see StatelessSession#insert(Object)
 	 */
 	default void onInsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
@@ -400,8 +367,6 @@ public interface Interceptor {
 	 * @param state The entity state
 	 * @param propertyNames The names of the entity properties.
 	 * @param propertyTypes The types of the entity properties
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 *
 	 * @see StatelessSession#update(Object)
 	 */
@@ -416,8 +381,6 @@ public interface Interceptor {
 	 * @param propertyNames The names of the entity properties.
 	 * @param propertyTypes The types of the entity properties
 	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
-	 *
 	 * @see StatelessSession#upsert(String, Object)
 	 */
 	default void onUpsert(Object entity, Object id, Object[] state, String[] propertyNames, Type[] propertyTypes) {}
@@ -429,8 +392,6 @@ public interface Interceptor {
 	 * @param id The identifier of the entity
 	 * @param propertyNames The names of the entity properties.
 	 * @param propertyTypes The types of the entity properties
-	 *
-	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 *
 	 * @see StatelessSession#delete(Object)
 	 */

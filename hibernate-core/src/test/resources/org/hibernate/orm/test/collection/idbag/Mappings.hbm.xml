@@ -1,27 +1,31 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
-<!DOCTYPE hibernate-mapping PUBLIC
-	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.idbag</package>
 
+    <entity class="IdbagOwner">
+        <attributes>
+            <id name="name"/>
+            <many-to-many name="children" target-entity="IdbagOwner">
+                <collection-id>
+                    <column name="children_id"/>
+                    <generator generator="increment"/>
+                    <target>Long</target>
+                </collection-id>
+                <join-table name="idbag_owner_children">
+                    <join-column name="owner_fk"/>
+                    <inverse-join-column name="child_fk"/>
+                </join-table>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>
 
-<hibernate-mapping package="org.hibernate.orm.test.collection.idbag">
-
-    <class name="IdbagOwner">
-		<id name="name" column="NAME" type="string" />
-
-        <idbag name="children" cascade="all" table="idbag_owner_children">
-            <collection-id column="CHILD" type="long">
-                <generator class="increment"/>
-            </collection-id>
-            <key column="PARENT_FK" />
-            <many-to-many column="CHILD_FK" class="IdbagOwner" />
-        </idbag>
-	</class>
-
-</hibernate-mapping>

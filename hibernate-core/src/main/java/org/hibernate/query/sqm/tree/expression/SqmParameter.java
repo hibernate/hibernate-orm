@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -76,14 +76,12 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 */
 	@Override
 	default int compareTo(SqmParameter<T> anotherParameter) {
-		if ( this instanceof SqmNamedParameter ) {
-			final SqmNamedParameter<?> one = (SqmNamedParameter<?>) this;
+		if ( this instanceof SqmNamedParameter<?> one ) {
 			return anotherParameter instanceof SqmNamedParameter<?>
 					? one.getName().compareTo( anotherParameter.getName() )
 					: -1;
 		}
-		else if ( this instanceof SqmPositionalParameter ) {
-			final SqmPositionalParameter<?> one = (SqmPositionalParameter<?>) this;
+		else if ( this instanceof SqmPositionalParameter<?> one ) {
 			return anotherParameter instanceof SqmPositionalParameter<?>
 					? one.getPosition().compareTo( anotherParameter.getPosition() )
 					: 1;

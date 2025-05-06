@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.CacheMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
@@ -16,10 +18,9 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.loader.ast.internal.LoaderHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 
@@ -29,7 +30,7 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, MultiIdLoadOptions {
-	private final SessionImpl session;
+	private final SharedSessionContractImplementor session;
 	private final EntityPersister entityPersister;
 
 	private LockOptions lockOptions;
@@ -47,7 +48,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
 
-	public MultiIdentifierLoadAccessImpl(SessionImpl session, EntityPersister entityPersister) {
+	public MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
 		this.session = session;
 		this.entityPersister = entityPersister;
 	}
@@ -76,7 +77,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	}
 
 	@Override
-	public MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public MultiIdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;
@@ -89,12 +90,7 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 
 	@Override
 	public MultiIdentifierLoadAccess<T> withBatchSize(int batchSize) {
-		if ( batchSize < 1 ) {
-			this.batchSize = null;
-		}
-		else {
-			this.batchSize = batchSize;
-		}
+		this.batchSize = batchSize < 1 ? null : batchSize;
 		return this;
 	}
 
@@ -186,16 +182,9 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	@Override
 	@SuppressWarnings( "unchecked" )
 	public <K> List<T> multiLoad(List<K> ids) {
-		if ( ids.isEmpty() ) {
-			return emptyList();
-		}
-		else {
-			return perform( () -> (List<T>) entityPersister.multiLoad(
-					ids.toArray( LoaderHelper.createTypedArray( ids.get( 0 ).getClass(), ids.size() ) ),
-					session,
-					this
-			) );
-		}
+		return ids.isEmpty()
+				? emptyList()
+				: perform( () -> (List<T>) entityPersister.multiLoad( ids.toArray(), session, this ) );
 	}
 
 	@Override

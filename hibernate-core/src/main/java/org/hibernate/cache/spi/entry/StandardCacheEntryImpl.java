@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
@@ -120,12 +120,12 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			final Object id,
 			final EntityPersister persister,
 			final Interceptor interceptor,
-			final EventSource session) throws HibernateException {
+			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( !persister.getEntityName().equals( subclass ) ) {
 			throw new AssertionFailure( "Tried to assemble a different subclass instance" );
 		}
 
-		//assembled state gets put in a new array (we read from cache by value!)
+		// assembled state gets put in a new array (we read from cache by value!)
 		final Object[] state = CacheEntryHelper.assemble(
 				disassembledState,
 				persister.getPropertyTypes(),
@@ -134,18 +134,20 @@ public class StandardCacheEntryImpl implements CacheEntry {
 
 		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
 
-		//TODO: reuse the PreLoadEvent
-		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
-				.setEntity( instance )
-				.setState( state )
-				.setId( id )
-				.setPersister( persister );
+		if ( session instanceof EventSource eventSource ) {
+			//TODO: reuse the PreLoadEvent
+			final PreLoadEvent preLoadEvent =
+					new PreLoadEvent( eventSource )
+							.setEntity( instance )
+							.setState( state )
+							.setId( id )
+							.setPersister( persister );
+			session.getFactory()
+					.getEventListenerGroups()
+					.eventListenerGroup_PRE_LOAD
+					.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 
-		session
-				.getFactory()
-				.getFastSessionServices()
-				.eventListenerGroup_PRE_LOAD
-				.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
+		}
 
 		persister.setPropertyValues( instance, state );
 

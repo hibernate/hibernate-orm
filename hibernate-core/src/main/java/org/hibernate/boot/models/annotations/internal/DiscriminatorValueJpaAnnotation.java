@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.DiscriminatorValue;
 
@@ -19,13 +19,13 @@ public class DiscriminatorValueJpaAnnotation implements DiscriminatorValue {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public DiscriminatorValueJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public DiscriminatorValueJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public DiscriminatorValueJpaAnnotation(DiscriminatorValue annotation, SourceModelBuildingContext modelContext) {
+	public DiscriminatorValueJpaAnnotation(DiscriminatorValue annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
@@ -34,7 +34,7 @@ public class DiscriminatorValueJpaAnnotation implements DiscriminatorValue {
 	 */
 	public DiscriminatorValueJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (String) attributeValues.get( "value" );
 	}
 

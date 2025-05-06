@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +16,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
+
+import static java.util.Collections.emptyList;
 
 public abstract class QueryOptionsAdapter implements QueryOptions {
 
@@ -42,7 +43,7 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 
 	@Override
 	public List<String> getDatabaseHints() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override

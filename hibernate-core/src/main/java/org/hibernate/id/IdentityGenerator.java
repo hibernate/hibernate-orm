@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.generator.EventType.INSERT;
-import static org.hibernate.generator.internal.NaturalIdHelper.getNaturalIdPropertyNames;
+import static org.hibernate.internal.NaturalIdHelper.getNaturalIdPropertyNames;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCustomSql;
 
 /**

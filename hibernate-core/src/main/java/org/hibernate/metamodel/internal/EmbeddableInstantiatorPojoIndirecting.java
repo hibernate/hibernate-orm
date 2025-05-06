@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -32,16 +31,13 @@ public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantia
 			throw new IllegalArgumentException( "Can't determine field assignment for constructor: " + constructor );
 		}
 		final int[] index = new int[componentNames.length];
-		if ( EmbeddableHelper.resolveIndex( propertyNames, componentNames, index ) ) {
-			return new EmbeddableInstantiatorPojoIndirecting.EmbeddableInstantiatorPojoIndirectingWithGap( constructor, index );
-		}
-		else {
-			return new EmbeddableInstantiatorPojoIndirecting( constructor, index );
-		}
+		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
+				? new EmbeddableInstantiatorPojoIndirectingWithGap( constructor, index )
+				: new EmbeddableInstantiatorPojoIndirecting( constructor, index );
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		try {
 			final Object[] originalValues = valuesAccess.getValues();
 			final Object[] values = new Object[originalValues.length];
@@ -63,7 +59,7 @@ public class EmbeddableInstantiatorPojoIndirecting extends AbstractPojoInstantia
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+		public Object instantiate(ValueAccess valuesAccess) {
 			try {
 				final Object[] originalValues = valuesAccess.getValues();
 				final Object[] values = new Object[index.length];

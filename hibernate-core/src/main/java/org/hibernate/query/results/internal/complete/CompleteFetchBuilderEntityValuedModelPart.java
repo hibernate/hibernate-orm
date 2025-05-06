@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -7,13 +7,13 @@ package org.hibernate.query.results.internal.complete;
 import java.util.List;
 
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -74,31 +74,11 @@ public class CompleteFetchBuilderEntityValuedModelPart
 			DomainResultCreationState domainResultCreationState) {
 		assert fetchPath.equals( navigablePath );
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-
 		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
 		modelPart.forEachSelectable(
-				(selectionIndex, selectableMapping) -> {
-					final TableReference tableReference = tableGroup.resolveTableReference(
-							navigablePath,
-							(ValuedModelPart) modelPart,
-							selectableMapping.getContainingTableExpression()
-					);
-					final String columnAlias = columnAliases.get( selectionIndex );
-					creationStateImpl.resolveSqlSelection(
-							ResultsHelper.resolveSqlExpression(
-									creationStateImpl,
-									jdbcResultsMetadata,
-									tableReference,
-									selectableMapping,
-									columnAlias
-							),
-							selectableMapping.getJdbcMapping().getJdbcJavaType(),
-							null,
-							creationStateImpl.getSessionFactory().getTypeConfiguration()
-					);
-				}
+				(selectionIndex, selectableMapping) ->
+						sqlSelection( jdbcResultsMetadata, selectionIndex, selectableMapping, creationStateImpl, tableGroup )
 		);
-
 		return parent.generateFetchableFetch(
 				modelPart,
 				fetchPath,
@@ -106,6 +86,27 @@ public class CompleteFetchBuilderEntityValuedModelPart
 				true,
 				null,
 				domainResultCreationState
+		);
+	}
+
+	private void sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			int selectionIndex,
+			SelectableMapping selectableMapping,
+			DomainResultCreationStateImpl creationStateImpl,
+			TableGroup tableGroup) {
+		creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						tableGroup.resolveTableReference( navigablePath, (ValuedModelPart) modelPart,
+								selectableMapping.getContainingTableExpression() ),
+						selectableMapping,
+						columnAliases.get( selectionIndex )
+				),
+				selectableMapping.getJdbcMapping().getJdbcJavaType(),
+				null,
+				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
 	}
 
@@ -120,8 +121,8 @@ public class CompleteFetchBuilderEntityValuedModelPart
 
 		final CompleteFetchBuilderEntityValuedModelPart that = (CompleteFetchBuilderEntityValuedModelPart) o;
 		return navigablePath.equals( that.navigablePath )
-				&& modelPart.equals( that.modelPart )
-				&& columnAliases.equals( that.columnAliases );
+			&& modelPart.equals( that.modelPart )
+			&& columnAliases.equals( that.columnAliases );
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -35,7 +35,7 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 			}
 		}
 
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
 		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -26,7 +26,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <pre>
  * &#64;Immutable &#64;Entity
  * &#64;Table(name="summary")
- * &#64;View(query="select type, sum(amount) as total, avg(amount) as average from details group by type")
+ * &#64;View(query="""
+ *             select type, sum(amount) as total, avg(amount) as average
+ *             from details
+ *             group by type
+ *             """)
  * &#64;Synchronize("details")
  * public class Summary {
  *     &#64;Id String type;
@@ -34,11 +38,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     Double average;
  * }
  * </pre>
- * <p>
  * results in the following generated DDL:
  * <pre>
  * create view summary
- * as select type, sum(amount) as total, avg(amount) as average from details group by type
+ * as select type, sum(amount) as total, avg(amount) as average
+ *    from details
+ *    group by type
  * </pre>
  * <p>
  * If a view is not updatable, we recommend annotating the
@@ -47,7 +52,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * It's possible to have an entity class which maps a table,
  * and another entity which maps a view defined as a query
  * against that table. In this case, a stateful session is
- * vulnerable to data aliasing effects, and it is the
+ * vulnerable to data aliasing effects, and it's the
  * responsibility of client code to ensure that changes to
  * the first entity are flushed to the database before
  * reading the same data via the second entity. The
@@ -61,6 +66,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @since 6.3
  *
  * @author Gavin King
+ *
+ * @see Synchronize
  */
 @Incubating
 @Target(TYPE)

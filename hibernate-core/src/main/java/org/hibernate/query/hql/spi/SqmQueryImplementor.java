@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.spi;
@@ -46,34 +46,41 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();
 
+	@Override
 	SqmStatement<R> getSqmStatement();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariance
 
+	@Override
 	SqmQueryImplementor<R> setCacheMode(CacheMode cacheMode);
 
+	@Override
 	SqmQueryImplementor<R> setCacheable(boolean cacheable);
 
+	@Override
 	SqmQueryImplementor<R> setCacheRegion(String cacheRegion);
 
+	@Override
 	SqmQueryImplementor<R> setTimeout(int timeout);
 
+	@Override
 	SqmQueryImplementor<R> setFetchSize(int fetchSize);
 
+	@Override
 	SqmQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
 	SqmQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
-	@Override
+	@Override @Deprecated
 	default SqmQueryImplementor<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyFetchGraph( graph );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	default SqmQueryImplementor<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyLoadGraph( graph );
 		return this;
@@ -97,8 +104,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
-	@Override
-	@Deprecated(since = "5.2")
+	@Override @Deprecated(since = "5.2")
 	default <T> SqmQueryImplementor<T> setResultTransformer(ResultTransformer<T> transformer) {
 		return setTupleTransformer( transformer ).setResultListTransformer( transformer );
 	}
@@ -110,7 +116,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setQueryFlushMode(QueryFlushMode queryFlushMode);
 
 	@Override
-	SqmQueryImplementor<R> setMaxResults(int maxResult);
+	SqmQueryImplementor<R> setMaxResults(int maxResults);
 
 	@Override
 	SqmQueryImplementor<R> setFirstResult(int startPosition);
@@ -133,13 +139,13 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	<P> SqmQueryImplementor<R> setParameter(String name, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -151,13 +157,13 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	<P> SqmQueryImplementor<R> setParameter(int position, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -172,10 +178,10 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	<T> SqmQueryImplementor<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
  * Strategy for instantiating a managed type
@@ -19,9 +18,10 @@ public interface Instantiator {
 	 * instance of managed structure
 	 * @see Class#isInstance
 	 */
-	boolean isInstance(Object object, SessionFactoryImplementor sessionFactory);
+	boolean isInstance(Object object);
 
 	/**
 	 * @see Class#equals
 	 */
-	boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory);}
+	boolean isSameClass(Object object);
+}

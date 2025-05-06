@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
@@ -8,7 +8,6 @@ import java.io.Serializable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -156,7 +155,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	Object getPropertyValue(J component, int property) throws HibernateException;
 
 	@Override
-	J instantiate(ValueAccess values, SessionFactoryImplementor sessionFactory);
+	J instantiate(ValueAccess values);
 
 	/**
 	 * The class that represents the embeddable mapping of the type.
@@ -232,12 +231,12 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	J replace(J detached, J managed, Object owner);
 
 	@Override
-	default boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+	default boolean isInstance(Object object) {
 		return returnedClass().isInstance( object );
 	}
 
 	@Override
-	default boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+	default boolean isSameClass(Object object) {
 		return object.getClass().equals( returnedClass() );
 	}
 }

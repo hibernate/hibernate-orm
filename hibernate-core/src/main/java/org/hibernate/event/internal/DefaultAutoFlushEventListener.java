@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -11,8 +11,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -40,8 +40,8 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();
-		final EventManager eventManager = source.getEventManager();
-		final HibernateMonitoringEvent partialFlushEvent = eventManager.beginPartialFlushEvent();
+		final EventMonitor eventMonitor = source.getEventMonitor();
+		final DiagnosticEvent partialFlushEvent = eventMonitor.beginPartialFlushEvent();
 		try {
 			eventListenerManager.partialFlushStart();
 
@@ -62,7 +62,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 
 					// note: performExecutions() clears all collectionXxxxtion
 					// collections (the collection actions) in the session
-					final HibernateMonitoringEvent flushEvent = eventManager.beginFlushEvent();
+					final DiagnosticEvent flushEvent = eventMonitor.beginFlushEvent();
 					try {
 						performExecutions( source );
 						postFlush( source );
@@ -70,7 +70,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 						postPostFlush( source );
 					}
 					finally {
-						eventManager.completeFlushEvent( flushEvent, event, true );
+						eventMonitor.completeFlushEvent( flushEvent, event, true );
 					}
 					final StatisticsImplementor statistics = source.getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
@@ -85,7 +85,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			}
 		}
 		finally {
-			eventManager.completePartialFlushEvent( partialFlushEvent, event );
+			eventMonitor.completePartialFlushEvent( partialFlushEvent, event );
 			eventListenerManager.partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),
 					event.getNumberOfEntitiesProcessed()
@@ -97,15 +97,15 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoPreFlush(EventSource source) throws HibernateException {
 		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();
 		eventListenerManager.prePartialFlushStart();
-		final EventManager eventManager = source.getEventManager();
-		HibernateMonitoringEvent hibernateMonitoringEvent = eventManager.beginPrePartialFlush();
+		final EventMonitor eventMonitor = source.getEventMonitor();
+		DiagnosticEvent diagnosticEvent = eventMonitor.beginPrePartialFlush();
 		try {
 			if ( flushMightBeNeeded( source ) ) {
 				preFlush( source, source.getPersistenceContextInternal() );
 			}
 		}
 		finally {
-			eventManager.completePrePartialFlush( hibernateMonitoringEvent, source );
+			eventMonitor.completePrePartialFlush( diagnosticEvent, source );
 			eventListenerManager.prePartialFlushEnd();
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria;
@@ -28,8 +28,8 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
@@ -111,6 +111,22 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 		} );
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	@JiraKey("HHH-13932")
+	public void testCriteriaQuerySetNonExistingParameter() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Item> query = builder.createQuery( Item.class );
+			Root<Item> root = query.from( Item.class );
+			ParameterExpression<String> parameter = builder.parameter( String.class, "name" );
+			Predicate predicate = builder.equal( root.get( "name" ), parameter );
+			query.where( predicate );
+			TypedQuery<Item> criteriaQuery = entityManager.createQuery( query );
+			ParameterExpression<String> nonExistingParam = builder.parameter( String.class, "nonExistingParam" );
+			criteriaQuery.setParameter( nonExistingParam, "George" );
+		} );
+	}
+
 	@Test
 	public void testSetParameterPassingTypeNotFails() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -123,9 +139,9 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			TypedQuery<?> criteriaQuery = entityManager.createQuery( query );
 
-			criteriaQuery.setParameter( "name", "2" ).list();
+			criteriaQuery.setParameter( "name", "2" ).getResultList();
 		} );
 	}
 
@@ -141,7 +157,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
 		} );
@@ -159,7 +175,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Instant.now() ).list();
 		} );
@@ -178,7 +194,7 @@ public class CriteriaQueryTypeQueryAdapterTest extends BaseEntityManagerFunction
 			);
 			query.where( predicate );
 
-			QueryImplementor<?> criteriaQuery = (QueryImplementor<?>) entityManager.createQuery( query );
+			Query<?> criteriaQuery = (Query<?>) entityManager.createQuery( query );
 
 			criteriaQuery.setParameter( "placedAt", Date.from(Instant.now()), TemporalType.DATE ).list();
 		} );

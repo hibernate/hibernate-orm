@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.JdbcTypeRegistrations;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -23,13 +23,13 @@ public class JdbcTypeRegistrationsAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public JdbcTypeRegistrationsAnnotation(SourceModelBuildingContext modelContext) {
+	public JdbcTypeRegistrationsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public JdbcTypeRegistrationsAnnotation(JdbcTypeRegistrations annotation, SourceModelBuildingContext modelContext) {
+	public JdbcTypeRegistrationsAnnotation(JdbcTypeRegistrations annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, HibernateAnnotations.JDBC_TYPE_REGISTRATIONS, "value", modelContext );
 	}
 
@@ -38,7 +38,7 @@ public class JdbcTypeRegistrationsAnnotation
 	 */
 	public JdbcTypeRegistrationsAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (org.hibernate.annotations.JdbcTypeRegistration[]) attributeValues.get( "value" );
 	}
 

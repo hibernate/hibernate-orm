@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -7,9 +7,11 @@ package org.hibernate.processor.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -72,13 +74,50 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 
 	abstract String createQueryMethod();
 
+	String specificationType() {
+		return "org.hibernate.query.specification.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append(".")
-				.append(createQueryMethod())
-				.append("(_query)\n");
+		final boolean specification = isUsingSpecification();
+		if ( specification && !isReactive() ) {
+			declaration
+					.append("_spec.createQuery(")
+					.append(localSessionName())
+					.append(")\n");
+		}
+		else {
+			declaration
+					.append(localSessionName())
+					.append(".")
+					.append(createQueryMethod())
+					.append('(');
+			if ( specification ) {
+				declaration
+						.append("_spec.buildCriteria(_builder)");
+			}
+			else {
+				declaration.append("_query");
+			}
+			declaration.append(")\n");
+		}
+	}
+
+	@Override
+	void createSpecification(StringBuilder declaration) {
+		if ( isUsingSpecification() ) {
+			declaration
+					.append( "\tvar _spec = " )
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(_query);\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return hasRestriction()
+			|| hasOrder() && !isJakartaCursoredPage(containerType);
 	}
 
 	void createCriteriaQuery(StringBuilder declaration) {
@@ -97,10 +136,11 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void createBuilder(StringBuilder declaration) {
 		declaration
 				.append("\tvar _builder = ")
-				.append(localSessionName())
-				.append(isUsingEntityManager()
-						? ".getEntityManagerFactory()"
-						: ".getFactory()")
+				.append(localSessionName());
+		if ( isReactive() ) {
+			declaration.append(".getFactory()");
+		}
+		declaration
 				.append(".getCriteriaBuilder();\n");
 	}
 
@@ -112,15 +152,6 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				nullCheck( declaration, paramName );
 			}
 		}
-	}
-
-	private static void nullCheck(StringBuilder declaration, String paramName) {
-		declaration
-				.append("\tif (")
-				.append(paramName.replace('.', '$'))
-				.append(" == null) throw new IllegalArgumentException(\"Null ")
-				.append(paramName)
-				.append("\");\n");
 	}
 
 	void where(StringBuilder declaration, List<String> paramTypes) {
@@ -194,11 +225,13 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void path(StringBuilder declaration, String paramName) {
 		final StringTokenizer tokens = new StringTokenizer(paramName, ".");
 		String typeName = entity;
-		while ( typeName!= null && tokens.hasMoreTokens() ) {
+		while ( typeName != null && tokens.hasMoreTokens() ) {
+			final TypeElement typeElement = annotationMetaEntity.getContext().getElementUtils()
+					.getTypeElement( typeName );
 			final String memberName = tokens.nextToken();
 			declaration
 					.append(".get(")
-					.append(annotationMetaEntity.importType(typeName + '_'))
+					.append( annotationMetaEntity.importType( getGeneratedClassFullyQualifiedName( typeElement, false ) ) )
 					.append('.')
 					.append(memberName)
 					.append(')');

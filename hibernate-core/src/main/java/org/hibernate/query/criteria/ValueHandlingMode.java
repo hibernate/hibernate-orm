@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -33,12 +33,12 @@ public enum ValueHandlingMode {
 		if ( valueHandlingMode == null ) {
 			return BIND;
 		}
-		else if ( valueHandlingMode instanceof ValueHandlingMode ) {
-			return (ValueHandlingMode) valueHandlingMode;
+		else if ( valueHandlingMode instanceof ValueHandlingMode mode ) {
+			return mode;
 		}
-		else if ( valueHandlingMode instanceof String ) {
+		else if ( valueHandlingMode instanceof String string ) {
 			for ( ValueHandlingMode value : values() ) {
-				if ( value.name().equalsIgnoreCase( (String) valueHandlingMode ) ) {
+				if ( value.name().equalsIgnoreCase( string ) ) {
 					return value;
 				}
 			}

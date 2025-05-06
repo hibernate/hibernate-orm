@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -84,7 +84,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		assertThat( selection.getSelectableNode(), instanceOf( SqmEntityValuedSimplePath.class ) );
 
 		final SqmPath selectExpression = (SqmPath) selection.getSelectableNode();
-		assertThat( selectExpression.getReferencedPathSource().getSqmPathType(), instanceOf( EntityDomainType.class ) );
+		assertThat( selectExpression.getReferencedPathSource().getPathType(), instanceOf( EntityDomainType.class ) );
 
 		final SqmComparisonPredicate predicate = (SqmComparisonPredicate) statement.getQuerySpec().getWhereClause().getPredicate();
 		final SqmPath predicateLhs = (SqmPath) predicate.getLeftHandExpression();
@@ -106,7 +106,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		interpretSelect( "select s.mate from Person s where s.pk = ?1" );
 
 
-		final EntityDomainType<OddOne> entity = sessionFactory().getRuntimeMetamodels()
+		final EntityDomainType<OddOne> entity = sessionFactory()
 				.getJpaMetamodel()
 				.entity( OddOne.class );
 		final SingularPersistentAttribute<? super OddOne, ?> idAttribute = entity.findIdAttribute();

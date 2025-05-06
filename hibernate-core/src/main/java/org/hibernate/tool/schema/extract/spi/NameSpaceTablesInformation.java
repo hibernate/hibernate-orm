@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
@@ -15,7 +15,7 @@ import org.hibernate.mapping.Table;
  */
 public class NameSpaceTablesInformation {
 	private final IdentifierHelper identifierHelper;
-	private Map<String, TableInformation> tables = new HashMap<>();
+	private final Map<String, TableInformation> tables = new HashMap<>();
 
 	public NameSpaceTablesInformation(IdentifierHelper identifierHelper) {
 		this.identifierHelper = identifierHelper;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -215,8 +215,8 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof SqmExpressible<?> ) {
-				expressibles.add( (SqmExpressible<?>) mappedType );
+			if ( mappedType instanceof SqmExpressible<?> sqmExpressible ) {
+				expressibles.add( sqmExpressible );
 			}
 		}
 		return expressibles.toArray( new SqmExpressible<?>[expressibles.size() + 1] );

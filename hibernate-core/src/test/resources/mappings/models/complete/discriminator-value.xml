@@ -1,8 +1,6 @@
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
   ~ SPDX-License-Identifier: Apache-2.0
-  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -11,14 +9,13 @@
 
     <entity class="Root" metadata-complete="true" access="FIELD">
         <inheritance strategy="JOINED"/>
-        <discriminator-column name="TYPE_COLUMN" discriminator-type="INTEGER"/>
+        <discriminator-value>P</discriminator-value>
+        <discriminator-column name="TYPE_COLUMN" discriminator-type="CHAR"/>
         <attributes>
             <id name="id">
                 <column name="pk"/>
             </id>
-            <basic name="name">
-                <type value="string"/>
-            </basic>
+            <basic name="name"/>
         </attributes>
     </entity>
     <entity class="Sub" metadata-complete="true" access="FIELD">

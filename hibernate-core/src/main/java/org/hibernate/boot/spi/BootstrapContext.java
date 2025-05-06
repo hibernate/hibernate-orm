@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -16,11 +16,15 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -51,6 +55,12 @@ public interface BootstrapContext {
 	TypeConfiguration getTypeConfiguration();
 
 	/**
+	 * Access to the {@code hibernate-models} {@linkplain ModelsContext}
+	 */
+	@Incubating
+	ModelsContext getModelsContext();
+
+	/**
 	 * The {@link SqmFunctionRegistry} belonging to this {@code BootstrapContext}.
 	 *
 	 * @see SqmFunctionRegistry
@@ -68,6 +78,21 @@ public interface BootstrapContext {
 	 * Options specific to building the {@linkplain Metadata boot metamodel}
 	 */
 	MetadataBuildingOptions getMetadataBuildingOptions();
+
+	/**
+	 * Access to the {@link ClassLoaderService}.
+	 */
+	ClassLoaderService getClassLoaderService();
+
+	/**
+	 * Access to the {@link ManagedBeanRegistry}.
+	 */
+	ManagedBeanRegistry getManagedBeanRegistry();
+
+	/**
+	 * Access to the {@link ConfigurationService}.
+	 */
+	ConfigurationService getConfigurationService();
 
 	/**
 	 * Whether the bootstrap was initiated from JPA bootstrapping.
@@ -149,11 +174,11 @@ public interface BootstrapContext {
 	 * Access to the Jandex index passed by call to
 	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(Object)}, if any.
 	 *
-	 * @apiNote Jandex is currently not used, see
-	 *          <a href="https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0">the roadmap</a>
-	 *
 	 * @return The Jandex index
+	 *
+	 * @deprecated Set via the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead
 	 */
+	@Deprecated
 	Object getJandexView();
 
 	/**
@@ -185,7 +210,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The {@link ConverterDescriptor}s registered via {@code MetadataBuilder}
 	 */
-	Collection<ConverterDescriptor> getAttributeConverters();
+	Collection<ConverterDescriptor<?, ?>> getAttributeConverters();
 
 	/**
 	 * Access to all explicit cache region mappings.

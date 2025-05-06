@@ -1,17 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.bytecode;
-
 
 /**
  * @author Emmanuel Bernard
  */
 public interface Tool {
-	public Long getId();
+	Long getId();
+	void setId(Long id);
 
-	public void setId(Long id);
-
-	public Number usage();
+	Number usage();
 }

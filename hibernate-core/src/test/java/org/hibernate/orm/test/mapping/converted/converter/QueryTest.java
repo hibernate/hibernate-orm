@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.converted.converter;
@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -66,7 +66,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 	@JiraKey( "HHH-13082" )
 	public void testNativeQueryResult() {
 		inTransaction( (session) -> {
-			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary" );
+			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary" );
 
 			final List<Object[]> results = query.list();
 			assertThat( results ).hasSize( 1 );
@@ -79,7 +79,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	public void testNativeQueryResultWithResultClass() {
 		inTransaction( (session) -> {
-			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary", Object[].class );
+			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary", Object[].class );
 
 			final List<Object[]> results = query.list();
 			assertThat( results ).hasSize( 1 );
@@ -95,7 +95,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 	@JiraKey( "HHH-14975" )
 	public void testAutoAppliedConverterAsNativeQueryResult() {
 		inTransaction( (session) -> {
-			final NativeQueryImplementor<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary2" );
+			final NativeQuery<Object[]> query = session.createNativeQuery( "select id, salary from EMP", "emp_id_salary2" );
 
 			final List<Object[]> results = query.list();
 			assertThat( results ).hasSize( 1 );

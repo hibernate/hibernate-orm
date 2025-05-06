@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -40,7 +40,7 @@ public enum FetchMode {
 	 * {@linkplain jakarta.persistence.FetchType#EAGER eager} and
 	 * {@linkplain jakarta.persistence.FetchType#LAZY lazy} fetching.
 	 * On the other hand, performance considerations dictate that it
-	 * should only be used in combination wih {@code EAGER} fetching
+	 * should only be used in combination with {@code EAGER} fetching
 	 * when it is almost certain that the associated data will be
 	 * available in the second-level cache.
 	 */

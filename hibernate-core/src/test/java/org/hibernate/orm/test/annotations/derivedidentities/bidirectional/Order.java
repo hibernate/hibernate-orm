@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
@@ -13,9 +13,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.processing.Exclude;
 
 @SuppressWarnings("serial")
 @Entity
+@Exclude
 @Table(name = "orders")
 public class Order implements Serializable
 {

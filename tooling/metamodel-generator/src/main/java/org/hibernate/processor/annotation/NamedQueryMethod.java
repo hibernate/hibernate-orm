@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -14,8 +14,8 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import java.util.TreeSet;
 
+import static org.hibernate.processor.util.Constants.NONNULL;
 import static org.hibernate.processor.util.StringUtil.nameToFieldName;
-import static org.hibernate.processor.util.SqmTypeUtils.resultType;
 
 /**
  * @author Gavin King
@@ -28,6 +28,7 @@ class NamedQueryMethod implements MetaAttribute {
 	private final boolean reactive;
 	private final String sessionVariableName;
 	private final boolean addNonnullAnnotation;
+	private final String resultClass;
 
 	public NamedQueryMethod(
 			AnnotationMeta annotationMeta,
@@ -36,7 +37,8 @@ class NamedQueryMethod implements MetaAttribute {
 			boolean belongsToRepository,
 			@Nullable String sessionType,
 			String sessionVariableName,
-			boolean addNonnullAnnotation) {
+			boolean addNonnullAnnotation,
+			String resultClass) {
 		this.annotationMeta = annotationMeta;
 		this.select = select;
 		this.name = name;
@@ -44,6 +46,7 @@ class NamedQueryMethod implements MetaAttribute {
 		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 		this.sessionVariableName = sessionVariableName;
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.resultClass = resultClass;
 	}
 
 	@Override
@@ -71,7 +74,9 @@ class NamedQueryMethod implements MetaAttribute {
 				.append(sessionVariableName)
 				.append(".createNamedQuery(")
 				.append(fieldName())
-				.append(")");
+				.append(", ")
+				.append( annotationMeta.importType( resultClass ) )
+				.append( ".class)");
 		for ( SqmParameter<?> param : sortedParameters ) {
 			declaration
 					.append("\n\t\t\t.setParameter(")
@@ -93,7 +98,7 @@ class NamedQueryMethod implements MetaAttribute {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMeta.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMeta.importType(NONNULL))
 					.append(' ');
 		}
 	}
@@ -121,7 +126,7 @@ class NamedQueryMethod implements MetaAttribute {
 		declaration
 				.append(annotationMeta.importType(Constants.LIST))
 				.append('<')
-				.append( annotationMeta.importType( resultType( select, annotationMeta.getContext() ) ) )
+				.append( annotationMeta.importType( resultClass ) )
 				.append("> ")
 				.append(name);
 		if ( reactive ) {
@@ -146,10 +151,20 @@ class NamedQueryMethod implements MetaAttribute {
 				declaration
 						.append(", ");
 			}
-			declaration
-					.append(parameterType(param))
-					.append(" ")
-					.append(parameterName(param));
+			if ( param.allowMultiValuedBinding() ) {
+				declaration
+						.append(annotationMeta.importType(Constants.LIST))
+						.append('<')
+						.append( parameterType( param ) )
+						.append("> ")
+						.append( parameterName( param ) );
+			}
+			else {
+				declaration
+						.append( parameterType( param ) )
+						.append( " " )
+						.append( parameterName( param ) );
+			}
 		}
 		declaration
 				.append(')');

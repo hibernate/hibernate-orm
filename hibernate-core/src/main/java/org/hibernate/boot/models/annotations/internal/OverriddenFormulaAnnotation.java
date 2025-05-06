@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_FORMULA;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -30,7 +30,7 @@ public class OverriddenFormulaAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenFormulaAnnotation(SourceModelBuildingContext sourceModelContext) {
+	public OverriddenFormulaAnnotation(ModelsContext sourceModelContext) {
 	}
 
 	/**
@@ -38,7 +38,7 @@ public class OverriddenFormulaAnnotation
 	 */
 	public OverriddenFormulaAnnotation(
 			DialectOverride.Formula annotation,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		dialect( annotation.dialect() );
 		before( annotation.before() );
 		sameOrAfter( annotation.sameOrAfter() );
@@ -50,7 +50,7 @@ public class OverriddenFormulaAnnotation
 	 */
 	public OverriddenFormulaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		super( attributeValues, DIALECT_OVERRIDE_FORMULA, sourceModelContext );
 		override( (Formula) attributeValues.get( "override" ) );
 	}

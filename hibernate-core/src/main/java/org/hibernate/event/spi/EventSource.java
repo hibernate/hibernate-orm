@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -68,5 +68,4 @@ public interface EventSource extends SessionImplementor {
 	//       This should be removed once action/task ordering is improved.
 	void removeOrphanBeforeUpdates(String entityName, Object child);
 
-	Object load(String entityName, Object identifier);
 }

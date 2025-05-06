@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -7,7 +7,6 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
@@ -313,7 +312,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
@@ -327,7 +325,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				columnReference,
 				jdbcMapping().getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -407,7 +405,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
 				jdbcMapping().getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

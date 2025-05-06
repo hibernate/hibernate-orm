@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -14,6 +14,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicPluralType;
@@ -23,12 +24,15 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.ReflectHelper.arrayClass;
+
 /**
  * Descriptor for {@code T[]} handling.
  *
  * @author Christian Beikov
  * @author Jordan Gigov
  */
+@AllowReflection
 public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 
 	public ArrayJavaType(BasicType<T> baseDescriptor) {
@@ -36,11 +40,9 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 	}
 
 	public ArrayJavaType(JavaType<T> baseDescriptor) {
-		super(
-				(Class<T[]>) Array.newInstance( baseDescriptor.getJavaTypeClass(), 0 ).getClass(),
+		super( arrayClass( baseDescriptor.getJavaTypeClass() ),
 				baseDescriptor,
-				new ArrayMutabilityPlan<>( baseDescriptor )
-		);
+				new ArrayMutabilityPlan<>( baseDescriptor ) );
 	}
 
 	@Override
@@ -376,6 +378,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 	}
 
+	@AllowReflection
 	private static class ArrayMutabilityPlan<T> implements MutabilityPlan<T[]> {
 
 		private final Class<T> componentClass;

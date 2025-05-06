@@ -1,104 +1,42 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Locale;
-
-import org.hibernate.HibernateException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import jakarta.enterprise.inject.spi.BeanManager;
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
+import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 import org.hibernate.service.ServiceRegistry;
 
+import static org.hibernate.cfg.ManagedBeanSettings.DELAY_CDI_ACCESS;
+
 /**
- * Helper class for helping deal with the reflection calls relating to CDI
- * in terms of building CDI-based {@link BeanContainer}
- * instance
- *
- * We need to avoid statically linking CDI classed into the ClassLoader which
- * would lead to errors if CDI is not available on the classpath.
+ * Helper class for building a CDI-based {@link BeanContainer}.
  *
  * @author Steve Ebersole
  */
 public class CdiBeanContainerBuilder {
-	private static final String CONTAINER_FQN_IMMEDIATE = "org.hibernate.resource.beans.container.internal.CdiBeanContainerImmediateAccessImpl";
-	private static final String CONTAINER_FQN_DELAYED = "org.hibernate.resource.beans.container.internal.CdiBeanContainerDelayedAccessImpl";
-	private static final String CONTAINER_FQN_EXTENDED = "org.hibernate.resource.beans.container.internal.CdiBeanContainerExtendedAccessImpl";
 
-	private static final String BEAN_MANAGER_EXTENSION_FQN = "org.hibernate.resource.beans.container.spi.ExtendedBeanManager";
-
-	public static BeanContainer fromBeanManagerReference(
-			Object beanManagerRef,
-			ServiceRegistry serviceRegistry) {
-		final ClassLoaderService classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
-		final Class<?> beanManagerClass = ManagedBeanRegistryInitiator.cdiBeanManagerClass( classLoaderService );
-		final Class<?> extendedBeanManagerClass = getHibernateClass( BEAN_MANAGER_EXTENSION_FQN );
-
-		final Class<? extends BeanContainer> containerClass;
-		final Class<?> ctorArgType;
-
-		if ( extendedBeanManagerClass.isInstance( beanManagerRef ) ) {
-			containerClass = getHibernateClass( CONTAINER_FQN_EXTENDED );
-			ctorArgType = extendedBeanManagerClass;
+	public static BeanContainer fromBeanManagerReference(Object beanManager, ServiceRegistry serviceRegistry) {
+		if ( beanManager instanceof ExtendedBeanManager extendedBeanManager ) {
+			return new CdiBeanContainerExtendedAccessImpl( extendedBeanManager );
+		}
+		else if ( beanManager instanceof BeanManager cdiBeanManager ) {
+			return delayCdiAccess( serviceRegistry )
+					? new CdiBeanContainerDelayedAccessImpl( cdiBeanManager )
+					: new CdiBeanContainerImmediateAccessImpl( cdiBeanManager );
 		}
 		else {
-			ctorArgType = beanManagerClass;
-
-			final ConfigurationService cfgService = serviceRegistry.requireService( ConfigurationService.class );
-			final boolean delayAccessToCdi = cfgService.getSetting( AvailableSettings.DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
-			if ( delayAccessToCdi ) {
-				containerClass = getHibernateClass( CONTAINER_FQN_DELAYED );
-			}
-			else {
-				containerClass = getHibernateClass( CONTAINER_FQN_IMMEDIATE );
-			}
-		}
-
-		try {
-			final Constructor<? extends BeanContainer> ctor = containerClass.getDeclaredConstructor( ctorArgType );
-			try {
-				ReflectHelper.ensureAccessibility( ctor );
-				return ctor.newInstance( ctorArgType.cast( beanManagerRef ) );
-			}
-			catch (InvocationTargetException e) {
-				throw new HibernateException( "Problem building " + containerClass.getName(), e.getCause() );
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Problem building " + containerClass.getName(), e );
-			}
-		}
-		catch (NoSuchMethodException e) {
-			throw new HibernateException(
-					String.format(
-							Locale.ENGLISH,
-							"Could not locate proper %s constructor",
-							containerClass.getName()
-					),
-					e
-			);
+			throw new AssertionFailure( "Unsupported bean manager: " + beanManager );
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> Class<T> getHibernateClass(String fqn) {
-		// we use this Class's ClassLoader...
-		try {
-			return  (Class<T>) Class.forName(
-					fqn,
-					true,
-					CdiBeanContainerBuilder.class.getClassLoader()
-			);
-		}
-		catch (ClassNotFoundException e) {
-			throw new HibernateException( "Unable to locate Hibernate class by name via reflection : " + fqn, e );
-		}
+	private static boolean delayCdiAccess(ServiceRegistry serviceRegistry) {
+		return serviceRegistry.requireService( ConfigurationService.class )
+				.getSetting( DELAY_CDI_ACCESS, StandardConverters.BOOLEAN, false );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -12,7 +12,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 
 import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminatorType;
@@ -25,10 +27,10 @@ import static org.hibernate.persister.entity.DiscriminatorHelper.getDiscriminato
 public class SqmLiteralEmbeddableType<T>
 		extends AbstractSqmExpression<T>
 		implements SqmSelectableNode<T>, SemanticPathPart {
-	final EmbeddableDomainType<T> embeddableDomainType;
+	final SqmEmbeddableDomainType<T> embeddableDomainType;
 
 	public SqmLiteralEmbeddableType(
-			EmbeddableDomainType<T> embeddableDomainType,
+			SqmEmbeddableDomainType<T> embeddableDomainType,
 			NodeBuilder nodeBuilder) {
 		super( getDiscriminatorType( embeddableDomainType, nodeBuilder), nodeBuilder );
 		this.embeddableDomainType = embeddableDomainType;
@@ -44,13 +46,9 @@ public class SqmLiteralEmbeddableType<T>
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmLiteralEmbeddableType<T> expression = context.registerCopy(
-				this,
-				new SqmLiteralEmbeddableType<>(
-						embeddableDomainType,
-						nodeBuilder()
-				)
-		);
+		final SqmLiteralEmbeddableType<T> expression =
+				context.registerCopy( this,
+						new SqmLiteralEmbeddableType<>( embeddableDomainType, nodeBuilder() ) );
 		copyTo( expression, context );
 		return expression;
 	}
@@ -86,7 +84,7 @@ public class SqmLiteralEmbeddableType<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( embeddableDomainType.getTypeName() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( embeddableDomainType.getTypeName() );
 	}
 }

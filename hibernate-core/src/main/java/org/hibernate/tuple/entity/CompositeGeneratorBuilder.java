@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple.entity;
@@ -183,18 +183,17 @@ class CompositeGeneratorBuilder {
 				final Object[] generatedValues = new Object[size];
 				for ( int i = 0; i < size; i++ ) {
 					final Generator generator = generators.get( i );
-					if ( generator != null ) {
+					if ( generator != null && generator.getEventTypes().contains( eventType ) ) {
 						generatedValues[i] = ((BeforeExecutionGenerator) generator)
 								.generate( session, owner, null, eventType );
 					}
 				}
-				return descriptor.getRepresentationStrategy().getInstantiator()
-						.instantiate( () -> generatedValues, session.getFactory() );
+				return descriptor.getRepresentationStrategy().getInstantiator().instantiate( () -> generatedValues );
 			}
 			else {
 				for ( int i = 0; i < size; i++ ) {
 					final Generator generator = generators.get( i );
-					if ( generator != null ) {
+					if ( generator != null && generator.getEventTypes().contains( eventType ) ) {
 						final Object value = descriptor.getValue( currentValue, i );
 						final Object generatedValue = ((BeforeExecutionGenerator) generator)
 								.generate( session, owner, value, eventType );

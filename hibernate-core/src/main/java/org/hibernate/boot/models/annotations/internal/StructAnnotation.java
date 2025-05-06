@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Struct;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -21,14 +21,14 @@ public class StructAnnotation implements Struct {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public StructAnnotation(SourceModelBuildingContext modelContext) {
+	public StructAnnotation(ModelsContext modelContext) {
 		this.attributes = new String[0];
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public StructAnnotation(Struct annotation, SourceModelBuildingContext modelContext) {
+	public StructAnnotation(Struct annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.catalog = annotation.catalog();
 		this.schema = annotation.schema();
@@ -38,7 +38,7 @@ public class StructAnnotation implements Struct {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public StructAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public StructAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.catalog = (String) attributeValues.get( "catalog" );
 		this.schema = (String) attributeValues.get( "schema" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -148,8 +148,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 			final PersistenceContext persistenceContext) {
 		this.persister = factory == null
 				? null
-				: factory.getRuntimeMetamodels().getMappingMetamodel()
-						.getEntityDescriptor( entityName );
+				: factory.getMappingMetamodel().getEntityDescriptor( entityName );
 		this.id = id;
 		setCompressedValue( STATUS, status );
 		setCompressedValue( PREVIOUS_STATUS, previousStatus );
@@ -289,7 +288,7 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 
 		final SharedSessionContractImplementor session = getPersistenceContext().getSession();
 		session.getFactory().getCustomEntityDirtinessStrategy()
-				.resetDirty( entity, persister, session.asSessionImplementor() );
+				.resetDirty( entity, persister, (SessionImplementor) session );
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
@@ -357,49 +356,52 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 	}
 
 	private boolean isUnequivocallyNonDirty(Object entity) {
-		if ( isSelfDirtinessTracker( entity ) ) {
-			final boolean uninitializedProxy;
-			if ( isPersistentAttributeInterceptable( entity ) ) {
-				final PersistentAttributeInterceptor interceptor =
-						asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					EnhancementAsProxyLazinessInterceptor enhancementAsProxyLazinessInterceptor =
-							(EnhancementAsProxyLazinessInterceptor) interceptor;
-					return !enhancementAsProxyLazinessInterceptor.hasWrittenFieldNames(); //EARLY EXIT!
-				}
-				else {
-					uninitializedProxy = false;
-				}
+		return isSelfDirtinessTracker( entity )
+				? isNonDirtyViaTracker( entity )
+				: isNonDirtyViaCustomStrategy( entity );
+	}
+
+	private boolean isNonDirtyViaCustomStrategy(Object entity) {
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+				// we never have to check an uninitialized proxy
+				return true;
 			}
-			else if ( isHibernateProxy( entity ) ) {
-				uninitializedProxy = extractLazyInitializer( entity ).isUninitialized();
+		}
+
+		final SessionImplementor session = (SessionImplementor) getPersistenceContext().getSession();
+		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
+				session.getFactory().getCustomEntityDirtinessStrategy();
+		return customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), session )
+			&& !customEntityDirtinessStrategy.isDirty( entity, getPersister(), session );
+	}
+
+	private boolean isNonDirtyViaTracker(Object entity) {
+		final boolean uninitializedProxy;
+		if ( isPersistentAttributeInterceptable( entity ) ) {
+			final PersistentAttributeInterceptor interceptor =
+					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				return !lazinessInterceptor.hasWrittenFieldNames();
 			}
 			else {
 				uninitializedProxy = false;
 			}
-			// we never have to check an uninitialized proxy
-			return uninitializedProxy
-				|| !persister.hasCollections()
-					&& !persister.hasMutableProperties()
-					&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes()
-					&& asManagedEntity( entity ).$$_hibernate_useTracker();
+		}
+		else if ( isHibernateProxy( entity ) ) {
+			uninitializedProxy = extractLazyInitializer( entity ).isUninitialized();
 		}
 		else {
-			if ( isPersistentAttributeInterceptable( entity ) ) {
-				final PersistentAttributeInterceptor interceptor =
-						asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-					// we never have to check an uninitialized proxy
-					return true; //EARLY EXIT!
-				}
-			}
-
-			final SessionImplementor session = getPersistenceContext().getSession().asSessionImplementor();
-			final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
-					session.getFactory().getCustomEntityDirtinessStrategy();
-			return customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), session  )
-				&& !customEntityDirtinessStrategy.isDirty( entity, getPersister(), session );
+			uninitializedProxy = false;
 		}
+		// we never have to check an uninitialized proxy
+		return uninitializedProxy
+			|| !persister.hasCollections()
+				&& !persister.hasMutableProperties()
+				&& !asSelfDirtinessTracker( entity ).$$_hibernate_hasDirtyAttributes()
+				&& asManagedEntity( entity ).$$_hibernate_useTracker();
 	}
 
 	@Override

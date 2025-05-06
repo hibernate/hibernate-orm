@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -47,9 +47,9 @@ import jakarta.persistence.criteria.TemporalField;
 /**
  * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
  * to express a criteria query. The JPA-standard API defines all the operations
- * needed express any query written in standard JPQL. This interface extends
- * {@code CriteriaBuilder}, adding operations needed to express features of
- * HQL which are not available in standard JPQL. For example:
+ * needed to express any query written in standard JPQL. This interface extends
+ * {@code CriteriaBuilder}, adding operations needed to express features of HQL
+ * which are not available in standard JPQL. For example:
  * <ul>
  * <li>JPQL does not have a {@code format()} function, so
  *     {@link #format(Expression, String)} is declared here, and
@@ -382,7 +382,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments);
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
@@ -393,7 +393,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
 
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
-	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
+	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends Selection<?>> selections);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1072,7 +1072,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7")
 	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return sort( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
 	}
@@ -1080,7 +1080,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	/**
 	 * @deprecated Use {@linkplain #sort(JpaExpression, SortDirection, Nulls, boolean)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7")
 	default JpaOrder sort(
 			JpaExpression<?> sortExpression,
 			SortDirection sortOrder,

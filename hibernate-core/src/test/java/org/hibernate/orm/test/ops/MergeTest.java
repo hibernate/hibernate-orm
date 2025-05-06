@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.ops;
@@ -623,7 +623,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					session.getTransaction().commit();
 
 					assertInsertCount( 1, scope );
-					assertUpdateCount( 0, scope );
+					assertUpdateCount( 1, scope );
 
 					assertThat( root.getChildren().size(), is( 1 ) );
 					assertTrue( root.getChildren().contains( mergedChild ) );

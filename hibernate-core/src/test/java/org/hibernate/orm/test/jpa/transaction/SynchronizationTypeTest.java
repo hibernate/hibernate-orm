@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
@@ -103,7 +103,7 @@ public class SynchronizationTypeTest {
 			assertTrue( transactionCoordinator.isActive(), "EM was auto joined on creation" );
 			assertFalse( transactionCoordinator.isJoined(), "EM was auto joined on creation" );
 
-			session.getFlushMode();
+			session.checkOpen();
 			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 			assertTrue( transactionCoordinator.isActive() );
 			assertFalse( transactionCoordinator.isJoined() );

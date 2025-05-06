@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance.discriminator;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -114,7 +114,7 @@ public class SingleTableInheritancePersistTest {
 	public void testFetchChildrenCountTwiceFails(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<Long> query = session.createQuery(
+					Query<Long> query = session.createQuery(
 							"SELECT count(p) FROM Person p WHERE TYPE(p) = ?1",
 							Long.class
 					);

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -64,7 +64,8 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	public void visitOver(Over<?> over) {
 		final Expression expression = over.getExpression();
-		if ( expression instanceof FunctionExpression && "row_number".equals( ( (FunctionExpression) expression ).getFunctionName() ) ) {
+		if ( expression instanceof FunctionExpression functionExpression
+				&& "row_number".equals( functionExpression.getFunctionName() ) ) {
 			if ( over.getPartitions().isEmpty() && over.getOrderList().isEmpty()
 					&& over.getStartKind() == FrameKind.UNBOUNDED_PRECEDING
 					&& over.getEndKind() == FrameKind.CURRENT_ROW
@@ -220,26 +221,6 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
 		return false;
 	}
 

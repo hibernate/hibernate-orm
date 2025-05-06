@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
@@ -10,6 +10,8 @@ import org.hibernate.JDBCException;
  * Represents an error trying to apply a pessimistic {@link LockingStrategy} to an entity
  *
  * @author Steve Ebersole
+ *
+ * @see jakarta.persistence.PessimisticLockException
  */
 public class PessimisticEntityLockException extends LockingStrategyException {
 	/**

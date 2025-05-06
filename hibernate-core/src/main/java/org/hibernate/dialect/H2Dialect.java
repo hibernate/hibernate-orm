@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -29,14 +28,20 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.H2SqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
+import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.H2JsonJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -80,6 +85,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -109,6 +115,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
+ * <p>
+ * Please refer to the
+ * <a href="http://www.h2database.com/html/main.html">H2 documentation</a>.
+ *
  *
  * @author Thomas Mueller
  * @author Jürgen Kreitler
@@ -368,6 +378,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.unnest_h2( getMaximumArraySize() );
 		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
 		functionFactory.jsonTable_h2( getMaximumArraySize() );
+
+		functionFactory.hex( "rawtohex(?1)" );
+		functionFactory.sha( "hash('SHA-256', ?1)" );
+		functionFactory.md5( "hash('MD5', ?1)" );
 	}
 
 	/**
@@ -774,50 +788,51 @@ public class H2Dialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				// 23000: Check constraint violation: {0}
-				// 23001: Unique index or primary key violation: {0}
-				if ( sqle.getSQLState().startsWith( "23" ) ) {
-					final String message = sqle.getMessage();
-					final int i = message.indexOf( "violation: " );
-					if ( i > 0 ) {
-						String constraintDescription =
-								message.substring( i + "violation: ".length() )
-										.replace( "\"", "" );
-						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintDescription = constraintDescription.substring( 1, constraintDescription.indexOf( ':' ) );
-						}
-						final int j = constraintDescription.indexOf(" ON ");
-						return j>0 ? constraintDescription.substring(0, j) : constraintDescription;
-					}
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( extractErrorCode( sqle ) ) {
+				case 23505 -> {
+					// Unique index or primary key violation
+					final String constraint =
+							extractUsingTemplate( "violation: \"", "\"", sqle.getMessage() );
+					final int onIndex = constraint == null ? -1 : constraint.indexOf( " ON " );
+					yield onIndex > 0 ? constraint.substring( 0, onIndex ) : constraint;
 				}
-				return null;
+				case 23502 ->
+					// NULL not allowed for column
+						extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+				case 23503, 23506, 23513, 23514 ->
+					// Referential integrity or check constraint violation
+						extractUsingTemplate( "constraint violation: \"", ":", sqle.getMessage() );
+				default -> null;
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
-					case 23505 ->
-						// Unique constraint violation
-							new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-							);
 					case 40001 ->
 						// DEADLOCK DETECTED
 							new LockAcquisitionException(message, sqlException, sql);
 					case 50200 ->
 						// LOCK NOT AVAILABLE
-							new PessimisticLockException(message, sqlException, sql);
-					case 90006 ->
-						// NULL not allowed for column [90006-145]
-							new ConstraintViolationException( message, sqlException, sql,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+							new LockTimeoutException(message, sqlException, sql);
+					case 23505 ->
+						// Unique index or primary key violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 23502 ->
+						// NULL not allowed for column
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 23503, 23506 ->
+						// Referential integrity constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 23513, 23514 ->
+						// Check constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 57014 ->
+						// QUERY CANCELLED
 							new QueryTimeoutException( message, sqlException, sql );
 					default -> null;
 				};
@@ -927,7 +942,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return addQueryHints( query, hints );
+		return addUseIndexQueryHint( query, hints );
 	}
 
 	@Override
@@ -1073,6 +1088,49 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getDual() {
 		return "dual";
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		// Introduction of FILTER clause https://github.com/h2database/h2database/commit/9e6dbf3baa57000f670826ede431dc7fb4cd9d9c
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		// Just a guess
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// Just a guess
+		return true;
 	}
 
 }

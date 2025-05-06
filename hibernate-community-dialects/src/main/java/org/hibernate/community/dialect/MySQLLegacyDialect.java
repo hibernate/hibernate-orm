@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -27,6 +27,8 @@ import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -238,6 +240,16 @@ public class MySQLLegacyDialect extends Dialect {
 			default:
 				return super.columnType( sqlTypeCode );
 		}
+	}
+
+	/**
+	 * MySQL strips any trailing space character from a
+	 * value stored in a column of type {@code char(n)}.
+	 * @return {@code true}
+	 */
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
 	}
 
 	@Override
@@ -618,10 +630,7 @@ public class MySQLLegacyDialect extends Dialect {
 		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
+
 		// pi() produces a value with 7 digits unless we're explicit
 		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
@@ -733,7 +742,7 @@ public class MySQLLegacyDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement );
+				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement, MySQLLegacyDialect.this );
 			}
 		};
 	}
@@ -887,7 +896,7 @@ public class MySQLLegacyDialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )
-				: addQueryHints( query, hints );
+				: addUseIndexQueryHint( query, hints );
 	}
 
 	/**
@@ -1318,16 +1327,12 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		}
+		return switch ( timeout ) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case LockOptions.WAIT_FOREVER -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1494,6 +1499,47 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public String getFromDualForSelectOnly() {
 		return getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		// It supports a proprietary operator
+		return true;
+	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 5, 7 );
 	}
 
 }

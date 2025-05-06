@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
@@ -15,10 +15,25 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
- * Represents a JPA callback on the embeddable type
+ * Represents a JPA callback method declared by an embeddable type.
+ *
+ * @deprecated The JPA specification does not require that we allow
+ * entity lifecycle callbacks on embeddable classes, and this is a
+ * misfeature since:
+ * <ul>
+ * <li>an embeddable objects doesn't have a well-defined lifecycle,
+ * <li>it's difficult to understand what this means for composite
+ *     collection elements, and
+ * <li>currently, the {@code PreUpdate}/{@code PostUpdate} callbacks
+ *     get called when the embeddable object is not itself being
+ *     updated.
+ * </ul>
+ * It would be OK to simply remove this capability, since fortunately
+ * we never documented it.
  *
  * @author Vlad Mihalcea
  */
+@Deprecated(since = "7")
 public class EmbeddableCallback extends AbstractCallback {
 
 	public static class Definition implements CallbackDefinition {
@@ -48,18 +63,17 @@ public class EmbeddableCallback extends AbstractCallback {
 	}
 
 	@Override
-	public boolean performCallback(Object entity) {
+	public void performCallback(Object entity) {
 		try {
-			Object embeddable = embeddableGetter.get( entity );
+			final Object embeddable = embeddableGetter.get( entity );
 			if ( embeddable != null ) {
 				callbackMethod.invoke( embeddable );
 			}
-			return true;
 		}
 		catch (InvocationTargetException e) {
 			//keep runtime exceptions as is
-			if ( e.getTargetException() instanceof RuntimeException ) {
-				throw (RuntimeException) e.getTargetException();
+			if ( e.getTargetException() instanceof RuntimeException runtimeException ) {
+				throw runtimeException;
 			}
 			else {
 				throw new RuntimeException( e.getTargetException() );

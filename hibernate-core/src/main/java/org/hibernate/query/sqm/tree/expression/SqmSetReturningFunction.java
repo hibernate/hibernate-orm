@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -8,7 +8,8 @@ import java.util.List;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
@@ -78,19 +79,19 @@ public abstract class SqmSetReturningFunction<T> extends AbstractSqmNode impleme
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( functionName );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( functionName );
 		if ( arguments.isEmpty() ) {
-			sb.append( "()" );
+			hql.append( "()" );
 			return;
 		}
-		sb.append( '(' );
-		arguments.get( 0 ).appendHqlString( sb );
+		hql.append( '(' );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append( ", " );
-			arguments.get( i ).appendHqlString( sb );
+			hql.append( ", " );
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 }

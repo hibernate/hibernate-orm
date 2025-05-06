@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
 				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true"),
 				@Setting(name = AvailableSettings.DIALECT_NATIVE_PARAM_MARKERS, value = "false"),
+				@Setting(name = AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, value = "bind")
 		},
 		useCollectingStatementInspector = true
 )
@@ -101,6 +102,30 @@ public class InClauseParameterPaddingCriteriaTest {
 		} );
 
 		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (d1_0.id,d1_0.id,d1_0.id)" ) );
+	}
+
+
+	@Test @JiraKey("HHH-14119")
+	public void testInClauseParameterBindingPadding(EntityManagerFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		statementInspector.clear();
+
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Integer> query = cb.createQuery( Integer.class );
+			Root<Document> document = query.from( Document.class );
+
+			query
+					.select( document.get( "id" ) )
+					.where( document.get( "id" ).in( Arrays.asList( 1, 2, 3, 4, 5 ) ) );
+
+
+			List<Integer> ids = entityManager.createQuery( query ).getResultList();
+			assertEquals( 1, ids.size() );
+		} );
+
+		assertTrue( statementInspector.getSqlQueries().get( 0 ).endsWith( "in (?,?,?,?,?,?,?,?)" ) );
+
 	}
 
 	@Entity(name = "Document")

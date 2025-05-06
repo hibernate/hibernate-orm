@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetomany.orderby;
 
-import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinTableNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -42,7 +42,7 @@ public class IdClassAndOrderByTest {
 	public static class PhysicalNamingStrategyProvider implements SettingProvider.Provider<String> {
 		@Override
 		public String getSetting() {
-			return CamelCaseToUnderscoresNamingStrategy.class.getName();
+			return PhysicalNamingStrategySnakeCaseImpl.class.getName();
 		}
 	}
 

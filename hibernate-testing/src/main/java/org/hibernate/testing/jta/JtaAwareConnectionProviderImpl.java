@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jta;
@@ -56,6 +56,7 @@ import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiato
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
@@ -181,6 +182,11 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return delegate.getDatabaseConnectionInfo( dialect );
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+		return delegate.getDatabaseConnectionInfo( dialect, metaData );
 	}
 
 	protected Transaction findCurrentTransaction() {

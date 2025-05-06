@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -32,7 +32,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -114,11 +113,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
-
 		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
 
 		final Dialect dialect = creationContext.getDialect();
-		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 
 		// CLASS + TABLE
@@ -254,7 +251,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			discriminatorInsertable = isDiscriminatorInsertable( persistentClass );
 			if ( discriminator.hasFormula() ) {
 				final Formula formula = (Formula) selectable;
-				discriminatorFormulaTemplate = formula.getTemplate( dialect, typeConfiguration, functionRegistry );
+				discriminatorFormulaTemplate = formula.getTemplate( dialect, typeConfiguration );
 				discriminatorColumnName = null;
 				discriminatorColumnReaders = null;
 				discriminatorColumnReaderTemplate = null;
@@ -264,7 +261,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				final Column column = (Column) selectable;
 				discriminatorColumnName = column.getQuotedName( dialect );
 				discriminatorColumnReaders = column.getReadExpr( dialect );
-				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration, functionRegistry );
+				discriminatorColumnReaderTemplate = column.getTemplate( dialect, typeConfiguration );
 				discriminatorAlias = column.getAlias( dialect, persistentClass.getRootTable() );
 				discriminatorFormulaTemplate = null;
 			}
@@ -566,9 +563,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			return;
 		}
 		// The following optimization is to add the discriminator filter fragment for all treated entity names
-		final MappingMetamodelImplementor mappingMetamodel = getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
+		final MappingMetamodelImplementor mappingMetamodel = getFactory().getMappingMetamodel();
 
 		boolean containsTreatUse = false;
 		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {

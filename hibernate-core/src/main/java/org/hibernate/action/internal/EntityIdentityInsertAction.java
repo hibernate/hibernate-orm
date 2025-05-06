@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -10,7 +10,9 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
@@ -23,7 +25,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
- * The action for performing entity insertions when entity is using IDENTITY column identifier generation
+ * The action for performing entity insertions when entity is using {@code IDENTITY} column identifier generation
  *
  * @see EntityInsertAction
  */
@@ -80,12 +82,18 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		// else inserted the same pk first, the insert would fail
 
 		if ( !isVeto() ) {
-			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert(
-					instance,
-					getState(),
-					session
-			);
-			generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent event = eventMonitor.beginEntityInsertEvent();
+			boolean success = false;
+			final GeneratedValues generatedValues;
+			try {
+				generatedValues = persister.getInsertCoordinator().insert( instance, getState(), session );
+				generatedId = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
+				success = true;
+			}
+			finally {
+				eventMonitor.completeEntityInsertEvent( event, generatedId, persister.getEntityName(), success, session );
+			}
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( persister.getRowIdMapping() != null ) {
 				rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
@@ -131,7 +139,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	@Override
 	protected boolean hasPostCommitEventListeners() {
 		final EventListenerGroup<PostInsertEventListener> group
-				= getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT;
+				= getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT;
 		for ( PostInsertEventListener listener : group.listeners() ) {
 			if ( listener.requiresPostCommitHandling( getPersister() ) ) {
 				return true;
@@ -152,32 +160,26 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	protected void postInsert() {
 		if ( isDelayed ) {
-			eventSource().getPersistenceContextInternal()
+			getSession().getPersistenceContextInternal()
 					.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}
-		getFastSessionServices().eventListenerGroup_POST_INSERT
+		getEventListenerGroups().eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
 	}
 
 	PostInsertEvent newPostInsertEvent() {
-		return new PostInsertEvent(
-				getInstance(),
-				generatedId,
-				getState(),
-				getPersister(),
-				eventSource()
-		);
+		return new PostInsertEvent( getInstance(), generatedId, getState(), getPersister(), eventSource() );
 	}
 
 	protected void postCommitInsert(boolean success) {
-		getFastSessionServices().eventListenerGroup_POST_COMMIT_INSERT
+		getEventListenerGroups().eventListenerGroup_POST_COMMIT_INSERT
 			.fireLazyEventOnEachListener( this::newPostInsertEvent,
 					success ? PostInsertEventListener::onPostInsert : this::postCommitInsertOnFailure );
 	}
 
 	private void postCommitInsertOnFailure(PostInsertEventListener listener, PostInsertEvent event) {
-		if ( listener instanceof PostCommitInsertEventListener ) {
-			((PostCommitInsertEventListener) listener).onPostInsertCommitFailed( event );
+		if ( listener instanceof PostCommitInsertEventListener postCommitInsertEventListener ) {
+			postCommitInsertEventListener.onPostInsertCommitFailed( event );
 		}
 		else {
 			//default to the legacy implementation that always fires the event
@@ -187,7 +189,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 
 	protected boolean preInsert() {
 		final EventListenerGroup<PreInsertEventListener> listenerGroup
-				= getFastSessionServices().eventListenerGroup_PRE_INSERT;
+				= getEventListenerGroups().eventListenerGroup_PRE_INSERT;
 		if ( listenerGroup.isEmpty() ) {
 			// NO_VETO
 			return false;

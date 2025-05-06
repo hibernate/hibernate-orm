@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -15,8 +15,8 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -61,19 +61,19 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 				deepCopy( results )
 		);
 
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		try {
 			session.getEventListenerManager().cachePutStart();
 			cacheRegion.putIntoCache( key, cacheItem, session );
 		}
 		finally {
-			eventManager.completeCachePutEvent(
+			eventMonitor.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cacheRegion,
 					true,
-					EventManager.CacheActionDescription.QUERY_RESULT
+					EventMonitor.CacheActionDescription.QUERY_RESULT
 			);
 			session.getEventListenerManager().cachePutEnd();
 		}
@@ -152,14 +152,14 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 
 	private CacheItem getCachedData(QueryKey key, SharedSessionContractImplementor session) {
 		CacheItem cachedItem = null;
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			cachedItem = (CacheItem) cacheRegion.getFromCache( key, session );
 		}
 		finally {
-			eventManager.completeCacheGetEvent(
+			eventMonitor.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheRegion,
@@ -175,7 +175,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 		return "QueryResultsCache(" + cacheRegion.getName() + ')';
 	}
 
-	public static class CacheItem implements Serializable {
+	static class CacheItem implements Serializable {
 		private final Long timestamp;
 		private final List<?> results;
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -34,6 +34,8 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
@@ -41,12 +43,14 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.QueryTypeMismatchException;
-import org.hibernate.query.criteria.JpaOrder;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -57,6 +61,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -72,6 +77,7 @@ import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
@@ -85,6 +91,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -127,6 +134,10 @@ public class SqmUtil {
 		return sqm instanceof SqmDmlStatement;
 	}
 
+	public static <T> boolean isRestrictedMutation(SqmStatement<T> sqmStatement) {
+		return sqmStatement instanceof SqmDeleteOrUpdateStatement;
+	}
+
 	public static void verifyIsSelectStatement(SqmStatement<?> sqm, String hqlString) {
 		if ( ! isSelect( sqm ) ) {
 			throw new IllegalSelectQueryException(
@@ -160,6 +171,27 @@ public class SqmUtil {
 		);
 	}
 
+	public static void verifyIsRestrictedMutation(SqmStatement<?> sqm, String hqlString) {
+		if ( ! isRestrictedMutation( sqm ) ) {
+			throw new IllegalMutationQueryException(
+					String.format(
+							Locale.ROOT,
+							"Expecting a restricted mutation query [%s], but found %s",
+							SqmDeleteOrUpdateStatement.class.getName(),
+							sqm.getClass().getName()
+					),
+					hqlString
+			);
+		}
+	}
+
+	public static @Nullable String determineAffectedTableName(TableGroup tableGroup, ValuedModelPart mapping) {
+		return tableGroup.getModelPart() instanceof EntityAssociationMapping associationMapping
+			&& !associationMapping.containsTableReference( mapping.getContainingTableExpression() )
+				? associationMapping.getAssociatedEntityMappingType().getMappedTableDetails().getTableName()
+				: null;
+	}
+
 	/**
 	 * Utility that returns the entity association target's mapping type if the specified {@code sqmPath} should
 	 * be dereferenced using the target table, i.e. when the path's lhs is an explicit join that is used in the
@@ -173,13 +205,13 @@ public class SqmUtil {
 		if ( sqlAstCreationState.getCurrentClauseStack().getCurrent() != Clause.FROM
 				&& modelPartContainer.getPartMappingType() != modelPartContainer
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?> ) {
-			final ModelPart modelPart = modelPartContainer instanceof PluralAttributeMapping plural ?
-					getCollectionPart( plural, castNonNull( sqmPath.getNavigablePath().getParent() ) )
-					: modelPartContainer;
-			if ( modelPart instanceof EntityAssociationMapping association ) {
-				if ( shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
-					return association.getAssociatedEntityMappingType();
-				}
+			final ModelPart modelPart =
+					modelPartContainer instanceof PluralAttributeMapping plural
+							? getCollectionPart( plural, castNonNull( sqmPath.getNavigablePath().getParent() ) )
+							: modelPartContainer;
+			if ( modelPart instanceof EntityAssociationMapping association
+					&& shouldRenderTargetSide( sqmPath, association, sqlAstCreationState ) ) {
+				return association.getAssociatedEntityMappingType();
 			}
 		}
 		return modelPartContainer;
@@ -207,20 +239,20 @@ public class SqmUtil {
 		final NavigablePath np = sqmPath.getNavigablePath();
 		final Boolean found = queryPartStack.findCurrentFirst( queryPart -> {
 			final SqmQuerySpec<?> spec = queryPart.getFirstQuerySpec();
-			return spec.groupByClauseContains( np, converter ) || spec.orderByClauseContains( np, converter ) ?
-					true :
-					null;
+			return spec.groupByClauseContains( np, converter )
+				|| spec.orderByClauseContains( np, converter )
+					? true : null;
 		} );
 		return Boolean.TRUE.equals( found );
 	}
 
 	private static CollectionPart getCollectionPart(PluralAttributeMapping attribute, NavigablePath path) {
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( path.getLocalName() );
-		return nature != null ? switch ( nature ) {
+		return nature == null ? null : switch ( nature ) {
 			case ELEMENT -> attribute.getElementDescriptor();
 			case INDEX -> attribute.getIndexDescriptor();
 			case ID -> attribute.getIdentifierDescriptor();
-		} : null;
+		};
 	}
 
 	/**
@@ -257,7 +289,13 @@ public class SqmUtil {
 	 * or one that has an explicit on clause predicate.
 	 */
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath, EntityAssociationMapping associationMapping) {
-		if ( associationMapping.isFkOptimizationAllowed() && sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
+		// By default, never allow the FK optimization if the path is a join, unless the association has a join table
+		// Hibernate ORM has no way for users to refer to collection/join table rows,
+		// so referring the columns of these rows by default when requesting FK column attributes is sensible.
+		// Users that need to refer to the actual target table columns will have to add an explicit entity join.
+		if ( associationMapping.isFkOptimizationAllowed()
+			&& sqmPath instanceof SqmJoin<?, ?> sqmJoin
+			&& hasJoinTable( associationMapping ) ) {
 			switch ( sqmJoin.getSqmJoinType() ) {
 				case LEFT:
 					if ( isFiltered( associationMapping ) ) {
@@ -273,6 +311,16 @@ public class SqmUtil {
 		return false;
 	}
 
+	private static boolean hasJoinTable(EntityAssociationMapping associationMapping) {
+		if ( associationMapping instanceof CollectionPart collectionPart ) {
+			return !collectionPart.getCollectionAttribute().getCollectionDescriptor().isOneToMany();
+		}
+		else if ( associationMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
+			return toOneAttributeMapping.hasJoinTable();
+		}
+		return false;
+	}
+
 	private static boolean isFiltered(EntityAssociationMapping associationMapping) {
 			final EntityMappingType entityMappingType = associationMapping.getAssociatedEntityMappingType();
 			return !associationMapping.isFkOptimizationAllowed()
@@ -282,12 +330,10 @@ public class SqmUtil {
 	}
 
 	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmJoin<?, ?> sqmJoin) {
-		if ( sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin ) {
-			if ( singularJoin.getAttribute().getSqmPathType() instanceof EntityDomainType<?> ) {
-				return resolveAssociationMapping( singularJoin );
-			}
-		}
-		return null;
+		return sqmJoin instanceof SqmSingularJoin<?, ?> singularJoin
+			&& singularJoin.getAttribute().getPathType() instanceof EntityDomainType<?>
+				? resolveAssociationMapping( singularJoin )
+				: null;
 	}
 
 	private static @Nullable EntityAssociationMapping resolveAssociationMapping(SqmSingularJoin<?, ?> sqmJoin) {
@@ -373,7 +419,7 @@ public class SqmUtil {
 			SqmPathSource<A> pathSource,
 			SqmJoinType requestedJoinType) {
 		for ( final SqmJoin<T, ?> join : sqmFrom.getSqmJoins() ) {
-			if ( join.getReferencedPathSource() == pathSource ) {
+			if ( join.getModel() == pathSource ) {
 				final SqmAttributeJoin<T, ?> attributeJoin = (SqmAttributeJoin<T, ?>) join;
 				if ( attributeJoin.isFetched() ) {
 					final SqmJoinType joinType = join.getSqmJoinType();
@@ -407,8 +453,7 @@ public class SqmUtil {
 				final Map<SqmParameter<?>, List<JdbcParametersList>> sqmParamMap =
 						result.computeIfAbsent( queryParam, qp -> new IdentityHashMap<>( sqmParams.size() ) );
 				for ( SqmParameter<?> sqmParam : sqmParams ) {
-					final Map<SqmParameter<?>, List<List<JdbcParameter>>> jdbcParamsBySqmParam =
-							jdbcParameterBySqmParameterAccess.getJdbcParamsBySqmParam();
+					final var jdbcParamsBySqmParam = jdbcParameterBySqmParameterAccess.getJdbcParamsBySqmParam();
 					sqmParamMap.put( sqmParam, convert( jdbcParamsBySqmParam.get( sqmParam ) ) );
 					for ( SqmParameter<?> expansion : domainParameterXref.getExpansions( sqmParam ) ) {
 						sqmParamMap.put( expansion, convert( jdbcParamsBySqmParam.get( expansion ) ) );
@@ -481,142 +526,171 @@ public class SqmUtil {
 			SharedSessionContractImplementor session) {
 		final JdbcParameterBindings jdbcParameterBindings =
 				new JdbcParameterBindingsImpl( domainParameterXref.getSqmParameterCount() );
-		domainParameterXref.getQueryParameters().forEach( (queryParam, sqmParameters) -> {
-			final QueryParameterBinding<?> domainParamBinding = domainParamBindings.getBinding( queryParam );
-			final Map<SqmParameter<?>, List<JdbcParametersList>> jdbcParamMap = jdbcParamXref.get( queryParam );
-			for ( SqmParameter<?> sqmParameter : sqmParameters ) {
-				final MappingModelExpressible resolvedMappingModelType =
-						mappingModelResolutionAccess.getResolvedMappingModelType( sqmParameter );
-				if ( resolvedMappingModelType != null ) {
-					domainParamBinding.setType( resolvedMappingModelType );
-				}
-				final Bindable parameterType = determineParameterType(
-						domainParamBinding,
-						queryParam,
-						sqmParameters,
-						mappingModelResolutionAccess,
-						session.getFactory()
-				);
+		domainParameterXref.getQueryParameters()
+				.forEach( (queryParameter, sqmParameters) ->
+						createJdbcParameterBinding(
+								domainParamBindings,
+								domainParameterXref,
+								jdbcParamXref,
+								mappingModelResolutionAccess,
+								session,
+								queryParameter,
+								sqmParameters,
+								jdbcParameterBindings
+						) );
+		return jdbcParameterBindings;
+	}
 
-				final List<JdbcParametersList> jdbcParamsBinds = jdbcParamMap.get( sqmParameter );
-				if ( jdbcParamsBinds == null ) {
-					// This can happen when a group or order by item expression, that contains parameters,
-					// is replaced with an alias reference expression, which can happen for JPA Criteria queries
-					continue;
-				}
-				if ( !domainParamBinding.isBound() ) {
-					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-						parameterType.forEachJdbcType(
-								(position, jdbcMapping) ->
-										jdbcParameterBindings.addBinding( jdbcParams.get( position ),
-												new JdbcParameterBindingImpl( jdbcMapping, null ) )
-						);
-					}
-				}
-				else if ( domainParamBinding.isMultiValued() ) {
-					final Collection<?> bindValues = domainParamBinding.getBindValues();
-					final Iterator<?> valueItr = bindValues.iterator();
-					// the original SqmParameter is the one we are processing.. create a binding for it..
-					final Object firstValue = valueItr.next();
-					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-						createValueBindings(
-								jdbcParameterBindings,
-								queryParam,
-								domainParamBinding,
-								parameterType,
-								jdbcParams,
-								firstValue,
-								session
-						);
-					}
+	private static <T> void createJdbcParameterBinding(
+			QueryParameterBindings domainParamBindings,
+			DomainParameterXref domainParameterXref,
+			Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamXref,
+			SqmParameterMappingModelResolutionAccess modelResolutionAccess,
+			SharedSessionContractImplementor session,
+			QueryParameterImplementor<T> queryParameter,
+			List<SqmParameter<?>> sqmParameters,
+			JdbcParameterBindings jdbcParameterBindings) {
+		final QueryParameterBinding<T> domainParamBinding = domainParamBindings.getBinding( queryParameter );
+		final var jdbcParamMap = jdbcParamXref.get( queryParameter );
+		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
+			final MappingModelExpressible<T> resolvedMappingModelType =
+					modelResolutionAccess.getResolvedMappingModelType( checkParameter( queryParameter, sqmParameter ) );
+			if ( resolvedMappingModelType != null ) {
+				domainParamBinding.setType( resolvedMappingModelType );
+			}
+			final Bindable parameterType =
+					determineParameterType( domainParamBinding, queryParameter, sqmParameters, modelResolutionAccess,
+							session.getFactory() );
 
-					// and then one for each of the expansions
-					final List<SqmParameter<?>> expansions = domainParameterXref.getExpansions( sqmParameter );
-					final int expansionCount = bindValues.size() - 1;
-					final int parameterUseCount = jdbcParamsBinds.size();
-					assert expansions.size() == expansionCount * parameterUseCount;
-					int expansionPosition = 0;
-					while ( valueItr.hasNext() ) {
-						final Object expandedValue = valueItr.next();
-						for ( int j = 0; j < parameterUseCount; j++ ) {
-							final SqmParameter<?> expansionSqmParam = expansions.get( expansionPosition + j * expansionCount );
-							final List<JdbcParametersList> jdbcParamBinds = jdbcParamMap.get( expansionSqmParam );
-							for ( int i = 0; i < jdbcParamBinds.size(); i++ ) {
-								final JdbcParametersList expansionJdbcParams = jdbcParamBinds.get( i );
-								createValueBindings(
-										jdbcParameterBindings,
-										queryParam,
-										domainParamBinding,
-										parameterType,
-										expansionJdbcParams,
-										expandedValue,
-										session
-								);
-							}
+			final List<JdbcParametersList> jdbcParamsBinds = jdbcParamMap.get( sqmParameter );
+			if ( jdbcParamsBinds == null ) {
+				// This can happen when a group or order by item expression, that contains parameters,
+				// is replaced with an alias reference expression, which can happen for JPA Criteria queries
+			}
+			else if ( !domainParamBinding.isBound() ) {
+				for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+					final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
+					parameterType.forEachJdbcType( (position, jdbcMapping) ->
+							jdbcParameterBindings.addBinding( jdbcParams.get( position ),
+									new JdbcParameterBindingImpl( jdbcMapping, null ) ) );
+				}
+			}
+			else if ( domainParamBinding.isMultiValued() ) {
+				final Collection<?> bindValues = domainParamBinding.getBindValues();
+				final Iterator<?> valueIterator = bindValues.iterator();
+				// the original SqmParameter is the one we are processing - create a binding for it
+				final Object firstValue = valueIterator.next();
+				for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+					final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
+					createValueBindings(
+							jdbcParameterBindings,
+							queryParameter,
+							domainParamBinding,
+							parameterType,
+							jdbcParams,
+							firstValue,
+							session
+					);
+				}
+
+				// and then one for each of the expansions
+				final List<SqmParameter<?>> expansions = domainParameterXref.getExpansions( sqmParameter );
+				final int expansionCount = bindValues.size() - 1;
+				final int parameterUseCount = jdbcParamsBinds.size();
+				assert expansions.size() == expansionCount * parameterUseCount;
+				int expansionPosition = 0;
+				while ( valueIterator.hasNext() ) {
+					final Object expandedValue = valueIterator.next();
+					for ( int j = 0; j < parameterUseCount; j++ ) {
+						final SqmParameter<?> expansionSqmParam = expansions.get( expansionPosition + j * expansionCount );
+						final List<JdbcParametersList> jdbcParamBinds = jdbcParamMap.get( expansionSqmParam );
+						for ( int i = 0; i < jdbcParamBinds.size(); i++ ) {
+							final JdbcParametersList expansionJdbcParams = jdbcParamBinds.get( i );
+							createValueBindings(
+									jdbcParameterBindings,
+									queryParameter,
+									domainParamBinding,
+									parameterType,
+									expansionJdbcParams,
+									expandedValue,
+									session
+							);
 						}
-						expansionPosition++;
+					}
+					expansionPosition++;
+				}
+			}
+			else {
+				final JdbcMapping jdbcMapping = jdbcMapping( domainParamBinding );
+				final BasicValueConverter valueConverter =
+						jdbcMapping == null ? null : jdbcMapping.getValueConverter();
+				if ( valueConverter != null ) {
+					final Object convertedValue =
+							valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
+					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
+						assert jdbcParams.size() == 1;
+						final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
+						jdbcParameterBindings.addBinding( jdbcParameter,
+								new JdbcParameterBindingImpl( jdbcMapping, convertedValue ) );
 					}
 				}
 				else {
-					final JdbcMapping jdbcMapping;
-					if ( domainParamBinding.getType() instanceof JdbcMapping mapping ) {
-						jdbcMapping = mapping;
-					}
-					// TODO: why do the test and the cast disagree here? getBindType() vs getType()
-					else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping ) {
-						jdbcMapping = ( (BasicValuedMapping) domainParamBinding.getType() ).getJdbcMapping();
-					}
-					else {
-						jdbcMapping = null;
-					}
-
-					final BasicValueConverter valueConverter =
-							jdbcMapping == null ? null : jdbcMapping.getValueConverter();
-					if ( valueConverter != null ) {
-						final Object convertedValue =
-								valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
+					final Object bindValue = domainParamBinding.getBindValue();
+					if ( bindValue == null ) {
 						for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 							final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-							assert jdbcParams.size() == 1;
-							final JdbcParameter jdbcParameter = jdbcParams.get( 0 );
-							jdbcParameterBindings.addBinding( jdbcParameter,
-									new JdbcParameterBindingImpl( jdbcMapping, convertedValue ) );
+							for ( int j = 0; j < jdbcParams.size(); j++ ) {
+								final JdbcParameter jdbcParameter = jdbcParams.get( j );
+								jdbcParameterBindings.addBinding( jdbcParameter,
+										new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
+							}
 						}
 					}
 					else {
-						final Object bindValue = domainParamBinding.getBindValue();
-						if ( bindValue == null ) {
-							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-								final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-								for ( int j = 0; j < jdbcParams.size(); j++ ) {
-									final JdbcParameter jdbcParameter = jdbcParams.get( j );
-									jdbcParameterBindings.addBinding( jdbcParameter,
-											new JdbcParameterBindingImpl( jdbcMapping, bindValue ) );
-								}
-							}
-						}
-						else {
-							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-								final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-								createValueBindings(
-										jdbcParameterBindings,
-										queryParam,
-										domainParamBinding,
-										parameterType,
-										jdbcParams,
-										bindValue,
-										session
-								);
-							}
+						for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+							final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
+							createValueBindings(
+									jdbcParameterBindings,
+									queryParameter,
+									domainParamBinding,
+									parameterType,
+									jdbcParams,
+									bindValue,
+									session
+							);
 						}
 					}
 				}
 			}
-		} );
+		}
+	}
 
-		return jdbcParameterBindings;
+	private static <T> SqmParameter<T> checkParameter
+			(QueryParameterImplementor<T> queryParameter, SqmParameter<?> sqmParameter) {
+		// TODO: currently no robust way to check the types
+//		assert type == sqmParameter.getParameterType()
+//			|| sqmParameter.getParameterType().isAssignableFrom( queryParameter.getParameterType() );
+		assert sqmParameter.getName() == null
+			|| sqmParameter.getName().equals( queryParameter.getName() );
+		assert sqmParameter.getPosition() == null
+			|| sqmParameter.getPosition().equals( queryParameter.getPosition() );
+		@SuppressWarnings("unchecked") // not great!
+		final SqmParameter<T> checkedSqmParameter = (SqmParameter<T>) sqmParameter;
+		return checkedSqmParameter;
+	}
+
+	private static <T> JdbcMapping jdbcMapping(QueryParameterBinding<T> domainParamBinding) {
+		if ( domainParamBinding.getType() instanceof JdbcMapping mapping ) {
+			return mapping;
+		}
+		// TODO: why do the test and the cast disagree here? getBindType() vs getType()
+		else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping ) {
+			return ( (BasicValuedMapping) domainParamBinding.getType() ).getJdbcMapping();
+		}
+		else {
+			return null;
+		}
 	}
 
 	private static void createValueBindings(
@@ -628,55 +702,83 @@ public class SqmUtil {
 			Object bindValue,
 			SharedSessionContractImplementor session) {
 		if ( parameterType == null ) {
-			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
+			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter: " + domainParam );
 		}
-		else if ( parameterType instanceof PluralAttributeMapping pluralAttributeMapping ) {
+		final int offset =
+				jdbcParameterBindings.registerParametersForEachJdbcValue(
+						bindValue( parameterType, bindValue, session ),
+						parameterType( domainParamBinding, parameterType ),
+						jdbcParams,
+						session
+				);
+		assert offset == jdbcParams.size();
+	}
+
+	private static Object bindValue(
+			Bindable parameterType, Object bindValue, SharedSessionContractImplementor session) {
+		if ( parameterType instanceof EntityIdentifierMapping identifierMapping ) {
+			return getIdentifier( bindValue, session, identifierMapping );
+		}
+		else if ( parameterType instanceof EntityMappingType entityMappingType ) {
+			return getIdentifier( bindValue, session, entityMappingType.getIdentifierMapping() );
+		}
+		else if ( parameterType instanceof EntityAssociationMapping association ) {
+			// If the association is the target, we must use the identifier of the EntityMappingType
+			return getIdentifier( bindValue, session, association );
+		}
+		else {
+			return bindValue;
+		}
+	}
+
+	private static Object getIdentifier
+			(Object bindValue, SharedSessionContractImplementor session, EntityAssociationMapping association) {
+		return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+				? association.getAssociatedEntityMappingType()
+				.getIdentifierMapping().getIdentifier( bindValue )
+				: association.getForeignKeyDescriptor()
+						.getAssociationKeyFromSide( bindValue, association.getSideNature().inverse(), session );
+	}
+
+	private static Object getIdentifier
+			(Object bindValue, SharedSessionContractImplementor session, EntityIdentifierMapping identifierMapping) {
+		return identifierMapping.findContainingEntityMapping().getRepresentationStrategy()
+						.getInstantiator().isInstance( bindValue )
+				? identifierMapping.getIdentifierIfNotUnsaved( bindValue, session )
+				: bindValue;
+	}
+
+	private static Bindable parameterType(
+			QueryParameterBinding<?> domainParamBinding, Bindable parameterType) {
+		if ( parameterType instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			// Default to the collection element
 			parameterType = pluralAttributeMapping.getElementDescriptor();
 		}
 
-		if ( parameterType instanceof EntityIdentifierMapping identifierMapping ) {
-			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
-			if ( entityMapping.getRepresentationStrategy().getInstantiator()
-					.isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
-			}
+		if ( parameterType instanceof EntityIdentifierMapping ) {
+			return parameterType;
 		}
 		else if ( parameterType instanceof EntityMappingType entityMappingType ) {
-			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
-			parameterType = identifierMapping;
-			if ( entityMapping.getRepresentationStrategy().getInstantiator()
-					.isInstance( bindValue, session.getFactory() ) ) {
-				bindValue = identifierMapping.getIdentifierIfNotUnsaved( bindValue, session );
-			}
+			return entityMappingType.getIdentifierMapping();
 		}
 		else if ( parameterType instanceof EntityAssociationMapping association ) {
-			if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-				// If the association is the target, we must use the identifier of the EntityMappingType
-				bindValue = association.getAssociatedEntityMappingType().getIdentifierMapping()
-						.getIdentifier( bindValue );
-				parameterType = association.getAssociatedEntityMappingType().getIdentifierMapping();
-			}
-			else {
-				bindValue = association.getForeignKeyDescriptor()
-						.getAssociationKeyFromSide( bindValue, association.getSideNature().inverse(), session );
-				parameterType = association.getForeignKeyDescriptor();
-			}
+			// If the association is the target, we must use the identifier of the EntityMappingType
+			return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+					? association.getAssociatedEntityMappingType().getIdentifierMapping()
+					: association.getForeignKeyDescriptor();
 		}
 		else if ( parameterType instanceof JavaObjectType ) {
-			parameterType = domainParamBinding.getType();
+			return domainParamBinding.getType();
 		}
-
-		final int offset =
-				jdbcParameterBindings.registerParametersForEachJdbcValue( bindValue, parameterType, jdbcParams, session );
-		assert offset == jdbcParams.size();
+		else {
+			return parameterType;
+		}
 	}
 
 	public static Bindable determineParameterType(
 			QueryParameterBinding<?> binding,
 			QueryParameterImplementor<?> parameter,
-			List<SqmParameter<?>> sqmParameters,
+			List<? extends SqmParameter<?>> sqmParameters,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
 
@@ -699,8 +801,8 @@ public class SqmUtil {
 		}
 
 		for ( int i = 0; i < sqmParameters.size(); i++ ) {
-			final MappingModelExpressible<?> mappingModelType = mappingModelResolutionAccess
-					.getResolvedMappingModelType( sqmParameters.get( i ) );
+			final MappingModelExpressible<?> mappingModelType =
+					mappingModelResolutionAccess.getResolvedMappingModelType( sqmParameters.get( i ) );
 			if ( mappingModelType != null ) {
 				return mappingModelType;
 			}
@@ -761,42 +863,35 @@ public class SqmUtil {
 		}
 	}
 
-	static JpaOrder sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
+	public static SqmSortSpecification sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
-		int element = order.getElement();
-		if ( element < 1) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element
-					+ " (the first select item is element 1)");
-		}
-		if ( element > items.size() ) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element
-					+ " (there are only " + items.size() + " select items)");
-		}
-		final SqmSelectableNode<?> selected = items.get( element-1 );
+		final SqmSelectableNode<?> selected = selectedNode( sqm, order ); // does validation by side effect!
+		return createSortSpecification( sqm, order, items, selected );
+	}
 
+	private static SqmSortSpecification createSortSpecification(
+			SqmSelectStatement<?> sqm, Order<?> order, List<SqmSelectableNode<?>> items, SqmSelectableNode<?> selected) {
 		final NodeBuilder builder = sqm.nodeBuilder();
-		if ( order.getEntityClass() == null ) {
+		if ( order.entityClass() == null ) {
 			// ordering by an element of the select list
 			return new SqmSortSpecification(
-					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
-					order.getDirection(),
-					order.getNullPrecedence(),
-					order.isCaseInsensitive()
+					new SqmAliasedNodeRef( order.element(), builder.getIntegerType(), builder ),
+					order.direction(), order.nullPrecedence(), !order.caseSensitive()
 			);
 		}
 		else {
 			// ordering by an attribute of the returned entity
-			if ( items.size() == 1) {
+			if ( items.size() <= 1) {
 				if ( selected instanceof SqmFrom<?, ?> root ) {
-					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
+					if ( !order.entityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
-					final StringTokenizer tokens = new StringTokenizer( order.getAttributeName(), "." );
+					final StringTokenizer tokens = new StringTokenizer( order.attributeName(), "." );
 					SqmPath<?> path = root;
 					while ( tokens.hasMoreTokens() ) {
 						path = path.get( tokens.nextToken() );
 					}
-					return builder.sort( path, order.getDirection(), order.getNullPrecedence(), order.isCaseInsensitive() );
+					return builder.sort( path, order.direction(), order.nullPrecedence(), !order.caseSensitive() );
 				}
 				else {
 					throw new IllegalQueryOperationException("Select item was not an entity type");
@@ -805,6 +900,32 @@ public class SqmUtil {
 			else {
 				throw new IllegalQueryOperationException("Query has multiple items in the select list");
 			}
+		}
+	}
+
+	private static SqmSelectableNode<?> selectedNode(SqmSelectStatement<?> sqm, Order<?> order) {
+		final int element = order.element();
+		if ( element < 1) {
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (the first select item is element 1)");
+		}
+		final var selectionItems = sqm.getQuerySpec().getSelectClause().getSelectionItems();
+		final int items = selectionItems.size();
+		if ( items == 0 && element == 1 ) {
+			if ( order.entityClass() == null || sqm.getQuerySpec().getRootList().size() > 1 ) {
+				throw new IllegalQueryOperationException("Cannot order by element " + element
+						+ " (there is no select list)");
+			}
+			else {
+				return sqm.getQuerySpec().getRootList().get(0);
+			}
+		}
+		else if ( element > items ) {
+			throw new IllegalQueryOperationException( "Cannot order by element " + element
+					+ " (there are only " + items + " select items)");
+		}
+		else {
+			return selectionItems.get( element - 1 );
 		}
 	}
 
@@ -840,6 +961,42 @@ public class SqmUtil {
 		return expressible == null || expressible.getExpressibleJavaType() == null
 				? null
 				: expressible.getExpressibleJavaType().getJavaTypeClass();
+	}
+
+	public static <X> SqmPredicate restriction(
+			SqmSelectStatement<X> sqmStatement,
+			Class<X> resultType,
+			Restriction<? super X> restriction) {
+		//noinspection unchecked
+		final JpaRoot<X> root = (JpaRoot<X>) sqmStatement.getRoot( 0, resultType );
+		return  (SqmPredicate) restriction.toPredicate( root, sqmStatement.nodeBuilder() );
+	}
+
+	public static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
+			if ( sqmQuerySpec.getSelectClause().getSelections().isEmpty() ) {
+				// make sure there is at least one root
+				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Criteria did not define any query roots" );
+				}
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
+				}
+				else {
+					throw new IllegalArgumentException( "Criteria has multiple query roots" );
+				}
+			}
+		}
+		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
+			for ( SqmQueryPart<?> part : queryGroup.getQueryParts() ) {
+				validateCriteriaQuery( part );
+			}
+		}
+		else {
+			assert false;
+		}
 	}
 
 	private static class CriteriaParameterCollector {
@@ -1000,6 +1157,7 @@ public class SqmUtil {
 				verifySelectionType( componentType, jpaCompliance, selection.getSelectableNode() );
 			}
 		}
+		//TODO: else check that the expectedResultClass has an appropriate constructor
 	}
 
 	/**
@@ -1064,6 +1222,14 @@ public class SqmUtil {
 		}
 	}
 
+	/**
+	 * Any query result can be represented as a {@link Tuple}, {@link List}, or {@link Map},
+	 * simply by repackaging the result tuple. Also, any query result is assignable to
+	 * {@code Object}, or can be returned as an instance of {@code Object[]}.
+	 *
+	 * @see ConcreteSqmSelectQueryPlan#determineRowTransformer
+	 * @see org.hibernate.query.sql.internal.NativeQueryImpl#determineTupleTransformerForResultType
+	 */
 	public static boolean isResultTypeAlwaysAllowed(Class<?> expectedResultClass) {
 		return expectedResultClass == null
 			|| expectedResultClass == Object.class
@@ -1104,7 +1270,7 @@ public class SqmUtil {
 			return resultClass.isAssignableFrom( identifiableDomainType.getIdType().getBindableJavaType() );
 		}
 		else if ( selectionExpressible instanceof EntitySqmPathSource<?> entityPath ) {
-			return resultClass.isAssignableFrom( entityPath.getSqmPathType().getIdType().getBindableJavaType() );
+			return resultClass.isAssignableFrom( entityPath.getPathType().getIdType().getBindableJavaType() );
 		}
 		else {
 			return false;
@@ -1126,7 +1292,7 @@ public class SqmUtil {
 			return basicDomainType.getJdbcType();
 		}
 		else if ( sqmExpressible instanceof SqmPathSource<?> pathSource ) {
-			if ( pathSource.getSqmPathType() instanceof BasicDomainType<?> basicDomainType ) {
+			if ( pathSource.getPathType() instanceof BasicDomainType<?> basicDomainType ) {
 				return basicDomainType.getJdbcType();
 			}
 		}
@@ -1149,9 +1315,10 @@ public class SqmUtil {
 
 	private static void throwQueryTypeMismatchException(Class<?> resultClass, SqmExpressible<?> sqmExpressible) {
 		throw new QueryTypeMismatchException( String.format(
-				"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
-				resultClass.getName(),
-				sqmExpressible.getTypeName()
+				Locale.ROOT,
+				"Incorrect query result type: query produces '%s' but type '%s' was given",
+				sqmExpressible.getTypeName(),
+				resultClass.getName()
 		) );
 	}
 }

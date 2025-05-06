@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
@@ -50,12 +50,11 @@ public interface OrderingExpression extends Node {
 		}
 		else {
 			final QueryEngine queryEngine =
-					creationState.getCreationContext().getSessionFactory()
-							.getQueryEngine();
+					creationState.getSqmCreationContext().getQueryEngine();
 			final SqmToSqlAstConverter converter =
 					creationState instanceof SqmToSqlAstConverter sqmToSqlAstConverter
 							? sqmToSqlAstConverter
-							: new FakeSqmToSqlAstConverter(creationState);
+							: new FakeSqmToSqlAstConverter( creationState );
 			sortExpression =
 					queryEngine.getSqmFunctionRegistry()
 							.findFunctionDescriptor( "collate" )

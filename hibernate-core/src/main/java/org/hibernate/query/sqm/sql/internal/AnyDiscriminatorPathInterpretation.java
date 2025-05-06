@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
@@ -27,8 +27,7 @@ public class AnyDiscriminatorPathInterpretation<T> extends AbstractSqmPathInterp
 		final ModelPart subPart = tableGroup.getModelPart();
 
 		final DiscriminatedAssociationModelPart mapping;
-		if ( subPart instanceof PluralAttributeMapping ) {
-			PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) subPart;
+		if ( subPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
 			mapping = (DiscriminatedAssociationModelPart) pluralAttributeMapping.getElementDescriptor();
 		}
 		else {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.internal;
@@ -80,9 +80,7 @@ public class TransactionImpl implements TransactionImplementor {
 	@Override
 	public void commit() {
 		// allow MARKED_ROLLBACK to propagate through to transactionDriverControl
-		// the boolean passed to isActive indicates whether MARKED_ROLLBACK should
-		// be considered active
-		if ( !isActive( true ) ) {
+		if ( !isActive() ) {
 			// we have a transaction that is inactive and has not been marked for rollback only
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
@@ -129,13 +127,6 @@ public class TransactionImpl implements TransactionImplementor {
 
 	@Override
 	public boolean isActive() {
-		// old behavior considered TransactionStatus#MARKED_ROLLBACK as active
-//		return isActive( jpaCompliance.isJpaTransactionComplianceEnabled() ? false : true );
-		return isActive( true );
-	}
-
-	@Override
-	public boolean isActive(boolean isMarkedForRollbackConsideredActive) {
 		if ( transactionDriverControl == null ) {
 			if ( session.isOpen() ) {
 				transactionDriverControl = transactionCoordinator.getTransactionDriverControl();
@@ -144,7 +135,7 @@ public class TransactionImpl implements TransactionImplementor {
 				return false;
 			}
 		}
-		return transactionDriverControl.isActive( isMarkedForRollbackConsideredActive );
+		return transactionDriverControl.isActive();
 	}
 
 	@Override

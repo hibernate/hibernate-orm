@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -17,6 +17,8 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDriverKind;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
@@ -28,7 +30,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
@@ -48,6 +49,8 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
@@ -197,7 +200,6 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		return false;
 	}
 
-	@Override
 	public boolean isAnsiNullOn() {
 		return ansiNull;
 	}
@@ -228,6 +230,11 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		};
 	}
 
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SybaseASEAggregateSupport.valueOf( this );
+	}
+
 	/**
 	 * The Sybase ASE {@code BIT} type does not allow
 	 * null values, so we don't use it.
@@ -251,10 +258,7 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
-		// At least the jTDS driver does not support this type code
-		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
-			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
-		}
+		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -628,8 +632,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
+				final String sqlState = extractSqlState( sqle );
+				final int errorCode = extractErrorCode( sqle );
 				if ( sqlState != null ) {
 					switch ( sqlState ) {
 						case "S1000":
@@ -654,8 +658,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 			return null;
 		}
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String sqlState = extractSqlState( sqlException );
+			final int errorCode = extractErrorCode( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
 					case "HY008":
@@ -723,4 +727,16 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	public String getDual() {
 		return "(select 1 c1)";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		// At least the version that
+		return false;
+	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

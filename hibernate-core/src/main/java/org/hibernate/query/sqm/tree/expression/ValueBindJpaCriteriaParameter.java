@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -7,19 +7,17 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * It is a JpaCriteriaParameter created from a value when ValueHandlingMode is equal to BIND
  *
  * @see org.hibernate.query.criteria.ValueHandlingMode
  */
-public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
+public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	private final T value;
 
-	public ValueBindJpaCriteriaParameter(
-			BindableType<? super T> type,
-			T value,
-			NodeBuilder nodeBuilder) {
+	public ValueBindJpaCriteriaParameter(BindableType<? super T> type, T value, NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
 		assert value == null || type == null || type.isInstance( value );
 		this.value = value;
@@ -33,10 +31,9 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	@Override
 	public ValueBindJpaCriteriaParameter<T> copy(SqmCopyContext context) {
 		final ValueBindJpaCriteriaParameter<T> existing = context.getCopy( this );
-		if ( existing != null ) {
-			return existing;
-		}
-		return context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
+		return existing != null
+				? existing
+				: context.registerCopy( this, new ValueBindJpaCriteriaParameter<>( this ) );
 	}
 
 	public T getValue() {
@@ -44,8 +41,8 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( value );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), value );
 	}
 
 	@Override
@@ -60,9 +57,6 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 
 	@Override
 	public int compareTo(SqmParameter anotherParameter) {
-		if ( this == anotherParameter ) {
-			return 0;
-		}
-		return 1;
+		return this == anotherParameter ? 0 : 1;
 	}
 }

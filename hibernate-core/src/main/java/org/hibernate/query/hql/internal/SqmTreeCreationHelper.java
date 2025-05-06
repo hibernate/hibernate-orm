@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -160,14 +160,14 @@ public class SqmTreeCreationHelper {
 		final int size = entityWithJoinsContext.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
 			final ParseTree parseTree = entityWithJoinsContext.getChild( i );
-			if ( parseTree instanceof HqlParser.CrossJoinContext ) {
-				sqmBuilder.consumeCrossJoin( (HqlParser.CrossJoinContext) parseTree, sqmPrimaryRoot );
+			if ( parseTree instanceof HqlParser.CrossJoinContext crossJoinContext ) {
+				sqmBuilder.consumeCrossJoin( crossJoinContext, sqmPrimaryRoot );
 			}
-			else if ( parseTree instanceof HqlParser.JoinContext ) {
-				sqmBuilder.consumeJoin( (HqlParser.JoinContext) parseTree, sqmPrimaryRoot );
+			else if ( parseTree instanceof HqlParser.JoinContext joinContext ) {
+				sqmBuilder.consumeJoin( joinContext, sqmPrimaryRoot );
 			}
-			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext ) {
-				sqmBuilder.consumeJpaCollectionJoin( (HqlParser.JpaCollectionJoinContext) parseTree, sqmPrimaryRoot );
+			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext collectionJoinContext ) {
+				sqmBuilder.consumeJpaCollectionJoin( collectionJoinContext, sqmPrimaryRoot );
 			}
 		}
 	}
@@ -201,8 +201,7 @@ public class SqmTreeCreationHelper {
 		}
 
 		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-		if ( lastChild instanceof HqlParser.IdentifierContext ) {
-			final HqlParser.IdentifierContext identifierContext = (HqlParser.IdentifierContext) lastChild;
+		if ( lastChild instanceof HqlParser.IdentifierContext identifierContext ) {
 			// in this branch, the alias could be a reserved word ("keyword as identifier")
 			// which JPA disallows...
 			if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -178,7 +179,7 @@ public class EntityDelayedFetchInitializer
 				final String uniqueKeyPropertyName = referencedModelPart.getReferencedPropertyName();
 				final Type uniqueKeyPropertyType = ( referencedModelPart.getReferencedPropertyName() == null ) ?
 						concreteDescriptor.getIdentifierType() :
-						session.getFactory()
+						session.getFactory().getRuntimeMetamodels()
 								.getReferencedPropertyType(
 										concreteDescriptor.getEntityName(),
 										uniqueKeyPropertyName
@@ -198,27 +199,34 @@ public class EntityDelayedFetchInitializer
 					if ( referencedModelPart.isLazy() ) {
 						instance = UNFETCHED_PROPERTY;
 					}
-					else if ( getParent().isEntityInitializer() && isLazyByGraph( rowProcessingState ) ) {
-						// todo : manage the case when parent is an EmbeddableInitializer
-						final Object resolvedInstance = getParent().asEntityInitializer()
-								.getResolvedInstance( rowProcessingState );
-						final LazyAttributeLoadingInterceptor persistentAttributeInterceptor = (LazyAttributeLoadingInterceptor) ManagedTypeHelper
-								.asPersistentAttributeInterceptable( resolvedInstance ).$$_hibernate_getInterceptor();
-
-						persistentAttributeInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
-						instance = UNFETCHED_PROPERTY;
-					}
 					else {
-						instance = concreteDescriptor.loadByUniqueKey(
-								uniqueKeyPropertyName,
-								data.entityIdentifier,
-								session
-						);
+						// Try to load a PersistentAttributeInterceptable. If we get one, we can add the lazy
+						// field to the interceptor. If we don't get one, we load the entity by unique key.
+						PersistentAttributeInterceptable persistentAttributeInterceptable = null;
+						if ( getParent().isEntityInitializer() && isLazyByGraph( rowProcessingState ) ) {
+							final Object resolvedInstance =
+									getParent().asEntityInitializer().getResolvedInstance( rowProcessingState );
+							persistentAttributeInterceptable =
+									ManagedTypeHelper.asPersistentAttributeInterceptableOrNull( resolvedInstance );
+						}
 
-						// If the entity was not in the Persistence Context, but was found now,
-						// add it to the Persistence Context
-						if ( instance != null ) {
-							persistenceContext.addEntity( euk, instance );
+						if ( persistentAttributeInterceptable != null ) {
+							final LazyAttributeLoadingInterceptor persistentAttributeInterceptor = (LazyAttributeLoadingInterceptor) persistentAttributeInterceptable.$$_hibernate_getInterceptor();
+							persistentAttributeInterceptor.addLazyFieldByGraph( navigablePath.getLocalName() );
+							instance = UNFETCHED_PROPERTY;
+						}
+						else {
+							instance = concreteDescriptor.loadByUniqueKey(
+									uniqueKeyPropertyName,
+									data.entityIdentifier,
+									session
+							);
+
+							// If the entity was not in the Persistence Context, but was found now,
+							// add it to the Persistence Context
+							if ( instance != null ) {
+								persistenceContext.addEntity( euk, instance );
+							}
 						}
 					}
 				}
@@ -260,12 +268,10 @@ public class EntityDelayedFetchInitializer
 	private boolean isLazyByGraph(RowProcessingState rowProcessingState) {
 		final AppliedGraph appliedGraph = rowProcessingState.getQueryOptions().getAppliedGraph();
 		if ( appliedGraph != null && appliedGraph.getSemantic() == GraphSemantic.FETCH ) {
-			final AttributeNodeImplementor<Object> attributeNode = appliedGraph.getGraph()
-					.findAttributeNode( navigablePath.getLocalName() );
-			if ( attributeNode != null && attributeNode.getAttributeDescriptor() == getInitializedPart().asAttributeMapping() ) {
-				return false;
-			}
-			return true;
+			final AttributeNodeImplementor<?,?,?> attributeNode =
+					appliedGraph.getGraph().findAttributeNode( navigablePath.getLocalName() );
+			return attributeNode == null
+				|| attributeNode.getAttributeDescriptor() != getInitializedPart().asAttributeMapping();
 		}
 		return false;
 	}

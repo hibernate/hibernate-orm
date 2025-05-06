@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.batchfetch;
@@ -9,16 +9,19 @@ package org.hibernate.orm.test.batchfetch;
  * @author Gavin King
  */
 public class Model {
-	private String id;
+	private Integer id;
 	private String name;
 	private String description;
 	private ProductLine productLine;
 
-	Model() {}
+	Model() {
+	}
 
-	public Model(ProductLine pl) {
-		this.productLine = pl;
-		pl.getModels().add(this);
+	public Model(String name, String description, ProductLine productLine) {
+		this.name = name;
+		this.description = description;
+		this.productLine = productLine;
+		productLine.getModels().add(this);
 	}
 
 	public String getDescription() {
@@ -27,10 +30,10 @@ public class Model {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public String getId() {
+	public Integer getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 	public String getName() {

@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;

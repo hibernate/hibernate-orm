@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
@@ -12,7 +12,6 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
@@ -58,9 +57,7 @@ public class SinglePropertyMapper extends AbstractPropertyMapper implements Simp
 			Object oldObj) {
 		data.put( propertyData.getName(), newObj );
 		boolean dbLogicallyDifferent = true;
-		Dialect dialect = session.getFactory().getJdbcServices()
-				.getDialect();
-		dialect = DialectDelegateWrapper.extractRealDialect( dialect );
+		final Dialect dialect = session.getFactory().getJdbcServices().getDialect();
 		if ( ( dialect instanceof OracleDialect ) && (newObj instanceof String || oldObj instanceof String) ) {
 			// Don't generate new revision when database replaces empty string with NULL during INSERT or UPDATE statements.
 			dbLogicallyDifferent = !(StringTools.isEmpty( newObj ) && StringTools.isEmpty( oldObj ));

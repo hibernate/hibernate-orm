@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb;
@@ -49,21 +49,17 @@ public class Origin implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof Origin ) ) {
+		if ( !(o instanceof Origin other) ) {
 			return false;
 		}
-
-		final Origin other = (Origin) o;
 		return type == other.type
-				&& Objects.equals( name, other.name );
+			&& Objects.equals( name, other.name );
 
 	}
 
 	@Override
 	public int hashCode() {
-		int result = type != null ? type.hashCode() : 0;
-		result = 31 * result + ( name != null ? name.hashCode() : 0 );
-		return result;
+		return Objects.hash( type, name );
 	}
 
 	@Override

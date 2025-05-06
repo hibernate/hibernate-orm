@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -17,12 +17,10 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.usertype.UserType;
 
@@ -34,6 +32,7 @@ import static org.hibernate.boot.model.internal.AnnotationHelper.resolveBasicTyp
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveJavaType;
 import static org.hibernate.boot.model.internal.AnnotationHelper.resolveUserType;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * @author Gavin King
@@ -42,8 +41,8 @@ public class FilterDefBinder {
 	private static final CoreMessageLogger LOG = messageLogger( FilterDefBinder.class );
 
 	public static void bindFilterDefs(AnnotationTarget annotatedElement, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
-		annotatedElement.forEachAnnotationUsage( FilterDef.class, sourceModelContext, (usage) -> {
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		annotatedElement.forEachAnnotationUsage( FilterDef.class, modelsContext, (usage) -> {
 			bindFilterDef( usage, context );
 		} );
 	}
@@ -57,7 +56,7 @@ public class FilterDefBinder {
 		final Map<String, JdbcMapping> paramJdbcMappings;
 		final Map<String, ManagedBean<? extends Supplier<?>>> parameterResolvers;
 		final ParamDef[] explicitParameters = filterDef.parameters();
-		if ( CollectionHelper.isEmpty( explicitParameters ) ) {
+		if ( isEmpty( explicitParameters ) ) {
 			paramJdbcMappings = emptyMap();
 			parameterResolvers = emptyMap();
 		}
@@ -96,7 +95,9 @@ public class FilterDefBinder {
 				parameterResolvers
 		);
 
-		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debug( "Binding filter definition: " + filterDefinition.getFilterName() );
+		}
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}
 
@@ -104,9 +105,8 @@ public class FilterDefBinder {
 	private static ManagedBean<? extends Supplier<?>> resolveParamResolver(Class<? extends Supplier> resolverClass, MetadataBuildingContext context) {
 		assert resolverClass != Supplier.class;
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
-		return (ManagedBean<? extends Supplier<?>>) bootstrapContext.getServiceRegistry()
-						.requireService(ManagedBeanRegistry.class)
-						.getBean(resolverClass, bootstrapContext.getCustomTypeProducer());
+		return (ManagedBean<? extends Supplier<?>>) bootstrapContext.getManagedBeanRegistry()
+						.getBean( resolverClass, bootstrapContext.getCustomTypeProducer() );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -115,7 +115,7 @@ public class FilterDefBinder {
 			return resolveUserType( (Class<UserType<?>>) type, context );
 		}
 		else if ( AttributeConverter.class.isAssignableFrom( type ) ) {
-			return resolveAttributeConverter( (Class<AttributeConverter<?,?>>) type, context );
+			return resolveAttributeConverter( (Class<? extends AttributeConverter<?,?>>) type, context );
 		}
 		else if ( JavaType.class.isAssignableFrom( type ) ) {
 			return resolveJavaType( (Class<JavaType<?>>) type, context );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -209,8 +209,8 @@ public interface EntityMappingType
 	 * @see #isTypeOrSuperType(EntityMappingType)
 	 */
 	default boolean isTypeOrSuperType(ManagedMappingType targetType) {
-		if ( targetType instanceof EntityMappingType ) {
-			return isTypeOrSuperType( (EntityMappingType) targetType );
+		if ( targetType instanceof EntityMappingType entityMappingType ) {
+			return isTypeOrSuperType( entityMappingType );
 		}
 
 		return false;
@@ -447,7 +447,7 @@ public interface EntityMappingType
 	}
 
 	/**
-	 * Walk this type's attributes as well as its sub-type's
+	 * Walk this type's attributes as well as its subtypes
 	 */
 	default void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		// by default do nothing

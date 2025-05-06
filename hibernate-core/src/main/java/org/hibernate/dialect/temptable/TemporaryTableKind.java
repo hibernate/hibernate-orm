@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
@@ -40,5 +40,5 @@ public enum TemporaryTableKind {
 	 * or {@value org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy#DROP_ID_TABLES} are
 	 * disabled.
 	 */
-	GLOBAL;
+	GLOBAL
 }

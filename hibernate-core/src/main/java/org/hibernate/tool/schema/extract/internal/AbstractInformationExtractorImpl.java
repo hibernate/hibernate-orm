@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
@@ -638,7 +638,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private ColumnInformationImpl columnInformation(TableInformation tableInformation, ResultSet resultSet)
+	/*
+	 * Hibernate Reactive overrides this
+	 */
+	protected ColumnInformationImpl columnInformation(TableInformation tableInformation, ResultSet resultSet)
 			throws SQLException {
 		return new ColumnInformationImpl(
 				tableInformation,
@@ -864,7 +867,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
-	private Boolean interpretTruthValue(String nullable) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected Boolean interpretTruthValue(String nullable) {
 		if ( "yes".equalsIgnoreCase( nullable ) ) {
 			return Boolean.TRUE;
 		}

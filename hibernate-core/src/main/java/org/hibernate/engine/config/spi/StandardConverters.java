@@ -1,11 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.config.spi;
 
 
 
+import static java.lang.Boolean.parseBoolean;
+import static java.lang.Integer.parseInt;
 import static org.hibernate.engine.config.spi.ConfigurationService.Converter;
 
 /**
@@ -17,9 +19,9 @@ public class StandardConverters {
 	public static final Converter<Boolean> BOOLEAN = StandardConverters::asBoolean;
 
 	public static Boolean asBoolean(Object value) {
-		return value instanceof Boolean
-				? (Boolean) value
-				: Boolean.parseBoolean( value.toString() );
+		return value instanceof Boolean bool
+				? bool
+				: parseBoolean( value.toString() );
 	}
 
 	public static final Converter<String> STRING = StandardConverters::asString;
@@ -31,11 +33,9 @@ public class StandardConverters {
 	public static final Converter<Integer> INTEGER = StandardConverters::asInteger;
 
 	public static Integer asInteger(Object value) {
-		if ( value instanceof Number ) {
-			return ( (Number) value ).intValue();
-		}
-
-		return Integer.parseInt( value.toString() );
+		return value instanceof Number number
+				? number.intValue()
+				: parseInt( value.toString() );
 	}
 
 	/**

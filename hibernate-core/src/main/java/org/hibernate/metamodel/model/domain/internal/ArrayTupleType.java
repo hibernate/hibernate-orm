@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -13,8 +13,9 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.model.domain.TupleType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tuple.TupleType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
@@ -23,7 +24,7 @@ import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
  * @author Christian Beikov
  */
 public class ArrayTupleType implements TupleType<Object[]>,
-		ReturnableType<Object[]>,
+		ReturnableType<Object[]>, SqmDomainType<Object[]>,
 		MappingModelExpressible<Object[]> {
 
 	private final ObjectArrayJavaType javaType;
@@ -32,6 +33,16 @@ public class ArrayTupleType implements TupleType<Object[]>,
 	public ArrayTupleType(SqmExpressible<?>[] components) {
 		this.components = components;
 		this.javaType = new ObjectArrayJavaType( getTypeDescriptors( components ) );
+	}
+
+	@Override
+	public String getTypeName() {
+		return SqmDomainType.super.getTypeName();
+	}
+
+	@Override
+	public SqmDomainType<Object[]> getSqmType() {
+		return this;
 	}
 
 	private static JavaType<?>[] getTypeDescriptors(SqmExpressible<?>[] components) {

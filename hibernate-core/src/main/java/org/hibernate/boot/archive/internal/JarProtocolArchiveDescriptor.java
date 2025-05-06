@@ -1,15 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
 
 import java.net.URL;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.archive.spi.ArchiveEntry;
 
 /**
  * An ArchiveDescriptor implementation for handling archives whose url reported a JAR protocol (i.e., jar://).
@@ -55,5 +57,10 @@ public class JarProtocolArchiveDescriptor implements ArchiveDescriptor {
 	@Override
 	public void visitArchive(ArchiveContext context) {
 		delegateDescriptor.visitArchive( context );
+	}
+
+	@Override
+	public @Nullable ArchiveEntry findEntry(String path) {
+		return delegateDescriptor.findEntry( path );
 	}
 }

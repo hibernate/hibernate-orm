@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -25,7 +25,7 @@ public final class BasicCacheKeyImplementation implements Serializable {
 
 	final Serializable id;
 	private final String entityOrRoleName;
-	private final int hashCode;
+	private final int hashCode; // not a record because we cache this
 
 	/**
 	 * Being an internal contract the arguments are not being checked.
@@ -75,13 +75,12 @@ public final class BasicCacheKeyImplementation implements Serializable {
 		else if ( this == other ) {
 			return true;
 		}
-		else if ( other.getClass() != BasicCacheKeyImplementation.class ) {
+		else if ( !(other instanceof BasicCacheKeyImplementation that) ) {
 			return false;
 		}
 		else {
-			final BasicCacheKeyImplementation o = (BasicCacheKeyImplementation) other;
-			return this.id.equals( o.id ) &&
-					this.entityOrRoleName.equals( o.entityOrRoleName );
+			return this.id.equals( that.id )
+				&& this.entityOrRoleName.equals( that.entityOrRoleName );
 		}
 	}
 

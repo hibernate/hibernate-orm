@@ -178,12 +178,16 @@ The standard aggregate functions defined in both ANSI SQL and JPQL are these one
 
 | `count()`, including `count(distinct)`, `count(all)`, and `count(*)` | Any | `Long` | ✔/✔
 | `avg()` | Any numeric type | `Double` | ✔/✔
+| `median()` | Any numeric type | `Double` | ✖/✖
 | `min()` | Any numeric type, or string | Same as the argument type | ✔/✔
 | `max()` | Any numeric type, or string | Same as the argument type | ✔/✔
 | `sum()` | Any numeric type | See table below | ✔/✔
 | `var_pop()`, `var_samp()` | Any numeric type | `Double` | ✖/✔
 | `stddev_pop()`, `stddev_samp()` | Any numeric type | `Double` | ✖/✔
 |===
+
+[NOTE]
+The `median()` function is not supported on MySQL or Sybase ASE.
 
 [[aggregate-functions-example]]
 [source, hql]

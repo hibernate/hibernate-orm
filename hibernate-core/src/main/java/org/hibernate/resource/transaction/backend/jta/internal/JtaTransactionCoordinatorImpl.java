@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
@@ -376,7 +376,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	/**
 	 * Implementation of the LocalInflow for this TransactionCoordinator.  Allows the
-	 * local transaction ({@link org.hibernate.Transaction} to callback into this
+	 * local transaction ({@link org.hibernate.Transaction}) to callback into this
 	 * TransactionCoordinator for the purpose of driving the underlying JTA transaction.
 	 */
 	public class TransactionDriverControlImpl implements TransactionDriver {
@@ -395,7 +395,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 		public void begin() {
 			errorIfInvalid();
 			jtaTransactionAdapter.begin();
-			JtaTransactionCoordinatorImpl.this.joinJtaTransaction();
+			joinJtaTransaction();
 		}
 
 		protected void errorIfInvalid() {

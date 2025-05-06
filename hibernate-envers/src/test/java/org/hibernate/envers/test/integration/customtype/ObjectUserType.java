@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
@@ -7,7 +7,6 @@ package org.hibernate.envers.test.integration.customtype;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -24,17 +23,15 @@ public class ObjectUserType implements CompositeUserType<Object> {
 
 	@Override
 	public Object getPropertyValue(Object component, int property) throws HibernateException {
-		switch ( property ) {
-			case 0:
-				return component;
-			case 1:
-				return component.getClass().getName();
-		}
-		return null;
+		return switch ( property ) {
+			case 0 -> component;
+			case 1 -> component.getClass().getName();
+			default -> null;
+		};
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valueAccess) {
 		return valueAccess.getValue( 0, Object.class );
 	}
 

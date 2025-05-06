@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -10,10 +10,11 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Abstract superclass of visitors that reattach collections.
@@ -77,10 +78,8 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	void removeCollection(CollectionPersister role, Object collectionKey, EventSource source)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Collection dereferenced while transient {0}",
-					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() )
-			);
+			LOG.trace( "Collection dereferenced while transient "
+						+ collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
 		}
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}

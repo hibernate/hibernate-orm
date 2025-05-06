@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -11,10 +11,11 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Uniquely identifies of an entity instance in a particular Session by identifier.
@@ -117,7 +118,7 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityKey" + MessageHelper.infoString( this.persister, identifier, persister.getFactory() );
+		return "EntityKey" + infoString( this.persister, identifier, persister.getFactory() );
 	}
 
 	/**
@@ -148,10 +149,9 @@ public final class EntityKey implements Serializable {
 	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
 		final Object id = ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final EntityPersister entityPersister = sessionFactory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityName);
+		final EntityPersister entityPersister =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( entityName);
 		return new EntityKey( id, entityPersister );
 	}
 }

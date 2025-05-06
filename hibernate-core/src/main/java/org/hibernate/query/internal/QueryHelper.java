@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -25,7 +25,7 @@ public class QueryHelper {
 			return types[0];
 		}
 
-		SqmExpressible<? extends T> highest = highestPrecedenceType2( types[0], types[1] );
+		var highest = highestPrecedenceType2( types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
 			highest = highestPrecedenceType2( highest, types[i] );
 		}

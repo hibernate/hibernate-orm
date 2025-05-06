@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
@@ -22,7 +22,7 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.jdbc.Expectations;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -350,7 +350,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				null,
 				parameterBinders,
 				sqlWhereString,
-				Expectations.NONE
+				Expectation.None.INSTANCE
 		);
 	}
 

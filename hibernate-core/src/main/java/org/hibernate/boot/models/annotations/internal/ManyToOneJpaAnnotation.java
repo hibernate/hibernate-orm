@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.boot.models.annotations.spi.AttributeMarker;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ManyToOne;
 
@@ -27,7 +27,7 @@ public class ManyToOneJpaAnnotation implements ManyToOne,
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ManyToOneJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ManyToOneJpaAnnotation(ModelsContext modelContext) {
 		this.targetEntity = void.class;
 		this.cascade = new jakarta.persistence.CascadeType[0];
 		this.fetch = jakarta.persistence.FetchType.EAGER;
@@ -37,7 +37,7 @@ public class ManyToOneJpaAnnotation implements ManyToOne,
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ManyToOneJpaAnnotation(ManyToOne annotation, SourceModelBuildingContext modelContext) {
+	public ManyToOneJpaAnnotation(ManyToOne annotation, ModelsContext modelContext) {
 		this.targetEntity = annotation.targetEntity();
 		this.cascade = annotation.cascade();
 		this.fetch = annotation.fetch();
@@ -47,7 +47,7 @@ public class ManyToOneJpaAnnotation implements ManyToOne,
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ManyToOneJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ManyToOneJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.targetEntity = (Class<?>) attributeValues.get( "targetEntity" );
 		this.cascade = (jakarta.persistence.CascadeType[]) attributeValues.get( "cascade" );
 		this.fetch = (jakarta.persistence.FetchType) attributeValues.get( "fetch" );

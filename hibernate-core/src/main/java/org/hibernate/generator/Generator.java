@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator;
@@ -48,6 +48,10 @@ import static org.hibernate.generator.EventType.UPDATE;
  * <li>declare a constructor which accepts just the annotation instance, or
  * <li>declare a only default constructor, in which case it will not receive parameters.
  * </ul>
+ * <p>
+ * A {@code Generator} may be a managed bean (for example, a CDI bean) instantiated by the
+ * {@linkplain org.hibernate.resource.beans.container.spi.BeanContainer bean container}. In this
+ * case, only the first of these options, {@code AnnotationBasedGenerator}, is available.
  * <p>
  * A generator must implement {@link #getEventTypes()} to specify the events for which it should be
  * called to produce a new value. {@link EventTypeSets} provides a convenient list of possibilities.

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
@@ -180,7 +180,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	public static void close(Statement statement) {
+	private static void close(Statement statement) {
 		log.tracef( "Closing prepared statement [%s]", statement );
 
 		try {

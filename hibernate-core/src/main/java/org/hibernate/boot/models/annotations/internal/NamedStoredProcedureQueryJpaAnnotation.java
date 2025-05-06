@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedStoredProcedureQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedStoredProcedureQuery;
 
@@ -30,7 +30,7 @@ public class NamedStoredProcedureQueryJpaAnnotation implements NamedStoredProced
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedStoredProcedureQueryJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedStoredProcedureQueryJpaAnnotation(ModelsContext modelContext) {
 		this.parameters = new jakarta.persistence.StoredProcedureParameter[0];
 		this.resultClasses = new java.lang.Class[0];
 		this.resultSetMappings = new String[0];
@@ -42,7 +42,7 @@ public class NamedStoredProcedureQueryJpaAnnotation implements NamedStoredProced
 	 */
 	public NamedStoredProcedureQueryJpaAnnotation(
 			NamedStoredProcedureQuery annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.procedureName = annotation.procedureName();
 		this.parameters = extractJdkValue(
@@ -61,7 +61,7 @@ public class NamedStoredProcedureQueryJpaAnnotation implements NamedStoredProced
 	 */
 	public NamedStoredProcedureQueryJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.procedureName = (String) attributeValues.get( "procedureName" );
 		this.parameters = (jakarta.persistence.StoredProcedureParameter[]) attributeValues.get( "parameters" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.converter.internal;
@@ -40,11 +40,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPlan<T> {
-	private final JpaAttributeConverter converter;
+public class AttributeConverterMutabilityPlanImpl<T,S> extends MutableMutabilityPlan<T> {
+	private final JpaAttributeConverter<T,S> converter;
 	private final boolean mutable;
 
-	public AttributeConverterMutabilityPlanImpl(JpaAttributeConverter converter, boolean mutable) {
+	public AttributeConverterMutabilityPlanImpl(JpaAttributeConverter<T,S> converter, boolean mutable) {
 		this.converter = converter;
 		this.mutable = mutable;
 	}
@@ -55,18 +55,17 @@ public class AttributeConverterMutabilityPlanImpl<T> extends MutableMutabilityPl
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected T deepCopyNotNull(T value) {
-		return (T) converter.toDomainValue( converter.toRelationalValue( value ) );
+		return converter.toDomainValue( converter.toRelationalValue( value ) );
 	}
 
 	@Override
 	public Serializable disassemble(T value, SharedSessionContract session) {
-		return mutable ? (Serializable) converter.toRelationalValue(value) : (Serializable) value;
+		return mutable ? (Serializable) converter.toRelationalValue( value ) : (Serializable) value;
 	}
 
 	@Override
 	public T assemble(Serializable cached, SharedSessionContract session) {
-		return mutable ? (T) converter.toDomainValue(cached) : (T) cached;
+		return mutable ? converter.toDomainValue( (S) cached) : (T) cached;
 	}
 }

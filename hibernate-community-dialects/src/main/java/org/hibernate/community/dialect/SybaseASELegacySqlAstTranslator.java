@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -48,7 +48,7 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
-import static org.hibernate.dialect.SybaseASESqlAstTranslator.isLob;
+import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -109,11 +109,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -132,11 +127,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
 	}
 
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
@@ -393,7 +383,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			}
 		}
 		// I think intersect is only supported in 16.0 SP3
-		if ( getDialect().isAnsiNullOn() ) {
+		if ( ( (SybaseASELegacyDialect) getDialect() ).isAnsiNullOn() ) {
 			if ( isLob ) {
 				switch ( operator ) {
 					case DISTINCT_FROM:
@@ -423,7 +413,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 						break;
 				}
 			}
-			if ( supportsDistinctFromPredicate() ) {
+			if ( getDialect().supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -482,7 +472,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 			else {
-				if ( supportsDistinctFromPredicate() ) {
+				if ( getDialect().supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {
@@ -490,12 +480,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		// At least the version that
-		return false;
 	}
 
 	@Override
@@ -570,21 +554,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected boolean needsMaxRows() {
 		return !supportsTopClause();
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsTopClause() {

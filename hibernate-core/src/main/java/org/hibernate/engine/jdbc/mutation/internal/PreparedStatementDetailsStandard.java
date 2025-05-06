@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -29,6 +29,8 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	private final JdbcServices jdbcServices;
 
 	private PreparedStatement statement;
+
+	private boolean toRelease;
 
 	public PreparedStatementDetailsStandard(
 			PreparableMutationOperation tableMutation,
@@ -66,6 +68,7 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 		if ( statement != null ) {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
 			statement = null;
+			toRelease = false;
 		}
 	}
 
@@ -82,6 +85,7 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public PreparedStatement resolveStatement() {
 		if ( statement == null ) {
+			toRelease = true;
 			statement = jdbcStatementCreator.get();
 			try {
 				expectation.prepare( statement );
@@ -100,6 +104,11 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public Expectation getExpectation() {
 		return expectation;
+	}
+
+	@Override
+	public boolean toRelease() {
+		return toRelease;
 	}
 
 	@Override

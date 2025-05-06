@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema;
@@ -69,8 +69,8 @@ public enum SourceType {
 			return defaultValue;
 		}
 
-		if ( value instanceof SourceType ) {
-			return (SourceType) value;
+		if ( value instanceof SourceType sourceType ) {
+			return sourceType;
 		}
 
 		final String name = value.toString().trim().replace('-', '_');

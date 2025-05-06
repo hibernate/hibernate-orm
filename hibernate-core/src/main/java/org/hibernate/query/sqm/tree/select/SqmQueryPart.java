@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -12,6 +12,7 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaQueryPart;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -173,38 +174,38 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	public abstract void validateQueryStructureAndFetchOwners();
 
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( orderByClause == null || orderByClause.getSortSpecifications().isEmpty() ) {
 			return;
 		}
-		sb.append( " order by " );
+		hql.append( " order by " );
 		final List<SqmSortSpecification> sortSpecifications = orderByClause.getSortSpecifications();
-		sortSpecifications.get( 0 ).appendHqlString( sb );
+		sortSpecifications.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < sortSpecifications.size(); i++ ) {
-			sb.append( ", " );
-			sortSpecifications.get( i ).appendHqlString( sb );
+			hql.append( ", " );
+			sortSpecifications.get( i ).appendHqlString( hql, context );
 		}
 
 		if ( offsetExpression != null ) {
-			sb.append( " offset " );
-			offsetExpression.appendHqlString( sb );
-			sb.append( " rows " );
+			hql.append( " offset " );
+			offsetExpression.appendHqlString( hql, context );
+			hql.append( " rows " );
 		}
 		if ( fetchExpression != null ) {
-			sb.append( " fetch first " );
-			fetchExpression.appendHqlString( sb );
+			hql.append( " fetch first " );
+			fetchExpression.appendHqlString( hql, context );
 			switch ( fetchClauseType ) {
 				case ROWS_ONLY:
-					sb.append( " rows only" );
+					hql.append( " rows only" );
 					break;
 				case ROWS_WITH_TIES:
-					sb.append( " rows with ties" );
+					hql.append( " rows with ties" );
 					break;
 				case PERCENT_ONLY:
-					sb.append( " percent rows only" );
+					hql.append( " percent rows only" );
 					break;
 				case PERCENT_WITH_TIES:
-					sb.append( " percent rows with ties" );
+					hql.append( " percent rows with ties" );
 					break;
 			}
 		}

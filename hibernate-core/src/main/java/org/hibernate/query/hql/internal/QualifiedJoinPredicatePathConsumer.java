@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -59,11 +59,8 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 						if ( fromClause != null && fromClause.getRoots().contains( joinRoot ) ) {
 							// It is allowed to use correlations from the same query
 							if ( !( root instanceof SqmCorrelation<?, ?> ) || !fromClause.getRoots().contains( root ) ) {
-								validateAsRootOnParentQueryClosure(
-										pathRoot,
-										root,
-										processingState.getParentProcessingState()
-								);
+								validateAsRootOnParentQueryClosure( pathRoot, root,
+										processingState.getParentProcessingState() );
 							}
 							return;
 						}

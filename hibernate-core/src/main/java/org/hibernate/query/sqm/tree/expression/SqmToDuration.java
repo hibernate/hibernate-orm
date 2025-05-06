@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Gavin King
@@ -21,7 +22,7 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 			SqmDurationUnit<?> unit,
 			ReturnableType<T> type,
 			NodeBuilder nodeBuilder) {
-		super( type, nodeBuilder );
+		super( type.resolveExpressible( nodeBuilder ), nodeBuilder );
 		this.magnitude = magnitude;
 		this.unit = unit;
 	}
@@ -64,9 +65,9 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		magnitude.appendHqlString( sb );
-		sb.append( ' ' );
-		sb.append( unit.getUnit() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		magnitude.appendHqlString( hql, context );
+		hql.append( ' ' );
+		hql.append( unit.getUnit() );
 	}
 }

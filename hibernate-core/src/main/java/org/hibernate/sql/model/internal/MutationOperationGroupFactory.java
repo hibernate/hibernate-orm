@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.internal;
@@ -16,10 +16,10 @@ public final class MutationOperationGroupFactory {
 	public static MutationOperationGroup noOperations(
 			final MutationType mutationType,
 			final MutationTarget mutationTarget) {
-		if ( mutationTarget instanceof EntityMutationTarget ) {
+		if ( mutationTarget instanceof EntityMutationTarget entityMutationTarget ) {
 			return new EntityMutationOperationGroupStandard(
 					mutationType,
-					(EntityMutationTarget) mutationTarget
+					entityMutationTarget
 			);
 		}
 		else {
@@ -38,10 +38,10 @@ public final class MutationOperationGroupFactory {
 			final MutationType mutationType,
 			final MutationTarget mutationTarget,
 			final MutationOperation operation) {
-		if ( mutationTarget instanceof EntityMutationTarget ) {
+		if ( mutationTarget instanceof EntityMutationTarget entityMutationTarget) {
 			return new EntityMutationOperationGroupStandard(
 					mutationType,
-					(EntityMutationTarget) mutationTarget,
+					entityMutationTarget,
 					operation
 			);
 		}
@@ -62,8 +62,8 @@ public final class MutationOperationGroupFactory {
 			final MutationType mutationType,
 			final MutationTarget mutationTarget,
 			final MutationOperation[] operations) {
-		if ( mutationTarget instanceof EntityMutationTarget ) {
-			return new EntityMutationOperationGroupStandard( mutationType, (EntityMutationTarget) mutationTarget, operations );
+		if ( mutationTarget instanceof EntityMutationTarget entityMutationTarget ) {
+			return new EntityMutationOperationGroupStandard( mutationType, entityMutationTarget, operations );
 		}
 		else {
 			return new MutationOperationGroupStandard( mutationType, mutationTarget, operations );

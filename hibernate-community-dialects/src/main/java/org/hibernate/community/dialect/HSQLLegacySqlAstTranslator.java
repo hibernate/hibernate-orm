@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -109,17 +109,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		if ( isNegated ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
-	}
-
-	@Override
-	protected boolean supportsArrayConstructor() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// Doesn't support correlations in the WITH clause
-		return false;
 	}
 
 	@Override
@@ -246,11 +235,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	public boolean supportsFilterClause() {
-		return true;
-	}
-
-	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
 			ForUpdateClause forUpdateClause,
@@ -335,21 +319,6 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsOffsetFetchClause() {

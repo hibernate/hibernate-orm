@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entity;
@@ -14,10 +14,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import jakarta.persistence.RollbackException;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -86,8 +88,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	// Not sure why teradata would cause transactions to hang
-//	@SkipForDialect(value = TeradataDialect.class , comment = "One transaction hangs the other")
 	public void testVersioning() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -117,8 +117,14 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 			parallelTx.commit();
 			fail( "All optimistic locking should have make it fail" );
 		}
-		catch (OptimisticLockException e) {
-			if ( parallelTx != null ) parallelTx.rollback();
+		catch (Exception e) {
+			if (getDialect() instanceof CockroachDialect) {
+				// CockroachDB always runs in SERIALIZABLE isolation, and throws a RollbackException
+				assertTrue( e instanceof RollbackException );
+			} else {
+				assertTrue( e instanceof OptimisticLockException );
+			}
+			parallelTx.rollback();
 		}
 		finally {
 			parallelSession.close();

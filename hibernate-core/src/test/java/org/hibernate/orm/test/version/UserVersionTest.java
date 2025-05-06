@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.version;
@@ -14,6 +14,7 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserVersionType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -147,7 +148,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 		public CustomVersion nullSafeGet(
 				ResultSet resultSet,
 				int position,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			return new CustomVersion( resultSet.getLong( position ) );
 		}
 
@@ -156,7 +157,7 @@ public class UserVersionTest extends BaseSessionFactoryFunctionalTest {
 				PreparedStatement statement,
 				CustomVersion value,
 				int index,
-				SharedSessionContractImplementor session) throws SQLException {
+				WrapperOptions options) throws SQLException {
 			statement.setLong( index, value.getRev() );
 		}
 

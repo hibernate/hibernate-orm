@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
@@ -157,7 +157,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			final BasicType<Object> resolvedType = jdbcResultsMetadata.resolveType(
 					jdbcPosition,
 					null,
-					sessionFactory
+					sessionFactory.getTypeConfiguration()
 			);
 			return new ResolvedSqlSelection(
 					jdbcPosition,

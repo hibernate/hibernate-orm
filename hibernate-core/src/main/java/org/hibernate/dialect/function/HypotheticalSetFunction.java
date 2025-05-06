@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -7,7 +7,7 @@ package org.hibernate.dialect.function;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -64,7 +64,7 @@ public class HypotheticalSetFunction extends AbstractSqmSelfRenderingFunctionDes
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		if ( filter != null && !translator.supportsFilterClause() ) {
+		if ( filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause() ) {
 			throw new IllegalArgumentException( "Can't emulate filter clause for inverse distribution function [" + getName() + "]" );
 		}
 		sqlAppender.appendSql( getName() );

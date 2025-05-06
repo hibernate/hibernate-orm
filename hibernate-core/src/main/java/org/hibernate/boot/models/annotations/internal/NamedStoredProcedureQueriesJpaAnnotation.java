@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.NamedStoredProcedureQuery;
@@ -25,7 +25,7 @@ public class NamedStoredProcedureQueriesJpaAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedStoredProcedureQueriesJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedStoredProcedureQueriesJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -33,7 +33,7 @@ public class NamedStoredProcedureQueriesJpaAnnotation
 	 */
 	public NamedStoredProcedureQueriesJpaAnnotation(
 			NamedStoredProcedureQueries annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				JpaAnnotations.NAMED_STORED_PROCEDURE_QUERIES,
@@ -47,7 +47,7 @@ public class NamedStoredProcedureQueriesJpaAnnotation
 	 */
 	public NamedStoredProcedureQueriesJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (NamedStoredProcedureQuery[]) attributeValues.get( "value" );
 	}
 

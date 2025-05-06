@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -59,7 +59,7 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		final EntityMappingType indicatedEntity = matchingValueDetails.getIndicatedEntity();
 		//noinspection unchecked
 		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
+			&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
 				? (O) indicatedEntity.getJavaType().getJavaTypeClass()
 				: (O) indicatedEntity.getEntityName();
 	}
@@ -73,8 +73,8 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		}
 
 		final String entityName;
-		if ( domainForm instanceof Class ) {
-			entityName = ( (Class<?>) domainForm ).getName();
+		if ( domainForm instanceof Class<?> clazz ) {
+			entityName = clazz.getName();
 		}
 		else {
 			entityName = (String) domainForm;

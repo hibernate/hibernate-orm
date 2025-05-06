@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result.internal;
@@ -14,14 +14,14 @@ import org.hibernate.result.ResultSetOutput;
  *
  * @author Steve Ebersole
  */
-class ResultSetOutputImpl implements ResultSetOutput {
-	private final Supplier<List<?>> resultSetSupplier;
+class ResultSetOutputImpl<T> implements ResultSetOutput<T> {
+	private final Supplier<List<T>> resultSetSupplier;
 
-	public ResultSetOutputImpl(List<?> results) {
+	public ResultSetOutputImpl(List<T> results) {
 		this.resultSetSupplier = () -> results;
 	}
 
-	public ResultSetOutputImpl(Supplier<List<?>> resultSetSupplier) {
+	public ResultSetOutputImpl(Supplier<List<T>> resultSetSupplier) {
 		this.resultSetSupplier = resultSetSupplier;
 	}
 
@@ -31,18 +31,13 @@ class ResultSetOutputImpl implements ResultSetOutput {
 	}
 
 	@Override
-	public List<?> getResultList() {
+	public List<T> getResultList() {
 		return resultSetSupplier.get();
 	}
 
 	@Override
 	public Object getSingleResult() {
 		final List<?> results = getResultList();
-		if ( results == null || results.isEmpty() ) {
-			return null;
-		}
-		else {
-			return results.get( 0 );
-		}
+		return results == null || results.isEmpty() ? null : results.get( 0 );
 	}
 }

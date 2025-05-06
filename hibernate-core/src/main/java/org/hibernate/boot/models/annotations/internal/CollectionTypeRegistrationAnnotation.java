@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.CollectionTypeRegistration;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.HibernateAnnotations.COLLECTION_TYPE_REGISTRATION;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -23,7 +23,7 @@ public class CollectionTypeRegistrationAnnotation implements CollectionTypeRegis
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionTypeRegistrationAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionTypeRegistrationAnnotation(ModelsContext modelContext) {
 		this.parameters = new org.hibernate.annotations.Parameter[0];
 	}
 
@@ -32,7 +32,7 @@ public class CollectionTypeRegistrationAnnotation implements CollectionTypeRegis
 	 */
 	public CollectionTypeRegistrationAnnotation(
 			CollectionTypeRegistration annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.classification = annotation.classification();
 		this.type = annotation.type();
 		this.parameters = extractJdkValue( annotation, COLLECTION_TYPE_REGISTRATION, "parameters", modelContext );
@@ -43,7 +43,7 @@ public class CollectionTypeRegistrationAnnotation implements CollectionTypeRegis
 	 */
 	public CollectionTypeRegistrationAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.classification = (org.hibernate.metamodel.CollectionClassification) attributeValues.get( "classification" );
 		this.type = (Class<? extends org.hibernate.usertype.UserCollectionType>) attributeValues.get( "type" );
 		this.parameters = (org.hibernate.annotations.Parameter[]) attributeValues.get( "parameters" );

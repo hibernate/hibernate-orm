@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
@@ -11,10 +11,10 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.internal.util.StringHelper;
 
 import jakarta.validation.groups.Default;
 
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
@@ -70,7 +70,7 @@ public class GroupsPerOperation {
 		}
 
 		if ( property instanceof String string ) {
-			final String[] groupNames = StringHelper.split( ",", string );
+			final String[] groupNames = split( ",", string );
 			if ( groupNames.length == 1 && groupNames[0].isEmpty() ) {
 				return EMPTY_GROUPS;
 			}

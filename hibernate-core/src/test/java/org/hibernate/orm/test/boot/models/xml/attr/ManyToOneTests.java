@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.attr;
@@ -22,7 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -50,8 +50,8 @@ public class ManyToOneTests {
 				.addXmlMappings( "mappings/models/attr/many-to-one/simple.xml" )
 				.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 

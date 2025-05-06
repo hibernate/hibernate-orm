@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql.treat;
 
 import java.util.List;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -51,7 +51,7 @@ public class HqlTreatJoinTest {
 	public void testTreatQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					QueryImplementor<TestEntity> query = session.createQuery(
+					Query<TestEntity> query = session.createQuery(
 							"select t from TestEntity t where treat(t.joined as JoinedEntity).id = ?1",
 							TestEntity.class
 					);

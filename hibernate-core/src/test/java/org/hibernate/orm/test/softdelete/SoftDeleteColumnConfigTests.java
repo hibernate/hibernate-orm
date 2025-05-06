@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete;
@@ -22,13 +22,15 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Test column configuration though {@linkplain SoftDelete @SoftDelete}
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class SoftDeleteColumnConfigTests {
 	@Test
 	@DomainModel(annotatedClasses = Thing.class)
-	@RequiresDialect( value = H2Dialect.class, comment = "Not all dialects export column comments, and we only really need to check for on that does" )
+	@RequiresDialect( value = H2Dialect.class, comment = "Not all dialects export column comments, and we only really need to check using one that does" )
 	void verifyModel(DomainModelScope modelScope) {
 		final RootClass entityBinding = (RootClass) modelScope.getEntityBinding( Thing.class );
 		final Column softDeleteColumn = entityBinding.getSoftDeleteColumn();

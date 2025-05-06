@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.hbm.transform;
@@ -18,6 +18,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.Value;
 
 /**
  * @author Steve Ebersole
@@ -91,11 +92,12 @@ public class BootModelPreprocessor {
 			TransformationState transformationState) {
 		entityTypeInfo.put( property.getName(), new PropertyInfo( property ) );
 
-		if ( property.getValue() instanceof Component component ) {
+		final Value value = property.getValue();
+		if ( value instanceof Component component ) {
 			final String componentRole = entityName + "." + property.getName();
 			buildComponentEntries( componentRole, component, transformationState );
 		}
-		else if ( property.getValue() instanceof IndexedCollection indexedCollection ) {
+		else if ( value instanceof IndexedCollection indexedCollection ) {
 			if ( indexedCollection.getIndex() instanceof Component index ) {
 				final String componentRole = entityName + "." + property.getName() + ".key";
 				buildComponentEntries( componentRole, index, transformationState );
@@ -105,13 +107,13 @@ public class BootModelPreprocessor {
 				buildComponentEntries( componentRole, element, transformationState );
 			}
 		}
-		else if ( property.getValue() instanceof Collection collection ) {
+		else if ( value instanceof Collection collection ) {
 			if ( collection.getElement() instanceof Component element ) {
 				final String componentRole = entityName + "." + property.getName() + ".value";
 				buildComponentEntries( componentRole, element, transformationState );
 			}
 		}
-		else if ( property.getValue() instanceof ToOne toOne ) {
+		else if ( value instanceof ToOne toOne ) {
 			// could be the target of an inverse mapping, and we will need this information for transforming to mapped-by
 			transformationState.registerMappableAttributesByColumns( entityName, property.getName(), toOne.getSelectables() );
 		}

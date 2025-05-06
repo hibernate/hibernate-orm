@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -14,23 +14,23 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public class NonAggregatedCompositeSqmPathSource<J> extends AbstractSqmPathSource<J> implements CompositeSqmPathSource<J> {
+public class NonAggregatedCompositeSqmPathSource<J>
+		extends AbstractSqmPathSource<J> implements CompositeSqmPathSource<J> {
+
+	private final ManagedDomainType<J> container;
+
 	public NonAggregatedCompositeSqmPathSource(
 			String localName,
 			SqmPathSource<J> pathModel,
 			BindableType bindableType,
 			ManagedDomainType<J> container) {
 		super( localName, pathModel, container, bindableType );
-	}
-
-	@Override
-	public ManagedDomainType<J> getSqmPathType() {
-		return (ManagedDomainType<J>) super.getSqmPathType();
+		this.container = container;
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
+		return (SqmPathSource<?>) container.findAttribute( name );
 	}
 
 	@Override

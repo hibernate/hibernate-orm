@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
@@ -18,7 +17,7 @@ import org.hibernate.usertype.UserCollectionType;
  * primitive arrays.
  * @author Gavin King
  */
-public abstract class IndexedCollection extends Collection {
+public sealed abstract class IndexedCollection extends Collection permits Map, List  {
 
 	public static final String DEFAULT_INDEX_COLUMN_NAME = "idx";
 
@@ -94,11 +93,6 @@ public abstract class IndexedCollection extends Collection {
 			list.addAll( getIndex().getConstraintColumns() );
 			getCollectionTable().createUniqueKey(list);*/
 //		}
-	}
-
-	@Deprecated
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

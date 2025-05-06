@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
@@ -18,6 +17,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -71,7 +71,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 			return new EmbeddedSqmPathSource<>(
 					navigablePath.getFullPath(),
 					null,
-					(EmbeddableDomainType<X>) managedType,
+					(SqmEmbeddableDomainType<X>) managedType,
 					Bindable.BindableType.SINGULAR_ATTRIBUTE,
 					false
 			);
@@ -125,7 +125,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		if ( !( getNodeType().getSqmPathType() instanceof BasicPluralType<?, ?> ) ) {
+		if ( !( getNodeType().getPathType() instanceof BasicPluralType<?, ?> ) ) {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
 		}
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
@@ -147,8 +147,8 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		function.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		function.appendHqlString( hql, context );
 	}
 
 	@Override

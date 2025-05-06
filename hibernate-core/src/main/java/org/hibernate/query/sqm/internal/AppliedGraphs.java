@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -26,12 +26,12 @@ public class AppliedGraphs {
 	}
 
 	private static boolean containsCollectionFetches(GraphImplementor<?> graph) {
-		for ( AttributeNodeImplementor<?> attributeNodeImplementor : graph.getAttributeNodeImplementors() ) {
-			if ( attributeNodeImplementor.getAttributeDescriptor().isCollection() ) {
+		for ( AttributeNodeImplementor<?,?,?> node : graph.getNodes().values() ) {
+			if ( node.getAttributeDescriptor().isCollection() ) {
 				return true;
 			}
-			for ( SubGraphImplementor<?> subGraph : attributeNodeImplementor.getSubGraphMap().values() ) {
-				if ( containsCollectionFetches(subGraph) ) {
+			for ( SubGraphImplementor<?> subgraph : node.getSubGraphs().values() ) {
+				if ( containsCollectionFetches( subgraph ) ) {
 					return true;
 				}
 			}

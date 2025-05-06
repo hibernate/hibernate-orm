@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
@@ -9,11 +9,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
+import jakarta.persistence.PrePersist;
 import org.hibernate.CallbackException;
-import org.hibernate.Session;
-import org.hibernate.classic.Lifecycle;
 
-public class Foo implements Lifecycle, FooProxy, Serializable {
+public class Foo implements FooProxy, Serializable {
 
 	private static int count=0;
 
@@ -89,7 +88,8 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		this.x=x;
 	}
 
-	public boolean onSave(Session db) throws CallbackException {
+	@PrePersist
+	public void onSave() throws CallbackException {
 		_string = "a string";
 		_date = new Date(123);
 		_timestamp = new Date( System.currentTimeMillis() );
@@ -114,17 +114,6 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		dependent = new Fee();
 		dependent.setFi( "belongs to foo # " + getKey() );
 		theLocale = Locale.getDefault();
-		return NO_VETO;
-	}
-
-	public boolean onDelete(Session db) throws CallbackException {
-		return NO_VETO;
-	}
-	public boolean onUpdate(Session db) throws CallbackException {
-		return NO_VETO;
-	}
-
-	public void onLoad(Session db, Object id) {
 	}
 
 	public String getKey() {

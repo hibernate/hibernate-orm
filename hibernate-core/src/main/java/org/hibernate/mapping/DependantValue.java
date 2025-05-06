@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -75,12 +75,13 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 
 	@Override
 	public boolean isSame(SimpleValue other) {
-		return other instanceof DependantValue && isSame( (DependantValue) other );
+		return other instanceof DependantValue dependantValue
+			&& isSame( dependantValue );
 	}
 
 	public boolean isSame(DependantValue other) {
 		return super.isSame( other )
-				&& isSame( wrappedValue, other.wrappedValue );
+			&& isSame( wrappedValue, other.wrappedValue );
 	}
 
 	@Override
@@ -91,8 +92,8 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 
 	@Override
 	public BasicValue.Resolution<?> resolve() {
-		if ( wrappedValue instanceof BasicValue ) {
-			return ( (BasicValue) wrappedValue ).resolve();
+		if ( wrappedValue instanceof BasicValue basicValue ) {
+			return basicValue.resolve();
 		}
 		// not sure it is ever possible
 		throw new UnsupportedOperationException("Trying to resolve the wrapped value but it is non a BasicValue");
@@ -111,8 +112,8 @@ public class DependantValue extends SimpleValue implements Resolvable, SortableV
 	public int[] sortProperties() {
 		if ( !sorted ) {
 			sorted = true;
-			if ( wrappedValue instanceof SortableValue ) {
-				final int[] originalOrder = ( (SortableValue) wrappedValue ).sortProperties();
+			if ( wrappedValue instanceof SortableValue sortableValue ) {
+				final int[] originalOrder = sortableValue.sortProperties();
 				if ( originalOrder != null ) {
 					sortColumns( originalOrder );
 				}

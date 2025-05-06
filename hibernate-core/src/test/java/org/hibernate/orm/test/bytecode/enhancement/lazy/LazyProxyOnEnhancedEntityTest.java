@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
@@ -60,7 +60,7 @@ public class LazyProxyOnEnhancedEntityTest {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
-		EventListenerRegistry registry = scope.getSessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = scope.getSessionFactory().getEventListenerRegistry();
 		registry.prependListeners( EventType.LOAD, new ImmediateLoadTrap() );
 
 		scope.inTransaction( em -> {

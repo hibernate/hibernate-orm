@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -25,9 +25,10 @@ import java.util.TimeZone;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2GetObjectExtractor;
-import org.hibernate.dialect.DB2StructJdbcType;
+import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -47,7 +48,6 @@ import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
-import org.hibernate.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
@@ -63,7 +63,9 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
@@ -87,6 +89,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
@@ -96,6 +100,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
@@ -154,6 +159,17 @@ public class DB2LegacyDialect extends Dialect {
 			? LegacyDB2LimitHandler.INSTANCE
 			: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
+	private final StandardTableExporter db2TableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isLob() || jdbcType.isXml() ) {
+				// LOB or XML columns can't have check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public DB2LegacyDialect() {
 		this( DatabaseVersion.make( 9, 0 ) );
@@ -187,6 +203,11 @@ public class DB2LegacyDialect extends Dialect {
 	 */
 	public DatabaseVersion getDB2Version() {
 		return this.getVersion();
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.db2TableExporter;
 	}
 
 	@Override
@@ -1285,4 +1306,25 @@ public class DB2LegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

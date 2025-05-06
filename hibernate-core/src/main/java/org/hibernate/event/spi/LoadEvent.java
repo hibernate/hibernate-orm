@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -14,16 +14,13 @@ import org.hibernate.LockOptions;
  * @author Steve Ebersole
  */
 public class LoadEvent extends AbstractEvent {
-//	public static final LockMode DEFAULT_LOCK_MODE = LockMode.NONE;
-//	public static final LockOptions DEFAULT_LOCK_OPTIONS = DEFAULT_LOCK_MODE.toLockOptions();
 
 	private Object entityId;
 	private String entityClassName;
 	private Object instanceToLoad;
-	private final LockOptions lockOptions;
-	private final boolean isAssociationFetch;
+	private LockOptions lockOptions;
+	private boolean isAssociationFetch;
 	private Object result;
-	private PostLoadEvent postLoadEvent;
 	private Boolean readOnly;
 
 	public LoadEvent(Object entityId, Object instanceToLoad, EventSource source, Boolean readOnly) {
@@ -88,7 +85,6 @@ public class LoadEvent extends AbstractEvent {
 		this.instanceToLoad = instanceToLoad;
 		this.lockOptions = lockOptions;
 		this.isAssociationFetch = isAssociationFetch;
-		this.postLoadEvent = new PostLoadEvent( source );
 		this.readOnly = readOnly;
 	}
 
@@ -112,6 +108,10 @@ public class LoadEvent extends AbstractEvent {
 		return isAssociationFetch;
 	}
 
+	public void setAssociationFetch(boolean associationFetch) {
+		isAssociationFetch = associationFetch;
+	}
+
 	public Object getInstanceToLoad() {
 		return instanceToLoad;
 	}
@@ -122,6 +122,10 @@ public class LoadEvent extends AbstractEvent {
 
 	public LockOptions getLockOptions() {
 		return lockOptions;
+	}
+
+	public void setLockOptions(LockOptions lockOptions) {
+		this.lockOptions = lockOptions;
 	}
 
 	public LockMode getLockMode() {
@@ -142,14 +146,6 @@ public class LoadEvent extends AbstractEvent {
 
 	public void setResult(Object result) {
 		this.result = result;
-	}
-
-	public PostLoadEvent getPostLoadEvent() {
-		return postLoadEvent;
-	}
-
-	public void setPostLoadEvent(PostLoadEvent postLoadEvent) {
-		this.postLoadEvent = postLoadEvent;
 	}
 
 	public Boolean getReadOnly() {

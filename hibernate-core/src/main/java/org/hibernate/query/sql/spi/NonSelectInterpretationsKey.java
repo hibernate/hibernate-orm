@@ -1,14 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.spi;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 
 import org.hibernate.query.spi.QueryInterpretationCache;
+
+import static java.util.Collections.emptySet;
 
 /**
  * QueryInterpretations key for non-select NativeQuery instances
@@ -21,7 +23,7 @@ public class NonSelectInterpretationsKey implements QueryInterpretationCache.Key
 
 	public NonSelectInterpretationsKey(String sql, Collection<String> querySpaces) {
 		this.sql = sql;
-		this.querySpaces = querySpaces == null ? Collections.emptySet() : querySpaces;
+		this.querySpaces = querySpaces == null ? emptySet() : querySpaces;
 	}
 
 	@Override
@@ -31,10 +33,8 @@ public class NonSelectInterpretationsKey implements QueryInterpretationCache.Key
 
 	@Override
 	public QueryInterpretationCache.Key prepareForStore() {
-		return new NonSelectInterpretationsKey(
-				sql,
-				querySpaces.isEmpty() ? Collections.emptySet() : new HashSet<>( querySpaces )
-		);
+		return new NonSelectInterpretationsKey( sql,
+				querySpaces.isEmpty() ? emptySet() : new HashSet<>( querySpaces ) );
 	}
 
 	@Override
@@ -42,22 +42,15 @@ public class NonSelectInterpretationsKey implements QueryInterpretationCache.Key
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof NonSelectInterpretationsKey that) ) {
 			return false;
 		}
-
-		NonSelectInterpretationsKey that = (NonSelectInterpretationsKey) o;
-
-		if ( !sql.equals( that.sql ) ) {
-			return false;
-		}
-		return querySpaces.equals( that.querySpaces );
+		return sql.equals( that.sql )
+			&& querySpaces.equals( that.querySpaces );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = sql.hashCode();
-		result = 31 * result + querySpaces.hashCode();
-		return result;
+		return Objects.hash( sql, querySpaces );
 	}
 }

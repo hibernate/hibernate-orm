@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
@@ -48,7 +48,8 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 			String aggregateParentReadExpression,
 			String columnExpression,
 			int aggregateColumnTypeCode,
-			SqlTypedMapping column) {
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON_ARRAY:
 			case JSON:

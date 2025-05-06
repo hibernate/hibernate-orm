@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -7,9 +7,11 @@ package org.hibernate.query.spi;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.checkQueryReturnType;
+import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed;
 
 /**
  * @author Steve Ebersole
@@ -48,9 +50,9 @@ public class SimpleHqlInterpretationImpl<R> implements HqlInterpretation<R> {
 	@Override
 	public void validateResultType(Class<?> resultType) {
 		assert sqmStatement instanceof SqmSelectStatement<?>;
-		if ( resultType != null && !SqmUtil.isResultTypeAlwaysAllowed( resultType ) ) {
+		if ( resultType != null && !isResultTypeAlwaysAllowed( resultType ) ) {
 			if ( !allowedReturnTypes.containsKey( resultType ) ) {
-				SqmUtil.checkQueryReturnType( ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(), resultType );
+				checkQueryReturnType( ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(), resultType );
 				allowedReturnTypes.put( resultType, Boolean.TRUE );
 			}
 		}

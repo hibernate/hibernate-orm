@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.jfr.internal;
 
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 
 import jdk.jfr.Category;
@@ -18,9 +18,9 @@ import jdk.jfr.StackTrace;
 @Label("JDBC Connection Release")
 @Category("Hibernate ORM")
 @Description("JDBC Connection Released")
-@StackTrace(false)
+@StackTrace
 @AllowNonPortable
-public class JdbcConnectionReleaseEvent extends Event implements HibernateMonitoringEvent {
+public class JdbcConnectionReleaseEvent extends Event implements DiagnosticEvent {
 	public static final String NAME = "org.hibernate.orm.JdbcConnectionRelease";
 
 	@Label("Session Identifier")

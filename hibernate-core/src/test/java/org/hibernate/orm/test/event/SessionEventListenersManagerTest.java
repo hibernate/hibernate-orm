@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event;
 
-import org.hibernate.BaseSessionEventListener;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 
@@ -43,7 +42,7 @@ public class SessionEventListenersManagerTest extends BaseUnitTestCase {
 		Assert.assertEquals( "e", sb.toString() );
 	}
 
-	private static class TestSessionEventListener extends BaseSessionEventListener {
+	private static class TestSessionEventListener implements SessionEventListener {
 
 		private final StringBuilder sb;
 		private final char theChar;

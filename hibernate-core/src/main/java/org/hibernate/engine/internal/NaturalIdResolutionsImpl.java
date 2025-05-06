@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -21,8 +21,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdLogging;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -265,7 +265,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 		final SessionFactoryImplementor factory = s.getFactory();
 		final StatisticsImplementor statistics = factory.getStatistics();
-		final EventManager eventManager = s.getEventManager();
+		final EventMonitor eventMonitor = s.getEventMonitor();
 		switch ( source ) {
 			case LOAD: {
 				if ( CacheHelper.fromSharedCache( s, cacheKey, persister, cacheAccess ) != null ) {
@@ -273,7 +273,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					return;
 				}
 				boolean put = false;
-				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 				try {
 					put = cacheAccess.putFromLoad(
 							s,
@@ -290,14 +290,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					}
 				}
 				finally {
-					eventManager.completeCachePutEvent(
+					eventMonitor.completeCachePutEvent(
 							cachePutEvent,
 							session(),
 							cacheAccess,
 							rootEntityPersister,
 							put,
 							true,
-							EventManager.CacheActionDescription.ENTITY_LOAD
+							EventMonitor.CacheActionDescription.ENTITY_LOAD
 					);
 				}
 
@@ -305,7 +305,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			}
 			case INSERT: {
 				boolean put = false;
-				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 
 				try {
 					put = cacheAccess.insert( s, cacheKey, id );
@@ -317,14 +317,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					}
 				}
 				finally {
-					eventManager.completeCachePutEvent(
+					eventMonitor.completeCachePutEvent(
 							cachePutEvent,
 							session(),
 							cacheAccess,
 							rootEntityPersister,
 							put,
 							true,
-							EventManager.CacheActionDescription.ENTITY_INSERT
+							EventMonitor.CacheActionDescription.ENTITY_INSERT
 					);
 				}
 
@@ -358,7 +358,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 				final SoftLock lock = cacheAccess.lockItem( s, cacheKey, null );
 				boolean put = false;
-				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 				try {
 					put = cacheAccess.update( s, cacheKey, id );
 					if ( put && statistics.isStatisticsEnabled() ) {
@@ -369,14 +369,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					}
 				}
 				finally {
-					eventManager.completeCachePutEvent(
+					eventMonitor.completeCachePutEvent(
 							cachePutEvent,
 							session(),
 							cacheAccess,
 							rootEntityPersister,
 							put,
 							true,
-							EventManager.CacheActionDescription.ENTITY_UPDATE
+							EventMonitor.CacheActionDescription.ENTITY_UPDATE
 					);
 				}
 
@@ -385,7 +385,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 							cacheAccess.unlockItem( s, previousCacheKey, removalLock );
 							if (success) {
 								boolean putAfterUpdate = false;
-								final HibernateMonitoringEvent cachePutEventAfterUpdate = eventManager.beginCachePutEvent();
+								final DiagnosticEvent cachePutEventAfterUpdate = eventMonitor.beginCachePutEvent();
 								try {
 									putAfterUpdate = cacheAccess.afterUpdate(
 											s,
@@ -402,14 +402,14 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 									}
 								}
 								finally {
-									eventManager.completeCachePutEvent(
+									eventMonitor.completeCachePutEvent(
 											cachePutEventAfterUpdate,
 											session(),
 											cacheAccess,
 											rootEntityPersister,
 											putAfterUpdate,
 											true,
-											EventManager.CacheActionDescription.ENTITY_AFTER_UPDATE
+											EventMonitor.CacheActionDescription.ENTITY_AFTER_UPDATE
 									);
 								}
 							}

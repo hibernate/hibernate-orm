@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
@@ -321,8 +321,8 @@ public class SchemaExport {
 			}
 		}
 		finally {
-			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl ) {
-				exceptions.addAll( ( (ExceptionHandlerCollectingImpl) exceptionHandler ).getExceptions() );
+			if ( exceptionHandler instanceof ExceptionHandlerCollectingImpl handler ) {
+				exceptions.addAll( handler.getExceptions() );
 			}
 		}
 	}

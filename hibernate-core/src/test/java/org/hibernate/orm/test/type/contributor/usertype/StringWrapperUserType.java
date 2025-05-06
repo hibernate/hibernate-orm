@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.contributor.usertype;
@@ -12,7 +12,7 @@ import java.sql.Types;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
@@ -49,7 +49,7 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 	}
 
 	@Override
-	public StringWrapper nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public StringWrapper nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		String columnValue = (String) rs.getObject( position );
 		log.debugv( "Result set column {0} value is {1}", position, columnValue );
@@ -58,7 +58,7 @@ public class StringWrapperUserType implements UserType<StringWrapper> {
 
 	@Override
 	public void nullSafeSet(
-			PreparedStatement st, StringWrapper value, int index, SharedSessionContractImplementor session)
+			PreparedStatement st, StringWrapper value, int index, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			log.debugv("Binding null to parameter {0} ",index);

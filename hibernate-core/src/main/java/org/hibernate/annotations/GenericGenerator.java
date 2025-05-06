@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -66,7 +66,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PACKAGE, TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 @Repeatable(GenericGenerators.class)
-@Deprecated(since = "6.5")
+@Deprecated(since = "6.5", forRemoval = true)
 public @interface GenericGenerator {
 	/**
 	 * The name of the identifier generator. This is the name that may be specified by
@@ -93,7 +93,7 @@ public @interface GenericGenerator {
 	 *
 	 * @deprecated use {@link #type()} for typesafety
 	 */
-	@Deprecated(since="6.2")
+	@Deprecated(since="6.2", forRemoval = true)
 	String strategy() default "native";
 	/**
 	 * Parameters to be passed to {@link org.hibernate.id.IdentifierGenerator#configure}

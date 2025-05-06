@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
@@ -94,9 +94,7 @@ public class AggregateEmbeddableResultImpl<T> extends AbstractFetchParent implem
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
 		final SelectableMapping selectableMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor().getAggregateMapping();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlSelection aggregateSelection = sqlExpressionResolver.resolveSqlSelection(
 				expression,
 				// Using the Object[] type here, so that a different JDBC extractor is chosen

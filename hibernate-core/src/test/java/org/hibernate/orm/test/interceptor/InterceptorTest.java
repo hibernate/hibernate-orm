@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.interceptor;
 
-import jakarta.persistence.PersistenceException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import java.util.LinkedList;
@@ -26,13 +25,11 @@ import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.Type;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -137,37 +134,6 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		t.commit();
 		s.close();
 
-	}
-
-	/**
-	 * Test that setting a transaction timeout will cause an Exception to occur
-	 * if the transaction timeout is exceeded.
-	 */
-	@Test
-	public void testTimeout() throws Exception {
-		final int TIMEOUT = 2;
-		final int WAIT = TIMEOUT + 1;
-		Session s = openSession();
-		// Get the transaction and set the timeout BEFORE calling begin()
-		Transaction t = s.getTransaction();
-		t.setTimeout( TIMEOUT );
-		t.begin();
-		// Sleep for an amount of time that exceeds the transaction timeout
-		Thread.sleep( WAIT * 1000 );
-		try {
-			// Do something with the transaction and try to commit it
-			s.persist( new User( "john", "test" ) );
-			t.commit();
-			fail( "Transaction should have timed out" );
-		}
-		catch (PersistenceException e) {
-			assertTyping( TransactionException.class, e );
-			assertTrue(
-					"Transaction failed for the wrong reason.  Expecting transaction timeout, but found [" +
-							e.getMessage() + "]",
-					e.getMessage().contains( "transaction timeout expired" )
-			);
-		}
 	}
 
 	@Test

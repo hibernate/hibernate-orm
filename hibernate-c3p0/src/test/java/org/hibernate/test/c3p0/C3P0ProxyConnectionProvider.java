@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.test.c3p0;
@@ -48,7 +48,7 @@ public class C3P0ProxyConnectionProvider extends C3P0ConnectionProvider {
 			throw new IllegalStateException( e );
 		}
 
-		ReflectionUtil.setField( this, "ds", dataSource );
+		ReflectionUtil.setField( this, "dataSource", dataSource );
 	}
 
 	@Override

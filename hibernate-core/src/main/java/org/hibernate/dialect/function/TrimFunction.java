@@ -1,14 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -82,22 +81,19 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 		final String trim = dialect.trimPattern( specification, isWhitespace );
 
-		final List<? extends SqlAstNode> args = isWhitespace ?
-				Collections.singletonList( sourceExpr ) :
-				List.of( sourceExpr, trimCharacter );
+		final List<? extends SqlAstNode> args =
+				isWhitespace ? List.of( sourceExpr ) : List.of( sourceExpr, trimCharacter );
 		new PatternRenderer( trim, argumentRenderingMode ).render( sqlAppender, args, walker );
 	}
 
 	private static boolean isWhitespace(SqlAstNode trimCharacter) {
-		if ( trimCharacter instanceof Literal ) {
-			final char literalValue = (char) ( (Literal) trimCharacter ).getLiteralValue();
+		if ( trimCharacter instanceof Literal literal ) {
+			final char literalValue = (char) literal.getLiteralValue();
 			return literalValue == ' ';
 		}
-		else {
-			assert trimCharacter instanceof SqmParameterInterpretation;
-			final JdbcType jdbcType = ( (SqmParameterInterpretation) trimCharacter ).getExpressionType()
-					.getSingleJdbcMapping()
-					.getJdbcType();
+		else if ( trimCharacter instanceof SqmParameterInterpretation parameterInterpretation ) {
+			final JdbcType jdbcType =
+					parameterInterpretation.getExpressionType().getSingleJdbcMapping().getJdbcType();
 			if ( !isCharacterType( jdbcType.getJdbcTypeCode() ) ) {
 				throw new FunctionArgumentException( String.format(
 						"Expected parameter used as trim character to be character typed, instead was [%s]",
@@ -105,6 +101,9 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				) );
 			}
 			return false;
+		}
+		else {
+			throw new IllegalArgumentException( "Trim character must be a literal string or parameter" );
 		}
 	}
 

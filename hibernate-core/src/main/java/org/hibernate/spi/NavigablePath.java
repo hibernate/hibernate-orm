@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spi;
@@ -140,8 +140,8 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	protected boolean localNamesMatch(DotIdentifierSequence other) {
-		if ( other instanceof EntityIdentifierNavigablePath ) {
-			return localNamesMatch( (EntityIdentifierNavigablePath) other );
+		if ( other instanceof EntityIdentifierNavigablePath entityIdentifierNavigablePath ) {
+			return localNamesMatch( entityIdentifierNavigablePath );
 		}
 
 		return Objects.equals( getLocalName(), other.getLocalName() );

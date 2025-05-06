@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.implicit;
@@ -12,15 +12,14 @@ import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.impl;
 
@@ -44,9 +43,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 			DomainResultCreationState creationState) {
 		this.fetchPath = fetchPath;
 		this.fetchable = fetchable;
-		final DomainResultCreationStateImpl creationStateImpl = impl( creationState );
-		final Function<String, FetchBuilder> fetchBuilderResolver = creationStateImpl.getCurrentExplicitFetchMementoResolver();
-		this.fetchBuilder = fetchBuilderResolver.apply( fetchable.getFetchableName() );
+		this.fetchBuilder = impl( creationState ).getCurrentExplicitFetchMementoResolver().apply( fetchable );
 	}
 
 	@Override
@@ -68,41 +65,9 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 					domainResultCreationState
 			);
 		}
-		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
-		final TableGroup parentTableGroup = creationStateImpl
-				.getFromClauseAccess()
-				.getTableGroup( parent.getNavigablePath() );
-
-		final String table = fetchable.getContainingTableExpression();
-		final String column;
-
-		// In case of a formula we look for a result set position with the fetchable name
-		if ( fetchable.isFormula() ) {
-			column = fetchable.getFetchableName();
-		}
-		else {
-			column = fetchable.getSelectionExpression();
-		}
-
-		final Expression expression = ResultsHelper.resolveSqlExpression(
-				creationStateImpl,
-				jdbcResultsMetadata,
-				parentTableGroup.resolveTableReference( fetchPath, fetchable, table ),
-				fetchable,
-				column
-		);
-
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-				expression,
-				fetchable.getJdbcMapping().getJdbcJavaType(),
-				parent,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
-		);
-
+		final SqlSelection sqlSelection =
+				sqlSelection( parent, fetchPath, jdbcResultsMetadata, domainResultCreationState );
 		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				parent,
@@ -111,6 +76,34 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 				FetchTiming.IMMEDIATE,
 				domainResultCreationState,
 				!sqlSelection.isVirtual()
+		);
+	}
+
+	private SqlSelection sqlSelection(
+			FetchParent parent,
+			NavigablePath fetchPath,
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationState domainResultCreationState) {
+		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
+		final TableGroup parentTableGroup =
+				creationStateImpl.getFromClauseAccess()
+						.getTableGroup( parent.getNavigablePath() );
+		return creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						jdbcResultsMetadata,
+						parentTableGroup.resolveTableReference( fetchPath, fetchable,
+								fetchable.getContainingTableExpression() ),
+						fetchable,
+						fetchable.isFormula()
+								// In case of a formula we look for a result set position with the fetchable name
+								? fetchable.getFetchableName()
+								: fetchable.getSelectionExpression()
+				),
+				fetchable.getJdbcMapping().getJdbcJavaType(),
+				parent,
+				domainResultCreationState.getSqlAstCreationState().getCreationContext()
+						.getTypeConfiguration()
 		);
 	}
 
@@ -130,7 +123,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 
 		final ImplicitFetchBuilderBasic that = (ImplicitFetchBuilderBasic) o;
 		return fetchPath.equals( that.fetchPath )
-				&& fetchable.equals( that.fetchable );
+			&& fetchable.equals( that.fetchable );
 	}
 
 	@Override
@@ -141,9 +134,9 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 		if ( fetchBuilder != null ) {
-			consumer.accept( fetchPath.getLocalName(), fetchBuilder );
+			consumer.accept( fetchable, fetchBuilder );
 		}
 	}
 }

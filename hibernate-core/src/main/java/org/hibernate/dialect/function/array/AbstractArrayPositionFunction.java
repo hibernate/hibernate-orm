@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -42,7 +42,6 @@ public abstract class AbstractArrayPositionFunction extends AbstractSqmSelfRende
 					public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 						if ( argumentIndex == 2 ) {
 							return converter.getCreationContext()
-									.getSessionFactory()
 									.getTypeConfiguration()
 									.standardBasicTypeForJavaType( Integer.class );
 						}

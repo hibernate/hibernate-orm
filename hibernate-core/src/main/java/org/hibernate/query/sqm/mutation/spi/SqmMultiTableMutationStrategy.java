@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.spi;
@@ -37,6 +37,15 @@ public interface SqmMultiTableMutationStrategy {
 			MappingModelCreationProcess mappingModelCreationProcess,
 			JdbcConnectionAccess connectionAccess) {
 		// by default, nothing to do...
+	}
+
+	/**
+	 * Prepare the strategy for use.  Called one time as the SessionFactory
+	 * is being built.
+	 */
+	default void prepare(MappingModelCreationProcess mappingModelCreationProcess) {
+		prepare( mappingModelCreationProcess,
+				mappingModelCreationProcess.getCreationContext().getJdbcServices().getBootstrapJdbcConnectionAccess() );
 	}
 
 	/**

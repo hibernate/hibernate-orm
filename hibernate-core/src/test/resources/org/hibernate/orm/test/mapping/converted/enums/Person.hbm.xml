@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
 <!DOCTYPE hibernate-mapping PUBLIC
 "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
@@ -16,20 +14,20 @@
     </id>
 
     <property name="gender" not-null="true">
-		<type name="org.hibernate.type.EnumType">
+		<type name="org.hibernate.orm.test.EnumType">
 			<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.Gender</param>
 			<param name="type">12</param>
 		</type>
 	</property>
 
     <property name="hairColor" not-null="true">
-		<type name="org.hibernate.type.EnumType">
+		<type name="org.hibernate.orm.test.EnumType">
 			<param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
 		</type>
 	</property>
 
     <property name="originalHairColor">
-        <type name="org.hibernate.type.EnumType">
+        <type name="org.hibernate.orm.test.EnumType">
             <param name="enumClass">org.hibernate.orm.test.mapping.converted.enums.HairColor</param>
             <param name="type">12</param>
         </type>

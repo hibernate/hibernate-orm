@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.query.ids;
@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
@@ -29,6 +30,7 @@ import static org.junit.Assert.assertNull;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-11748")
+@Exclude
 public class MultipleIdRelatedIdQueryTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

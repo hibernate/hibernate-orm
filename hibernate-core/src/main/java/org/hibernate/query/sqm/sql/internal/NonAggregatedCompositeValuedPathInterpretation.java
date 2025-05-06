@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -13,6 +12,10 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.query.sqm.internal.SqmUtil.determineAffectedTableName;
 
 /**
  * @author Andrea Boriero
@@ -25,11 +28,13 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 			NonAggregatedCompositeSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final TableGroup tableGroup = sqlAstCreationState
-				.getFromClauseAccess()
-				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
-		final NonAggregatedIdentifierMapping mapping = (NonAggregatedIdentifierMapping) tableGroup.getModelPart()
-				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
+		final TableGroup tableGroup =
+				sqlAstCreationState.getFromClauseAccess()
+						.findTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final NonAggregatedIdentifierMapping mapping =
+				(NonAggregatedIdentifierMapping)
+						tableGroup.getModelPart()
+								.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 
 		return new NonAggregatedCompositeValuedPathInterpretation<>(
 				mapping.toSqlExpression(
@@ -40,24 +45,33 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 				),
 				sqmPath.getNavigablePath(),
 				mapping,
-				tableGroup
+				tableGroup,
+				determineAffectedTableName( tableGroup, mapping )
 		);
 	}
 
 	private final SqlTuple sqlExpression;
+	private final @Nullable String affectedTableName;
 
 	private NonAggregatedCompositeValuedPathInterpretation(
 			SqlTuple sqlExpression,
 			NavigablePath navigablePath,
-			ModelPart mapping,
-			TableGroup tableGroup) {
+			NonAggregatedIdentifierMapping mapping,
+			TableGroup tableGroup,
+			@Nullable String affectedTableName) {
 		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
+		this.affectedTableName = affectedTableName;
 	}
 
 	@Override
 	public SqlTuple getSqlExpression() {
 		return sqlExpression;
+	}
+
+	@Override
+	public @Nullable String getAffectedTableName() {
+		return affectedTableName;
 	}
 
 	@Override

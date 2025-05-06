@@ -1,48 +1,44 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.selectcase;
 
-import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
-
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.metadata.Person_;
-
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey(value = "HHH-12230")
-public class GroupBySelectCaseTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
+@DomainModel( annotatedClasses = GroupBySelectCaseTest.Person.class )
+@SessionFactory
+public class GroupBySelectCaseTest {
 
 	@Test
-	@JiraKey(value = "HHH-12230")
-	public void selectCaseInGroupByAndSelectExpression() {
+	public void selectCaseInGroupByAndSelectExpression(SessionFactoryScope sessions) {
+		sessions.inTransaction( (entityManager) -> {
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			final Root<Person> from = query.from( Person.class );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Tuple> query = cb.createTupleQuery();
-			Root<Person> from = query.from( Person.class );
-
-			Predicate childPredicate = cb.between( from.get( Person_.AGE ), 0, 10 );
-			Predicate teenagerPredicate = cb.between( from.get( Person_.AGE ), 11, 20 );
-			CriteriaBuilder.Case<String> selectCase = cb.selectCase();
+			final Predicate childPredicate = cb.between( from.get( Person_.AGE ), 0, 10 );
+			final Predicate teenagerPredicate = cb.between( from.get( Person_.AGE ), 11, 20 );
+			final CriteriaBuilder.Case<String> selectCase = cb.selectCase();
 			selectCase.when( childPredicate, "child" )
 					.when( teenagerPredicate, "teenager" )
 					.otherwise( "adult" );
@@ -50,24 +46,22 @@ public class GroupBySelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 			query.multiselect( selectCase );
 			query.groupBy( selectCase );
 
-			List<Tuple> resultList = entityManager.createQuery( query ).getResultList();
-			assertNotNull( resultList );
-			assertTrue( resultList.isEmpty() );
+			final List<Tuple> resultList = entityManager.createQuery( query ).getResultList();
+			assertThat( resultList ).isNotNull();
+			assertThat( resultList ).isEmpty();
 		} );
 	}
 
 	@Test
-	@JiraKey(value = "HHH-12230")
-	public void selectCaseInOrderByAndSelectExpression() {
+	public void selectCaseInOrderByAndSelectExpression(SessionFactoryScope sessions) {
+		sessions.inTransaction( (entityManager) -> {
+			final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			final CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			final Root<Person> from = query.from( Person.class );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Tuple> query = cb.createTupleQuery();
-			Root<Person> from = query.from( Person.class );
-
-			Predicate childPredicate = cb.between( from.get( Person_.AGE ), 0, 10 );
-			Predicate teenagerPredicate = cb.between( from.get( Person_.AGE ), 11, 20 );
-			CriteriaBuilder.Case<String> selectCase = cb.selectCase();
+			final Predicate childPredicate = cb.between( from.get( Person_.AGE ), 0, 10 );
+			final Predicate teenagerPredicate = cb.between( from.get( Person_.AGE ), 11, 20 );
+			final CriteriaBuilder.Case<String> selectCase = cb.selectCase();
 			selectCase.when( childPredicate, "child" )
 					.when( teenagerPredicate, "teenager" )
 					.otherwise( "adult" );
@@ -75,18 +69,17 @@ public class GroupBySelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 			query.multiselect( selectCase );
 			query.orderBy( cb.asc( selectCase ) );
 
-			List<Tuple> resultList = entityManager.createQuery( query ).getResultList();
-			assertNotNull( resultList );
-			assertTrue( resultList.isEmpty() );
+			final List<Tuple> resultList = entityManager.createQuery( query ).getResultList();
+			assertThat( resultList ).isNotNull();
+			assertThat( resultList ).isEmpty();
 		} );
 	}
 
 	@Entity(name = "Person")
+	@Table(name="persons")
 	public static class Person {
-
 		@Id
 		private Long id;
-
 		private Integer age;
 	}
 }

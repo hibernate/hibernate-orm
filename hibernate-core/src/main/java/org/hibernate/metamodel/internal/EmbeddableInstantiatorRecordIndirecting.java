@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
 import org.hibernate.InstantiationException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.ValueAccess;
+
+import static org.hibernate.internal.util.ReflectHelper.getRecordComponentNames;
 
 /**
  * Support for instantiating embeddables as record representation
@@ -22,18 +22,15 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 	}
 
 	public static EmbeddableInstantiatorRecordIndirecting of(Class<?> javaType, String[] propertyNames) {
-		final String[] componentNames = ReflectHelper.getRecordComponentNames( javaType );
+		final String[] componentNames = getRecordComponentNames( javaType );
 		final int[] index = new int[componentNames.length];
-		if ( EmbeddableHelper.resolveIndex( propertyNames, componentNames, index ) ) {
-			return new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index );
-		}
-		else {
-			return new EmbeddableInstantiatorRecordIndirecting(javaType, index);
-		}
+		return EmbeddableHelper.resolveIndex( propertyNames, componentNames, index )
+				? new EmbeddableInstantiatorRecordIndirectingWithGap( javaType, index )
+				: new EmbeddableInstantiatorRecordIndirecting( javaType, index );
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		if ( constructor == null ) {
 			throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 		}
@@ -59,7 +56,7 @@ public class EmbeddableInstantiatorRecordIndirecting extends EmbeddableInstantia
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+		public Object instantiate(ValueAccess valuesAccess) {
 			if ( constructor == null ) {
 				throw new InstantiationException( "Unable to locate constructor for embeddable", getMappedPojoClass() );
 			}

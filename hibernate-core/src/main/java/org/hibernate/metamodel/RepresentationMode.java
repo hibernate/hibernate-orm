@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
 
-import org.hibernate.AssertionFailure;
 
 import java.util.Locale;
 
@@ -19,28 +18,19 @@ public enum RepresentationMode {
 	MAP;
 
 	public String getExternalName() {
-		switch (this) {
-			case POJO:
-				return "pojo";
-			case MAP:
-				return "dynamic-map";
-			default:
-				throw new AssertionFailure("Unknown RepresentationMode");
-		}
+		return switch ( this ) {
+			case POJO -> "pojo";
+			case MAP -> "dynamic-map";
+		};
 	}
 
 	public static RepresentationMode fromExternalName(String externalName) {
-		if ( externalName == null ) {
-			return POJO;
-		}
-		switch ( externalName.toLowerCase(Locale.ROOT) ) {
-			case "pojo":
-				return POJO;
-			case "dynamic-map":
-			case "map":
-				return MAP;
-			default:
-				throw new IllegalArgumentException("Unknown RepresentationMode");
-		}
+		return externalName == null
+				? POJO
+				: switch ( externalName.toLowerCase( Locale.ROOT ) ) {
+					case "pojo" -> POJO;
+					case "dynamic-map", "map" -> MAP;
+					default -> throw new IllegalArgumentException( "Unknown RepresentationMode" );
+				};
 	}
 }

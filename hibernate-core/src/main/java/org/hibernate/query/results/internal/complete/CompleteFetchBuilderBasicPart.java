@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -82,7 +82,6 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 
 		final String selectedAlias;
 		final int jdbcPosition;
-
 		if ( selectionAlias != null ) {
 			try {
 				jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( selectionAlias );
@@ -104,16 +103,12 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 			selectedAlias = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
 		}
 
+		final JdbcMapping jdbcMapping =
+				referencedModelPart instanceof DiscriminatorMapping discriminatorMapping
+						? discriminatorMapping.getUnderlyingJdbcMapping()
+						: referencedModelPart.getJdbcMapping();
+
 		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-
-		final JdbcMapping jdbcMapping;
-		if ( referencedModelPart instanceof DiscriminatorMapping ) {
-			jdbcMapping = ( (DiscriminatorMapping) referencedModelPart ).getUnderlyingJdbcMapping();
-		}
-		else {
-			jdbcMapping = referencedModelPart.getJdbcMapping();
-		}
-
 		// we just care about the registration here.  The ModelPart will find it later
 		creationStateImpl.resolveSqlExpression(
 				createColumnReferenceKey( tableReference, referencedModelPart.getSelectablePath(), jdbcMapping ),
@@ -141,8 +136,8 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Fetc
 
 		final CompleteFetchBuilderBasicPart that = (CompleteFetchBuilderBasicPart) o;
 		return navigablePath.equals( that.navigablePath )
-				&& referencedModelPart.equals( that.referencedModelPart )
-				&& Objects.equals( selectionAlias, that.selectionAlias );
+			&& referencedModelPart.equals( that.referencedModelPart )
+			&& Objects.equals( selectionAlias, that.selectionAlias );
 	}
 
 	@Override

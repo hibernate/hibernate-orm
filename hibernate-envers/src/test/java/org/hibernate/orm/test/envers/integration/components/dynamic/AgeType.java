@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.components.dynamic;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 public class AgeType implements UserType<Age> {
@@ -37,13 +37,13 @@ public class AgeType implements UserType<Age> {
 	}
 
 	@Override
-	public Age nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public Age nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		return new Age( rs.getInt( position ) );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Age value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, Age value, int index, WrapperOptions options)
 			throws SQLException {
 		st.setInt( index, value.getAgeInYears() );
 	}

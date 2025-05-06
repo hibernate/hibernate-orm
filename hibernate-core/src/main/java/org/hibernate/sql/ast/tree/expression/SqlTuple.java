@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -13,20 +13,21 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.tuple.TupleResult;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProducer, Assignable {
 	private final List<? extends Expression> expressions;
-	private final MappingModelExpressible valueMapping;
+	private final MappingModelExpressible<?> valueMapping;
 
-	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressible valueMapping) {
+	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressible<?> valueMapping) {
 		this.expressions = expressions;
 		this.valueMapping = valueMapping;
 
@@ -42,7 +43,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	}
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return valueMapping;
 	}
 
@@ -52,7 +53,11 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 
 	@Override
 	public List<ColumnReference> getColumnReferences() {
-		return (List<ColumnReference>) expressions;
+		// TODO: this operation is completely untypesafe
+		//       since the List can totally contain
+		//       Expressions which aren't ColumnReferences
+		return expressions.stream()
+				.map( expression -> (ColumnReference) expression ).toList();
 	}
 
 	@Override
@@ -66,26 +71,28 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaType javaType = ( (SqmExpressible<?>) valueMapping ).getExpressibleJavaType();
+		final SqmExpressible<?> expressible = (SqmExpressible<?>) valueMapping;
 		final int[] valuesArrayPositions = new int[expressions.size()];
 		for ( int i = 0; i < expressions.size(); i++ ) {
 			final Expression expression = expressions.get( i );
-			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
-					expression,
-					expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
-					null,
-					creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
-			).getValuesArrayPosition();
+			valuesArrayPositions[i] =
+					resolveSelection( creationState.getSqlAstCreationState(), expression )
+							.getValuesArrayPosition();
 		}
+		return new TupleResult<>( valuesArrayPositions, resultVariable, expressible.getExpressibleJavaType() );
+	}
 
-		return new TupleResult(
-				valuesArrayPositions,
-				resultVariable,
-				javaType
-		);
+	private static SqlSelection resolveSelection(SqlAstCreationState creationState, Expression expression) {
+		return creationState.getSqlExpressionResolver()
+				.resolveSqlSelection(
+						expression,
+						expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
+						null,
+						creationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
+				);
 	}
 
 	@Override
@@ -94,15 +101,15 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	}
 
 	public static class Builder {
-		private final MappingModelExpressible valueMapping;
+		private final MappingModelExpressible<?> valueMapping;
 
 		private List<Expression> expressions;
 
-		public Builder(MappingModelExpressible valueMapping) {
+		public Builder(MappingModelExpressible<?> valueMapping) {
 			this.valueMapping = valueMapping;
 		}
 
-		public Builder(MappingModelExpressible valueMapping, int jdbcTypeCount) {
+		public Builder(MappingModelExpressible<?> valueMapping, int jdbcTypeCount) {
 			this( valueMapping );
 			expressions = new ArrayList<>( jdbcTypeCount );
 		}

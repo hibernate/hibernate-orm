@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
@@ -50,6 +50,11 @@ public enum TransactionStatus {
 	 */
 	ROLLING_BACK;
 
+	public boolean isActive() {
+		return this == ACTIVE
+			|| this == MARKED_ROLLBACK;
+	}
+
 	public boolean isOneOf(TransactionStatus... statuses) {
 		for ( TransactionStatus status : statuses ) {
 			if ( this == status ) {
@@ -64,10 +69,8 @@ public enum TransactionStatus {
 	}
 
 	public boolean canRollback() {
-		return isOneOf(
-				TransactionStatus.ACTIVE,
-				TransactionStatus.FAILED_COMMIT,
-				TransactionStatus.MARKED_ROLLBACK
-		);
+		return this == ACTIVE
+			|| this == FAILED_COMMIT
+			|| this == MARKED_ROLLBACK;
 	}
 }

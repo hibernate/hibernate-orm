@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.lifecycle;
@@ -12,7 +12,7 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -41,11 +41,11 @@ public class EntityLifecycleTests {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/lifecycle/entity-lifecycle.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				registryScope.getRegistry()
 		);
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 		assertThat( classDetails.getName() ).isEqualTo( SimpleEntity.class.getName() );
 

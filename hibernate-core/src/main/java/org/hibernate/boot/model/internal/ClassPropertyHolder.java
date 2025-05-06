@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -127,12 +127,10 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 		property.forEachAnnotationUsage( Convert.class, getSourceModelContext(), (usage) -> {
 			final AttributeConversionInfo info = new AttributeConversionInfo( usage, property );
-			if ( isEmpty( info.getAttributeName() ) ) {
-				attributeConversionInfoMap.put( propertyName, info );
-			}
-			else {
-				attributeConversionInfoMap.put( propertyName + '.' + info.getAttributeName(), info );
-			}
+			final String path = isEmpty( info.getAttributeName() )
+					? propertyName
+					: propertyName + '.' + info.getAttributeName();
+			attributeConversionInfoMap.put( path, info );
 		} );
 	}
 
@@ -171,7 +169,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	public void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
 		if ( prop.getValue() instanceof Component ) {
 			//TODO handle quote and non quote table comparison
-			String tableName = prop.getValue().getTable().getName();
+			final String tableName = prop.getValue().getTable().getName();
 			if ( getJoinsPerRealTableName().containsKey( tableName ) ) {
 				final Join join = getJoinsPerRealTableName().get( tableName );
 				addPropertyToJoin( prop, memberDetails, declaringClass, join );
@@ -316,8 +314,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 							final Collection initializedCollection = (Collection) originalValue;
 							final Value element = initializedCollection.getElement().copy();
 							setTypeName( element, memberDetails.getElementType().getName() );
-							if ( initializedCollection instanceof IndexedCollection ) {
-								final Value index = ( (IndexedCollection) initializedCollection ).getIndex().copy();
+							if ( initializedCollection instanceof IndexedCollection indexedCollection ) {
+								final Value index = indexedCollection.getIndex().copy();
 								if ( memberDetails.getMapKeyType() != null ) {
 									setTypeName( index, memberDetails.getMapKeyType().getName() );
 								}
@@ -404,8 +402,8 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				component.setTypeName( typeName );
 			}
 		}
-		else if ( value instanceof SimpleValue ) {
-			( (SimpleValue) value ).setTypeName( typeName );
+		else if ( value instanceof SimpleValue simpleValue ) {
+			simpleValue.setTypeName( typeName );
 		}
 	}
 

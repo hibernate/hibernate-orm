@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -67,10 +68,10 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "not (" );
-		wrappedPredicate.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "not (" );
+		wrappedPredicate.appendHqlString( hql, context );
+		hql.append( ')' );
 	}
 
 	@Override

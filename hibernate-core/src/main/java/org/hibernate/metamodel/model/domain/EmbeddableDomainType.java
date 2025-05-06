@@ -1,12 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
 import java.util.Collection;
-
-import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.EmbeddableType;
 
@@ -19,11 +17,7 @@ import jakarta.persistence.metamodel.EmbeddableType;
  * @author Steve Ebersole
  */
 public interface EmbeddableDomainType<J>
-		extends TreatableDomainType<J>, EmbeddableType<J>, SqmExpressible<J> {
-	@Override
-	default EmbeddableDomainType<J> getSqmType() {
-		return this;
-	}
+		extends TreatableDomainType<J>, EmbeddableType<J> {
 
 	@Override
 	Collection<? extends EmbeddableDomainType<? extends J>> getSubTypes();

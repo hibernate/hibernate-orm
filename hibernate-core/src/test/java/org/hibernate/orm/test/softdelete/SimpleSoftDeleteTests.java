@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete;
@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = { SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
 @SessionFactory(useCollectingStatementInspector = true)
 public class SimpleSoftDeleteTests {
@@ -55,12 +56,8 @@ public class SimpleSoftDeleteTests {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from simple" );
-			statement.execute( "delete from batch_loadable" );
-		} ) );
+	void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
@@ -75,9 +72,9 @@ public class SimpleSoftDeleteTests {
 	void testLoading(SessionFactoryScope scope) {
 		// Load
 		scope.inTransaction( (session) -> {
-			assertThat( session.get( SimpleEntity.class, 1 ) ).isNull();
-			assertThat( session.get( SimpleEntity.class, 2 ) ).isNotNull();
-			assertThat( session.get( SimpleEntity.class, 3 ) ).isNotNull();
+			assertThat( session.find( SimpleEntity.class, 1 ) ).isNull();
+			assertThat( session.find( SimpleEntity.class, 2 ) ).isNotNull();
+			assertThat( session.find( SimpleEntity.class, 3 ) ).isNotNull();
 		} );
 
 		// Proxy

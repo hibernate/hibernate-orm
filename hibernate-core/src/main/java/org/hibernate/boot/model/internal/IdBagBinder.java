@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -104,13 +104,13 @@ public class IdBagBinder extends BagBinder {
 
 		switch (namedGenerator) {
 			case "identity": {
-				throw new MappingException("IDENTITY generation not supported for CollectionId");
+				throw new MappingException("IDENTITY generation not supported for @CollectionId");
 			}
 			case "assigned": {
-				throw new MappingException("Assigned generation not supported for CollectionId");
+				throw new MappingException("Assigned generation not supported for @CollectionId");
 			}
 			case "native": {
-				throw new MappingException("Native generation not supported for CollectionId");
+				throw new MappingException("Native generation not supported for @CollectionId");
 			}
 		}
 

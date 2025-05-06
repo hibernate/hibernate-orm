@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.targetannotation;
@@ -8,7 +8,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 
 /**
  * @author Hardy Ferentschik
@@ -19,7 +19,7 @@ class House {
 	long id;
 
 	@Embedded
-	@Target(AddressImpl.class)
+	@TargetEmbeddable(AddressImpl.class)
 	private Address address;
 
 	public Address getAddress() {

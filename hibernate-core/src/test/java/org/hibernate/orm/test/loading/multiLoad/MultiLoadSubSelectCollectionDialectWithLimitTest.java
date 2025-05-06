@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.loading.multiLoad;
@@ -112,7 +112,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	@JiraKey(value = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-		final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		statementInspector.clear();
 
 		scope.inTransaction(

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -70,8 +70,8 @@ public class CollectionElementLoaderByIndex implements Loader {
 		List<ModelPart> restrictedParts = new ArrayList<>();
 		restrictedParts.add( keyDescriptor );
 
-		if ( indexDescriptor instanceof EntityCollectionPart ) {
-			EntityIdentifierMapping identifierMapping = ( (EntityCollectionPart) indexDescriptor ).getEntityMappingType()
+		if ( indexDescriptor instanceof EntityCollectionPart entityCollectionPart ) {
+			EntityIdentifierMapping identifierMapping = entityCollectionPart.getEntityMappingType()
 					.getIdentifierMapping();
 			restrictedParts.add( identifierMapping );
 			this.keyJdbcCount = keyDescriptor.getJdbcTypeCount() +

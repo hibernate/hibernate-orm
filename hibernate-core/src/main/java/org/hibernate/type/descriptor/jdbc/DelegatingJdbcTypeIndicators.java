@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
 import org.hibernate.Incubating;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -109,6 +109,22 @@ public class DelegatingJdbcTypeIndicators implements JdbcTypeIndicators {
 	@Override
 	public int resolveJdbcTypeCode(int jdbcTypeCode) {
 		return delegate.resolveJdbcTypeCode( jdbcTypeCode );
+	}
+
+	@Override
+	@Incubating
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
+	}
+
+	@Override
+	public boolean preferJdbcDatetimeTypes() {
+		return delegate.preferJdbcDatetimeTypes();
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+		return delegate.getPreferredSqlTypeCodeForArray( elementSqlTypeCode );
 	}
 
 	@Override

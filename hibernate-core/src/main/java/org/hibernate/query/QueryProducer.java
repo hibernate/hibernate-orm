@@ -1,16 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
-import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
-
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 
 /**
  * Contract for things that can produce instances of {@link Query} and {@link NativeQuery}.
@@ -339,6 +338,45 @@ public interface QueryProducer {
 	<R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType);
 
 	/**
+	 * Create a {@link SelectionQuery} instance for the given HQL query
+	 * string and given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 * The query result type is the root entity of the given graph.
+	 * <ul>
+	 * <li>If the query has an explicit {@code select} clause, there must
+	 *     be a single item in the {@code select} list, and the select
+	 *     item must be assignable to the root type of the given graph.
+	 * <li>Otherwise, if a query has no explicit {@code select} list, the
+	 *     select list is inferred from the given entity graph. The query
+	 *     must have exactly one root entity in the {@code from} clause,
+	 *     it must be assignable to the root type of the given graph, and
+	 *     the inferred select list will contain just that entity.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+
+	 * @param hqlString The HQL {@code select} query as a string
+	 * @param resultGraph An {@link EntityGraph} whose root type is the
+	 *                    query result type, which is interpreted as a
+	 *                    {@linkplain org.hibernate.graph.GraphSemantic#LOAD
+	 *                    load graph}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query
+	 *         is an {@code insert}, {@code update} or {@code delete}
+	 *         statement
+	 *
+	 * @since 7.0
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph);
+
+	/**
 	 * Create a {@link SelectionQuery} reference for the given
 	 * {@link CriteriaQuery}.
 	 *
@@ -369,14 +407,9 @@ public interface QueryProducer {
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link MutationQuery} from the given insert-select criteria tree
-	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect);
-
-	/**
 	 * Create a {@link MutationQuery} from the given insert criteria tree
 	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL statement.

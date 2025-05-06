@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
@@ -96,24 +96,24 @@ public class InlineUpdateHandler implements UpdateHandler {
 		}
 
 		domainParameterXref.clearExpansions();
-		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodel domainModel = sessionFactory.getMappingMetamodel();
 
 		final String mutatingEntityName = sqmUpdate.getTarget().getModel().getHibernateEntityName();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( mutatingEntityName );
 		final List<Expression> inListExpressions = matchingIdsPredicateProducer.produceIdExpressionList( ids, entityDescriptor );
 
 		//noinspection unchecked
-		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>) sessionFactory.getQueryEngine()
-				.getSqmTranslatorFactory()
-				.createMutationTranslator(
-						sqmUpdate,
-						executionContext.getQueryOptions(),
-						domainParameterXref,
-						executionContext.getQueryParameterBindings(),
-						executionContext.getSession().getLoadQueryInfluencers(),
-						sessionFactory
-				)
-				.translate();
+		final SqmTranslation<UpdateStatement> translation = (SqmTranslation<UpdateStatement>)
+				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
+						.createMutationTranslator(
+								sqmUpdate,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								sessionFactory.getSqlTranslationEngine()
+						)
+						.translate();
 		final TableGroup updatingTableGroup = translation.getSqlAst().getFromClause().getRoots().get( 0 );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

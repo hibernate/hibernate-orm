@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
@@ -28,8 +28,7 @@ public interface HibernateProxy extends Serializable, PrimeAmongSecondarySuperty
 	 *         object is a proxy, or {@code null} otherwise.
 	 */
 	static @Nullable LazyInitializer extractLazyInitializer(final @Nullable Object object) {
-		if ( object instanceof PrimeAmongSecondarySupertypes ) {
-			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) object;
+		if ( object instanceof PrimeAmongSecondarySupertypes t ) {
 			final HibernateProxy hibernateProxy = t.asHibernateProxy();
 			if ( hibernateProxy != null ) {
 				return hibernateProxy.getHibernateLazyInitializer();

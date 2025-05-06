@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Map;
 
 import org.hibernate.MappingException;
@@ -17,7 +16,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * Collection second pass
@@ -26,7 +25,7 @@ import org.jboss.logging.Logger;
  */
 public abstract class CollectionSecondPass implements SecondPass {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CollectionSecondPass.class.getName() );
+	private static final CoreMessageLogger LOG = messageLogger( CollectionSecondPass.class);
 
 	private final Collection collection;
 
@@ -38,7 +37,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Second pass for collection: %s", collection.getRole() );
+			LOG.debug( "Second pass for collection: " + collection.getRole() );
 		}
 
 		secondPass( persistentClasses );

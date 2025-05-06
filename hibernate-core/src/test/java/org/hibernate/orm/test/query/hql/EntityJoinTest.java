@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -194,7 +194,7 @@ public class EntityJoinTest {
 											DomainParameterXref.EMPTY,
 											QueryParameterBindingsImpl.EMPTY,
 											new LoadQueryInfluencers( factory ),
-											factory,
+											factory.getSqlTranslationEngine(),
 											true
 									)
 									.translate();

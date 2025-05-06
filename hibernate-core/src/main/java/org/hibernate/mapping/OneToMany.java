@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -13,7 +13,7 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.EntityType;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.MappingContext;
 
@@ -56,20 +56,6 @@ public class OneToMany implements Value {
 	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return buildingContext.getBuildingOptions().getServiceRegistry();
-	}
-
-	private EntityType getEntityType() {
-		return MappingHelper.manyToOne(
-				getReferencedEntityName(),
-				true,
-				null,
-				null,
-				false,
-				false,
-				isIgnoreNotFound(),
-				false,
-				buildingContext
-		);
 	}
 
 	public PersistentClass getAssociatedClass() {
@@ -121,7 +107,17 @@ public class OneToMany implements Value {
 
 	@Override
 	public Type getType() {
-		return getEntityType();
+		return new ManyToOneType(
+				buildingContext.getBootstrapContext().getTypeConfiguration(),
+				getReferencedEntityName(),
+				true,
+				null,
+				null,
+				false,
+				isIgnoreNotFound(),
+				false,
+				false
+		);
 	}
 
 	@Override
@@ -174,7 +170,8 @@ public class OneToMany implements Value {
 
 	@Override
 	public boolean isSame(Value other) {
-		return this == other || other instanceof OneToMany && isSame( (OneToMany) other );
+		return this == other
+			|| other instanceof OneToMany oneToMany && isSame( oneToMany );
 	}
 
 	public boolean isSame(OneToMany other) {

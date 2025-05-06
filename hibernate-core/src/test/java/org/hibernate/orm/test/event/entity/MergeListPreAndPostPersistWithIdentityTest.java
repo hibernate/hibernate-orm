@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.entity;
@@ -136,8 +136,7 @@ public class MergeListPreAndPostPersistWithIdentityTest extends BaseCoreFunction
 
 	private void addEntityListeners(final Order order) {
 
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		registry.setListeners(
 				EventType.PRE_INSERT,
 				new PreInsertEventListener() {

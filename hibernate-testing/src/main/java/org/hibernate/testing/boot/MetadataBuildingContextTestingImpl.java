@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.boot;
@@ -8,7 +8,7 @@ import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
-import org.hibernate.boot.model.TypeDefinitionRegistryStandardImpl;
+import org.hibernate.boot.internal.TypeDefinitionRegistryStandardImpl;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.models.xml.internal.PersistenceUnitMetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;

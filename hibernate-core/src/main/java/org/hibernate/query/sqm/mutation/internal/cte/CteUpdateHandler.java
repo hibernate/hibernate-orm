@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
@@ -79,9 +79,9 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( rootEntityName );
+		final EntityPersister rootEntityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(

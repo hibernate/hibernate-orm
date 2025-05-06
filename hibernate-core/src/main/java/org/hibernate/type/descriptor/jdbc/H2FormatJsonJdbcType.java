@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
  * '{@code ? format json}' write expression for H2.
  *
  * @author Marco Belladelli
- * @deprecated Use {@link org.hibernate.dialect.H2JsonJdbcType} instead
+ * @deprecated Use {@link org.hibernate.dialect.type.H2JsonJdbcType} instead
  */
 @Deprecated(forRemoval = true, since = "6.5")
 public class H2FormatJsonJdbcType extends JsonJdbcType {

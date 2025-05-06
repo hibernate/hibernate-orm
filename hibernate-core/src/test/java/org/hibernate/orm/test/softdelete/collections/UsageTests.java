@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete.collections;
 
-import java.sql.Statement;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -19,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = { CollectionOwner.class, CollectionOwned.class })
 @SessionFactory(useCollectingStatementInspector = true)
 public class UsageTests {
@@ -38,13 +38,7 @@ public class UsageTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from m2m" );
-			statement.execute( "delete from elements" );
-			statement.execute( "delete from coll_owned" );
-			statement.execute( "delete from coll_owner" );
-		} ) );
+		scope.dropData();
 	}
 
 	@Test

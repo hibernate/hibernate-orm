@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.annotations.NamedQuery;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -41,7 +41,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedQueryAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedQueryAnnotation(ModelsContext modelContext) {
 		resultClass = void.class;
 		flushMode = FlushModeType.PERSISTENCE_CONTEXT;
 		flush = QueryFlushMode.DEFAULT;
@@ -58,7 +58,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	/**
 	 * Used in creating annotation instances from JDK and Jandes variant
 	 */
-	public NamedQueryAnnotation(NamedQuery annotation, SourceModelBuildingContext modelContext) {
+	public NamedQueryAnnotation(NamedQuery annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.resultClass = annotation.resultClass();
@@ -81,7 +81,7 @@ public class NamedQueryAnnotation implements NamedQuery {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedQueryAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedQueryAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );

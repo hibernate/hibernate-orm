@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.SqlResultSetMapping;
 
@@ -25,7 +25,7 @@ public class SqlResultSetMappingJpaAnnotation implements SqlResultSetMapping {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SqlResultSetMappingJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public SqlResultSetMappingJpaAnnotation(ModelsContext modelContext) {
 		this.entities = new jakarta.persistence.EntityResult[0];
 		this.classes = new jakarta.persistence.ConstructorResult[0];
 		this.columns = new jakarta.persistence.ColumnResult[0];
@@ -34,7 +34,7 @@ public class SqlResultSetMappingJpaAnnotation implements SqlResultSetMapping {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SqlResultSetMappingJpaAnnotation(SqlResultSetMapping annotation, SourceModelBuildingContext modelContext) {
+	public SqlResultSetMappingJpaAnnotation(SqlResultSetMapping annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.entities = extractJdkValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "entities", modelContext );
 		this.classes = extractJdkValue( annotation, JpaAnnotations.SQL_RESULT_SET_MAPPING, "classes", modelContext );
@@ -46,7 +46,7 @@ public class SqlResultSetMappingJpaAnnotation implements SqlResultSetMapping {
 	 */
 	public SqlResultSetMappingJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.entities = (jakarta.persistence.EntityResult[]) attributeValues.get( "entities" );
 		this.classes = (jakarta.persistence.ConstructorResult[]) attributeValues.get( "classes" );

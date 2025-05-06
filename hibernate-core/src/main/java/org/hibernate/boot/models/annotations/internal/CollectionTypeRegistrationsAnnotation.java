@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,7 +24,7 @@ public class CollectionTypeRegistrationsAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionTypeRegistrationsAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionTypeRegistrationsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -32,7 +32,7 @@ public class CollectionTypeRegistrationsAnnotation
 	 */
 	public CollectionTypeRegistrationsAnnotation(
 			CollectionTypeRegistrations annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				HibernateAnnotations.COLLECTION_TYPE_REGISTRATIONS,
@@ -46,7 +46,7 @@ public class CollectionTypeRegistrationsAnnotation
 	 */
 	public CollectionTypeRegistrationsAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (CollectionTypeRegistration[]) attributeValues.get( "value" );
 	}
 

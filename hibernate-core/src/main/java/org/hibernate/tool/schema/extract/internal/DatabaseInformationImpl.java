@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.internal;
@@ -83,8 +83,8 @@ public class DatabaseInformationImpl
 
 	@Override
 	public boolean schemaExists(Namespace.Name namespace) {
-		return extractor.schemaExists( context.catalogWithDefault( namespace.getCatalog() ),
-				context.schemaWithDefault( namespace.getSchema() ) );
+		return extractor.schemaExists( context.catalogWithDefault( namespace.catalog() ),
+				context.schemaWithDefault( namespace.schema() ) );
 	}
 
 	@Override
@@ -117,8 +117,8 @@ public class DatabaseInformationImpl
 
 	@Override
 	public NameSpaceTablesInformation getTablesInformation(Namespace namespace) {
-		return extractor.getTables( context.catalogWithDefault( namespace.getPhysicalName().getCatalog() ),
-				context.schemaWithDefault( namespace.getPhysicalName().getSchema() ) );
+		return extractor.getTables( context.catalogWithDefault( namespace.getPhysicalName().catalog() ),
+				context.schemaWithDefault( namespace.getPhysicalName().schema() ) );
 	}
 
 	@Override

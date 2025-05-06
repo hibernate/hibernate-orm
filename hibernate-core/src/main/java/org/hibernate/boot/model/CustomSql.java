@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
@@ -12,25 +12,19 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
  *
  * @author Steve Ebersole
  */
-public class CustomSql {
-	private final String sql;
-	private final boolean isCallable;
-	private final ExecuteUpdateResultCheckStyle checkStyle;
+public record CustomSql(String sql, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
 
-	public CustomSql(String sql, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
-		this.sql = sql;
-		this.isCallable = callable;
-		this.checkStyle = checkStyle;
-	}
-
+	@Deprecated(since = "7")
 	public String getSql() {
 		return sql;
 	}
 
+	@Deprecated(since = "7")
 	public boolean isCallable() {
-		return isCallable;
+		return callable;
 	}
 
+	@Deprecated(since = "7")
 	public ExecuteUpdateResultCheckStyle getCheckStyle() {
 		return checkStyle;
 	}

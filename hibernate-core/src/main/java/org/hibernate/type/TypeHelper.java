@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -47,8 +47,7 @@ public class TypeHelper {
 					target[i] = values[i];
 				}
 				else {
-					target[i] = types[i].deepCopy( values[i], session
-						.getFactory() );
+					target[i] = types[i].deepCopy( values[i], session.getFactory() );
 				}
 			}
 		}
@@ -195,8 +194,7 @@ public class TypeHelper {
 					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
 				}
 				else {
-					if ( type instanceof ComponentType ) {
-						final ComponentType compositeType = (ComponentType) type;
+					if ( type instanceof ComponentType compositeType ) {
 						if ( target[i] != null ) {
 							// need to extract the component values and check for subtype replacements...
 							final Object[] objects = replaceCompositeAssociations(

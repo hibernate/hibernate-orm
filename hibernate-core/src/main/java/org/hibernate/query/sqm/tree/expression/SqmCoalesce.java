@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -86,14 +87,14 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "coalesce(" );
-		arguments.get( 0 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "coalesce(" );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append(", ");
-			arguments.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			arguments.get( i ).appendHqlString( hql, context );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 

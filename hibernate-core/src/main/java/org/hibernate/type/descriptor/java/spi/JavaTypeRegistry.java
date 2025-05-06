@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
@@ -34,7 +34,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	private static final Logger log = Logger.getLogger( JavaTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
-	private final ConcurrentHashMap<Type, JavaType<?>> descriptorsByType = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, JavaType<?>> descriptorsByTypeName = new ConcurrentHashMap<>();
 
 	public JavaTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -56,13 +56,13 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	@Override
 	public void addBaselineDescriptor(Type describedJavaType, JavaType<?> descriptor) {
 		performInjections( descriptor );
-		descriptorsByType.put( describedJavaType, descriptor );
+		descriptorsByTypeName.put( describedJavaType.getTypeName(), descriptor );
 	}
 
 	private void performInjections(JavaType<?> descriptor) {
-		if ( descriptor instanceof TypeConfigurationAware ) {
+		if ( descriptor instanceof TypeConfigurationAware typeConfigurationAware ) {
 			// would be nice to make the JavaType for an entity, e.g., aware of the TypeConfiguration
-			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
+			typeConfigurationAware.setTypeConfiguration( typeConfiguration );
 		}
 	}
 
@@ -71,7 +71,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	// descriptor access
 
 	public void forEachDescriptor(Consumer<JavaType<?>> consumer) {
-		descriptorsByType.values().forEach( consumer );
+		descriptorsByTypeName.values().forEach( consumer );
 	}
 
 	public <T> JavaType<T> getDescriptor(Type javaType) {
@@ -79,7 +79,7 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
-		JavaType<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
+		final JavaType<?> old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",
@@ -93,72 +93,81 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	public <J> JavaType<J> findDescriptor(Type javaType) {
 		//noinspection unchecked
-		return (JavaType<J>) descriptorsByType.get( javaType );
+		return (JavaType<J>) descriptorsByTypeName.get( javaType.getTypeName() );
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Type javaType, Supplier<JavaType<J>> creator) {
-		final JavaType<?> cached = descriptorsByType.get( javaType );
+		return resolveDescriptor( javaType.getTypeName(), creator );
+	}
+
+	private <J> JavaType<J> resolveDescriptor(String javaTypeName, Supplier<JavaType<J>> creator) {
+		final JavaType<?> cached = descriptorsByTypeName.get( javaTypeName );
 		if ( cached != null ) {
 			//noinspection unchecked
 			return (JavaType<J>) cached;
 		}
 
 		final JavaType<J> created = creator.get();
-		descriptorsByType.put( javaType, created );
+		descriptorsByTypeName.put( javaTypeName, created );
 		return created;
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Type javaType) {
-		return resolveDescriptor( javaType, (elementJavaType, typeConfiguration) -> {
-			final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
-					elementJavaType,
-					typeConfiguration
-			);
-			if ( determinedPlan != null ) {
-				return determinedPlan;
-			}
+		return resolveDescriptor( javaType, JavaTypeRegistry::createMutabilityPlan );
+	}
 
-			return MutableMutabilityPlan.INSTANCE;
-		} );
+	private static <J> MutabilityPlan<?> createMutabilityPlan(Type elementJavaType, TypeConfiguration typeConfiguration) {
+		final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+				elementJavaType,
+				typeConfiguration
+		);
+		if ( determinedPlan != null ) {
+			return determinedPlan;
+		}
+
+		return MutableMutabilityPlan.INSTANCE;
+	}
+
+	public JavaType<?> resolveArrayDescriptor(Class<?> elementJavaType) {
+		return resolveDescriptor( elementJavaType.getTypeName() + "[]",
+				() -> createArrayTypeDescriptor( elementJavaType, JavaTypeRegistry::createMutabilityPlan) );
 	}
 
 	public <J> JavaType<J> resolveDescriptor(
 			Type javaType,
 			BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
 		return resolveDescriptor(
-				javaType,
+				javaType.getTypeName(),
 				() -> {
-					if ( javaType instanceof ParameterizedType ) {
-						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
+					if ( javaType instanceof ParameterizedType parameterizedType ) {
 						final JavaType<J> rawType = findDescriptor( parameterizedType.getRawType() );
 						if ( rawType != null ) {
 							return rawType.createJavaType( parameterizedType, typeConfiguration );
 						}
 					}
-					final Type elementJavaType;
-					JavaType<J> elementTypeDescriptor;
-					if ( javaType instanceof Class<?> && ( (Class<?>) javaType ).isArray() ) {
-						elementJavaType = ( (Class<?>) javaType ).getComponentType();
-						elementTypeDescriptor = findDescriptor( elementJavaType );
-					}
-					else {
-						elementJavaType = javaType;
-						elementTypeDescriptor = null;
-					}
-					if ( elementTypeDescriptor == null ) {
+					else if ( javaType instanceof Class<?> javaClass && javaClass.isArray() ) {
 						//noinspection unchecked
-						elementTypeDescriptor = RegistryHelper.INSTANCE.createTypeDescriptor(
-								elementJavaType,
-								() -> (MutabilityPlan<J>) mutabilityPlanCreator.apply( elementJavaType, typeConfiguration ),
-								typeConfiguration
-						);
+						return (JavaType<J>) createArrayTypeDescriptor( javaClass.getComponentType(), mutabilityPlanCreator );
 					}
-					if ( javaType != elementJavaType ) {
-						//noinspection unchecked
-						return (JavaType<J>) new ArrayJavaType<>( elementTypeDescriptor );
-					}
-					return elementTypeDescriptor;
+					return createTypeDescriptor( javaType, mutabilityPlanCreator );
 				}
+		);
+	}
+
+	private <J> JavaType<J[]> createArrayTypeDescriptor(Class<J> elementJavaType, BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+		JavaType<J> elementTypeDescriptor = findDescriptor( elementJavaType );
+		if ( elementTypeDescriptor == null ) {
+			elementTypeDescriptor = createTypeDescriptor( elementJavaType, mutabilityPlanCreator );
+		}
+		return new ArrayJavaType<>( elementTypeDescriptor );
+	}
+
+	private <J> JavaType<J> createTypeDescriptor(Type javaType, BiFunction<Type, TypeConfiguration, MutabilityPlan<?>> mutabilityPlanCreator) {
+		//noinspection unchecked
+		return RegistryHelper.INSTANCE.createTypeDescriptor(
+				javaType,
+				() -> (MutabilityPlan<J>) mutabilityPlanCreator.apply( javaType, typeConfiguration ),
+				typeConfiguration
 		);
 	}
 

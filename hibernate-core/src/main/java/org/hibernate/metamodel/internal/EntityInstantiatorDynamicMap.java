@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -10,7 +10,6 @@ import java.util.Set;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 
@@ -26,7 +25,6 @@ public class EntityInstantiatorDynamicMap
 
 	public EntityInstantiatorDynamicMap(PersistentClass bootDescriptor) {
 		super( bootDescriptor.getEntityName() );
-
 		entityRoleNames.add( getRoleName() );
 		if ( bootDescriptor.hasSubclasses() ) {
 			for ( PersistentClass subclassInfo : bootDescriptor.getSubclassClosure() ) {
@@ -36,7 +34,7 @@ public class EntityInstantiatorDynamicMap
 	}
 
 	@Override
-	public Object instantiate(SessionFactoryImplementor sessionFactory) {
+	public Object instantiate() {
 		return generateDataMap();
 	}
 
@@ -49,25 +47,19 @@ public class EntityInstantiatorDynamicMap
 		return entityRoleNames.contains( type );
 	}
 
-	public static final EntityNameResolver ENTITY_NAME_RESOLVER = entity -> {
-		if ( ! (entity instanceof Map ) ) {
-			return null;
-		}
-		final String entityName = extractEmbeddedEntityName( (Map<?,?>) entity );
-		if ( entityName == null ) {
-			throw new HibernateException( "Could not determine type of dynamic map entity" );
-		}
-		return entityName;
-	};
+	public static final EntityNameResolver ENTITY_NAME_RESOLVER =
+			entity -> entity instanceof Map<?, ?> map ? extractEmbeddedEntityName( map ) : null;
 
 	public static String extractEmbeddedEntityName(Map<?,?> entity) {
 		if ( entity == null ) {
-			return null;
-		}
-		final String entityName = (String) entity.get( TYPE_KEY );
-		if ( entityName == null ) {
 			throw new HibernateException( "Could not determine type of dynamic map entity" );
 		}
-		return entityName;
+		else {
+			final String entityName = (String) entity.get( TYPE_KEY );
+			if ( entityName == null ) {
+				throw new HibernateException( "Could not determine type of dynamic map entity" );
+			}
+			return entityName;
+		}
 	}
 }

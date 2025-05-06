@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -9,14 +9,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -52,11 +53,14 @@ public class SqmDynamicInstantiation<T>
 		);
 	}
 
-	public static <R> SqmDynamicInstantiation<R> forClassInstantiation(
+	public static <R> SqmDynamicInstantiation<R> classInstantiation(
 			Class<R> targetJavaType,
+			List<? extends SqmSelectableNode<?>> arguments,
 			NodeBuilder nodeBuilder) {
-		return forClassInstantiation(
-				nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( targetJavaType ),
+		return new SqmDynamicInstantiation<>(
+				new DynamicInstantiationTargetImpl<>( CLASS,
+						nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( targetJavaType ) ),
+				arguments,
 				nodeBuilder
 		);
 	}
@@ -70,9 +74,12 @@ public class SqmDynamicInstantiation<T>
 		);
 	}
 
-	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(NodeBuilder nodeBuilder) {
-		return forMapInstantiation(
-				nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Map.class ),
+	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> mapInstantiation(
+			List<? extends SqmSelectableNode<?>> arguments, NodeBuilder nodeBuilder) {
+		return new SqmDynamicInstantiation<>(
+				new DynamicInstantiationTargetImpl<>( MAP,
+						nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Map.class ) ),
+				arguments,
 				nodeBuilder
 		);
 	}
@@ -86,9 +93,12 @@ public class SqmDynamicInstantiation<T>
 		);
 	}
 
-	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(NodeBuilder nodeBuilder) {
-		return forListInstantiation(
-				nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( List.class ),
+	public static <L extends List<?>> SqmDynamicInstantiation<L> listInstantiation(
+			List<? extends SqmSelectableNode<?>> arguments, NodeBuilder nodeBuilder) {
+		return new SqmDynamicInstantiation<>(
+				new DynamicInstantiationTargetImpl<>( LIST,
+						nodeBuilder.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( List.class ) ),
+				arguments,
 				nodeBuilder
 		);
 	}
@@ -101,6 +111,19 @@ public class SqmDynamicInstantiation<T>
 			NodeBuilder nodeBuilder) {
 		super( instantiationTarget, nodeBuilder );
 		this.instantiationTarget = instantiationTarget;
+	}
+
+	private SqmDynamicInstantiation(
+			SqmDynamicInstantiationTarget<T> instantiationTarget,
+			List<? extends SqmSelectableNode<?>> arguments,
+			NodeBuilder nodeBuilder) {
+		super( instantiationTarget, nodeBuilder );
+		this.instantiationTarget = instantiationTarget;
+		for ( SqmSelectableNode<?> argument : arguments ) {
+			final SqmDynamicInstantiationArgument<?> arg =
+					new SqmDynamicInstantiationArgument<>( argument, argument.getAlias(), nodeBuilder() );
+			addArgument( arg );
+		}
 	}
 
 	private SqmDynamicInstantiation(
@@ -233,11 +256,8 @@ public class SqmDynamicInstantiation<T>
 
 	@Override
 	public SqmDynamicInstantiationArgument<?> add(SqmExpression<?> expression, String alias) {
-		final SqmDynamicInstantiationArgument<?> argument = new SqmDynamicInstantiationArgument<>(
-				expression,
-				alias,
-				nodeBuilder()
-		);
+		final SqmDynamicInstantiationArgument<?> argument =
+				new SqmDynamicInstantiationArgument<>( expression, alias, nodeBuilder() );
 		addArgument( argument );
 		return argument;
 	}
@@ -253,25 +273,25 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "new " );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "new " );
 		if ( instantiationTarget.getNature() == LIST ) {
-			sb.append( "list" );
+			hql.append( "list" );
 		}
 		else if ( instantiationTarget.getNature() == MAP ) {
-			sb.append( "map" );
+			hql.append( "map" );
 		}
 		else {
-			sb.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
+			hql.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
 		}
-		sb.append( '(' );
-		arguments.get( 0 ).appendHqlString( sb );
+		hql.append( '(' );
+		arguments.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sb.append(", ");
-			arguments.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			arguments.get( i ).appendHqlString( hql, context );
 		}
 
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 	@SuppressWarnings("unused")
@@ -310,7 +330,7 @@ public class SqmDynamicInstantiation<T>
 		}
 
 		@Override
-		public DomainType<T> getSqmType() {
+		public SqmDomainType<T> getSqmType() {
 			return null;
 		}
 	}

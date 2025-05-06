@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -82,8 +82,8 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
-					if ( value instanceof Calendar ) {
-						st.setTimestamp( index, timestamp, (Calendar) value );
+					if ( value instanceof Calendar calendar ) {
+						st.setTimestamp( index, timestamp, calendar );
 					}
 					else if ( options.getJdbcTimeZone() != null ) {
 						st.setTimestamp( index, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
@@ -109,8 +109,8 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 				catch (SQLException|AbstractMethodError e) {
 					// fall back to treating it as a JDBC Timestamp
 					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
-					if ( value instanceof Calendar ) {
-						st.setTimestamp( name, timestamp, (Calendar) value );
+					if ( value instanceof Calendar calendar ) {
+						st.setTimestamp( name, timestamp, calendar );
 					}
 					else if ( options.getJdbcTimeZone() != null ) {
 						st.setTimestamp( name, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );

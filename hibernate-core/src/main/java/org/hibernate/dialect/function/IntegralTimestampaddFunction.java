@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.SqlAstTranslator;

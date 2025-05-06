@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.lazy;
@@ -25,10 +25,6 @@ protected String getBaseForMappings() {
 @Override
 public String[] getMappings() {
 	return new String[] { "org/hibernate/orm/test/annotations/derivedidentities/e1/b/specjmapid/lazy/order_orm.xml" };
-}
-
-public CompositeKeyDeleteTest() {
-	System.setProperty( "hibernate.enable_specj_proprietary_syntax", "true" );
 }
 /**
 	* This test checks to make sure the non null column is not updated with a

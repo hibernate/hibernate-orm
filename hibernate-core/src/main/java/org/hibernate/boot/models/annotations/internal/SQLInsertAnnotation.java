@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -23,7 +23,7 @@ public class SQLInsertAnnotation implements SQLInsert, CustomSqlDetails {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SQLInsertAnnotation(SourceModelBuildingContext modelContext) {
+	public SQLInsertAnnotation(ModelsContext modelContext) {
 		this.callable = false;
 		this.verify = org.hibernate.jdbc.Expectation.class;
 		this.check = org.hibernate.annotations.ResultCheckStyle.NONE;
@@ -33,7 +33,7 @@ public class SQLInsertAnnotation implements SQLInsert, CustomSqlDetails {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SQLInsertAnnotation(SQLInsert annotation, SourceModelBuildingContext modelContext) {
+	public SQLInsertAnnotation(SQLInsert annotation, ModelsContext modelContext) {
 		this.sql = annotation.sql();
 		this.callable = annotation.callable();
 		this.verify = annotation.verify();
@@ -44,7 +44,7 @@ public class SQLInsertAnnotation implements SQLInsert, CustomSqlDetails {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SQLInsertAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public SQLInsertAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.sql = (String) attributeValues.get( "sql" );
 		this.callable = (boolean) attributeValues.get( "callable" );
 		this.verify = (Class<? extends org.hibernate.jdbc.Expectation>) attributeValues.get( "verify" );

@@ -1,15 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
 import java.util.TimeZone;
+import java.util.function.UnaryOperator;
 
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -91,9 +95,15 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SharedSessionBuilder statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
+		return this;
+	}
+
+	@Override
+	public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+		delegate.statementInspector( operator );
 		return this;
 	}
 
@@ -139,9 +149,15 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode) {
 		delegate.connectionHandlingMode( mode );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+		delegate.connectionHandling( acquisitionMode, releaseMode );
 		return this;
 	}
 
@@ -166,6 +182,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	@Override
 	public SharedSessionBuilder jdbcTimeZone(TimeZone timeZone) {
 		delegate.jdbcTimeZone( timeZone );
+		return this;
+	}
+
+	@Override
+	public SharedSessionBuilder identifierRollback(boolean identifierRollback) {
+		delegate.identifierRollback( identifierRollback );
 		return this;
 	}
 }

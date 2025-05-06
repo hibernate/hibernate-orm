@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate;
@@ -119,8 +119,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			addExportIdentifier(
 					new Sequence(
 							"orm",
-							namespace.getName().getCatalog(),
-							namespace.getName().getSchema(),
+							namespace.getName().catalog(),
+							namespace.getName().schema(),
 							Identifier.toIdentifier( name )
 					),
 					exportIdentifierList,

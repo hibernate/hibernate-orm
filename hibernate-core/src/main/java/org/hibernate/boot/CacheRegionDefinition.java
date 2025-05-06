@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
@@ -14,48 +14,37 @@ package org.hibernate.boot;
  *
  * @author Steve Ebersole
  */
-public class CacheRegionDefinition {
+public record CacheRegionDefinition(CacheRegionType regionType,
+									String role, String usage, String region,
+									boolean cacheLazy) {
+
 	public enum CacheRegionType {
 		ENTITY,
 		COLLECTION,
 		QUERY
 	}
 
-	private final CacheRegionType regionType;
-	private final String role;
-	private final String usage;
-	private final String region;
-	private final boolean cacheLazy;
-
-	public CacheRegionDefinition(
-			CacheRegionType cacheType,
-			String role,
-			String usage,
-			String region,
-			boolean cacheLazy) {
-		this.regionType = cacheType;
-		this.role = role;
-		this.usage = usage;
-		this.region = region;
-		this.cacheLazy = cacheLazy;
-	}
-
+	@Deprecated(since = "7")
 	public CacheRegionType getRegionType() {
 		return regionType;
 	}
 
+	@Deprecated(since = "7")
 	public String getRole() {
 		return role;
 	}
 
+	@Deprecated(since = "7")
 	public String getUsage() {
 		return usage;
 	}
 
+	@Deprecated(since = "7")
 	public String getRegion() {
 		return region;
 	}
 
+	@Deprecated(since = "7")
 	public boolean isCacheLazy() {
 		return cacheLazy;
 	}

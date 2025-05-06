@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid;
@@ -21,7 +21,6 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
-@SuppressWarnings("serial")
 @NamedQueries({
 		@NamedQuery(name = Customer.QUERY_ALL,
 				query = "select a from Customer a"),

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -15,19 +16,17 @@ import org.hibernate.spi.NavigablePath;
 @SuppressWarnings("rawtypes")
 public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTreatedJoin {
 	private final SqmPluralPartJoin wrappedPath;
-	private final EntityDomainType treatTarget;
+	private final SqmEntityDomainType treatTarget;
 
 	public SqmTreatedPluralPartJoin(
 			SqmPluralPartJoin wrappedPath,
-			EntityDomainType treatTarget,
+			SqmEntityDomainType treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getHibernateEntityName(),
-						alias
-				),
+				wrappedPath.getNavigablePath()
+						.treatAs( treatTarget.getHibernateEntityName(), alias ),
 				wrappedPath.getReferencedPathSource(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -40,7 +39,7 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	private SqmTreatedPluralPartJoin(
 			NavigablePath navigablePath,
 			SqmPluralPartJoin wrappedPath,
-			EntityDomainType treatTarget,
+			SqmEntityDomainType treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
@@ -108,41 +107,41 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatTarget );
+		return super.treatAs( treatTarget );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(Class treatJavaType, String alias) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatJavaType, alias );
+		return super.treatAs( treatJavaType, alias );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget, String alias) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatTarget, alias );
+		return super.treatAs( treatTarget, alias );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(Class treatJavaType, String alias, boolean fetch) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatJavaType, alias, fetch );
+		return super.treatAs( treatJavaType, alias, fetch );
 	}
 
 	@Override
 	public SqmTreatedPluralPartJoin treatAs(EntityDomainType treatTarget, String alias, boolean fetch) {
 		//noinspection unchecked
-		return (SqmTreatedPluralPartJoin) super.treatAs( treatTarget, alias, fetch );
+		return super.treatAs( treatTarget, alias, fetch );
 	}
 
 
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( treatTarget.getName() );
+		hql.append( ')' );
 	}
 }

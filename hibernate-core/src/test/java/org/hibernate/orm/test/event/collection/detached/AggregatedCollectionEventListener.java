@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.collection.detached;
@@ -154,8 +154,7 @@ public class AggregatedCollectionEventListener
 			}
 			listener = new AggregatedCollectionEventListener();
 
-			final EventListenerRegistry listenerRegistry = sessionFactory.getServiceRegistry()
-					.getService( EventListenerRegistry.class );
+			final EventListenerRegistry listenerRegistry = sessionFactory.getEventListenerRegistry();
 			listenerRegistry.appendListeners( EventType.INIT_COLLECTION, listener );
 			listenerRegistry.appendListeners( EventType.PRE_COLLECTION_RECREATE, listener );
 			listenerRegistry.appendListeners( EventType.POST_COLLECTION_RECREATE, listener );

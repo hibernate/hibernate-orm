@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -31,7 +32,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.BasicType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
@@ -68,17 +68,12 @@ public class CollectionBatchLoaderArrayParam
 
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
 		final JdbcMapping jdbcMapping = keyDescriptor.getSingleJdbcMapping();
-		final Class<?> jdbcArrayClass = Array.newInstance( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), 0 )
-				.getClass();
+		final Class<?> jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
 		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
-		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.getRegisteredType( jdbcArrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
-				arrayBasicType,
 				jdbcMapping,
-				jdbcArrayClass,
+				jdbcJavaTypeClass,
 				getSessionFactory()
 		);
 
@@ -115,6 +110,7 @@ public class CollectionBatchLoaderArrayParam
 
 	}
 
+	@AllowReflection
 	private PersistentCollection<?> loadEmbeddable(
 			Object keyBeingLoaded,
 			SharedSessionContractImplementor session,
@@ -216,6 +212,7 @@ public class CollectionBatchLoaderArrayParam
 	}
 
 	@Override
+	@AllowReflection
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
 		if( keyDescriptor.isEmbedded()){

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.parser;
@@ -14,14 +14,15 @@ import org.junit.Test;
 
 public class EntityGraphsTest extends AbstractEntityGraphTest {
 
-	private final <T> void checkMerge(Class<T> rootType, EntityGraph<T> expected, @SuppressWarnings("unchecked") EntityGraph<T>... graphs) {
+	@SafeVarargs
+	private <T> void checkMerge(Class<T> rootType, EntityGraph<T> expected, EntityGraph<T>... graphs) {
 		EntityManager entityManager = getOrCreateEntityManager();
 		EntityGraph<T> actual = EntityGraphs.merge( entityManager, rootType, graphs );
 		Assert.assertTrue( EntityGraphs.areEqual( expected, actual ) );
 	}
 
 	@SafeVarargs
-	private final void checkMerge(EntityGraph<GraphParsingTestEntity> expected, EntityGraph<GraphParsingTestEntity>... graphs) {
+	private void checkMerge(EntityGraph<GraphParsingTestEntity> expected, EntityGraph<GraphParsingTestEntity>... graphs) {
 		checkMerge( GraphParsingTestEntity.class, expected, graphs );
 	}
 

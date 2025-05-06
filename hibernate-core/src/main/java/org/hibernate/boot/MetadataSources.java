@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +36,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SerializationException;
 
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -128,45 +130,44 @@ public class MetadataSources implements Serializable {
 	/**
 	 * @deprecated Prefer {@linkplain #getMappingXmlBindings()} and/or {@linkplain #getHbmXmlBindings()}
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Deprecated(since = "7.0")
-	public List<Binding<JaxbBindableMappingDescriptor>> getXmlBindings() {
+	public List<? extends Binding<? extends JaxbBindableMappingDescriptor>> getXmlBindings() {
 		if ( mappingXmlBindings == null && hbmXmlBindings == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
-
-		if ( hbmXmlBindings == null ) {
-			return (List) mappingXmlBindings;
+		else if ( hbmXmlBindings == null ) {
+			return mappingXmlBindings;
 		}
-
-		if ( mappingXmlBindings == null ) {
-			return (List) hbmXmlBindings;
+		else if ( mappingXmlBindings == null ) {
+			return hbmXmlBindings;
 		}
-
-		final ArrayList<Binding<JaxbBindableMappingDescriptor>> combined = arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
-		combined.addAll( (List) mappingXmlBindings );
-		combined.addAll( (List) hbmXmlBindings );
-		return combined;
+		else {
+			final ArrayList<Binding<? extends JaxbBindableMappingDescriptor>> combined =
+					arrayList( mappingXmlBindings.size() + hbmXmlBindings.size() );
+			combined.addAll( mappingXmlBindings );
+			combined.addAll( hbmXmlBindings );
+			return combined;
+		}
 	}
 
 	public List<Binding<JaxbEntityMappingsImpl>> getMappingXmlBindings() {
-		return mappingXmlBindings == null ? Collections.emptyList() : mappingXmlBindings;
+		return mappingXmlBindings == null ? emptyList() : mappingXmlBindings;
 	}
 
 	public List<Binding<JaxbHbmHibernateMapping>> getHbmXmlBindings() {
-		return hbmXmlBindings == null ? Collections.emptyList() : hbmXmlBindings;
+		return hbmXmlBindings == null ? emptyList() : hbmXmlBindings;
 	}
 
 	public Collection<String> getAnnotatedPackages() {
-		return annotatedPackages == null ? Collections.emptySet() : annotatedPackages;
+		return annotatedPackages == null ? emptySet() : annotatedPackages;
 	}
 
 	public Collection<Class<?>> getAnnotatedClasses() {
-		return annotatedClasses == null ? Collections.emptySet() : annotatedClasses;
+		return annotatedClasses == null ? emptySet() : annotatedClasses;
 	}
 
 	public Collection<String> getAnnotatedClassNames() {
-		return annotatedClassNames == null ? Collections.emptySet() : annotatedClassNames;
+		return annotatedClassNames == null ? emptySet() : annotatedClassNames;
 	}
 
 	public Map<String,Class<?>> getExtraQueryImports() {
@@ -202,7 +203,7 @@ public class MetadataSources implements Serializable {
 	 */
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
 
-		Collection<MetadataBuilderFactory> discoveredBuilderFactories =
+		final Collection<MetadataBuilderFactory> discoveredBuilderFactories =
 				serviceRegistry.requireService( ClassLoaderService.class )
 						.loadJavaServices( MetadataBuilderFactory.class );
 
@@ -269,7 +270,7 @@ public class MetadataSources implements Serializable {
 			if ( this.annotatedClasses == null ) {
 				this.annotatedClasses = new LinkedHashSet<>();
 			}
-			Collections.addAll( this.annotatedClasses, annotatedClasses );
+			addAll( this.annotatedClasses, annotatedClasses );
 		}
 		return this;
 	}
@@ -297,7 +298,7 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addAnnotatedClassNames(String... annotatedClassNames) {
 		if ( annotatedClassNames != null && annotatedClassNames.length > 0 ) {
-			Collections.addAll( this.annotatedClassNames, annotatedClassNames );
+			addAll( this.annotatedClassNames, annotatedClassNames );
 		}
 		return this;
 	}
@@ -306,9 +307,7 @@ public class MetadataSources implements Serializable {
 		if ( extraQueryImports == null ) {
 			extraQueryImports = new HashMap<>();
 		}
-
 		extraQueryImports.put( importedName, target );
-
 		return this;
 	}
 
@@ -632,8 +631,8 @@ public class MetadataSources implements Serializable {
 	 * processing the contained mapping documents.
 	 */
 	public MetadataSources addDirectory(File dir) {
-		File[] files = dir.listFiles();
-		if ( files != null && files.length > 0 ) {
+		final File[] files = dir.listFiles();
+		if ( files != null ) {
 			for ( File file : files ) {
 				if ( file.isDirectory() ) {
 					addDirectory( file );

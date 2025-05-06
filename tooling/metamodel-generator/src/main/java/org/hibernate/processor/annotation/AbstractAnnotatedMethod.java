@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -13,10 +13,8 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSession;
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSessionAccess;
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingStatelessSession;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
+import static org.hibernate.processor.util.Constants.OBJECTS;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 
 /**
@@ -49,15 +47,15 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 	}
 
 	boolean isUsingStatelessSession() {
-		return usingStatelessSession(sessionType);
+		return annotationMetaEntity.isStatelessSession();
 	}
 
 	boolean isReactive() {
-		return usingReactiveSession(sessionType);
+		return annotationMetaEntity.isReactive();
 	}
 
 	boolean isReactiveSessionAccess() {
-		return usingReactiveSessionAccess(sessionType);
+		return annotationMetaEntity.isReactiveSessionAccess();
 	}
 
 	String localSessionName() {
@@ -74,6 +72,39 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 		}
 		else {
 			return emptyList();
+		}
+	}
+
+	void nullCheck(StringBuilder declaration, String paramName) {
+		declaration
+				.append('\t')
+				.append(annotationMetaEntity.staticImport(OBJECTS, "requireNonNull"))
+				.append('(')
+				.append(paramName.replace('.', '$'))
+				.append(", \"Null ")
+				.append(paramName)
+				.append("\");\n");
+	}
+
+	protected void handle(StringBuilder declaration, String handled, String rethrown) {
+		if ( isReactive() ) {
+			declaration.append( "\n\t\t\t.onFailure(" )
+					.append( annotationMetaEntity.importType( handled ) )
+					.append( ".class)\n" )
+					.append( "\t\t\t\t\t.transform(_ex -> new " )
+					.append( annotationMetaEntity.importType( rethrown ) )
+					.append( "(_ex.getMessage(), _ex))" );
+
+		}
+		else {
+			declaration
+					.append( "\tcatch (" )
+					.append( annotationMetaEntity.importType( handled ) )
+					.append( " _ex) {\n" )
+					.append( "\t\tthrow new " )
+					.append( annotationMetaEntity.importType( rethrown ) )
+					.append( "(_ex.getMessage(), _ex);\n" )
+					.append( "\t}\n" );
 		}
 	}
 }

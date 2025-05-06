@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -27,8 +27,8 @@ public class InjectionHelper {
 			try {
 				injectField(
 						metamodelClass,
-						'_' + javaIdentifier( definition.getRegisteredName() ),
-						jpaMetamodel.findEntityGraphByName( definition.getRegisteredName() ),
+						'_' + javaIdentifier( definition.name() ),
+						jpaMetamodel.findEntityGraphByName( definition.name() ),
 						false
 				);
 			}

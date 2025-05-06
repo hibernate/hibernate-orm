@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -14,7 +14,6 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -40,10 +39,9 @@ public class KeyBasedPagination {
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
 		if ( items.size() == 1 ) {
 			final JpaSelection<?> selected = items.get(0);
-			if ( selected instanceof SqmRoot) {
+			if ( selected instanceof SqmFrom<?, ?> root ) {
 				statement.orderBy( keyDefinition.stream().map( order -> sortSpecification( statement, order ) )
 						.collect( toList() ) );
-				final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
 				statement.select( keySelection( keyDefinition, root, selected, builder ) );
 				if ( keyValues != null ) {
 					final SqmPredicate restriction = keyRestriction( keyDefinition, keyValues, root, builder );
@@ -69,12 +67,12 @@ public class KeyBasedPagination {
 			NodeBuilder builder) {
 		final List<SqmPath<?>> keyPaths = new ArrayList<>();
 		for ( Order<? super R> key : keyDefinition ) {
-			keyPaths.add( root.get( key.getAttributeName() ) );
+			keyPaths.add( root.get( key.attributeName() ) );
 		}
 		SqmPredicate restriction = null;
 		for (int i = 0; i < keyDefinition.size(); i++ ) {
 			// ordering by an attribute of the returned entity
-			final SortDirection direction = keyDefinition.get(i).getDirection();
+			final SortDirection direction = keyDefinition.get(i).direction();
 			final SqmPath key = keyPaths.get(i);
 			final Comparable keyValue = keyValues.get(i);
 			final List<SqmPath<?>> previousKeys = keyPaths.subList(0, i);
@@ -90,15 +88,15 @@ public class KeyBasedPagination {
 			NodeBuilder builder) {
 		final List<SqmPath<?>> items = new ArrayList<>();
 		for ( Order<? super R> key : keyDefinition ) {
-			if ( key.getEntityClass() == null ) {
+			if ( key.entityClass() == null ) {
 				throw new IllegalQueryOperationException("Key-based pagination based on select list items is not yet supported");
 			}
 			else {
-				if ( !key.getEntityClass().isAssignableFrom( selected.getJavaType() ) ) {
+				if ( !key.entityClass().isAssignableFrom( selected.getJavaType() ) ) {
 					throw new IllegalQueryOperationException("Select item was of wrong entity type");
 				}
 				// ordering by an attribute of the returned entity
-				items.add( root.get( key.getAttributeName() ) );
+				items.add( root.get( key.attributeName() ) );
 			}
 		}
 		return keyedResultConstructor( selected, builder, items );
@@ -111,7 +109,7 @@ public class KeyBasedPagination {
 		return builder.construct( resultClass, asList( selected, builder.construct(List.class, newItems ) ) );
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings("rawtypes")
 	private static <C extends Comparable<? super C>> SqmPredicate keyPredicate(
 			Expression<? extends C> key, C keyValue, SortDirection direction,
 			List<SqmPath<?>> previousKeys, List<Comparable<?>> keyValues,

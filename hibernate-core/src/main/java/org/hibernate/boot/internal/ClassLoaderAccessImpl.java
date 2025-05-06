@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -82,9 +82,9 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 	private boolean isSafeClass(String name) {
 		// classes in any of these packages are safe to load through the "live" ClassLoader
 		return name.startsWith( "java." )
-				|| name.startsWith( "javax." )
-				|| name.startsWith( "jakarta." )
-				|| name.startsWith( "org.hibernate." );
+			|| name.startsWith( "javax." )
+			|| name.startsWith( "jakarta." )
+			|| name.startsWith( "org.hibernate." );
 
 	}
 

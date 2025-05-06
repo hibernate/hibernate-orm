@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -16,6 +16,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.DB2iSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
@@ -38,7 +39,7 @@ import static org.hibernate.type.SqlTypes.ROWID;
 public class DB2iDialect extends DB2Dialect {
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
-	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
 
 	private static final String FOR_UPDATE_SQL = " for update with rs";
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + " skip locked data";

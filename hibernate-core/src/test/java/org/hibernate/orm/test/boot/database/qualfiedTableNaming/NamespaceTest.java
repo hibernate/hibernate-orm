@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
@@ -46,8 +46,8 @@ public class NamespaceTest {
 
 		final Namespace.Name physicalName = namespace.getPhysicalName();
 
-		assertThat( physicalName.getSchema().getText(), is( EXPECTED_SCHEMA_PHYSICAL_NAME ) );
-		assertThat( physicalName.getCatalog().getText(), is( EXPECTED_CATALOG_PHYSICAL_NAME ) );
+		assertThat( physicalName.schema().getText(), is( EXPECTED_SCHEMA_PHYSICAL_NAME ) );
+		assertThat( physicalName.catalog().getText(), is( EXPECTED_CATALOG_PHYSICAL_NAME ) );
 	}
 
 	public static class TestNamingStrategy implements PhysicalNamingStrategy {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -100,7 +100,7 @@ public class SpecialOneToOneType extends OneToOneType {
 								getAssociatedEntityName()
 				);
 			}
-			return getIdentifierType( sessionFactory ).disassemble( id, sessionFactory );
+			return getIdentifierType( sessionFactory.getRuntimeMetamodels() ).disassemble( id, sessionFactory );
 		}
 	}
 

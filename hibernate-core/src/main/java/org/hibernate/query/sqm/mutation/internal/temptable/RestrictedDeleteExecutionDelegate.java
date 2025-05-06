@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
@@ -88,9 +88,9 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 
 	@Override
 	public int execute(DomainQueryExecutionContext executionContext) {
-		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( getSqmDelete().getTarget().getEntityName() );
+		final EntityPersister entityDescriptor =
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( getSqmDelete().getTarget().getEntityName() );
 		final String hierarchyRootTableName = entityDescriptor.getTableName();
 
 		final TableGroup deletingTableGroup = getConverter().getMutatingTableGroup();

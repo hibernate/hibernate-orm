@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -15,13 +15,10 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 
-import org.jboss.logging.Logger;
-
 /**
 * @author Steve Ebersole
 */
 public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
-	private static final Logger log = Logger.getLogger( NormalizingIdentifierHelperImpl.class );
 
 	private final JdbcEnvironment jdbcEnvironment;
 
@@ -30,6 +27,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	private final boolean globallyQuoteIdentifiersSkipColumnDefinitions;
 	private final boolean autoQuoteKeywords;
 	private final boolean autoQuoteInitialUnderscore;
+	private final boolean autoQuoteDollar;
 	private final TreeSet<String> reservedWords;
 	private final IdentifierCaseStrategy unquotedCaseStrategy;
 	private final IdentifierCaseStrategy quotedCaseStrategy;
@@ -41,6 +39,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			boolean globallyQuoteIdentifiersSkipColumnDefinitions,
 			boolean autoQuoteKeywords,
 			boolean autoQuoteInitialUnderscore,
+			boolean autoQuoteDollar,
 			TreeSet<String> reservedWords, //careful, we intentionally omit making a defensive copy to not waste memory
 			IdentifierCaseStrategy unquotedCaseStrategy,
 			IdentifierCaseStrategy quotedCaseStrategy) {
@@ -50,6 +49,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 		this.globallyQuoteIdentifiersSkipColumnDefinitions = globallyQuoteIdentifiersSkipColumnDefinitions;
 		this.autoQuoteKeywords = autoQuoteKeywords;
 		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
+		this.autoQuoteDollar = autoQuoteDollar;
 		this.reservedWords = reservedWords;
 		this.unquotedCaseStrategy = unquotedCaseStrategy == null ? IdentifierCaseStrategy.UPPER : unquotedCaseStrategy;
 		this.quotedCaseStrategy = quotedCaseStrategy == null ? IdentifierCaseStrategy.MIXED : quotedCaseStrategy;
@@ -57,32 +57,25 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public Identifier normalizeQuoting(Identifier identifier) {
-		log.tracef( "Normalizing identifier quoting [%s]", identifier );
-
 		if ( identifier == null ) {
 			return null;
 		}
-
-		if ( identifier.isQuoted() ) {
+		else if ( identifier.isQuoted() ) {
 			return identifier;
 		}
-
-		if ( globallyQuoteIdentifiers ) {
-			log.tracef( "Forcing identifier [%s] to quoted for global quoting", identifier );
+		else if ( mustQuote( identifier ) ) {
 			return Identifier.toIdentifier( identifier.getText(), true );
 		}
-
-		if ( autoQuoteKeywords && isReservedWord( identifier.getText() ) ) {
-			log.tracef( "Forcing identifier [%s] to quoted as recognized reserved word", identifier );
-			return Identifier.toIdentifier( identifier.getText(), true );
+		else {
+			return identifier;
 		}
+	}
 
-		if ( autoQuoteInitialUnderscore && identifier.getText().startsWith("_") ) {
-			log.tracef( "Forcing identifier [%s] to quoted due to initial underscore", identifier );
-			return Identifier.toIdentifier( identifier.getText(), true );
-		}
-
-		return identifier;
+	private boolean mustQuote(Identifier identifier) {
+		return globallyQuoteIdentifiers
+			|| autoQuoteKeywords && isReservedWord( identifier.getText() )
+			|| autoQuoteInitialUnderscore && identifier.getText().startsWith( "_" )
+			|| autoQuoteDollar && identifier.getText().contains( "$" );
 	}
 
 	@Override
@@ -110,10 +103,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public String toMetaDataCatalogName(Identifier identifier) {
-		log.tracef( "Normalizing identifier quoting for catalog name [%s]", identifier );
-
 		if ( !nameQualifierSupport.supportsCatalogs() ) {
-			log.trace( "Environment does not support catalogs; returning null" );
 			// null is used to tell DatabaseMetaData to not limit results based on catalog.
 			return null;
 		}
@@ -133,53 +123,30 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			throw new IllegalArgumentException( "Identifier cannot be null; bad usage" );
 		}
 
+		final String text = identifier.getText();
 		if ( identifier instanceof DatabaseIdentifier ) {
-			return identifier.getText();
+			return text;
 		}
-
-		if ( identifier.isQuoted() ) {
-			switch ( quotedCaseStrategy ) {
-				case UPPER: {
-					log.tracef( "Rendering quoted identifier [%s] in upper case for use in DatabaseMetaData", identifier );
-					return identifier.getText().toUpperCase( Locale.ROOT );
-				}
-				case LOWER: {
-					log.tracef( "Rendering quoted identifier [%s] in lower case for use in DatabaseMetaData", identifier );
-					return identifier.getText().toLowerCase( Locale.ROOT );
-				}
-				default: {
-					// default is mixed case
-					log.tracef( "Rendering quoted identifier [%s] in mixed case for use in DatabaseMetaData", identifier );
-					return identifier.getText();
-				}
-			}
+		else if ( identifier.isQuoted() ) {
+			return switch ( quotedCaseStrategy ) {
+				case UPPER -> text.toUpperCase( Locale.ROOT );
+				case LOWER -> text.toLowerCase( Locale.ROOT );
+				case MIXED -> text; // default
+			};
 		}
 		else {
-			switch ( unquotedCaseStrategy ) {
-				case MIXED: {
-					log.tracef( "Rendering unquoted identifier [%s] in mixed case for use in DatabaseMetaData", identifier );
-					return identifier.getText();
-				}
-				case LOWER: {
-					log.tracef( "Rendering unquoted identifier [%s] in lower case for use in DatabaseMetaData", identifier );
-					return identifier.getText().toLowerCase( Locale.ROOT );
-				}
-				default: {
-					// default is upper case
-					log.tracef( "Rendering unquoted identifier [%s] in upper case for use in DatabaseMetaData", identifier );
-					return identifier.getText().toUpperCase( Locale.ROOT );
-				}
-			}
+			return switch ( unquotedCaseStrategy ) {
+				case MIXED -> text;
+				case LOWER -> text.toLowerCase( Locale.ROOT );
+				case UPPER -> text.toUpperCase( Locale.ROOT ); // default
+			};
 		}
 	}
 
 	@Override
 	public String toMetaDataSchemaName(Identifier identifier) {
-		log.tracef( "Normalizing identifier quoting for schema name [%s]", identifier );
-
 		if ( !nameQualifierSupport.supportsSchemas() ) {
 			// null is used to tell DatabaseMetaData to not limit results based on schema.
-			log.trace( "Environment does not support catalogs; returning null" );
 			return null;
 		}
 
@@ -195,8 +162,6 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 
 	@Override
 	public String toMetaDataObjectName(Identifier identifier) {
-		log.tracef( "Normalizing identifier quoting for object name [%s]", identifier );
-
 		if ( identifier == null ) {
 			// if this method was called, the value is needed
 			throw new IllegalArgumentException( "null was passed as an object name" );

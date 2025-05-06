@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -14,9 +14,10 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Sanne Grinovero
@@ -76,15 +77,15 @@ public class DialectOverridesAnnotationHelper {
 			AnnotationTarget element,
 			Class<T> annotationType,
 			MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final Class<? extends Annotation> overrideAnnotation = OVERRIDE_MAP.get( annotationType );
 
 		if ( overrideAnnotation != null ) {
 			// the requested annotation does have a DialectOverride variant - look for matching one of those...
 			final Dialect dialect = context.getMetadataCollector().getDatabase().getDialect();
 
-			final Annotation[] overrides = element.getRepeatedAnnotationUsages( overrideAnnotation, sourceModelContext );
-			if ( CollectionHelper.isNotEmpty( overrides ) ) {
+			final Annotation[] overrides = element.getRepeatedAnnotationUsages( overrideAnnotation, modelsContext );
+			if ( isNotEmpty( overrides ) ) {
 				for ( int i = 0; i < overrides.length; i++ ) {
 					//noinspection unchecked
 					final DialectOverrider<T> override = (DialectOverrider<T>) overrides[i];
@@ -96,7 +97,7 @@ public class DialectOverridesAnnotationHelper {
 		}
 
 		// no override was found.  return the base annotation (if one)
-		return element.getAnnotationUsage( annotationType, sourceModelContext );
+		return element.getAnnotationUsage( annotationType, modelsContext );
 	}
 
 	public static boolean overrideMatchesDialect(DialectOverrider<?> override, Dialect dialect) {

@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.Optional;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 /**
  * Loads an entity by its primary identifier.
@@ -76,7 +77,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default IdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -87,7 +88,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default IdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -95,7 +96,7 @@ public interface IdentifierLoadAccess<T> {
 	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
-	default IdentifierLoadAccess<T> with(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> with(EntityGraph<T> graph) {
 		return withLoadGraph( graph );
 	}
 
@@ -104,7 +105,7 @@ public interface IdentifierLoadAccess<T> {
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
-	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	IdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a

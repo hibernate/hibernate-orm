@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
@@ -8,7 +8,7 @@ package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
  * Defines "inflow" for JTA transactions from the perspective of Hibernate's registered JTA Synchronization
  * back into the TransactionCoordinator by means of the SynchronizationCallbackCoordinator.
  * <p>
- * That's a mouthful :)  The way it works is like this...<ul>
+ * That's a mouthful, :).  The way it works is like this...<ul>
  *     <li>
  *         Hibernate will register a JTA {@link jakarta.transaction.Synchronization} implementation
  *         ({@link RegisteredSynchronization}) which allows

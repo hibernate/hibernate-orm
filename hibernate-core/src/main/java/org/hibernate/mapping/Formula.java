@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.loader.internal.AliasConstantsHelper;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.StringHelper.replace;
@@ -23,7 +22,7 @@ import static org.hibernate.sql.Template.renderWhereStringTemplate;
  *
  * @author Gavin King
  */
-public class Formula implements Selectable, Serializable {
+public final class Formula implements Selectable, Serializable {
 
 	private static final AtomicInteger formulaUniqueInteger = new AtomicInteger();
 
@@ -40,7 +39,7 @@ public class Formula implements Selectable, Serializable {
 	}
 
 	@Override
-	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry registry) {
+	public String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration) {
 		final String template = renderWhereStringTemplate( formula, dialect, typeConfiguration );
 		return safeInterning( replace( template, "{alias}", TEMPLATE ) );
 	}

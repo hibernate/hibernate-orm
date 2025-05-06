@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -13,32 +12,34 @@ import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
 
 /**
  * @author Steve Ebersole
  */
 public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
 	private final boolean isGeneric;
+	private final SqmMappedSuperclassDomainType<J> domainType;
 
 	public MappedSuperclassSqmPathSource(
 			String localPathName,
 			SqmPathSource<J> pathModel,
-			MappedSuperclassDomainType<J> domainType,
+			SqmMappedSuperclassDomainType<J> domainType,
 			BindableType jpaBindableType,
 			boolean isGeneric) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
 		this.isGeneric = isGeneric;
+		this.domainType = domainType;
 	}
 
 	@Override
-	public MappedSuperclassDomainType<J> getSqmPathType() {
-		return (MappedSuperclassDomainType<J>) super.getSqmPathType();
+	public SqmMappedSuperclassDomainType<J> getPathType() {
+		return domainType;
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final MappedSuperclassDomainType<J> sqmPathType = getSqmPathType();
-		return sqmPathType.findSubPathSource( name );
+		return getPathType().findSubPathSource( name );
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.DialectOverride.SQLRestrictions;
 import org.hibernate.boot.models.DialectOverrideAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,13 +24,13 @@ public class OverriddenSQLSelectsAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenSQLSelectsAnnotation(SourceModelBuildingContext modelContext) {
+	public OverriddenSQLSelectsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public OverriddenSQLSelectsAnnotation(SQLRestrictions annotation, SourceModelBuildingContext modelContext) {
+	public OverriddenSQLSelectsAnnotation(SQLRestrictions annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_RESTRICTIONS,
@@ -44,7 +44,7 @@ public class OverriddenSQLSelectsAnnotation
 	 */
 	public OverriddenSQLSelectsAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (DialectOverride.SQLSelect[]) attributeValues.get( "value" );
 	}
 

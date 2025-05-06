@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
@@ -15,7 +15,7 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
- * Represents a JPA callback on the entity itself
+ * Represents a JPA callback method declared by the entity itself.
  *
  * @author Kabir Khan
  * @author Steve Ebersole
@@ -50,15 +50,14 @@ public class EntityCallback extends AbstractCallback {
 	}
 
 	@Override
-	public boolean performCallback(Object entity) {
+	public void performCallback(Object entity) {
 		try {
 			callbackMethod.invoke( entity );
-			return true;
 		}
 		catch (InvocationTargetException e) {
 			//keep runtime exceptions as is
-			if ( e.getTargetException() instanceof RuntimeException ) {
-				throw (RuntimeException) e.getTargetException();
+			if ( e.getTargetException() instanceof RuntimeException runtimeException ) {
+				throw runtimeException;
 			}
 			else {
 				throw new RuntimeException( e.getTargetException() );

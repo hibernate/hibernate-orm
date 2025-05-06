@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.xml.internal.QueryProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.MutableClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedNativeQuery;
 
@@ -34,7 +34,7 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedNativeQueryJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedNativeQueryJpaAnnotation(ModelsContext modelContext) {
 		this.hints = new jakarta.persistence.QueryHint[0];
 		this.resultClass = void.class;
 		this.resultSetMapping = "";
@@ -46,7 +46,7 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedNativeQueryJpaAnnotation(NamedNativeQuery annotation, SourceModelBuildingContext modelContext) {
+	public NamedNativeQueryJpaAnnotation(NamedNativeQuery annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
 		this.hints = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "hints", modelContext );
@@ -60,7 +60,7 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedNativeQueryJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedNativeQueryJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.query = (String) attributeValues.get( "query" );
 		this.hints = (jakarta.persistence.QueryHint[]) attributeValues.get( "hints" );

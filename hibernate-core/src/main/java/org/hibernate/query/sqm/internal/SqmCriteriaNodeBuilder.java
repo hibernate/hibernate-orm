@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -39,19 +40,19 @@ import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.BindingContext;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -67,7 +68,6 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.ValueHandlingMode;
@@ -99,7 +99,6 @@ import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
 import org.hibernate.query.sqm.tree.cte.SqmSearchClauseSpecification;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
@@ -107,9 +106,12 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -128,7 +130,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
-import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
@@ -167,8 +168,12 @@ import jakarta.persistence.metamodel.Bindable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Arrays.asList;
+import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
+import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.classInstantiation;
+import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.listInstantiation;
+import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.mapInstantiation;
 
 /**
  * Acts as a JPA {@link jakarta.persistence.criteria.CriteriaBuilder} by
@@ -184,7 +189,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private final String name;
 	private final transient JpaCompliance jpaCompliance;
 	private final transient QueryEngine queryEngine;
-	private transient ValueHandlingMode criteriaValueHandlingMode;
+	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private final transient ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	private final transient BindingContext bindingContext;
 	private transient BasicType<Boolean> booleanType;
@@ -208,12 +213,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		this.criteriaValueHandlingMode = options.getCriteriaValueHandlingMode();
 		this.immutableEntityUpdateQueryHandlingMode = options.getImmutableEntityUpdateQueryHandlingMode();
 		this.bindingContext = bindingContext;
+		this.extensions = loadExtensions();
+	}
+
+	private Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> loadExtensions() {
 		// load registered criteria builder extensions
-		this.extensions = new HashMap<>();
+		final Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions = new HashMap<>();
 		for ( CriteriaBuilderExtension extension : ServiceLoader.load( CriteriaBuilderExtension.class ) ) {
-			HibernateCriteriaBuilder builder = extension.extend( this );
-			extensions.put( extension.getRegistrationKey(), builder );
+			extensions.put( extension.getRegistrationKey(), extension.extend( this ) );
 		}
+		return extensions;
 	}
 
 	@Override
@@ -223,7 +232,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return getQueryEngine().getTypeConfiguration();
+		return bindingContext.getTypeConfiguration();
 	}
 
 	@Override
@@ -236,9 +245,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return jpaCompliance;
 	}
 
-	@Override
+	@Override @Deprecated
 	public ImmutableEntityUpdateQueryHandlingMode getImmutableEntityUpdateQueryHandlingMode() {
 		return immutableEntityUpdateQueryHandlingMode;
+	}
+
+	@Override
+	public boolean allowImmutableEntityUpdate() {
+		return immutableEntityUpdateQueryHandlingMode != ImmutableEntityUpdateQueryHandlingMode.EXCEPTION;
 	}
 
 	@Override
@@ -374,7 +388,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmValues values(Expression<?>... expressions) {
-		return values( Arrays.asList( expressions ) );
+		return values( asList( expressions ) );
 	}
 
 	@Override
@@ -589,12 +603,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <P, F> SqmExpression<F> fk(Path<P> path) {
-		if ( path.getModel().getBindableType() != Bindable.BindableType.SINGULAR_ATTRIBUTE
-				|| ! ( path instanceof SqmEntityValuedSimplePath ) ) {
-			throw new FunctionArgumentException( "Path '" + path + "' does not refer to a single-valued association" );
+		final SqmPath<P> sqmPath = (SqmPath<P>) path;
+		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
+		final boolean validToOneRef =
+				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
+				&& toOneReference instanceof EntitySqmPathSource;
+		if ( !validToOneRef ) {
+			throw new FunctionArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Argument '%s' of 'fk()' function is not a single-valued association",
+							sqmPath.getNavigablePath()
+					)
+			);
 		}
 
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) path );
+		return new SqmFkExpression<>( sqmPath );
 	}
 
 	@Override
@@ -872,141 +896,136 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections) {
-		return tuple( Arrays.asList( selections ) );
+	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
+		return tuple( asList( selections ) );
 	}
 
 	@Override
 	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
 		checkMultiselect( selections );
-		//noinspection unchecked,rawtypes
 		return new SqmJpaCompoundSelection<>(
-				(List) selections,
+				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList(),
 				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
 				this
 		);
 	}
 
-	@Override
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(Class<R> tupleType, SqmExpression<?>... expressions) {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
-	@Override @SuppressWarnings("unchecked")
-	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
-		final SqmExpressible<R> expressibleType =
-				tupleType == null || tupleType == Object[].class
-						? (DomainType<R>) getTypeConfiguration().resolveTupleType( expressions )
-						: getDomainModel().embeddable( tupleType );
-		return tuple( expressibleType, expressions );
-	}
-
-	@Override
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, SqmExpression<?>... expressions) {
 		return tuple( tupleType, asList( expressions ) );
 	}
 
-	@Override
+	@Override @Deprecated(since = "7", forRemoval = true)
+	public <R> SqmTuple<R> tuple(Class<R> tupleType, List<? extends SqmExpression<?>> expressions) {
+		@SuppressWarnings("unchecked")
+		final SqmExpressible<R> expressibleType =
+				tupleType == null || tupleType == Object[].class
+						? (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( expressions )
+						: (SqmEmbeddableDomainType<R>) getDomainModel().embeddable( tupleType );
+		return tuple( expressibleType, expressions );
+	}
+
+	@Override @Deprecated(since = "7", forRemoval = true)
 	public <R> SqmTuple<R> tuple(SqmExpressible<R> tupleType, List<? extends SqmExpression<?>> sqmExpressions) {
 		if ( tupleType == null ) {
 			//noinspection unchecked
-			tupleType = (DomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
+			tupleType = (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
 		}
 		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), tupleType, this );
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
-		return array( Arrays.asList( selections ) );
+	public JpaCompoundSelection<Object[]> array(Selection<?>... selections) {
+		return array( Object[].class,
+				Arrays.stream( selections ).map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
 	@Override
 	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
-		//noinspection unchecked,rawtypes
-		return array( Object[].class, (List) selections );
+		return arrayInternal( Object[].class,
+				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections) {
-		//noinspection unchecked
-		return array( resultClass, (List<SqmSelectableNode<?>>) (List<?>) Arrays.asList( selections ) );
+	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections) {
+		return arrayInternal( resultClass,
+				Arrays.stream( selections ).map( selection -> (SqmSelectableNode<?>) selection ).toList() );
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections) {
-		//noinspection rawtypes,unchecked
-		checkMultiselect( (List) selections );
+	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends Selection<?>> selections) {
+		return arrayInternal( resultClass,
+				selections.stream().map( selection -> (SqmSelectableNode<?>) selection ).toList() );
+	}
+
+	public <Y> JpaCompoundSelection<Y> arrayInternal(Class<Y> resultClass, List<? extends SqmSelectableNode<?>> selections) {
+		checkMultiselect( selections );
 		final JavaType<Y> javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass );
-		//noinspection unchecked
-		return new SqmJpaCompoundSelection<>( (List<SqmSelectableNode<?>>) selections, javaType, this );
+		return new SqmJpaCompoundSelection<>( selections, javaType, this );
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] arguments) {
-		//noinspection unchecked
-		return construct( resultClass, (List<JpaSelection<?>>) (List<?>) Arrays.asList( arguments ) );
+	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... arguments) {
+		return constructInternal( resultClass,
+				Arrays.stream( arguments ).map( arg -> (SqmSelectableNode<?>) arg ).toList() );
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments) {
-		//noinspection unchecked,rawtypes
-		checkMultiselect( (List) arguments );
-		final SqmDynamicInstantiation<Y> instantiation;
+	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends Selection<?>> arguments) {
+		return constructInternal( resultClass,
+				arguments.stream().map( arg -> (SqmSelectableNode<?>) arg ).toList() );
+	}
+
+	@SuppressWarnings("unchecked")
+	private <Y> JpaCompoundSelection<Y> constructInternal(Class<Y> resultClass, List<? extends SqmSelectableNode<?>> arguments) {
+		checkMultiselect( arguments );
 		if ( List.class.equals( resultClass ) ) {
-			//noinspection unchecked
-			instantiation = (SqmDynamicInstantiation<Y>) SqmDynamicInstantiation.forListInstantiation( this );
+			return (SqmDynamicInstantiation<Y>) listInstantiation( arguments, this );
 		}
 		else if ( Map.class.equals( resultClass ) ) {
-			//noinspection unchecked
-			instantiation = (SqmDynamicInstantiation<Y>) SqmDynamicInstantiation.forMapInstantiation( this );
+			return (SqmDynamicInstantiation<Y>) mapInstantiation( arguments, this );
 		}
 		else {
-			instantiation = SqmDynamicInstantiation.forClassInstantiation( resultClass, this );
+			return classInstantiation( resultClass, arguments, this );
 		}
-
-		for ( Selection<?> argument : arguments ) {
-			final SqmSelectableNode<?> arg = (SqmSelectableNode<?>) argument;
-			instantiation.addArgument(
-					new SqmDynamicInstantiationArgument<>( arg, argument.getAlias(), this )
-			);
-		}
-
-		return instantiation;
 	}
 
 	/**
-	 * Package-protected method to centralize checking of criteria query multi-selects as defined by the
-	 * {@link CriteriaQuery#multiselect(List)}  method.
+	 * Check the arguments of {@link jakarta.persistence.criteria.CriteriaBuilder#array},
+	 * {@link jakarta.persistence.criteria.CriteriaBuilder#construct}, or
+	 * {@link jakarta.persistence.criteria.CriteriaBuilder#tuple}.
 	 *
 	 * @param selections The selection varargs to check
 	 *
-	 * @throws IllegalArgumentException If the selection items are not valid per {@link CriteriaQuery#multiselect}
-	 * documentation.
-	 * <i>&quot;An argument to the multiselect method must not be a tuple-
-	 * or array-valued compound selection item.&quot;</i>
+	 * @throws IllegalArgumentException If the selection items are not valid per
+	 *         according to {@linkplain CriteriaQuery#multiselect this documentation}.
+	 *         <i>&quot;An argument to the multiselect method must not be a tuple-
+	 *         or array-valued compound selection item.&quot;</i>
 	 */
-	void checkMultiselect(List<Selection<?>> selections) {
-		final HashSet<String> aliases = new HashSet<>( CollectionHelper.determineProperSizing( selections.size() ) );
-
-		for ( Selection<?> it : selections ) {
-			final JpaSelection<?> selection = (JpaSelection<?>) it;
+	private void checkMultiselect(List<? extends Selection<?>> selections) {
+		final HashSet<String> aliases = new HashSet<>( determineProperSizing( selections.size() ) );
+		for ( Selection<?> selection : selections ) {
 			if ( selection.isCompoundSelection() ) {
-				if ( selection.getJavaType().isArray() ) {
+				final Class<?> javaType = selection.getJavaType();
+				if ( javaType.isArray() ) {
 					throw new IllegalArgumentException(
-							"Selection items in a multi-select cannot contain compound array-valued elements"
+							"Selection item in a multi-select cannot contain compound array-valued elements"
 					);
 				}
-				if ( Tuple.class.isAssignableFrom( selection.getJavaType() ) ) {
+				if ( Tuple.class.isAssignableFrom( javaType ) ) {
 					throw new IllegalArgumentException(
-							"Selection items in a multi-select cannot contain compound tuple-valued elements"
+							"Selection item in a multi-select cannot contain compound tuple-valued elements"
 					);
 				}
 			}
-			if ( StringHelper.isNotEmpty( selection.getAlias() ) ) {
-				boolean added = aliases.add( selection.getAlias() );
-				if ( ! added ) {
-					throw new IllegalArgumentException( "Multi-select expressions defined duplicate alias : " + selection.getAlias() );
-				}
+			final String alias = selection.getAlias();
+			if ( StringHelper.isNotEmpty( alias ) && !aliases.add( alias ) ) {
+				throw new IllegalArgumentException( "Multi-select expressions have duplicate alias '" + alias + "'" );
 			}
 		}
 	}
@@ -1154,7 +1173,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public JpaExpression<Double> power(Expression<? extends Number> x, Expression<? extends Number> y) {
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
-				Arrays.asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
+				asList( (SqmExpression<?>) x, (SqmExpression<?>) y),
 				null,
 				queryEngine
 		);
@@ -1163,7 +1182,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public JpaExpression<Double> power(Expression<? extends Number> x, Number y) {
 		return getFunctionDescriptor( "power" ).generateSqmExpression(
-				Arrays.asList( (SqmExpression<?>) x, value( y ) ),
+				asList( (SqmExpression<?>) x, value( y ) ),
 				null,
 				queryEngine
 		);
@@ -1172,7 +1191,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T extends Number> JpaExpression<T> round(Expression<T> x, Integer n) {
 		return getFunctionDescriptor( "round" ).generateSqmExpression(
-				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
+				asList( (SqmExpression<?>) x, value( n ) ),
 				null,
 				queryEngine
 		);
@@ -1181,7 +1200,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T extends Number> JpaExpression<T> truncate(Expression<T> x, Integer n) {
 		return getFunctionDescriptor( "truncate" ).generateSqmExpression(
-				Arrays.asList( (SqmExpression<?>) x, value( n ) ),
+				asList( (SqmExpression<?>) x, value( n ) ),
 				null,
 				queryEngine
 		);
@@ -1325,16 +1344,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> leftHandExpression,
 			SqmExpression<?> rightHandExpression) {
+		final SqmExpressible<?> arithmeticType =
+				getTypeConfiguration()
+						.resolveArithmeticType(
+								leftHandExpression.getNodeType(),
+								rightHandExpression.getNodeType(),
+								operator
+						);
 		//noinspection unchecked
+		final SqmExpressible<N> castType =
+				(SqmExpressible<N>) arithmeticType;
 		return new SqmBinaryArithmetic<>(
 				operator,
 				leftHandExpression,
 				rightHandExpression,
-				(SqmExpressible<N>) getTypeConfiguration().resolveArithmeticType(
-						leftHandExpression.getNodeType(),
-						rightHandExpression.getNodeType(),
-						operator
-				),
+				castType,
 				this
 		);
 	}
@@ -1510,49 +1534,56 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	public <T> SqmLiteral<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
-		if ( value == null ) {
-			return new SqmLiteralNull<>( this );
-		}
+		return value == null
+				? new SqmLiteralNull<T>( this )
+				: createLiteral( value, resolveInferredType( value, typeInferenceSource ) );
+	}
 
-		final SqmExpressible<T> expressible = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+	private <T> SqmLiteral<T> createLiteral(T value, SqmExpressible<T> expressible) {
 		if ( expressible.getExpressibleJavaType().isInstance( value ) ) {
 			return new SqmLiteral<>( value, expressible, this );
 		}
-		// Just like in HQL, we allow coercion of literal values to the inferred type
-		final T coercedValue = expressible.getExpressibleJavaType().coerce( value, this::getTypeConfiguration );
-		if ( expressible.getExpressibleJavaType().isInstance( coercedValue ) ) {
-			return new SqmLiteral<>( coercedValue, expressible, this );
-		}
 		else {
+			// Just like in HQL, we allow coercion of literal values to the inferred type
+			final T coercedValue =
+					expressible.getExpressibleJavaType()
+							.coerce( value, this::getTypeConfiguration );
 			// ignore typeInferenceSource and fallback the value type
-			return literal( value );
+			return expressible.getExpressibleJavaType().isInstance( coercedValue )
+					? new SqmLiteral<>( coercedValue, expressible, this )
+					: literal( value );
 		}
 	}
 
-	@SuppressWarnings({"rawtypes","unchecked"})
-	private static <T> SqmExpressible<T> resolveInferredType(
-			T value,
-			SqmExpression<? extends T> typeInferenceSource,
-			TypeConfiguration typeConfiguration) {
+	private <T> SqmExpressible<? extends T> resolveInferredType(
+			T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( typeInferenceSource != null ) {
-			return (SqmExpressible<T>) typeInferenceSource.getNodeType();
+			return typeInferenceSource.getNodeType();
 		}
 		else if ( value == null ) {
 			return null;
 		}
 		else {
-			final Class type = value.getClass();
-			final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
-			if ( result == null && value instanceof Enum ) {
-				final EnumJavaType javaType = new EnumJavaType<>( type );
-				final JdbcType jdbcType =
-						javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
-			}
-			else {
-				return result;
-			}
+			return resolveInferredType( value );
 		}
+	}
+
+	private <T> BasicType<T> resolveInferredType(T value) {
+		final TypeConfiguration typeConfiguration = getTypeConfiguration();
+		final Class<T> type = ReflectHelper.getClass( value );
+		final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
+		if ( result == null && value instanceof Enum<?> enumValue ) {
+			return (BasicType<T>) resolveEnumType( typeConfiguration, enumValue );
+		}
+		else {
+			return result;
+		}
+	}
+
+	private static <E extends Enum<E>> BasicType<E> resolveEnumType(TypeConfiguration configuration, Enum<E> enumValue) {
+		final EnumJavaType<E> javaType = new EnumJavaType<>( ReflectHelper.getClass( enumValue ) );
+		final JdbcType jdbcType = javaType.getRecommendedJdbcType( configuration.getCurrentBaseSqlTypeIndicators() );
+		return configuration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 	}
 
 	@Override
@@ -1613,7 +1644,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			// if there's no basic type, it might be an entity type
 			final SqmExpressible<T> sqmExpressible =
 					basicTypeForJavaType == null
-							? getDomainModel().managedType( resultClass )
+							? getDomainModel().managedType( resultClass ).resolveExpressible( this )
 							: basicTypeForJavaType;
 			return new SqmLiteralNull<>( sqmExpressible, this );
 		}
@@ -1637,7 +1668,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
-		public DomainType<T> getSqmType() {
+		public SqmDomainType<T> getSqmType() {
 			return null;
 		}
 	}
@@ -2122,11 +2153,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
-		if ( expression instanceof SqmPath<?> ) {
-			final SqmPathSource<?> pathSource = ( (SqmPath<?>) expression ).getResolvedModel();
-			return pathSource instanceof SingularPersistentAttribute<?, ?> ?
-					( (SingularPersistentAttribute<?, ?>) pathSource ).getPathSource() :
-					pathSource;
+		if ( expression instanceof SqmPath<?> sqmPath ) {
+			return sqmPath.getResolvedModel() instanceof SqmSingularPersistentAttribute<?,?> attribute
+					? attribute.getSqmPathSource()
+					: sqmPath.getResolvedModel();
 		}
 		else {
 			return expression.getNodeType();
@@ -3006,7 +3036,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public <T> SqmFunction<T> sql(String pattern, Class<T> type, Expression<?>... arguments) {
-		List<SqmExpression<?>> sqmArguments = new ArrayList<>( expressionList( arguments ) );
+		final List<SqmExpression<?>> sqmArguments = new ArrayList<>( expressionList( arguments ) );
 		sqmArguments.add( 0, literal( pattern ) );
 		return getFunctionDescriptor( "sql" ).generateSqmExpression(
 				sqmArguments,
@@ -3017,7 +3047,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmFunction<String> format(Expression<? extends TemporalAccessor> datetime, String pattern) {
-		SqmFormat sqmFormat = new SqmFormat( pattern, null, this );
+		final SqmFormat sqmFormat = new SqmFormat( pattern, null, this );
 		return getFunctionDescriptor( "format" ).generateSqmExpression(
 				asList( (SqmExpression<?>) datetime, sqmFormat ),
 				null,
@@ -4134,7 +4164,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <T> SqmExpression<Integer> arrayLength(Expression<T[]> arrayExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
-				asList( (SqmExpression<?>) arrayExpression ),
+				Collections.singletonList( (SqmExpression<?>) arrayExpression ),
 				null,
 				queryEngine
 		);
@@ -4731,7 +4761,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
-				asList( (SqmExpression<?>) collectionExpression ),
+				Collections.singletonList( (SqmExpression<?>) collectionExpression ),
 				null,
 				queryEngine
 		);
@@ -5525,7 +5555,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return getFunctionDescriptor( "json_arrayagg" ).generateOrderedSetAggregateSqmExpression(
 				nullBehavior == null
 						? Collections.singletonList( value )
-						: Arrays.asList( value, SqmJsonNullBehavior.NULL ),
+						: asList( value, SqmJsonNullBehavior.NULL ),
 				filterPredicate,
 				orderByClause,
 				null,
@@ -5705,7 +5735,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmExpression<String> xmlforest(Expression<?>... elements) {
-		return xmlforest( Arrays.asList( elements ) );
+		return xmlforest( asList( elements ) );
 	}
 
 	@Override
@@ -5734,7 +5764,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public SqmExpression<String> xmlconcat(Expression<?>... elements) {
-		return xmlconcat( Arrays.asList( elements ) );
+		return xmlconcat( asList( elements ) );
 	}
 
 	@Override
@@ -5749,7 +5779,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public SqmExpression<String> xmlpi(String elementName) {
 		return getFunctionDescriptor( "xmlpi" ).generateSqmExpression(
-				asList( literal( elementName ) ),
+				Collections.singletonList( literal( elementName ) ),
 				null,
 				queryEngine
 		);
@@ -5823,7 +5853,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <E> SqmSetReturningFunction<E> unnestArray(Expression<E[]> array) {
 		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
-				asList( (SqmTypedNode<?>) array ),
+				Collections.singletonList( (SqmTypedNode<?>) array ),
 				queryEngine
 		);
 	}
@@ -5831,7 +5861,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <E> SqmSetReturningFunction<E> unnestCollection(Expression<? extends Collection<E>> collection) {
 		return getSetReturningFunctionDescriptor( "unnest" ).generateSqmExpression(
-				asList( (SqmTypedNode<?>) collection ),
+				Collections.singletonList( (SqmTypedNode<?>) collection ),
 				queryEngine
 		);
 	}
@@ -5959,7 +5989,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	public SqmJsonTableFunction<?> jsonTable(Expression<?> jsonDocument, @Nullable Expression<String> jsonPath) {
 		return (SqmJsonTableFunction<?>) getSetReturningFunctionDescriptor( "json_table" ).generateSqmExpression(
 				jsonPath == null
-						? asList( (SqmTypedNode<?>) jsonDocument )
+						? Collections.singletonList( (SqmTypedNode<?>) jsonDocument )
 						: asList( (SqmTypedNode<?>) jsonDocument, (SqmTypedNode<?>) jsonPath ),
 				queryEngine
 		);

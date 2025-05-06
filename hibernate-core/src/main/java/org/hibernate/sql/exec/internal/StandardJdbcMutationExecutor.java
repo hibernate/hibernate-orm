@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
@@ -12,8 +12,8 @@ import java.util.function.Function;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -43,23 +43,11 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		session.autoFlushIfRequired( jdbcMutation.getAffectedTableNames() );
 
-		final LogicalConnectionImplementor logicalConnection = session
-				.getJdbcCoordinator()
-				.getLogicalConnection();
+		final LogicalConnectionImplementor logicalConnection =
+				session.getJdbcCoordinator().getLogicalConnection();
 
 		final JdbcServices jdbcServices = session.getJdbcServices();
-		final QueryOptions queryOptions = executionContext.getQueryOptions();
-		final String finalSql;
-		if ( queryOptions == null ) {
-			finalSql = jdbcMutation.getSqlString();
-		}
-		else {
-			finalSql = jdbcServices.getDialect().addSqlHintOrComment(
-					jdbcMutation.getSqlString(),
-					queryOptions,
-					executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
-			);
-		}
+		final String finalSql = applyOptions( jdbcMutation, executionContext, jdbcServices );
 		try {
 			// prepare the query
 			final PreparedStatement preparedStatement = statementCreator.apply( finalSql );
@@ -82,15 +70,16 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				}
 
 				session.getEventListenerManager().jdbcExecuteStatementStart();
-				final EventManager eventManager = session.getEventManager();
-				final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+				final EventMonitor eventMonitor = session.getEventMonitor();
+				final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
+						eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 				try {
-					int rows = preparedStatement.executeUpdate();
+					final int rows = preparedStatement.executeUpdate();
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
 				finally {
-					eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
+					eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 					session.getEventListenerManager().jdbcExecuteStatementEnd();
 				}
 			}
@@ -99,34 +88,49 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			}
 		}
 		catch (SQLException e) {
-			final JDBCException exception = jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					"JDBC exception executing SQL [" + finalSql + "]"
-			);
-			if ( exception instanceof ConstraintViolationException && jdbcMutation instanceof JdbcOperationQueryInsert ) {
-				final ConstraintViolationException constraintViolationException = (ConstraintViolationException) exception;
-				if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
-					final JdbcOperationQueryInsert jdbcInsert = (JdbcOperationQueryInsert) jdbcMutation;
-					final String uniqueConstraintNameThatMayFail = jdbcInsert.getUniqueConstraintNameThatMayFail();
-					if ( uniqueConstraintNameThatMayFail != null ) {
-						final String violatedConstraintName = constraintViolationException.getConstraintName();
-						if ( constraintNameMatches( uniqueConstraintNameThatMayFail, violatedConstraintName ) ) {
-							return 0;
-						}
-					}
-				}
-			}
-			throw exception;
+			return handleException( jdbcMutation, e, jdbcServices, finalSql );
 		}
 		finally {
 			executionContext.afterStatement( logicalConnection );
 		}
 	}
 
+	private static int handleException(
+			JdbcOperationQueryMutation jdbcMutation, SQLException sqle, JdbcServices jdbcServices, String finalSql) {
+		final JDBCException exception =
+				jdbcServices.getSqlExceptionHelper()
+						.convert( sqle, "JDBC exception executing SQL [" + finalSql + "]" );
+		if ( exception instanceof ConstraintViolationException constraintViolationException
+			&& jdbcMutation instanceof JdbcOperationQueryInsert jdbcInsert ) {
+			if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
+				final String uniqueConstraintNameThatMayFail = jdbcInsert.getUniqueConstraintNameThatMayFail();
+				if ( uniqueConstraintNameThatMayFail != null ) {
+					final String violatedConstraintName = constraintViolationException.getConstraintName();
+					if ( constraintNameMatches( uniqueConstraintNameThatMayFail, violatedConstraintName ) ) {
+						return 0;
+					}
+				}
+			}
+		}
+		throw exception;
+	}
+
+	private static String applyOptions(
+			JdbcOperationQueryMutation jdbcMutation, ExecutionContext executionContext, JdbcServices jdbcServices) {
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		return queryOptions == null
+				? jdbcMutation.getSqlString()
+				: jdbcServices.getDialect().addSqlHintOrComment(
+						jdbcMutation.getSqlString(),
+						queryOptions,
+						executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
+				);
+	}
+
 	private static boolean constraintNameMatches(String uniqueConstraintNameThatMayFail, String violatedConstraintName) {
 		return uniqueConstraintNameThatMayFail.isEmpty()
-			|| uniqueConstraintNameThatMayFail.equalsIgnoreCase(violatedConstraintName)
+			|| uniqueConstraintNameThatMayFail.equalsIgnoreCase( violatedConstraintName )
 			|| violatedConstraintName != null && violatedConstraintName.indexOf('.') > 0
-				&& uniqueConstraintNameThatMayFail.equalsIgnoreCase(violatedConstraintName.substring(violatedConstraintName.lastIndexOf('.') + 1));
+				&& uniqueConstraintNameThatMayFail.equalsIgnoreCase( violatedConstraintName.substring(violatedConstraintName.lastIndexOf('.') + 1) );
 	}
 }

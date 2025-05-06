@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -18,7 +18,7 @@ import org.hibernate.internal.util.collections.JoinedList;
  *
  * @author Gavin King
  */
-public class SingleTableSubclass extends Subclass {
+public final class SingleTableSubclass extends Subclass {
 
 	public SingleTableSubclass(PersistentClass superclass, MetadataBuildingContext buildingContext) {
 		super( superclass, buildingContext );

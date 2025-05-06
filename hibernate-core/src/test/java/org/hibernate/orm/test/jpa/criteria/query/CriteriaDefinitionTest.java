@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.query;
@@ -51,6 +51,12 @@ public class CriteriaDefinitionTest {
 			orderBy(asc(message.get("text")));
 		}};
 
+		var query3prime = new CriteriaDefinition<>(factory, Message.class, "from Msg") {{
+			var message = getRoot( 0, Message.class );
+			where(ilike(message.get("text"), "%e%"));
+			orderBy(asc(message.get("text")));
+		}};
+
 		var query4 = new CriteriaDefinition<>(factory, Message.class) {{
 			var message = from(Message.class);
 			restrict(like(message.get("text"), "hell%"));
@@ -76,6 +82,9 @@ public class CriteriaDefinitionTest {
 
 			var messages = session.createSelectionQuery(query3).getResultList();
 			assertEquals(2,messages.size());
+
+			var messagesPrime = session.createSelectionQuery(query3prime).getResultList();
+			assertEquals(2,messagesPrime.size());
 
 			var msg = session.createSelectionQuery(query4).getSingleResult();
 			assertNotNull(msg);

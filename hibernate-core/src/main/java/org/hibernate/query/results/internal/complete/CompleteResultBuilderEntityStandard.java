@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -16,6 +16,7 @@ import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -32,7 +33,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
 	private final FetchBuilderBasicValued discriminatorFetchBuilder;
-	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
+	private final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityStandard(
 			String tableAlias,
@@ -40,7 +41,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
 			FetchBuilderBasicValued discriminatorFetchBuilder,
-			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
+			HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap) {
 		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
@@ -144,18 +145,14 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 					entityDescriptor,
 					tableAlias,
 					lockMode,
-					(entityResult) -> {
-						if ( discriminatorFetchBuilder == null ) {
-							return null;
-						}
-
-						return discriminatorFetchBuilder.buildFetch(
-								entityResult,
-								navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
-								jdbcResultsMetadata,
-								domainResultCreationState
-						);
-					},
+					entityResult -> discriminatorFetchBuilder == null
+							? null
+							: discriminatorFetchBuilder.buildFetch(
+									entityResult,
+									navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+									jdbcResultsMetadata,
+									domainResultCreationState
+							),
 					domainResultCreationState
 			);
 		}
@@ -165,7 +162,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
-	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	public void visitFetchBuilders(BiConsumer<Fetchable, FetchBuilder> consumer) {
 		explicitFetchBuilderMap.forEach( consumer );
 	}
 
@@ -190,9 +187,9 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 
 		final CompleteResultBuilderEntityStandard that = (CompleteResultBuilderEntityStandard) o;
 		return navigablePath.equals( that.navigablePath )
-				&& entityDescriptor.equals( that.entityDescriptor )
-				&& lockMode == that.lockMode
-				&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
-				&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
+			&& entityDescriptor.equals( that.entityDescriptor )
+			&& lockMode == that.lockMode
+			&& Objects.equals( discriminatorFetchBuilder, that.discriminatorFetchBuilder )
+			&& explicitFetchBuilderMap.equals( that.explicitFetchBuilderMap );
 	}
 }

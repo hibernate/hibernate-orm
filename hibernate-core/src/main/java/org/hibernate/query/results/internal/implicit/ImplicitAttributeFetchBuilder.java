@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.implicit;
@@ -61,7 +61,7 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 
 		final ImplicitAttributeFetchBuilder that = (ImplicitAttributeFetchBuilder) o;
 		return navigablePath.equals( that.navigablePath )
-				&& attributeMapping.equals( that.attributeMapping );
+			&& attributeMapping.equals( that.attributeMapping );
 	}
 
 	@Override

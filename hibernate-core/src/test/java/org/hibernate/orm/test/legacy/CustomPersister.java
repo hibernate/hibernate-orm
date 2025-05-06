@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
@@ -44,6 +44,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -57,7 +58,6 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -285,11 +285,6 @@ public 	class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public boolean implementsLifecycle() {
-		return false;
-	}
-
-	@Override
 	public Class<?> getConcreteProxyClass() {
 		return Custom.class;
 	}
@@ -436,7 +431,7 @@ public 	class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return Collections.emptyList();
 	}
 
@@ -494,7 +489,7 @@ public 	class CustomPersister implements EntityPersister {
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			EventSource session
+			SharedSessionContractImplementor session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();
@@ -508,7 +503,7 @@ public 	class CustomPersister implements EntityPersister {
 			Object version,
 			Object object,
 			LockMode lockMode,
-			EventSource session
+			SharedSessionContractImplementor session
 	) throws HibernateException {
 
 		throw new UnsupportedOperationException();
@@ -1068,7 +1063,7 @@ public 	class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+	public DiscriminatorType<?> getDiscriminatorDomainType() {
 		return null;
 	}
 

@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal.parse;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.grammars.graph.GraphLanguageLexer;
 import org.hibernate.grammars.graph.GraphLanguageParser;
 import org.hibernate.grammars.graph.GraphLanguageParserBaseVisitor;
+import org.hibernate.graph.GraphNode;
 import org.hibernate.graph.InvalidGraphException;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
@@ -16,69 +16,45 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-
 import static org.hibernate.graph.internal.GraphParserLogging.PARSING_LOGGER;
 
 /**
+ * Unified access to the Antlr parser for Hibernate's "graph language"
+ *
  * @author Steve Ebersole
  */
-public class GraphParser extends GraphLanguageParserBaseVisitor {
+public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
+	private final EntityNameResolver entityNameResolver;
 
-	/**
-	 * Parse the passed graph textual representation into the passed Graph.
-	 */
-	public static void parseInto(
-			GraphImplementor<?> targetGraph,
-			String graphString,
-			SessionFactoryImplementor sessionFactory) {
-		// Build the lexer
-		final GraphLanguageLexer lexer = new GraphLanguageLexer( CharStreams.fromString( graphString ) );
+	private final Stack<GraphImplementor<?>> graphStack = new StandardStack<>();
+	private final Stack<AttributeNodeImplementor<?,?,?>> attributeNodeStack = new StandardStack<>();
+	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>();
 
-		// Build the parser...
-		final GraphLanguageParser parser = new GraphLanguageParser( new CommonTokenStream( lexer ) );
-
-		// Build an instance of this class as a visitor
-		final GraphParser visitor = new GraphParser( sessionFactory );
-		visitor.graphStack.push( targetGraph );
-		try {
-			visitor.visitGraph( parser.graph() );
-		}
-		finally {
-			visitor.graphStack.pop();
-
-			assert visitor.graphStack.isEmpty();
-		}
+	public GraphParser(EntityNameResolver entityNameResolver) {
+		this.entityNameResolver = entityNameResolver;
 	}
 
 	/**
-	 * Parse the passed graph textual representation into the passed Graph.
+	 * @apiNote It is important that this form only be used after the session-factory is fully
+	 * initialized, especially the {@linkplain SessionFactoryImplementor#getJpaMetamodel()} JPA metamodel}.
+	 *
+	 * @see GraphParser#GraphParser(EntityNameResolver)
 	 */
-	public static void parseInto(
-			GraphImplementor<?> targetGraph,
-			CharSequence graphString,
-			SessionFactoryImplementor sessionFactory) {
-		parseInto( targetGraph, graphString.toString(), sessionFactory );
-	}
-
-	private final SessionFactoryImplementor sessionFactory;
-
-	private final Stack<GraphImplementor> graphStack = new StandardStack<>( GraphImplementor.class );
-	private final Stack<AttributeNodeImplementor> attributeNodeStack = new StandardStack<>( AttributeNodeImplementor.class );
-	private final Stack<SubGraphGenerator> graphSourceStack = new StandardStack<>(SubGraphGenerator.class);
-
 	public GraphParser(SessionFactoryImplementor sessionFactory) {
-		this.sessionFactory = sessionFactory;
+		this( new EntityNameResolverSessionFactory( sessionFactory ) );
+	}
+
+	public Stack<GraphImplementor<?>> getGraphStack() {
+		return graphStack;
 	}
 
 	@Override
-	public AttributeNodeImplementor visitAttributeNode(GraphLanguageParser.AttributeNodeContext ctx) {
-		final String attributeName = ctx.attributePath().ATTR_NAME().getText();
+	public AttributeNodeImplementor<?,?,?> visitAttributeNode(GraphLanguageParser.AttributeNodeContext attributeNodeContext) {
+		final String attributeName = attributeNodeContext.attributePath().ATTR_NAME().getText();
 
 		final SubGraphGenerator subGraphCreator;
 
-		if ( ctx.attributePath().attributeQualifier() == null ) {
+		if ( attributeNodeContext.attributePath().attributeQualifier() == null ) {
 			if ( PARSING_LOGGER.isDebugEnabled() ) {
 				PARSING_LOGGER.debugf(
 						"%s Start attribute : %s",
@@ -90,7 +66,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			subGraphCreator = PathQualifierType.VALUE.getSubGraphCreator();
 		}
 		else {
-			final String qualifierName = ctx.attributePath().attributeQualifier().ATTR_NAME().getText();
+			final String qualifierName = attributeNodeContext.attributePath().attributeQualifier().ATTR_NAME().getText();
 
 			if ( PARSING_LOGGER.isDebugEnabled() ) {
 				PARSING_LOGGER.debugf(
@@ -105,14 +81,14 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			subGraphCreator = pathQualifierType.getSubGraphCreator();
 		}
 
-		final AttributeNodeImplementor attributeNode = resolveAttributeNode( attributeName );
+		final AttributeNodeImplementor<?,?,?> attributeNode = resolveAttributeNode( attributeName );
 
-		if ( ctx.subGraph() != null ) {
+		if ( attributeNodeContext.subGraph() != null ) {
 			attributeNodeStack.push( attributeNode );
 			graphSourceStack.push( subGraphCreator );
 
 			try {
-				visitSubGraph( ctx.subGraph() );
+				visitSubGraph( attributeNodeContext.subGraph() );
 
 			}
 			finally {
@@ -132,12 +108,11 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 		return attributeNode;
 	}
 
-
-	private AttributeNodeImplementor resolveAttributeNode(String attributeName) {
+	private AttributeNodeImplementor<?,?,?> resolveAttributeNode(String attributeName) {
 		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
-		final AttributeNodeImplementor attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
+		final AttributeNodeImplementor<?,?,?> attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
 		assert attributeNode != null;
 
 		return attributeNode;
@@ -156,8 +131,8 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 	}
 
 	@Override
-	public SubGraphImplementor visitSubGraph(GraphLanguageParser.SubGraphContext ctx) {
-		final String subTypeName = ctx.subType() == null ? null : ctx.subType().getText();
+	public SubGraphImplementor<?> visitSubGraph(GraphLanguageParser.SubGraphContext subGraphContext) {
+		final String subTypeName = subGraphContext.typeIndicator() == null ? null : subGraphContext.typeIndicator().TYPE_NAME().getText();
 
 		if ( PARSING_LOGGER.isDebugEnabled() ) {
 			PARSING_LOGGER.debugf(
@@ -167,19 +142,19 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 			);
 		}
 
-		final AttributeNodeImplementor<?> attributeNode = attributeNodeStack.getCurrent();
+		final AttributeNodeImplementor<?,?,?> attributeNode = attributeNodeStack.getCurrent();
 		final SubGraphGenerator subGraphCreator = graphSourceStack.getCurrent();
 
 		final SubGraphImplementor<?> subGraph = subGraphCreator.createSubGraph(
 				attributeNode,
 				subTypeName,
-				sessionFactory
+				entityNameResolver
 		);
 
 		graphStack.push( subGraph );
 
 		try {
-			ctx.attributeList().accept( this );
+			subGraphContext.attributeList().accept( this );
 		}
 		finally {
 			graphStack.pop();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -22,7 +22,8 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
  *
  * @author Christian Beikov
  */
-public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression extends SelfRenderingAggregateFunctionSqlAstExpression
+public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<T>
+		extends SelfRenderingAggregateFunctionSqlAstExpression<T>
 		implements OrderedSetAggregateFunctionExpression {
 
 	private final List<SortSpecification> withinGroup;
@@ -33,7 +34,7 @@ public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression extends Se
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
-			ReturnableType<?> type,
+			ReturnableType<T> type,
 			JdbcMappingContainer expressible) {
 		super( functionName, renderer, sqlAstArguments, filter, type, expressible );
 		this.withinGroup = withinGroup;

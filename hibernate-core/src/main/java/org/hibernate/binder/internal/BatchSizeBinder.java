@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.binder.internal;
@@ -37,8 +37,7 @@ public class BatchSizeBinder implements TypeBinder<BatchSize>, AttributeBinder<B
 	@Override
 	public void bind(BatchSize batchSize, MetadataBuildingContext context, PersistentClass persistentClass, Property property) {
 		final Value value = property.getValue();
-		if ( value instanceof Collection ) {
-			final Collection collection = (Collection) value;
+		if ( value instanceof Collection collection ) {
 			collection.setBatchSize( batchSize.size() );
 		}
 		else {

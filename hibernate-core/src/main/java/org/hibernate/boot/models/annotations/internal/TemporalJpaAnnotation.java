@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Temporal;
 
@@ -19,20 +19,20 @@ public class TemporalJpaAnnotation implements Temporal {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public TemporalJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public TemporalJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public TemporalJpaAnnotation(Temporal annotation, SourceModelBuildingContext modelContext) {
+	public TemporalJpaAnnotation(Temporal annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TemporalJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public TemporalJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (jakarta.persistence.TemporalType) attributeValues.get( "value" );
 	}
 

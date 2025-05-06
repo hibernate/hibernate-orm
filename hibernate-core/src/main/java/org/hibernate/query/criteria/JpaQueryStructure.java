@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -66,9 +66,9 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	List<? extends JpaExpression<?>> getGroupingExpressions();
 
-	JpaQueryStructure<T> setGroupingExpressions(List<? extends JpaExpression<?>> grouping);
+	JpaQueryStructure<T> setGroupingExpressions(List<? extends Expression<?>> grouping);
 
-	JpaQueryStructure<T> setGroupingExpressions(JpaExpression<?>... grouping);
+	JpaQueryStructure<T> setGroupingExpressions(Expression<?>... grouping);
 
 	JpaPredicate getGroupRestriction();
 

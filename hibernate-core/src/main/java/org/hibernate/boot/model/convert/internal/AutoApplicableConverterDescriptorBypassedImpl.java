@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.internal;
@@ -25,21 +25,26 @@ public class AutoApplicableConverterDescriptorBypassedImpl implements AutoApplic
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForAttribute(
+	public boolean isAutoApplicable() {
+		return false;
+	}
+
+	@Override
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForAttribute(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForCollectionElement(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForCollectionElement(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;
 	}
 
 	@Override
-	public ConverterDescriptor getAutoAppliedConverterDescriptorForMapKey(
+	public ConverterDescriptor<?,?> getAutoAppliedConverterDescriptorForMapKey(
 			MemberDetails memberDetails,
 			MetadataBuildingContext context) {
 		return null;

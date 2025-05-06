@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -74,7 +74,8 @@ public class MapBinder extends CollectionBinder {
 		super( customTypeBeanResolver, sorted, buildingContext );
 	}
 
-	public boolean isMap() {
+	@Override
+	boolean isMap() {
 		return true;
 	}
 
@@ -82,6 +83,7 @@ public class MapBinder extends CollectionBinder {
 		return (Map) collection;
 	}
 
+	@Override
 	protected Collection createCollection(PersistentClass owner) {
 		return new Map( getCustomTypeBeanResolver(), owner, getBuildingContext() );
 	}
@@ -124,7 +126,7 @@ public class MapBinder extends CollectionBinder {
 		return false;
 	}
 
-	private boolean namedMapValue(AttributeOverride annotation) {
+	private static boolean namedMapValue(AttributeOverride annotation) {
 		return annotation.name().startsWith( "value." );
 	}
 
@@ -241,21 +243,19 @@ public class MapBinder extends CollectionBinder {
 	}
 
 	private ClassDetails mapKeyClass(String mapKeyType) {
-		if ( isPrimitive( mapKeyType ) ) {
-			return null;
-		}
-		else {
-			return buildingContext.getMetadataCollector().getSourceModelBuildingContext().getClassDetailsRegistry().resolveClassDetails( mapKeyType );
-		}
+		return isPrimitive( mapKeyType )
+				? null
+				: buildingContext.getBootstrapContext()
+						.getModelsContext()
+						.getClassDetailsRegistry()
+						.resolveClassDetails( mapKeyType );
 	}
 
 	private static String getKeyType(MemberDetails property) {
 		//target has priority over reflection for the map key type
 		//JPA 2 has priority
 		final MapKeyClass mapKeyClassAnn = property.getDirectAnnotationUsage( MapKeyClass.class );
-		final Class<?> target = mapKeyClassAnn != null
-				? mapKeyClassAnn.value()
-				: void.class;
+		final Class<?> target = mapKeyClassAnn != null ? mapKeyClassAnn.value() : void.class;
 		return void.class.equals( target ) ? property.getMapKeyType().getName() : target.getName();
 	}
 
@@ -274,11 +274,12 @@ public class MapBinder extends CollectionBinder {
 					+ "' not found in target entity '" + associatedClass.getEntityName() + "'" );
 		}
 		// HHH-11005 - if InheritanceType.JOINED then need to find class defining the column
-		final InheritanceState inheritanceState = inheritanceStatePerClass.get( elementType.determineRawClass() );
-		final PersistentClass targetEntity = InheritanceType.JOINED == inheritanceState.getType()
-				? mapProperty.getPersistentClass()
-				: associatedClass;
-		final Value indexValue = createFormulatedValue( mapProperty.getValue(), collection, associatedClass, targetEntity );
+		final PersistentClass targetEntity =
+				inheritanceStatePerClass.get( elementType.determineRawClass() ).getType() == InheritanceType.JOINED
+						? mapProperty.getPersistentClass()
+						: associatedClass;
+		final Value indexValue =
+				createFormulatedValue( mapProperty.getValue(), collection, associatedClass, targetEntity );
 		getMap().setIndex( indexValue );
 		getMap().setMapKeyPropertyName( mapKeyPropertyName );
 	}
@@ -310,7 +311,8 @@ public class MapBinder extends CollectionBinder {
 		if ( foreignKey != null ) {
 			final ConstraintMode constraintMode = foreignKey.value();
 			if ( constraintMode == ConstraintMode.NO_CONSTRAINT
-					|| constraintMode == ConstraintMode.PROVIDER_DEFAULT && getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
+					|| constraintMode == ConstraintMode.PROVIDER_DEFAULT
+							&& getBuildingContext().getBuildingOptions().isNoConstraintByDefault() ) {
 				element.disableForeignKey();
 			}
 			else {
@@ -422,12 +424,13 @@ public class MapBinder extends CollectionBinder {
 		if ( compositeType != null ) {
 			return compositeType.value();
 		}
-
-		if ( returnedClass != null ) {
-			return context.getMetadataCollector().findRegisteredCompositeUserType( returnedClass.determineRawClass().toJavaClass() );
+		else if ( returnedClass != null ) {
+			return context.getMetadataCollector()
+					.findRegisteredCompositeUserType( returnedClass.determineRawClass().toJavaClass() );
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	private jakarta.persistence.ForeignKey getMapKeyForeignKey(MemberDetails property) {
@@ -458,10 +461,11 @@ public class MapBinder extends CollectionBinder {
 				}
 			}
 		}
+
 		return false;
 	}
 
-	private boolean namedMapKey(AttributeOverride annotation) {
+	private static boolean namedMapKey(AttributeOverride annotation) {
 		return annotation.name().startsWith( "key." );
 	}
 
@@ -476,9 +480,10 @@ public class MapBinder extends CollectionBinder {
 		else {
 			// HHH-11005 - only if we are @OneToMany and location of map key property is
 			// at a different level, need to add a select
-			final Table mapKeyTable = !associatedClass.equals( targetPropertyPersistentClass )
-					? targetPropertyPersistentClass.getTable()
-					: associatedClass.getTable();
+			final Table mapKeyTable =
+					!associatedClass.equals( targetPropertyPersistentClass )
+							? targetPropertyPersistentClass.getTable()
+							: associatedClass.getTable();
 			if ( value instanceof BasicValue basicValue ) {
 				return createDependantBasicValue( mapKeyTable, basicValue );
 			}
@@ -530,13 +535,10 @@ public class MapBinder extends CollectionBinder {
 		else if ( selectable instanceof Formula formula ) {
 			targetValue.addFormula( new Formula( formula.getFormula() ) );
 		}
-		else {
-			throw new AssertionFailure( "Unknown element in column iterator: " + selectable.getClass() );
-		}
 	}
 
 	private Component createIndexComponent(Collection collection, PersistentClass associatedClass, Component component) {
-		final Component indexComponent = new Component( getBuildingContext(), collection);
+		final Component indexComponent = new Component( getBuildingContext(), collection );
 		indexComponent.setComponentClassName( component.getComponentClassName() );
 		for ( Property property : component.getProperties() ) {
 			final Property newProperty = new Property();
@@ -553,7 +555,7 @@ public class MapBinder extends CollectionBinder {
 			newProperty.setPropertyAccessorName( property.getPropertyAccessorName() );
 			newProperty.setSelectable( property.isSelectable() );
 			newProperty.setValue(
-					createFormulatedValue( property.getValue(), collection, associatedClass, associatedClass)
+					createFormulatedValue( property.getValue(), collection, associatedClass, associatedClass )
 			);
 			indexComponent.addProperty( newProperty );
 		}

@@ -1,0 +1,125 @@
+[[QuerySpecification]]
+== Programmatic Query Specification
+:root-project-dir: ../../../../../../../..
+
+Hibernate offers an API for creating a representation of a query, adjusting that representation programmatically, and then creating an executable form of the query.  The idea is similar in concept to <<chapters/query/criteria/Criteria.adoc#criteria,criteria queries>>, but focused on ease-of-use and less verbosity.
+
+There is support for both <<SelectionSpecification,selection>> and <<MutationSpecification,mutation>> queries via the `SelectionSpecification` and `MutationSpecification` contracts, respectively.  These can be obtained from both `Session` and `StatelessSession`.
+
+[NOTE]
+====
+These APIs are new in 7.0 and considered incubating.
+====
+
+[[SelectionSpecification]]
+=== SelectionSpecification
+
+A `SelectionSpecification` allows to iteratively build a query from a "base", adjust the query by adding sorting and restrictions and finally creating an executable <<hql-SelectionQuery,`SelectionQuery`>>.  We can use HQL as the base -
+
+.SelectionSpecification from HQL
+====
+[source, java, indent=0]
+----
+SelectionSpecification<Book> spec = SelectionSpecification.create(
+    Book.class,
+    "from Book"
+);
+----
+====
+
+or a root entity as the base -
+
+.SelectionSpecification from root entity
+====
+[source, java, indent=0]
+----
+SelectionSpecification<Book> spec = SelectionSpecification.create(Book.class);
+----
+====
+
+Once we have the `SelectionSpecification` we can adjust the query adding restrictions and sorting -
+
+.Adjusting the SelectionSpecification
+====
+[source, java, indent=0]
+----
+// from here we can augment the base query "from Book",
+// with either restrictions
+spec.restrict(
+    Restriction.restrict(
+        Book_.suggestedCost,
+        Range.closed(10.00, 19.99)
+    )
+);
+
+// or here with some sorting
+spec.sort(
+    Order.asc(Book_.suggestedCost)
+)
+----
+====
+
+[NOTE]
+====
+Notice that generally the JPA static metamodel is a convenient and type-safe way to help build these sorting and restriction references.
+====
+
+After adjusting the query, we can obtain the executable `SelectionQuery`:
+
+.Using the SelectionSpecification
+====
+[source, java, indent=0]
+----
+SelectionQuery<Book> qry = ds.createQuery(session);
+List<Book> books = qry.getResultList();
+----
+====
+
+These calls can even be chained, e.g.
+
+.Example of chained calls
+====
+[source, java, indent=0]
+----
+SelectionQuery<Book> qry = SelectionSpecification.create(
+    Book.class,
+    "from Book"
+).restrict(
+    Restriction.restrict(
+        Book_.suggestedCost,
+        Range.closed(10.00, 19.99)
+    )
+).sort(
+    Order.asc(Book_.suggestedCost)
+).createQuery(session);
+----
+====
+
+[NOTE]
+====
+We expect, in future releases, to add the ability to handle pagination.
+
+We also expect to add the ability to use <<criteria,Criteria>> references as the base.  Possibly even `TypedQueryReference` references.
+====
+
+[[MutationSpecification]]
+=== MutationSpecification
+
+There is also support for mutation queries through `MutationSpecification`.
+At the moment, only update and delete queries are supported.  E.g.
+
+.MutationQuery example
+====
+[source, java, indent=0]
+----
+MutationQuery<Book> qry = MutationSpecification.create(
+    Book.class,
+    "delete Book"
+).restrict(
+    Restriction.restrict(
+        Book_.suggestedCost,
+        Range.closed(10.00, 19.99)
+    )
+).createQuery(session);
+----
+====

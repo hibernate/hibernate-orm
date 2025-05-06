@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
@@ -103,9 +103,8 @@ public class SQLServerJsonQueryFunction extends JsonQueryFunction {
 			final JsonPathHelper.JsonPathElement jsonPathElement = jsonPathElements.get( index );
 			if ( jsonPathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSql( "'strict $." );
-				final String name = attribute.attribute();
-				for ( int i = 0; i < name.length(); i++ ) {
-					final char c = name.charAt( i );
+				for ( int i = 0; i < attribute.attribute().length(); i++ ) {
+					final char c = attribute.attribute().charAt( i );
 					if ( c == '\'' ) {
 						sqlAppender.append( '\'' );
 					}

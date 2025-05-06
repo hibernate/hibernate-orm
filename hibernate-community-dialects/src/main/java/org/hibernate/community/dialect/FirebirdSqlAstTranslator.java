@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -188,13 +188,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		// Firebird 4 and earlier are quite strict i.e. it requires `select .. union all select * from (select ...)`
-		// rather than `select .. union all (select ...)`
-		return getDialect().getVersion().isSameOrAfter( 5 );
-	}
-
-	@Override
 	protected void renderSelectExpression(Expression expression) {
 		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
 	}
@@ -245,33 +238,8 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 3 );
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsNestedWithClause() {
-		return false;
 	}
 
 	@Override

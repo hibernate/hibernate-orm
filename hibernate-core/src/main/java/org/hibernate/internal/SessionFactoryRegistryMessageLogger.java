@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.internal.log.SubSystemLogging;
@@ -29,6 +30,7 @@ import static org.jboss.logging.Logger.getMessageLogger;
 		name = SessionFactoryRegistryMessageLogger.LOGGER_NAME,
 		description = "Logging related to session factory registry"
 )
+@Internal
 public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".factoryRegistry";
 

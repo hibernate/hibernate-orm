@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -21,7 +21,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -37,6 +36,17 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLStructCastingJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -46,11 +56,15 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
@@ -78,6 +92,8 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -99,7 +115,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
@@ -137,14 +155,28 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 11 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
  *
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( jdbcType.isXml() ) {
+				// Requires the use of xmltable which is not supported in check constraints
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	protected final PostgreSQLDriverKind driverKind;
 	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
@@ -228,7 +260,8 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "text";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "varchar";
+			case LONG32VARCHAR, LONG32NVARCHAR -> "text";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "bytea";
 			default -> super.castType( sqlTypeCode );
 		};
@@ -535,7 +568,6 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.pi();
 		functionFactory.trim2();
 		functionFactory.repeat();
-		functionFactory.md5();
 		functionFactory.initcap();
 		functionFactory.substr();
 		functionFactory.substring_substr();
@@ -594,7 +626,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.arrayToString_postgresql();
 
 		if ( getVersion().isSameOrAfter( 17 ) ) {
-			functionFactory.jsonValue();
+			functionFactory.jsonValue_postgresql( true );
 			functionFactory.jsonQuery();
 			functionFactory.jsonExists();
 			functionFactory.jsonObject();
@@ -604,7 +636,7 @@ public class PostgreSQLDialect extends Dialect {
 			functionFactory.jsonTable();
 		}
 		else {
-			functionFactory.jsonValue_postgresql();
+			functionFactory.jsonValue_postgresql( false );
 			functionFactory.jsonQuery_postgresql();
 			functionFactory.jsonExists_postgresql();
 			if ( getVersion().isSameOrAfter( 16 ) ) {
@@ -625,11 +657,9 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.jsonRemove_postgresql();
 		functionFactory.jsonReplace_postgresql();
 		functionFactory.jsonInsert_postgresql();
-		if ( getVersion().isSameOrAfter( 13 ) ) {
-			// Requires support for WITH clause in subquery which only 13+ provides
-			functionFactory.jsonMergepatch_postgresql();
-		}
-		functionFactory.jsonArrayAppend_postgresql( getVersion().isSameOrAfter( 13 ) );
+		// Requires support for WITH clause in subquery which only 13+ provides
+		functionFactory.jsonMergepatch_postgresql();
+		functionFactory.jsonArrayAppend_postgresql( true );
 		functionFactory.jsonArrayInsert_postgresql();
 
 		functionFactory.xmlelement();
@@ -668,13 +698,12 @@ public class PostgreSQLDialect extends Dialect {
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		functionFactory.dateTrunc();
 
-		if ( getVersion().isSameOrAfter( 17 ) ) {
-			functionFactory.unnest( null, "ordinality" );
-		}
-		else {
-			functionFactory.unnest_postgresql();
-		}
+		functionFactory.unnest_postgresql( getVersion().isSameOrAfter( 17 ) );
 		functionFactory.generateSeries( null, "ordinality", false );
+
+		functionFactory.hex( "encode(?1, 'hex')" );
+		functionFactory.sha( "sha256(?1)" );
+		functionFactory.md5( "decode(md5(?1), 'hex')" );
 	}
 
 	@Override
@@ -899,6 +928,17 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String getSelectClauseNullString(SqlTypedMapping sqlType, TypeConfiguration typeConfiguration) {
+		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final String castTypeName = ddlTypeRegistry
+				.getDescriptor( sqlType.getJdbcMapping().getJdbcType().getDdlTypeCode() )
+				.getCastTypeName( sqlType.toSize(), (SqlExpressible) sqlType.getJdbcMapping(), ddlTypeRegistry );
+		// PostgreSQL assumes a plain null literal in the select statement to be of type text,
+		// which can lead to issues in e.g. the union subclass strategy, so do a cast
+		return "cast(null as " + castTypeName + ")";
+	}
+
+	@Override
 	public String quoteCollation(String collation) {
 		return '\"' + collation + '\"';
 	}
@@ -991,50 +1031,36 @@ public class PostgreSQLDialect extends Dialect {
 	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
-				if ( sqlState != null ) {
-					switch ( Integer.parseInt( sqlState ) ) {
-						// CHECK VIOLATION
-						case 23514:
-							return extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
-						// UNIQUE VIOLATION
-						case 23505:
-							return extractUsingTemplate( "violates unique constraint \"", "\"", sqle.getMessage() );
-						// FOREIGN KEY VIOLATION
-						case 23503:
-							return extractUsingTemplate( "violates foreign key constraint \"", "\"", sqle.getMessage() );
+				final String sqlState = extractSqlState( sqle );
+				return sqlState == null ? null : switch ( parseInt( sqlState ) ) {
+					case 23505, 23514, 23503 ->
+						// UNIQUE, CHECK, OR FOREIGN KEY VIOLATION
+							extractUsingTemplate( "constraint \"", "\"", sqle.getMessage() );
+					case 23502 ->
 						// NOT NULL VIOLATION
-						case 23502:
-							return extractUsingTemplate(
-									"null value in column \"",
-									"\" violates not-null constraint",
-									sqle.getMessage()
-							);
-						// TODO: RESTRICT VIOLATION
-						case 23001:
-							return null;
-					}
-				}
-				return null;
+							extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+					default -> null;
+				};
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "40P01":
-						// DEADLOCK DETECTED
-						return new LockAcquisitionException( message, sqlException, sql );
-					case "55P03":
-						// LOCK NOT AVAILABLE
-						return new PessimisticLockException( message, sqlException, sql );
-					case "57014":
-						return new QueryTimeoutException( message, sqlException, sql );
-				}
-			}
-			return null;
+			final String sqlState = extractSqlState( sqlException );
+			return sqlState == null ? null : switch ( sqlState ) {
+				case "40P01" ->
+					// DEADLOCK DETECTED
+						new LockAcquisitionException( message, sqlException, sql );
+				case "55P03" ->
+					// LOCK NOT AVAILABLE
+					//TODO: should we check that the message is "canceling statement due to lock timeout"
+					//      and return LockAcquisitionException if it is not?
+						new LockTimeoutException( message, sqlException, sql );
+				case "57014" ->
+					// QUERY CANCELLED
+						new QueryTimeoutException( message, sqlException, sql );
+				default -> null;
+			};
 		};
 	}
 
@@ -1302,6 +1328,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String getForUpdateString() {
+		return " for no key update";
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
 				? " for update nowait"
@@ -1374,7 +1405,7 @@ public class PostgreSQLDialect extends Dialect {
 		return switch (type) {
 			case ROWS_ONLY -> true;
 			case PERCENT_ONLY, PERCENT_WITH_TIES -> false;
-			case ROWS_WITH_TIES -> getVersion().isSameOrAfter(13);
+			case ROWS_WITH_TIES -> true;
 		};
 	}
 
@@ -1472,6 +1503,11 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return postgresqlTableExporter;
 	}
 
 	/**
@@ -1580,4 +1616,35 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleUsingClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
+	@Override
+	public boolean supportsRecursiveSearchClause() {
+		return getVersion().isSameOrAfter( 14 );
+	}
+
 }

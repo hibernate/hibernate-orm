@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -11,6 +11,7 @@ import org.hibernate.processor.model.ImportContext;
 import org.hibernate.processor.model.MetaAttribute;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.tools.Diagnostic;
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
-	public @Nullable String getSupertypeName() {
+	public @Nullable Element getSuperTypeElement() {
 		return null;
 	}
 

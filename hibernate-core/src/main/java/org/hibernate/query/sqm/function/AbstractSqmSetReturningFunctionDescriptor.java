@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
@@ -82,7 +82,7 @@ public abstract class AbstractSqmSetReturningFunctionDescriptor implements SqmSe
 	public final <T> SelfRenderingSqmSetReturningFunction<T> generateSqmExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		argumentsValidator.validate( arguments, getName(), queryEngine.getTypeConfiguration() );
+		argumentsValidator.validate( arguments, getName(), queryEngine );
 
 		return generateSqmSetReturningFunctionExpression( arguments, queryEngine );
 	}

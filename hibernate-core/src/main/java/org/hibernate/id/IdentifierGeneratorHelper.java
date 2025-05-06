@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
@@ -15,9 +15,12 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.Internal;
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
@@ -135,8 +138,8 @@ public final class IdentifierGeneratorHelper {
 		final EntityPersister entityDescriptor =
 				sessionImplementor.getFactory().getMappingMetamodel()
 						.getEntityDescriptor( entityName );
-		if ( sessionImplementor.isSessionImplementor()
-				&& sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
+		if ( sessionImplementor instanceof SessionImplementor statefulSession
+				&& statefulSession.contains( entityName, object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
@@ -166,12 +169,12 @@ public final class IdentifierGeneratorHelper {
 			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, sessionImplementor );
 		}
 		catch (TransientObjectException toe) {
-			if ( sessionImplementor.isSessionImplementor() ) {
-				sessionImplementor.asSessionImplementor().persist( associatedEntityName, associatedEntity );
+			if ( sessionImplementor instanceof Session statefulSession ) {
+				statefulSession.persist( associatedEntityName, associatedEntity );
 				return sessionImplementor.getContextEntityIdentifier( associatedEntity );
 			}
-			else if ( sessionImplementor.isStatelessSession() ) {
-				return sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedEntity );
+			else if ( sessionImplementor instanceof StatelessSession statelessSession ) {
+				return statelessSession.insert( associatedEntityName, associatedEntity );
 			}
 			else {
 				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");

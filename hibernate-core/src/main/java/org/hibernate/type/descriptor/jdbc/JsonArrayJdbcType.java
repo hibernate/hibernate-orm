@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -59,7 +58,7 @@ public class JsonArrayJdbcType extends ArrayJdbcType {
 		if ( string == null ) {
 			return null;
 		}
-		return JsonHelper.arrayFromString( javaType, this, string, options );
+		return JsonHelper.arrayFromString( javaType, this.getElementJdbcType(), string, options );
 	}
 
 	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) {

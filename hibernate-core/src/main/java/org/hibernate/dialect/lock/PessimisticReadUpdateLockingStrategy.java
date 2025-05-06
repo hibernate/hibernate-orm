@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
@@ -14,7 +14,7 @@ import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -69,7 +69,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
+	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
@@ -84,7 +84,7 @@ public class PessimisticReadUpdateLockingStrategy implements LockingStrategy {
 					int offset = 2;
 
 					lockable.getIdentifierType().nullSafeSet( st, id, offset, session );
-					offset += lockable.getIdentifierType().getColumnSpan( factory );
+					offset += lockable.getIdentifierType().getColumnSpan( factory.getRuntimeMetamodels() );
 
 					if ( lockable.isVersioned() ) {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );

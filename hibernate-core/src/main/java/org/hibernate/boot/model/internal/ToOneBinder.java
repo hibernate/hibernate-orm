@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -22,14 +22,13 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,7 +52,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
@@ -89,7 +88,8 @@ public class ToOneBinder {
 			);
 		}
 
-		if ( joinColumns.hasMappedBy() && isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper ) ) {
+		if ( joinColumns.hasMappedBy()
+				&& isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper ) ) {
 			throw new AnnotationException(
 					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is the inverse side of a '@ManyToOne' association and cannot be used as identifier"
@@ -158,7 +158,7 @@ public class ToOneBinder {
 			boolean inSecondPass,
 			PropertyBinder propertyBinder,
 			MetadataBuildingContext context) {
-		if ( joinTable != null && !isEmpty( joinTable.name() ) ) {
+		if ( joinTable != null && !isBlank( joinTable.name() ) ) {
 			final Join join = propertyHolder.addJoin( joinTable, false );
 			// TODO: if notFoundAction!=null should we call join.disableForeignKeyCreation() ?
 			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
@@ -173,7 +173,7 @@ public class ToOneBinder {
 		final org.hibernate.mapping.ManyToOne value =
 				new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
 
-		if ( joinTable != null && isEmpty( joinTable.name() ) ) {
+		if ( joinTable != null && isBlank( joinTable.name() ) ) {
 			context.getMetadataCollector().addSecondPass( new ImplicitToOneJoinTableSecondPass(
 					propertyHolder,
 					inferredData,
@@ -213,7 +213,6 @@ public class ToOneBinder {
 			joinColumns.setMapsId( mapsId.value() );
 		}
 
-		final boolean hasSpecjManyToOne = handleSpecjSyntax( joinColumns, inferredData, context, property );
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
@@ -247,7 +246,6 @@ public class ToOneBinder {
 				propertyBinder,
 				value,
 				property,
-				hasSpecjManyToOne,
 				propertyName
 		);
 	}
@@ -255,38 +253,6 @@ public class ToOneBinder {
 	static boolean isTargetAnnotatedEntity(ClassDetails targetEntity, MemberDetails property) {
 		final ClassDetails target = isDefault( targetEntity ) ? property.getType().determineRawClass() : targetEntity;
 		return target.hasDirectAnnotationUsage( Entity.class );
-	}
-
-	private static boolean handleSpecjSyntax(
-			AnnotatedJoinColumns columns,
-			PropertyData inferredData,
-			MetadataBuildingContext context,
-			MemberDetails property) {
-		//Make sure that JPA1 key-many-to-one columns are read only too
-		boolean hasSpecjManyToOne = false;
-		if ( context.getBuildingOptions().isSpecjProprietarySyntaxEnabled() ) {
-			final JoinColumn joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
-			String columnName = "";
-			for ( MemberDetails prop : inferredData.getDeclaringClass().getFields() ) {
-				if ( prop.hasDirectAnnotationUsage( Id.class ) && prop.hasDirectAnnotationUsage( Column.class ) ) {
-					columnName = prop.getDirectAnnotationUsage( Column.class ).name();
-				}
-
-				if ( property.hasDirectAnnotationUsage( ManyToOne.class ) && joinColumn != null ) {
-					final String joinColumnName = joinColumn.name();
-					if ( StringHelper.isNotEmpty( joinColumnName )
-							&& joinColumnName.equals( columnName )
-							&& !property.hasDirectAnnotationUsage( MapsId.class ) ) {
-						hasSpecjManyToOne = true;
-						for ( AnnotatedJoinColumn column : columns.getJoinColumns() ) {
-							column.setInsertable( false );
-							column.setUpdatable( false );
-						}
-					}
-				}
-			}
-		}
-		return hasSpecjManyToOne;
 	}
 
 	private static void processManyToOneProperty(
@@ -298,7 +264,6 @@ public class ToOneBinder {
 			PropertyBinder propertyBinder,
 			org.hibernate.mapping.ManyToOne value,
 			MemberDetails property,
-			boolean hasSpecjManyToOne,
 			String propertyName) {
 
 		columns.checkPropertyConsistency();
@@ -311,10 +276,6 @@ public class ToOneBinder {
 			propertyBinder.setInsertable( false );
 			propertyBinder.setUpdatable( false );
 		}
-		else if ( hasSpecjManyToOne ) {
-			propertyBinder.setInsertable( false );
-			propertyBinder.setUpdatable( false );
-		}
 		propertyBinder.setColumns( columns );
 		propertyBinder.setAccessType( inferredData.getDefaultAccess() );
 		propertyBinder.setCascade( cascadeStrategy );
@@ -323,15 +284,15 @@ public class ToOneBinder {
 
 		final JoinColumn joinColumn = property.getDirectAnnotationUsage( JoinColumn.class );
 		final JoinColumns joinColumns = property.getDirectAnnotationUsage( JoinColumns.class );
-		propertyBinder.makePropertyAndBind().setOptional( optional && isNullable( joinColumns, joinColumn ) );
+		propertyBinder.makePropertyAndBind()
+				.setOptional( optional && isNullable( joinColumns, joinColumn ) );
 	}
 
 	private static boolean isNullable(JoinColumns joinColumns, JoinColumn joinColumn) {
 		if ( joinColumn != null ) {
 			return joinColumn.nullable();
 		}
-
-		if ( joinColumns != null ) {
+		else if ( joinColumns != null ) {
 			for ( JoinColumn column : joinColumns.value() ) {
 				if ( column.nullable() ) {
 					return true;
@@ -339,8 +300,9 @@ public class ToOneBinder {
 			}
 			return false;
 		}
-
-		return true;
+		else {
+			return true;
+		}
 	}
 
 	static void defineFetchingStrategy(
@@ -373,8 +335,8 @@ public class ToOneBinder {
 			PropertyData inferredData) {
 		final MetadataBuildingContext context = toOne.getBuildingContext();
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
-		final SourceModelBuildingContext sourceModelContext = collector.getSourceModelBuildingContext();
-		property.forEachAnnotationUsage( FetchProfileOverride.class, sourceModelContext,
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		property.forEachAnnotationUsage( FetchProfileOverride.class, modelsContext,
 				usage -> collector.addSecondPass( new FetchSecondPass( usage, propertyHolder, inferredData.getPropertyName(), context ) ));
 	}
 
@@ -643,14 +605,14 @@ public class ToOneBinder {
 	}
 
 	private static ClassDetails getTargetEntityClass(MemberDetails property, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
 		final ManyToOne manyToOne = property.getDirectAnnotationUsage( ManyToOne.class );
 		if ( manyToOne != null ) {
-			return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );
+			return modelsContext.getClassDetailsRegistry().resolveClassDetails( manyToOne.targetEntity().getName() );
 		}
 		final OneToOne oneToOne = property.getDirectAnnotationUsage( OneToOne.class );
 		if ( oneToOne != null ) {
-			return sourceModelContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
+			return modelsContext.getClassDetailsRegistry().resolveClassDetails( oneToOne.targetEntity().getName() );
 		}
 		throw new AssertionFailure( "Unexpected discovery of a targetEntity: " + property.getName() );
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
@@ -12,6 +12,7 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
@@ -57,6 +58,11 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	@Override
 	public ColumnValueBindingList getOptimisticLockBindings() {
 		return optimisticLockBindings;
+	}
+
+	@Override
+	public void addNonKeyRestriction(ColumnValueBinding valueBinding) {
+		optimisticLockBindings.addRestriction( valueBinding );
 	}
 
 	@Override

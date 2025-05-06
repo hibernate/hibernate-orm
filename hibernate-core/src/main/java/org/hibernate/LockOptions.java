@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -16,8 +16,8 @@ import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryOptions;
 
+import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 
@@ -132,13 +132,13 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * @see #getTimeOut()
 	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
 	 */
-	@Deprecated
+	@Deprecated(since = "6.2", forRemoval = true)
 	public static final int SKIP_LOCKED = -2;
 
 	private final boolean immutable;
 	private LockMode lockMode;
 	private int timeout;
-	private boolean extendedScope;
+	private PessimisticLockScope pessimisticLockScope;
 	private Boolean followOnLocking;
 	private Map<String, LockMode> aliasSpecificLockModes;
 
@@ -150,6 +150,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		immutable = false;
 		lockMode = LockMode.NONE;
 		timeout = WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
 	}
 
 	/**
@@ -162,6 +163,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		timeout = WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
 	}
 
 	/**
@@ -175,6 +177,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
+		pessimisticLockScope = NORMAL;
 	}
 
 	/**
@@ -189,7 +192,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
-		this.extendedScope = scope == PessimisticLockScope.EXTENDED;
+		this.pessimisticLockScope = scope;
 	}
 
 	/**
@@ -199,6 +202,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		this.immutable = immutable;
 		this.lockMode = lockMode;
 		timeout = WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
 	}
 	/**
 	 * Determine of the lock options are empty.
@@ -210,7 +214,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		return lockMode == LockMode.NONE
 			&& timeout == WAIT_FOREVER
 			&& followOnLocking == null
-			&& !extendedScope
+			&& pessimisticLockScope == NORMAL
 			&& !hasAliasSpecificLockModes();
 	}
 
@@ -232,7 +236,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public LockOptions setLockMode(LockMode lockMode) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
 		this.lockMode = lockMode;
 		return this;
@@ -249,7 +253,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
 		if ( aliasSpecificLockModes == null ) {
 			aliasSpecificLockModes = new LinkedHashMap<>();
@@ -413,7 +417,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * @return the current {@link PessimisticLockScope}
 	 */
 	public PessimisticLockScope getLockScope() {
-		return extendedScope ? PessimisticLockScope.EXTENDED : PessimisticLockScope.NORMAL;
+		return pessimisticLockScope;
 	}
 
 	/**
@@ -430,49 +434,9 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public LockOptions setLockScope(PessimisticLockScope scope) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
-		return setScope(scope==PessimisticLockScope.EXTENDED);
-	}
-
-	/**
-	 * The current lock scope setting:
-	 * <ul>
-	 * <li>{@code true} means the lock extends to rows of owned
-	 *     collections, but
-	 * <li>{@code false} means only the entity table and secondary
-	 *     tables are locked.
-	 * </ul>
-	 *
-	 * @return {@code true} if the lock extends to owned associations
-	 *
-	 * @deprecated use {@link #getLockScope()}
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public boolean getScope() {
-		return extendedScope;
-	}
-
-	/**
-	 * Set the lock scope setting:
-	 * <ul>
-	 * <li>{@code true} means the lock extends to rows of owned
-	 *     collections, but
-	 * <li>{@code false} means only the entity table and secondary
-	 *     tables are locked.
-	 * </ul>
-	 *
-	 * @param scope the new scope setting
-	 * @return {@code this} for method chaining
-	 *
-	 * @deprecated use {@link #setLockScope(PessimisticLockScope)}
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public LockOptions setScope(boolean scope) {
-		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
-		}
-		this.extendedScope = scope;
+		pessimisticLockScope = scope;
 		return this;
 	}
 
@@ -487,7 +451,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 *         has not been overridden.
 	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, QueryOptions)
+	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
 	 */
 	public Boolean getFollowOnLocking() {
 		return followOnLocking;
@@ -501,11 +465,11 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * @return {@code this} for method chaining
 	 *
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, QueryOptions)
+	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
 	 */
 	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
 		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
 		this.followOnLocking = followOnLocking;
 		return this;
@@ -544,7 +508,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public void overlay(LockOptions lockOptions) {
 		setLockMode( lockOptions.getLockMode() );
-		setScope( lockOptions.getScope() );
+		setLockScope( lockOptions.getLockScope() );
 		setTimeOut( lockOptions.getTimeOut() );
 		if ( lockOptions.aliasSpecificLockModes != null ) {
 			lockOptions.aliasSpecificLockModes.forEach(this::setAliasSpecificLockMode);
@@ -563,7 +527,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public static LockOptions copy(LockOptions source, LockOptions destination) {
 		destination.setLockMode( source.getLockMode() );
-		destination.setScope( source.getScope() );
+		destination.setLockScope( source.getLockScope() );
 		destination.setTimeOut( source.getTimeOut() );
 		if ( source.aliasSpecificLockModes != null ) {
 			destination.aliasSpecificLockModes = new HashMap<>( source.aliasSpecificLockModes );
@@ -582,7 +546,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		}
 		else {
 			return timeout == that.timeout
-				&& extendedScope == that.extendedScope
+				&& pessimisticLockScope == that.pessimisticLockScope
 				&& lockMode == that.lockMode
 				&& Objects.equals( aliasSpecificLockModes, that.aliasSpecificLockModes )
 				&& Objects.equals( followOnLocking, that.followOnLocking );
@@ -591,6 +555,6 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, extendedScope);
+		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
 	}
 }

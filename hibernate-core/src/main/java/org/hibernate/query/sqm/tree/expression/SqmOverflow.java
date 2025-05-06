@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Christian Beikov
@@ -59,20 +60,20 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		separatorExpression.appendHqlString( sb );
-		sb.append( " on overflow " );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		separatorExpression.appendHqlString( hql, context );
+		hql.append( " on overflow " );
 		if ( fillerExpression == null ) {
-			sb.append( "error" );
+			hql.append( "error" );
 		}
 		else {
-			sb.append( "truncate " );
-			fillerExpression.appendHqlString( sb );
+			hql.append( "truncate " );
+			fillerExpression.appendHqlString( hql, context );
 			if ( withCount ) {
-				sb.append( " with count" );
+				hql.append( " with count" );
 			}
 			else {
-				sb.append( " without count" );
+				hql.append( " without count" );
 			}
 		}
 	}

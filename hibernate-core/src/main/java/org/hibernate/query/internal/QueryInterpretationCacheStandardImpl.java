@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -124,6 +124,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
+			//noinspection unchecked
 			return (HqlInterpretation<R>) existing;
 		}
 		else if ( expectedResultType != null ) {
@@ -132,6 +133,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.queryPlanCacheHit( queryString );
 				}
+				//noinspection unchecked
 				return (HqlInterpretation<R>) existingQueryOnly;
 			}
 		}
@@ -140,6 +142,11 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 				createHqlInterpretation( queryString, expectedResultType, translator, statistics );
 		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 		return hqlInterpretation;
+	}
+
+	@Override
+	public <R> void cacheHqlInterpretation(Object cacheKey, HqlInterpretation<R> hqlInterpretation) {
+		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 	}
 
 	protected static <R> HqlInterpretation<R> createHqlInterpretation(
@@ -194,38 +201,16 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	@Override
 	public void close() {
-		// todo (6.0) : clear maps/caches and LOG
+		log.debug( "Closing QueryInterpretationCache" );
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();
 	}
 
-	private static final class HqlInterpretationCacheKey {
-		private final String queryString;
-		private final Class<?> expectedResultType;
-
-		public HqlInterpretationCacheKey(String queryString, Class<?> expectedResultType) {
-			this.queryString = queryString;
-			this.expectedResultType = expectedResultType;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if ( o.getClass() != HqlInterpretationCacheKey.class ) {
-				return false;
-			}
-
-			final HqlInterpretationCacheKey that = (HqlInterpretationCacheKey) o;
-			return queryString.equals( that.queryString )
-					&& expectedResultType.equals( that.expectedResultType );
-		}
-
-		@Override
-		public int hashCode() {
-			int result = queryString.hashCode();
-			result = 31 * result + expectedResultType.hashCode();
-			return result;
-		}
+	/**
+	 * Interpretation-cache key used for HQL interpretations
+	 */
+	private record HqlInterpretationCacheKey(String queryString, Class<?> expectedResultType) {
 	}
 
 }

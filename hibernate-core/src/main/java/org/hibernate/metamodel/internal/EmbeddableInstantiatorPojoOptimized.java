@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -30,7 +29,7 @@ public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiato
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		final Object embeddable = instantiationOptimizer.newInstance();
 		final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
 		final Object[] values = valuesAccess.getValues();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
@@ -10,10 +10,12 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -145,6 +147,60 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 					entryHandler.handleEntry( entry, context );
 				}
 			}
+		}
+		finally {
+			try {
+				jarFile.close();
+			}
+			catch ( Exception ignore ) {
+			}
+		}
+	}
+
+	@Override
+	public @Nullable ArchiveEntry findEntry(String path) {
+		final JarFile jarFile = resolveJarFileReference();
+		if ( jarFile == null ) {
+			return null;
+		}
+
+		try {
+			final JarEntry jarEntry = jarFile.getJarEntry( path );
+			if ( jarEntry == null ) {
+				return null;
+			}
+			final String name = extractName( jarEntry );
+			final String relativeName = extractRelativeName( jarEntry );
+			final InputStreamAccess inputStreamAccess;
+			try (InputStream is = jarFile.getInputStream( jarEntry )) {
+				inputStreamAccess = buildByteBasedInputStreamAccess( name, is );
+			}
+			catch (IOException e) {
+				throw new ArchiveException(
+						String.format(
+								"Unable to access stream from jar file [%s] for entry [%s]",
+								jarFile.getName(),
+								jarEntry.getName()
+						)
+				);
+			}
+
+			return new ArchiveEntry() {
+				@Override
+				public String getName() {
+					return name;
+				}
+
+				@Override
+				public String getNameWithinArchive() {
+					return relativeName;
+				}
+
+				@Override
+				public InputStreamAccess getStreamAccess() {
+					return inputStreamAccess;
+				}
+			};
 		}
 		finally {
 			try {

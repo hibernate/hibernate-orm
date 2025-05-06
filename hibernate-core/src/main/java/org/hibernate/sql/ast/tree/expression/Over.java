@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -136,7 +136,7 @@ public class Over<T> implements Expression, DomainResultProducer<T> {
 				this,
 				expression.getExpressionType().getSingleJdbcMapping().getJdbcJavaType(),
 				null,
-				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

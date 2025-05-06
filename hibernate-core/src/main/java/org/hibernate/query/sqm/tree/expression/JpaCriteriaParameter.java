@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
@@ -29,6 +30,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 public class JpaCriteriaParameter<T>
 		extends AbstractSqmExpression<T>
 		implements SqmParameter<T>, QueryParameterImplementor<T> {
+
 	private final String name;
 	private boolean allowsMultiValuedBinding;
 
@@ -49,10 +51,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	private static <T> SqmExpressible<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
-		if ( type == null ) {
-			return null;
-		}
-		return type.resolveExpressible( nodeBuilder );
+		return type == null ? null : type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override
@@ -110,12 +109,7 @@ public class JpaCriteriaParameter<T>
 
 	@Override
 	public SqmParameter<T> copy() {
-		return new JpaCriteriaParameter<>(
-				getName(),
-				getAnticipatedType(),
-				allowMultiValuedBinding(),
-				nodeBuilder()
-		);
+		return new JpaCriteriaParameter<>( getName(), getAnticipatedType(), allowMultiValuedBinding(), nodeBuilder() );
 	}
 
 	@Override
@@ -145,9 +139,13 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( ':' );
-		sb.append( getName() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		if ( getName() == null ) {
+			hql.append( ':' ).append( context.resolveParameterName( this ) );
+		}
+		else {
+			hql.append( ':' ).append( getName() );
+		}
 	}
 
 	@Override
@@ -155,19 +153,20 @@ public class JpaCriteriaParameter<T>
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( o == null ) {
 			return false;
 		}
-		JpaCriteriaParameter<?> parameter = (JpaCriteriaParameter<?>) o;
-		return Objects.equals( name, parameter.name );
+		else if ( !(o instanceof JpaCriteriaParameter<?> that) ) {
+			return false;
+		}
+		else {
+			return Objects.equals( name, that.name );
+		}
 	}
 
 	@Override
 	public int hashCode() {
-		if ( name == null ) {
-			return super.hashCode();
-		}
-		return Objects.hash( name );
+		return name == null ? super.hashCode() : Objects.hash( name );
 	}
 
 	@Override

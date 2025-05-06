@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -7,6 +7,7 @@ package org.hibernate.sql.results.graph;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -26,6 +27,7 @@ public class DomainResultGraphPrinter {
 			name = Logging.LOGGER_NAME,
 			description = "Logging of `DomainResult` graphs"
 	)
+	@Internal
 	interface Logging {
 		String LOGGER_NAME = ResultsLogger.LOGGER_NAME + ".graph.AST";
 		Logger AST_LOGGER = Logger.getLogger( LOGGER_NAME );
@@ -45,7 +47,7 @@ public class DomainResultGraphPrinter {
 	}
 
 	private final StringBuilder buffer;
-	private final Stack<FetchParent> fetchParentStack = new StandardStack<>( FetchParent.class );
+	private final Stack<FetchParent> fetchParentStack = new StandardStack<>();
 
 	private DomainResultGraphPrinter(String header) {
 		buffer = new StringBuilder( header + ":" + System.lineSeparator() );
@@ -91,8 +93,8 @@ public class DomainResultGraphPrinter {
 		}
 		buffer.append( '\n' );
 
-		if ( node instanceof FetchParent ) {
-			visitFetches( (FetchParent) node );
+		if ( node instanceof FetchParent fetchParent ) {
+			visitFetches( fetchParent );
 		}
 	}
 

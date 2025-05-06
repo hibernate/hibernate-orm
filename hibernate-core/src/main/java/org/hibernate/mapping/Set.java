@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
@@ -24,7 +23,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public class Set extends Collection {
+public non-sealed class Set extends Collection {
 	/**
 	 * Used by hbm.xml binding
 	 */
@@ -48,10 +47,6 @@ public class Set extends Collection {
 		return new Set( this );
 	}
 
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping );
-	}
-
 	public void validate(MappingContext mappingContext) throws MappingException {
 		super.validate( mappingContext );
 		//for backward compatibility, disable this:
@@ -73,12 +68,12 @@ public class Set extends Collection {
 		if ( isSorted() ) {
 			return new SortedSetType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
-
-		if ( hasOrder() ) {
+		else if ( hasOrder() ) {
 			return new OrderedSetType( getRole(), getReferencedPropertyName() );
 		}
-
-		return new SetType( getRole(), getReferencedPropertyName() );
+		else {
+			return new SetType( getRole(), getReferencedPropertyName() );
+		}
 	}
 
 	void createPrimaryKey() {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -10,8 +10,6 @@ import org.hibernate.binder.internal.CommentBinder;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
-
-import jakarta.persistence.Table;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -49,7 +47,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Yanming Zhou
  * @author Gavin King
  *
- * @deprecated Prefer {@linkplain Table#comment()}
+ * @deprecated Prefer {@link jakarta.persistence.Table#comment},
+ *             {@link jakarta.persistence.Column#comment}, etc.
  */
 @TypeBinderType(binder = CommentBinder.class)
 @AttributeBinderType(binder = CommentBinder.class)

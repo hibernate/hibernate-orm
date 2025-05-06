@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.binder.internal;
@@ -22,8 +22,7 @@ import org.hibernate.mapping.RootClass;
 public class DiscriminatorOptionsBinder implements TypeBinder<DiscriminatorOptions> {
 	@Override
 	public void bind(DiscriminatorOptions options, MetadataBuildingContext context, PersistentClass persistentClass) {
-		if ( persistentClass instanceof RootClass ) {
-			final RootClass rootClass = (RootClass) persistentClass;
+		if ( persistentClass instanceof RootClass rootClass ) {
 			if ( !rootClass.hasDiscriminator() ) {
 				throw new AnnotationException( "Root entity '" + rootClass.getEntityName()
 						+ "' is annotated '@DiscriminatorOptions' but has no discriminator column" );

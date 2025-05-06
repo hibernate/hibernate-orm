@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 import java.util.function.Supplier;
 
 import org.hibernate.bytecode.spi.BasicProxyFactory;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -20,31 +19,31 @@ public class EmbeddableInstantiatorProxied implements StandardEmbeddableInstanti
 	private final BasicProxyFactory factory;
 
 	public EmbeddableInstantiatorProxied(
-			Class proxiedClass,
-			Supplier<EmbeddableMappingType> embeddableMappingAccess, BasicProxyFactory factory) {
+			Class<?> proxiedClass,
+			Supplier<EmbeddableMappingType> embeddableMappingAccess,
+			BasicProxyFactory factory) {
 		this.proxiedClass = proxiedClass;
 		this.embeddableMappingAccess = embeddableMappingAccess;
 		this.factory = factory;
 	}
 
 	@Override
-	public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valuesAccess) {
 		final Object proxy = factory.getProxy();
-		Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
+		final Object[] values = valuesAccess == null ? null : valuesAccess.getValues();
 		if ( values != null ) {
-			final EmbeddableMappingType embeddableMapping = embeddableMappingAccess.get();
-			embeddableMapping.setValues( proxy, values );
+			embeddableMappingAccess.get().setValues( proxy, values );
 		}
 		return proxy;
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isInstance(Object object) {
 		return proxiedClass.isInstance( object );
 	}
 
 	@Override
-	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isSameClass(Object object) {
 		return object.getClass() == proxiedClass;
 	}
 }

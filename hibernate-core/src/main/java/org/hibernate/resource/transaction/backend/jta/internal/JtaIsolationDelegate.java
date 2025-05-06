@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
@@ -200,7 +200,11 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			}
 		}
 		catch (SQLException e) {
-			throw sqlExceptionConverter().apply( e, "unable to obtain isolated JDBC connection" );
+			final JDBCException jdbcException = sqlExceptionConverter().apply( e, "unable to obtain isolated JDBC connection" );
+			if ( jdbcException == null ) {
+				throw new HibernateException( "Unable to obtain isolated JDBC connection", e );
+			}
+			throw jdbcException;
 		}
 	}
 

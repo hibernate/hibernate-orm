@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
@@ -14,11 +14,10 @@ import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("unused")
 public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer {
 	private final BeanManager beanManager;
 
-	private CdiBeanContainerDelayedAccessImpl(BeanManager beanManager) {
+	CdiBeanContainerDelayedAccessImpl(BeanManager beanManager) {
 		this.beanManager = beanManager;
 	}
 
@@ -61,6 +60,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 		}
 
 		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
+		}
+
+		@Override
 		public void initialize() {
 			if ( delegateBean == null ) {
 				delegateBean = lifecycleStrategy.createBean( beanType, fallbackProducer, CdiBeanContainerDelayedAccessImpl.this );
@@ -98,6 +102,11 @@ public class CdiBeanContainerDelayedAccessImpl extends AbstractCdiBeanContainer 
 			this.beanType = beanType;
 			this.lifecycleStrategy = lifecycleStrategy;
 			this.fallbackProducer = fallbackProducer;
+		}
+
+		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
 		}
 
 		@Override

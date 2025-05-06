@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
@@ -78,16 +78,40 @@ public interface JpaMetamodel extends Metamodel {
 	<X> EntityDomainType<X> resolveHqlEntityReference(String entityName);
 
 	/**
-	 * Same as {@link #managedType} except {@code null} is returned rather
+	 * Same as {@link #managedType(Class)} except {@code null} is returned rather
 	 * than throwing an exception
 	 */
-	<X> ManagedDomainType<X> findManagedType(Class<X> cls);
+	@Nullable <X> ManagedDomainType<X> findManagedType(Class<X> cls);
 
 	/**
-	 * Same as {@link #entity} except {@code null} is returned rather
+	 * Same as {@link #entity(Class)} except {@code null} is returned rather
 	 * than throwing an exception
 	 */
-	<X> EntityDomainType<X> findEntityType(Class<X> cls);
+	@Nullable <X> EntityDomainType<X> findEntityType(Class<X> cls);
+
+	/**
+	 * Same as {@link #embeddable(Class)} except {@code null} is returned rather
+	 * than throwing an exception
+	 */
+	@Nullable <X> EmbeddableDomainType<X> findEmbeddableType(Class<X> cls);
+
+	/**
+	 * Same as {@link #managedType(String)} except {@code null} is returned rather
+	 * than throwing an exception
+	 */
+	@Nullable <X> ManagedDomainType<X> findManagedType(@Nullable String typeName);
+
+	/**
+	 * Same as {@link #entity(String)} except {@code null} is returned rather
+	 * than throwing an exception
+	 */
+	@Nullable EntityDomainType<?> findEntityType(@Nullable String entityName);
+
+	/**
+	 * Same as {@link #embeddable(String)} except {@code null} is returned rather
+	 * than throwing an exception
+	 */
+	@Nullable EmbeddableDomainType<?> findEmbeddableType(@Nullable String embeddableName);
 
 	String qualifyImportableName(String queryName);
 

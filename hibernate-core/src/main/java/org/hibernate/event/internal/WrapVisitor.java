@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -125,7 +125,7 @@ public class WrapVisitor extends ProxyVisitor {
 				final PersistentCollection<?> persistentCollection = collectionType.wrap( session, collection );
 				persistenceContext.addNewCollection( persister, persistentCollection );
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Wrapped collection in role: {0}", collectionType.getRole() );
+					LOG.trace( "Wrapped collection in role: " + collectionType.getRole() );
 				}
 				return persistentCollection; //Force a substitution!
 			}

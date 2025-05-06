@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Entity;
 
@@ -19,21 +19,21 @@ public class EntityJpaAnnotation implements Entity {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public EntityJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public EntityJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public EntityJpaAnnotation(Entity annotation, SourceModelBuildingContext modelContext) {
+	public EntityJpaAnnotation(Entity annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public EntityJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public EntityJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 	}
 

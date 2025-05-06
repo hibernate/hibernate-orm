@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.spi;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.DialectOverride;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * Base support for {@linkplain DialectOverrider} annotations
@@ -29,7 +29,7 @@ public abstract class AbstractOverrider<O extends Annotation> implements Dialect
 	public AbstractOverrider(
 			Map<String, Object> attributeValues,
 			AnnotationDescriptor<?> descriptor,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		dialect( (Class<? extends Dialect>) attributeValues.get( "dialect" ) );
 		before( (DialectOverride.Version) attributeValues.get( "before" ) );
 		sameOrAfter( (DialectOverride.Version) attributeValues.get( "sameOrAfter" ) );

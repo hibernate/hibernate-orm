@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -52,8 +52,8 @@ public class QuerySplitter {
 	}
 
 	private static SqmRoot<?> findUnmappedPolymorphicReference(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> ) {
-			return ( (SqmQuerySpec<?>) queryPart ).getRoots()
+		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
+			return sqmQuerySpec.getRoots()
 					.stream()
 					.filter( sqmRoot -> sqmRoot.getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor )
 					.findFirst()
@@ -105,7 +105,8 @@ public class QuerySplitter {
 			return sqmDeleteStatement;
 		}
 
-		final SqmPolymorphicRootDescriptor<R> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<R>) unmappedPolymorphicReference.getReferencedPathSource();
+		final SqmPolymorphicRootDescriptor<R> unmappedPolymorphicDescriptor =
+				(SqmPolymorphicRootDescriptor<R>) unmappedPolymorphicReference.getReferencedPathSource();
 		final Set<EntityDomainType<? extends R>> implementors = unmappedPolymorphicDescriptor.getImplementors();
 		@SuppressWarnings("unchecked")
 		final SqmDeleteStatement<R>[] expanded = new SqmDeleteStatement[ implementors.size() ];
@@ -119,11 +120,8 @@ public class QuerySplitter {
 	}
 
 	private static SqmRoot<?> findUnmappedPolymorphicReference(SqmDeleteOrUpdateStatement<?> queryPart) {
-		if ( queryPart.getTarget().getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?> ) {
-			return queryPart.getTarget();
-		}
-		else {
-			return null;
-		}
+		return queryPart.getTarget().getReferencedPathSource() instanceof SqmPolymorphicRootDescriptor<?>
+				? queryPart.getTarget()
+				: null;
 	}
 }

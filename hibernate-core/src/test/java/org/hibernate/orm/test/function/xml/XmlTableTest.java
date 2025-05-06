@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.xml;
@@ -193,6 +193,7 @@ public class XmlTableTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support such xpath expressions directly in xmltable. We could emulate that through generating xmlextract calls though")
 	public void testCorrelateXmlTable(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final String query = """
@@ -202,10 +203,10 @@ public class XmlTableTest {
 					t.theString,
 					t.theBoolean
 					from XmlHolder e join lateral xmltable('/Map' passing e.xml columns
-					theInt Integer,
-					theFloat Float,
-					theString String,
-					theBoolean Boolean
+					theInt Integer path 'e[k/text()="theInt"]/v',
+					theFloat Float path 'e[k/text()="theFloat"]/v',
+					theString String path 'e[k/text()="theString"]/v',
+					theBoolean Boolean path 'e[k/text()="theBoolean"]/v'
 					) t
 					""";
 			List<Tuple> resultList = em.createQuery( query, Tuple.class ).getResultList();

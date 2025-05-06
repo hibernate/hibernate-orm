@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -51,6 +51,7 @@ public final class EnhancerImplConstants {
 	final Advice adviceInitializeLazyAttributeLoadingInterceptor;
 	final Implementation implementationSetOwner;
 	final Implementation implementationClearOwner;
+	final Implementation implementationSetPersistenceInfo;
 
 	//Frequently used Modifiers:
 	final int methodModifierPUBLIC = ModifierContributor.Resolver.of( List.of( Visibility.PUBLIC ) ).resolve();
@@ -74,6 +75,7 @@ public final class EnhancerImplConstants {
 	//Frequently used Types for method signatures:
 	final TypeDefinition TypeVoid = TypeDescription.ForLoadedType.of( void.class );
 	final TypeDefinition TypeBooleanPrimitive = TypeDescription.ForLoadedType.of( boolean.class );
+	final TypeDefinition TypeIntegerPrimitive = TypeDescription.ForLoadedType.of( int.class );
 	final TypeDefinition TypeManagedEntity = TypeDescription.ForLoadedType.of( ManagedEntity.class );
 	final TypeDefinition TypeEntityEntry = TypeDescription.ForLoadedType.of( EntityEntry.class );
 	final TypeDefinition TypePersistentAttributeInterceptor = TypeDescription.ForLoadedType.of( PersistentAttributeInterceptor.class );
@@ -117,6 +119,8 @@ public final class EnhancerImplConstants {
 		this.implementationSetOwner = Advice.to( CodeTemplates.SetOwner.class, adviceLocator )
 				.wrap( StubMethod.INSTANCE );
 		this.implementationClearOwner = Advice.to( CodeTemplates.ClearOwner.class, adviceLocator )
+				.wrap( StubMethod.INSTANCE );
+		this.implementationSetPersistenceInfo = Advice.to( CodeTemplates.SetPersistenceInfo.class, adviceLocator )
 				.wrap( StubMethod.INSTANCE );
 	}
 

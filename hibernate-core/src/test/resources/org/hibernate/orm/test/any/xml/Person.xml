@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.any.xml</package>
+
+    <entity class="Person">
+        <table name="persons"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name"/>
+            <any name="data">
+                <discriminator>
+                    <type>STRING</type>
+                    <column name="data_type"/>
+                    <mapping value="A">Address</mapping>
+                </discriminator>
+                <key>
+                    <java-class>Long</java-class>
+                    <column name="data_fk"/>
+                </key>
+            </any>
+        </attributes>
+    </entity>
+
+    <entity class="Address">
+        <table name="addresses"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <element-collection name="lines" target-class="String">
+                <column name="line"/>
+                <collection-table name="address_lines">
+                    <join-column name="address_fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>
+
+<!--<!DOCTYPE hibernate-mapping PUBLIC-->
+<!--      "-//Hibernate/Hibernate Mapping DTD 3.0//EN"-->
+<!--          "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">-->
+
+<!--<hibernate-mapping package="org.hibernate.orm.test.any.xml">-->
+
+<!--    <class name="Person" table="T_ANY_PERSON">-->
+<!--        <id name="id" column="ID_">-->
+<!--            <generator class="increment" />-->
+<!--        </id>-->
+<!--        <property name="name" />-->
+<!--        <any name="data" id-type="long" cascade="none">-->
+<!--            <meta-value value="A" class="Address"/>-->
+<!--            <column name="DATATYPE_"/>-->
+<!--            <column name="DATAID_"/>-->
+<!--        </any>-->
+<!--    </class>-->
+
+<!--    <class name="Address" table="T_ANY_ADDRESS">-->
+<!--        <id name="id" column="ID_">-->
+<!--            <generator class="increment" />-->
+<!--        </id>-->
+<!--        <set name="lines" table="LINE">-->
+<!--            <key column="ADDRESS" />-->
+<!--            <element type="string" />-->
+<!--        </set>-->
+<!--    </class>-->
+
+<!--</hibernate-mapping>-->

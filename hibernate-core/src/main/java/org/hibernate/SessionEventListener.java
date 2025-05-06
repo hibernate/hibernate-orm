@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -15,8 +15,8 @@ import java.io.Serializable;
  * sessions may be registered using the configuration property
  * {@value org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER}.
  * A new instance of the class will be created for each new session.
- * <p>
- * <em>This an incubating API, subject to change.</em>
+ *
+ * @apiNote This an incubating API, subject to change.
  *
  * @see org.hibernate.cfg.AvailableSettings#AUTO_SESSION_EVENTS_LISTENER
  * @see SessionBuilder#eventListeners(SessionEventListener...)

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
@@ -32,7 +32,7 @@ public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public PrimaryKeyJoinColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public PrimaryKeyJoinColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.referencedColumnName = "";
 		this.columnDefinition = "";
@@ -43,7 +43,7 @@ public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public PrimaryKeyJoinColumnJpaAnnotation(PrimaryKeyJoinColumn annotation, SourceModelBuildingContext modelContext) {
+	public PrimaryKeyJoinColumnJpaAnnotation(PrimaryKeyJoinColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.referencedColumnName = annotation.referencedColumnName();
 		this.columnDefinition = annotation.columnDefinition();
@@ -56,7 +56,7 @@ public class PrimaryKeyJoinColumnJpaAnnotation implements PrimaryKeyJoinColumn, 
 	 */
 	public PrimaryKeyJoinColumnJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.referencedColumnName = (String) attributeValues.get( "referencedColumnName" );
 		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );

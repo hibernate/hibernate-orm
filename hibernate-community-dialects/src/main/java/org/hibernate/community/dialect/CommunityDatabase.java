@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -185,21 +185,6 @@ public enum CommunityDatabase {
 		}
 	},
 
-	TERADATA {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new TeradataDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return "Teradata".equals( databaseName );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.teradata.jdbc.TeraDriver";
-		}
-	},
-
 	TIMESTEN {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
@@ -225,6 +210,23 @@ public enum CommunityDatabase {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "com.singlestore.jdbc.Driver";
+		}
+	},
+
+	DERBY {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new DerbyDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return "Apache Derby".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return jdbcUrl.startsWith( "jdbc:derby://" )
+					? "org.apache.derby.jdbc.ClientDriver"
+					: "org.apache.derby.jdbc.EmbeddedDriver";
 		}
 	};
 

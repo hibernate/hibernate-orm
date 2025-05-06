@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.CollectionIdMutability;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -18,7 +18,7 @@ public class CollectionIdMutabilityAnnotation implements CollectionIdMutability 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionIdMutabilityAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionIdMutabilityAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -26,14 +26,14 @@ public class CollectionIdMutabilityAnnotation implements CollectionIdMutability 
 	 */
 	public CollectionIdMutabilityAnnotation(
 			CollectionIdMutability annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionIdMutabilityAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CollectionIdMutabilityAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (Class<? extends org.hibernate.type.descriptor.java.MutabilityPlan<?>>) attributeValues.get( "value" );
 	}
 

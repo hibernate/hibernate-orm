@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
@@ -210,10 +210,8 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			}
 
 			if ( systemId != null ) {
-				if ( systemId.startsWith( httpBase )
-						|| systemId.startsWith( httpsBase ) ) {
-					return true;
-				}
+				return systemId.startsWith( httpBase )
+					|| systemId.startsWith( httpsBase );
 			}
 
 			return false;

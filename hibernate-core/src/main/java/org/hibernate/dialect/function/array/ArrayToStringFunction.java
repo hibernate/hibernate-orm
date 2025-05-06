@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -16,6 +16,9 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -32,8 +35,7 @@ public class ArrayToStringFunction extends AbstractSqmSelfRenderingFunctionDescr
 				"array_to_string",
 				FunctionKind.NORMAL,
 				StandardArgumentsValidators.composite(
-					new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), ANY, STRING, ANY ),
-					new ArrayAndElementArgumentValidator( 0, 2 )
+					new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), ANY, STRING, ANY )
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
@@ -51,15 +53,42 @@ public class ArrayToStringFunction extends AbstractSqmSelfRenderingFunctionDescr
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql( "array_to_string(" );
-		sqlAstArguments.get( 0 ).accept( walker );
-		sqlAppender.appendSql( ',' );
-		sqlAstArguments.get( 1 ).accept( walker );
-		if ( sqlAstArguments.size() > 2 ) {
+		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
+		final Expression separatorExpression = (Expression) sqlAstArguments.get( 1 );
+		final Expression defaultExpression = sqlAstArguments.size() > 2 ? (Expression) sqlAstArguments.get( 2 ) : null;
+		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) arrayExpression.getExpressionType().getSingleJdbcMapping();
+		final int ddlTypeCode = pluralType.getElementType().getJdbcType().getDdlTypeCode();
+		if ( ddlTypeCode == SqlTypes.BOOLEAN ) {
+			// For some reason, PostgreSQL turns true/false to t/f in this function, so unnest this manually
+			sqlAppender.append( "case when " );
+			arrayExpression.accept( walker );
+			sqlAppender.append( " is not null then coalesce((select string_agg(" );
+			if ( defaultExpression != null ) {
+				sqlAppender.append( "coalesce(" );
+			}
+			sqlAppender.append( "cast(t.v as varchar)" );
+			if ( defaultExpression != null ) {
+				sqlAppender.append( "," );
+				defaultExpression.accept( walker );
+				sqlAppender.append( ")" );
+			}
 			sqlAppender.appendSql( ',' );
-			sqlAstArguments.get( 2 ).accept( walker );
+			separatorExpression.accept( walker );
+			sqlAppender.append( " order by t.i) from unnest(");
+			arrayExpression.accept( walker );
+			sqlAppender.append(") with ordinality t(v,i)),'') end" );
 		}
-		sqlAppender.appendSql( ')' );
+		else {
+			sqlAppender.appendSql( "array_to_string(" );
+			arrayExpression.accept( walker );
+			sqlAppender.appendSql( ',' );
+			separatorExpression.accept( walker );
+			if ( defaultExpression != null ) {
+				sqlAppender.appendSql( ',' );
+				defaultExpression.accept( walker );
+			}
+			sqlAppender.appendSql( ')' );
+		}
 	}
 
 }

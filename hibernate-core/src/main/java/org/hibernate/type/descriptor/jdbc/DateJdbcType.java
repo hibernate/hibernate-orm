@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -74,8 +74,8 @@ public class DateJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Date date = javaType.unwrap( value, Date.class, options );
-				if ( value instanceof Calendar ) {
-					st.setDate( index, date, (Calendar) value );
+				if ( value instanceof Calendar calendar ) {
+					st.setDate( index, date, calendar );
 				}
 				else {
 					st.setDate( index, date );
@@ -86,8 +86,8 @@ public class DateJdbcType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final Date date = javaType.unwrap( value, Date.class, options );
-				if ( value instanceof Calendar ) {
-					st.setDate( name, date, (Calendar) value );
+				if ( value instanceof Calendar calendar ) {
+					st.setDate( name, date, calendar );
 				}
 				else {
 					st.setDate( name, date );

@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -34,7 +34,7 @@ public interface FunctionRenderer {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, (ReturnableType<?>) null, walker );
+		render( sqlAppender, sqlAstArguments, null, walker );
 	}
 
 	void render(

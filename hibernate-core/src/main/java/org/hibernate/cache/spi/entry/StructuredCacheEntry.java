@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
@@ -22,7 +22,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	public static final String SUBCLASS_KEY = "_subclass";
 	public static final String VERSION_KEY = "_version";
 
-	private EntityPersister persister;
+	private final EntityPersister persister;
 
 	/**
 	 * Constructs a StructuredCacheEntry strategy
@@ -34,35 +34,26 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
-		final Map map = (Map) structured;
+		final var map = (Map<?,?>) structured;
 		final String subclass = (String) map.get( SUBCLASS_KEY );
 		final Object version = map.get( VERSION_KEY );
-
-		final EntityPersister subclassPersister = factory
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( subclass );
-
-		final String[] names = subclassPersister.getPropertyNames();
+		final String[] names =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( subclass )
+						.getPropertyNames();
 		final Serializable[] disassembledState = new Serializable[names.length];
 		for ( int i = 0; i < names.length; i++ ) {
 			disassembledState[i] = (Serializable) map.get( names[i] );
 		}
-		return new StandardCacheEntryImpl(
-			disassembledState,
-			subclass,
-			version
-		);
+		return new StandardCacheEntryImpl( disassembledState, subclass, version );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Object structure(Object item) {
 		final CacheEntry entry = (CacheEntry) item;
 		final String[] names = persister.getPropertyNames();
-		final Map map = new HashMap( names.length + 3, 1f );
+		final Map<String,Object> map = new HashMap<>( names.length + 3, 1f );
 		map.put( SUBCLASS_KEY, entry.getSubclass() );
 		map.put( VERSION_KEY, entry.getVersion() );
 		for ( int i=0; i<names.length; i++ ) {

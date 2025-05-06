@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
@@ -11,6 +11,8 @@ import java.util.Properties;
  * may be made parameterizable by implementing this interface. Parameters for a type
  * may be set by using a nested type element for the property element in the mapping
  * file, or by defining a typedef.
+ *
+ * @see org.hibernate.annotations.Type#parameters
  *
  * @author Michael Gloegl
  */

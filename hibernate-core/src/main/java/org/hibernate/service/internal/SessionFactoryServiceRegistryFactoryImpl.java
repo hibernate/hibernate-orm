@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
@@ -29,10 +29,13 @@ public class SessionFactoryServiceRegistryFactoryImpl implements SessionFactoryS
 	public SessionFactoryServiceRegistry buildServiceRegistry(
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions options) {
-		final ClassLoaderService cls = options.getServiceRegistry().requireService( ClassLoaderService.class );
-		final SessionFactoryServiceRegistryBuilderImpl builder = new SessionFactoryServiceRegistryBuilderImpl( theBasicServiceRegistry );
+		final ClassLoaderService classLoaderService =
+				options.getServiceRegistry().requireService( ClassLoaderService.class );
+		final SessionFactoryServiceRegistryBuilderImpl builder =
+				new SessionFactoryServiceRegistryBuilderImpl( theBasicServiceRegistry );
 
-		for ( SessionFactoryServiceContributor contributor : cls.loadJavaServices( SessionFactoryServiceContributor.class ) ) {
+		for ( SessionFactoryServiceContributor contributor :
+				classLoaderService.loadJavaServices( SessionFactoryServiceContributor.class ) ) {
 			contributor.contribute( builder );
 		}
 

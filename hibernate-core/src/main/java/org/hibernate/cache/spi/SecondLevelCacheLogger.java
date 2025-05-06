@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -28,6 +28,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = SecondLevelCacheLogger.LOGGER_NAME,
 		description = "Logging related to Hibernate second-level caching"
 )
+@Internal
 public interface SecondLevelCacheLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".cache";
 
@@ -37,15 +38,15 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Attempt to restart an already started RegionFactory.  Use sessionFactory.close() between " +
-					"repeated calls to buildSessionFactory. Using previously created RegionFactory.",
+			value = "Attempt to start an already-started RegionFactory, probably because a SessionFactory was not closed." +
+					" Using previously created RegionFactory.",
 			id = NAMESPACE + 1
 	)
 	void attemptToStartAlreadyStartedCacheProvider();
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Attempt to restop an already stopped JCacheRegionFactory.",
+			value = "Attempt to stop an already-stopped JCacheRegionFactory.",
 			id = NAMESPACE + 2
 	)
 	void attemptToStopAlreadyStoppedCacheProvider();
@@ -55,51 +56,48 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 			value = "Read-only caching was requested for mutable entity [%s]",
 			id = NAMESPACE + 3
 	)
-	void readOnlyCachingMutableEntity(NavigableRole navigableRole);
+	void readOnlyCachingMutableEntity(String entity);
 
 	@LogMessage( level = WARN )
 	@Message(
 			value = "Read-only caching was requested for mutable natural-id for entity [%s]",
 			id = NAMESPACE + 4
 	)
-	void readOnlyCachingMutableNaturalId(NavigableRole navigableRole);
+	void readOnlyCachingMutableNaturalId(String entity);
 
-	/**
-	 * Log a message (WARN) about expiry of soft-locked region.
-	 */
 	@LogMessage(level = INFO)
 	@Message(
-			value = "Cache[%s] Key[%s]\n" +
-					"A soft-locked cache entry was expired by the underlying cache. If this happens regularly you " +
-					"should consider increasing the cache timeouts and/or capacity limits",
+			value = "A soft-locked cache entry in region [%s] with key [%s] was expired by the underlying cache." +
+					" If this happens regularly, consider increasing the cache timeouts and/or capacity limits.",
 			id = NAMESPACE + 5
 	)
 	void softLockedCacheExpired(String regionName, Object key);
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Missing cache[%1$s] was created on-the-fly." +
-					" The created cache will use a provider-specific default configuration:" +
-					" make sure you defined one." +
-					" You can disable this warning by setting '%2$s' to '%3$s'.",
+			value = "Missing cache region [%1$s] was created with provider-specific default policies." +
+					" Explicitly configure the region and its policies, or disable this warning by setting '%2$s' to '%3$s'.",
 			id = NAMESPACE + 6
 	)
+	@SuppressWarnings( "unused" ) // used by hibernate-jcache
 	void missingCacheCreated(String regionName, String configurationPropertyToDisableKey, String configurationPropertyToDisableValue);
 
 	@LogMessage(level = WARN)
 	@Message(
 			value = "Using legacy cache name [%2$s] because configuration could not be found for cache [%1$s]." +
-					" Update your configuration to rename cache [%2$s] to [%1$s].",
+					" Update configuration to rename cache [%2$s] to [%1$s].",
 			id = NAMESPACE + 7
 	)
+	@SuppressWarnings( "unused" ) // used by hibernate-jcache
 	void usingLegacyCacheName(String currentName, String legacyName);
 
 	@LogMessage(level = WARN)
 	@Message(
-			value = "Cache [%1$s] uses the [%2$s] access type, but [%3$s] does not support it natively." +
-					" Make sure your cache implementation supports JTA transactions.",
+			value = "Cache region [%1$s] has the access type '%2$s' which is not supported by [%3$s]." +
+					" Ensure cache implementation supports JTA transactions.",
 			id = NAMESPACE + 8
 	)
-	void nonStandardSupportForAccessType(String key, String accessType, String regionName);
+	@SuppressWarnings( "unused" ) // used by hibernate-jcache
+	void nonStandardSupportForAccessType(String regionName, String accessType, String regionFactoryClass);
 
 }

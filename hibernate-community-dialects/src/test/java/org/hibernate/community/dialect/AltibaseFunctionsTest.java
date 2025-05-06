@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -23,10 +23,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@DomainModel(
-		annotatedClasses = { Person.class },
-		xmlMappings = "org/hibernate/community/dialect/Person.hbm.xml"
-)
+@DomainModel(annotatedClasses = Person.class)
 @RequiresDialect(AltibaseDialect.class)
 @SessionFactory
 public class AltibaseFunctionsTest {

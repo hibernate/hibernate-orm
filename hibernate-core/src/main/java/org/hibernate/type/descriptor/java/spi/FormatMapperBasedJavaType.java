@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
@@ -46,22 +46,20 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 		);
 	}
 
+	private WrapperOptions getWrapperOptions() {
+		return typeConfiguration.getSessionFactory().getWrapperOptions();
+	}
+
 	@Override
 	public String toString(T value) {
-		return getFormatMapper( typeConfiguration ).toString(
-				value,
-				this,
-				typeConfiguration.getSessionFactory().getWrapperOptions()
-		);
+		return getFormatMapper( typeConfiguration )
+				.toString( value, this, getWrapperOptions() );
 	}
 
 	@Override
 	public T fromString(CharSequence string) {
-		return getFormatMapper( typeConfiguration ).fromString(
-				string,
-				this,
-				typeConfiguration.getSessionFactory().getWrapperOptions()
-		);
+		return getFormatMapper( typeConfiguration )
+				.fromString( string, this, getWrapperOptions() );
 	}
 
 	@Override
@@ -72,7 +70,8 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 		}
 		else if ( type == String.class ) {
 			//noinspection unchecked
-			return (X) getFormatMapper( typeConfiguration ).toString( value, this, options );
+			return (X) getFormatMapper( typeConfiguration )
+					.toString( value, this, options );
 		}
 		throw new UnsupportedOperationException(
 				"Unwrap strategy not known for this Java type: " + getTypeName()
@@ -85,8 +84,9 @@ public abstract class FormatMapperBasedJavaType<T> extends AbstractJavaType<T> i
 			//noinspection unchecked
 			return (T) value;
 		}
-		else if ( value instanceof String ) {
-			return getFormatMapper( typeConfiguration ).fromString( (String) value, this, options );
+		else if ( value instanceof String string ) {
+			return getFormatMapper( typeConfiguration )
+					.fromString( string, this, options );
 		}
 		throw new UnsupportedOperationException(
 				"Wrap strategy not known for this Java type: " + getTypeName()

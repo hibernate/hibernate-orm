@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
@@ -90,6 +90,7 @@ public class ScanningCoordinatorTest {
 		when( bootstrapContext.getMetadataBuildingOptions() ).thenReturn( metadataBuildingOptions );
 
 		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+		when( bootstrapContext.getClassLoaderService() ).thenReturn( classLoaderService );
 
 		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 
@@ -190,10 +191,8 @@ public class ScanningCoordinatorTest {
 
 		when( bootstrapContext.getScanner() ).thenReturn( scanner );
 
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline(
-				new MetadataSources(),
-				bootstrapContext
-		);
+		final ManagedResourcesImpl managedResources =
+				ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
 
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 
@@ -214,7 +213,8 @@ public class ScanningCoordinatorTest {
 	private void assertManagedResourcesAfterCoordinateScanWithScanner(final Scanner scanner, final boolean expectedIsManagedResourcesEmpty) {
 		when( bootstrapContext.getScanner() ).thenReturn( scanner );
 
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
+		final ManagedResourcesImpl managedResources =
+				ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
 
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 

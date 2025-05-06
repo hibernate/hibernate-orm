@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -42,12 +42,9 @@ public class DynamicResultBuilderInstantiation<J>
 				return false;
 			}
 
-			InstantiationArgument that = (InstantiationArgument) o;
-
-			if ( !argumentBuilder.equals( that.argumentBuilder ) ) {
-				return false;
-			}
-			return resultAlias.equals( that.resultAlias );
+			final InstantiationArgument that = (InstantiationArgument) o;
+			return argumentBuilder.equals( that.argumentBuilder )
+				&&  resultAlias.equals( that.resultAlias );
 		}
 
 		@Override
@@ -69,15 +66,9 @@ public class DynamicResultBuilderInstantiation<J>
 	private DynamicResultBuilderInstantiation(DynamicResultBuilderInstantiation<J> original) {
 		this.javaType = original.javaType;
 		final List<InstantiationArgument> arguments = new ArrayList<>( original.argumentResultBuilders.size() );
-		for ( InstantiationArgument argument : original.argumentResultBuilders ) {
-			arguments.add(
-					new InstantiationArgument(
-							argument.argumentBuilder.cacheKeyInstance(),
-							argument.resultAlias
-					)
-			);
+		for ( InstantiationArgument arg : original.argumentResultBuilders ) {
+			arguments.add( new InstantiationArgument( arg.argumentBuilder.cacheKeyInstance(), arg.resultAlias ) );
 		}
-
 		this.argumentResultBuilders = arguments;
 	}
 
@@ -88,9 +79,7 @@ public class DynamicResultBuilderInstantiation<J>
 
 	@Override
 	public NativeQuery.InstantiationResultNode<J> addBasicArgument(String columnAlias, String argumentAlias) {
-		argumentResultBuilders.add(
-				new InstantiationArgument( Builders.scalar( columnAlias ), argumentAlias )
-		);
+		argumentResultBuilders.add( new InstantiationArgument( Builders.scalar( columnAlias ), argumentAlias ) );
 		return this;
 	}
 
@@ -109,19 +98,11 @@ public class DynamicResultBuilderInstantiation<J>
 		}
 
 		final List<ArgumentDomainResult<?>> argumentDomainResults = new ArrayList<>( argumentResultBuilders.size() );
-
 		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
-			final InstantiationArgument argument = argumentResultBuilders.get( i );
-
-			final ArgumentDomainResult<?> argumentDomainResult = new ArgumentDomainResult<>(
-					argument.argumentBuilder.buildResult(
-							jdbcResultsMetadata,
-							i,
-							domainResultCreationState
-					)
-			);
-
-			argumentDomainResults.add( argumentDomainResult );
+			argumentDomainResults.add( new ArgumentDomainResult<>(
+					argumentResultBuilders.get( i )
+							.argumentBuilder.buildResult( jdbcResultsMetadata, i, domainResultCreationState )
+			) );
 		}
 
 		return new DynamicInstantiationResultImpl<>(
@@ -141,12 +122,9 @@ public class DynamicResultBuilderInstantiation<J>
 			return false;
 		}
 
-		DynamicResultBuilderInstantiation<?> that = (DynamicResultBuilderInstantiation<?>) o;
-
-		if ( !javaType.equals( that.javaType ) ) {
-			return false;
-		}
-		return argumentResultBuilders.equals( that.argumentResultBuilders );
+		final DynamicResultBuilderInstantiation<?> that = (DynamicResultBuilderInstantiation<?>) o;
+		return javaType.equals( that.javaType )
+			&& argumentResultBuilders.equals( that.argumentResultBuilders );
 	}
 
 	@Override

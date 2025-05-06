@@ -69,7 +69,7 @@ driver for your database.
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
 | DB2                       | `com.ibm.db2:jcc:{version}`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11:{version}`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 |===
@@ -121,6 +121,7 @@ and `com.github.ben-manes.caffeine:jcache`
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+| <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -239,8 +240,14 @@ SessionFactory sessionFactory =
         new HibernatePersistenceConfiguration("Bookshop")
             .managedClass(Book.class)
             .managedClass(Author.class)
-            // Set properties
-            ...
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
             // Create a new SessionFactory
             .createEntityManagerFactory();
 ----
@@ -348,8 +355,10 @@ You can set the size of Hibernate's built-in connection pool using this property
 |===
 | Configuration property name | Purpose
 
-| `hibernate.connection.pool_size` | The size of the built-in connection pool
+| `hibernate.connection.pool_size` | The size of the connection pool
 |===
+
+This configuration property is also respected when you use Agroal, HikariCP, or c3p0 for connection pooling.
 
 [CAUTION]
 // .The default connection pool is not meant for production use
@@ -388,13 +397,14 @@ properties:
 | Configuration property name                                | Purpose
 
 | `jakarta.persistence.schema-generation.database.action`
-a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints
-* If `create`, export tables, sequences, and constraints, without attempting to drop them first
-* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup
-Additionally, drop the schema on `SessionFactory` shutdown
+a| * If `drop-and-create`, first drop the schema, then export tables, sequences, and constraints, and then populate initial data
+* If `create`, export tables, sequences, and constraints, without attempting to drop them first, and then populate initial data
+* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup;
+additionally, drop the schema on `SessionFactory` shutdown
 * If `drop`, drop the schema on `SessionFactory` shutdown
 * If `validate`, validate the database schema without changing it
-* If `update`, only export what's missing in the schema
+* If `update`, only export what's missing in the schema, and alter incorrect column types
+* If `populate`, only populate initial data
 
 | `jakarta.persistence.create-database-schemas`
 | (Optional) If `true`, automatically create schemas and catalogs
@@ -426,7 +436,7 @@ As we mentioned <<testing,earlier>>, it can also be useful to control schema exp
 The link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API allows programmatic control over schema export:
 
 [source,java]
-sessionFactory.getSchemaManager().export(true);
+sessionFactory.getSchemaManager().create(true);
 ====
 
 [[logging-generated-sql]]
@@ -469,7 +479,7 @@ logger.jdbc-extract.level=trace
 
 ----
 
-But with this approach we miss out on the pretty highlighting.
+SQL logging respects the settings `hibernate.format_sql` and `hibernate.highlight_sql`, so we don't miss out on the pretty formatting and highlighting.
 
 [[minimizing]]
 === Minimizing repetitive mapping information
@@ -481,10 +491,10 @@ The following properties are very useful for minimizing the amount of informatio
 |===
 | Configuration property name           | Purpose
 
-| `hibernate.default_schema`            | A default schema name for entities which do not explicitly declare one
-| `hibernate.default_catalog`           | A default catalog name for entities which do not explicitly declare one
-| `hibernate.physical_naming_strategy`  | A `PhysicalNamingStrategy` implementing your database naming standards
-| `hibernate.implicit_naming_strategy`  | An `ImplicitNamingStrategy` which specifies how "logical" names of relational objects should be inferred when no name is specified in annotations
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#DEFAULT_SCHEMA[`hibernate.default_schema`]            | A default schema name for entities which do not explicitly declare one
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#DEFAULT_CATALOG[`hibernate.default_catalog`]           | A default catalog name for entities which do not explicitly declare one
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PHYSICAL_NAMING_STRATEGY[`hibernate.physical_naming_strategy`]  | A `PhysicalNamingStrategy` implementing your database naming standards
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#IMPLICIT_NAMING_STRATEGY[`hibernate.implicit_naming_strategy`]  | An `ImplicitNamingStrategy` which specifies how "logical" names of relational objects should be inferred when no name is specified in annotations
 |===
 
 [TIP]
@@ -497,18 +507,19 @@ We'll have more to say about them in <<naming-strategies>>.
 [[quoted-identifiers]]
 === Quoting SQL identifiers
 
-By default, Hibernate never quotes SQL table and column names in generated SQL.
+By default, Hibernate never quotes a SQL table or column name in generated SQL when the name contains only alphanumeric characters.
 This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
+On the other hand, any table or column name containing a punctuation character like `$` is automatically quoted by default.
 
-The following settings enable automatic quoting:
+The following settings enable additional automatic quoting:
 
 .Settings for identifier quoting
 [%breakable,cols="35,~"]
 |===
 | Configuration property name           | Purpose
 
-| `hibernate.auto_quote_keyword`          | Automatically quote any identifier which is a SQL keyword
-| `hibernate.globally_quoted_identifiers` | Automatically quote every identifier
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#KEYWORD_AUTO_QUOTING_ENABLED[`hibernate.auto_quote_keyword`]          | Automatically quote any identifier which is a SQL keyword
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#GLOBALLY_QUOTED_IDENTIFIERS[`hibernate.globally_quoted_identifiers`] | Automatically quote every identifier
 |===
 
 Note that `hibernate.globally_quoted_identifiers` is a synonym for `<delimited-identifiers/>` in <<configuration-jpa,`persistence.xml`>>.
@@ -532,7 +543,7 @@ So, if you're working with SQL Server, you might need to force Hibernate to use 
 |===
 | Configuration property name                 | Purpose
 
-| `hibernate.use_nationalized_character_data` | Use `nchar` and `nvarchar` instead of `char` and `varchar`
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#USE_NATIONALIZED_CHARACTER_DATA[`hibernate.use_nationalized_character_data`] | Use `nchar` and `nvarchar` instead of `char` and `varchar`
 |===
 
 On the other hand, if only _some_ columns store nationalized data, use the link:{doc-javadoc-url}org/hibernate/annotations/Nationalized.html[`@Nationalized`] annotation to indicate fields of your entities which map these columns.
@@ -542,4 +553,32 @@ On the other hand, if only _some_ columns store nationalized data, use the link:
 ====
 Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `_UTF8`.
 ====
+
+[[datetime-jdbc]]
+=== Date and time types and JDBC
+
+By default, Hibernate handles date and time types defined by `java.time` by:
+
+- converting `java.time` types to JDBC date/time types defined in `java.sql` when sending data to the database, and
+- reading `java.sql` types from JDBC and then converting them to `java.time` types when retrieving data from the database.
+
+This works best when the database server time zone agrees with JVM system time zone.
+
+TIP: We therefore recommend setting things up so that the database server and the JVM agree on the same time zone. **Hint:** when in doubt, UTC is quite a nice time zone.
+
+There are two system configuration properties which influence this behavior:
+
+.Settings for JDBC date/time handling
+[%breakable,cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#JDBC_TIME_ZONE[`hibernate.jdbc.time_zone`]          | Use an explicit time zone when interacting with JDBC
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#JAVA_TIME_USE_DIRECT_JDBC[`hibernate.type.java_time_use_direct_jdbc`] | Read and write `java.time` types directly to and from JDBC
+|===
+
+You may set `hibernate.jdbc.time_zone` to the time zone of the database server if for some reason the JVM needs to operate in a different time zone.
+We do not recommend this approach.
+
+On the other hand, we would love to recommend the use of `hibernate.type.java_time_use_direct_jdbc`, but this option is still experimental for now, and does result in some subtle differences in behavior which might affect legacy programs using Hibernate.
 

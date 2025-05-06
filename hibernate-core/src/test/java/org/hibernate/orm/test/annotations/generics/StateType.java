@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.generics;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -37,7 +37,7 @@ public class StateType implements UserType<State> {
 	}
 
 	@Override
-	public State nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public State nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		int result = rs.getInt( position );
 		if ( rs.wasNull() ) return null;
@@ -45,7 +45,7 @@ public class StateType implements UserType<State> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, State value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, State value, int index, WrapperOptions options)
 			throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull( index, Types.INTEGER );

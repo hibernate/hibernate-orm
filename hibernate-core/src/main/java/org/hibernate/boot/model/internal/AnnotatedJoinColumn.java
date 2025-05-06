@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -13,6 +13,7 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -176,12 +177,12 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			setImplicit( false );
 
 			final String name = joinColumn.name();
-			if ( !name.isEmpty() ) {
+			if ( !name.isBlank() ) {
 				setLogicalColumnName( name );
 			}
 
 			final String columnDefinition = joinColumn.columnDefinition();
-			if ( !columnDefinition.isEmpty() ) {
+			if ( !columnDefinition.isBlank() ) {
 				setSqlType( getBuildingContext().getObjectNameNormalizer().applyGlobalQuoting( columnDefinition ) );
 			}
 
@@ -191,10 +192,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			setUpdatable( joinColumn.updatable() );
 			setReferencedColumn( joinColumn.referencedColumnName() );
 			applyColumnCheckConstraint( joinColumn );
-			setOptions( joinColumn.options() );
+			applyColumnComment( joinColumn );
+			applyColumnOptions( joinColumn );
 
 			final String table = joinColumn.table();
-			if ( table.isEmpty() ) {
+			if ( table.isBlank() ) {
 				setExplicitTableName( "" );
 			}
 			else {
@@ -234,25 +236,27 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final String columnDefinition;
 		final String referencedColumnName;
 		final String options;
+		final String comment;
 		if ( primaryKeyJoinColumn != null ) {
 			columnName = primaryKeyJoinColumn.name();
 			columnDefinition = primaryKeyJoinColumn.columnDefinition();
 			referencedColumnName = primaryKeyJoinColumn.referencedColumnName();
 			options = primaryKeyJoinColumn.options();
+			comment = null;
 		}
 		else {
 			columnName = joinColumn.name();
 			columnDefinition = joinColumn.columnDefinition();
 			referencedColumnName = joinColumn.referencedColumnName();
 			options = joinColumn.options();
+			comment = joinColumn.comment();
 		}
 
 		final ObjectNameNormalizer normalizer = context.getObjectNameNormalizer();
-		final String columnDef = columnDefinition.isEmpty() ? null
-				: normalizer.toDatabaseIdentifierText( columnDefinition );
-		final String logicalColumnName = columnName.isEmpty()
-				? normalizer.normalizeIdentifierQuotingAsString( defaultColumnName )
-				: normalizer.normalizeIdentifierQuotingAsString( columnName );
+		final String columnDef =
+				columnDefinition.isBlank() ? null : normalizer.toDatabaseIdentifierText( columnDefinition );
+		final String logicalColumnName =
+				normalizer.normalizeIdentifierQuotingAsString( columnName.isBlank() ? defaultColumnName : columnName );
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
 		column.setSqlType( columnDef );
 		column.setLogicalColumnName( logicalColumnName );
@@ -260,6 +264,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		column.setPropertyHolder(propertyHolder);
 //		column.setJoins(joins);
 //		column.setContext( context );
+		column.setComment( comment );
 		column.setOptions( options );
 		column.setImplicit( false );
 		column.setNullable( false );
@@ -312,7 +317,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
-		int columnIndex = getParent().getJoinColumns().indexOf(this);
+		final int columnIndex = getParent().getJoinColumns().indexOf( this );
 		linkValueUsingDefaultColumnNaming( columnIndex, referencedColumn, referencedEntity, value );
 	}
 
@@ -321,8 +326,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
-		final String logicalReferencedColumn = getBuildingContext().getMetadataCollector()
-				.getLogicalColumnName( referencedEntity.getTable(), referencedColumn.getQuotedName() );
+		final String logicalReferencedColumn =
+				getBuildingContext().getMetadataCollector()
+						.getLogicalColumnName( referencedEntity.getTable(), referencedColumn.getQuotedName() );
 		final String columnName = defaultColumnName( columnIndex, referencedEntity, logicalReferencedColumn );
 		//yuk side effect on an implicit column
 		setLogicalColumnName( columnName );
@@ -338,7 +344,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				referencedColumn.getTemporalPrecision(),
 				referencedColumn.getArrayLength(),
 				mappingColumn != null && mappingColumn.isNullable(),
-				referencedColumn.getSqlType(),
+				mappingColumn != null && mappingColumn.getSqlType() != null
+						? mappingColumn.getSqlType()
+						: referencedColumn.getSqlType(),
 				mappingColumn != null && mappingColumn.isUnique(),
 				false
 		);
@@ -407,15 +415,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			final String referencedColumn = normalizer.normalizeIdentifierQuotingAsString( getReferencedColumn() );
 			final String unquotedLogColName = unquote( logicalColumnName );
 			final String unquotedRefColumn = unquote( referencedColumn );
-			final String collectionColName = isNotEmpty( unquotedLogColName )
-					? unquotedLogColName
-					: getParent().getPropertyName() + '_' + unquotedRefColumn;
+			final String collectionColName =
+					isNotEmpty( unquotedLogColName )
+							? unquotedLogColName
+							: getParent().getPropertyName() + '_' + unquotedRefColumn;
 			final InFlightMetadataCollector collector = getBuildingContext().getMetadataCollector();
-			final String logicalCollectionColumnName = collector.getDatabase()
-					.getJdbcEnvironment()
-					.getIdentifierHelper()
-					.toIdentifier( collectionColName, isLogicalColumnQuoted )
-					.render();
+			final String logicalCollectionColumnName =
+					collector.getDatabase().getJdbcEnvironment().getIdentifierHelper()
+							.toIdentifier( collectionColName, isLogicalColumnQuoted )
+							.render();
 			collector.addColumnNameBinding( value.getTable(), logicalCollectionColumnName, getMappingColumn() );
 		}
 	}
@@ -445,7 +453,9 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	@Override
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		super.redefineColumnName( columnName, null, applyNamingStrategy );
+		if ( StringHelper.isNotEmpty( columnName ) ) {
+			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
+		}
 	}
 
 	static AnnotatedJoinColumn buildImplicitJoinTableJoinColumn(
@@ -508,7 +518,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	@Override
 	public void setParent(AnnotatedColumns parent) {
-		if ( !(parent instanceof  AnnotatedJoinColumns) ) {
+		if ( !(parent instanceof AnnotatedJoinColumns) ) {
 			throw new UnsupportedOperationException("wrong kind of parent");
 		}
 		super.setParent( parent );
@@ -520,5 +530,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	private void applyColumnCheckConstraint(jakarta.persistence.JoinColumn column) {
 		applyCheckConstraints( column.check() );
+	}
+
+	private void applyColumnOptions(jakarta.persistence.JoinColumn column) {
+		options = column.options();
+	}
+
+	private void applyColumnComment(jakarta.persistence.JoinColumn column) {
+		if ( !column.comment().isBlank() ) {
+			comment = column.comment();
+		}
 	}
 }

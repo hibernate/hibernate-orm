@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -15,12 +15,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
@@ -40,7 +36,6 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -48,6 +43,9 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
+import static org.hibernate.internal.util.ReflectHelper.getMethod;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.proxy.pojo.ProxyFactoryHelper.validateGetterSetterMethodProxyability;
 
 /**
  * @author Steve Ebersole
@@ -59,7 +57,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	private final JavaType<?> proxyJtd;
 
 	private final boolean isBytecodeEnhanced;
-	private final boolean lifecycleImplementor;
 
 	private final ReflectionOptimizer reflectionOptimizer;
 	private final ProxyFactory proxyFactory;
@@ -82,14 +79,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		this.mappedJtd = jtdRegistry.resolveEntityTypeDescriptor( mappedJavaType );
 
 		final Class<?> proxyJavaType = bootDescriptor.getProxyInterface();
-		if ( proxyJavaType != null ) {
-			this.proxyJtd = jtdRegistry.getDescriptor( proxyJavaType );
-		}
-		else {
-			this.proxyJtd = null;
-		}
+		this.proxyJtd = proxyJavaType != null ? jtdRegistry.getDescriptor( proxyJavaType ) : null;
 
-		this.lifecycleImplementor = Lifecycle.class.isAssignableFrom( mappedJavaType );
 		this.isBytecodeEnhanced = isPersistentAttributeInterceptableType( mappedJavaType );
 
 		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
@@ -99,21 +90,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 			final KeyValue bootDescriptorIdentifier = bootDescriptor.getIdentifier();
 
-			if ( bootDescriptorIdentifier instanceof Component ) {
-				if ( bootDescriptor.getIdentifierMapper() != null ) {
+			if ( bootDescriptorIdentifier instanceof Component descriptorIdentifierComponent ) {
+				final Component identifierMapper = bootDescriptor.getIdentifierMapper();
+				if ( identifierMapper != null ) {
 					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
-							bootDescriptor.getIdentifierMapper(),
-							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
-									.getMappingModelPart().getEmbeddableTypeDescriptor(),
-							// we currently do not support custom instantiators for identifiers
-							null,
-							null,
-							creationContext
-					);
-				}
-				else if ( bootDescriptorIdentifier != null ) {
-					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
-							(Component) bootDescriptorIdentifier,
+							identifierMapper,
 							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
 									.getMappingModelPart().getEmbeddableTypeDescriptor(),
 							// we currently do not support custom instantiators for identifiers
@@ -123,7 +104,16 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 					);
 				}
 				else {
-					mapsIdRepresentationStrategy = null;
+					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
+							descriptorIdentifierComponent,
+							// TODO: something wrong here: bootDescriptor.getIdentifierMapper() was null!
+							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
+									.getMappingModelPart().getEmbeddableTypeDescriptor(),
+							// we currently do not support custom instantiators for identifiers
+							null,
+							null,
+							creationContext
+					);
 				}
 			}
 			else {
@@ -138,7 +128,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		this.strategySelector = creationContext.getServiceRegistry().getService( StrategySelector.class );
 
-		final BytecodeProvider bytecodeProvider = creationContext.getBootstrapContext().getServiceRegistry().requireService( BytecodeProvider.class );
+		final BytecodeProvider bytecodeProvider =
+				creationContext.getBootstrapContext().getServiceRegistry()
+						.requireService( BytecodeProvider.class );
 
 		this.proxyFactory = resolveProxyFactory(
 				bootDescriptor,
@@ -194,16 +186,16 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityMetamodel entityMetamodel) {
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
-			final InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			return new EntityInstantiatorPojoOptimized(
 					entityMetamodel,
 					bootDescriptor,
 					mappedJtd,
-					instantiationOptimizer
+					reflectionOptimizer.getInstantiationOptimizer()
 			);
 		}
-
-		return new EntityInstantiatorPojoStandard( entityMetamodel, bootDescriptor, mappedJtd );
+		else {
+			return new EntityInstantiatorPojoStandard( entityMetamodel, bootDescriptor, mappedJtd );
+		}
 	}
 
 	private ProxyFactory createProxyFactory(
@@ -218,13 +210,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		final Set<Class<?>> proxyInterfaces = new java.util.LinkedHashSet<>();
 
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
-		Class<?> proxyInterface;
-		if ( proxyJtd != null ) {
-			proxyInterface = proxyJtd.getJavaTypeClass();
-		}
-		else {
-			proxyInterface = null;
-		}
+		final Class<?> proxyInterface = proxyJtd != null ? proxyJtd.getJavaTypeClass() : null;
 
 		if ( proxyInterface != null && ! mappedClass.equals( proxyInterface ) ) {
 			if ( ! proxyInterface.isInterface() ) {
@@ -254,31 +240,21 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		proxyInterfaces.add( HibernateProxy.class );
 
-		Class<?> clazz = bootDescriptor.getMappedClass();
+		final Class<?> clazz = bootDescriptor.getMappedClass();
 		final Method idGetterMethod;
 		final Method idSetterMethod;
 		try {
 			for ( Property property : bootDescriptor.getProperties() ) {
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Getter",
-						property.getGetter( clazz ).getMethod()
-				);
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Setter",
-						property.getSetter( clazz ).getMethod()
-				);
+				validateGetterSetterMethodProxyability( "Getter",
+						property.getGetter( clazz ).getMethod() );
+				validateGetterSetterMethodProxyability( "Setter",
+						property.getSetter( clazz ).getMethod() );
 			}
 			if ( identifierPropertyAccess != null ) {
 				idGetterMethod = identifierPropertyAccess.getGetter().getMethod();
 				idSetterMethod = identifierPropertyAccess.getSetter().getMethod();
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Getter",
-						idGetterMethod
-				);
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Setter",
-						idSetterMethod
-				);
+				validateGetterSetterMethodProxyability( "Getter", idGetterMethod );
+				validateGetterSetterMethodProxyability( "Setter", idSetterMethod );
 			}
 			else {
 				idGetterMethod = null;
@@ -290,15 +266,16 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return null;
 		}
 
-		final Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null
-				? null
-				: ReflectHelper.getMethod( proxyInterface, idGetterMethod );
-		final Method proxySetIdentifierMethod = idSetterMethod == null || proxyInterface == null
-				? null
-				: ReflectHelper.getMethod( proxyInterface, idSetterMethod );
+		final Method proxyGetIdentifierMethod =
+				idGetterMethod == null || proxyInterface == null ? null
+						: getMethod( proxyInterface, idGetterMethod );
+		final Method proxySetIdentifierMethod =
+				idSetterMethod == null || proxyInterface == null ? null
+						: getMethod( proxyInterface, idSetterMethod );
 
-		final ProxyFactory proxyFactory = bytecodeProvider.getProxyFactoryFactory()
-				.buildProxyFactory( creationContext.getSessionFactory() );
+		final ProxyFactory proxyFactory =
+				bytecodeProvider.getProxyFactoryFactory()
+						.buildProxyFactory( creationContext.getSessionFactory() );
 		try {
 			proxyFactory.postInstantiate(
 					bootDescriptor.getEntityName(),
@@ -306,9 +283,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 					proxyInterfaces,
 					proxyGetIdentifierMethod,
 					proxySetIdentifierMethod,
-					bootDescriptor.hasEmbeddedIdentifier() ?
-							(CompositeType) bootDescriptor.getIdentifier().getType() :
-							null
+					bootDescriptor.hasEmbeddedIdentifier()
+							? (CompositeType) bootDescriptor.getIdentifier().getType()
+							: null
 			);
 
 			return proxyFactory;
@@ -331,18 +308,16 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		if ( strategy == null ) {
 			final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
-			if ( StringHelper.isNotEmpty( propertyAccessorName ) ) {
+			if ( isNotEmpty( propertyAccessorName ) ) {
 				// handle explicitly specified attribute accessor
 				strategy = strategySelector.resolveStrategy( PropertyAccessStrategy.class, propertyAccessorName );
 			}
 			else {
-				if ( bootAttributeDescriptor instanceof Backref ) {
-					final Backref backref = (Backref) bootAttributeDescriptor;
+				if ( bootAttributeDescriptor instanceof Backref backref ) {
 					strategy = new PropertyAccessStrategyBackRefImpl( backref.getCollectionRole(), backref
 							.getEntityName() );
 				}
-				else if ( bootAttributeDescriptor instanceof IndexBackref ) {
-					final IndexBackref indexBackref = (IndexBackref) bootAttributeDescriptor;
+				else if ( bootAttributeDescriptor instanceof IndexBackref indexBackref ) {
 					strategy = new PropertyAccessStrategyIndexBackRefImpl(
 							indexBackref.getCollectionRole(),
 							indexBackref.getEntityName()
@@ -390,11 +365,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
-	public boolean isLifecycleImplementor() {
-		return lifecycleImplementor;
-	}
-
-	@Override
 	public boolean isBytecodeEnhanced() {
 		return isBytecodeEnhanced;
 	}
@@ -415,7 +385,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			return identifierPropertyAccess;
 		}
 
-		PropertyAccess propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
+		final PropertyAccess propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
 		if ( propertyAccess != null ) {
 			return propertyAccess;
 		}

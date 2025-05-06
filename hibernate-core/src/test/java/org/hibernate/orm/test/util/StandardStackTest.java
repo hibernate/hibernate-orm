@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.util;
@@ -146,7 +146,7 @@ public class StandardStackTest {
 	// utility functions
 
 	private Stack<Integer> allocateStack(int size) {
-		final Stack<Integer> stack = new StandardStack<>( Integer.class );
+		final Stack<Integer> stack = new StandardStack<>();
 		for ( int i = 0; i < size; i++ ) {
 			stack.push( i );
 		}

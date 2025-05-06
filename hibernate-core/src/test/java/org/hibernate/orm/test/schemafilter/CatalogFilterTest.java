@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemafilter;
@@ -144,7 +144,7 @@ public class CatalogFilterTest extends BaseUnitTestCase {
 		@Override
 		public boolean includeNamespace(Namespace namespace) {
 			// exclude schema "the_catalog_2"
-			Identifier identifier = namespace.getName().getCatalog();
+			Identifier identifier = namespace.getName().catalog();
 			return identifier == null || !"the_catalog_2".equals( identifier.getText() );
 		}
 

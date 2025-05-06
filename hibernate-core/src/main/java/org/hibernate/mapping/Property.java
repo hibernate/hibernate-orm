@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -18,7 +18,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.jpa.event.internal.EmbeddableCallback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -140,8 +140,8 @@ public class Property implements Serializable, MetaAttributable {
 		if ( type instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		if ( type instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		if ( type instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else if ( type instanceof CollectionType ) {
 			final Collection collection = (Collection) value;
@@ -175,8 +175,8 @@ public class Property implements Serializable, MetaAttributable {
 		if ( elementType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		else if ( elementType instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
+		else if ( elementType instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );
@@ -276,17 +276,9 @@ public class Property implements Serializable, MetaAttributable {
 		this.metaAttributes = metas;
 	}
 
-	/**
-	 * @deprecated use {@link #isValid(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return isValid( (MappingContext) mapping);
-	}
-
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
-		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
+		if ( value instanceof BasicValue basicValue && basicValue.isDisallowedWrapperArray() ) {
 			throw new MappingException(
 					"The property " + persistentClass.getEntityName() + "#" + name +
 							" uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. " +
@@ -450,6 +442,10 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
 		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
 			if ( this.callbackDefinitions == null ) {
@@ -459,6 +455,10 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
 		return callbackDefinitions == null ? emptyList() : unmodifiableList( callbackDefinitions );
 	}

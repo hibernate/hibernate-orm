@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -44,13 +44,13 @@ public enum EntityState {
 			if ( entry.getStatus() != Status.DELETED ) {
 				// do nothing for persistent instances
 				if ( LOG.isTraceEnabled() ) {
-					LOG.tracev( "Persistent instance of: {0}", getLoggableName( entityName, entity ) );
+					LOG.trace( "Persistent instance of: " + getLoggableName( entityName, entity ) );
 				}
 				return PERSISTENT;
 			}
 			// ie. e.status==DELETED
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Deleted instance of: {0}", getLoggableName( entityName, entity ) );
+				LOG.trace( "Deleted instance of: " + getLoggableName( entityName, entity ) );
 			}
 			return DELETED;
 		}
@@ -61,12 +61,12 @@ public enum EntityState {
 
 		if ( ForeignKeys.isTransient( entityName, entity, assumedUnsaved, source ) ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Transient instance of: {0}", getLoggableName( entityName, entity ) );
+				LOG.trace( "Transient instance of: " + getLoggableName( entityName, entity ) );
 			}
 			return TRANSIENT;
 		}
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Detached instance of: {0}", getLoggableName( entityName, entity ) );
+			LOG.trace( "Detached instance of: " + getLoggableName( entityName, entity ) );
 		}
 
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

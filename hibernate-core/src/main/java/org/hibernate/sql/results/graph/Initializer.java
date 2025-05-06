@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -40,7 +40,7 @@ public interface Initializer<Data extends InitializerData> {
 	 * by traversing up {@link #getParent()}.
 	 */
 	default @Nullable EntityInitializer<?> findOwningEntityInitializer() {
-		return Initializer.findOwningEntityInitializer( getParent() );
+		return findOwningEntityInitializer( getParent() );
 	}
 	/**
 	 * Find the entity initializer that owns this initializer
@@ -50,11 +50,10 @@ public interface Initializer<Data extends InitializerData> {
 		if ( parent == null || parent.isCollectionInitializer() ) {
 			return null;
 		}
-		final EntityInitializer<?> entityInitializer = parent.asEntityInitializer();
-		if ( entityInitializer != null ) {
-			return entityInitializer;
+		else {
+			final EntityInitializer<?> initializer = parent.asEntityInitializer();
+			return initializer != null ? initializer : findOwningEntityInitializer( parent.getParent() );
 		}
-		return findOwningEntityInitializer( parent.getParent() );
 	}
 
 	NavigablePath getNavigablePath();
@@ -62,9 +61,11 @@ public interface Initializer<Data extends InitializerData> {
 	ModelPart getInitializedPart();
 
 	default Object getResolvedInstance(Data data) {
-		assert data.getState() != State.UNINITIALIZED
-				&& data.getState() != State.KEY_RESOLVED
-				&& ( data.getState() != State.MISSING || data.getInstance() == null );
+		assert switch ( data.getState() ) {
+			case UNINITIALIZED, KEY_RESOLVED -> false;
+			case INITIALIZED, RESOLVED -> true;
+			case MISSING -> data.getInstance() == null;
+		};
 		return data.getInstance();
 	}
 	default Object getResolvedInstance(RowProcessingState rowProcessingState) {
@@ -79,8 +80,9 @@ public interface Initializer<Data extends InitializerData> {
 	/**
 	 * Step 0 - Callback for initializers before the first row is read.
 	 * It is the responsibility of this initializer to recurse to the sub-initializers
-	 * and register {@link InitializerData} for the initializer id via {@link RowProcessingState#setInitializerData(int, InitializerData)}.
-	 *
+	 * and register {@link InitializerData} for the initializer id via
+	 * {@link RowProcessingState#setInitializerData(int, InitializerData)}.
+	 * <p>
 	 * This is useful for e.g. preparing initializers in case of a cache hit.
 	 */
 	void startLoading(RowProcessingState rowProcessingState);
@@ -89,7 +91,7 @@ public interface Initializer<Data extends InitializerData> {
 	/**
 	 * Step 1.1 - Resolve the key value for this initializer for the current
 	 * row and then recurse to the sub-initializers.
-	 *
+	 * <p>
 	 * After this point, the initializer knows whether further processing is necessary
 	 * for the current row i.e. if the object is missing.
 	 */
@@ -100,8 +102,8 @@ public interface Initializer<Data extends InitializerData> {
 	}
 
 	/**
-	 * Step 1.2 - Special variant of {@link #resolveKey(InitializerData)} that allows the reuse of key value
-	 * and instance value from the previous row.
+	 * Step 1.2 - Special variant of {@link #resolveKey(InitializerData)} that allows
+	 * the reuse of key value and instance value from the previous row.
 	 *
 	 * @implSpec Defaults to simply delegating to {@link #resolveKey(InitializerData)}.
 	 */
@@ -116,10 +118,11 @@ public interface Initializer<Data extends InitializerData> {
 	/**
 	 * Step 2.1 - Using the key resolved in {@link #resolveKey}, resolve the
 	 * instance (of the thing initialized) to use for the current row.
-	 *
+	 * <p>
 	 * After this point, the initializer knows the entity/collection/component
-	 * instance for the current row based on the resolved key.
-	 * If the resolving was successful, {@link #getResolvedInstance(RowProcessingState)} will return that instance.
+	 * instance for the current row based on the resolved key. If the resolving
+	 * was successful, {@link #getResolvedInstance(RowProcessingState)} will
+	 * return that instance.
 	 */
 	void resolveInstance(Data data);
 
@@ -136,8 +139,9 @@ public interface Initializer<Data extends InitializerData> {
 	/**
 	 * Step 2.2 - Use the given instance as resolved instance for this initializer.
 	 * Initializers are supposed to recursively call this method for sub-initializers.
-	 *
-	 * This alternative initialization protocol is used when a parent instance was already part of the persistence context.
+	 * <p>
+	 * This alternative initialization protocol is used when a parent instance was
+	 * already part of the persistence context.
 	 */
 	default void resolveInstance(@Nullable Object instance, Data data) {
 		resolveKey( data );
@@ -150,7 +154,7 @@ public interface Initializer<Data extends InitializerData> {
 	/**
 	 * Step 3 - Initialize the state of the instance resolved in
 	 * {@link #resolveInstance} from the current row values.
-	 *
+	 * <p>
 	 * All resolved state for the current row is injected into the resolved
 	 * instance
 	 */
@@ -161,13 +165,14 @@ public interface Initializer<Data extends InitializerData> {
 	}
 
 	/**
-	 * Step 3.1 - Initialize the state of the instance as extracted from the given parentInstance.
-	 * Extraction can be done with the {@link #getInitializedPart()}.
+	 * Step 3.1 - Initialize the state of the instance as extracted from the given
+	 * {@code parentInstance}. Extraction can be done with the {@link #getInitializedPart()}.
 	 * Initializers are supposed to recursively call this method for sub-initializers.
-	 *
+	 * <p>
 	 * This alternative initialization protocol is used for shallow query cache hits,
-	 * in which case there is no data available in the {@link org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit}
-	 * to initialize potentially lazy associations.
+	 * in which case there is no data available in the
+	 * {@link org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit} to initialize
+	 * potentially lazy associations.
 	 */
 	default void initializeInstanceFromParent(Object parentInstance, Data data) {
 	}
@@ -183,9 +188,9 @@ public interface Initializer<Data extends InitializerData> {
 	 */
 	void finishUpRow(Data data);
 
-	default void finishUpRow(RowProcessingState rowProcessingState) {
-		finishUpRow( getData( rowProcessingState ) );
-	}
+//	default void finishUpRow(RowProcessingState rowProcessingState) {
+//		finishUpRow( getData( rowProcessingState ) );
+//	}
 
 	/**
 	 * Lifecycle method called at the very end of the result values processing
@@ -194,15 +199,16 @@ public interface Initializer<Data extends InitializerData> {
 		// by default - nothing to do
 	}
 
-	default void endLoading(RowProcessingState rowProcessingState) {
-		final Data data = getData( rowProcessingState );
-		if ( data != null ) {
-			endLoading( data );
-		}
-	}
+//	default void endLoading(RowProcessingState rowProcessingState) {
+//		final Data data = getData( rowProcessingState );
+//		if ( data != null ) {
+//			endLoading( data );
+//		}
+//	}
 
 	/**
-	 * Indicates whether this initializer is part of a key i.e. entity identifier, foreign key or collection key.
+	 * Indicates whether this initializer is part of a key i.e. entity identifier,
+	 * foreign key or collection key.
 	 */
 	boolean isPartOfKey();
 
@@ -281,6 +287,6 @@ public interface Initializer<Data extends InitializerData> {
 		MISSING,
 		KEY_RESOLVED,
 		RESOLVED,
-		INITIALIZED;
+		INITIALIZED
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -7,7 +7,7 @@ package org.hibernate.dialect.function.json;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -47,9 +47,9 @@ public class MySQLJsonArrayAggFunction extends JsonArrayAggFunction {
 		}
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinct.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;

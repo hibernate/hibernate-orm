@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
@@ -22,8 +22,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.Query;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.internal.QuerySqmImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
@@ -396,7 +396,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery( entityType );
 		criteriaQuery.select( criteriaQuery.from( entityType ) );
 
-		final QueryImplementor<T> query = session.createQuery( criteriaQuery );
+		final Query<T> query = session.createQuery( criteriaQuery );
 		final SqmQueryImplementor<String> hqlQuery = (SqmQueryImplementor<String>) query;
 		hqlQuery.applyGraph( entityGraph, mode );
 
@@ -406,9 +406,9 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 				sqmStatement,
 				hqlQuery.getQueryOptions(),
 				( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
-				query.getParameterBindings(),
+				hqlQuery.getParameterBindings(),
 				loadQueryInfluencers,
-				session.getSessionFactory(),
+				session.getSessionFactory().getSqlTranslationEngine(),
 				true
 		);
 

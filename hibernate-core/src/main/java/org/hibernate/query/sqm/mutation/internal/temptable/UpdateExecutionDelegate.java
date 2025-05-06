@@ -1,18 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -58,6 +49,14 @@ import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
@@ -109,7 +108,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			);
 			this.suppliedPredicate = Predicate.combinePredicates(
 					suppliedPredicate,
-					SoftDeleteHelper.createNonSoftDeletedRestriction( rootTableReference, softDeleteMapping )
+					softDeleteMapping.createNonDeletedRestriction( rootTableReference )
 			);
 		}
 		else {

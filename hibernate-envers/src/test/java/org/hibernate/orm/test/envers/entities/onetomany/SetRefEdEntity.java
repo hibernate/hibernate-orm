@@ -1,15 +1,20 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.onetomany;
 
 import java.util.Set;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 /**
  * ReferencEd entity
@@ -25,8 +30,12 @@ public class SetRefEdEntity {
 	private String data;
 
 	@Audited
-	@OneToMany(mappedBy = "reference")
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "reference", cascade = CascadeType.ALL)
 	private Set<SetRefIngEntity> reffering;
+
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	@ManyToOne(fetch = FetchType.LAZY)
+	private SetRefIngEntity ref;
 
 	public SetRefEdEntity() {
 	}
@@ -62,6 +71,14 @@ public class SetRefEdEntity {
 
 	public void setReffering(Set<SetRefIngEntity> reffering) {
 		this.reffering = reffering;
+	}
+
+	public SetRefIngEntity getRef() {
+		return ref;
+	}
+
+	public void setRef(SetRefIngEntity ref) {
+		this.ref = ref;
 	}
 
 	public boolean equals(Object o) {

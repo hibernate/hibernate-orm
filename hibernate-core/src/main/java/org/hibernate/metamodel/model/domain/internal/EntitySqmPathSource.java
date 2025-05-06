@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -12,6 +11,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
@@ -19,30 +19,32 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  */
 public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
 	private final boolean isGeneric;
+	private final SqmEntityDomainType<J> domainType;
 
 	public EntitySqmPathSource(
 			String localPathName,
 			SqmPathSource<J> pathModel,
-			EntityDomainType<J> domainType,
+			SqmEntityDomainType<J> domainType,
 			BindableType jpaBindableType,
 			boolean isGeneric) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
+		this.domainType = domainType;
 		this.isGeneric = isGeneric;
 	}
 
 	@Override
-	public EntityDomainType<J> getSqmPathType() {
-		return (EntityDomainType<J>) super.getSqmPathType();
+	public SqmEntityDomainType<J> getPathType() {
+		return domainType;
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return getSqmPathType().findSubPathSource( name );
+		return getPathType().findSubPathSource( name );
 	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
-		return getSqmPathType().findSubPathSource( name, includeSubtypes );
+		return getPathType().findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

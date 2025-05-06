@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.SessionEventListener;
@@ -21,6 +22,11 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	public SessionEventListenerManagerImpl(SessionEventListener... initialListener) {
 		//no need for defensive copies until the array is mutated:
 		this.listeners = initialListener;
+	}
+
+	public SessionEventListenerManagerImpl(List<SessionEventListener> initialListener) {
+		//no need for defensive copies until the array is mutated:
+		this.listeners = initialListener.toArray( new SessionEventListener[0] );
 	}
 
 	@Override

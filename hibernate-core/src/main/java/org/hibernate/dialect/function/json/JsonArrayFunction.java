@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -50,8 +50,8 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
 			final JsonNullBehavior nullBehavior;
 			final int argumentsCount;
-			if ( lastArgument instanceof JsonNullBehavior ) {
-				nullBehavior = (JsonNullBehavior) lastArgument;
+			if ( lastArgument instanceof JsonNullBehavior jsonNullBehavior ) {
+				nullBehavior = jsonNullBehavior;
 				argumentsCount = sqlAstArguments.size() - 1;
 			}
 			else {

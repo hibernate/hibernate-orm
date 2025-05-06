@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -14,7 +14,7 @@ import org.hibernate.processor.model.MetaCollection;
  * @author Emmanuel Bernard
  */
 public class AnnotationMetaCollection extends AnnotationMetaAttribute implements MetaCollection {
-	private String collectionType;
+	private final String collectionType;
 
 	public AnnotationMetaCollection(AnnotationMetaEntity parent, Element element, String collectionType, String elementType) {
 		super( parent, element, elementType );

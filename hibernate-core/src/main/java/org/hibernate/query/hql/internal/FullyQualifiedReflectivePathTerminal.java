@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -21,16 +21,17 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
@@ -71,9 +72,13 @@ public class FullyQualifiedReflectivePathTerminal<E>
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().entity( fullPath );
+			final EntityDomainType<?> entityDescriptor =
+					creationContext.getJpaMetamodel().findEntityType( fullPath );
 			if ( entityDescriptor != null ) {
-				return new SqmLiteralEntityType<>( entityDescriptor, creationContext.getNodeBuilder() );
+				return new SqmLiteralEntityType<>(
+						(SqmEntityDomainType<?>) entityDescriptor,
+						creationContext.getNodeBuilder()
+				);
 			}
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -152,10 +157,10 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( getParent().getFullPath() );
-		sb.append( '.' );
-		sb.append( getLocalName() );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( getParent().getFullPath() );
+		hql.append( '.' );
+		hql.append( getLocalName() );
 	}
 
 	@Override
@@ -219,12 +224,12 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	}
 
 	@Override
-	public Predicate notEqualTo(Expression value) {
+	public SqmPredicate notEqualTo(Expression value) {
 		return null;
 	}
 
 	@Override
-	public Predicate notEqualTo(Object value) {
+	public SqmPredicate notEqualTo(Object value) {
 		return null;
 	}
 

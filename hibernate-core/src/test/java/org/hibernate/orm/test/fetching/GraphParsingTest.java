@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.fetching;
@@ -99,7 +99,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 		//tag::fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2[]
 		final EntityGraph<Ticket> graph = GraphParser.parse(
 				Ticket.class,
-				"showing.key(movie(cast))",
+				"showing(id(movie(cast)))",
 				entityManager
 		);
 		//end::fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-2[]
@@ -177,7 +177,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Some entities for illustrating key sub-graphs
+	// Some entities for illustrating key subgraphs
 	//
 	// NOTE : for the moment I do not add named (sub)graph annotations because
 	//		this is only used for discussing graph parsing
@@ -199,7 +199,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 
 		@ElementCollection
 //		@OneToMany
-				Map<Person,String> cast;
+		Map<Person,String> cast;
 	}
 
 	@Entity(name = "Theater")

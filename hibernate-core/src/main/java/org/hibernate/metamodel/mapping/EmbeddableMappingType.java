@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -137,8 +137,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType
-					&& ( (EmbeddableMappingType) mappedType ).getAggregateMapping() != null ) {
+			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType
+					&& embeddableMappingType.getAggregateMapping() != null ) {
 				count++;
 			}
 			else {
@@ -153,8 +153,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		int count = 0;
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
-			if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping ) {
-				final DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping = (DiscriminatedAssociationAttributeMapping) attributeMapping;
+			if ( attributeMapping instanceof DiscriminatedAssociationAttributeMapping discriminatedAssociationAttributeMapping ) {
 				if ( count == columnIndex ) {
 					return discriminatedAssociationAttributeMapping.getDiscriminatorMapping();
 				}
@@ -164,8 +163,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 				}
 				count++;
 			}
-			else if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 				if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
 					final ValuedModelPart keyPart = toOneAttributeMapping.getForeignKeyDescriptor().getKeyPart();
 					if ( keyPart instanceof BasicValuedMapping ) {
@@ -174,8 +172,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 						}
 						count++;
 					}
-					else if ( keyPart instanceof EmbeddableValuedModelPart ) {
-						final EmbeddableMappingType mappingType = ( (EmbeddableValuedModelPart) keyPart ).getEmbeddableTypeDescriptor();
+					else if ( keyPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
+						final EmbeddableMappingType mappingType = embeddableValuedModelPart.getEmbeddableTypeDescriptor();
 						final SelectableMapping selectable = mappingType.getJdbcValueSelectable( columnIndex - count );
 						if ( selectable != null ) {
 							return selectable;
@@ -187,8 +185,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					}
 				}
 			}
-			else if ( attributeMapping instanceof EmbeddableValuedModelPart ) {
-				final EmbeddableValuedModelPart embeddableValuedModelPart = (EmbeddableValuedModelPart) attributeMapping;
+			else if ( attributeMapping instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 				final EmbeddableMappingType embeddableMappingType = embeddableValuedModelPart.getMappedType();
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping == null ) {
@@ -207,8 +204,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 			}
 			else {
 				if ( count == columnIndex ) {
-					if ( attributeMapping instanceof SelectableMapping ) {
-						return (SelectableMapping) attributeMapping;
+					if ( attributeMapping instanceof SelectableMapping selectableMapping ) {
+						return selectableMapping;
 					}
 					assert attributeMapping.getJdbcTypeCount() == 0;
 				}
@@ -228,8 +225,7 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof EmbeddableMappingType ) {
-				final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
+			if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
 				final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 				if ( aggregateMapping != null ) {
 					if ( aggregateMapping.getSelectableName().equals( selectableName ) ) {
@@ -245,8 +241,8 @@ public interface EmbeddableMappingType extends ManagedMappingType, SelectableMap
 					offset += embeddableMappingType.getJdbcTypeCount();
 				}
 			}
-			else if ( attributeMapping instanceof SelectableMapping ) {
-				if ( ( (SelectableMapping) attributeMapping ).getSelectableName().equals( selectableName ) ) {
+			else if ( attributeMapping instanceof SelectableMapping selectableMapping) {
+				if ( selectableMapping.getSelectableName().equals( selectableName ) ) {
 					return offset;
 				}
 				offset++;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -310,9 +310,8 @@ public final class Cascade {
 					// We first have to extract the component object and then ask the component type
 					// recursively to give us the value of the sub-property of that object
 					final Type propertyType = entry.getPersister().getPropertyType( componentPath.get(0) );
-					if ( propertyType instanceof ComponentType ) {
+					if ( propertyType instanceof ComponentType componentType ) {
 						loadedValue = entry.getLoadedValue( componentPath.get( 0 ) );
-						ComponentType componentType = (ComponentType) propertyType;
 						if ( componentPath.size() != 1 ) {
 							for ( int i = 1; i < componentPath.size(); i++ ) {
 								final int subPropertyIndex = componentType.getPropertyIndex( componentPath.get( i ) );
@@ -602,14 +601,10 @@ public final class Cascade {
 		}
 
 		// a newly instantiated collection can't have orphans
-		final PersistentCollection<?> persistentCollection;
-		if ( child instanceof PersistentCollection<?> pc ) {
-			persistentCollection = pc;
-		}
-		else {
-			persistentCollection = eventSource.getPersistenceContext()
-					.getCollectionHolder( child );
-		}
+		final PersistentCollection<?> persistentCollection =
+				child instanceof PersistentCollection<?> collection
+						? collection
+						: eventSource.getPersistenceContext().getCollectionHolder( child );
 
 		final boolean deleteOrphans = style.hasOrphanDelete()
 				&& action.deleteOrphans()

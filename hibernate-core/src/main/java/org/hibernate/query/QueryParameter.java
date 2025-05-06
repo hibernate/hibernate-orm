@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -13,6 +13,30 @@ import org.hibernate.Incubating;
  */
 @Incubating
 public interface QueryParameter<T> extends jakarta.persistence.Parameter<T> {
+	/**
+	 * Determine if this a named parameter or ordinal.
+	 *
+	 * @return {@code true} if it is a named parameter;
+	 *         {@code false} if it is ordinal
+	 *
+	 * @since 7.0
+	 */
+	default boolean isNamed() {
+		return getName() != null;
+	}
+
+	/**
+	 * Determine if this a named parameter or ordinal.
+	 *
+	 * @return {@code true} if it is an ordinal parameter;
+	 *         {@code false} if it is named
+	 *
+	 * @since 7.0
+	 */
+	default boolean isOrdinal() {
+		return getPosition() != null;
+	}
+
 	/**
 	 * Does this parameter allow multi-valued (collection, array, etc) binding?
 	 * <p>

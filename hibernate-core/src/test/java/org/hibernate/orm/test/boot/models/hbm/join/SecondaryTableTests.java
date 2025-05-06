@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.hbm.join;
 
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -12,34 +11,21 @@ import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
+ * Tests parsing Hibernate extensions to {@code <secondary-table/>}
+ *
  * @author Steve Ebersole
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class SecondaryTableTests {
 	@Test
-	@DomainModel(xmlMappings = "mappings/models/hbm/join/hbm.xml")
-	void baseline(DomainModelScope domainModelScope) {
-		verifyModel( domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() ) );
-	}
-
-	@Test
-	@DomainModel(xmlMappings = "mappings/models/hbm/join/mapping.xml")
+	@DomainModel(xmlMappings = "mappings/models/join/mapping.xml")
 	void testMappingXml(DomainModelScope domainModelScope) {
-		verifyModel( domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() ) );
-	}
-
-	@Test
-	@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-	@DomainModel(xmlMappings = "mappings/models/hbm/join/hbm.xml")
-	void testJoinTransformations(DomainModelScope domainModelScope) {
 		verifyModel( domainModelScope.getDomainModel().getEntityBinding( Person.class.getName() ) );
 	}
 

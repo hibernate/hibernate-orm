@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal.metadata;
@@ -20,7 +20,6 @@ import org.hibernate.metamodel.internal.EmbeddableCompositeUserTypeInstantiator;
 import org.hibernate.metamodel.internal.EmbeddableInstantiatorPojoIndirecting;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 /**
@@ -55,11 +54,10 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 				instantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( propComponent.getCustomInstantiator() );
 			}
 			else {
-				instantiator = getMetadataBuildingContext().getBootstrapContext()
-						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
-						.getBean( propComponent.getCustomInstantiator() )
-						.getBeanInstance();
+				instantiator =
+						getMetadataBuildingContext().getBootstrapContext().getManagedBeanRegistry()
+								.getBean( propComponent.getCustomInstantiator() )
+								.getBeanInstance();
 			}
 		}
 		else if ( propComponent.getTypeName() != null ) {
@@ -72,11 +70,10 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 				instantiator = new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );
 			}
 			else {
-				final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>) getMetadataBuildingContext().getBootstrapContext()
-						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class )
-						.getBean( userTypeClass )
-						.getBeanInstance();
+				final CompositeUserType<Object> compositeUserType = (CompositeUserType<Object>)
+						getMetadataBuildingContext().getBootstrapContext().getManagedBeanRegistry()
+								.getBean( userTypeClass )
+								.getBeanInstance();
 				instantiator = new EmbeddableCompositeUserTypeInstantiator( compositeUserType );
 			}
 		}

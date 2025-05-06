@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -8,8 +8,8 @@ import org.hibernate.ObjectNotFoundException;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 
 /**
- * Standard non-JPA implementation of EntityNotFoundDelegate, throwing the
- * Hibernate-specific {@link ObjectNotFoundException}.
+ * Standard non-JPA implementation of {@link EntityNotFoundDelegate},
+ * throwing the Hibernate-specific {@link ObjectNotFoundException}.
  *
  * @author Steve Ebersole
  */

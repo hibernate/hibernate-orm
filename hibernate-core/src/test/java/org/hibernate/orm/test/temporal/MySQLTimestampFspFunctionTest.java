@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.temporal;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 
 import org.hibernate.dialect.MySQLDialect;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
+import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -46,11 +48,13 @@ public class MySQLTimestampFspFunctionTest {
 					);
 					Object[] oArray = (Object[]) q.uniqueResult();
 					for ( Object o : oArray ) {
-						( (Timestamp) o ).setNanos( 0 );
+						if ( o instanceof Timestamp ts ) {
+							ts.setNanos( 0 );
+						}
 					}
 					final Timestamp now = (Timestamp) oArray[0];
 					assertEquals( now, oArray[1] );
-					assertEquals( now, oArray[2] );
+					assertTrue( JdbcTimeJavaType.INSTANCE.areEqual( new Time( now.getTime() ), (Time) oArray[2] ) );
 					assertEquals( now, oArray[3] );
 					assertTrue( now.compareTo( (Timestamp) oArray[4] ) <= 0 );
 				}

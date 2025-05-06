@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.immutable;
@@ -14,7 +14,6 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -40,7 +39,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 
 	@Override
 	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE, "exception" );
+//		settings.put( AvailableSettings.IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE, "exception" );
 	}
 
 	@Test
@@ -62,7 +61,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 		catch (PersistenceException e) {
 			assertTrue( e instanceof HibernateException );
 			assertEquals(
-					"Error interpreting query [The query attempts to update an immutable entity: [Country]] [update Country set name = :name]",
+					"Error interpreting query [The query attempts to update an immutable entity: [Country] (set 'hibernate.query.immutable_entity_update_query_handling_mode' to suppress)] [update Country set name = :name]",
 					e.getMessage()
 			);
 		}

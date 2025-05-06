@@ -1,12 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
@@ -17,6 +15,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Objects;
 
@@ -42,9 +41,8 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			BasicValuedMapping explicitType,
 			JavaType<?> explicitJavaType) {
 		//noinspection unchecked
-		assert explicitType == null || explicitType.getJdbcMapping()
-				.getJavaTypeDescriptor()
-				.getJavaTypeClass()
+		assert explicitType == null
+			|| explicitType.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass()
 				.isAssignableFrom( explicitJavaType.getJavaTypeClass() );
 
 		this.explicitColumnName = explicitColumnName;
@@ -68,18 +66,32 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
-		final int jdbcPosition;
-		final String columnName;
-		if ( explicitColumnName != null ) {
-			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-			columnName = explicitColumnName;
-		}
-		else {
-			jdbcPosition = creationStateImpl.getNumberOfProcessedSelections() + 1;
-			columnName = jdbcResultsMetadata.resolveColumnName( jdbcPosition );
-		}
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
+		final int jdbcPosition =
+				explicitColumnName != null
+						? jdbcResultsMetadata.resolveColumnPosition( explicitColumnName )
+						: creationStateImpl.getNumberOfProcessedSelections() + 1;
+		final String columnName =
+				explicitColumnName != null
+						? explicitColumnName
+						: jdbcResultsMetadata.resolveColumnName( jdbcPosition );
+		final SqlSelection sqlSelection =
+				sqlSelection( jdbcResultsMetadata, creationStateImpl, columnName, jdbcPosition );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnName,
+				sqlSelection.getExpressionType().getSingleJdbcMapping(),
+				null,
+				false,
+				false
+		);
+	}
+
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationStateImpl creationStateImpl,
+			String columnName, int jdbcPosition) {
+		final TypeConfiguration typeConfiguration = creationStateImpl.getCreationContext().getTypeConfiguration();
+		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						processingState -> {
@@ -91,27 +103,16 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 								basicType = jdbcResultsMetadata.resolveType(
 										jdbcPosition,
 										explicitJavaType,
-										sessionFactory
+										typeConfiguration
 								);
 							}
-
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, basicType );
 						}
 				),
 				explicitJavaType,
 				null,
-				sessionFactory.getTypeConfiguration()
-		);
-
-		final JdbcMapping jdbcMapping = sqlSelection.getExpressionType().getSingleJdbcMapping();
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				columnName,
-				jdbcMapping,
-				null,
-				false,
-				false
+				typeConfiguration
 		);
 	}
 
@@ -123,11 +124,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		CompleteResultBuilderBasicValuedStandard that = (CompleteResultBuilderBasicValuedStandard) o;
+		final CompleteResultBuilderBasicValuedStandard that = (CompleteResultBuilderBasicValuedStandard) o;
 		return Objects.equals( explicitColumnName, that.explicitColumnName )
-				&& Objects.equals( explicitType, that.explicitType )
-				&& Objects.equals( explicitJavaType, that.explicitJavaType );
-	}
+			&& Objects.equals( explicitType, that.explicitType )
+			&& Objects.equals( explicitJavaType, that.explicitJavaType );
+}
 
 	@Override
 	public int hashCode() {

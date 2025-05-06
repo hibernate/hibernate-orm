@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -18,6 +17,8 @@ import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.BasicType;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Christian Beikov
@@ -39,11 +40,10 @@ public final class SqmInsertStrategyHelper {
 		final List<SortSpecification> orderList;
 		if ( querySpec.getSelectClause().isDistinct() ) {
 			assert sessionFactory.getJdbcServices().getDialect().supportsWindowFunctions();
-
-			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression(
+			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression<>(
 					"dense_rank",
 					(appender, args, returnType, walker) -> appender.appendSql( "dense_rank()" ),
-					Collections.emptyList(),
+					emptyList(),
 					null,
 					null,
 					null,
@@ -67,27 +67,28 @@ public final class SqmInsertStrategyHelper {
 			}
 		}
 		else {
-			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression(
+			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression<>(
 					"row_number",
 					(appender, args, returnType, walker) -> appender.appendSql( "row_number()" ),
-					Collections.emptyList(),
+					emptyList(),
 					null,
 					null,
 					null,
 					resultType,
 					resultType
 			);
-			orderList = Collections.emptyList();
+			orderList = emptyList();
 		}
-		return new Over<>( functionExpression, Collections.emptyList(), orderList );
+		return new Over<>( functionExpression, emptyList(), orderList );
 	}
 
 	private static boolean containsSelectionExpression(List<SortSpecification> orderList, SqlSelection sqlSelection) {
 		final Expression expression = sqlSelection.getExpression();
 		for ( SortSpecification sortSpecification : orderList ) {
 			final Expression sortExpression = sortSpecification.getSortExpression();
-			if ( sortExpression == expression || sortExpression instanceof SqlSelectionExpression
-					&& ( (SqlSelectionExpression) sortExpression ).getSelection() == sqlSelection ) {
+			if ( sortExpression == expression
+				|| sortExpression instanceof SqlSelectionExpression sqlSelectionExpression
+						&& sqlSelectionExpression.getSelection() == sqlSelection ) {
 				return true;
 			}
 		}

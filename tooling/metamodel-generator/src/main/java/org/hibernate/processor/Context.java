@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor;
@@ -17,7 +17,6 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.ModuleElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -35,7 +34,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.processor.validation.ProcessorSessionFactory.findEntityByUnqualifiedName;
 
 /**
  * @author Max Andersen
@@ -94,6 +92,7 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean quarkusInjection;
+	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
 	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
@@ -106,6 +105,8 @@ public final class Context {
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
+
+	private boolean indexing = true;
 
 	private final Map<String, String> entityNameMappings = new HashMap<>();
 	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
@@ -224,6 +225,14 @@ public final class Context {
 		this.quarkusInjection = quarkusInjection;
 	}
 
+	public boolean isDataEventPackageAvailable() {
+		return dataEventPackageAvailable;
+	}
+
+	public void setDataEventPackageAvailable(boolean dataEventPackageAvailable) {
+		this.dataEventPackageAvailable = dataEventPackageAvailable;
+	}
+
 	public Elements getElementUtils() {
 		return processingEnvironment.getElementUtils();
 	}
@@ -302,6 +311,15 @@ public final class Context {
 
 	public Collection<Metamodel> getDataMetaEmbeddables() {
 		return dataMetaEmbeddables.values();
+	}
+
+	public @Nullable Metamodel getMetamodel(String qualifiedName) {
+		if ( metaEntities.containsKey( qualifiedName ) ) {
+			return metaEntities.get( qualifiedName );
+		}
+		else {
+			return metaEmbeddables.get( qualifiedName );
+		}
 	}
 
 	public @Nullable Metamodel getMetaAuxiliary(String qualifiedName) {
@@ -522,24 +540,11 @@ public final class Context {
 		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( qualifiedTypeName );
 	}
 
-	public @Nullable TypeElement entityType(String entityName) {
-		final Elements elementUtils = getElementUtils();
-		final String qualifiedName = qualifiedNameForEntityName(entityName);
-		if ( qualifiedName != null ) {
-			return elementUtils.getTypeElement(qualifiedName);
-		}
-		TypeElement symbol =
-				findEntityByUnqualifiedName( entityName,
-						elementUtils.getModuleElement("") );
-		if ( symbol != null ) {
-			return symbol;
-		}
-		for ( ModuleElement module : elementUtils.getAllModuleElements() ) {
-			symbol = findEntityByUnqualifiedName( entityName, module );
-			if ( symbol != null ) {
-				return symbol;
-			}
-		}
-		return null;
+	public void setIndexing(boolean index) {
+		this.indexing = index;
+	}
+
+	public boolean isIndexing() {
+		return indexing;
 	}
 }

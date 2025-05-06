@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
@@ -24,6 +25,10 @@ import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Specialized ParameterMetadataImplementor for callable queries implementing
@@ -39,29 +44,26 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	}
 
 	public ProcedureParameterMetadataImpl(NamedCallableQueryMemento memento, SharedSessionContractImplementor session) {
-		memento.getParameterMementos().forEach(
-				parameterMemento -> registerParameter( parameterMemento.resolve( session ) )
-		);
+		memento.getParameterMementos()
+				.forEach( parameterMemento -> registerParameter( parameterMemento.resolve( session ) ) );
 	}
 
-	public void registerParameter(ProcedureParameterImplementor parameter) {
-		if ( parameter.getName() != null ) {
+	public void registerParameter(ProcedureParameterImplementor<?> parameter) {
+		if ( parameter.isNamed() ) {
 			if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
 				throw new IllegalArgumentException( "Cannot mix named parameter with positional parameter registrations" );
 			}
 			parameterStrategy = ParameterStrategy.NAMED;
 		}
-		else if ( parameter.getPosition() != null ) {
+		else if ( parameter.isOrdinal() ) {
 			if ( parameterStrategy == ParameterStrategy.NAMED ) {
 				throw new IllegalArgumentException( "Cannot mix positional parameter with named parameter registrations" );
 			}
-			this.parameterStrategy = ParameterStrategy.POSITIONAL;
+			parameterStrategy = ParameterStrategy.POSITIONAL;
 		}
 		else {
 			throw new IllegalArgumentException( "Unrecognized parameter type : " + parameter );
 		}
-
-
 		if ( parameters == null ) {
 			parameters = new ArrayList<>();
 		}
@@ -74,10 +76,15 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	}
 
 	@Override
-	public void visitParameters(Consumer<QueryParameterImplementor<?>> consumer) {
+	public void visitParameters(Consumer<QueryParameter<?>> consumer) {
 		if ( parameters != null ) {
 			parameters.forEach( consumer );
 		}
+	}
+
+	@Override
+	public Collection<QueryParameter<?>> getParameters() {
+		return unmodifiableList( parameters );
 	}
 
 	@Override
@@ -93,11 +100,11 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	@Override
 	public Set<String> getNamedParameterNames() {
 		if ( !hasNamedParameters() ) {
-			return Collections.emptySet();
+			return emptySet();
 		}
 
 		final Set<String> rtn = new HashSet<>();
-		for ( ProcedureParameter parameter : parameters ) {
+		for ( ProcedureParameter<?> parameter : parameters ) {
 			if ( parameter.getName() != null ) {
 				rtn.add( parameter.getName() );
 			}
@@ -107,19 +114,12 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public int getParameterCount() {
-		if ( parameters == null ) {
-			return 0;
-		}
-		return parameters.size();
+		return parameters == null ? 0 : parameters.size();
 	}
 
 	@Override
-	@SuppressWarnings("SuspiciousMethodCalls")
-	public boolean containsReference(QueryParameter parameter) {
-		if ( parameters == null ) {
-			return false;
-		}
-		return parameters.contains( parameter );
+	public boolean containsReference(QueryParameter<?> parameter) {
+		return parameters != null && parameters.contains( (ProcedureParameterImplementor<?>) parameter );
 	}
 
 	public ParameterStrategy getParameterStrategy() {
@@ -131,14 +131,14 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 		if ( parameters.isEmpty() ) {
 			return false;
 		}
-
-		for ( ProcedureParameterImplementor<?> parameter : parameters ) {
-			if ( filter.test( parameter ) ) {
-				return true;
+		else {
+			for ( ProcedureParameterImplementor<?> parameter : parameters ) {
+				if ( filter.test( parameter ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 
 	@Override
@@ -157,7 +157,6 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 		if ( parameter != null ) {
 			return parameter;
 		}
-
 		throw new IllegalArgumentException( "Named parameter [" + name + "] is not registered with this procedure call" );
 	}
 
@@ -177,57 +176,51 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 		if ( queryParameter != null ) {
 			return queryParameter;
 		}
-
 		throw new IllegalArgumentException( "Positional parameter [" + positionLabel + "] is not registered with this procedure call" );
 	}
 
 	@Override
-	public <P> ProcedureParameterImplementor<P> resolve(Parameter<P> param) {
-		if ( param instanceof ProcedureParameterImplementor ) {
-			for ( ProcedureParameterImplementor<?> p : parameters ) {
-				if ( p == param ) {
-					//noinspection unchecked
-					return (ProcedureParameterImplementor<P>) p;
+	public <P> ProcedureParameterImplementor<P> resolve(Parameter<P> parameter) {
+		if ( parameter instanceof ProcedureParameterImplementor<P> procedureParameterImplementor ) {
+			for ( ProcedureParameterImplementor<?> registered : parameters ) {
+				if ( registered == parameter ) {
+					return procedureParameterImplementor;
 				}
 			}
 		}
-
 		return null;
 	}
 
 	@Override
 	public Set<? extends QueryParameter<?>> getRegistrations() {
-		if ( parameters == null ) {
-			return Collections.emptySet();
-		}
-		return new HashSet<>( parameters );
+		return parameters == null ? emptySet() : new HashSet<>( parameters );
 	}
 
 	@Override
 	public List<? extends ProcedureParameterImplementor<?>> getRegistrationsAsList() {
-		if ( parameters == null ) {
-			return Collections.emptyList();
-		}
-		return parameters;
+		return parameters == null ? emptyList() : parameters;
 	}
 
 	@Override
-	public void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
+	public void visitRegistrations(Consumer<QueryParameter<?>> action) {
 		if ( parameters != null ) {
-			parameters.forEach( (Consumer) action );
+			parameters.forEach( action );
 		}
 	}
 
 	@Override
 	public Set<Integer> getOrdinalParameterLabels() {
 		final HashSet<Integer> labels = new HashSet<>();
-		visitRegistrations(
-				p -> {
-					if ( p.getPosition() != null ) {
-						labels.add( p.getPosition() );
-					}
-				}
-		);
+		visitRegistrations( parameter -> {
+			if ( parameter.getPosition() != null ) {
+				labels.add( parameter.getPosition() );
+			}
+		} );
 		return labels;
+	}
+
+	@Override
+	public <T> BindableType<T> getInferredParameterType(QueryParameter<T> parameter) {
+		return null;
 	}
 }

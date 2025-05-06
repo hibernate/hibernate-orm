@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -86,7 +87,8 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				valuesList.add( sqmValues.copy( context ) );
 			}
 		}
-		return context.registerCopy(
+
+		final SqmInsertValuesStatement<T> sqmInsertValuesStatementCopy = context.registerCopy(
 				this,
 				new SqmInsertValuesStatement<>(
 						nodeBuilder(),
@@ -95,10 +97,16 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
+						null,
 						valuesList
 				)
 		);
+
+		if ( getConflictClause() != null ) {
+			sqmInsertValuesStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		}
+
+		return sqmInsertValuesStatementCopy;
 	}
 
 	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
@@ -190,29 +198,29 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		assert valuesList != null;
-		super.appendHqlString( sb );
-		sb.append( " values (" );
-		appendValues( valuesList.get( 0 ), sb );
+		super.appendHqlString( hql, context );
+		hql.append( " values (" );
+		appendValues( valuesList.get( 0 ), hql, context );
 		for ( int i = 1; i < valuesList.size(); i++ ) {
-			sb.append( ", " );
-			appendValues( valuesList.get( i ), sb );
+			hql.append( ", " );
+			appendValues( valuesList.get( i ), hql, context );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 		final SqmConflictClause conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( sb );
+			conflictClause.appendHqlString( hql, context );
 		}
 	}
 
-	private static void appendValues(SqmValues sqmValues, StringBuilder sb) {
+	private static void appendValues(SqmValues sqmValues, StringBuilder sb, SqmRenderContext context) {
 		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
 		sb.append( '(' );
-		expressions.get( 0 ).appendHqlString( sb );
+		expressions.get( 0 ).appendHqlString( sb, context );
 		for ( int i = 1; i < expressions.size(); i++ ) {
 			sb.append( ", " );
-			expressions.get( i ).appendHqlString( sb );
+			expressions.get( i ).appendHqlString( sb, context );
 		}
 		sb.append( ')' );
 	}

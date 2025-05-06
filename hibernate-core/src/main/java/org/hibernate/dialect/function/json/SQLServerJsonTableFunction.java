@@ -1,12 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.AssertionFailure;
 import org.hibernate.QueryException;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonExistsErrorBehavior;
@@ -166,9 +167,11 @@ public class SQLServerJsonTableFunction extends JsonTableFunction {
 				if ( lastPathElement instanceof JsonPathHelper.JsonIndexAccess indexAccess ) {
 					terminalKey = String.valueOf( indexAccess.index() );
 				}
+				else if (lastPathElement instanceof JsonPathHelper.JsonAttribute attribute) {
+					terminalKey = attribute.attribute();
+				}
 				else {
-					assert lastPathElement instanceof JsonPathHelper.JsonAttribute;
-					terminalKey = ( (JsonPathHelper.JsonAttribute) lastPathElement ).attribute();
+					throw new AssertionFailure( "Unrecognized json path element: " + lastPathElement );
 				}
 
 				sqlAppender.appendSql( "coalesce((select 1 from openjson(t" );

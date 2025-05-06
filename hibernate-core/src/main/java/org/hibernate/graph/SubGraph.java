@@ -1,15 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph;
 
-import java.util.List;
-
 import jakarta.persistence.Subgraph;
-import jakarta.persistence.metamodel.Attribute;
-
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
  * Extends the JPA-defined {@link Subgraph} with additional operations.
@@ -20,77 +15,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * @see RootGraph
  */
 public interface SubGraph<J> extends Graph<J>, Subgraph<J> {
-	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default List<jakarta.persistence.AttributeNode<?>> getAttributeNodes() {
-		return (List) getAttributeNodeList();
-	}
-
-	@Override
-	default void addAttributeNodes(String... names) {
-		if ( names == null ) {
-			return;
-		}
-
-		for ( String name : names ) {
-			addAttributeNode( name );
-		}
-	}
-
-	@Override
-	default void addAttributeNodes(Attribute<? super J, ?>... attribute) {
-		if ( attribute == null ) {
-			return;
-		}
-
-		for ( Attribute<? super J, ?> node : attribute ) {
-			assert node instanceof PersistentAttribute;
-			addAttributeNode( node );
-		}
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
-		return addSubGraph( (PersistentAttribute<? super J, X>) attribute );
-	}
-
-	@Override
-	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( (PersistentAttribute<J, X>) attribute, type );
-	}
-
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(String name) {
-		return addSubGraph( name );
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(String name, Class<X> type) {
-		return addSubGraph( name, type );
-	}
-
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
-		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute );
-	}
-
-	@Override
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute, type );
-	}
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(String name) {
-		return addKeySubGraph( name );
-	}
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(String name, Class<X> type) {
-		return addKeySubGraph( name, type );
-	}
-
 	@Override
 	default Class<J> getClassType() {
 		return getGraphedType().getJavaType();

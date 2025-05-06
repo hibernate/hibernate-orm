@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
@@ -55,7 +55,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 			final int inExprLimit = dialect.getParameterCountLimit();
 
 			for ( ParameterOccurrence occurrence : parameterOccurrences ) {
-				final QueryParameterImplementor<?> param = occurrence.getParameter();
+				final QueryParameterImplementor<?> param = occurrence.parameter();
 				final QueryParameterBinding<?> binding = queryParameterBindings.getBinding( param );
 
 				final JdbcMapping jdbcMapping;
@@ -64,13 +64,13 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 				if ( type == null ) {
 					jdbcMapping = factory.getTypeConfiguration().getBasicTypeForJavaType( Object.class );
 				}
-				else if ( type instanceof BasicTypeReference ) {
-					jdbcMapping = factory.getTypeConfiguration()
-							.getBasicTypeRegistry()
-							.resolve( ( (BasicTypeReference<?>) type ) );
+				else if ( type instanceof BasicTypeReference<?> basicTypeReference ) {
+					jdbcMapping =
+							factory.getTypeConfiguration().getBasicTypeRegistry()
+									.resolve( basicTypeReference );
 				}
-				else if ( type instanceof BasicValuedMapping ) {
-					jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+				else if ( type instanceof BasicValuedMapping basicValuedMapping ) {
+					jdbcMapping = basicValuedMapping.getJdbcMapping();
 				}
 				else {
 					throw new IllegalArgumentException( "Could not resolve NativeQuery parameter type : `" + param + "`");

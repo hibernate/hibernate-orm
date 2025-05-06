@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -43,6 +43,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.spi.NavigablePath;
@@ -339,11 +340,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public int getSubclassPropertyTableNumber(String propertyName) {
-		return 0;
-	}
-
-	@Override
 	public String physicalTableNameForMutation(SelectableMapping selectableMapping) {
 		assert !selectableMapping.isFormula();
 		return tableName;
@@ -451,8 +447,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				subquery.append( "select " );
 				for ( Column col : columns ) {
 					if ( !table.containsColumn( col ) ) {
-						int sqlType = col.getSqlTypeCode( mapping );
-						subquery.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
+						subquery.append( getSelectClauseNullString( col, dialect ) )
 								.append(" as ");
 					}
 					subquery.append( col.getQuotedName( dialect ) )
@@ -467,13 +462,27 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return subquery.append( ")" ).toString();
 	}
 
+	private String getSelectClauseNullString(Column col, Dialect dialect) {
+		return dialect.getSelectClauseNullString(
+				new SqlTypedMappingImpl(
+						col.getTypeName(),
+						col.getLength(),
+						col.getPrecision(),
+						col.getScale(),
+						col.getTemporalPrecision(),
+						col.getType()
+				),
+				getFactory().getTypeConfiguration()
+		);
+	}
+
 	protected String generateSubquery(Map<String, EntityNameUse> entityNameUses) {
 		if ( !hasSubclasses() ) {
 			return getTableName();
 		}
 
 		final Dialect dialect = getFactory().getJdbcServices().getDialect();
-		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = getFactory().getMappingMetamodel();
 		// Collect all selectables of every entity subtype and group by selection expression as well as table name
 		final LinkedHashMap<String, Map<String, SelectableMapping>> selectables = new LinkedHashMap<>();
 		final Set<String> tablesToUnion = new HashSet<>( entityNameUses.size() );
@@ -533,9 +542,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					if ( selectableMapping == null ) {
 						// If there is no selectable mapping for a table name, we render a null expression
 						selectableMapping = selectableMappings.values().iterator().next();
-						final int sqlType = selectableMapping.getJdbcMapping().getJdbcType()
-								.getDdlTypeCode();
-						buf.append( dialect.getSelectClauseNullString( sqlType, getFactory().getTypeConfiguration() ) )
+						buf.append( dialect.getSelectClauseNullString( selectableMapping, getFactory().getTypeConfiguration() ) )
 								.append( " as " );
 					}
 					if ( selectableMapping.isFormula() ) {

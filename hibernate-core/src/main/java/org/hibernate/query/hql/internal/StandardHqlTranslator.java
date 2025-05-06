@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -144,8 +144,8 @@ public class StandardHqlTranslator implements HqlTranslator {
 		String errorText = "";
 		if ( includeLocation ) {
 			errorText += "At " + line + ":" + charPositionInLine;
-			if ( offendingSymbol instanceof CommonToken ) {
-				String token = ( (CommonToken) offendingSymbol).getText();
+			if ( offendingSymbol instanceof CommonToken commonToken ) {
+				String token = commonToken.getText();
 				if ( token != null && !token.isEmpty() ) {
 					errorText += " and token '" + token + "'";
 				}

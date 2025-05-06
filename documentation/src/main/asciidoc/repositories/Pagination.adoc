@@ -8,6 +8,7 @@ An <<find-method,automatic>> or <<query-method,annotated>> query method may have
 
 Before we see this, let's see how we can refer to a field of an entity in a completely typesafe way.
 
+[[data-static-metamodel]]
 === The static metamodel
 
 You might already be familiar with the Jakarta Persistence static metamodel.
@@ -59,12 +60,13 @@ This example looks superficially more typesafe.
 But since Hibernate Data Repositories already validates the content of the `@OrderBy` annotation at compile time, it's not really better.
 ====
 
+[[dynamic-sorting]]
 === Dynamic sorting
 
 Dynamic sorting criteria are expressed using the types `Sort` and `Order`:
 
-- an instance of `Sort` represents a single criterion for sorting query results, and
-- an instance of `Order` packages multiple ``Sort``s together.
+- an instance of https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/sort[`Sort`] represents a single criterion for sorting query results, and
+- an instance of https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/order[`Order`] packages multiple ``Sort``ing criteria together.
 
 A query method may accept an instance of `Sort`.
 
@@ -100,10 +102,22 @@ The method might now be called like this:
 var books =
        library.books(pattern, year,
                      Order.of(_Book.title.ascIgnoreCase(),
-                              _Book.isbn.asc());
+                              _Book.isbn.asc()));
 ----
 
 Dynamic sorting criteria may be combined with static criteria.
+
+[TIP]
+====
+If the entity has entity supertypes, use a lower bounded wildcard in the repository method declaration, for example:
+[source,java]
+----
+@Find
+List<Book> books(@Pattern String title, Year yearPublished,
+                 Order<? super Book> order);
+----
+This lets the caller sort by fields of the supertype.
+====
 
 [source,java]
 ----
@@ -115,15 +129,16 @@ List<Book> books(@Pattern String title, Year yearPublished,
 
 We're not convinced this is very useful in practice.
 
+[[limits]]
 === Limits
 
-A `Limit` is the simplest way to express a subrange of query results.
+A https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/limit[`Limit`] is the simplest way to express a subrange of query results.
 It specifies:
 
 - `maxResults`, the maximum number of results to be returned from the database server to the client, and,
-- optionally, `startAt`, an offset from the very first result.
+- optionally, `startAt`, the position of the first result to be returned to the client.
 
-These values map directly the familiar `setMaxResults()` and `setFirstResults()` of the Jakarta Persistence `Query` interface.
+These values map directly to the familiar `setMaxResults()` and `setFirstResult()` of the Jakarta Persistence `Query` interface.
 
 [source,java]
 ----
@@ -139,11 +154,15 @@ var books =
                       Limit.of(MAX_RESULTS));
 ----
 
+[CAUTION]
+Whereas `Query.setFirstResult()` is an _offset_ of the first result to be returned, with `setFirstResult(0)` meaning "no offset", `Limit.startAt` numbers results from one, with `Limit.range(1, n)` meaning "at most _n_ results, starting from the first result".
+
 A more sophisticated approach is provided by `PageRequest`.
 
+[[offset-based-pagination]]
 === Offset-based pagination
 
-A `PageRequest` is superficially similar to a `Limit`, except that it's specified in terms of:
+A https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/page/pagerequest[`PageRequest`] is superficially similar to a `Limit`, except that it's specified in terms of:
 
 - a page `size`, and
 - a numbered `page`.
@@ -172,7 +191,7 @@ The easiest way to be sure that you have a well-defined total order is to specif
 For this reason, we specified `@OrderBy("isbn")` in the previous example.
 ====
 
-However, a repository method which accepts a `PageRequest` may return a `Page` instead of a `List`, making it easier to implement pagination.
+However, a repository method which accepts a `PageRequest` may return a https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/page/page[`Page`] of results instead of a `List`, making it easier to implement pagination.
 
 [source,java]
 ----
@@ -218,6 +237,7 @@ We'll refer to this as _offset-based pagination_.
 A problem with this approach is that it's quite vulnerable to missed or duplicate results when the database is modified between page requests.
 Therefore, Jakarta Data offers an alternative solution, which we'll call _key-based pagination_.
 
+[[key-based-pagination]]
 === Key-based pagination
 
 In key-based pagination, the query results must be totally ordered by a unique key of the result set.
@@ -233,7 +253,7 @@ For key-based pagination, it's _essential_ that the query has a total order.
 ====
 
 From our point of view as users of Jakarta Data, key-based pagination works almost exactly like offset-based pagination.
-The difference is that we must declare our repository method to return `CursoredPage`.
+The difference is that we must declare our repository method to return https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/page/cursoredpage[`CursoredPage`].
 
 [source,java]
 ----
@@ -241,7 +261,7 @@ The difference is that we must declare our repository method to return `Cursored
 @OrderBy("title")
 @OrderBy("isbn")
 CursoredPage<Book> books(@Pattern String title, Year yearPublished,
-                 PageRequest pageRequest);
+                         PageRequest pageRequest);
 ----
 
 On the other hand, with key-based pagination, Hibernate must do some work under the covers rewriting our query.
@@ -258,6 +278,63 @@ Direct API support for key-based pagination originated in the work of Hibernate 
 It was adopted from there by the Jakarta Data specification, and is now even available in Hibernate ORM via the link:{doc-javadoc-url}org/hibernate/query/KeyedPage.html[`KeyedPage`]/link:{doc-javadoc-url}org/hibernate/query/KeyedResultList.html[`KeyedResultList`] API.
 ****
 
+[[dynamic-restrictions]]
+=== Dynamic restrictions
+
+Jakarta Data 1.0 does not include an API for programmatically specifying restrictions, but for now we may use the native link:{doc-javadoc-url}org/hibernate/query/restriction/Restriction.html[`Restriction`] API in Hibernate 7.
+
+[NOTE]
+====
+Restrictions will be standardized by Jakarta Data 1.1.
+====
+
+Hibernate, an atomic `Restriction` is formed from:
+
+- a reference to a JPA `SingularAttribute`, usually obtained via the _Jakarta Persistence_ (not Jakarta Data) static metamodel, together with
+- a `Range` of allowed values for that attribute.
+
+A query method may have a parameter of type `Restriction`, for example:
+
+[source,java]
+----
+@Find
+List<Book> books(Restriction<Book> restriction,
+                 Order<Book> order);
+----
+
+This method would be called like this:
+
+[source,java]
+----
+var books =
+       library.books(Restriction.contains(Book_.title, "Hibernate"),
+                     Order.of(_Book.title.ascIgnoreCase(),
+                              _Book.isbn.asc()));
+----
+
+Notice the mix of metamodels here: `Book_` is the Persistence metamodel, and `_Book` is the Data metamodel.
+
+It's even possible to directly use a link:{doc-javadoc-url}org/hibernate/query/range/Range.html[`Range`] to restrict a given property or field of an entity:
+
+[source,java]
+----
+@Find
+List<Book> books(Range<String> title, Range<Year> yearPublished,
+                 Order<Book> order);
+----
+
+There are various kinds of `Range`, including lists, patterns, and intervals:
+
+[source,java]
+----
+var books =
+       library.books(Range.prefix("Hibernate"),
+                     Range.closed(Year.of(2000), Year.of(2009)),
+                     Order.of(_Book.title.ascIgnoreCase(),
+                              _Book.isbn.asc()));
+----
+
+[[advanced-query-control]]
 === Advanced control over querying
 
 For more advanced usage, an automatic or annotated query method may be declared to return `jakarta.persistence.Query`, `jakarta.persistence.TypedQuery`, link:{doc-javadoc-url}org/hibernate/query/Query.html[`org.hibernate.query.Query`], or link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html[`org.hibernate.query.SelectionQuery`].
@@ -269,11 +346,11 @@ SelectionQuery<Book> booksQuery(@Pattern String title, Year yearPublished);
 
 default List<Book> booksQuery(String title, Year yearPublished) {
     return books(title, yearPublished)
-            .enableFetchProfile(_Book.PROFILE_WITH_AUTHORS);
+            .enableFetchProfile(_Book.PROFILE_WITH_AUTHORS)
             .setReadOnly(true)
             .setTimeout(QUERY_TIMEOUT)
             .getResultList();
 }
 ----
 
-This allows for direct control over query execution, without loss of typesafety.
+This allows for direct control over query execution, without loss of type safety.

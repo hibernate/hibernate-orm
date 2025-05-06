@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
@@ -100,8 +100,8 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
 		if ( idTable.getSessionUidColumn() != null ) {
-			final ParameterMarkerStrategy parameterMarkerStrategy = session.getSessionFactory()
-					.getFastSessionServices().parameterMarkerStrategy;
+			final ParameterMarkerStrategy parameterMarkerStrategy =
+					session.getSessionFactory().getParameterMarkerStrategy();
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
 					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
 					+ parameterMarkerStrategy.createMarker( 1, null );

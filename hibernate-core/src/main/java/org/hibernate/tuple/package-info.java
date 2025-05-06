@@ -1,17 +1,16 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 /**
  * Most contracts here have been replaced by the new runtime
  * {@linkplain org.hibernate.metamodel.mapping mapping model}.
- * <p>
- * @apiNote This entire package (and sub-packages) is considered deprecated
+ *
+ * @apiNote This entire package (and subpackages) is considered
+ *          deprecated and will be removed
  */
-@Remove
+@Remove @Deprecated(forRemoval = true)
 package org.hibernate.tuple;
 
 import org.hibernate.Remove;

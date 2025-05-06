@@ -1,15 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.namingstrategy;
 
+import jakarta.persistence.Column;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategySnakeCaseImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -50,29 +50,33 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 		Metadata metadata = new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( B.class )
 				.getMetadataBuilder()
-				.applyPhysicalNamingStrategy( new CamelCaseToUnderscoresNamingStrategy() )
+				.applyPhysicalNamingStrategy( new PhysicalNamingStrategySnakeCaseImpl() )
 				.build();
 
 		PersistentClass entityBinding = metadata.getEntityBinding( B.class.getName() );
 		assertEquals(
 				"word_with_digit_d1",
-				( (Selectable) entityBinding.getProperty( "wordWithDigitD1" ).getSelectables().get( 0 ) ).getText()
+				entityBinding.getProperty( "wordWithDigitD1" ).getSelectables().get( 0 ).getText()
 		);
 		assertEquals(
 				"abcd_efgh_i21",
-				( (Selectable) entityBinding.getProperty( "AbcdEfghI21" ).getSelectables().get( 0 ) ).getText()
+				entityBinding.getProperty( "AbcdEfghI21" ).getSelectables().get( 0 ).getText()
 		);
 		assertEquals(
 				"hello1",
-				( (Selectable) entityBinding.getProperty( "hello1" ).getSelectables().get( 0 ) ).getText()
+				entityBinding.getProperty( "hello1" ).getSelectables().get( 0 ).getText()
 		);
 		assertEquals(
 				"hello1_d2",
-				( (Selectable) entityBinding.getProperty( "hello1D2" ).getSelectables().get( 0 ) ).getText()
+				entityBinding.getProperty( "hello1D2" ).getSelectables().get( 0 ).getText()
 		);
 		assertEquals(
 				"hello3d4",
-				( (Selectable) entityBinding.getProperty( "hello3d4" ).getSelectables().get( 0 ) ).getText()
+				entityBinding.getProperty( "hello3d4" ).getSelectables().get( 0 ).getText()
+		);
+		assertEquals(
+				"Quoted-ColumnName",
+				entityBinding.getProperty( "quoted" ).getSelectables().get( 0 ).getText()
 		);
 	}
 
@@ -85,6 +89,8 @@ public class CamelCaseToUnderscoresNamingStrategyTest extends BaseUnitTestCase {
 		protected String hello1;
 		protected String hello1D2;
 		protected String hello3d4;
+		@Column(name = "\"Quoted-ColumnName\"")
+		protected String quoted;
 
 		public String getAbcdEfghI21() {
 			return AbcdEfghI21;

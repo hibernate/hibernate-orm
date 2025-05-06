@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
@@ -20,7 +20,7 @@ import org.hibernate.tool.schema.internal.exec.JdbcContext;
  */
 public interface TransactionCoordinatorBuilder extends Service {
 	/**
-	 * Access to options to are specific to each {@link TransactionCoordinator} instance.
+	 * Access to options that are specific to each {@link TransactionCoordinator} instance.
 	 */
 	interface Options {
 		/**

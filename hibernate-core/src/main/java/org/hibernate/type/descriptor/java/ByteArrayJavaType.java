@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -30,7 +30,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 
 	@SuppressWarnings("unchecked")
 	public ByteArrayJavaType() {
-		super( Byte[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
+		super( Byte[].class, ImmutableObjectArrayMutabilityPlan.get(), IncomparableComparator.INSTANCE );
 	}
 	@Override
 	public boolean areEqual(Byte[] one, Byte[] another) {

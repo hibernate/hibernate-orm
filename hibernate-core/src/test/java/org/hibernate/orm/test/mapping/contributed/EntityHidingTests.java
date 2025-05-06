@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.contributed;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.mapping.contributed;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -42,12 +41,11 @@ public class EntityHidingTests {
 	@NotImplementedYet( reason = "Contributed entity hiding is not yet implemented" )
 	public void testModel(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 
-		final EntityDomainType<?> jpaModelDescriptor = runtimeMetamodels.getJpaMetamodel().entity( "DynamicEntity" );
+		final EntityDomainType<?> jpaModelDescriptor = sessionFactory.getJpaMetamodel().entity( "DynamicEntity" );
 		assertThat( jpaModelDescriptor, nullValue() );
 
-		final EntityPersister mappingModelDescriptor = runtimeMetamodels.getMappingMetamodel()
+		final EntityPersister mappingModelDescriptor = sessionFactory.getMappingMetamodel()
 				.findEntityDescriptor( "DynamicEntity" );
 		assertThat( mappingModelDescriptor, nullValue() );
 	}

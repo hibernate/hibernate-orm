@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entity;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.annotations.entity;
 import java.math.BigDecimal;
 import java.util.Currency;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -16,7 +15,7 @@ import org.hibernate.metamodel.spi.ValueAccess;
  */
 public class MonetaryAmountInstantiator implements EmbeddableInstantiator {
 	@Override
-	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valueAccess) {
 		final BigDecimal amount = valueAccess.getValue(0, BigDecimal.class);
 		final Currency currency = valueAccess.getValue(1, Currency.class);
 
@@ -28,12 +27,12 @@ public class MonetaryAmountInstantiator implements EmbeddableInstantiator {
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isInstance(Object object) {
 		return object instanceof MonetaryAmount;
 	}
 
 	@Override
-	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isSameClass(Object object) {
 		return MonetaryAmount.class.equals( object.getClass() );
 	}
 }

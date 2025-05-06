@@ -1,14 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
@@ -27,6 +26,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Christian Beikov
@@ -79,7 +80,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 				}
 				List<SortSpecification> withinGroup;
 				if ( this.getWithinGroup() == null ) {
-					withinGroup = Collections.emptyList();
+					withinGroup = emptyList();
 				}
 				else {
 					walker.getCurrentClauseStack().push( Clause.ORDER );
@@ -97,15 +98,16 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 						walker.getCurrentClauseStack().pop();
 					}
 				}
-				final SelfRenderingFunctionSqlAstExpression function = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
-						getFunctionName(),
-						getFunctionRenderer(),
-						Collections.emptyList(),
-						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
-						Collections.emptyList(),
-						resultType,
-						getMappingModelExpressible( walker, resultType, arguments )
-				);
+				final SelfRenderingFunctionSqlAstExpression<?> function =
+						new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression<>(
+								getFunctionName(),
+								getFunctionRenderer(),
+								emptyList(),
+								getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
+								emptyList(),
+								resultType,
+								getMappingModelExpressible( walker, resultType, arguments )
+						);
 				final Over<Object> windowFunction = new Over<>( function, new ArrayList<>(), withinGroup );
 				walker.registerQueryTransformer(
 						new AggregateWindowEmulationQueryTransformer( windowFunction, withinGroup, arguments )

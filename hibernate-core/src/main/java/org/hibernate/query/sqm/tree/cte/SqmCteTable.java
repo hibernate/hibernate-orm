@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.cte;
@@ -11,9 +11,9 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
-import org.hibernate.query.derived.AnonymousTupleSimpleSqmPathSource;
-import org.hibernate.query.derived.AnonymousTupleType;
-import org.hibernate.query.derived.CteTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
+import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;

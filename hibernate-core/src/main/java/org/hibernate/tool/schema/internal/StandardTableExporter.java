@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -168,7 +168,7 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyInitCommands(Table table, List<String> sqlStrings, SqlStringGenerationContext context) {
 		for ( InitCommand initCommand : table.getInitCommands( context ) ) {
-			addAll( sqlStrings, initCommand.getInitCommands() );
+			addAll( sqlStrings, initCommand.initCommands() );
 		}
 	}
 
@@ -207,7 +207,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		return false;
 	}
 
-	private void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+	protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
 		final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
 		final int checkStart = buf.length();
 		buf.append( ", check (" );
@@ -279,7 +279,8 @@ public class StandardTableExporter implements Exporter<Table> {
 							subColumnName,
 							aggregatePath,
 							subColumnName,
-							aggregateColumn, subColumn
+							aggregateColumn,
+							subColumn
 					);
 					if ( !subColumn.isNullable() ) {
 						buf.append( separator );

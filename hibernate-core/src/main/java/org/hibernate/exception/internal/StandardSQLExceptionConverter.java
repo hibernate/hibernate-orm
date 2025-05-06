@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.exception.internal;
@@ -10,11 +10,9 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A {@link SQLExceptionConverter} that delegates to a chain of
@@ -28,26 +26,6 @@ public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 
 	public StandardSQLExceptionConverter(SQLExceptionConversionDelegate... delegates) {
 		this.delegates = Arrays.asList(delegates);
-	}
-
-	/**
-	 * @deprecated use {@link #StandardSQLExceptionConverter(SQLExceptionConversionDelegate...)}
-	 */
-	@Deprecated(since = "6.0")
-	public StandardSQLExceptionConverter() {
-		delegates = new ArrayList<>();
-	}
-
-	/**
-	 * Add a delegate.
-	 *
-	 * @deprecated use {@link #StandardSQLExceptionConverter(SQLExceptionConversionDelegate...)}
-	 */
-	@Deprecated(since = "6.0")
-	public void addDelegate(@Nullable SQLExceptionConversionDelegate delegate) {
-		if ( delegate != null ) {
-			this.delegates.add( delegate );
-		}
 	}
 
 	@Override

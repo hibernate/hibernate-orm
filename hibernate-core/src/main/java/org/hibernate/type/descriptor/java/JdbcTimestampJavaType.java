@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -24,7 +24,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -224,7 +223,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = DateTimeUtils.DATE_TIME.parse( subSequence( charSequence, start, end ) );
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			final Timestamp timestamp;
 			if ( accessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
 				timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );

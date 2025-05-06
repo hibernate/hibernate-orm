@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
@@ -59,11 +59,10 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Binding doBind(Binder binder) {
+	public <T> Binding<T> doBind(Binder<T> binder) {
 		if ( strict ) {
 			try {
-				return new Binding( readSerFile(), getOrigin() );
+				return new Binding<>( readSerFile(), getOrigin() );
 			}
 			catch ( SerializationException e ) {
 				throw new MappingException(
@@ -83,7 +82,7 @@ public class CacheableFileXmlSource extends XmlSource {
 		else {
 			if ( !isSerfileObsolete() ) {
 				try {
-					return new Binding( readSerFile(), getOrigin() );
+					return new Binding<>( readSerFile(), getOrigin() );
 				}
 				catch ( SerializationException e ) {
 					log.unableToDeserializeCache( serFile.getName(), e );
@@ -97,7 +96,7 @@ public class CacheableFileXmlSource extends XmlSource {
 			}
 
 			log.readingMappingsFromFile( xmlFile.getPath() );
-			final Binding binding = FileXmlSource.doBind( binder, xmlFile, getOrigin() );
+			final Binding<T> binding = FileXmlSource.doBind( binder, xmlFile, getOrigin() );
 
 			writeSerFile( binding );
 

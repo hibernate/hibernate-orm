@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,9 +12,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -24,6 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Christian Beikov
  */
+@AllowReflection // Needed for arbitrary array wrapping/unwrapping
 public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Long> {
 
 	public static final LongPrimitiveArrayJavaType INSTANCE = new LongPrimitiveArrayJavaType();
@@ -183,27 +183,10 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 		throw unknownWrap( value.getClass() );
 	}
 
-	private static class ArrayMutabilityPlan implements MutabilityPlan<long[]> {
-
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<long[]> {
 		@Override
-		public boolean isMutable() {
-			return true;
+		protected long[] deepCopyNotNull(long[] value) {
+			return value.clone();
 		}
-
-		@Override
-		public long[] deepCopy(long[] value) {
-			return value == null ? null : value.clone();
-		}
-
-		@Override
-		public Serializable disassemble(long[] value, SharedSessionContract session) {
-			return deepCopy( value );
-		}
-
-		@Override
-		public long[] assemble(Serializable cached, SharedSessionContract session) {
-			return deepCopy( (long[]) cached );
-		}
-
 	}
 }

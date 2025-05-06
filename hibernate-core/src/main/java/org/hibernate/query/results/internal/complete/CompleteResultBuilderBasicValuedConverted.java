@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -46,12 +46,14 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			BasicValuedMapping underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
 		this.underlyingMapping = underlyingMapping;
-		//noinspection unchecked,rawtypes
+		@SuppressWarnings("unchecked")
+		final JavaType<R> relationalType =
+				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor();
 		this.valueConverter = new JpaAttributeConverterImpl<>(
 				converterBean,
 				converterJtd,
 				domainJavaType,
-				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor()
+				relationalType
 		);
 	}
 
@@ -71,28 +73,36 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final String columnName =
+				explicitColumnName != null
+						? explicitColumnName
+				: jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
+		return new BasicResult<>(
+				sqlSelection( jdbcResultsMetadata, resultPosition, creationStateImpl, columnName )
+						.getValuesArrayPosition(),
+				columnName,
+				valueConverter.getDomainJavaType(),
+				valueConverter,
+				null,
+				false,
+				false
+		);
+	}
+
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			int resultPosition,
+			DomainResultCreationStateImpl creationStateImpl,
+			String columnName) {
 		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
-
-		final String columnName;
-		if ( explicitColumnName != null ) {
-			columnName = explicitColumnName;
-		}
-		else {
-			columnName = jdbcResultsMetadata.resolveColumnName( creationStateImpl.getNumberOfProcessedSelections() + 1 );
-		}
-
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
+		return creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
 						processingState -> {
-							final int jdbcPosition;
-							if ( explicitColumnName != null ) {
-								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-							}
-							else {
-								jdbcPosition = resultPosition + 1;
-							}
-
+							final int jdbcPosition =
+									explicitColumnName != null
+											? jdbcResultsMetadata.resolveColumnPosition( explicitColumnName )
+											: resultPosition + 1;
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 							return new ResultSetMappingSqlSelection( valuesArrayPosition, underlyingMapping );
 						}
@@ -100,16 +110,6 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 				valueConverter.getRelationalJavaType(),
 				null,
 				sessionFactory.getTypeConfiguration()
-		);
-
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				columnName,
-				valueConverter.getDomainJavaType(),
-				valueConverter,
-				null,
-				false,
-				false
 		);
 	}
 
@@ -122,15 +122,10 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			return false;
 		}
 
-		CompleteResultBuilderBasicValuedConverted<?, ?> that = (CompleteResultBuilderBasicValuedConverted<?, ?>) o;
-
-		if ( !Objects.equals( explicitColumnName, that.explicitColumnName ) ) {
-			return false;
-		}
-		if ( !underlyingMapping.equals( that.underlyingMapping ) ) {
-			return false;
-		}
-		return valueConverter.equals( that.valueConverter );
+		final CompleteResultBuilderBasicValuedConverted<?, ?> that = (CompleteResultBuilderBasicValuedConverted<?, ?>) o;
+		return Objects.equals( explicitColumnName, that.explicitColumnName )
+				&& underlyingMapping.equals( that.underlyingMapping )
+				&& valueConverter.equals( that.valueConverter );
 	}
 
 	@Override

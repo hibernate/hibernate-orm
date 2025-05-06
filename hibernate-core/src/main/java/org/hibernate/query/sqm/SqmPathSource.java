@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -8,9 +8,9 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.Bindable;
 
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.metamodel.model.domain.PathSource;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -24,20 +24,26 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J> {
-	/**
-	 * The name of this thing.
-	 *
-	 * @apiNote Mainly used in logging and when creating a {@link NavigablePath}.
-	 */
-	String getPathName();
+public interface SqmPathSource<J>
+		extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J>, PathSource<J> {
 
 	/**
 	 * The type of {@linkplain SqmPath path} this source creates.
 	 *
 	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
-	DomainType<J> getSqmPathType();
+	@Override
+	SqmDomainType<J> getPathType();
+
+	/**
+	 * The type of {@linkplain SqmPath path} this source creates.
+	 *
+	 * @deprecated Use {@link #getPathType()}.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default SqmDomainType<J> getSqmPathType() {
+		return getPathType();
+	}
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
@@ -157,12 +163,12 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 
 	@Override
 	default SqmExpressible<J> getExpressible() {
-		return getSqmPathType();
+		return getPathType();
 	}
 
 	@Override
-	default DomainType<J> getSqmType() {
-		return getSqmPathType();
+	default SqmDomainType<J> getSqmType() {
+		return getPathType();
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -48,7 +48,7 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.HANAServerConfiguration;
-import org.hibernate.dialect.HANASqlAstTranslator;
+import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.RowLockStrategy;
@@ -111,7 +111,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
@@ -163,6 +162,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.java.DataHelper.extractBytes;
+import static org.hibernate.type.descriptor.java.DataHelper.extractString;
 
 /**
  * An SQL dialect for legacy versions of the SAP HANA Platform up tu and including 2.0 SPS 04.
@@ -683,26 +684,14 @@ public class HANALegacyDialect extends Dialect {
 		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
 	}
 
-	@SuppressWarnings({ "deprecation" })
 	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, timeout );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, timeout );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString( aliases );
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString( aliases );
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch ( lockMode ) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	@Override
@@ -1497,7 +1486,7 @@ public class HANALegacyDialect extends Dialect {
 
 		@Override
 		public long position(Clob searchstr, long start) throws SQLException {
-			return this.data.indexOf( DataHelper.extractString( searchstr ), (int) ( start - 1 ) );
+			return this.data.indexOf( extractString( searchstr ), (int) ( start - 1 ) );
 		}
 
 		@Override
@@ -1533,6 +1522,47 @@ public class HANALegacyDialect extends Dialect {
 		@Override
 		public void free() throws SQLException {
 			this.data = null;
+		}
+	}
+
+	private static class BlobExtractor<X> extends BasicExtractor<X> {
+		private final int maxLobPrefetchSize;
+
+		public BlobExtractor(JavaType<X> javaType, JdbcType jdbcType, int maxLobPrefetchSize) {
+			super( javaType, jdbcType );
+			this.maxLobPrefetchSize = maxLobPrefetchSize;
+		}
+
+		private X doExtract(Blob blob, WrapperOptions options) throws SQLException {
+			final X result;
+			if ( blob == null ) {
+				result = getJavaType().wrap( null, options );
+			}
+			else if ( blob.length() < maxLobPrefetchSize ) {
+				result = getJavaType().wrap( blob, options );
+				blob.free();
+			}
+			else {
+				final MaterializedBlob materialized = new MaterializedBlob( extractBytes( blob.getBinaryStream() ) );
+				blob.free();
+				result = getJavaType().wrap( materialized, options );
+			}
+			return result;
+		}
+
+		@Override
+		protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+			return doExtract( rs.getBlob( paramIndex ), options );
+		}
+
+		@Override
+		protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+			return doExtract( statement.getBlob( index ), options );
+		}
+
+		@Override
+		protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			return doExtract( statement.getBlob( name ), options );
 		}
 	}
 
@@ -1601,38 +1631,8 @@ public class HANALegacyDialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
-			return new BasicExtractor<>( javaType, this ) {
-				private X extract(Blob blob, WrapperOptions options) throws SQLException {
-					if ( blob == null ) {
-						return null;
-					}
-					if ( blob.length() < HANALegacyDialect.HANAStreamBlobType.this.maxLobPrefetchSize ) {
-						X result = javaType.wrap( blob, options );
-						blob.free();
-						return result;
-					}
-					Blob materializedBlob = new MaterializedBlob( DataHelper.extractBytes( blob.getBinaryStream() ) );
-					blob.free();
-					return javaType.wrap( materializedBlob, options );
-				}
-
-				@Override
-				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return extract( rs.getBlob( paramIndex ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( index ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( name ), options );
-				}
-			};
+			return new BlobExtractor<>( javaType, this, maxLobPrefetchSize );
 		}
-
 	}
 
 	// the ClobTypeDescriptor and NClobTypeDescriptor for HANA are slightly
@@ -1704,55 +1704,39 @@ public class HANALegacyDialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
-				private X extract(Clob clob, WrapperOptions options) throws SQLException {
+				private X doExtract(Clob clob, WrapperOptions options) throws SQLException {
+					final X result;
 					if ( clob == null ) {
-						return null;
+						result = getJavaType().wrap( null, options );
 					}
-
-					if ( clob.length() < HANALegacyDialect.HANAClobJdbcType.this.maxLobPrefetchSize ) {
-						X retVal = javaType.wrap(clob, options);
+					else if ( clob.length() < maxLobPrefetchSize ) {
+						result = getJavaType().wrap(clob, options);
 						clob.free();
-						return retVal;
 					}
-					NClob materializedNClob = new MaterializedNClob( DataHelper.extractString( clob ) );
-					clob.free();
-					return javaType.wrap( materializedNClob, options );
+					else {
+						final MaterializedNClob materialized = new MaterializedNClob( extractString( clob ) );
+						clob.free();
+						result = getJavaType().wrap( materialized, options );
+					}
+					return result;
 				}
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANALegacyDialect.HANAClobJdbcType.this.useUnicodeStringTypes ) {
-						rsClob = rs.getNClob( paramIndex );
-					}
-					else {
-						rsClob = rs.getClob( paramIndex );
-					}
-					return extract( rsClob, options );
+					final Clob clob = useUnicodeStringTypes ? rs.getNClob( paramIndex ) : rs.getClob( paramIndex );
+					return doExtract( clob, options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANALegacyDialect.HANAClobJdbcType.this.useUnicodeStringTypes ) {
-						rsClob = statement.getNClob( index );
-					}
-					else {
-						rsClob = statement.getClob( index );
-					}
-					return extract( rsClob, options );
+					final Clob clob = useUnicodeStringTypes ? statement.getNClob( index ) : statement.getClob( index );
+					return doExtract( clob, options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					Clob rsClob;
-					if ( HANALegacyDialect.HANAClobJdbcType.this.useUnicodeStringTypes ) {
-						rsClob = statement.getNClob( name );
-					}
-					else {
-						rsClob = statement.getClob( name );
-					}
-					return extract( rsClob, options );
+					final Clob clob = useUnicodeStringTypes ? statement.getNClob( name ) : statement.getClob( name );
+					return doExtract( clob, options );
 				}
 			};
 		}
@@ -1826,32 +1810,36 @@ public class HANALegacyDialect extends Dialect {
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
 			return new BasicExtractor<>( javaType, this ) {
-				private X extract(NClob nclob, WrapperOptions options) throws SQLException {
+				private X doExtract(NClob nclob, WrapperOptions options) throws SQLException {
+					final X result;
 					if ( nclob == null ) {
-						return null;
+						result = getJavaType().wrap( null, options );
 					}
-					if ( nclob.length() < maxLobPrefetchSize ) {
-						X retVal = javaType.wrap(nclob, options);
+					else if ( nclob.length() < maxLobPrefetchSize ) {
+						result = javaType.wrap(nclob, options);
 						nclob.free();
-						return retVal;
 					}
-					NClob materializedNClob = new MaterializedNClob( DataHelper.extractString( nclob ) );
-					nclob.free();
-					return javaType.wrap( materializedNClob, options );
+					else {
+						final MaterializedNClob materialized = new MaterializedNClob( extractString( nclob ) );
+						nclob.free();
+						result = getJavaType().wrap( materialized, options );
+					}
+					return result;
 				}
+
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return extract( rs.getNClob( paramIndex ), options );
+					return doExtract( rs.getNClob( paramIndex ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return extract( statement.getNClob( index ), options );
+					return doExtract( statement.getNClob( index ), options );
 				}
 
 				@Override
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return extract( statement.getNClob( name ), options );
+					return doExtract( statement.getNClob( name ), options );
 				}
 			};
 		}
@@ -1892,35 +1880,7 @@ public class HANALegacyDialect extends Dialect {
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaType) {
-			return new BasicExtractor<>( javaType, this ) {
-				private X extract(Blob blob, WrapperOptions options) throws SQLException {
-					if ( blob == null ) {
-						return null;
-					}
-					if ( blob.length() < maxLobPrefetchSize ) {
-						X retVal = javaType.wrap(blob, options);
-						blob.free();
-						return retVal;
-					}
-					Blob materializedBlob = new MaterializedBlob( DataHelper.extractBytes( blob.getBinaryStream() ) );
-					blob.free();
-					return javaType.wrap( materializedBlob, options );
-				}
-				@Override
-				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-					return extract( rs.getBlob( paramIndex ) , options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( index ), options );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return extract( statement.getBlob( name ), options );
-				}
-			};
+			return new BlobExtractor<>( javaType, this, maxLobPrefetchSize );
 		}
 
 		@Override
@@ -2046,4 +2006,21 @@ public class HANALegacyDialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorGtLtSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// HANA doesn't seem to support correlation, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 }

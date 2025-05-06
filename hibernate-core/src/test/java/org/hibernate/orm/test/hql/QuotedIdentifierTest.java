@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
 
 import java.util.List;
 
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -24,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Christian Beikov
  */
+@Exclude
 public class QuotedIdentifierTest extends BaseCoreFunctionalTestCase {
 
 	private Person person;

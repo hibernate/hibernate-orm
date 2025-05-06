@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast;
@@ -16,9 +16,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * Models a column's value expression within the SQL AST. Used to model:<ul>
- *     <li>a column's new value in a SET clause</li>
- *     <li>a column's new value in a SET clause</li>
- *     <li>a column's old value in a restriction (optimistic locking)</li>
+ *     <li>a column's new value (UPDATE SET clause or INSERT VALUES clause)</li>
+ *     <li>a column's old value in a restriction (optimistic locking, etc.)</li>
  * </ul>
  *
  * @see ColumnTransformer#write()
@@ -65,32 +64,29 @@ public class ColumnWriteFragment implements Expression {
 
 	@Override
 	public String toString() {
-		switch ( parameters.size() ) {
-			case 0:
-				return String.format(
-						Locale.ROOT,
-						"ColumnWriteFragment(%s)@%s",
-						fragment,
-						hashCode()
-				);
-			case 1:
-				return String.format(
-						Locale.ROOT,
-						"ColumnWriteFragment(%s = %s (%s))@%s",
-						parameters.get( 0 ).getColumnReference().getColumnExpression(),
-						fragment,
-						parameters.get( 0 ).getUsage(),
-						hashCode()
-				);
-			default:
-				return String.format(
-						Locale.ROOT,
-						"ColumnWriteFragment(%s = %s (%s))@%s",
-						parameters,
-						fragment,
-						parameters.get( 0 ).getUsage(),
-						hashCode()
-				);
-		}
+		return switch ( parameters.size() ) {
+			case 0 -> String.format(
+					Locale.ROOT,
+					"ColumnWriteFragment(%s)@%s",
+					fragment,
+					hashCode()
+			);
+			case 1 -> String.format(
+					Locale.ROOT,
+					"ColumnWriteFragment(%s = %s (%s))@%s",
+					parameters.get( 0 ).getColumnReference().getColumnExpression(),
+					fragment,
+					parameters.get( 0 ).getUsage(),
+					hashCode()
+			);
+			default -> String.format(
+					Locale.ROOT,
+					"ColumnWriteFragment(%s = %s (%s))@%s",
+					parameters,
+					fragment,
+					parameters.get( 0 ).getUsage(),
+					hashCode()
+			);
+		};
 	}
 }

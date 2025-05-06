@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.records;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.records;
 import java.time.LocalDate;
 
 import org.hibernate.annotations.EmbeddableInstantiator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -72,17 +71,17 @@ public class EmbeddableInstantiatorTest {
 		public static class MyRecordInstantiator implements org.hibernate.metamodel.spi.EmbeddableInstantiator {
 
 			@Override
-			public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+			public boolean isInstance(Object object) {
 				return MyRecord.class.isInstance( object );
 			}
 
 			@Override
-			public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+			public boolean isSameClass(Object object) {
 				return MyRecord.class.equals( object.getClass() );
 			}
 
 			@Override
-			public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+			public Object instantiate(ValueAccess valueAccess) {
 				return new MyRecord( valueAccess.getValue( 2, Integer.class ), valueAccess.getValue( 1, String.class ),
 									valueAccess.getValue( 0, LocalDate.class )
 				);

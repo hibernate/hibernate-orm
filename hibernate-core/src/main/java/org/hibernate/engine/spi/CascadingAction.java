@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -8,9 +8,7 @@ import java.util.Iterator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
 
 /**
  * A session action that may be cascaded from parent entity to its children
@@ -57,34 +55,6 @@ public interface CascadingAction<T> {
 	 * @return True if this action can lead to deletions of orphans.
 	 */
 	boolean deleteOrphans();
-
-
-	/**
-	 * Does the specified cascading action require verification of no cascade validity?
-	 *
-	 * @return True if this action requires no-cascade verification; false otherwise.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "6.6", forRemoval = true)
-	default boolean requiresNoCascadeChecking() {
-		return false;
-	}
-
-	/**
-	 * Called (in the case of {@link #requiresNoCascadeChecking} returning true) to validate
-	 * that no cascade on the given property is considered a valid semantic.
-	 *
-	 * @param session The session within which the cascade is occurring.
-	 * @param parent The property value owner
-	 * @param persister The entity persister for the owner
-	 * @param propertyType The property type
-	 * @param propertyIndex The index of the property within the owner.
-	 *
-	 * @deprecated No longer used
-	 */
-	@Deprecated(since = "6.6", forRemoval = true)
-	default void noCascade(EventSource session, Object parent, EntityPersister persister, Type propertyType, int propertyIndex) {}
 
 	/**
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.

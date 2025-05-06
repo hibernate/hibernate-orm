@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -10,7 +10,6 @@ import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -64,11 +63,23 @@ public class CompleteResultBuilderBasicModelPart
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		final TableReference tableReference = tableReference( creationStateImpl );
+		final SqlSelection sqlSelection = sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				columnAlias,
+				modelPart.getJdbcMapping(),
+				navigablePath,
+				false,
+				!sqlSelection.isVirtual()
+		);
+	}
 
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
-
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationStateImpl creationStateImpl,
+			TableReference tableReference) {
+		return creationStateImpl.resolveSqlSelection(
 				ResultsHelper.resolveSqlExpression(
 						creationStateImpl,
 						jdbcResultsMetadata,
@@ -80,15 +91,12 @@ public class CompleteResultBuilderBasicModelPart
 				null,
 				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
+	}
 
-		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
-				columnAlias,
-				modelPart.getJdbcMapping(),
-				navigablePath,
-				false,
-				!sqlSelection.isVirtual()
-		);
+	private TableReference tableReference(DomainResultCreationStateImpl creationStateImpl) {
+		return creationStateImpl.getFromClauseAccess()
+				.getTableGroup( navigablePath.getParent() )
+				.resolveTableReference( navigablePath, modelPart, modelPart.getContainingTableExpression() );
 	}
 
 	@Override
@@ -100,15 +108,10 @@ public class CompleteResultBuilderBasicModelPart
 			return false;
 		}
 
-		CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
-
-		if ( !navigablePath.equals( that.navigablePath ) ) {
-			return false;
-		}
-		if ( !modelPart.equals( that.modelPart ) ) {
-			return false;
-		}
-		return columnAlias.equals( that.columnAlias );
+		final CompleteResultBuilderBasicModelPart that = (CompleteResultBuilderBasicModelPart) o;
+		return navigablePath.equals( that.navigablePath )
+				&& modelPart.equals( that.modelPart )
+				&& columnAlias.equals( that.columnAlias );
 	}
 
 	@Override

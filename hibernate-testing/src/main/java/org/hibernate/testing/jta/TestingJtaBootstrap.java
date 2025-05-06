@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jta;
@@ -9,12 +9,15 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.orm.junit.SettingConfiguration;
 import org.hibernate.testing.util.ServiceRegistryUtil;
+
+import static org.hibernate.cfg.TransactionSettings.TRANSACTION_COORDINATOR_STRATEGY;
 
 /**
  * @author Steve Ebersole
  */
-public final class TestingJtaBootstrap {
+public final class TestingJtaBootstrap implements SettingConfiguration.Configurer {
 	public static final TestingJtaBootstrap INSTANCE = new TestingJtaBootstrap();
 
 	public static void prepare(Map<String,Object> configValues) {
@@ -28,7 +31,7 @@ public final class TestingJtaBootstrap {
 	}
 
 	public static void prepare(StandardServiceRegistryBuilder registryBuilder) {
-		registryBuilder.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
+		registryBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 		registryBuilder.applySetting( AvailableSettings.JTA_PLATFORM, TestingJtaPlatformImpl.INSTANCE );
 		registryBuilder.applySetting( AvailableSettings.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
 		registryBuilder.applySetting(
@@ -44,6 +47,12 @@ public final class TestingJtaBootstrap {
 		return registryBuilder;
 	}
 
-	private TestingJtaBootstrap() {
+	public TestingJtaBootstrap() {
+	}
+
+	@Override
+	public void applySettings(StandardServiceRegistryBuilder registryBuilder) {
+		registryBuilder.applySetting( TRANSACTION_COORDINATOR_STRATEGY, "jta" );
+		prepare( registryBuilder );
 	}
 }

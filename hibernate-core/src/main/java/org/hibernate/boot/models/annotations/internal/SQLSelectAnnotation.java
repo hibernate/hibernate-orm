@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.HibernateAnnotations.SQL_SELECT;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -25,7 +25,7 @@ public class SQLSelectAnnotation implements SQLSelect {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SQLSelectAnnotation(SourceModelBuildingContext modelContext) {
+	public SQLSelectAnnotation(ModelsContext modelContext) {
 		this.resultSetMapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage( modelContext );
 		this.querySpaces = new String[0];
 	}
@@ -33,7 +33,7 @@ public class SQLSelectAnnotation implements SQLSelect {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SQLSelectAnnotation(SQLSelect annotation, SourceModelBuildingContext modelContext) {
+	public SQLSelectAnnotation(SQLSelect annotation, ModelsContext modelContext) {
 		this.sql = annotation.sql();
 		this.resultSetMapping = extractJdkValue( annotation, SQL_SELECT, "resultSetMapping", modelContext );
 		this.querySpaces = annotation.querySpaces();
@@ -42,7 +42,7 @@ public class SQLSelectAnnotation implements SQLSelect {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SQLSelectAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public SQLSelectAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.sql = (String) attributeValues.get( "sql" );
 		this.resultSetMapping = (jakarta.persistence.SqlResultSetMapping) attributeValues.get( "resultSetMapping" );
 		this.querySpaces = (String[]) attributeValues.get( "querySpaces" );

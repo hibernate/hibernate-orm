@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
 
 import java.lang.reflect.Field;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +13,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.SqlTypes;
 
+import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -29,11 +29,11 @@ public final class JdbcTypeNameMapper {
 	private static final Map<String, Integer> SQL_TYPE_NAME_MAP = buildJdbcTypeNameMap( SqlTypes.class );
 
 	private static Map<Integer, String> buildJdbcTypeMap(Class<?> typesClass) {
-		HashMap<Integer, String> map = new HashMap<>();
+		final HashMap<Integer, String> map = new HashMap<>();
 		for ( Field field : typesClass.getFields() ) {
 			try {
 				final int code = field.getInt( null );
-				String old = map.put( code, field.getName() );
+				final String old = map.put( code, field.getName() );
 				if ( old != null ) {
 					LOG.JavaSqlTypesMappedSameCodeMultipleTimes( code, old, field.getName() );
 				}
@@ -42,11 +42,11 @@ public final class JdbcTypeNameMapper {
 				throw new HibernateException( "Unable to access JDBC type mapping [" + field.getName() + "]", e );
 			}
 		}
-		return Collections.unmodifiableMap( map );
+		return unmodifiableMap( map );
 	}
 
 	private static Map<String, Integer> buildJdbcTypeNameMap(Class<?> typesClass) {
-		HashMap<String, Integer> map = new HashMap<>();
+		final HashMap<String, Integer> map = new HashMap<>();
 		for ( Field field : typesClass.getFields() ) {
 			try {
 				final int code = field.getInt( null );
@@ -56,7 +56,7 @@ public final class JdbcTypeNameMapper {
 				throw new HibernateException( "Unable to access JDBC type mapping [" + field.getName() + "]", e );
 			}
 		}
-		return Collections.unmodifiableMap( map );
+		return unmodifiableMap( map );
 	}
 
 	/**
@@ -94,11 +94,8 @@ public final class JdbcTypeNameMapper {
 	 * @return The type name.
 	 */
 	public static String getTypeName(Integer typeCode) {
-		String name = SQL_TYPE_MAP.get( typeCode );
-		if ( name == null ) {
-			return "UNKNOWN(" + typeCode + ")";
-		}
-		return name;
+		final String name = SQL_TYPE_MAP.get( typeCode );
+		return name == null ? "UNKNOWN(" + typeCode + ")" : name;
 	}
 
 	/**

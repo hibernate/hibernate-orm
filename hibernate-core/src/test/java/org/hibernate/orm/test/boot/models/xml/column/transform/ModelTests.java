@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.column.transform;
@@ -8,19 +8,16 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Property;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,33 +35,11 @@ public class ModelTests {
 				.addXmlMappings( "mappings/models/column/transform/mapping.xml" )
 				.build();
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, serviceRegistry );
 
-		final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
+		final ClassDetails classDetails = ModelsContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
 		final FieldDetails costField = classDetails.findFieldByName( "cost" );
-		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, sourceModelBuildingContext );
-		assertThat( transformerAnn ).isNotNull();
-		assertThat( transformerAnn.read() ).isEqualTo( "cost / 100.00" );
-		assertThat( transformerAnn.write() ).isEqualTo( "? * 100.00" );
-	}
-
-	@ServiceRegistry(settings = {
-			@Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"),
-			@Setting( name = AvailableSettings.VALIDATE_XML, value = "true")
-	})
-	@Test
-	void testHbmXml(ServiceRegistryScope scope) {
-		final String hbmXmlResourceName = "mappings/models/column/transform/hbm.xml";
-
-		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder( scope.getRegistry() )
-				.addXmlMappings( hbmXmlResourceName )
-				.build();
-		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, serviceRegistry );
-
-		final ClassDetails classDetails = sourceModelBuildingContext.getClassDetailsRegistry().getClassDetails( Item.class.getName() );
-		final FieldDetails costField = classDetails.findFieldByName( "cost" );
-		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, sourceModelBuildingContext );
+		final ColumnTransformer transformerAnn = costField.getAnnotationUsage( ColumnTransformer.class, ModelsContext );
 		assertThat( transformerAnn ).isNotNull();
 		assertThat( transformerAnn.read() ).isEqualTo( "cost / 100.00" );
 		assertThat( transformerAnn.write() ).isEqualTo( "? * 100.00" );

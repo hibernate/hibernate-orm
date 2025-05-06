@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -12,8 +12,8 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -49,31 +49,31 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final StatisticsImplementor statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
-		final Long ts = regionFactory.nextTimestamp() + regionFactory.getTimeout();
+		final Long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		final boolean debugEnabled = log.isDebugEnabled();
 
 		for ( String space : spaces ) {
 			if ( debugEnabled ) {
-				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
+				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, timestamp );
 			}
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
-				timestampsRegion.putIntoCache( space, ts, session );
+				timestampsRegion.putIntoCache( space, timestamp, session );
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						timestampsRegion,
 						true,
-						EventManager.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
+						EventMonitor.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
 				);
 				eventListenerManager.cachePutEnd();
 			}
@@ -100,19 +100,19 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			}
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						timestampsRegion,
 						true,
-						EventManager.CacheActionDescription.TIMESTAMP_INVALIDATE
+						EventMonitor.CacheActionDescription.TIMESTAMP_INVALIDATE
 				);
 				eventListenerManager.cachePutEnd();
 
@@ -129,13 +129,11 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			Long timestamp,
 			SharedSessionContractImplementor session) {
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
-
 		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
@@ -151,6 +149,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateTimestampsCacheMiss();
 			}
+			return false;
 		}
 		else {
 			if ( DEBUG_ENABLED ) {
@@ -160,18 +159,11 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 						lastUpdate + ", result set timestamp: " + timestamp
 				);
 			}
-
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateTimestampsCacheHit();
 			}
-
-			//noinspection RedundantIfStatement
-			if ( lastUpdate >= timestamp ) {
-				return true;
-			}
+			return lastUpdate >= timestamp;
 		}
-
-		return false;
 	}
 
 	@Override
@@ -180,34 +172,28 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			Long timestamp,
 			SharedSessionContractImplementor session) {
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
-
 		for ( String space : spaces ) {
 			if ( isSpaceOutOfDate( space, timestamp, session, statistics ) ) {
 				return false;
 			}
 		}
-
 		return true;
 	}
 
 	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
-		Long ts = null;
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
+		boolean found = false;
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent cacheGetEvent = eventMonitor.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
-			ts = (Long) timestampsRegion.getFromCache( space, session );
+			final Long timestamp = (Long) timestampsRegion.getFromCache( space, session );
+			found = timestamp != null;
+			return timestamp;
 		}
 		finally {
-			eventManager.completeCacheGetEvent(
-					cacheGetEvent,
-					session,
-					timestampsRegion,
-					ts != null
-			);
-			session.getEventListenerManager().cacheGetEnd( ts != null );
+			eventMonitor.completeCacheGetEvent( cacheGetEvent, session, timestampsRegion, found );
+			session.getEventListenerManager().cacheGetEnd( found );
 		}
-		return ts;
 	}
 
 }

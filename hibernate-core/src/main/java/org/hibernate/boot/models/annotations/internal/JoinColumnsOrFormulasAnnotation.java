@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,13 +24,13 @@ public class JoinColumnsOrFormulasAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public JoinColumnsOrFormulasAnnotation(SourceModelBuildingContext modelContext) {
+	public JoinColumnsOrFormulasAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public JoinColumnsOrFormulasAnnotation(JoinColumnsOrFormulas annotation, SourceModelBuildingContext modelContext) {
+	public JoinColumnsOrFormulasAnnotation(JoinColumnsOrFormulas annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue(
 				annotation,
 				HibernateAnnotations.JOIN_COLUMNS_OR_FORMULAS,
@@ -44,7 +44,7 @@ public class JoinColumnsOrFormulasAnnotation
 	 */
 	public JoinColumnsOrFormulasAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (JoinColumnOrFormula[]) attributeValues.get( "value" );
 	}
 

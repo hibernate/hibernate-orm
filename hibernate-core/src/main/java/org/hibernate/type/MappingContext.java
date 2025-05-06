@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -7,15 +7,16 @@ package org.hibernate.type;
 import org.hibernate.MappingException;
 
 /**
- * Declares operations used by implementors of {@link Type} that are common to
- * "compiled" mappings held at runtime by a {@link org.hibernate.SessionFactory}
- * and "uncompiled" mappings held by a {@link org.hibernate.cfg.Configuration}.
+ * Declares operations used by implementors of {@link Type} that are common to the fully-"compiled"
+ * runtime mapping metadata held by a {@link org.hibernate.SessionFactory} and the incomplete metamodel
+ * which exists during the {@linkplain org.hibernate.boot.model.process.spi.MetadataBuildingProcess
+ * metadata building process}.
  *
  * @see Type
- * @see org.hibernate.internal.SessionFactoryImpl
- * @see org.hibernate.cfg.Configuration
+ * @see org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor
+ * @see org.hibernate.boot.Metadata
  *
- *
+ * @since 7.0
  */
 public interface MappingContext {
 	Type getIdentifierType(String className) throws MappingException;

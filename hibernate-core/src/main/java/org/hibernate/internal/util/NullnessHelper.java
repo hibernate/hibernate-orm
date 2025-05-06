@@ -1,11 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -39,8 +41,8 @@ public class NullnessHelper {
 		}
 		for ( T value : values ) {
 			if ( value != null ) {
-				if ( value instanceof String ) {
-					if ( StringHelper.isNotEmpty( (String) value ) ) {
+				if ( value instanceof String string) {
+					if ( isNotEmpty( string ) ) {
 						return value;
 					}
 				}
@@ -66,7 +68,7 @@ public class NullnessHelper {
 	@SafeVarargs
 	public static <T> T coalesceSuppliedValues(Supplier<T>... valueSuppliers) {
 		return coalesceSuppliedValues(
-				(value) -> ( value instanceof String && StringHelper.isNotEmpty( (String) value ) )
+				(value) -> value instanceof String string && isNotEmpty( string )
 						|| value != null,
 				valueSuppliers
 		);
@@ -94,7 +96,6 @@ public class NullnessHelper {
 				if ( checker.apply( value ) ) {
 					return value;
 				}
-
 			}
 		}
 

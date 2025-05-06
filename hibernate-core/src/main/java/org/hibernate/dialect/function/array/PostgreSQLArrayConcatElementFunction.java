@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -9,7 +9,7 @@ import java.util.List;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -48,7 +48,7 @@ public class PostgreSQLArrayConcatElementFunction extends ArrayConcatElementFunc
 		final String elementCastType;
 		if ( needsElementCasting( elementArgument ) ) {
 			final JdbcMappingContainer arrayType = arrayArgument.getExpressionType();
-			final Size size = arrayType instanceof SqlTypedMapping ? ( (SqlTypedMapping) arrayType ).toSize() : null;
+			final Size size = arrayType instanceof SqlTypedMapping sqlTypedMapping ? sqlTypedMapping.toSize() : null;
 			elementCastType = DdlTypeHelper.getCastTypeName(
 					( (BasicPluralType<?, ?>) returnType ).getElementType(),
 					size,
@@ -87,9 +87,8 @@ public class PostgreSQLArrayConcatElementFunction extends ArrayConcatElementFunc
 
 	private static boolean needsElementCasting(Expression elementExpression) {
 		// PostgreSQL needs casting of null and string literal expressions
-		return elementExpression instanceof Literal && (
-				elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-						|| ( (Literal) elementExpression ).getLiteralValue() == null
-		);
+		return elementExpression instanceof Literal literal
+			&& ( elementExpression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
+					|| literal.getLiteralValue() == null );
 	}
 }

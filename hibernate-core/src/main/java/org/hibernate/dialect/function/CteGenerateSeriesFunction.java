@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -9,7 +9,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -150,8 +150,9 @@ public class CteGenerateSeriesFunction extends NumberSeriesGenerateSeriesFunctio
 		}
 
 		public static CteStatement createSeriesCte(int maxSeriesSize, SqmToSqlAstConverter converter) {
-			final BasicType<Long> longType = converter.getCreationContext().getTypeConfiguration()
-					.getBasicTypeForJavaType( Long.class );
+			final BasicType<Long> longType =
+					converter.getCreationContext().getTypeConfiguration()
+							.getBasicTypeForJavaType( Long.class );
 			final Expression one = new UnparsedNumericLiteral<>( "1", NumericTypeCategory.LONG, longType );
 			final List<CteColumn> cteColumns = List.of( new CteColumn( "i", longType ) );
 

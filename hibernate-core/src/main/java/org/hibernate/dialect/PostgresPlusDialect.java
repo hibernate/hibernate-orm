@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;

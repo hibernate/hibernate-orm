@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
@@ -108,7 +108,7 @@ class EntityPropertyMapping {
 	private void logIncompatibleRegistration(String path, Type existingType, Type type) {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev(
-					"Skipped adding attribute [{1}] to base-type [{0}] as more than one sub-type defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
+					"Skipped adding attribute [{1}] to base type [{0}] as more than one subtype defined the attribute using incompatible types (strictly speaking the attributes are not inherited); existing type = [{2}], incoming type = [{3}]",
 					getEntityName(),
 					path,
 					existingType,
@@ -153,9 +153,7 @@ class EntityPropertyMapping {
 							logIncompatibleRegistration( path, existingType, type );
 						}
 					}
-					else if ( type instanceof EntityType && existingType instanceof EntityType ) {
-						EntityType entityType1 = (EntityType) existingType;
-						EntityType entityType2 = (EntityType) type;
+					else if ( type instanceof EntityType entityType2 && existingType instanceof EntityType entityType1 ) {
 
 						if ( entityType1.getAssociatedEntityName().equals( entityType2.getAssociatedEntityName() ) ) {
 							logDuplicateRegistration( path, existingType, type );
@@ -205,17 +203,14 @@ class EntityPropertyMapping {
 		}
 
 		// Create a copy of the type but with the common class
-		if ( entityType1 instanceof ManyToOneType ) {
-			ManyToOneType t = (ManyToOneType) entityType1;
-			return new ManyToOneType( t, commonClass.getEntityName() );
+		if ( entityType1 instanceof ManyToOneType manyToOneType ) {
+			return new ManyToOneType( manyToOneType, commonClass.getEntityName() );
 		}
-		else if ( entityType1 instanceof SpecialOneToOneType ) {
-			SpecialOneToOneType t = (SpecialOneToOneType) entityType1;
-			return new SpecialOneToOneType( t, commonClass.getEntityName() );
+		else if ( entityType1 instanceof SpecialOneToOneType specialOneToOneType ) {
+			return new SpecialOneToOneType( specialOneToOneType, commonClass.getEntityName() );
 		}
-		else if ( entityType1 instanceof OneToOneType ) {
-			OneToOneType t = (OneToOneType) entityType1;
-			return new OneToOneType( t, commonClass.getEntityName() );
+		else if ( entityType1 instanceof OneToOneType oneToOneType ) {
+			return new OneToOneType( oneToOneType, commonClass.getEntityName() );
 		}
 		else {
 			throw new IllegalStateException( "Unexpected entity type: " + entityType1 );
@@ -274,8 +269,7 @@ class EntityPropertyMapping {
 			addPropertyPath( path, type, columns, columnReaders, columnReaderTemplates, factory );
 		}
 
-		if ( type instanceof AnyType ) {
-			AnyType actype = (AnyType) type;
+		if ( type instanceof AnyType actype ) {
 			initComponentPropertyPaths(
 					path,
 					actype,
@@ -286,8 +280,7 @@ class EntityPropertyMapping {
 					factory
 			);
 		}
-		else if ( type instanceof ComponentType ) {
-			ComponentType actype = (ComponentType) type;
+		else if ( type instanceof ComponentType actype ) {
 			initComponentPropertyPaths(
 					path,
 					actype,

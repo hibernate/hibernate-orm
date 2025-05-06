@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -23,20 +23,20 @@ public class SQLUpdatesAnnotation implements SQLUpdates, RepeatableContainer<SQL
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SQLUpdatesAnnotation(SourceModelBuildingContext modelContext) {
+	public SQLUpdatesAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SQLUpdatesAnnotation(SQLUpdates annotation, SourceModelBuildingContext modelContext) {
+	public SQLUpdatesAnnotation(SQLUpdates annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, HibernateAnnotations.SQL_UPDATES, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SQLUpdatesAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public SQLUpdatesAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (SQLUpdate[]) attributeValues.get( "value" );
 	}
 

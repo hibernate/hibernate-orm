@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
@@ -39,9 +39,8 @@ public enum Clause {
 	SET_EXPRESSION,
 
 	/**
-	 * Not used in 5.x.  Intended for use in 6+ as indicator
-	 * of processing predicates (where clause) that occur in a
-	 * delete
+	 * Used as indicator of processing predicates (where clause)
+	 * that occur in a delete
 	 */
 	DELETE,
 	MERGE,
@@ -64,9 +63,6 @@ public enum Clause {
 	CONFLICT,
 	CALL,
 
-	/**
-	 * Again, not used in 5.x.  Used in 6+
-	 */
 	IRRELEVANT
 
 }

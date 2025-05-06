@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -110,7 +110,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	@Override
 	public PersistentAttribute<? super L, ?> getAttribute() {
 		//noinspection unchecked
-		return (PersistentAttribute<? super L, ?>) getReferencedPathSource();
+		return (PersistentAttribute<? super L, ?>) getModel();
 	}
 
 	@Override

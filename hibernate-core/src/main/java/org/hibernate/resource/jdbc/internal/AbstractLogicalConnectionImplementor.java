@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
@@ -35,7 +35,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 
 	protected void errorIfClosed() {
 		if ( !isOpen() ) {
-			throw new IllegalStateException( this.toString() + " is closed" );
+			throw new IllegalStateException( this + " is closed" );
 		}
 	}
 
@@ -84,6 +84,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void commit() {
 		try {
 			log.trace( "Preparing to commit transaction via JDBC Connection.commit()" );
+			status = TransactionStatus.COMMITTING;
 			if ( isPhysicallyConnected() ) {
 				getConnectionForTransactionManagement().commit();
 			}
@@ -124,6 +125,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	public void rollback() {
 		try {
 			log.trace( "Preparing to rollback transaction via JDBC Connection.rollback()" );
+			status = TransactionStatus.ROLLING_BACK;
 			if ( isPhysicallyConnected() ) {
 				getConnectionForTransactionManagement().rollback();
 			}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.spi;
@@ -13,7 +13,9 @@ import java.util.Map;
 import static java.util.Collections.emptyMap;
 
 /**
- * A service SPI for collecting statistics about various events that occur at runtime.
+ * A service SPI for collecting statistics about various events occurring at runtime.
+ * <p>
+ * A custom implementation may be provided via a {@link StatisticsFactory}.
  *
  * @author Emmanuel Bernard
  */
@@ -77,6 +79,13 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 * @param entityName The name of the entity updated.
 	 */
 	void updateEntity(String entityName);
+
+	/**
+	 * Callback about an entity being upserted.
+	 *
+	 * @param entityName The name of the entity upserted.
+	 */
+	void upsertEntity(String entityName);
 
 	/**
 	 * Callback about an entity being inserted

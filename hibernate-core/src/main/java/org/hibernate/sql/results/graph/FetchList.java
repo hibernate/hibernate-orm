@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -52,9 +52,9 @@ public interface FetchList extends Iterable<Fetch> {
 			if ( fetch instanceof BasicFetch<?> || fetch instanceof AbstractNonJoinedEntityFetch || fetch.getTiming() == FetchTiming.DELAYED ) {
 				// That's fine
 			}
-			else if ( fetch instanceof EmbeddableResultGraphNode ) {
+			else if ( fetch instanceof EmbeddableResultGraphNode embeddableResultGraphNode ) {
 				// Check all these fetches as well
-				if ( ( (EmbeddableResultGraphNode) fetch ).hasJoinFetches() ) {
+				if ( embeddableResultGraphNode.hasJoinFetches() ) {
 					return true;
 				}
 			}

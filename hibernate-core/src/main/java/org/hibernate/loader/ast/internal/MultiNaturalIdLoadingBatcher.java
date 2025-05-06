@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -13,10 +13,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -52,6 +51,8 @@ public class MultiNaturalIdLoadingBatcher {
 
 	private final JdbcOperationQuerySelect jdbcSelect;
 
+	private final LockOptions lockOptions;
+
 	public MultiNaturalIdLoadingBatcher(
 			EntityMappingType entityDescriptor,
 			ModelPart restrictedPart,
@@ -83,18 +84,24 @@ public class MultiNaturalIdLoadingBatcher {
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
 				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( null, QueryOptions.NONE );
+				.translate( null, new QueryOptionsAdapter() {
+					@Override
+					public LockOptions getLockOptions() {
+						return lockOptions;
+					}
+				} );
+		this.lockOptions = lockOptions;
 	}
 
-	public <E> List<E> multiLoad(Object[] naturalIdValues, MultiNaturalIdLoadOptions options, SharedSessionContractImplementor session) {
+	public <E> List<E> multiLoad(Object[] naturalIdValues, SharedSessionContractImplementor session) {
 		final ArrayList<E> multiLoadResults = CollectionHelper.arrayList( naturalIdValues.length );
 		final JdbcParameterBindingsImpl jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 
 		int offset = 0;
 		int size = 0;
 
-		for ( int i = 0; i < naturalIdValues.length; i++ ) {
-			final Object bindValue = keyValueResolver.resolveKeyToLoad( naturalIdValues[ i ], session );
+		for ( Object naturalIdValue : naturalIdValues ) {
+			final Object bindValue = keyValueResolver.resolveKeyToLoad( naturalIdValue, session );
 			if ( bindValue != null ) {
 				offset += jdbcParamBindings.registerParametersForEachJdbcValue(
 						bindValue,
@@ -159,7 +166,7 @@ public class MultiNaturalIdLoadingBatcher {
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParamBindings,
-				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
+				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler, false, lockOptions ),
 				RowTransformerStandardImpl.instance(),
 				null,
 				ListResultsConsumer.UniqueSemantic.FILTER,

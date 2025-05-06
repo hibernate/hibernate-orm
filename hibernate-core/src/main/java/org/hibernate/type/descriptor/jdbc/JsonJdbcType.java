@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.dialect.JsonHelper;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.SqlTypes;
@@ -81,11 +80,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 					options
 			);
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().fromString(
-				string,
-				javaType,
-				options
-		);
+		return options.getJsonFormatMapper().fromString( string, javaType, options );
 	}
 
 	@Override
@@ -104,11 +99,7 @@ public class JsonJdbcType implements AggregateJdbcType {
 		if ( embeddableMappingType != null ) {
 			return JsonHelper.toString( embeddableMappingType, value, options );
 		}
-		return options.getSessionFactory().getFastSessionServices().getJsonFormatMapper().toString(
-				value,
-				javaType,
-				options
-		);
+		return options.getJsonFormatMapper().toString( value, javaType, options );
 	}
 
 	@Override

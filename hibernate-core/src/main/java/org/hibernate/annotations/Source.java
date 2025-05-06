@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
 
-import org.hibernate.Remove;
 import org.hibernate.generator.internal.SourceGeneration;
 
 import java.lang.annotation.Retention;
@@ -42,7 +41,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @deprecated use {@link CurrentTimestamp} instead
  */
-@Deprecated(since = "6.2") @Remove
+@Deprecated(since = "6.2", forRemoval = true)
 @Target({ METHOD, FIELD })
 @Retention(RUNTIME)
 @ValueGenerationType(generatedBy = SourceGeneration.class)

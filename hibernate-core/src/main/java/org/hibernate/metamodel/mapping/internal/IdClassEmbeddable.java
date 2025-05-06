@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -164,10 +164,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 	@Override
 	public Object getIdentifier(Object entity, SharedSessionContractImplementor session) {
-		final Object id = representationStrategy.getInstantiator().instantiate(
-				null,
-				session.getSessionFactory()
-		);
+		final Object id = representationStrategy.getInstantiator().instantiate( null );
 
 		final Object[] propertyValues = new Object[virtualIdEmbeddable.getNumberOfAttributeMappings()];
 
@@ -184,12 +181,11 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 				}
 			}
 			//JPA 2 @MapsId + @IdClass points to the pk of the entity
-			else if ( attributeMapping instanceof ToOneAttributeMapping
+			else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 					&& !( getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-				final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
-						toOneAttributeMapping.getSideNature().inverse()
-				);
+				final ModelPart targetPart =
+						toOneAttributeMapping.getForeignKeyDescriptor()
+								.getPart( toOneAttributeMapping.getSideNature().inverse() );
 				if ( targetPart.isEntityIdentifierMapping() ) {
 					propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
 				}
@@ -211,18 +207,18 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
-		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entity.getClass() );
+		final EntityPersister entityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( entity.getClass() );
 		final Object[] propertyValues = new Object[attributeMappings.size()];
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
 					final AttributeMapping idClassAttribute = attributeMappings.get( position );
 					Object o = idClassAttribute.getValue( id );
-					if ( virtualIdAttribute instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
-						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
-						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-								.getEntityPersister();
+					if ( virtualIdAttribute instanceof ToOneAttributeMapping toOneAttributeMapping
+							&& !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
+						final EntityPersister entityPersister =
+								toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 						final PersistenceContext persistenceContext = session.getPersistenceContext();
 						final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );

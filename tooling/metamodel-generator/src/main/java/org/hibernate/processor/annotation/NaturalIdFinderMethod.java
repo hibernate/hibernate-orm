@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -15,6 +15,8 @@ import static java.util.Collections.emptyList;
  * @author Gavin King
  */
 public class NaturalIdFinderMethod extends AbstractFinderMethod {
+
+	public static final String IDENTIFIER = "org.hibernate.reactive.common.Identifier";
 
 	private final List<Boolean> paramNullability;
 
@@ -90,11 +92,11 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if ( containerType == null ) {
 			//TODO we should probably throw if this returns null
 			declaration
-					.append("\t\t\t.load();\n");
+					.append("\t\t\t.load()");
 		}
 		else {
 			declaration
-					.append("\t\t\t.loadOptional();\n");
+					.append("\t\t\t.loadOptional()");
 		}
 	}
 
@@ -111,7 +113,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration
 					.append("\n\t\t\t")
-					.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
+					.append(annotationMetaEntity.importType(IDENTIFIER))
 					.append(".composite(");
 		}
 		boolean first = true;
@@ -130,7 +132,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 				}
 				final String paramName = paramNames.get(i);
 				declaration
-						.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
+						.append(annotationMetaEntity.importType(IDENTIFIER))
 						.append(".id(")
 						.append(annotationMetaEntity.importType(entity + '_'))
 						.append('.')
@@ -143,7 +145,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");
 		}
-		declaration.append(");\n");
+		declaration.append(')');
 	}
 
 	private boolean isComposite() {

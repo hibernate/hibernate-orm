@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -44,12 +44,10 @@ public class SqlColumn extends AbstractSqmSelfRenderingFunctionDescriptor  {
 			SqlAstTranslator<?> walker) {
 		final SqlAstNode sqlAstNode = arguments.get(0);
 		final ColumnReference reference;
-		if ( sqlAstNode instanceof Assignable ) {
-			final Assignable assignable = (Assignable) sqlAstNode;
+		if ( sqlAstNode instanceof Assignable assignable ) {
 			reference = assignable.getColumnReferences().get(0);
 		}
-		else if ( sqlAstNode instanceof Expression ) {
-			final Expression expression = (Expression) sqlAstNode;
+		else if ( sqlAstNode instanceof Expression expression ) {
 			reference = expression.getColumnReference();
 		}
 		else {

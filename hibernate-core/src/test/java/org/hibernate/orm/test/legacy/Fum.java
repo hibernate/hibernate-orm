@@ -1,23 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
 import java.io.Serializable;
-import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.CallbackException;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.classic.Lifecycle;
-
-public class Fum implements Lifecycle, Serializable {
+public class Fum implements Serializable {
 	private String fum;
 	private FumCompositeID id;
 	private Fum fo;
@@ -30,7 +23,7 @@ public class Fum implements Lifecycle, Serializable {
 	private MapComponent mapComponent = new MapComponent();
 
 	public Fum() {}
-	public Fum(FumCompositeID id) throws SQLException, HibernateException {
+	public Fum(FumCompositeID id) {
 		this.id = id;
 		friends = new HashSet();
 		FumCompositeID fid = new FumCompositeID();
@@ -74,45 +67,6 @@ public class Fum implements Lifecycle, Serializable {
 
 	public void setFriends(Set friends) {
 		this.friends = friends;
-	}
-
-
-	public boolean onDelete(Session s) throws CallbackException {
-		if (friends==null) return false;
-		try {
-			Iterator iter = friends.iterator();
-			while ( iter.hasNext() ) {
-				s.remove( iter.next() );
-			}
-		}
-		catch (Exception e) {
-			throw new CallbackException(e);
-		}
-		return false;
-	}
-
-
-	public void onLoad(Session s, Object id) {
-	}
-
-
-	public boolean onSave(Session s) throws CallbackException {
-		if (friends==null) return false;
-		try {
-			Iterator iter = friends.iterator();
-			while ( iter.hasNext() ) {
-				s.persist( iter.next() );
-			}
-		}
-		catch (Exception e) {
-			throw new CallbackException(e);
-		}
-		return false;
-	}
-
-
-	public boolean onUpdate(Session s) throws CallbackException {
-		return false;
 	}
 
 	public Calendar getLastUpdated() {

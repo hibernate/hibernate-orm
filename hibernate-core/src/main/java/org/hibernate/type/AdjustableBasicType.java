@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -20,8 +20,8 @@ public interface AdjustableBasicType<J> extends BasicType<J> {
 	 */
 	default <X> BasicType<X> resolveIndicatedType(JdbcTypeIndicators indicators, JavaType<X> domainJtd) {
 		final JdbcType jdbcType = getJdbcType();
-		if ( jdbcType instanceof AdjustableJdbcType ) {
-			final JdbcType resolvedJdbcType = ( (AdjustableJdbcType) jdbcType ).resolveIndicatedType(
+		if ( jdbcType instanceof AdjustableJdbcType adjustableJdbcType ) {
+			final JdbcType resolvedJdbcType = adjustableJdbcType.resolveIndicatedType(
 					indicators,
 					domainJtd
 			);

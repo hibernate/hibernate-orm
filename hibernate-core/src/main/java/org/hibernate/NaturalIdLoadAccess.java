@@ -1,12 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityGraph;
+
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 import java.util.Map;
 import java.util.Optional;
@@ -51,7 +52,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default NaturalIdLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -62,7 +63,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default NaturalIdLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -73,7 +74,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	NaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a

@@ -16,13 +16,10 @@ Hibernate will internally determine which `ConnectionProvider` to use based on t
 1. If `hibernate.connection.provider_class` is set, it takes precedence
 2. else if `hibernate.connection.datasource` is set -> <<database-connectionprovider-datasource>>
 3. else if any setting prefixed by `hibernate.c3p0.` is set -> <<database-connectionprovider-c3p0>>
-4. else if any setting prefixed by `hibernate.proxool.` is set -> <<database-connectionprovider-proxool>>
-5. else if any setting prefixed by `hibernate.hikari.` is set -> <<database-connectionprovider-hikari>>
-6. else if any setting prefixed by `hibernate.vibur.` is set -> <<database-connectionprovider-vibur>>
-7. else if any setting prefixed by `hibernate.agroal.` is set -> <<database-connectionprovider-agroal>>
-8. else if any setting prefixed by `hibernate.oracleucp.` is set -> <<database-connectionprovider-ucp>>
-9. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
-10. else -> <<database-connectionprovider-provided>>
+4. else if any setting prefixed by `hibernate.hikari.` is set -> <<database-connectionprovider-hikari>>
+5. else if any setting prefixed by `hibernate.agroal.` is set -> <<database-connectionprovider-agroal>>
+6. else if `hibernate.connection.url` is set -> <<database-connectionprovider-drivermanager>>
+7. else -> <<database-connectionprovider-provided>>
 
 [[database-connectionprovider-datasource]]
 === Using DataSources
@@ -72,38 +69,6 @@ Transaction isolation of the Connections is managed by the `ConnectionProvider` 
 Any other settings prefixed with `hibernate.c3p0.`:: Will have the `hibernate.` portion stripped and be passed to c3p0.
 Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See https://www.mchange.com/projects/c3p0/#configuration[c3p0 configuration]
 
-[[database-connectionprovider-proxool]]
-=== Using Proxool
-
-[IMPORTANT]
-====
-To use the Proxool integration, the application must include the `hibernate-proxool` module jar (as well as its dependencies) on the classpath.
-====
-
-Hibernate also provides support for applications to use https://proxool.sourceforge.net/[Proxool] connection pooling.
-
-Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
-
-[[database-connectionprovider-proxool-existing]]
-==== Using existing Proxool pools
-
-Controlled by the `hibernate.proxool.existing_pool` setting.
-If set to true, this ConnectionProvider will use an already existing Proxool pool by alias as indicated by the `hibernate.proxool.pool_alias` setting.
-
-[[database-connectionprovider-proxool-jaxp]]
-==== Configuring Proxool via XML
-
-The `hibernate.proxool.xml` setting names a Proxool configuration XML file to be loaded as a classpath resource and loaded by Proxool's JAXPConfigurator.
-See https://proxool.sourceforge.net/configure.html[proxool  configuration].
-`hibernate.proxool.pool_alias` must be set to indicate which pool to use.
-
-[[database-connectionprovider-proxool-properties]]
-==== Configuring Proxool via Properties
-
-The `hibernate.proxool.properties` setting names a Proxool configuration properties file to be loaded as a classpath resource and loaded by Proxool's `PropertyConfigurator`.
-See https://proxool.sourceforge.net/configure.html[proxool  configuration].
-`hibernate.proxool.pool_alias` must be set to indicate which pool to use.
-
 [[database-connectionprovider-hikari]]
 === Using HikariCP
 
@@ -125,26 +90,6 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 Note that Hikari only supports JDBC standard isolation levels (apparently).
 `hibernate.connection.autocommit`:: Mapped to Hikari's `autoCommit` setting
 
-[[database-connectionprovider-vibur]]
-=== Using Vibur DBCP
-
-[IMPORTANT]
-====
-To use the Vibur DBCP integration, the application must include the `hibernate-vibur` module jar (as well as its dependencies) on the classpath.
-====
-
-Hibernate also provides support for applications to use https://www.vibur.org/[Vibur DBCP] connection pool.
-
-Set all of your Vibur settings in Hibernate prefixed by `hibernate.vibur.` and this `ConnectionProvider` will pick them up and pass them along to Vibur DBCP.
-Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Vibur ones (any `hibernate.vibur.` prefixed ones have precedence):
-
-`hibernate.connection.driver_class`:: Mapped to Vibur's `driverClassName` setting
-`hibernate.connection.url`:: Mapped to Vibur's `jdbcUrl` setting
-`hibernate.connection.username`:: Mapped to Vibur's `username` setting
-`hibernate.connection.password`:: Mapped to Vibur's `password` setting
-`hibernate.connection.isolation`:: Mapped to Vibur's `defaultTransactionIsolationValue` setting. See <<ConnectionProvider support for transaction isolation setting>>.
-`hibernate.connection.autocommit`:: Mapped to Vibur's `defaultAutoCommit` setting
-
 [[database-connectionprovider-agroal]]
 === Using Agroal
 
@@ -164,38 +109,6 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 `hibernate.connection.password`:: Mapped to Agroal's `credential` setting
 `hibernate.connection.isolation`:: Mapped to Agroal's `jdbcTransactionIsolation` setting. See <<ConnectionProvider support for transaction isolation setting>>.
 `hibernate.connection.autocommit`:: Mapped to Agroal's `autoCommit` setting
-
-[[database-connectionprovider-ucp]]
-=== Using Oracle Universal Connection Pool
-
-[IMPORTANT]
-====
-To use the Universal Connection Pool (aka UCP) integration, the application must include the `hibernate-ucp` module jar (as well as its dependencies) on the classpath.
-====
-
-Hibernate also provides support for applications to use https://docs.oracle.com/en/database/oracle/oracle-database/23/jjucp/intro.html[Oracle Universal Connection Pool].
-
-Set all of your UCP settings in Hibernate prefixed by `hibernate.oracleucp.` and this `ConnectionProvider` will pick them up and pass them along to UCP.
-Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding UCP ones (any `hibernate.oracleucp.` prefixed ones have precedence):
-
-`hibernate.connection.url`:: Mapped to UCP's `URL` setting
-`hibernate.connection.username`:: Mapped to UCP's `user` setting
-`hibernate.connection.password`:: Mapped to UCP's `password` setting
-`hibernate.connection.isolation`:: Used to initialize `Connection` retrieved from UCP. See <<ConnectionProvider support for transaction isolation setting>>.
-`hibernate.connection.autocommit`:: Used to initialize `Connection` retrieved from UCP.
-Any other settings prefixed with `hibernate.oracleucp.`:: Will have the `hibernate.oracleucp.` portion stripped and be passed to UCP.
-
-[IMPORTANT]
-====
-You can pass further settings to the `Connection` provided by UCP by using the `hibernate.oracleucp.connectionProperties` property in the following manner:
-
-`hibernate.oracleucp.connectionProperties=oracle.jdbc.thinForceDNSLoadBalancing=true,oracle.jdbc.fanEnabled=true,oracle.jdbc.defaultConnectionValidation=SOCKET,oracle.jdbc.implicitStatementCacheSize=50,oracle.jdbc.loginTimeout=5000`
-====
-
-The Hibernate property `hibernate.oracleucp.connectionFactoryClassName` can be used to choose between:
-
-. a standard connection pool: `oracle.jdbc.pool.OracleDataSource`
-. a _replay_ connection pool: `oracle.jdbc.replay.OracleDataSourceImpl` which allows using [Transparent] Application Continuity capabilities to mask planned and unplanned downtime
 
 [[database-connectionprovider-drivermanager]]
 === Using Hibernate's built-in (and unsupported) pooling

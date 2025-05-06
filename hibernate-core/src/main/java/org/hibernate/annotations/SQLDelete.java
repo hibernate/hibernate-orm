@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -59,7 +59,7 @@ public @interface SQLDelete {
 	 *
 	 * @deprecated use {@link #verify()} with an {@link Expectation} class
 	 */
-	@Deprecated(since = "6.5")
+	@Deprecated(since = "6.5", forRemoval = true)
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.named;
@@ -32,9 +32,9 @@ public interface NamedResultSetMappingMemento {
 	String getName();
 
 	/**
-	 * Resolve this memento.  Generally speaking, this involves building ResultBuilder instances for
-	 * each defined result and registering them with the passed `resultSetMapping`.  Any known
-	 * query spaces should be passed to the `querySpaceConsumer`
+	 * Resolve this memento. This involves building {@link org.hibernate.query.results.ResultBuilder}
+	 * instances for each defined result and registering them with the passed {@code resultSetMapping}.
+	 * Any known query spaces should be passed to the {@code querySpaceConsumer}.
 	 */
 	void resolve(
 			ResultSetMapping resultSetMapping,

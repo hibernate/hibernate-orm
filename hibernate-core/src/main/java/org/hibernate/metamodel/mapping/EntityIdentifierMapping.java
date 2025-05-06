@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -13,6 +13,7 @@ import org.hibernate.event.spi.MergeContext;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import org.hibernate.sql.results.graph.Fetchable;
 
 
 /**
@@ -22,7 +23,7 @@ import jakarta.persistence.IdClass;
  * @see EmbeddedId
  * @see Nature
  */
-public interface EntityIdentifierMapping extends ValuedModelPart {
+public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 
 	String ID_ROLE_NAME = "{id}";
 	String LEGACY_ID_NAME = "id";

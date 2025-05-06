@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -40,6 +40,8 @@ import org.hibernate.boot.model.source.spi.ToolingHintContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
+import static java.util.Collections.emptyMap;
+
 /**
  * @author Steve Ebersole
  * @author Hardy Ferentschik
@@ -57,7 +59,7 @@ public abstract class AbstractEntitySourceImpl
 	private final AttributeRole attributeRoleBase;
 	private final AttributePath attributePathBase;
 
-	private List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<>();
+	private final List<IdentifiableTypeSource> subclassEntitySources = new ArrayList<>();
 
 	private int inLineViewCount = 0;
 
@@ -114,8 +116,7 @@ public abstract class AbstractEntitySourceImpl
 
 	private FilterSource[] buildFilterSources() {
 		//todo for now, i think all EntityElement should support this.
-		if ( jaxbEntityMapping() instanceof JaxbHbmRootEntityType ) {
-			final JaxbHbmRootEntityType jaxbClassElement = (JaxbHbmRootEntityType) jaxbEntityMapping();
+		if ( jaxbEntityMapping() instanceof JaxbHbmRootEntityType jaxbClassElement ) {
 			final int size = jaxbClassElement.getFilter().size();
 			if ( size == 0 ) {
 				return NO_FILTER_SOURCES;
@@ -209,13 +210,13 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	private Map<String,SecondaryTableSource> buildSecondaryTableMap() {
-		if ( !(jaxbEntityMapping instanceof SecondaryTableContainer) ) {
-			return Collections.emptyMap();
+		if ( !(jaxbEntityMapping instanceof SecondaryTableContainer secondaryTableContainer) ) {
+			return emptyMap();
 		}
 
 		final HashMap<String,SecondaryTableSource> secondaryTableSourcesMap = new HashMap<>();
 
-		for ( final JaxbHbmSecondaryTableType joinElement :  ( (SecondaryTableContainer) jaxbEntityMapping ).getJoin() ) {
+		for ( final JaxbHbmSecondaryTableType joinElement :  secondaryTableContainer.getJoin() ) {
 			final SecondaryTableSourceImpl secondaryTableSource = new SecondaryTableSourceImpl(
 					sourceMappingDocument(),
 					joinElement,

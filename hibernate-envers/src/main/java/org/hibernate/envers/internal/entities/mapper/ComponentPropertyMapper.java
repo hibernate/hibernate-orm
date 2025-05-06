@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities.mapper;
@@ -156,11 +156,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 							);
 							i++;
 						}
-						subObj = embeddableInstantiator.instantiate(
-								() -> values,
-								versionsReader.getSessionImplementor()
-										.getSessionFactory()
-						);
+						subObj = embeddableInstantiator.instantiate( () -> values );
 					}
 					else {
 						subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
@@ -221,11 +217,7 @@ public class ComponentPropertyMapper extends AbstractPropertyMapper implements C
 							);
 							i++;
 						}
-						subObj = embeddableInstantiator.instantiate(
-								() -> values,
-								versionsReader.getSessionImplementor()
-										.getSessionFactory()
-						);
+						subObj = embeddableInstantiator.instantiate( () -> values );
 					}
 					else {
 						subObj = ReflectHelper.getDefaultConstructor( componentClass ).newInstance();

@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -91,7 +90,6 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-		final SessionFactoryImplementor sessionFactory = creationStateImpl.getSessionFactory();
 		final FromClauseAccessImpl fromClauseAccess = creationStateImpl.getFromClauseAccess();
 		final TableGroup rootTableGroup = pluralAttributeDescriptor.createRootTableGroup(
 				false,
@@ -141,23 +139,24 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 			String[] columnNames,
 			JdbcValuesMetadata jdbcResultsMetadata,
 			DomainResultCreationStateImpl creationStateImpl) {
-		final SelectableConsumer consumer = (selectionIndex, selectableMapping) -> {
-			final String columnName = columnNames[selectionIndex];
-			creationStateImpl.resolveSqlSelection(
-					ResultsHelper.resolveSqlExpression(
-							creationStateImpl,
-							jdbcResultsMetadata,
-							tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
-							selectableMapping,
-							columnName
-					),
-					selectableMapping.getJdbcMapping().getJdbcJavaType(),
-					null,
-					creationStateImpl.getSessionFactory().getTypeConfiguration()
-			);
-		};
-		if ( modelPart instanceof EntityValuedModelPart ) {
-			final EntityMappingType entityMappingType = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
+		resolveSelections( modelPart, (selectionIndex, selectableMapping) ->
+				creationStateImpl.resolveSqlSelection(
+						ResultsHelper.resolveSqlExpression(
+								creationStateImpl,
+								jdbcResultsMetadata,
+								tableGroup.resolveTableReference( selectableMapping.getContainingTableExpression() ),
+								selectableMapping,
+								columnNames[selectionIndex]
+						),
+						selectableMapping.getJdbcMapping().getJdbcJavaType(),
+						null,
+						creationStateImpl.getSessionFactory().getTypeConfiguration()
+				) );
+	}
+
+	private static void resolveSelections(ModelPart modelPart, SelectableConsumer consumer) {
+		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			final EntityMappingType entityMappingType = entityValuedModelPart.getEntityMappingType();
 			int index = entityMappingType.getIdentifierMapping().forEachSelectable( consumer );
 			if ( entityMappingType.getDiscriminatorMapping() != null ) {
 				index += entityMappingType.getDiscriminatorMapping().forEachSelectable( index, consumer );
@@ -180,11 +179,11 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 
 		final CompleteResultBuilderCollectionStandard that = (CompleteResultBuilderCollectionStandard) o;
 		return tableAlias.equals( that.tableAlias )
-				&& navigablePath.equals( that.navigablePath )
-				&& pluralAttributeDescriptor.equals( that.pluralAttributeDescriptor )
-				&& Arrays.equals( keyColumnNames, that.keyColumnNames )
-				&& Arrays.equals( indexColumnNames, that.indexColumnNames )
-				&& Arrays.equals( elementColumnNames, that.elementColumnNames );
+			&& navigablePath.equals( that.navigablePath )
+			&& pluralAttributeDescriptor.equals( that.pluralAttributeDescriptor )
+			&& Arrays.equals( keyColumnNames, that.keyColumnNames )
+			&& Arrays.equals( indexColumnNames, that.indexColumnNames )
+			&& Arrays.equals( elementColumnNames, that.elementColumnNames );
 	}
 
 	@Override

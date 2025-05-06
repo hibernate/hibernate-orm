@@ -1,13 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
 import jakarta.persistence.FindOption;
+import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
@@ -42,7 +44,14 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  *     {@code Session}.
  * </ul>
  * <p>
- * At any given time, an instance may be associated with at most one open session.
+ * Each persistent instance has a <em>persistent identity</em> determined by its type
+ * and identifier value. There may be at most one persistent instance with a given
+ * persistent identity associated with a given session. A persistent identity is
+ * assigned when an {@linkplain #persist(Object) instance is made persistent}.
+ * <p>
+ * An instance of an entity class may be associated with at most one open session.
+ * Distinct sessions represent state with the same persistent identity using distinct
+ * persistent instances of the mapped entity class.
  * <p>
  * Any instance returned by {@link #get(Class, Object)}, {@link #find(Class, Object)},
  * or by a query is persistent. A persistent instance might hold references to other
@@ -57,8 +66,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * <p>
  * A transient instance may be made persistent by calling {@link #persist(Object)}.
  * A persistent instance may be made detached by calling {@link #detach(Object)}.
- * A persistent instance may be marked for removal, and eventually made transient, by
- * calling {@link #remove(Object)}.
+ * A persistent instance may be marked for removal, and eventually made transient,
+ * by calling {@link #remove(Object)}.
  * <p>
  * Persistent instances are held in a managed state by the persistence context. Any
  * change to the state of a persistent instance is automatically detected and eventually
@@ -382,8 +391,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * the database?  In other words, would any DML operations be executed if
 	 * we flushed this session?
 	 *
-	 * @return {@code true} if the session contains pending changes; {@code false} otherwise.
-	 * @throws HibernateException could not perform dirtying checking
+	 * @return {@code true} if the session contains pending changes;
+	 *         {@code false} otherwise.
 	 */
 	boolean isDirty();
 
@@ -586,7 +595,47 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @see #byMultipleIds(Class)
 	 * @since 7.0
 	 */
-	<E> List<E> findMultiple(Class<E> entityType, List<Object> ids, FindOption... options);
+	<E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options);
+
+	/**
+	 * Return the persistent instances of the root entity of the given {@link EntityGraph}
+	 * with the given identifiers as a list, fetching the associations specified by the
+	 * graph, which is interpreted as a {@linkplain org.hibernate.graph.GraphSemantic#LOAD
+	 * load graph}. The position of an instance in the returned list matches the position of
+	 * its identifier in the given list of identifiers, and the returned list contains a null
+	 * value if there is no persistent instance matching a given identifier. If an instance
+	 * is already associated with the session, that instance is returned. This method never
+	 * returns an uninitialized instance.
+	 * <p>
+	 * Every object returned by {@code findMultiple()} is either an unproxied instance of the
+	 * given entity class, or a fully-fetched proxy object.
+	 * <p>
+	 * This method accepts {@link BatchSize} as an option, allowing control over the number of
+	 * records retrieved in a single database request. The performance impact of setting a batch
+	 * size depends on whether a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which {@linkplain org.hibernate.dialect.Dialect#supportsStandardArrays
+	 *     support standard SQL arrays}, a smaller batch size might be extremely inefficient
+	 *     compared to a very large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a large batch size results
+	 *     in long SQL statements with many JDBC parameters.
+	 * </ul>
+	 * <p>
+	 * For more advanced cases, use {@link #byMultipleIds(Class)}, which returns an instance of
+	 * {@link MultiIdentifierLoadAccess}.
+	 *
+	 * @param entityGraph the entity graph interpreted as a load graph
+	 * @param ids the list of identifiers
+	 * @param options options, if any
+	 *
+	 * @return an ordered list of persistent instances, with null elements representing missing
+	 *         entities, whose positions in the list match the positions of their ids in the
+	 *         given list of identifiers
+	 * @see #byMultipleIds(Class)
+	 * @since 7.0
+	 */
+	<E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options);
 
 	/**
 	 * Read the persistent state associated with the given identifier into the given
@@ -659,6 +708,22 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return an updated persistent instance
 	 */
 	<T> T merge(String entityName, T object);
+
+	/**
+	 * Copy the state of the given object onto the persistent object with the same
+	 * identifier. If there is no persistent instance currently associated with
+	 * the session, it will be loaded. Return the persistent instance. If the
+	 * given instance is unsaved, save a copy and return it as a newly persistent
+	 * instance. The given instance does not become associated with the session.
+	 * This operation cascades to associated instances if the association is mapped
+	 * with {@link jakarta.persistence.CascadeType#MERGE}.
+	 *
+	 * @param object a detached instance with state to be copied
+	 * @param loadGraph entity graph interpreted as a load graph
+	 *
+	 * @return an updated persistent instance
+	 */
+	<T> T merge( T object, EntityGraph<?> loadGraph);
 
 	/**
 	 * Make a transient instance persistent and mark it for later insertion in the
@@ -901,6 +966,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @return a persistent instance or null
 	 *
 	 * @deprecated The semantics of this method may change in a future release.
+	 *             Use {@link SessionFactory#createGraphForDynamicEntity(String)}
+	 *             together with {@link #find(EntityGraph, Object, FindOption...)}
+	 *             to load {@link org.hibernate.metamodel.RepresentationMode#MAP
+	 *             dynamic entities}.
+	 *
+	 * @see SessionFactory#createGraphForDynamicEntity(String)
+	 * @see #find(EntityGraph, Object, FindOption...)
 	 */
 	@Deprecated(since = "7")
 	Object get(String entityName, Object id);
@@ -1245,8 +1317,46 @@ public interface Session extends SharedSessionContract, EntityManager {
 	LobHelper getLobHelper();
 
 	/**
-	 * Obtain a {@link Session} builder with the ability to copy certain information
-	 * from this session.
+	 * Obtain the collection of all managed entities which belong to this
+	 * persistence context.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Collection<?> getManagedEntities();
+
+	/**
+	 * Obtain a collection of all managed instances of the entity type with the
+	 * given entity name which belong to this persistence context.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	Collection<?> getManagedEntities(String entityName);
+
+	/**
+	 * Obtain a collection of all managed entities of the given type which belong
+	 * to this persistence context. This operation is not polymorphic, and does
+	 * not return instances of subtypes of the given entity type.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<E> Collection<E> getManagedEntities(Class<E> entityType);
+
+	/**
+	 * Obtain a collection of all managed entities of the given type which belong
+	 * to this persistence context. This operation is not polymorphic, and does
+	 * not return instances of subtypes of the given entity type.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	<E> Collection<E> getManagedEntities(EntityType<E> entityType);
+
+	/**
+	 * Obtain a {@link Session} builder with the ability to copy certain
+	 * information from this session.
 	 *
 	 * @return the session builder
 	 */
@@ -1259,15 +1369,85 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	void addEventListeners(SessionEventListener... listeners);
 
+	/**
+	 * Set a hint. The hints understood by Hibernate are enumerated by
+	 * {@link org.hibernate.jpa.AvailableHints}.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints
+	 * @see org.hibernate.jpa.SpecHints
+	 *
+	 * @apiNote Hints are a
+	 * {@linkplain jakarta.persistence.EntityManager#setProperty
+	 * JPA-standard way} to control provider-specific behavior of the
+	 * {@code EntityManager}. Clients of the native API defined by
+	 * Hibernate should make use of type-safe operations of this
+	 * interface. For example, {@link #enableFetchProfile(String)}
+	 * should be used in preference to the hint
+	 * {@link org.hibernate.jpa.HibernateHints#HINT_FETCH_PROFILE}.
+	 */
+	@Override
+	void setProperty(String propertyName, Object value);
+
+	/**
+	 * Create a new mutable instance of {@link EntityGraph}, with only
+	 * a root node, allowing programmatic definition of the graph from
+	 * scratch.
+	 *
+	 * @param rootType The root entity of the graph
+	 *
+	 * @see #find(EntityGraph, Object, FindOption...)
+	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	 * @see org.hibernate.graph.EntityGraphs#createGraph(jakarta.persistence.metamodel.EntityType)
+	 */
 	@Override
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
 
+	/**
+	 * Create a new mutable instance of {@link EntityGraph}, based on
+	 * a predefined {@linkplain jakarta.persistence.NamedEntityGraph
+	 * named entity graph}, allowing customization of the graph, or
+	 * return {@code null} if there is no predefined graph with the
+	 * given name.
+	 *
+	 * @param graphName The name of the predefined named entity graph
+	 *
+	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
+	 * unchecked typecast before use. It's cleaner to obtain a graph using
+	 * {@link #createEntityGraph(Class, String)} instead.
+	 *
+	 * @see #find(EntityGraph, Object, FindOption...)
+	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 */
 	@Override
 	RootGraph<?> createEntityGraph(String graphName);
 
+	/**
+	 * Obtain an immutable reference to a predefined
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
+	 * or return {@code null} if there is no predefined graph with the given
+	 * name.
+	 *
+	 * @param graphName The name of the predefined named entity graph
+	 *
+	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
+	 * unchecked typecast before use. It's cleaner to obtain a graph using
+	 * the static metamodel for the class which defines the graph, or by
+	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
+	 *
+	 * @see #find(EntityGraph, Object, FindOption...)
+	 * @see org.hibernate.query.SelectionQuery#setEntityGraph(EntityGraph, org.hibernate.graph.GraphSemantic)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 */
 	@Override
 	RootGraph<?> getEntityGraph(String graphName);
 
+	/**
+	 * Retrieve all named {@link EntityGraph}s with the given root entity type.
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#getNamedEntityGraphs(Class)
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 */
 	@Override
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -18,6 +18,13 @@ public class PostLoadEvent extends AbstractEvent {
 
 	public PostLoadEvent(EventSource session) {
 		super(session);
+	}
+
+	public PostLoadEvent(Object id, EntityPersister persister, Object entity, EventSource session) {
+		super(session);
+		this.id = id;
+		this.persister = persister;
+		this.entity = entity;
 	}
 
 	public void reset() {

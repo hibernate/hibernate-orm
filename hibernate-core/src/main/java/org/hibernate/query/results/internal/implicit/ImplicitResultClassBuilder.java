@@ -1,14 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.implicit;
 
 import jakarta.persistence.NamedNativeQuery;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -38,13 +38,9 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 			DomainResultCreationState domainResultCreationState) {
 		assert resultPosition == 0;
 
-		final SessionFactoryImplementor sessionFactory =
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory();
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final SqlExpressionResolver sqlExpressionResolver =
-				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
 		final int jdbcResultPosition = 1;
 
@@ -55,17 +51,27 @@ public class ImplicitResultClassBuilder implements ResultBuilder {
 				typeConfiguration
 		);
 
-		final SqlSelection selection = sqlExpressionResolver.resolveSqlSelection(
+		final SqlSelection selection =
+				sqlSelection( resultPosition, sqlExpressionResolver, columnName, basicType, typeConfiguration );
+		return new BasicResult<>( selection.getValuesArrayPosition(), columnName, basicType );
+	}
+
+	private static SqlSelection sqlSelection(
+			int resultPosition,
+			SqlExpressionResolver sqlExpressionResolver,
+			String columnName,
+			BasicType<?> basicType,
+			TypeConfiguration typeConfiguration) {
+		return sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
-						(state) -> new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType )
+						state ->
+								new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType )
 				),
 				basicType.getMappedJavaType(),
 				null,
 				typeConfiguration
 		);
-
-		return new BasicResult<>( selection.getValuesArrayPosition(), columnName, basicType );
 	}
 
 	@Override

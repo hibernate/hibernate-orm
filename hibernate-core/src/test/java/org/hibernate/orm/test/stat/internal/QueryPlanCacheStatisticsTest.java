@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stat.internal;
@@ -21,7 +21,6 @@ import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
@@ -132,7 +131,7 @@ public class QueryPlanCacheStatisticsTest {
 	public void testCreateQueryHitCount(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 
-			QueryImplementor<Employee> query = entityManager.createQuery(
+			Query<Employee> query = entityManager.createQuery(
 					"select e from Employee e", Employee.class );
 
 			//First time, we get a cache miss, so the query is compiled
@@ -269,7 +268,7 @@ public class QueryPlanCacheStatisticsTest {
 	public void testCreateQueryTupleHitCount(SessionFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 
-			QueryImplementor<Tuple> query = entityManager.createQuery(
+			Query<Tuple> query = entityManager.createQuery(
 					"select e.id, e.name from Employee e", Tuple.class );
 
 			//First time, we get a cache miss, so the query is compiled

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
@@ -83,7 +83,7 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 
 		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
 		try {
-			return getGeneratedValues( resultSet, persister, getTiming(), session );
+			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

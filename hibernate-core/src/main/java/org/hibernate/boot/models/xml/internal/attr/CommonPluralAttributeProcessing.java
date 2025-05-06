@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal.attr;
@@ -11,8 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.XmlAnnotations;
-import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
@@ -30,7 +29,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * @author Marco Belladelli
@@ -40,7 +39,7 @@ public class CommonPluralAttributeProcessing {
 			JaxbPluralAttribute jaxbPluralAttribute,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final SourceModelBuildingContext buildingContext = xmlDocumentContext.getModelBuildingContext();
+		final ModelsContext buildingContext = xmlDocumentContext.getModelBuildingContext();
 		final ClassDetailsRegistry classDetailsRegistry = buildingContext.getClassDetailsRegistry();
 
 		if ( jaxbPluralAttribute.getFetchMode() != null ) {
@@ -56,12 +55,20 @@ public class CommonPluralAttributeProcessing {
 				memberDetails.applyAnnotationUsage( HibernateAnnotations.BAG, buildingContext );
 			}
 			else {
-				final CollectionClassificationXmlAnnotation collectionClassificationAnn = (CollectionClassificationXmlAnnotation) memberDetails.applyAnnotationUsage(
-						XmlAnnotations.COLLECTION_CLASSIFICATION,
-						buildingContext
+				XmlAnnotationHelper.applyCollectionClassification(
+						jaxbPluralAttribute.getClassification(),
+						memberDetails,
+						xmlDocumentContext
 				);
-				collectionClassificationAnn.value( jaxbPluralAttribute.getClassification() );
 			}
+		}
+
+		if ( jaxbPluralAttribute.getBatchSize() != null ) {
+			final BatchSizeAnnotation batchSizeAnnotation = (BatchSizeAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.BATCH_SIZE,
+					buildingContext
+			);
+			batchSizeAnnotation.size( jaxbPluralAttribute.getBatchSize() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,12 +77,6 @@ public class CommonPluralAttributeProcessing {
 		XmlAnnotationHelper.applyCollectionUserType( jaxbPluralAttribute.getCollectionType(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyCollectionId( jaxbPluralAttribute.getCollectionId(), memberDetails, xmlDocumentContext );
-
-		XmlAnnotationHelper.applyCollectionClassification(
-				jaxbPluralAttribute.getClassification(),
-				memberDetails,
-				xmlDocumentContext
-		);
 
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
 			final OrderByJpaAnnotation orderByAnn = (OrderByJpaAnnotation) memberDetails.applyAnnotationUsage(

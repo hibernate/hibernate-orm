@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.tm;
@@ -12,8 +12,8 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.TransactionManager;
 
 import org.hibernate.FlushMode;
+import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
@@ -54,7 +54,7 @@ public class SessionInterceptorTransactionTest extends BaseEnversJPAFunctionalTe
 		// Revision 1
 		EntityManager em = getEntityManager();
 		// Explicitly use manual flush to trigger separate temporary session write via Envers
-		em.unwrap( SessionImpl.class ).setHibernateFlushMode( FlushMode.MANUAL );
+		em.unwrap( Session.class ).setHibernateFlushMode( FlushMode.MANUAL );
 		tm.begin();
 		StrTestEntity entity = new StrTestEntity( "Test" );
 		em.persist( entity );

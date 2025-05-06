@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.annotations.spi.FilterDetails;
 import org.hibernate.boot.models.xml.internal.FilterProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.HibernateAnnotations.FILTER_JOIN_TABLE;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -29,7 +29,7 @@ public class FilterJoinTableAnnotation implements FilterJoinTable, FilterDetails
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public FilterJoinTableAnnotation(SourceModelBuildingContext modelContext) {
+	public FilterJoinTableAnnotation(ModelsContext modelContext) {
 		this.condition = "";
 		this.deduceAliasInjectionPoints = true;
 		this.aliases = new org.hibernate.annotations.SqlFragmentAlias[0];
@@ -38,7 +38,7 @@ public class FilterJoinTableAnnotation implements FilterJoinTable, FilterDetails
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public FilterJoinTableAnnotation(FilterJoinTable annotation, SourceModelBuildingContext modelContext) {
+	public FilterJoinTableAnnotation(FilterJoinTable annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.condition = annotation.condition();
 		this.deduceAliasInjectionPoints = annotation.deduceAliasInjectionPoints();
@@ -48,7 +48,7 @@ public class FilterJoinTableAnnotation implements FilterJoinTable, FilterDetails
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public FilterJoinTableAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public FilterJoinTableAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.condition = (String) attributeValues.get( "condition" );
 		this.deduceAliasInjectionPoints = (boolean) attributeValues.get( "deduceAliasInjectionPoints" );

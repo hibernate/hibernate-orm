@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicTypeReference;
 
@@ -80,6 +81,18 @@ import java.util.Map;
  * <li>by calling {@link #addSynchronizedEntityClass},
  *     {@link #addSynchronizedEntityName}, or
  *     {@link #addSynchronizedQuerySpace}.
+ * </ul>
+ * <p>
+ * When the affected tables are not known to Hibernate, the behavior depends
+ * on whether Hibernate is operating in fully JPA-compliant mode.
+ * <ul>
+ * <li>In JPA-compliant mode, {@link FlushModeType#AUTO} specifies that the
+ *     session should be flushed before execution of a native query when the
+ *     affected tables are not known.
+ * <li>Otherwise, when Hibernate is not operating in JPA-compliant mode,
+ *     {@code AUTO} specifies that the session is <em>not</em> flushed before
+ *     execution of a native query, unless the affected tables are known and
+ *     Hibernate determines that a flush is required.
  * </ul>
  *
  * @author Gavin King
@@ -504,6 +517,8 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 		String getOwnerAlias();
 
+		Fetchable getFetchable();
+
 		String getFetchableName();
 
 		/**
@@ -621,7 +636,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addQueryHint(String hint);
 
 	@Override
-	NativeQuery<T> setMaxResults(int maxResult);
+	NativeQuery<T> setMaxResults(int maxResults);
 
 	@Override
 	NativeQuery<T> setFirstResult(int startPosition);
@@ -693,13 +708,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	<P> NativeQuery<T> setParameter(String name, P val, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -711,13 +726,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	<P> NativeQuery<T> setParameter(int position, P val, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Date value, TemporalType temporalType);
 
 	@Override
@@ -732,10 +747,10 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

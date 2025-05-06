@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.named.multiple;
@@ -57,6 +57,7 @@ public class NamedEntityGraphsTest {
 					EntityManager em = session.unwrap( EntityManager.class );
 					EntityGraph<?> graph = em.getEntityGraph( "name_salary_graph" );
 					assertThat( graph, notNullValue() );
+					assertThat( graph.getName(), is( "name_salary_graph" ) );
 
 					List<AttributeNode<?>> list =  graph.getAttributeNodes();
 					assertThat( list, notNullValue() );

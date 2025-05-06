@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.spi;
@@ -9,12 +9,14 @@ import java.util.Locale;
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.ConnectionAcquisitionMode.AS_NEEDED;
 import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
 import static org.hibernate.ConnectionReleaseMode.AFTER_TRANSACTION;
 import static org.hibernate.ConnectionReleaseMode.BEFORE_TRANSACTION_COMPLETION;
 import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
  * Enumerates valid combinations of {@link ConnectionAcquisitionMode} and
@@ -72,50 +74,39 @@ public enum PhysicalConnectionHandlingMode {
 	}
 
 	public static PhysicalConnectionHandlingMode interpret(Object setting) {
-		if ( setting == null ) {
+		if ( setting instanceof PhysicalConnectionHandlingMode mode ) {
+			return mode;
+		}
+		else if ( setting instanceof String string ) {
+			return isBlank( string ) ? null
+					: valueOf( string.trim().toUpperCase( Locale.ROOT ) );
+
+		}
+		else {
 			return null;
 		}
-
-		if ( setting instanceof PhysicalConnectionHandlingMode ) {
-			return (PhysicalConnectionHandlingMode) setting;
-		}
-
-		final String value = setting.toString().trim();
-		if ( value.isEmpty() ) {
-			return null;
-		}
-
-		return PhysicalConnectionHandlingMode.valueOf( value.toUpperCase( Locale.ROOT ) );
 	}
 
 	public static PhysicalConnectionHandlingMode interpret(
 			ConnectionAcquisitionMode acquisitionMode,
 			ConnectionReleaseMode releaseMode) {
-		if ( acquisitionMode == IMMEDIATELY ) {
-			if ( releaseMode != null && releaseMode != ON_CLOSE ) {
-				throw new IllegalArgumentException(
-						"Only ConnectionReleaseMode.ON_CLOSE can be used in combination with " +
-								"ConnectionAcquisitionMode.IMMEDIATELY; but ConnectionReleaseMode." +
-								releaseMode.name() + " was specified."
+		requireNonNull( acquisitionMode, "ConnectionAcquisitionMode must be specified" );
+		requireNonNull( acquisitionMode, "ConnectionReleaseMode must be specified" );
+		return switch ( acquisitionMode ) {
+			case AS_NEEDED -> switch ( releaseMode ) {
+				case ON_CLOSE -> DELAYED_ACQUISITION_AND_HOLD;
+				case AFTER_STATEMENT -> DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
+				case BEFORE_TRANSACTION_COMPLETION -> DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
+				case AFTER_TRANSACTION -> DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
+			};
+			case IMMEDIATELY -> switch ( releaseMode ) {
+				case ON_CLOSE -> IMMEDIATE_ACQUISITION_AND_HOLD;
+				default -> throw new IllegalArgumentException(
+						"Only ConnectionReleaseMode.ON_CLOSE can be used in combination with "
+						+ "ConnectionAcquisitionMode.IMMEDIATELY; but ConnectionReleaseMode."
+						+ releaseMode.name() + " was specified."
 				);
-			}
-			return IMMEDIATE_ACQUISITION_AND_HOLD;
-		}
-		else {
-			switch ( releaseMode ) {
-				case AFTER_STATEMENT: {
-					return DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT;
-				}
-				case BEFORE_TRANSACTION_COMPLETION: {
-					return DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION;
-				}
-				case AFTER_TRANSACTION: {
-					return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
-				}
-				default: {
-					return DELAYED_ACQUISITION_AND_HOLD;
-				}
-			}
-		}
+			};
+		};
 	}
 }

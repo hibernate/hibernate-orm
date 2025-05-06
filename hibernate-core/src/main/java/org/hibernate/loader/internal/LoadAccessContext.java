@@ -1,18 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.internal;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 
 /**
- * Context for loader-access objects.  Generally this is equivalent
- * to the Session
+ * Context for loader-access objects.
  */
 @Incubating
 @Internal
@@ -28,12 +28,19 @@ public interface LoadAccessContext {
 	void checkOpenOrWaitingForAutoClose();
 
 	/**
-	 * Callback to pulse the transaction coo
+	 * Callback to pulse the transaction coordinator
 	 */
 	void pulseTransactionCoordinator();
 	void delayedAfterCompletion();
 
-	void afterOperation(boolean success);
-
-	void fireLoad(LoadEvent event, LoadEventListener.LoadType load);
+	/**
+	 * Efficiently fire a {@link LoadEvent} with the given type
+	 * and return the resulting entity instance or proxy.
+	 *
+	 * @since 7.0
+	 */
+	Object load(
+			LoadEventListener.LoadType loadType,
+			Object id, String entityName,
+			LockOptions lockOptions, Boolean readOnly);
 }

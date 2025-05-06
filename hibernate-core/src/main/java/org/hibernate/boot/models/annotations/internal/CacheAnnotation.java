@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Cache;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -16,35 +16,31 @@ public class CacheAnnotation implements Cache {
 	private org.hibernate.annotations.CacheConcurrencyStrategy usage;
 	private String region;
 	private boolean includeLazy;
-	private String include;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CacheAnnotation(SourceModelBuildingContext modelContext) {
+	public CacheAnnotation(ModelsContext modelContext) {
 		this.region = "";
 		this.includeLazy = true;
-		this.include = "all";
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CacheAnnotation(Cache annotation, SourceModelBuildingContext modelContext) {
+	public CacheAnnotation(Cache annotation, ModelsContext modelContext) {
 		this.usage = annotation.usage();
 		this.region = annotation.region();
 		this.includeLazy = annotation.includeLazy();
-		this.include = annotation.include();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CacheAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CacheAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.usage = (org.hibernate.annotations.CacheConcurrencyStrategy) attributeValues.get( "usage" );
 		this.region = (String) attributeValues.get( "region" );
 		this.includeLazy = (boolean) attributeValues.get( "includeLazy" );
-		this.include = (String) attributeValues.get( "include" );
 	}
 
 	@Override
@@ -80,16 +76,5 @@ public class CacheAnnotation implements Cache {
 	public void includeLazy(boolean value) {
 		this.includeLazy = value;
 	}
-
-
-	@Override
-	public String include() {
-		return include;
-	}
-
-	public void include(String value) {
-		this.include = value;
-	}
-
 
 }

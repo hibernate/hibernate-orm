@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -14,7 +14,7 @@ import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 
 import jakarta.persistence.JoinColumn;
@@ -42,7 +42,7 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public JoinColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public JoinColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.referencedColumnName = "";
 		this.unique = false;
@@ -60,7 +60,7 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public JoinColumnJpaAnnotation(JoinColumn annotation, SourceModelBuildingContext modelContext) {
+	public JoinColumnJpaAnnotation(JoinColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.referencedColumnName = annotation.referencedColumnName();
 		this.unique = annotation.unique();
@@ -78,7 +78,7 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JoinColumnJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public JoinColumnJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.referencedColumnName = (String) attributeValues.get( "referencedColumnName" );
 		this.unique = (boolean) attributeValues.get( "unique" );
@@ -309,8 +309,8 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 
 	public static JoinColumn toJoinColumn(
 			PrimaryKeyJoinColumn pkJoinColumn,
-			SourceModelBuildingContext sourceModelBuildingContext) {
-		final JoinColumnJpaAnnotation joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage( sourceModelBuildingContext );
+			ModelsContext ModelsContext) {
+		final JoinColumnJpaAnnotation joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage( ModelsContext );
 		joinColumn.name( pkJoinColumn.name() );
 		joinColumn.referencedColumnName( pkJoinColumn.referencedColumnName() );
 		joinColumn.columnDefinition( pkJoinColumn.columnDefinition() );
@@ -321,8 +321,8 @@ public class JoinColumnJpaAnnotation implements JoinColumn {
 
 	public static JoinColumn toJoinColumn(
 			MapKeyJoinColumn mapKeyJoinColumn,
-			SourceModelBuildingContext sourceModelBuildingContext) {
-		final JoinColumnJpaAnnotation joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage( sourceModelBuildingContext );
+			ModelsContext ModelsContext) {
+		final JoinColumnJpaAnnotation joinColumn = JpaAnnotations.JOIN_COLUMN.createUsage( ModelsContext );
 		joinColumn.name( mapKeyJoinColumn.name() );
 		joinColumn.table( mapKeyJoinColumn.table() );
 		joinColumn.referencedColumnName( mapKeyJoinColumn.referencedColumnName() );

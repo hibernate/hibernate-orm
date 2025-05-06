@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Array;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -18,20 +18,20 @@ public class ArrayAnnotation implements Array {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ArrayAnnotation(SourceModelBuildingContext modelContext) {
+	public ArrayAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ArrayAnnotation(Array annotation, SourceModelBuildingContext modelContext) {
+	public ArrayAnnotation(Array annotation, ModelsContext modelContext) {
 		this.length = annotation.length();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ArrayAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ArrayAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.length = (int) attributeValues.get( "length" );
 	}
 

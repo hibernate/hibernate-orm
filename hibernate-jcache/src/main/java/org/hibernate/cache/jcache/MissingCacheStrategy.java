@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.jcache;
@@ -42,8 +42,8 @@ public enum MissingCacheStrategy {
 	}
 
 	public static MissingCacheStrategy interpretSetting(Object value) {
-		if ( value instanceof MissingCacheStrategy ) {
-			return (MissingCacheStrategy) value;
+		if ( value instanceof MissingCacheStrategy missingCacheStrategy ) {
+			return missingCacheStrategy;
 		}
 
 		final String externalRepresentation = value == null ? null : value.toString().trim();

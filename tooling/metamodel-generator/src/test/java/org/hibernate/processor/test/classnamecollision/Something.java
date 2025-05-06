@@ -1,0 +1,12 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.processor.test.classnamecollision;
+
+import jakarta.persistence.Entity;
+
+@Entity
+public class Something extends org.hibernate.processor.test.classnamecollision.somewhere.Something {
+	String alphaValue;
+}

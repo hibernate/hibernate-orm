@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal;
@@ -14,7 +14,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 
 /**
@@ -69,14 +69,14 @@ public class ModelsHelper {
 	 *
 	 * @param propertiesSource The property source containing the virtual field
 	 * @param propertyName The property name of the dynamic field
-	 * @param sourceModelBuildingContext Context object for models
+	 * @param modelsContext Context object for models
 	 *
 	 * @return The newly created dynamic field details
 	 */
 	public static FieldDetails dynamicFieldDetails(
 			PersistentPropertiesSource propertiesSource,
 			String propertyName,
-			SourceModelBuildingContext sourceModelBuildingContext) {
+			ModelsContext modelsContext) {
 		return new DynamicFieldDetails(
 				propertyName,
 				new ClassTypeDetailsImpl( propertiesSource.getClassDetails(), TypeDetails.Kind.CLASS ),
@@ -84,7 +84,7 @@ public class ModelsHelper {
 				ModifierUtils.DYNAMIC_ATTRIBUTE_MODIFIERS,
 				false,
 				false,
-				sourceModelBuildingContext
+				modelsContext
 		);
 	}
 }

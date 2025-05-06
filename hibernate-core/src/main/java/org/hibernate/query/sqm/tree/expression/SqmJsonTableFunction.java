@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -14,7 +14,8 @@ import org.hibernate.query.criteria.JpaJsonQueryNode;
 import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
 import org.hibernate.query.criteria.JpaJsonTableFunction;
 import org.hibernate.query.criteria.JpaJsonValueNode;
-import org.hibernate.query.derived.AnonymousTupleType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -289,7 +290,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 
 		JsonTableColumnDefinition convertToSqlAst(SqmToSqlAstConverter walker);
 
-		void appendHqlString(StringBuilder sb);
+		void appendHqlString(StringBuilder sb, SqmRenderContext context);
 
 		int populateTupleType(int offset, String[] componentNames, SqmExpressible<?>[] componentTypes);
 	}
@@ -334,7 +335,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( " exists" );
 
@@ -446,7 +447,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( " json" );
 			switch ( wrapMode ) {
@@ -652,10 +653,10 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( ' ' );
-			type.appendHqlString( sb );
+			type.appendHqlString( sb, context );
 			if ( jsonPath != null ) {
 				sb.append( " path " );
 				QuotingHelper.appendSingleQuoteEscapedString( sb, jsonPath );
@@ -666,7 +667,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				case DEFAULT -> {
 					assert errorDefaultExpression != null;
 					sb.append( " default " );
-					errorDefaultExpression.appendHqlString( sb );
+					errorDefaultExpression.appendHqlString( sb, context );
 					sb.append( " on error" );
 				}
 			}
@@ -676,7 +677,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 				case DEFAULT -> {
 					assert emptyDefaultExpression != null;
 					sb.append( " default " );
-					emptyDefaultExpression.appendHqlString( sb );
+					emptyDefaultExpression.appendHqlString( sb, context );
 					sb.append( " on empty" );
 				}
 			}
@@ -780,7 +781,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( name );
 			sb.append( " for ordinality" );
 		}
@@ -836,17 +837,17 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
+		public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 			sb.append( "nested " );
 			QuotingHelper.appendSingleQuoteEscapedString( sb, jsonPath );
-			appendColumnsToHqlString( sb );
+			appendColumnsToHqlString( sb, context );
 		}
 
-		void appendColumnsToHqlString(StringBuilder sb) {
+		void appendColumnsToHqlString(StringBuilder sb, SqmRenderContext context) {
 			String separator = " columns (";
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
 				sb.append( separator );
-				columnDefinition.appendHqlString( sb );
+				columnDefinition.appendHqlString( sb, context );
 				separator = ", ";
 			}
 			sb.append( ')' );
@@ -990,8 +991,8 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public void appendHqlString(StringBuilder sb) {
-			appendColumnsToHqlString( sb );
+		public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+			appendColumnsToHqlString( hql, context );
 		}
 	}
 }

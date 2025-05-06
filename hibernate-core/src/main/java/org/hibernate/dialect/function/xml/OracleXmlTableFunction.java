@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.xml;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
@@ -48,9 +47,8 @@ public class OracleXmlTableFunction extends XmlTableFunction {
 			if ( isEncodedBoolean( type ) ) {
 				//noinspection unchecked
 				final JdbcLiteralFormatter<Object> jdbcLiteralFormatter = type.getJdbcLiteralFormatter();
-				final SessionFactoryImplementor sessionFactory = converter.getCreationContext().getSessionFactory();
-				final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-				final WrapperOptions wrapperOptions = sessionFactory.getWrapperOptions();
+				final Dialect dialect = converter.getCreationContext().getDialect();
+				final WrapperOptions wrapperOptions = converter.getCreationContext().getWrapperOptions();
 				final Object trueValue = type.convertToRelationalValue( true );
 				final Object falseValue = type.convertToRelationalValue( false );
 				final String trueFragment = jdbcLiteralFormatter.toJdbcLiteral( trueValue, dialect, wrapperOptions );

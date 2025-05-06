@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.internal;
@@ -12,6 +12,7 @@ import java.util.Enumeration;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveContext;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
@@ -55,6 +56,39 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 			//assume zipped file
 			processZippedRoot( rootDirectory, context );
 		}
+	}
+
+	@Override
+	public @Nullable ArchiveEntry findEntry(String path) {
+		final File rootDirectory = resolveRootDirectory();
+		if ( rootDirectory == null ) {
+			return null;
+		}
+		final File localFile = new File( rootDirectory, path );
+		if ( !localFile.exists() ) {
+			return null;
+		}
+
+		final String name = localFile.getAbsolutePath();
+		final String relativeName = path + localFile.getName();
+		final InputStreamAccess inputStreamAccess = new FileInputStreamAccess( name, localFile );
+
+		return new ArchiveEntry() {
+			@Override
+			public String getName() {
+				return name;
+			}
+
+			@Override
+			public String getNameWithinArchive() {
+				return relativeName;
+			}
+
+			@Override
+			public InputStreamAccess getStreamAccess() {
+				return inputStreamAccess;
+			}
+		};
 	}
 
 	private File resolveRootDirectory() {

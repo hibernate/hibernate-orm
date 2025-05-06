@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
@@ -11,7 +11,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.Size;

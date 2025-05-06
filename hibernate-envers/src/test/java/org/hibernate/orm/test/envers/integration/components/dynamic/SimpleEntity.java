@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.components.dynamic;
@@ -43,11 +43,9 @@ public class SimpleEntity {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof SimpleEntity ) ) {
+		if ( !( o instanceof SimpleEntity that ) ) {
 			return false;
 		}
-
-		SimpleEntity that = (SimpleEntity) o;
 
 		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
 			return false;

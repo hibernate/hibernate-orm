@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -64,7 +64,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );
 			needsResolve = needsResolve
-					|| sqlSelection instanceof SqlSelectionImpl && ( (SqlSelectionImpl) sqlSelection ).needsResolve();
+					|| sqlSelection instanceof SqlSelectionImpl selection && selection.needsResolve();
 			if ( valueIndexesToCache.get( i ) ) {
 				valueIndexesToCacheIndexes[i] = cacheIndex++;
 			}
@@ -115,10 +115,11 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 		}
 		final AssemblerCreationStateImpl creationState = new AssemblerCreationStateImpl(
 				this,
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
-		DomainResultAssembler<?>[] domainResultAssemblers = resolveAssemblers( creationState ).toArray(new DomainResultAssembler[0]);
+		DomainResultAssembler<?>[] domainResultAssemblers =
+				resolveAssemblers( creationState ).toArray(new DomainResultAssembler[0]);
 		creationState.initializerMap.logInitializers();
 		return this.resolution = new JdbcValuesMappingResolutionImpl(
 				domainResultAssemblers,
@@ -148,7 +149,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 	private static class AssemblerCreationStateImpl implements AssemblerCreationState {
 		private final JdbcValuesMapping jdbcValuesMapping;
-		private final SessionFactoryImplementor sessionFactory;
+		private final SqlAstCreationContext sqlAstCreationContexty;
 		//custom Map<NavigablePath, Initializer>
 		private final NavigablePathMapToInitializer initializerMap = new NavigablePathMapToInitializer();
 		private final InitializersList.Builder initializerListBuilder = new InitializersList.Builder();
@@ -159,9 +160,9 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		public AssemblerCreationStateImpl(
 				JdbcValuesMapping jdbcValuesMapping,
-				SessionFactoryImplementor sessionFactory) {
+				SqlAstCreationContext sqlAstCreationContexty) {
 			this.jdbcValuesMapping = jdbcValuesMapping;
-			this.sessionFactory = sessionFactory;
+			this.sqlAstCreationContexty = sqlAstCreationContexty;
 		}
 
 		@Override
@@ -179,8 +180,8 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 			if ( containsMultipleCollectionFetches == null ) {
 				int collectionFetchesCount = 0;
 				for ( DomainResult<?> domainResult : jdbcValuesMapping.getDomainResults() ) {
-					if ( domainResult instanceof FetchParent ) {
-						collectionFetchesCount += ( (FetchParent) domainResult ).getCollectionFetchesCount();
+					if ( domainResult instanceof FetchParent fetchParent ) {
+						collectionFetchesCount += fetchParent.getCollectionFetchesCount();
 					}
 				}
 				containsMultipleCollectionFetches = collectionFetchesCount > 1;
@@ -256,7 +257,7 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 
 		@Override
 		public SqlAstCreationContext getSqlAstCreationContext() {
-			return sessionFactory;
+			return sqlAstCreationContexty;
 		}
 
 	}

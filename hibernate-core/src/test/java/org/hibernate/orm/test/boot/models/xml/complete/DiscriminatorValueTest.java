@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.complete;
@@ -9,7 +9,7 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -31,22 +31,22 @@ public class DiscriminatorValueTest {
 				.addXmlMappings( "mappings/models/complete/discriminator-value.xml" )
 				.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext(
+		final ModelsContext ModelsContext = createBuildingContext(
 				managedResources,
 				registryScope.getRegistry()
 		);
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		{
 			final ClassDetails rootClassDetails = classDetailsRegistry.getClassDetails( Root.class.getName() );
-			assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorValue.class ) ).isFalse();
+			assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorValue.class ) ).isTrue();
 			assertThat( rootClassDetails.hasDirectAnnotationUsage( DiscriminatorFormula.class ) ).isFalse();
 
 			final DiscriminatorColumn discriminatorColumn = rootClassDetails.getDirectAnnotationUsage(
 					DiscriminatorColumn.class );
 			assertThat( discriminatorColumn ).isNotNull();
 			assertThat( discriminatorColumn.name() ).isEqualTo( "TYPE_COLUMN" );
-			assertThat( discriminatorColumn.discriminatorType() ).isEqualTo( DiscriminatorType.INTEGER );
+			assertThat( discriminatorColumn.discriminatorType() ).isEqualTo( DiscriminatorType.CHAR );
 
 			final ClassDetails subClassDetails = classDetailsRegistry.getClassDetails( Sub.class.getName() );
 			assertThat( subClassDetails.hasDirectAnnotationUsage( DiscriminatorColumn.class ) ).isFalse();

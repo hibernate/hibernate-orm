@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.entities;
@@ -12,8 +12,8 @@ import java.sql.Types;
 import java.util.Objects;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -35,7 +35,7 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public RevisionType nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public RevisionType nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		byte byteValue = rs.getByte( position );
 		if ( rs.wasNull() ) {
@@ -45,7 +45,7 @@ public class RevisionTypeType implements UserType<RevisionType>, Serializable {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement preparedStatement, RevisionType value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement preparedStatement, RevisionType value, int index, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			preparedStatement.setNull( index, Types.TINYINT );

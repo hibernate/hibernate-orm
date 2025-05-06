@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
@@ -31,8 +31,7 @@ public class GenericsHelper {
 
 		for ( Type type : types ) {
 			type = resolveType( type, base );
-			if ( type instanceof ParameterizedType ) {
-				final ParameterizedType parameterizedType = (ParameterizedType) type;
+			if ( type instanceof ParameterizedType parameterizedType ) {
 				if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
 					return parameterizedType;
 				}
@@ -64,21 +63,21 @@ public class GenericsHelper {
 	}
 
 	public static Class<?> extractClass(Type type) {
-		if ( type instanceof Class ) {
-			return (Class<?>) type;
+		if ( type instanceof Class<?> clazz ) {
+			return clazz;
 		}
-		else if ( type instanceof ParameterizedType ) {
-			return extractClass( ( (ParameterizedType) type ).getRawType() );
+		else if ( type instanceof ParameterizedType parameterizedType ) {
+			return extractClass( parameterizedType.getRawType() );
 		}
 		return null;
 	}
 
 	private static Type resolveType(Type target, Type context) {
-		if ( target instanceof ParameterizedType ) {
-			return resolveParameterizedType( (ParameterizedType) target, context );
+		if ( target instanceof ParameterizedType parameterizedType ) {
+			return resolveParameterizedType( parameterizedType, context );
 		}
-		else if ( target instanceof TypeVariable ) {
-			return resolveTypeVariable( (TypeVariable<?>) target, (ParameterizedType) context );
+		else if ( target instanceof TypeVariable<?> typeVariable ) {
+			return resolveTypeVariable( typeVariable, (ParameterizedType) context );
 		}
 		return target;
 	}

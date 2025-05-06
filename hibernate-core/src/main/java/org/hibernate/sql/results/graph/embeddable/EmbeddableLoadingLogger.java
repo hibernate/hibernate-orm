@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.sql.results.LoadingLogger;
 
@@ -21,6 +22,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 		name = EmbeddableLoadingLogger.LOGGER_NAME,
 		description = "Logging related to embeddable loading"
 )
+@Internal
 public interface EmbeddableLoadingLogger extends BasicLogger {
 	String LOGGER_NAME = LoadingLogger.LOGGER_NAME + ".embeddable";
 

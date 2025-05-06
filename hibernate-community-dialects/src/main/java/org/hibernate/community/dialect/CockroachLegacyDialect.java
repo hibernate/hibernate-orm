@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,6 +36,15 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.type.PgJdbcHelper;
+import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLOrdinalEnumJdbcType;
+import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -47,7 +55,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.SemanticException;
@@ -76,7 +83,6 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
@@ -124,7 +130,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class CockroachLegacyDialect extends Dialect {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, CockroachLegacyDialect.class.getName() );
 	// KNOWN LIMITATIONS:
 	// * no support for java.sql.Clob
 
@@ -188,11 +193,6 @@ public class CockroachLegacyDialect extends Dialect {
 		}
 		if ( databaseVersion == null ) {
 			// Recur to the default version of the no-args constructor
-			LOG.unableToDetermineCockroachDatabaseVersion(
-					DEFAULT_VERSION.getDatabaseMajorVersion() + "." +
-							DEFAULT_VERSION.getDatabaseMinorVersion() + "." +
-							DEFAULT_VERSION.getDatabaseMicroVersion()
-			);
 			databaseVersion = DEFAULT_VERSION;
 		}
 		return databaseVersion;
@@ -519,7 +519,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.jsonArrayAppend_postgresql( false );
 		functionFactory.jsonArrayInsert_postgresql();
 
-		functionFactory.unnest_postgresql();
+		functionFactory.unnest_postgresql( false );
 		functionFactory.generateSeries( null, "ordinality", true );
 		functionFactory.jsonTable_cockroachdb();
 
@@ -1000,38 +1000,21 @@ public class CockroachLegacyDialect extends Dialect {
 		if (lockMode == null ) {
 			lockMode = lockOptions.getLockMode();
 		}
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ: {
-				return getReadLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case PESSIMISTIC_WRITE: {
-				return getWriteLockString( aliases, lockOptions.getTimeOut() );
-			}
-			case UPGRADE_NOWAIT:
-			case PESSIMISTIC_FORCE_INCREMENT: {
-				return getForUpdateNowaitString(aliases);
-			}
-			case UPGRADE_SKIPLOCKED: {
-				return getForUpdateSkipLockedString(aliases);
-			}
-			default: {
-				return "";
-			}
-		}
+		return switch ( lockMode ) {
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
+			default -> "";
+		};
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT: {
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			}
-			case LockOptions.SKIP_LOCKED: {
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			}
-			default: {
-				return lockString;
-			}
-		}
+		return switch ( timeout ) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default -> lockString;
+		};
 	}
 
 	@Override
@@ -1248,4 +1231,20 @@ public class CockroachLegacyDialect extends Dialect {
 	public boolean supportsFromClauseInUpdate() {
 		return true;
 	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
 }

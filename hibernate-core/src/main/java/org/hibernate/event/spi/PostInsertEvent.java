@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -12,11 +11,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Gavin King
  */
-public class PostInsertEvent extends AbstractEvent {
-	private Object entity;
-	private EntityPersister persister;
-	private Object[] state;
-	private Object id;
+public class PostInsertEvent extends AbstractPostDatabaseOperationEvent {
+	private final Object[] state;
 
 	public PostInsertEvent(
 			Object entity,
@@ -24,28 +20,8 @@ public class PostInsertEvent extends AbstractEvent {
 			Object[] state,
 			EntityPersister persister,
 			EventSource source) {
-		super(source);
-		this.entity = entity;
-		this.id = id;
+		super( source, entity, id, persister );
 		this.state = state;
-		this.persister = persister;
-	}
-
-	public Object getEntity() {
-		return entity;
-	}
-
-	public Object getId() {
-		return id;
-	}
-
-	public EntityPersister getPersister() {
-		return persister;
-	}
-
-	@Override
-	public SessionFactoryImplementor getFactory() {
-		return persister.getFactory();
 	}
 
 	public Object[] getState() {

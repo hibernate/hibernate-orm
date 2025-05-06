@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -50,28 +50,24 @@ public class CompleteResultBuilderInstantiation
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final List<ArgumentDomainResult<?>> argumentDomainResults = new ArrayList<>( argumentResultBuilders.size() );
-
-		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
-			final ResultBuilder argumentResultBuilder = argumentResultBuilders.get( i );
-
-			@SuppressWarnings({"unchecked", "rawtypes"}) final ArgumentDomainResult<?> argumentDomainResult = new ArgumentDomainResult(
-					argumentResultBuilder.buildResult(
-							jdbcResultsMetadata,
-							i,
-							domainResultCreationState
-					)
-			);
-
-			argumentDomainResults.add( argumentDomainResult );
-		}
-
 		return new DynamicInstantiationResultImpl<>(
 				null,
 				DynamicInstantiationNature.CLASS,
 				javaType,
-				argumentDomainResults
+				argumentDomainResults( jdbcResultsMetadata, domainResultCreationState )
 		);
+	}
+
+	private List<ArgumentDomainResult<?>> argumentDomainResults(
+			JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationState domainResultCreationState) {
+		final List<ArgumentDomainResult<?>> argumentDomainResults = new ArrayList<>( argumentResultBuilders.size() );
+		for ( int i = 0; i < argumentResultBuilders.size(); i++ ) {
+			argumentDomainResults.add( new ArgumentDomainResult<>(
+					argumentResultBuilders.get( i )
+							.buildResult( jdbcResultsMetadata, i, domainResultCreationState )
+			) );
+		}
+		return argumentDomainResults;
 	}
 
 	@Override
@@ -85,7 +81,7 @@ public class CompleteResultBuilderInstantiation
 
 		final CompleteResultBuilderInstantiation that = (CompleteResultBuilderInstantiation) o;
 		return javaType.equals( that.javaType )
-				&& argumentResultBuilders.equals( that.argumentResultBuilders );
+			&& argumentResultBuilders.equals( that.argumentResultBuilders );
 	}
 
 	@Override

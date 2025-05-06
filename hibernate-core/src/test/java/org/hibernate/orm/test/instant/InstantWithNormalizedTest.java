@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.instant;
@@ -10,7 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;

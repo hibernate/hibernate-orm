@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.converter.internal;
@@ -7,6 +7,7 @@ package org.hibernate.type.descriptor.converter.internal;
 import java.lang.reflect.Array;
 import java.util.Collection;
 
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
@@ -43,6 +44,7 @@ public class CollectionConverter<X extends Collection<Object>, Y> implements Bas
 	}
 
 	@Override
+	@AllowReflection
 	public Y toRelationalValue(X domainForm) {
 		if ( domainForm == null ) {
 			return null;

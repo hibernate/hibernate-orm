@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.secondarytable;
@@ -11,11 +11,13 @@ import java.util.EnumSet;
 import java.util.Locale;
 
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.QualifiedTypeName;
+import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -64,17 +66,11 @@ public class SecondaryTableTest {
 	}
 
 	private String getExpectedTableName(String tableName, String schema, String catalog) {
-		String expectedTableName = tableName;
-		NameQualifierSupport nameQualifierSupport = metadata.getDatabase()
-				.getJdbcEnvironment()
-				.getNameQualifierSupport();
-		if ( StringHelper.isNotEmpty( schema ) && nameQualifierSupport.supportsSchemas() ) {
-			expectedTableName = schema + "." + expectedTableName;
-		}
-		if ( StringHelper.isNotEmpty( catalog ) && nameQualifierSupport.supportsCatalogs() ) {
-			expectedTableName = catalog + "." + expectedTableName;
-		}
-		return expectedTableName;
+		SqlStringGenerationContext context = SqlStringGenerationContextImpl.forTests(
+				metadata.getDatabase().getJdbcEnvironment(), catalog, schema );
+		return context.format(
+				new QualifiedTypeName( Identifier.toIdentifier( catalog ), Identifier.toIdentifier( schema ),
+						Identifier.toIdentifier( tableName ) ) );
 	}
 
 	private boolean isTableCreated(

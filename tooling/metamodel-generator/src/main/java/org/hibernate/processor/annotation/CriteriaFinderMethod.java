@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -54,14 +54,15 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
 		declaration
 				.append('\n');
-		collectOrdering( declaration, paramTypes );
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes, containerType );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
+		boolean unwrapped = initiallyUnwrapped();
 		unwrapped = enableFetchProfile( declaration, unwrapped );
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, paramTypes, unwrapped );
 	}
 
@@ -81,7 +82,9 @@ public class CriteriaFinderMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String createQueryMethod() {
-		return isUsingEntityManager() || isReactive() || isUnspecializedQueryType(containerType)
+		return isUsingEntityManager()
+			|| isReactive()
+			|| isUnspecializedQueryType(containerType)
 				? "createQuery"
 				: "createSelectionQuery";
 	}

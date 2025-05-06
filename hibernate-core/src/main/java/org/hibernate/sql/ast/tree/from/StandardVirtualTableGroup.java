@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.OwnedValuedModelPart;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
@@ -100,11 +99,11 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 
 	private void registerPredicateOnCorrelatedTableGroup(TableGroupJoin join) {
 		TableGroup tableGroup = underlyingTableGroup;
-		while ( tableGroup instanceof StandardVirtualTableGroup ) {
-			tableGroup = ( (StandardVirtualTableGroup) tableGroup ).underlyingTableGroup;
+		while ( tableGroup instanceof StandardVirtualTableGroup standardVirtualTableGroup ) {
+			tableGroup = standardVirtualTableGroup.underlyingTableGroup;
 		}
-		if ( tableGroup instanceof CorrelatedTableGroup ) {
-			( (CorrelatedTableGroup) tableGroup ).getJoinPredicateConsumer().accept( join.getPredicate() );
+		if ( tableGroup instanceof CorrelatedTableGroup correlatedTableGroup ) {
+			correlatedTableGroup.getJoinPredicateConsumer().accept( join.getPredicate() );
 		}
 	}
 
@@ -141,15 +140,11 @@ public class StandardVirtualTableGroup extends AbstractTableGroup implements Vir
 			ValuedModelPart modelPart,
 			String tableExpression,
 			boolean resolve) {
-		final ValuedModelPart parentModelPart;
-		final MappingType declaringType;
-		if ( modelPart instanceof OwnedValuedModelPart
-				&& ( declaringType = ( (OwnedValuedModelPart) modelPart ).getDeclaringType() ) instanceof EmbeddableMappingType ) {
-			parentModelPart = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
-		}
-		else {
-			parentModelPart = modelPart;
-		}
+		final ValuedModelPart parentModelPart =
+				modelPart instanceof OwnedValuedModelPart ownedValuedModelPart
+					&& ownedValuedModelPart.getDeclaringType() instanceof EmbeddableMappingType declaringType
+						? declaringType.getEmbeddedValueMapping()
+						: modelPart;
 		final TableReference tableReference = underlyingTableGroup.getTableReference(
 				navigablePath,
 				parentModelPart,

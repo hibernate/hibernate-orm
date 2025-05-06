@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.log;
 
+import org.hibernate.Internal;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
@@ -19,6 +20,7 @@ import static org.jboss.logging.Logger.Level.WARN;
  */
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 90006001, max = 90007000)
+@Internal
 public interface IncubationLogger {
 	String CATEGORY = SubSystemLogging.BASE + ".incubating";
 

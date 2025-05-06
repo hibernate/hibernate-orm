@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -41,7 +41,7 @@ public class UnknownPathException extends PathException {
 						Locale.ROOT,
 						"Could not resolve path element '%s' relative to '%s' (%s)",
 						name,
-						base.getReferencedPathSource().getSqmPathType().getTypeName(),
+						base.getReferencedPathSource().getPathType().getTypeName(),
 						base.getNavigablePath()
 				)
 		);

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbDiscriminatorColumnImpl;
 import org.hibernate.boot.models.annotations.spi.ColumnDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.DiscriminatorColumn;
 
@@ -28,7 +28,7 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public DiscriminatorColumnJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public DiscriminatorColumnJpaAnnotation(ModelsContext modelContext) {
 		this.name = "DTYPE";
 		this.discriminatorType = jakarta.persistence.DiscriminatorType.STRING;
 		this.columnDefinition = "";
@@ -39,7 +39,7 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public DiscriminatorColumnJpaAnnotation(DiscriminatorColumn annotation, SourceModelBuildingContext modelContext) {
+	public DiscriminatorColumnJpaAnnotation(DiscriminatorColumn annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.discriminatorType = annotation.discriminatorType();
 		this.columnDefinition = annotation.columnDefinition();
@@ -52,7 +52,7 @@ public class DiscriminatorColumnJpaAnnotation implements DiscriminatorColumn, Co
 	 */
 	public DiscriminatorColumnJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.discriminatorType = (jakarta.persistence.DiscriminatorType) attributeValues.get( "discriminatorType" );
 		this.columnDefinition = (String) attributeValues.get( "columnDefinition" );

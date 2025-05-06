@@ -1,117 +1,66 @@
-description = 'Maven plugin to integrate aspects of Hibernate into your build.'
-
-apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
-apply from: rootProject.file( 'gradle/java-module.gradle' )
-
-apply plugin: 'org.hibernate.build.maven-embedder'
-
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
+
+plugins {
+    id "local.java-module"
+    id "local.publishing"
+    id "local.code-quality"
+    id "org.gradlex.maven-plugin-development" version "1.0.3"
+}
+
+description = 'Maven plugin to integrate aspects of Hibernate into your build.'
 
 dependencies {
     implementation project( ":hibernate-core" )
 
     implementation "org.apache.maven:maven-plugin-api:3.6.3"
-    implementation "org.apache.maven.plugin-tools:maven-plugin-annotations:3.6.0"
     implementation "org.apache.maven:maven-project:2.2.1"
     implementation "org.apache.maven.shared:file-management:3.1.0"
+
+    compileOnly "org.apache.maven.plugin-tools:maven-plugin-annotations:3.6.0"
 }
 
-publishing {
-    publications {
-        publishedArtifacts(MavenPublication) {
-            from components.java
-            pom.withXml {
-                asNode()
-                        .version
-                        .plus {
-                            packaging('maven-plugin')
-                        }
-                asNode()
-                        .dependencies
-                        .dependency
-                        .findAll { dependency ->
-                            dependency.groupId.text().startsWith('org.apache.maven')
-                        }
-                        .each { dependency ->
-                            if (dependency.groupId.text().startsWith('org.apache.maven.shared')) {
-                                dependency.scope*.value = 'compile'
-                            } else {
-                                dependency.scope*.value = 'provided'
-                            }
-                        }
-                asNode()
-                        .dependencies
-                        .dependency
-                        .findAll { dependency ->
-                            dependency.groupId.text().startsWith('org.hibernate.orm')
-                        }
-                        .each { dependency ->
-                            dependency.scope*.value = 'compile'
-                        }
-                asNode()
-                        .dependencies
-                        .plus {
-                            def plugins = build().appendNode('plugins')
-                            def pluginPlugin = plugins.appendNode('plugin')
-                            pluginPlugin.appendNode('groupId', 'org.apache.maven.plugins')
-                            pluginPlugin.appendNode('artifactId', 'maven-plugin-plugin')
-                            pluginPlugin.appendNode('version', '3.15.0')
-                            def pluginConfiguration = pluginPlugin.appendNode('configuration')
-                            pluginConfiguration.appendNode('goalPrefix', 'plugin')
-                            pluginConfiguration.appendNode('outputDirectory', layout.buildDirectory.dir('generated/sources/plugin-descriptors/META-INF/maven').get().getAsFile().getAbsolutePath() )
-                            def invokerPlugin = plugins.appendNode('plugin');
-                            invokerPlugin.appendNode('groupId', 'org.apache.maven.plugins')
-                            invokerPlugin.appendNode('artifactId', 'maven-invoker-plugin')
-                            invokerPlugin.appendNode('version', '3.8.0')
-                            def invokerConfiguration = invokerPlugin.appendNode('configuration');
-                            invokerConfiguration.appendNode('debug', 'true');
-                            invokerConfiguration.appendNode('mavenExecutable', 'mvnw');
-                            def scriptVariables = invokerConfiguration.appendNode('scriptVariables');
-                            scriptVariables.appendNode('hibernateCoreJarPath', layout.buildDirectory.file('maven-embedder/maven-local/org/hibernate/orm/hibernate-core/' + project.version + '/hibernate-core-' + project.version + '.jar').get().getAsFile().getAbsolutePath())
-                        }
-            }
-        }
-    }
+def releasePrepareTask = tasks.register("releasePrepare") {
+    group "release-prepare"
+    description "See :release:releasePrepare for details.  Here we hook in the `check` task."
 
+    dependsOn tasks.check
 }
 
-// Following tasks need to be performed:
-// 1. Compile the Java classes
-// 2. Copy the source tree to the working directory
-// 3. Copy the compiled Java classes to the working directory
-// 4. Install the 'hibernate-core' dependency in the local Maven repo
-// 5. Install the 'hibernate-scan-jandex' dependency in the local Maven repo
-// 6. Generate the pom.xml file for the Maven plugin
-// 7. Generate the Maven plugin descriptor
-// 8. Create the jar for the Maven plugin
-// 9. Install the Maven plugin descriptor in the local Maven repo
-// 10. Run the integration tests
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+    group "release-prepare"
+    description "Delegates to `releasePrepare` task"
 
-// Prepare the working directory
-tasks.register('prepareWorkspace', Copy) {
-    into('target/maven-embedder/workspace')
-    // copy the plugin pom
-    with( copySpec {
-        from('target/publications/publishedArtifacts/pom-default.xml')
-        rename('pom-default.xml', 'pom.xml')
-        dependsOn('generatePomFileForPublishedArtifactsPublication')
-    })
-    // copy the compiled java classes
-    into('target/classes') {
-        with( copySpec {
-            from('target/classes/java/main')
-            dependsOn('compileJava')
-        })
-    }
-    // copy the integration tests
-    into('src/it') {
-        with( copySpec {
-            from('src/it')
-        })
+    dependsOn releasePrepareTask
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts") {
+    from components.java
+
+    // Adjust the pom for 3 things:
+    //      1. set packaging to maven-plugin (org.gradlex.maven-plugin-development does not in my testing)
+    //      2. scope of org.apache.maven dependencies
+    pom.withXml {
+        asNode()
+                .version
+                .plus {
+                    packaging('maven-plugin')
+                }
+        asNode()
+                .dependencies
+                .dependency
+                .findAll { dependency ->
+                    dependency.groupId.text().startsWith('org.apache.maven')
+                }
+                .each { dependency ->
+                    if (!dependency.groupId.text().startsWith('org.apache.maven.shared')) {
+                        dependency.scope*.value = 'provided'
+                    }
+                }
     }
 }
+

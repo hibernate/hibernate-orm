@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +20,8 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.type.BasicCollectionType;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Maintains a cross-reference between SqmParameter and QueryParameter references.
@@ -39,71 +40,76 @@ public class DomainParameterXref {
 	 * Create a DomainParameterXref for the parameters defined in the SQM statement
 	 */
 	public static DomainParameterXref from(SqmStatement<?> sqmStatement) {
-		// `xrefMap` is used to help maintain the proper cardinality between an
-		// SqmParameter and a QueryParameter.  Multiple SqmParameter references
-		// can map to the same QueryParameter.  Consider, e.g.,
-		// `.. where a.b = :param or a.c = :param`.  Here we have 2 SqmParameter
-		// references (one for each occurrence of `:param`) both of which map to
-		// the same QueryParameter.
-		final Map<SqmParameter<?>, QueryParameterImplementor<?>> xrefMap = new TreeMap<>();
-
 		final SqmStatement.ParameterResolutions parameterResolutions = sqmStatement.resolveParameters();
 		if ( parameterResolutions.getSqmParameters().isEmpty() ) {
 			return EMPTY;
 		}
+		else {
+			final int sqmParamCount = parameterResolutions.getSqmParameters().size();
+			final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam =
+					new LinkedHashMap<>( sqmParamCount );
+			final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam =
+					new IdentityHashMap<>( sqmParamCount );
 
-		final int sqmParamCount = parameterResolutions.getSqmParameters().size();
-		final LinkedHashMap<QueryParameterImplementor<?>, List<SqmParameter<?>>> sqmParamsByQueryParam = new LinkedHashMap<>( sqmParamCount );
-		final IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
-
-		for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
-			if ( sqmParameter instanceof JpaCriteriaParameter ) {
-				// see discussion on `SqmJpaCriteriaParameterWrapper#accept`
-				throw new UnsupportedOperationException(
-						"Unexpected JpaCriteriaParameter in SqmStatement#getSqmParameters.  Criteria parameters " +
-								"should be represented as SqmJpaCriteriaParameterWrapper references in this collection"
-				);
-			}
-
-			final QueryParameterImplementor<?> queryParameter = xrefMap.computeIfAbsent(
-					sqmParameter,
-					p -> {
-						if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
-							return ( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter ).getJpaCriteriaParameter();
-						}
-						else if ( sqmParameter.getName() != null ) {
-							return QueryParameterNamedImpl.fromSqm( sqmParameter );
-						}
-						else if ( sqmParameter.getPosition() != null ) {
-							return QueryParameterPositionalImpl.fromSqm( sqmParameter );
-						}
-						else {
-							throw new UnsupportedOperationException( "Unexpected SqmParameter type : " + sqmParameter );
-						}
-					}
-			);
-
-			if ( ! sqmParameter.allowMultiValuedBinding() ) {
-				if ( queryParameter.allowsMultiValuedBinding() ) {
-					SqmTreeTransformationLogger.LOGGER.debugf(
-							"SqmParameter [%s] does not allow multi-valued binding, " +
-									"but mapped to existing QueryParameter [%s] that does - " +
-									"disallowing multi-valued binding" ,
-							sqmParameter,
-							queryParameter
+			for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
+				if ( sqmParameter instanceof JpaCriteriaParameter ) {
+					// see discussion on `SqmJpaCriteriaParameterWrapper#accept`
+					throw new UnsupportedOperationException(
+							"Unexpected JpaCriteriaParameter in SqmStatement#getSqmParameters.  Criteria parameters " +
+							"should be represented as SqmJpaCriteriaParameterWrapper references in this collection"
 					);
+				}
+
+				// `xrefMap` is used to help maintain the proper cardinality between an
+				// SqmParameter and a QueryParameter.  Multiple SqmParameter references
+				// can map to the same QueryParameter.  Consider, e.g.,
+				// `.. where a.b = :param or a.c = :param`.  Here we have 2 SqmParameter
+				// references (one for each occurrence of `:param`) both of which map to
+				// the same QueryParameter.
+				final Map<SqmParameter<?>, QueryParameterImplementor<?>> xrefMap = new TreeMap<>();
+
+				final QueryParameterImplementor<?> queryParameter = xrefMap.computeIfAbsent(
+						sqmParameter,
+						parameter -> {
+							if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> sqmJpaCriteriaParameterWrapper ) {
+								return sqmJpaCriteriaParameterWrapper.getJpaCriteriaParameter();
+							}
+							else if ( sqmParameter.getName() != null ) {
+								return QueryParameterNamedImpl.fromSqm( sqmParameter );
+							}
+							else if ( sqmParameter.getPosition() != null ) {
+								return QueryParameterPositionalImpl.fromSqm( sqmParameter );
+							}
+							else {
+								throw new UnsupportedOperationException(
+										"Unexpected SqmParameter type : " + sqmParameter );
+							}
+						}
+				);
+
+				if ( !sqmParameter.allowMultiValuedBinding() ) {
+					if ( queryParameter.allowsMultiValuedBinding() ) {
+						SqmTreeTransformationLogger.LOGGER.debugf(
+								"SqmParameter [%s] does not allow multi-valued binding, " +
+								"but mapped to existing QueryParameter [%s] that does - " +
+								"disallowing multi-valued binding",
+								sqmParameter,
+								queryParameter
+						);
+						queryParameter.disallowMultiValuedBinding();
+					}
+				}
+				else if ( sqmParameter.getExpressible() != null
+						&& sqmParameter.getExpressible().getSqmType() instanceof BasicCollectionType ) {
 					queryParameter.disallowMultiValuedBinding();
 				}
-			}
-			else if ( sqmParameter.getExpressible() != null && sqmParameter.getExpressible().getSqmType() instanceof BasicCollectionType ) {
-				queryParameter.disallowMultiValuedBinding();
+
+				sqmParamsByQueryParam.computeIfAbsent( queryParameter, impl -> new ArrayList<>() ).add( sqmParameter );
+				queryParamBySqmParam.put( sqmParameter, queryParameter );
 			}
 
-			sqmParamsByQueryParam.computeIfAbsent( queryParameter, qp -> new ArrayList<>() ).add( sqmParameter );
-			queryParamBySqmParam.put( sqmParameter, queryParameter );
+			return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam, parameterResolutions );
 		}
-
-		return new DomainParameterXref( sqmParamsByQueryParam, queryParamBySqmParam, parameterResolutions );
 	}
 
 
@@ -128,11 +134,10 @@ public class DomainParameterXref {
 
 	public DomainParameterXref copy() {
 		//noinspection unchecked
-		return new DomainParameterXref(
-				sqmParamsByQueryParam,
-				(IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>>) queryParamBySqmParam.clone(),
-				parameterResolutions
-		);
+		final var clone =
+				(IdentityHashMap<SqmParameter<?>, QueryParameterImplementor<?>>)
+						queryParamBySqmParam.clone();
+		return new DomainParameterXref( sqmParamsByQueryParam, clone, parameterResolutions );
 	}
 
 	/**
@@ -157,14 +162,12 @@ public class DomainParameterXref {
 		return queryParamBySqmParam.size();
 	}
 
-	public int getNumberOfSqmParameters(QueryParameterImplementor<?> queryParameter) {
-		final List<SqmParameter<?>> sqmParameters = sqmParamsByQueryParam.get( queryParameter );
-		if ( sqmParameters == null ) {
-			// this should maybe be an exception instead
-			return 0;
-		}
-		return sqmParameters.size();
-	}
+//	public int getNumberOfSqmParameters(QueryParameterImplementor<?> queryParameter) {
+//		final List<SqmParameter<?>> sqmParameters = sqmParamsByQueryParam.get( queryParameter );
+//		return sqmParameters == null
+//				? 0 // this should maybe be an exception instead
+//				: sqmParameters.size();
+//	}
 
 	public SqmStatement.ParameterResolutions getParameterResolutions() {
 		return parameterResolutions;
@@ -175,49 +178,47 @@ public class DomainParameterXref {
 	}
 
 	public QueryParameterImplementor<?> getQueryParameter(SqmParameter<?> sqmParameter) {
-		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
-			return ( (SqmJpaCriteriaParameterWrapper<?>) sqmParameter ).getJpaCriteriaParameter();
+		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> parameterWrapper ) {
+			return parameterWrapper.getJpaCriteriaParameter();
 		}
-		else if ( sqmParameter instanceof QueryParameterImplementor<?> ) {
-			return (QueryParameterImplementor<?>) sqmParameter;
+		else if ( sqmParameter instanceof QueryParameterImplementor<?> parameterImplementor ) {
+			return parameterImplementor;
 		}
-		return queryParamBySqmParam.get( sqmParameter );
+		else {
+			return queryParamBySqmParam.get( sqmParameter );
+		}
 	}
 
 	public void addExpansion(
 			QueryParameterImplementor<?> domainParam,
-			SqmParameter originalSqmParameter,
-			SqmParameter expansion) {
+			SqmParameter<?> originalSqmParameter,
+			SqmParameter<?> expansion) {
 		assert !queryParamBySqmParam.isEmpty();
 		queryParamBySqmParam.put( expansion, domainParam );
-
 		if ( expansions == null ) {
 			expansions = new IdentityHashMap<>();
 		}
-
 		expansions.computeIfAbsent( originalSqmParameter, p -> new ArrayList<>() ).add( expansion );
 	}
 
 	public List<SqmParameter<?>> getExpansions(SqmParameter<?> sqmParameter) {
 		if ( expansions == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
-
-		final List<SqmParameter<?>> sqmParameters = expansions.get( sqmParameter );
-		return sqmParameters == null ? Collections.emptyList() : sqmParameters;
+		else {
+			final List<SqmParameter<?>> sqmParameters = expansions.get( sqmParameter );
+			return sqmParameters == null ? emptyList() : sqmParameters;
+		}
 	}
 
 	public void clearExpansions() {
-		if ( expansions == null ) {
-			return;
-		}
-
-		for ( List<SqmParameter<?>> expansionList : expansions.values() ) {
-			for ( SqmParameter<?> expansion : expansionList ) {
-				queryParamBySqmParam.remove( expansion );
+		if ( expansions != null ) {
+			for ( List<SqmParameter<?>> expansionList : expansions.values() ) {
+				for ( SqmParameter<?> expansion : expansionList ) {
+					queryParamBySqmParam.remove( expansion );
+				}
 			}
+			expansions.clear();
 		}
-
-		expansions.clear();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -90,7 +90,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	// JPA
 
 	@Override
-	public EntityDomainType<E> getModel() {
+	public SqmEntityDomainType<E> getModel() {
 		// Or should we throw an exception instead?
 		return null;
 	}
@@ -101,7 +101,7 @@ public class SqmFunctionRoot<E> extends SqmRoot<E> implements JpaFunctionRoot<E>
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
+	public SqmPathSource<E> getResolvedModel() {
 		return getReferencedPathSource();
 	}
 

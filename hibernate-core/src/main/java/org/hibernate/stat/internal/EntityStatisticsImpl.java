@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat.internal;
@@ -20,6 +20,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 	private final String rootEntityName;
 	private final LongAdder loadCount = new LongAdder();
 	private final LongAdder updateCount = new LongAdder();
+	private final LongAdder upsertCount = new LongAdder();
 	private final LongAdder insertCount = new LongAdder();
 	private final LongAdder deleteCount = new LongAdder();
 	private final LongAdder fetchCount = new LongAdder();
@@ -50,6 +51,10 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		return updateCount.sum();
 	}
 
+	public long getUpsertCount() {
+		return upsertCount.sum();
+	}
+
 	public long getFetchCount() {
 		return fetchCount.sum();
 	}
@@ -70,6 +75,10 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 		updateCount.increment();
 	}
 
+	void incrementUpsertCount() {
+		upsertCount.increment();
+	}
+
 	void incrementInsertCount() {
 		insertCount.increment();
 	}
@@ -88,6 +97,7 @@ public class EntityStatisticsImpl extends AbstractCacheableDataStatistics implem
 				.append( "[rootEntityName=" ).append( rootEntityName )
 				.append( ",loadCount=" ).append( this.loadCount )
 				.append( ",updateCount=" ).append( this.updateCount )
+				.append( ",upsertCount=" ).append( this.upsertCount )
 				.append( ",insertCount=" ).append( this.insertCount )
 				.append( ",deleteCount=" ).append( this.deleteCount )
 				.append( ",fetchCount=" ).append( this.fetchCount )

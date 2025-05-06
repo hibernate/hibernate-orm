@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.lock;
@@ -12,6 +12,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.exception.SQLGrammarException;
@@ -105,6 +106,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void testStaleVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;
@@ -228,6 +230,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and fails to acquire a write lock after a TX in between committed changes to a row")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 11, minorVersion = 6, microVersion = 2, reason = "MariaDB will throw an error DB_RECORD_CHANGED when acquiring a lock on a record that have changed")
 	public void testStaleNonVersionedInstanceFoundOnLock() {
 		if ( !readCommittedIsolationMaintained( "repeatable read tests" ) ) {
 			return;

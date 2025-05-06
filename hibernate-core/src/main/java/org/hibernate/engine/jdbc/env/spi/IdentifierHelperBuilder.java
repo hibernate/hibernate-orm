@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
@@ -40,6 +40,7 @@ public class IdentifierHelperBuilder {
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
 	private boolean autoQuoteInitialUnderscore = false;
+	private boolean autoQuoteDollar = false;
 	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
@@ -150,6 +151,10 @@ public class IdentifierHelperBuilder {
 		this.autoQuoteInitialUnderscore = autoQuoteInitialUnderscore;
 	}
 
+	public void setAutoQuoteDollar(boolean autoQuoteDollar) {
+		this.autoQuoteDollar = autoQuoteDollar;
+	}
+
 	public NameQualifierSupport getNameQualifierSupport() {
 		return nameQualifierSupport;
 	}
@@ -215,6 +220,7 @@ public class IdentifierHelperBuilder {
 				skipGlobalQuotingForColumnDefinitions,
 				autoQuoteKeywords,
 				autoQuoteInitialUnderscore,
+				autoQuoteDollar,
 				reservedWords,
 				unquotedCaseStrategy,
 				quotedCaseStrategy

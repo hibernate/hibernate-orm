@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
@@ -37,15 +36,12 @@ public class SelectableMappingsImpl implements SelectableMappings {
 	}
 
 	private static void resolveJdbcMappings(List<JdbcMapping> jdbcMappings, MappingContext mapping, Type valueType) {
-		final Type keyType;
-		if ( valueType instanceof EntityType ) {
-			keyType = ( (EntityType) valueType ).getIdentifierOrUniqueKeyType( mapping );
-		}
-		else {
-			keyType = valueType;
-		}
-		if ( keyType instanceof CompositeType ) {
-			Type[] subtypes = ( (CompositeType) keyType ).getSubtypes();
+		final Type keyType =
+				valueType instanceof EntityType entityType
+						? entityType.getIdentifierOrUniqueKeyType( mapping )
+						: valueType;
+		if ( keyType instanceof CompositeType compositeType ) {
+			Type[] subtypes = compositeType.getSubtypes();
 			for ( Type subtype : subtypes ) {
 				resolveJdbcMappings( jdbcMappings, mapping, subtype );
 			}
@@ -53,34 +49,6 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		else {
 			jdbcMappings.add( (JdbcMapping) keyType );
 		}
-	}
-
-	/**
-	 * @deprecated use {@link #from(String, Value, int[], MappingContext, TypeConfiguration, boolean[], boolean[], Dialect, SqmFunctionRegistry, RuntimeModelCreationContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public static SelectableMappings from(
-			String containingTableExpression,
-			Value value,
-			int[] propertyOrder,
-			Mapping mapping,
-			TypeConfiguration typeConfiguration,
-			boolean[] insertable,
-			boolean[] updateable,
-			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		return from(
-				containingTableExpression,
-				value, propertyOrder,
-				(MappingContext) mapping,
-				typeConfiguration,
-				insertable,
-				updateable,
-				dialect,
-				sqmFunctionRegistry,
-				creationContext
-		);
 	}
 
 	public static SelectableMappings from(

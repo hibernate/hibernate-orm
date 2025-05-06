@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.embeddables;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -40,7 +40,7 @@ public class DollarValueUserType implements UserType<DollarValue> {
 	}
 
 	@Override
-	public DollarValue nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public DollarValue nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		return new DollarValue( rs.getBigDecimal( position ) );
 	}
@@ -50,7 +50,7 @@ public class DollarValueUserType implements UserType<DollarValue> {
 			PreparedStatement st,
 			DollarValue value,
 			int index,
-			SharedSessionContractImplementor session) throws SQLException {
+			WrapperOptions options) throws SQLException {
 		st.setBigDecimal(index, value.getAmount());
 	}
 

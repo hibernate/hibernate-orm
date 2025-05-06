@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -7,7 +7,6 @@ package org.hibernate.metamodel.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.Instantiator;
 
 /**
@@ -22,7 +21,7 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 
 	public AbstractDynamicMapInstantiator(String roleName) {
 		if ( roleName == null ) {
-			throw new IllegalArgumentException( "`roleName` passed to dynamic-map instantiator cannot be null" );
+			throw new IllegalArgumentException( "Role name passed to dynamic map instantiator cannot be null" );
 		}
 		this.roleName = roleName;
 	}
@@ -32,15 +31,10 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-		if ( object instanceof Map ) {
-			//noinspection rawtypes
-			final String type = (String) ( (Map) object ).get( TYPE_KEY );
-			return isSameRole( type );
-		}
-
-		// todo (6.0) : should this be an exception instead?
-		return false;
+	public boolean isInstance(Object object) {
+		return object instanceof Map<?, ?> map
+			&& isSameRole( (String) map.get( TYPE_KEY ) );
+		// todo (6.0) : should this be an exception if there is no TYPE_KEY
 	}
 
 	protected boolean isSameRole(String type) {
@@ -48,14 +42,12 @@ public abstract class AbstractDynamicMapInstantiator implements Instantiator {
 	}
 
 	@Override
-	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
-		return isInstance( object, sessionFactory );
+	public boolean isSameClass(Object object) {
+		return isInstance( object );
 	}
 
-	@SuppressWarnings("rawtypes")
-	protected Map generateDataMap() {
-		final Map map = new HashMap();
-		//noinspection unchecked
+	protected Map<String,?> generateDataMap() {
+		final Map<String,Object> map = new HashMap<>();
 		map.put( TYPE_KEY, roleName );
 		return map;
 	}

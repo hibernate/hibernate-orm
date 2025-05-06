@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -99,13 +99,16 @@ import org.hibernate.graph.GraphSemantic;
  * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
  * {@code @OneToOne} association belonging to an entity returned by the query.
  * <p>
- * Finally, two alternative approaches to pagination are available:
+ * Finally, three alternative approaches to pagination are available:
  * <ol>
  * <li>
- * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
- * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
- * pagination, at a slightly higher semantic level than the ancient but dependable
- * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
+ * The ancient but dependable operations {@link #setFirstResult(int)} and
+ * {@link #setMaxResults(int)} are the standard approach blessed by the JPA
+ * specification.
+ * <li>
+ * {@link org.hibernate.query.specification.SelectionSpecification SelectionSpecification}
+ * and {@link #setPage(Page)}, together with {@link Order} and {@link Page}, provide
+ * a streamlined API for offset-based pagination, at a slightly higher semantic level.
  * <li>
  * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
  * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,
@@ -134,27 +137,26 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * {@code Object[]}.
 	 *
 	 * @return the results as a list
+	 *
+	 * @apiNote Synonym for {@link #list()}
 	 */
 	default List<R> getResultList() {
 		return list();
 	}
 
 	/**
-	 * Returns scrollable access to the query results.
-	 * <p>
-	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}
+	 * Returns scrollable access to the query results, using the
+	 * {@linkplain Dialect#defaultScrollMode() default scroll mode
+	 * of the SQL dialect.}
 	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 * @see #scroll(ScrollMode)
 	 */
 	ScrollableResults<R> scroll();
 
 	/**
-	 * Returns scrollable access to the query results.  The capabilities of the
-	 * returned ScrollableResults depend on the specified ScrollMode.
-	 *
-	 * @apiNote The exact behavior of this method depends somewhat
-	 * on the JDBC driver's {@link java.sql.ResultSet} scrolling support
+	 * Returns scrollable access to the query results. The capabilities
+	 * of the returned {@link ScrollableResults} depend on the specified
+	 * {@link ScrollMode}.
 	 */
 	ScrollableResults<R> scroll(ScrollMode scrollMode);
 
@@ -169,9 +171,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @return The results as a {@link Stream}
 	 *
-	 * @implNote The default implementation defined here simply returns
-	 *           {@link #list()}{@code .stream()}. Concrete implementations
-	 *           may be more efficient.
+	 * @apiNote Synonym for {@link #stream()}
 	 */
 	default Stream<R> getResultStream() {
 		return stream();
@@ -187,6 +187,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
+	 *
+	 * @implNote The default implementation defined here simply returns
+	 *           {@link #list()}{@link List#stream() .stream()}.
+	 *           Overriding implementations are typically more efficient.
 	 *
 	 * @since 5.2
 	 */
@@ -268,6 +272,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Incubating
 	KeyedResultList<R> getKeyedResultList(KeyedPage<R> page);
 
+	@Override
 	SelectionQuery<R> setHint(String hintName, Object value);
 
 	/**
@@ -278,12 +283,12 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @since 6.3
 	 */
-	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	/**
-	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
-	 * for this query. If the requested fetch profile is already enabled,
-	 * the call has no effect.
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name during execution of this query. If the
+	 * requested fetch profile is already enabled, the call has no effect.
 	 * <p>
 	 * This is an alternative way to specify the associations which
 	 * should be fetched as part of the initial query.
@@ -298,9 +303,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> enableFetchProfile(String profileName);
 
 	/**
-	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
-	 * with the given name in this session. If the requested fetch profile
-	 * is not currently enabled, the call has no effect.
+	 * Disable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} with the given name in this session. If the fetch profile is
+	 * not currently enabled, the call has no effect.
 	 *
 	 * @param profileName the name of the fetch profile to be disabled
 	 *
@@ -403,25 +408,34 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setReadOnly(boolean readOnly);
 
 	/**
-	 * The max number of rows requested for the query results
+	 * The maximum number of query result rows to return.
+	 *
+	 * @return the maximum length of the query result list
 	 */
 	int getMaxResults();
 
 	/**
-	 * Set the max number of rows requested for the query results. Applied
-	 * to the SQL query
+	 * Set the maximum number of query result rows to return.
+	 *
+	 * @param maxResults the maximum length of the query result list
 	 */
-	SelectionQuery<R> setMaxResults(int maxResult);
+	SelectionQuery<R> setMaxResults(int maxResults);
 
 	/**
-	 * The first row position to return from the query results. Applied
-	 * to the SQL query.
+	 * The first query result row to return. The very first row
+	 * of the query result list is considered the zeroth row.
+	 *
+	 * @return the position of the first row to return,
+	 *         indexed from zero
 	 */
 	int getFirstResult();
 
 	/**
-	 * Set the first row position to return from the query results. Applied
-	 * to the SQL query.
+	 * Set the first query result row to return. The very first
+	 * row of the query result list is considered the zeroth row.
+	 *
+	 * @param startPosition the position of the first row to return,
+	 *                      indexed from zero
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
 
@@ -580,35 +594,19 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * If the result type of this query is an entity class, add one or more
-	 * {@linkplain Order rules} for ordering the query results.
-	 *
-	 * @param orderList one or more instances of {@link Order}
-	 *
-	 * @see Order
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
-
-	/**
-	 * If the result type of this query is an entity class, add a
-	 * {@linkplain Order rule} for ordering the query results.
-	 *
-	 * @param order an instance of {@link Order}
-	 *
-	 * @see Order
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> setOrder(Order<? super R> order);
-
-	/**
 	 * Specifies whether follow-on locking should be applied
 	 */
 	SelectionQuery<R> setFollowOnLocking(boolean enable);
+
+	/**
+	 * Set a {@link TupleTransformer}.
+	 */
+	<T> SelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	/**
+	 * Set a {@link ResultListTransformer}.
+	 */
+	SelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
 	SelectionQuery<R> setParameter(String name, Object value);
@@ -619,13 +617,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<P> SelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -637,13 +635,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<P> SelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -658,10 +656,10 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	@Override
 	<T> SelectionQuery<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -13,10 +13,12 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.internal.FastSessionServices;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.event.service.spi.EventListenerGroups;
+
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * Any action relating to insert/update/delete of a collection
@@ -61,14 +63,14 @@ public abstract class CollectionAction implements ComparableExecutable {
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( collectionRole );
+			this.persister = session.getFactory().getMappingMetamodel().getCollectionDescriptor( collectionRole );
 		}
 	}
 
 	@Override
 	public final void beforeExecutions() throws CacheException {
 		// we need to obtain the lock before any actions are executed, since this may be an inverse="true"
-		// bidirectional association and it is one of the earlier entity actions which actually updates
+		// bidirectional association, and it is one of the earlier entity actions which actually updates
 		// the database (this action is responsible for second-level cache invalidation only)
 		if ( persister.hasCache() ) {
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
@@ -147,7 +149,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public String toString() {
-		return StringHelper.unqualify( getClass().getName() ) + MessageHelper.infoString( collectionRole, key );
+		return unqualify( getClass().getName() ) + infoString( collectionRole, key );
 	}
 
 	@Override
@@ -196,10 +198,10 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	/**
 	 * Convenience method for all subclasses.
-	 * @return the {@link FastSessionServices} instance from the SessionFactory.
+	 * @return the {@link EventListenerGroups} instance from the {@code SessionFactory}.
 	 */
-	protected FastSessionServices getFastSessionServices() {
-		return session.getFactory().getFastSessionServices();
+	protected EventListenerGroups getEventListenerGroups() {
+		return session.getFactory().getEventListenerGroups();
 	}
 
 }

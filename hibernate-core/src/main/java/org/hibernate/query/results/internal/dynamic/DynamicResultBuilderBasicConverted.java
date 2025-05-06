@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.dynamic;
@@ -9,9 +9,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.query.results.internal.ResultsHelper;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.beans.spi.ProvidedInstanceManagedBeanImpl;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -20,7 +20,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -41,17 +40,13 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			Class<R> jdbcJavaType,
 			AttributeConverter<O, R> converter,
 			SessionFactoryImplementor sessionFactory) {
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converter.getClass() );
-		final ManagedBean<? extends AttributeConverter<O,R>> bean = new ProvidedInstanceManagedBeanImpl<>( converter );
-
 		this.columnAlias = columnAlias;
+		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
 		this.basicValueConverter = new JpaAttributeConverterImpl<>(
-				bean,
-				converterJtd,
-				jtdRegistry.getDescriptor( domainJavaType ),
-				jtdRegistry.getDescriptor( jdbcJavaType )
+				new ProvidedInstanceManagedBeanImpl<>( converter ),
+				javaTypeRegistry.getDescriptor( converter.getClass() ),
+				javaTypeRegistry.getDescriptor( domainJavaType ),
+				javaTypeRegistry.getDescriptor( jdbcJavaType )
 		);
 	}
 
@@ -61,18 +56,14 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			Class<R> jdbcJavaType,
 			Class<? extends AttributeConverter<O, R>> converterJavaType,
 			SessionFactoryImplementor sessionFactory) {
-		final ManagedBeanRegistry beans = sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
-		final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<? extends AttributeConverter<O, R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
-		final ManagedBean<? extends AttributeConverter<O, R>> bean = beans.getBean( converterJavaType );
-
 		this.columnAlias = columnAlias;
+		final ManagedBeanRegistry beans = sessionFactory.getManagedBeanRegistry();
+		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
 		this.basicValueConverter = new JpaAttributeConverterImpl<>(
-				bean,
-				converterJtd,
-				jtdRegistry.getDescriptor( domainJavaType ),
-				jtdRegistry.getDescriptor( jdbcJavaType )
+				beans.getBean( converterJavaType ),
+				javaTypeRegistry.getDescriptor( converterJavaType ),
+				javaTypeRegistry.getDescriptor( domainJavaType ),
+				javaTypeRegistry.getDescriptor( jdbcJavaType )
 		);
 	}
 
@@ -91,41 +82,18 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			DomainResultCreationState domainResultCreationState) {
-		final TypeConfiguration typeConfiguration = domainResultCreationState.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		final SqlAstCreationState sqlAstCreationState = domainResultCreationState.getSqlAstCreationState();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final String columnName;
-		if ( columnAlias != null ) {
-			columnName = columnAlias;
-		}
-		else {
-			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
-		}
+		final String columnName =
+				columnAlias != null
+						? columnAlias
+						: jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey( columnName ),
-						state -> {
-							final int jdbcPosition;
-							if ( columnAlias != null ) {
-								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-							}
-							else {
-								jdbcPosition = resultPosition + 1;
-							}
-							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
-									jdbcPosition,
-									basicValueConverter.getRelationalJavaType(),
-									domainResultCreationState.getSqlAstCreationState()
-											.getCreationContext()
-											.getSessionFactory()
-							);
-
-							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-							return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
-						}
+						state -> resultSetMappingSqlSelection( jdbcResultsMetadata, resultPosition, typeConfiguration )
 				),
 				basicValueConverter.getRelationalJavaType(),
 				null,
@@ -143,6 +111,21 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		);
 	}
 
+	private ResultSetMappingSqlSelection resultSetMappingSqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata, int resultPosition, TypeConfiguration typeConfiguration) {
+		final int jdbcPosition =
+				columnAlias != null
+						? jdbcResultsMetadata.resolveColumnPosition( columnAlias )
+						: resultPosition + 1;
+		final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
+				jdbcPosition,
+				basicValueConverter.getRelationalJavaType(),
+				typeConfiguration
+		);
+		final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
+		return new ResultSetMappingSqlSelection( valuesArrayPosition, (BasicValuedMapping) basicType );
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -154,10 +137,8 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 
 		DynamicResultBuilderBasicConverted<?, ?> that = (DynamicResultBuilderBasicConverted<?, ?>) o;
 
-		if ( !Objects.equals( columnAlias, that.columnAlias ) ) {
-			return false;
-		}
-		return basicValueConverter.equals( that.basicValueConverter );
+		return Objects.equals( columnAlias, that.columnAlias )
+			&& basicValueConverter.equals( that.basicValueConverter );
 	}
 
 	@Override

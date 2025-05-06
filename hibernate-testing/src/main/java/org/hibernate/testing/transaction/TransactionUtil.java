@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.transaction;
@@ -28,7 +28,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -599,8 +598,7 @@ public class TransactionUtil {
 	}
 
 	private static void setJdbcTimeout(Dialect dialect, Connection connection, long millis) throws SQLException {
-		Dialect extractedDialect = DialectDelegateWrapper.extractRealDialect( dialect );
-		if ( extractedDialect instanceof PostgreSQLDialect || extractedDialect instanceof CockroachDialect ) {
+		if ( dialect instanceof PostgreSQLDialect || dialect instanceof CockroachDialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
 				st.execute( String.format( "SET statement_timeout TO %d", millis ) );
@@ -614,33 +612,33 @@ public class TransactionUtil {
 				}
 			}
 		}
-		else if ( extractedDialect instanceof MySQLDialect ) {
+		else if ( dialect instanceof MySQLDialect ) {
 			try (PreparedStatement st = connection.prepareStatement( "SET SESSION innodb_lock_wait_timeout = ?" )) {
 				// 50 seconds is the default
 				st.setLong( 1, millis == 0L ? 50 : Math.max( 1, Math.round( millis / 1e3f ) ) );
 				st.execute();
 			}
 		}
-		else if ( extractedDialect instanceof H2Dialect ) {
+		else if ( dialect instanceof H2Dialect ) {
 			try (PreparedStatement st = connection.prepareStatement( "SET LOCK_TIMEOUT ?" )) {
 				// 10 seconds is the default we set
 				st.setLong( 1, millis == 0L ? 10_000 : millis );
 				st.execute();
 			}
 		}
-		else if ( extractedDialect instanceof SQLServerDialect ) {
+		else if ( dialect instanceof SQLServerDialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
 				st.execute( String.format( "SET LOCK_TIMEOUT %d", millis == 0L ? -1L : millis ) );
 			}
 		}
-		else if ( extractedDialect instanceof HANADialect ) {
+		else if ( dialect instanceof HANADialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
 				st.execute( String.format( "SET TRANSACTION LOCK WAIT TIMEOUT %d", millis ) );
 			}
 		}
-		else if ( extractedDialect instanceof SybaseASEDialect ) {
+		else if ( dialect instanceof SybaseASEDialect ) {
 			try (Statement st = connection.createStatement()) {
 				//Prepared Statements fail for SET commands
 				if ( millis == 0L ) {

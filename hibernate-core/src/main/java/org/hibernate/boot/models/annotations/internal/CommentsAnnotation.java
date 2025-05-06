@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.Comments;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -23,20 +23,20 @@ public class CommentsAnnotation implements Comments, RepeatableContainer<org.hib
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CommentsAnnotation(SourceModelBuildingContext modelContext) {
+	public CommentsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CommentsAnnotation(Comments annotation, SourceModelBuildingContext modelContext) {
+	public CommentsAnnotation(Comments annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, HibernateAnnotations.COMMENTS, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CommentsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CommentsAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (org.hibernate.annotations.Comment[]) attributeValues.get( "value" );
 	}
 

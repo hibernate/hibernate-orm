@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -62,7 +62,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 
 		this.primaryKeyJoinColumnSources = new ArrayList<>( valueSources.size() );
 		for ( RelationalValueSource valueSource : valueSources ) {
-			primaryKeyJoinColumnSources.add( ColumnSource.class.cast( valueSource ) ) ;
+			primaryKeyJoinColumnSources.add( (ColumnSource) valueSource ) ;
 		}
 	}
 
@@ -89,8 +89,8 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 
 	@Override
 	public String getDiscriminatorMatchValue() {
-		return jaxbEntityMapping() instanceof JaxbHbmJoinedSubclassEntityType
-				? ( (JaxbHbmJoinedSubclassEntityType) jaxbEntityMapping() ).getDiscriminatorValue()
+		return jaxbEntityMapping() instanceof JaxbHbmJoinedSubclassEntityType joinedSubclassEntityType
+				? joinedSubclassEntityType.getDiscriminatorValue()
 				: null;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.XmlHelper;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
 import org.hibernate.dialect.function.json.ExpressionTypeHelper;
 import org.hibernate.dialect.function.json.HANAJsonValueFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingSqmSetReturningFunction;

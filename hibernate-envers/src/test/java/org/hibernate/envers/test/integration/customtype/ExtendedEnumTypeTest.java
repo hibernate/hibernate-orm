@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.test.integration.customtype;
@@ -31,11 +31,10 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
- * Tests that a custom type which extends {@link org.hibernate.type.EnumType} continues to be
- * recognized as an EnumType rather than a basic custom type implementation since the values
+ * Tests that a custom type which extends {@link org.hibernate.envers.test.integration.customtype.EnumType}
+ * continues to be recognized as an EnumType rather than a basic custom type implementation since the values
  * which envers sends to describe the type in HBM differ whether its an Enum or not.
  *
  * Without the fix, this test would not even bootstrap and would throw a MappingException.
@@ -47,7 +46,7 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.
 	// This should be treated the same as any other property annotated as Enumerated or uses an Enum.
-	public static class ExtendedEnumType extends org.hibernate.type.EnumType<Widget.Status> {
+	public static class ExtendedEnumType extends org.hibernate.envers.test.integration.customtype.EnumType<Widget.Status> {
 
 	}
 
@@ -176,16 +175,17 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 			final UserType userType = ( (CustomType<Object>) propertyType ).getUserType();
 			assertTyping( typeClass, userType );
-			assertTyping( org.hibernate.type.EnumType.class, userType );
+			assertTyping( org.hibernate.envers.test.integration.customtype.EnumType.class, userType );
 
-			switch ( expectedType ) {
-				case STRING:
-					assertTrue( !( (org.hibernate.type.EnumType) userType ).isOrdinal() );
-					break;
-				default:
-					assertTrue( ( (org.hibernate.type.EnumType) userType ).isOrdinal() );
-					break;
-			}
+			// org,hibernate.type.EnumType used to be special-cased in the Envers code
+//			switch ( expectedType ) {
+//				case STRING:
+//					assertTrue( !( (org.hibernate.envers.test.integration.customtype.EnumType) userType ).isOrdinal() );
+//					break;
+//				default:
+//					assertTrue( ( (org.hibernate.envers.test.integration.customtype.EnumType) userType ).isOrdinal() );
+//					break;
+//			}
 		} );
 	}
 }

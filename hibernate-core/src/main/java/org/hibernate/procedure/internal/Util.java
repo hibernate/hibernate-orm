@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
@@ -7,7 +7,7 @@ package org.hibernate.procedure.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
@@ -52,8 +52,7 @@ public class Util {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final NamedObjectRepository namedObjectRepository =
-				context.getSessionFactory().getQueryEngine().getNamedObjectRepository();
+		final NamedObjectRepository namedObjectRepository = context.getNamedObjectRepository();
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			final NamedResultSetMappingMemento memento =
 					namedObjectRepository.getResultSetMappingMemento( resultSetMappingName );
@@ -73,7 +72,7 @@ public class Util {
 			ResultSetMapping resultSetMapping,
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		final MappingMetamodelImplementor mappingMetamodel = context.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodel mappingMetamodel = context.getMappingMetamodel();
 		final JavaTypeRegistry javaTypeRegistry = mappingMetamodel.getTypeConfiguration().getJavaTypeRegistry();
 
 		for ( Class<?> resultSetMappingClass : resultSetMappingClasses ) {

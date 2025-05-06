@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
@@ -13,12 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
-@JiraKey(value = "HHH-12786")
 public class ByteBuddyBasicProxyFactoryTest {
 
 	private static final BasicProxyFactoryImpl BASIC_PROXY_FACTORY = new BasicProxyFactoryImpl( Entity.class, null, new ByteBuddyState() );
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testEqualsHashCode() {
 		Object entityProxy = BASIC_PROXY_FACTORY.getProxy();
 
@@ -30,6 +30,7 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testToString() {
 		Object entityProxy = BASIC_PROXY_FACTORY.getProxy();
 
@@ -37,6 +38,7 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testGetterSetter() {
 		Entity entityProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
 
@@ -50,10 +52,21 @@ public class ByteBuddyBasicProxyFactoryTest {
 	}
 
 	@Test
+	@JiraKey(value = "HHH-12786")
 	public void testNonGetterSetterMethod() {
 		Entity entityProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
 
 		assertNull( entityProxy.otherMethod() );
+	}
+
+	@Test
+	@JiraKey(value = "HHH-13915")
+	public void testProxiesDoNotShareState() {
+		Entity entityAProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
+		entityAProxy.setString( "John Irving" );
+
+		Entity entityBProxy = (Entity) BASIC_PROXY_FACTORY.getProxy();
+		assertNull( entityBProxy.getString() );
 	}
 
 	public static class Entity {

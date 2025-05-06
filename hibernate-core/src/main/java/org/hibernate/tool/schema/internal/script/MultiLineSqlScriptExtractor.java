@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal.script;
@@ -44,11 +44,11 @@ public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 			final SqlScriptVisitor visitor = new SqlScriptVisitor( dialect );
 			return visitor.visitScript( scriptParseTree );
 		}
-		catch (Exception e) {
-			if ( e instanceof SqlScriptException ) {
-				throw (SqlScriptException) e;
+		catch (Exception exception) {
+			if ( exception instanceof SqlScriptException sqlScriptException ) {
+				throw sqlScriptException;
 			}
-			throw new SqlScriptException( "Error during sql-script parsing.", e );
+			throw new SqlScriptException( "Error during sql-script parsing.", exception );
 		}
 	}
 

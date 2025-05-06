@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -99,7 +99,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				rowIdType.getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicResult<>(

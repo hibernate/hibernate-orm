@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.update;
@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
@@ -46,18 +47,18 @@ public class SqmSetClause {
 		addAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
 
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 		sb.append( " set " );
-		appendAssignment( assignments.get( 0 ), sb );
+		appendAssignment( assignments.get( 0 ), sb, context );
 		for ( int i = 1; i < assignments.size(); i++ ) {
 			sb.append( ", " );
-			appendAssignment( assignments.get( i ), sb );
+			appendAssignment( assignments.get( i ), sb, context );
 		}
 	}
 
-	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb) {
-		sqmAssignment.getTargetPath().appendHqlString( sb );
+	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb, SqmRenderContext context) {
+		sqmAssignment.getTargetPath().appendHqlString( sb, context );
 		sb.append( " = " );
-		sqmAssignment.getValue().appendHqlString( sb );
+		sqmAssignment.getValue().appendHqlString( sb, context );
 	}
 }

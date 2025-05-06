@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Red Hat Inc. and Hibernate Authors
+
+# This file is a list of signatures to feed into Forbidden-API.
+# It defines classes/methods to be avoided.
+# See here for the syntax of this file: https://github.com/policeman-tools/forbidden-apis/wiki/SignaturesSyntax
+
+################################################################################################################
+# Reflection-related
+@defaultMessage Use 'new Object[]' instead if possible. This forbidden method requires reflection and may not work in natively compiled applications. If you really must use this forbidden method, annotate the calling method with @AllowReflection.
+
+java.lang.reflect.Array#newInstance(java.lang.Class, int)
+java.lang.reflect.Array#newInstance(java.lang.Class, int[])
+org.hibernate.internal.util.collections.ArrayHelper#newInstance(java.lang.Class, int)
+org.hibernate.internal.util.collections.ArrayHelper#filledArray(java.lang.Object, java.lang.Class, int)
+org.hibernate.internal.util.collections.ArrayHelper#join(java.lang.Object[], java.lang.Object[])
+
+################################################################################################################
+# Misc -- put things here as a last resort, but if possible prefer adding a category above with an actionable message.
+@defaultMessage Should not be used.

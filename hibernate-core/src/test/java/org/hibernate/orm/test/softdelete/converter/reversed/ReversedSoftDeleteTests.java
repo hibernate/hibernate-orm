@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete.converter.reversed;
@@ -14,6 +14,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,10 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name= AvailableSettings.PREFERRED_BOOLEAN_JDBC_TYPE, value = "CHAR"))
 @DomainModel(annotatedClasses = {TheEntity.class, TheEntity2.class})
 @SessionFactory( useCollectingStatementInspector = true)
 public class ReversedSoftDeleteTests {
+	@AfterEach
+	void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
+	}
+
 	@Test
 	void verifySchema(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor metamodel = scope.getSessionFactory().getMappingMetamodel();

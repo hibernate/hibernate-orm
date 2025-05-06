@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
@@ -13,9 +13,12 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static java.lang.System.identityHashCode;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
+
 /**
- * A {@code Map} where keys are compared by object identity,
- * rather than {@code equals()}.
+ * A {@link Map} where keys are compared by object identity,
+ * rather than using {@link #equals(Object)}.
  */
 public final class IdentityMap<K,V> implements Map<K,V> {
 
@@ -45,11 +48,10 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	/**
 	 * Return the map entries (as instances of {@code Map.Entry} in a collection that
-	 * is safe from concurrent modification). ie. we may safely add new instances to
-	 * the underlying {@code Map} during iteration of the {@code entries()}.
+	 * is safe from concurrent modification). That is, we may safely add new instances
+	 * to the underlying {@code Map} during iteration of the {@code entries()}.
 	 *
 	 * @param map The map of entries
-	 * @return Collection
 	 */
 	public static <K,V> Entry<K,V>[] concurrentEntries(Map<K,V> map) {
 		return ( (IdentityMap<K,V>) map ).entryArray();
@@ -61,7 +63,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	/**
-	 * Override Map{@link #forEach(BiConsumer)} to provide a more efficient implementation
+	 * Overrides {@link Map#forEach(BiConsumer)} with a more efficient implementation.
 	 * @param action the operation to apply to each element
 	 */
 	@Override
@@ -84,9 +86,8 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean containsKey(Object key) {
-		return map.containsKey( new IdentityKey( key ) );
+		return map.containsKey( new IdentityKey<>( key ) );
 	}
 
 	@Override
@@ -96,9 +97,8 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public V get(Object key) {
-		return map.get( new IdentityKey( key ) );
+		return map.get( new IdentityKey<>( key ) );
 	}
 
 	@Override
@@ -108,15 +108,14 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
 	public V remove(Object key) {
 		this.entryArray = null;
-		return map.remove( new IdentityKey( key ) );
+		return map.remove( new IdentityKey<>( key ) );
 	}
 
 	@Override
 	public void putAll(Map<? extends K, ? extends V> otherMap) {
-		for ( Entry<? extends K, ? extends V> entry : otherMap.entrySet() ) {
+		for ( var entry : otherMap.entrySet() ) {
 			put( entry.getKey(), entry.getValue() );
 		}
 	}
@@ -141,8 +140,8 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	@Override
 	public Set<Entry<K,V>> entrySet() {
-		Set<Entry<K,V>> set = CollectionHelper.setOfSize( map.size() );
-		for ( Entry<IdentityKey<K>, V> entry : map.entrySet() ) {
+		final Set<Entry<K,V>> set = setOfSize( map.size() );
+		for ( var entry : map.entrySet() ) {
 			set.add( new IdentityMapEntry<>( entry.getKey().key, entry.getValue() ) );
 		}
 		return set;
@@ -150,12 +149,13 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	public Entry<K,V>[] entryArray() {
 		if ( entryArray == null ) {
+			//noinspection unchecked
 			entryArray = new Entry[ map.size() ];
-			final Iterator<Entry<IdentityKey<K>, V>> itr = map.entrySet().iterator();
+			final var iterator = map.entrySet().iterator();
 			int i = 0;
-			while ( itr.hasNext() ) {
-				final Entry<IdentityKey<K>, V> me = itr.next();
-				entryArray[i++] = new IdentityMapEntry<>( me.getKey().key, me.getValue() );
+			while ( iterator.hasNext() ) {
+				final var entry = iterator.next();
+				entryArray[i++] = new IdentityMapEntry<>( entry.getKey().key, entry.getValue() );
 			}
 		}
 		return entryArray;
@@ -166,45 +166,33 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 		return map.toString();
 	}
 
-	private static final class KeyIterator<K> implements Iterator<K> {
-		private final Iterator<IdentityKey<K>> identityKeyIterator;
-
-		private KeyIterator(Iterator<IdentityKey<K>> iterator) {
-			identityKeyIterator = iterator;
-		}
-
+	private record KeyIterator<K>(Iterator<IdentityKey<K>> identityKeyIterator)
+			implements Iterator<K> {
+		@Override
 		public boolean hasNext() {
 			return identityKeyIterator.hasNext();
 		}
-
+		@Override
 		public K next() {
 			return identityKeyIterator.next().key;
 		}
-
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
-
 	}
 
-	private static final class IdentityMapEntry<K,V> implements Entry<K,V> {
-
-		private final K key;
-		private final V value;
-
-		IdentityMapEntry(final K key, final V value) {
-			this.key=key;
-			this.value=value;
-		}
-
+	private record IdentityMapEntry<K, V>(K key, V value)
+			implements Entry<K, V> {
+		@Override
 		public K getKey() {
 			return key;
 		}
-
+		@Override
 		public V getValue() {
 			return value;
 		}
-
+		@Override
 		public V setValue(final V value) {
 			throw new UnsupportedOperationException();
 		}
@@ -213,30 +201,21 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	/**
 	 * We need to base the identity on {@link System#identityHashCode(Object)}
 	 */
-	private static final class IdentityKey<K> implements Serializable {
-
-		private final K key;
-
-		IdentityKey(K key) {
-			this.key = key;
-		}
-
-		@SuppressWarnings( {"EqualsWhichDoesntCheckParameterClass"})
+	private record IdentityKey<K>(K key)
+			implements Serializable {
 		@Override
 		public boolean equals(Object other) {
-			return other != null && key == ( (IdentityKey) other ).key;
+			return other instanceof IdentityKey<?> that
+				&& this.key == that.key;
 		}
-
 		@Override
 		public int hashCode() {
-			return System.identityHashCode( key );
+			return identityHashCode( key );
 		}
-
 		@Override
 		public String toString() {
 			return key.toString();
 		}
-
 	}
 
 }

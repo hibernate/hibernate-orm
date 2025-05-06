@@ -1,11 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sqm;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
@@ -91,6 +93,21 @@ public abstract class BaseSqmUnitTest
 
 	@Override
 	public Integer getMaximumFetchDepth() {
-		return sessionFactory().getMaximumFetchDepth();
+		return sessionFactory().getSessionFactoryOptions().getMaximumFetchDepth();
+	}
+
+	@Override
+	public boolean isJpaQueryComplianceEnabled() {
+		return strictJpaCompliance();
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return sessionFactory().getQueryEngine().getDialect();
+	}
+
+	@Override
+	public FetchProfile getFetchProfile(String name) {
+		return sessionFactory().getFetchProfile( name );
 	}
 }

@@ -1,0 +1,55 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.java-module"
+    id "local.publishing"
+    id "local.code-quality"
+}
+
+configurations {
+    javadocSources {
+        description = "All Java sources for the project's Javadoc"
+        canBeConsumed = true
+        canBeResolved = false
+        visible = false
+    }
+}
+
+dependencies {
+    javadocSources sourceSets.main.allJava
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Publishing
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
+    // Add the Java component to the main publication
+    from components.java
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Releasing
+
+def releasePrepareTask = tasks.register("releasePrepare") {
+    group "release"
+    description "See :release:releasePrepare for details.  Here we hook in testing and checks ensure publish-ability"
+
+    dependsOn tasks.check
+    dependsOn tasks.generateMetadataFileForPublishedArtifactsPublication
+    dependsOn tasks.generatePomFileForPublishedArtifactsPublication
+}
+
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+    group "release-prepare"
+    description "Delegates to `releasePrepare` task"
+
+    dependsOn releasePrepareTask
+}
+

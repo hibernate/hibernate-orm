@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service.internal;
@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
@@ -281,20 +282,18 @@ public abstract class AbstractServiceRegistryImpl
 
 		applyInjections( service );
 
-		if ( service instanceof ServiceRegistryAwareService ) {
-			( (ServiceRegistryAwareService) service ).injectServices( this );
+		if ( service instanceof ServiceRegistryAwareService serviceRegistryAwareService ) {
+			serviceRegistryAwareService.injectServices( this );
 		}
 	}
 
 	private <R extends Service> void applyInjections(R service) {
 		try {
 			for ( Method method : service.getClass().getMethods() ) {
-				InjectService injectService = method.getAnnotation( InjectService.class );
-				if ( injectService == null ) {
-					continue;
+				final InjectService injectService = method.getAnnotation( InjectService.class );
+				if ( injectService != null ) {
+					processInjection( service, method, injectService );
 				}
-
-				processInjection( service, method, injectService );
 			}
 		}
 		catch (NullPointerException e) {
@@ -339,8 +338,8 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
-		if ( serviceBinding.getService() instanceof Startable ) {
-			( (Startable) serviceBinding.getService() ).start();
+		if ( serviceBinding.getService() instanceof Startable startable ) {
+			startable.start();
 		}
 	}
 
@@ -356,9 +355,8 @@ public abstract class AbstractServiceRegistryImpl
 				//threads not owning the synchronization lock can't get an invalid Service:
 				initializedServiceByRole.clear();
 				synchronized (serviceBindingList) {
-					ListIterator<ServiceBinding<?>> serviceBindingsIterator = serviceBindingList.listIterator(
-							serviceBindingList.size()
-					);
+					final ListIterator<ServiceBinding<?>> serviceBindingsIterator =
+							serviceBindingList.listIterator( serviceBindingList.size() );
 					while ( serviceBindingsIterator.hasPrevious() ) {
 						final ServiceBinding<?> serviceBinding = serviceBindingsIterator.previous();
 						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
@@ -378,9 +376,9 @@ public abstract class AbstractServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( service instanceof Stoppable ) {
+		if ( service instanceof Stoppable stoppable ) {
 			try {
-				( (Stoppable) service ).stop();
+				stoppable.stop();
 			}
 			catch ( Exception e ) {
 				log.unableToStopService( service.getClass(), e );
@@ -429,18 +427,18 @@ public abstract class AbstractServiceRegistryImpl
 	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
 	public synchronized void resetParent(@Nullable BootstrapServiceRegistry newParent) {
-		if ( this.parent != null ) {
-			this.parent.deRegisterChild( this );
+		if ( parent != null ) {
+			parent.deRegisterChild( this );
 		}
 		if ( newParent != null ) {
 			if ( !(newParent instanceof ServiceRegistryImplementor) ) {
 				throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 			}
-			this.parent = (ServiceRegistryImplementor) newParent;
-			this.parent.registerChild( this );
+			parent = (ServiceRegistryImplementor) newParent;
+			parent.registerChild( this );
 		}
 		else {
-			this.parent = null;
+			parent = null;
 		}
 	}
 
@@ -472,9 +470,10 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	/**
-	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
-	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
+	 * Not intended for general use. We need the ability to stop and "reactivate" a registry
+	 * to allow experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
+	@Internal
 	public synchronized void reactivate() {
 		if ( !active.compareAndSet( false, true ) ) {
 			throw new IllegalStateException( "Was not inactive, could not reactivate" );

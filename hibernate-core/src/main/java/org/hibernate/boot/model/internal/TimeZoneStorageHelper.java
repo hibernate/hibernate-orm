@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -19,7 +19,7 @@ import org.hibernate.usertype.internal.OffsetDateTimeCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 import org.hibernate.usertype.internal.ZonedDateTimeCompositeUserType;
 
-import static org.hibernate.TimeZoneStorageStrategy.COLUMN;
+import static org.hibernate.type.TimeZoneStorageStrategy.COLUMN;
 import static org.hibernate.dialect.TimeZoneSupport.NATIVE;
 
 public class TimeZoneStorageHelper {
@@ -33,7 +33,7 @@ public class TimeZoneStorageHelper {
 			ClassDetails returnedClass,
 			MetadataBuildingContext context) {
 		if ( useColumnForTimeZoneStorage( attributeMember, context ) ) {
-			String returnedClassName = returnedClass.getName();
+			final String returnedClassName = returnedClass.getName();
 			if ( OFFSET_DATETIME_CLASS.equals( returnedClassName ) ) {
 				return OffsetDateTimeCompositeUserType.class;
 			}
@@ -49,24 +49,20 @@ public class TimeZoneStorageHelper {
 
 	private static boolean isTemporalWithTimeZoneClass(String returnedClassName) {
 		return OFFSET_DATETIME_CLASS.equals( returnedClassName )
-				|| ZONED_DATETIME_CLASS.equals( returnedClassName )
-				|| isOffsetTimeClass( returnedClassName );
+			|| ZONED_DATETIME_CLASS.equals( returnedClassName )
+			|| isOffsetTimeClass( returnedClassName );
 	}
 
 	public static boolean isOffsetTimeClass(AnnotationTarget element) {
-		if ( element instanceof MemberDetails memberDetails ) {
-			return isOffsetTimeClass( memberDetails );
-		}
-		return false;
+		return element instanceof MemberDetails memberDetails
+			&& isOffsetTimeClass( memberDetails );
 	}
 
 	public static boolean isOffsetTimeClass(MemberDetails element) {
 		final TypeDetails type = element.getType();
-		if ( type == null ) {
-			return false;
-		}
+		return type != null
+			&& isOffsetTimeClass( type.determineRawClass().getClassName() );
 
-		return isOffsetTimeClass( type.determineRawClass().getClassName() );
 	}
 
 	private static boolean isOffsetTimeClass(String returnedClassName) {
@@ -76,14 +72,10 @@ public class TimeZoneStorageHelper {
 	static boolean useColumnForTimeZoneStorage(AnnotationTarget element, MetadataBuildingContext context) {
 		final TimeZoneStorage timeZoneStorage = element.getDirectAnnotationUsage( TimeZoneStorage.class );
 		if ( timeZoneStorage == null ) {
-			if ( element instanceof MemberDetails attributeMember ) {
-				return isTemporalWithTimeZoneClass( attributeMember.getType().getName() )
-						//no @TimeZoneStorage annotation, so we need to use the default storage strategy
-						&& context.getBuildingOptions().getDefaultTimeZoneStorage() == COLUMN;
-			}
-			else {
-				return false;
-			}
+			return element instanceof MemberDetails attributeMember
+				&& isTemporalWithTimeZoneClass( attributeMember.getType().getName() )
+				//no @TimeZoneStorage annotation, so we need to use the default storage strategy
+				&& context.getBuildingOptions().getDefaultTimeZoneStorage() == COLUMN;
 		}
 		else {
 			return switch ( timeZoneStorage.value() ) {

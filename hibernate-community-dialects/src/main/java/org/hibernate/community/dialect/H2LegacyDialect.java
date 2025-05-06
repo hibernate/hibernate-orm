@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -34,6 +34,9 @@ import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
+import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.H2JsonJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -952,7 +955,7 @@ public class H2LegacyDialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return addQueryHints( query, hints );
+		return addUseIndexQueryHint( query, hints );
 	}
 
 	@Override
@@ -1057,4 +1060,60 @@ public class H2LegacyDialect extends Dialect {
 	public String getDual() {
 		return "dual";
 	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNullPrecedence() {
+		// Support for nulls clause in listagg was added in 2.0
+		return getVersion().isSameOrAfter( 2 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		// Just a guess
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		// Seems that before, this was buggy
+		return getVersion().isSameOrAfter( 1, 4, 200 );
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// Just a guess
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		// Just a guess
+		return getVersion().isSameOrAfter( 1, 4, 197 );
+	}
+
 }

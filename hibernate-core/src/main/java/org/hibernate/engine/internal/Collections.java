@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -15,14 +15,12 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
 
-import org.jboss.logging.Logger;
-
-import java.lang.invoke.MethodHandles;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Implements book-keeping for the collection persistence by reachability algorithm
@@ -30,11 +28,7 @@ import java.lang.invoke.MethodHandles;
  * @author Gavin King
  */
 public final class Collections {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			Collections.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Collections.class );
 
 	/**
 	 * record the fact that this collection was dereferenced
@@ -57,46 +51,25 @@ public final class Collections {
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
 		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Collection dereferenced: %s",
-					MessageHelper.collectionInfoString( loadedPersister,
-							coll, entry.getLoadedKey(), session
-					)
-			);
+			LOG.debug("Collection dereferenced: "
+					+ collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
 		}
 
 		// do a check
 		final boolean hasOrphanDelete = loadedPersister != null && loadedPersister.hasOrphanDelete();
 		if ( hasOrphanDelete ) {
-			Object ownerId = loadedPersister.getOwnerEntityPersister().getIdentifier( coll.getOwner(), session );
-			if ( ownerId == null ) {
-				// the owning entity may have been deleted and its identifier unset due to
-				// identifier-rollback; in which case, try to look up its identifier from
-				// the persistence context
-				if ( session.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
-					final EntityEntry ownerEntry = persistenceContext.getEntry( coll.getOwner() );
-					if ( ownerEntry != null ) {
-						ownerId = ownerEntry.getId();
-					}
-				}
-				if ( ownerId == null ) {
-					throw new AssertionFailure( "Unable to determine collection owner identifier for orphan-delete processing" );
-				}
-			}
+			final Object ownerId = getOwnerId( coll, session, loadedPersister );
 			final EntityKey key = session.generateEntityKey( ownerId, loadedPersister.getOwnerEntityPersister() );
 			final Object owner = persistenceContext.getEntity( key );
 			if ( owner == null ) {
-				throw new AssertionFailure(
-						"collection owner not associated with session: " +
-						loadedPersister.getRole()
-				);
+				throw new AssertionFailure( "collection owner not associated with session: " + loadedPersister.getRole() );
 			}
 			final EntityEntry e = persistenceContext.getEntry( owner );
 			//only collections belonging to deleted entities are allowed to be dereferenced in the case of orphan delete
 			if ( e != null && !e.getStatus().isDeletedOrGone() ) {
 				throw new HibernateException(
-						"A collection with orphan deletion was no longer referenced by the owning entity instance: " +
-						loadedPersister.getRole()
+						"A collection with orphan deletion was no longer referenced by the owning entity instance: "
+						+ loadedPersister.getRole()
 				);
 			}
 		}
@@ -108,21 +81,43 @@ public final class Collections {
 
 	}
 
+	private static Object getOwnerId(
+			PersistentCollection<?> coll,
+			SessionImplementor session,
+			CollectionPersister loadedPersister) {
+
+		Object ownerId =
+				loadedPersister.getOwnerEntityPersister()
+						.getIdentifier( coll.getOwner(), session );
+		if ( ownerId == null ) {
+			// the owning entity may have been deleted and its identifier unset due to
+			// identifier-rollback; in which case, try to look up its identifier from
+			// the persistence context
+			if ( session.getFactory().getSessionFactoryOptions()
+					.isIdentifierRollbackEnabled() ) {
+				final EntityEntry ownerEntry =
+						session.getPersistenceContextInternal()
+								.getEntry( coll.getOwner() );
+				if ( ownerEntry != null ) {
+					ownerId = ownerEntry.getId();
+				}
+			}
+			if ( ownerId == null ) {
+				throw new AssertionFailure( "Unable to determine collection owner identifier for orphan delete processing" );
+			}
+		}
+		return ownerId;
+	}
+
 	private static void processNeverReferencedCollection(PersistentCollection<?> coll, SessionImplementor session)
 			throws HibernateException {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
+		final CollectionEntry entry =
+				session.getPersistenceContextInternal()
+						.getCollectionEntry( coll );
 
 		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Found collection with unloaded owner: %s",
-					MessageHelper.collectionInfoString(
-							entry.getLoadedPersister(),
-							coll,
-							entry.getLoadedKey(),
-							session
-					)
-			);
+			LOG.debug( "Found collection with unloaded owner: " +
+					collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
 		}
 
 		entry.setCurrentPersister( entry.getLoadedPersister() );
@@ -146,34 +141,34 @@ public final class Collections {
 			Object entity,
 			SessionImplementor session) {
 		collection.setOwner( entity );
-		final CollectionEntry ce = session.getPersistenceContextInternal().getCollectionEntry( collection );
+		final CollectionEntry ce =
+				session.getPersistenceContextInternal()
+						.getCollectionEntry( collection );
 
 		if ( ce == null ) {
 			// refer to comment in StatefulPersistenceContext.addCollection()
-			throw new HibernateException(
-					"Found two representations of same collection: " +
-					type.getRole()
-			);
+			throw new HibernateException( "Found two representations of same collection: " + type.getRole() );
 		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
-		final CollectionPersister persister = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( type.getRole() );
+		final CollectionPersister persister =
+				factory.getMappingMetamodel()
+						.getCollectionDescriptor( type.getRole() );
 
 		ce.setCurrentPersister( persister );
 		//TODO: better to pass the id in as an argument?
 		ce.setCurrentKey( type.getKeyOfOwner( entity, session ) );
 
-		final boolean isBytecodeEnhanced = persister.getOwnerEntityPersister().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		final boolean isBytecodeEnhanced =
+				persister.getOwnerEntityPersister()
+						.getBytecodeEnhancementMetadata()
+						.isEnhancedForLazyLoading();
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// the class of the collection owner is enhanced for lazy loading and we found an un-initialized PersistentCollection
 			// 		- skip it
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf(
-						"Skipping uninitialized bytecode-lazy collection: %s",
-						MessageHelper.collectionInfoString(persister, collection, ce.getCurrentKey(), session)
-				);
+				LOG.debug( "Skipping uninitialized bytecode-lazy collection: "
+						+ collectionInfoString( persister, collection, ce.getCurrentKey(), session ) );
 			}
 			ce.setReached( true );
 			ce.setProcessed( true );
@@ -184,9 +179,7 @@ public final class Collections {
 		// who set up circular or shared references between/to collections.
 		if ( ce.isReached() ) {
 			// We've been here before
-			throw new HibernateException(
-					"Found shared references to a collection: " + type.getRole()
-			);
+			throw new HibernateException( "Found shared references to a collection: " + type.getRole() );
 		}
 
 		ce.setReached( true );
@@ -195,13 +188,13 @@ public final class Collections {
 			if ( collection.wasInitialized() ) {
 				LOG.debugf(
 						"Collection found: %s, was: %s (initialized)",
-						MessageHelper.collectionInfoString(
+						collectionInfoString(
 								persister,
 								collection,
 								ce.getCurrentKey(),
 								session
 						),
-						MessageHelper.collectionInfoString(
+						collectionInfoString(
 								ce.getLoadedPersister(),
 								collection,
 								ce.getLoadedKey(),
@@ -212,13 +205,13 @@ public final class Collections {
 			else {
 				LOG.debugf(
 						"Collection found: %s, was: %s (uninitialized)",
-						MessageHelper.collectionInfoString(
+						collectionInfoString(
 								persister,
 								collection,
 								ce.getCurrentKey(),
 								session
 						),
-						MessageHelper.collectionInfoString(
+						collectionInfoString(
 								ce.getLoadedPersister(),
 								collection,
 								ce.getLoadedKey(),
@@ -250,25 +243,21 @@ public final class Collections {
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
 
-			// check if the key changed
-			// excludes marking key changed when the loaded key is a DelayedPostInsertIdentifier.
-			final boolean keyChanged = currentPersister != null
-					&& entry != null
-					&& !currentPersister.getKeyType().isEqual( entry.getLoadedKey(), entry.getCurrentKey(), factory )
-					&& !( entry.getLoadedKey() instanceof DelayedPostInsertIdentifier );
 
 			// if either its role changed, or its key changed
-			final boolean ownerChanged = loadedPersister != currentPersister || keyChanged;
+			final boolean ownerChanged =
+					loadedPersister != currentPersister
+						|| wasKeyChanged( entry, factory, currentPersister );
 
 			if ( ownerChanged ) {
 				// do a check
 				final boolean orphanDeleteAndRoleChanged =
 						loadedPersister != null && currentPersister != null && loadedPersister.hasOrphanDelete();
 
-				if (orphanDeleteAndRoleChanged) {
+				if ( orphanDeleteAndRoleChanged ) {
 					throw new HibernateException(
-							"Don't change the reference to a collection with delete-orphan enabled : "
-									+ loadedPersister.getRole()
+							"Don't change the reference to a collection with delete orphan enabled: "
+							+ loadedPersister.getRole()
 					);
 				}
 
@@ -291,6 +280,17 @@ public final class Collections {
 				entry.setDoupdate( true );
 			}
 		}
+	}
+
+	/**
+	 * Check if the key changed.
+	 * Excludes marking key changed when the loaded key is a {@code DelayedPostInsertIdentifier}.
+	 */
+	private static boolean wasKeyChanged(
+			CollectionEntry entry, SessionFactoryImplementor factory, CollectionPersister currentPersister) {
+		return currentPersister != null
+			&& !currentPersister.getKeyType().isEqual( entry.getLoadedKey(), entry.getCurrentKey(), factory )
+			&& !(entry.getLoadedKey() instanceof DelayedPostInsertIdentifier);
 	}
 
 	/**

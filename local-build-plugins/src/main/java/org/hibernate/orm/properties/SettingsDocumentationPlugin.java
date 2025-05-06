@@ -1,15 +1,12 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.properties;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-
-import org.hibernate.orm.env.EnvironmentProjectPlugin;
+import org.hibernate.build.aspects.ModuleAspect;
 
 import static org.hibernate.orm.properties.SettingsDocExtension.EXTENSION_NAME;
 import static org.hibernate.orm.properties.SettingsDocGenerationTask.TASK_NAME;
@@ -25,7 +22,7 @@ public class SettingsDocumentationPlugin implements Plugin<Project> {
 	@Override
 	public void apply(Project project) {
 		// if not already, so we can access HibernateVersion
-		project.getPluginManager().apply( EnvironmentProjectPlugin.class );
+		project.getPluginManager().apply( ModuleAspect.class );
 
 		// create and register the DSL extension
 		final SettingsDocExtension dslExtension = new SettingsDocExtension( project );

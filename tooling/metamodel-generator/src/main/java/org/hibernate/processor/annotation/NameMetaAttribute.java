@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -7,6 +7,7 @@ package org.hibernate.processor.annotation;
 import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 
+import static org.hibernate.processor.util.Constants.STRING;
 import static org.hibernate.processor.util.StringUtil.nameToFieldName;
 
 /**
@@ -45,7 +46,7 @@ class NameMetaAttribute implements MetaAttribute {
 			declaration.append( "public static final " );
 		}
 		return declaration
-				.append(annotationMetaEntity.importType(String.class.getName()))
+				.append(annotationMetaEntity.importType(STRING))
 				.append(' ')
 				.append(prefix)
 				.append(fieldName())

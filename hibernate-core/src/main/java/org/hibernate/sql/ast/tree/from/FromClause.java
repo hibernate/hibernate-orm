@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
@@ -230,8 +230,9 @@ public class FromClause implements SqlAstNode {
 					if ( navigablePath.equals( tg.getNavigablePath() ) ) {
 						return tg;
 					}
-					if ( tg instanceof OneToManyTableGroup && tg.getNavigablePath().equals( navigablePath.getParent() ) ) {
-						return ( (OneToManyTableGroup) tg ).getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
+					if ( tg instanceof OneToManyTableGroup oneToManyTableGroup
+							&& tg.getNavigablePath().equals( navigablePath.getParent() ) ) {
+						return oneToManyTableGroup.getTableGroup( CollectionPart.Nature.fromName( navigablePath.getLocalName() ) );
 					}
 					return null;
 				}

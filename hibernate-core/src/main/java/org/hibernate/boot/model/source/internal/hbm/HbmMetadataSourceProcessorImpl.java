@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -26,12 +26,11 @@ import org.jboss.logging.Logger;
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	private static final Logger log = Logger.getLogger( HbmMetadataSourceProcessorImpl.class );
 
-	private final MetadataBuildingContext rootBuildingContext;
-	private Collection<MappingDocument> mappingDocuments;
+	private final Collection<MappingDocument> mappingDocuments;
 
 	private final ModelBinder modelBinder;
 
-	private List<EntityHierarchySourceImpl> entityHierarchies;
+	private final List<EntityHierarchySourceImpl> entityHierarchies;
 
 	public HbmMetadataSourceProcessorImpl(
 			ManagedResources managedResources,
@@ -40,26 +39,23 @@ public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
 	}
 
 	public HbmMetadataSourceProcessorImpl(
-			Collection<Binding<JaxbBindableMappingDescriptor>> xmlBindings,
+			Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlBindings,
 			MetadataBuildingContext rootBuildingContext) {
-		this.rootBuildingContext = rootBuildingContext;
 		final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
-		this.mappingDocuments = new ArrayList<>();
+		mappingDocuments = new ArrayList<>();
 
-		for ( Binding<JaxbBindableMappingDescriptor> xmlBinding : xmlBindings ) {
-			if ( !(xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping) ) {
-				continue;
+		for ( var xmlBinding : xmlBindings ) {
+			if ( xmlBinding.getRoot() instanceof JaxbHbmHibernateMapping hibernateMapping ) {
+				final MappingDocument mappingDocument = new MappingDocument(
+						"orm",
+						hibernateMapping,
+						xmlBinding.getOrigin(),
+						rootBuildingContext
+				);
+				mappingDocuments.add( mappingDocument );
+				hierarchyBuilder.indexMappingDocument( mappingDocument );
 			}
-
-			final MappingDocument mappingDocument = new MappingDocument(
-					"orm",
-					(JaxbHbmHibernateMapping) xmlBinding.getRoot(),
-					xmlBinding.getOrigin(),
-					rootBuildingContext
-			);
-			mappingDocuments.add( mappingDocument );
-			hierarchyBuilder.indexMappingDocument( mappingDocument );
 		}
 
 		entityHierarchies = hierarchyBuilder.buildHierarchies();

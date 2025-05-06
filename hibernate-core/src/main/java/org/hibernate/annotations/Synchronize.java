@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -25,7 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Ordinarily, Hibernate knows the tables containing the state of an
  * entity or collection. This annotation might be necessary if:
  * <ul>
- * <li>an entity or collection maps a database view,
+ * <li>an entity or collection maps a database {@linkplain View view},
  * <li>an entity or collection is persisted using handwritten SQL,
  *     that is, using {@link SQLSelect @SQLSelect} and friends, or
  * <li>an entity is mapped using {@link Subselect @Subselect}.
@@ -41,6 +41,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Sharath Reddy
  *
  * @see org.hibernate.query.SynchronizeableQuery
+ * @see View
+ * @see Subselect
+ * @see SQLSelect
  */
 @Target({TYPE, FIELD, METHOD})
 @Retention(RUNTIME)

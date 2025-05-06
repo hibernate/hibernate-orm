@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
@@ -15,7 +14,7 @@ import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
- * Standard ScrollableResults implementation.
+ * Standard {@link org.hibernate.ScrollableResults} implementation.
  *
  * @author Gavin King
  */
@@ -107,42 +106,45 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 	}
 
 	@Override
-	public int getRowNumber() throws HibernateException {
+	public int getRowNumber() {
+		return getPosition() - 1;
+	}
+
+	@Override
+	public int getPosition() {
 		return getRowProcessingState().getPosition();
 	}
 
 	@Override
-	public boolean setRowNumber(int rowNumber) throws HibernateException {
+	public boolean setRowNumber(int rowNumber) {
 		return position( rowNumber );
 	}
 
 	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
-		if ( !underlyingScrollSuccessful ) {
-			currentRow = null;
-			return;
-		}
-
-		final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
-		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
-		loadContexts.register( getJdbcValuesSourceProcessingState() );
-		persistenceContext.beforeLoad();
-		try {
+		if ( underlyingScrollSuccessful ) {
+			final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
+			final LoadContexts loadContexts = persistenceContext.getLoadContexts();
+			loadContexts.register( getJdbcValuesSourceProcessingState() );
+			persistenceContext.beforeLoad();
 			try {
-				currentRow = getRowReader().readRow( getRowProcessingState() );
-
-				getRowProcessingState().finishRowProcessing( true );
-				getJdbcValuesSourceProcessingState().finishUp( false );
+				try {
+					currentRow = getRowReader().readRow( getRowProcessingState() );
+					getRowProcessingState().finishRowProcessing( true );
+					getJdbcValuesSourceProcessingState().finishUp( false );
+				}
+				finally {
+					persistenceContext.afterLoad();
+				}
+				persistenceContext.initializeNonLazyCollections();
 			}
 			finally {
-				persistenceContext.afterLoad();
+				loadContexts.deregister( getJdbcValuesSourceProcessingState() );
 			}
-			persistenceContext.initializeNonLazyCollections();
+			afterScrollOperation();
 		}
-		finally {
-			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
+		else {
+			currentRow = null;
 		}
-
-		afterScrollOperation();
 	}
 
 }

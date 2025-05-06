@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresentationStrategy {
-	private final JavaType<?> mapJtd;
+	private final JavaType<Map<String,?>> mapJavaType;
 	private final EmbeddableInstantiator instantiator;
 
 	public EmbeddableRepresentationStrategyMap(
@@ -31,7 +31,7 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 			Supplier<EmbeddableMappingType> runtimeDescriptorAccess,
 			EmbeddableInstantiator customInstantiator,
 			RuntimeModelCreationContext creationContext) {
-		this.mapJtd = creationContext.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Map.class );
+		this.mapJavaType = creationContext.getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Map.class );
 		this.instantiator = customInstantiator != null
 				? customInstantiator
 				: new EmbeddableInstantiatorDynamicMap( bootDescriptor, runtimeDescriptorAccess );
@@ -49,7 +49,7 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 
 	@Override
 	public JavaType<?> getMappedJavaType() {
-		return mapJtd;
+		return mapJavaType;
 	}
 
 	@Override

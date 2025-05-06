@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -54,6 +54,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTracker;
 import static org.hibernate.event.internal.EntityState.getEntityState;
+import static org.hibernate.event.internal.EventUtil.getLoggableName;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -81,7 +82,8 @@ public class DefaultMergeEventListener
 	@Override
 	public void onMerge(MergeEvent event) throws HibernateException {
 		final EventSource session = event.getSession();
-		final EntityCopyObserver entityCopyObserver = createEntityCopyObserver( session );
+		final EntityCopyObserver entityCopyObserver =
+				session.getFactory().getEntityCopyObserver().createEntityCopyObserver();
 		final MergeContext mergeContext = new MergeContext( session, entityCopyObserver );
 		try {
 			onMerge( event, mergeContext );
@@ -91,10 +93,6 @@ public class DefaultMergeEventListener
 			entityCopyObserver.clear();
 			mergeContext.clear();
 		}
-	}
-
-	private EntityCopyObserver createEntityCopyObserver(final EventSource session) {
-		return session.getFactory().getFastSessionServices().entityCopyObserverFactory.createEntityCopyObserver();
 	}
 
 	/**
@@ -113,7 +111,7 @@ public class DefaultMergeEventListener
 			if ( lazyInitializer != null ) {
 				if ( lazyInitializer.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
-					event.setResult( source.load( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
+					event.setResult( source.getReference( lazyInitializer.getEntityName(), lazyInitializer.getInternalIdentifier() ) );
 				}
 				else {
 					doMerge( event, copiedAlready, lazyInitializer.getImplementation() );
@@ -124,7 +122,8 @@ public class DefaultMergeEventListener
 						asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
-					event.setResult( source.load( proxyInterceptor.getEntityName(), proxyInterceptor.getIdentifier() ) );
+					event.setResult( source.byId( proxyInterceptor.getEntityName() )
+							.getReference( proxyInterceptor.getIdentifier() ) );
 				}
 				else {
 					doMerge( event, copiedAlready, original );
@@ -155,27 +154,21 @@ public class DefaultMergeEventListener
 		final EventSource source = event.getSession();
 		// Check the persistence context for an entry relating to this
 		// entity to be merged...
+		final String entityName = event.getEntityName();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		EntityEntry entry = persistenceContext.getEntry( entity );
 		final EntityState entityState;
 		final Object copiedId;
 		final Object originalId;
 		if ( entry == null ) {
-			final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+			final EntityPersister persister = source.getEntityPersister( entityName, entity );
 			originalId = persister.getIdentifier( entity, copiedAlready );
 			if ( originalId != null ) {
 				final EntityKey entityKey;
-				if ( persister.getIdentifierType() instanceof ComponentType ) {
-					/*
-					this is needed in case of composite id containing an association with a generated identifier, in such a case
-					generating the EntityKey will cause a NPE when trying to get the hashcode of the null id
-					 */
-					copiedId = copyCompositeTypeId(
-							originalId,
-							(ComponentType) persister.getIdentifierType(),
-							source,
-							copiedAlready
-					);
+				if ( persister.getIdentifierType() instanceof ComponentType compositeId ) {
+					// this is needed in case of a composite id containing an association with a generated identifier
+					// in such a case, generating the EntityKey will cause NPE when evaluating the hashcode of the null id
+					copiedId = copyCompositeTypeId( originalId, compositeId, source, copiedAlready );
 					entityKey = source.generateEntityKey( copiedId, persister );
 				}
 				else {
@@ -193,18 +186,18 @@ public class DefaultMergeEventListener
 					entityState = EntityState.DETACHED;
 				}
 				else {
-					entityState = getEntityState( entity, event.getEntityName(), entry, source, false );
+					entityState = getEntityState( entity, entityName, entry, source, false );
 				}
 			}
 			else {
 				copiedId = null;
-				entityState = getEntityState( entity, event.getEntityName(), entry, source, false );
+				entityState = getEntityState( entity, entityName, entry, source, false );
 			}
 		}
 		else {
 			copiedId = null;
 			originalId = null;
-			entityState = getEntityState( entity, event.getEntityName(), entry, source, false );
+			entityState = getEntityState( entity, entityName, entry, source, false );
 		}
 
 		switch ( entityState ) {
@@ -219,22 +212,19 @@ public class DefaultMergeEventListener
 				break;
 			default: //DELETED
 				if ( persistenceContext.getEntry( entity ) == null ) {
+					final EntityPersister persister = source.getEntityPersister( entityName, entity );
 					assert persistenceContext.containsDeletedUnloadedEntityKey(
 							source.generateEntityKey(
-									source.getEntityPersister( event.getEntityName(), entity )
-											.getIdentifier( entity, event.getSession() ),
-									source.getEntityPersister( event.getEntityName(), entity )
+									persister.getIdentifier( entity, event.getSession() ),
+									persister
 							)
 					);
 					source.getActionQueue().unScheduleUnloadedDeletion( entity );
 					entityIsDetached(event, copiedId, originalId, copiedAlready);
 					break;
 				}
-				throw new ObjectDeletedException(
-						"deleted instance passed to merge",
-						null,
-						EventUtil.getLoggableName( event.getEntityName(), entity)
-				);
+				throw new ObjectDeletedException( "deleted instance passed to merge",
+						originalId, getLoggableName( entityName, entity ) );
 		}
 	}
 
@@ -247,25 +237,33 @@ public class DefaultMergeEventListener
 		final Object idCopy = compositeType.deepCopy( id, factory );
 		final Type[] subtypes = compositeType.getSubtypes();
 		final Object[] propertyValues = compositeType.getPropertyValues( id );
-		final Object[] copyValues = compositeType.getPropertyValues( idCopy );
+		final Object[] copiedValues = compositeType.getPropertyValues( idCopy );
 		for ( int i = 0; i < subtypes.length; i++ ) {
-			final Type subtype = subtypes[i];
-			if ( subtype instanceof EntityType ) {
-				// the value of the copy in the MergeContext has the id assigned
-				final Object object = mergeContext.get( propertyValues[i] );
-				copyValues[i] = object == null ? subtype.deepCopy( propertyValues[i], factory ) : object;
-			}
-			else if ( subtype instanceof AnyType anyType ) {
-				copyValues[i] = copyCompositeTypeId( propertyValues[i], anyType, session, mergeContext );
-			}
-			else if ( subtype instanceof ComponentType componentType ) {
-				copyValues[i] = copyCompositeTypeId( propertyValues[i], componentType, session, mergeContext );
-			}
-			else {
-				copyValues[i] = subtype.deepCopy( propertyValues[i], factory );
-			}
+			copiedValues[i] = copy( session, mergeContext, subtypes[i], propertyValues[i], factory );
 		}
-		return compositeType.replacePropertyValues( idCopy, copyValues, session );
+		return compositeType.replacePropertyValues( idCopy, copiedValues, session );
+	}
+
+	private static Object copy(
+			EventSource session,
+			MergeContext mergeContext,
+			Type subtype,
+			Object propertyValue,
+			SessionFactoryImplementor factory) {
+		if ( subtype instanceof EntityType ) {
+			// the value of the copy in the MergeContext has the id assigned
+			final Object object = mergeContext.get( propertyValue );
+			return object == null ? subtype.deepCopy( propertyValue, factory ) : object;
+		}
+		else if ( subtype instanceof AnyType anyType ) {
+			return copyCompositeTypeId( propertyValue, anyType, session, mergeContext );
+		}
+		else if ( subtype instanceof ComponentType componentType ) {
+			return copyCompositeTypeId( propertyValue, componentType, session, mergeContext );
+		}
+		else {
+			return subtype.deepCopy( propertyValue, factory );
+		}
 	}
 
 	protected void entityIsPersistent(MergeEvent event, MergeContext copyCache) {

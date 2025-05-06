@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.CurrentTimestamp;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
@@ -22,7 +22,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CurrentTimestampAnnotation(SourceModelBuildingContext modelContext) {
+	public CurrentTimestampAnnotation(ModelsContext modelContext) {
 		this.event = new org.hibernate.generator.EventType[] {INSERT, UPDATE};
 		this.source = org.hibernate.annotations.SourceType.DB;
 	}
@@ -30,7 +30,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CurrentTimestampAnnotation(CurrentTimestamp annotation, SourceModelBuildingContext modelContext) {
+	public CurrentTimestampAnnotation(CurrentTimestamp annotation, ModelsContext modelContext) {
 		this.event = annotation.event();
 		this.source = annotation.source();
 	}
@@ -38,7 +38,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CurrentTimestampAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CurrentTimestampAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.event = (org.hibernate.generator.EventType[]) attributeValues.get( "event" );
 		this.source = (org.hibernate.annotations.SourceType) attributeValues.get( "source" );
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -163,8 +163,8 @@ public class NamedQueryHelper {
 		final Object setting = hints.get( HINT_CACHE_MODE );
 
 		if ( setting != null ) {
-			if ( setting instanceof CacheMode ) {
-				return (CacheMode) setting;
+			if ( setting instanceof CacheMode cacheMode ) {
+				return cacheMode;
 			}
 
 			final CacheMode cacheMode = CacheMode.interpretExternalSetting( setting.toString() );
@@ -180,12 +180,12 @@ public class NamedQueryHelper {
 		final Object setting = hints.get( HINT_FLUSH_MODE );
 
 		if ( setting != null ) {
-			if ( setting instanceof FlushMode ) {
-				return (FlushMode) setting;
+			if ( setting instanceof FlushMode flushMode ) {
+				return flushMode;
 			}
 
-			if ( setting instanceof FlushModeType ) {
-				return FlushModeTypeHelper.getFlushMode( (FlushModeType) setting );
+			if ( setting instanceof FlushModeType flushModeType ) {
+				return FlushModeTypeHelper.getFlushMode( flushModeType );
 			}
 
 			final FlushMode mode = FlushMode.interpretExternalSetting( setting.toString() );
@@ -203,11 +203,11 @@ public class NamedQueryHelper {
 		if ( lockModeSetting == null ) {
 			lockMode = LockMode.NONE;
 		}
-		else if ( lockModeSetting instanceof LockMode ) {
-			lockMode = (LockMode) lockModeSetting;
+		else if ( lockModeSetting instanceof LockMode mode ) {
+			lockMode = mode;
 		}
-		else if ( lockModeSetting instanceof LockModeType ) {
-			lockMode = LockModeTypeHelper.getLockMode( (LockModeType) lockModeSetting );
+		else if ( lockModeSetting instanceof LockModeType lockModeType ) {
+			lockMode = LockModeTypeHelper.getLockMode( lockModeType );
 		}
 		else {
 			lockMode = LockMode.fromExternalForm( lockModeSetting.toString() );

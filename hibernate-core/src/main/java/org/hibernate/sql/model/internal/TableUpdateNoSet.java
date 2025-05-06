@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.internal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,7 +22,7 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
-import static org.hibernate.jdbc.Expectations.NONE;
+import static java.util.Collections.emptyList;
 
 /**
  * A skipped update
@@ -38,9 +37,9 @@ public class TableUpdateNoSet
 				mutatingTable,
 				mutationTarget,
 				"no-op",
-				Collections.emptyList(),
-				Collections.emptyList(),
-				Collections.emptyList()
+				emptyList(),
+				emptyList(),
+				emptyList()
 		);
 	}
 
@@ -69,7 +68,7 @@ public class TableUpdateNoSet
 
 	@Override
 	public Expectation getExpectation() {
-		return NONE;
+		return Expectation.None.INSTANCE;
 	}
 
 	@Override
@@ -79,7 +78,7 @@ public class TableUpdateNoSet
 
 	@Override
 	public List<ColumnValueBinding> getValueBindings() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override
@@ -88,7 +87,7 @@ public class TableUpdateNoSet
 
 	@Override
 	public List<ColumnReference> getReturningColumns() {
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override

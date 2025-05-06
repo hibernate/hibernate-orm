@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal.attr;
@@ -11,6 +11,7 @@ import org.hibernate.boot.models.XmlAnnotations;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
+import org.hibernate.boot.models.xml.internal.SimpleTypeInterpretation;
 import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.boot.models.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
@@ -53,7 +54,7 @@ public class ElementCollectionAttributeProcessing {
 			elementCollectionUsage.fetch( jaxbElementCollection.getFetch() );
 		}
 
-		applyTarget( jaxbElementCollection, xmlDocumentContext, memberDetails );
+		applyElementCollectionElementType( jaxbElementCollection, elementCollectionUsage, memberDetails, xmlDocumentContext );
 
 		// NOTE: it is important that this happens before the `CommonPluralAttributeProcessing#applyPluralAttributeStructure`
 		// call below
@@ -89,6 +90,22 @@ public class ElementCollectionAttributeProcessing {
 		XmlAnnotationHelper.applyAssociationOverrides( jaxbElementCollection.getAssociationOverrides(), memberDetails, xmlDocumentContext );
 
 		return memberDetails;
+	}
+
+	private static void applyElementCollectionElementType(
+			JaxbElementCollectionImpl jaxbElementCollection,
+			ElementCollectionJpaAnnotation elementCollectionUsage,
+			MutableMemberDetails memberDetails,
+			XmlDocumentContext xmlDocumentContext) {
+		if ( StringHelper.isNotEmpty( jaxbElementCollection.getTargetClass() ) ) {
+			final SimpleTypeInterpretation simpleTypeInterpretation = SimpleTypeInterpretation.interpret( jaxbElementCollection.getTargetClass() );
+			if ( simpleTypeInterpretation != null ) {
+				elementCollectionUsage.targetClass( simpleTypeInterpretation.getJavaType() );
+				return;
+			}
+		}
+
+		applyTarget( jaxbElementCollection, xmlDocumentContext, memberDetails );
 	}
 
 	private static void applyTarget(

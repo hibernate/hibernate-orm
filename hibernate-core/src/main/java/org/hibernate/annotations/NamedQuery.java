@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -75,7 +75,7 @@ public @interface NamedQuery {
 	 *
 	 * @deprecated use {@link #flush()}
 	 */
-	@Deprecated(since = "7")
+	@Deprecated(since = "7", forRemoval = true)
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**

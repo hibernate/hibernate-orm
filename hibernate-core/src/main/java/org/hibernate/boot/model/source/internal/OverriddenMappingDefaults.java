@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal;
@@ -151,7 +151,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 		private String implicitDiscriminatorColumnName;
 		private String implicitPackageName;
 		private boolean autoImportEnabled;
-		private EnumSet<CascadeType> implicitCascadeTypes;
+		private final EnumSet<CascadeType> implicitCascadeTypes;
 		private jakarta.persistence.AccessType implicitPropertyAccessType;
 		private String implicitPropertyAccessorName;
 		private boolean entitiesImplicitlyLazy;
@@ -170,6 +170,7 @@ public class OverriddenMappingDefaults implements EffectiveMappingDefaults {
 			this.autoImportEnabled = parentDefaults.isDefaultAutoImport();
 
 			this.implicitCascadeTypes = parentDefaults.getDefaultCascadeTypes();
+			this.implicitPropertyAccessType = parentDefaults.getDefaultPropertyAccessType();
 			this.implicitPropertyAccessorName = parentDefaults.getDefaultAccessStrategyName();
 			this.entitiesImplicitlyLazy = parentDefaults.isDefaultEntityLaziness();
 			this.pluralAttributesImplicitlyLazy = parentDefaults.isDefaultCollectionLaziness();

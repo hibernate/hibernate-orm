@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers;
-
-import jakarta.persistence.Entity;
 
 /**
  * Extension of standard {@link DefaultRevisionEntity} that allows tracking entity names changed in each revision.
@@ -13,6 +11,5 @@ import jakarta.persistence.Entity;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@Entity
 public final class DefaultTrackingModifiedEntitiesRevisionEntity extends TrackingModifiedEntitiesRevisionMapping {
 }

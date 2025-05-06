@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -7,7 +7,7 @@ package org.hibernate.action.internal;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.internal.OptimisticLockHelper;
 
 /**
  * A {@link BeforeTransactionCompletionProcess} implementation to verify and
@@ -37,12 +37,8 @@ public class EntityIncrementVersionProcess implements BeforeTransactionCompletio
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
 		// Don't increment version for an entity that is not in the PersistenceContext;
-		if ( entry == null ) {
-			return;
+		if ( entry != null ) {
+			OptimisticLockHelper.forceVersionIncrement( object, entry, session.asEventSource() );
 		}
-
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
-		entry.forceLocked( object, nextVersion );
 	}
 }

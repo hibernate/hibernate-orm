@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results.internal.complete;
@@ -14,7 +14,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -59,18 +58,16 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 		}
 		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
 				navigablePath,
-				np -> {
-					return entityValuedModelPart.getEntityMappingType()
-							.getEntityPersister()
-							.createRootTableGroup(
-									true,
-									navigablePath,
-									null,
-									null,
-									() -> p -> {},
-									sqlAstCreationState
-							);
-				}
+				np ->
+						entityValuedModelPart.getEntityMappingType().getEntityPersister()
+								.createRootTableGroup(
+										true,
+										navigablePath,
+										null,
+										null,
+										() -> p -> {},
+										sqlAstCreationState
+								)
 		);
 
 		this.identifierFetch = creationState.visitIdentifierFetch( this );
@@ -137,10 +134,10 @@ public class EntityResultImpl implements EntityResult, InitializerProducer<Entit
 	}
 
 	@Override
-	public DomainResultAssembler<?> createResultAssembler(
-			InitializerParent parent,
-			AssemblerCreationState creationState) {
-		return new EntityAssembler( getResultJavaType(), creationState.resolveInitializer( this, parent, this ).asEntityInitializer() );
+	public EntityAssembler createResultAssembler(InitializerParent parent, AssemblerCreationState creationState) {
+		return new EntityAssembler<>( getResultJavaType(),
+				creationState.resolveInitializer( this, parent, this )
+						.asEntityInitializer() );
 	}
 
 	@Override

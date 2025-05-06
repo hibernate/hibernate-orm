@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -13,9 +13,8 @@ public interface SqlTupleContainer {
 	SqlTuple getSqlTuple();
 
 	static SqlTuple getSqlTuple(SqlAstNode expression) {
-		if ( expression instanceof SqlTupleContainer ) {
-			return ( (SqlTupleContainer) expression ).getSqlTuple();
-		}
-		return null;
+		return expression instanceof SqlTupleContainer sqlTupleContainer
+				? sqlTupleContainer.getSqlTuple()
+				: null;
 	}
 }

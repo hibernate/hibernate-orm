@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;

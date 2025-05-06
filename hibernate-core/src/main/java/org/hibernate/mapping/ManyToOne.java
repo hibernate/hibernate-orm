@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -10,19 +10,18 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.EntityType;
-import org.hibernate.type.Type;
+import org.hibernate.type.ManyToOneType;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.ManyToOne many-to-one association}.
  *
  * @author Gavin King
  */
-public class ManyToOne extends ToOne {
+public final class ManyToOne extends ToOne {
 	private boolean isLogicalOneToOne;
 	private NotFoundAction notFoundAction;
 
-	private transient Type resolvedType;
+	private transient ManyToOneType resolvedType;
 
 	public ManyToOne(MetadataBuildingContext buildingContext, Table table) {
 		super( buildingContext, table );
@@ -39,21 +38,20 @@ public class ManyToOne extends ToOne {
 		return new ManyToOne( this );
 	}
 
-	public Type getType() throws MappingException {
+	public ManyToOneType getType() throws MappingException {
 		if ( resolvedType == null ) {
-			resolvedType = MappingHelper.manyToOne(
+			resolvedType = new ManyToOneType(
+					getTypeConfiguration(),
 					getReferencedEntityName(),
 					isReferenceToPrimaryKey(),
 					getReferencedPropertyName(),
 					getPropertyName(),
-					isLogicalOneToOne(),
 					isLazy(),
 					isUnwrapProxy(),
 					isIgnoreNotFound(),
-					getBuildingContext()
+					isLogicalOneToOne()
 			);
 		}
-
 		return resolvedType;
 	}
 
@@ -101,7 +99,7 @@ public class ManyToOne extends ToOne {
 					final ForeignKey foreignKey = getTable().createForeignKey(
 							getForeignKeyName(),
 							getConstraintColumns(),
-							( (EntityType) getType() ).getAssociatedEntityName(),
+							getType().getAssociatedEntityName(),
 							getForeignKeyDefinition(),
 							getForeignKeyOptions(),
 							new ArrayList<>( property.getColumns() )

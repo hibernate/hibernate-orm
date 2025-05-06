@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql;
@@ -23,12 +23,12 @@ import static org.hibernate.internal.util.StringHelper.WHITESPACE;
  * should be written in the native SQL dialect of the target database,
  * with the following special exceptions:
  * <ul>
- *     <li>any backtick-quoted identifiers, for example {@code `hello`},
+ *     <li>any backtick-quoted identifier, for example {@code `hello`},
  *     is interpreted as a quoted identifier and re-quoted using the
  *     {@linkplain Dialect#quote native quoted identifier syntax} of
  *     the database, and</li>
  *     <li>the literal identifiers {@code true} and {@code false} are
- *     interpreted are literal boolean values, and replaced with
+ *     interpreted as literal boolean values, and replaced with
  *     {@linkplain Dialect#toBooleanValueString dialect-specific
  *     literal values}.
  *     </li>
@@ -167,8 +167,11 @@ public final class Template {
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
+		String token = null;
+		String previousToken;
 		while ( hasMore ) {
-			String token = nextToken;
+			previousToken = token;
+			token = nextToken;
 			String lcToken = token.toLowerCase(Locale.ROOT);
 			hasMore = tokens.hasMoreTokens();
 			nextToken = hasMore ? tokens.nextToken() : null;
@@ -203,7 +206,9 @@ public final class Template {
 				else {
 					isOpenQuote = false;
 				}
-				if ( isOpenQuote ) {
+				if ( isOpenQuote
+						&& !inFromClause // don't want to append alias to tokens inside the FROM clause
+						&& !endsWithDot( previousToken ) ) {
 					result.append( alias ).append( '.' );
 				}
 			}
@@ -232,7 +237,8 @@ public final class Template {
 				result.append(token);
 				inExtractOrTrim = true;
 			}
-			else if ( isIdentifier(token)
+			else if ( !inFromClause // don't want to append alias to tokens inside the FROM clause
+					&& isIdentifier( token )
 					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
 					&& !isLiteral( lcToken, nextToken, sql, symbols, tokens ) ) {
 				result.append(alias)
@@ -268,26 +274,28 @@ public final class Template {
 		return result.toString();
 	}
 
+	private static boolean endsWithDot(String token) {
+		return token != null && token.endsWith( "." );
+	}
+
 	private static boolean isLiteral(
 			String lcToken, String next,
 			String sqlWhereString, String symbols, StringTokenizer tokens) {
-		if ( LITERAL_PREFIXES.contains( lcToken ) && next != null ) {
-			// easy cases first
-			if ( "'".equals(next) ) {
-				return true;
-			}
-			else if ( !next.isBlank() ) {
-				return false;
-			}
-			else {
+		if ( next == null ) {
+			return false;
+		}
+		else if ( LITERAL_PREFIXES.contains( lcToken ) ) {
+			if ( next.isBlank() ) {
 				// we need to look ahead in the token stream
 				// to find the first non-blank token
 				return lookPastBlankTokens( sqlWhereString, symbols, tokens, 1,
-						(String nextToken)
-								-> "'".equals(nextToken)
+						(nextToken) -> "'".equals(nextToken)
 								|| lcToken.equals("time") && "with".equals(nextToken)
 								|| lcToken.equals("timestamp") && "with".equals(nextToken)
 								|| lcToken.equals("time") && "zone".equals(nextToken) );
+			}
+			else {
+				return "'".equals(next);
 			}
 		}
 		else {
@@ -341,7 +349,7 @@ public final class Template {
 		int begin = 0;
 		int match;
 		while ( ( match = template.indexOf(TEMPLATE, begin) ) >= 0 ) {
-			int start = match + TEMPLATE.length() + 1;
+			final int start = match + TEMPLATE.length() + 1;
 			for ( int loc = start;; loc++ ) {
 				if ( loc == template.length() - 1 ) {
 					names.add( template.substring( start ) );
@@ -349,7 +357,7 @@ public final class Template {
 					break;
 				}
 				else {
-					char ch = template.charAt( loc );
+					final char ch = template.charAt( loc );
 					if ( PUNCTUATION.indexOf(ch) >= 0 || WHITESPACE.indexOf(ch) >= 0 ) {
 						names.add( template.substring( start, loc ) );
 						begin = loc;
@@ -391,17 +399,16 @@ public final class Template {
 	}
 
 	private static boolean isIdentifier(String token) {
-		if ( isBoolean( token ) ) {
-			return false;
-		}
-		return token.charAt( 0 ) == '`'
-			|| ( //allow any identifier quoted with backtick
-				isLetter( token.charAt( 0 ) ) && //only recognizes identifiers beginning with a letter
-						token.indexOf( '.' ) < 0
-			);
+		return token.charAt( 0 ) == '`' // allow any identifier quoted with backtick
+			|| isLetter( token.charAt( 0 ) )  // only recognizes identifiers beginning with a letter
+				&& token.indexOf( '.' ) < 0
+				&& !isBoolean( token );
 	}
 
 	private static boolean isBoolean(String token) {
-		return "true".equals( token ) || "false".equals( token );
+		return switch ( token.toLowerCase( Locale.ROOT ) ) {
+			case "true", "false" -> true;
+			default -> false;
+		};
 	}
 }

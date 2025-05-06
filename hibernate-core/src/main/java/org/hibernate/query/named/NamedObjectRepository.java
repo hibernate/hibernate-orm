@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.named;
@@ -7,6 +7,8 @@ package org.hibernate.query.named;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.boot.Metadata;
@@ -32,6 +34,10 @@ import jakarta.persistence.TypedQueryReference;
 public interface NamedObjectRepository {
 
 	<R> Map<String, TypedQueryReference<R>> getNamedQueries(Class<R> resultType);
+
+	void registerNamedQuery(String name, Query query);
+
+	<R> TypedQueryReference<R> registerNamedQuery(String name, TypedQuery<R> query);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Named SQM Memento
@@ -81,7 +87,7 @@ public interface NamedObjectRepository {
 	/**
 	 * Resolve the named query with the given name.
 	 */
-	NamedQueryMemento resolve(
+	NamedQueryMemento<?> resolve(
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor bootMetamodel,
 			String registrationName);

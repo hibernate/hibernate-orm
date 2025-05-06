@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -16,6 +16,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Gavin King
  *
  * @since 7
+ *
+ * @see BindableType#resolveExpressible(BindingContext)
+ * @see org.hibernate.query.sqm.SqmExpressible#resolveExpressible(BindingContext)
+ * @see org.hibernate.query.sqm.produce.function.ArgumentsValidator#validate(java.util.List, String, BindingContext)
+ * @see org.hibernate.query.sqm.internal.TypecheckUtil
  */
 @Incubating
 public interface BindingContext {
@@ -23,7 +28,5 @@ public interface BindingContext {
 
 	MappingMetamodel getMappingMetamodel();
 
-	default TypeConfiguration getTypeConfiguration() {
-		return getJpaMetamodel().getTypeConfiguration();
-	}
+	TypeConfiguration getTypeConfiguration();
 }

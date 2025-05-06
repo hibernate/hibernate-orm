@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.internal.synchronization.work;
@@ -56,6 +56,8 @@ public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 
 		data.put( configuration.getRevisionTypePropertyName(), revisionType );
 		data.put( configuration.getOriginalIdPropertyName(), originalId );
+		// The $type$ property holds the name of the (versions) entity
+		data.put( "$type$", configuration.getAuditEntityName( entityName ) );
 	}
 
 	@Override

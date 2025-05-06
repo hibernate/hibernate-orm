@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -52,7 +53,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		this.insertStatement = insertStatement;
 		this.excludedRoot = excludedRoot;
 		this.constraintName = constraintName;
-		this.constraintPaths = Collections.unmodifiableList( constraintPaths );
+		this.constraintPaths = constraintPaths == null ? null : Collections.unmodifiableList( constraintPaths );
 		this.updateAction = updateAction;
 	}
 
@@ -155,7 +156,7 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 						insertStatement.copy( context ),
 						excludedRoot.copy( context ),
 						constraintName,
-						copyOf( constraintPaths, context ),
+						constraintPaths == null ? null : copyOf( constraintPaths, context ),
 						updateAction == null ? null : updateAction.copy( context )
 				)
 		);
@@ -177,26 +178,26 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 		return walker.visitConflictClause( this );
 	}
 
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( " on conflict" );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( " on conflict" );
 		if ( constraintName != null ) {
-			sb.append( " on constraint " );
-			sb.append( constraintName );
+			hql.append( " on constraint " );
+			hql.append( constraintName );
 		}
 		else if ( !constraintPaths.isEmpty() ) {
 			char separator = '(';
 			for ( SqmPath<?> path : constraintPaths ) {
-				sb.append( separator );
-				appendUnqualifiedPath( sb, path );
+				hql.append( separator );
+				appendUnqualifiedPath( hql, path );
 				separator = ',';
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
 		if ( updateAction == null ) {
-			sb.append( " do nothing" );
+			hql.append( " do nothing" );
 		}
 		else {
-			updateAction.appendHqlString( sb );
+			updateAction.appendHqlString( hql, context );
 		}
 	}
 

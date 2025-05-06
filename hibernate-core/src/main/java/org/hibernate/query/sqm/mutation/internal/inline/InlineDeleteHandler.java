@@ -1,14 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.inline;
-
-import java.sql.PreparedStatement;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableInteger;
@@ -37,13 +31,15 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.StatementCreatorHelper;
 
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
-import static org.hibernate.boot.model.internal.SoftDeleteHelper.createSoftDeleteAssignment;
+import java.sql.PreparedStatement;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * DeleteHandler for the in-line strategy
  *
- * @author Evandro Pires da Silva
  * @author Vlad Mihalcea
  * @author Steve Ebersole
  */
@@ -193,14 +189,9 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 		final Predicate predicate = Predicate.combinePredicates(
 				matchingIdsPredicate,
-				createNonSoftDeletedRestriction( targetTableReference, softDeleteMapping )
+				softDeleteMapping.createNonDeletedRestriction( targetTableReference )
 		);
-
-		final Assignment softDeleteAssignment = createSoftDeleteAssignment(
-				targetTableReference,
-				softDeleteMapping
-		);
-
+		final Assignment softDeleteAssignment = softDeleteMapping.createSoftDeleteAssignment( targetTableReference );
 		final UpdateStatement updateStatement = new UpdateStatement(
 				targetTableReference,
 				Collections.singletonList( softDeleteAssignment ),

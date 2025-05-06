@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.internal;
@@ -9,11 +9,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.persistence.EntityGraph;
+
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
@@ -74,34 +75,29 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		return doLoad( entityPersister().getNaturalIdMapping().normalizeInput( naturalIdValue) );
 	}
 
+	/**
+	 * Verify that the given natural id is "simple".
+	 * <p>
+	 * We allow compound natural id "simple" loading if all the values are passed as an array,
+	 * list, or map. We assume an array is properly ordered following the attribute ordering.
+	 * For lists, just like arrays, we assume the user has ordered them properly; for maps,
+	 * the key is expected to be the attribute name.
+	 */
 	private void verifySimplicity(Object naturalIdValue) {
 		assert naturalIdValue != null;
-
-		if ( hasSimpleNaturalId ) {
-			// implicitly
-			return;
+		if ( !hasSimpleNaturalId
+				&& !naturalIdValue.getClass().isArray()
+				&& !(naturalIdValue instanceof List)
+				&& !(naturalIdValue instanceof Map) ) {
+			throw new HibernateException(
+					String.format(
+							Locale.ROOT,
+							"Cannot interpret natural-id value [%s] for compound natural-id: %s",
+							naturalIdValue,
+							entityPersister().getEntityName()
+					)
+			);
 		}
-
-		if ( naturalIdValue.getClass().isArray() ) {
-			// we allow compound natural-id "simple" loading all the values are passed as an array
-			// (we assume the array is properly ordered following the mapping-model attribute ordering)
-			return;
-		}
-
-		if ( naturalIdValue instanceof List || naturalIdValue instanceof Map ) {
-			// also allowed.  For Lists, just like arrays, we assume the user has ordered them properly;
-			// for Maps, the key is expected to be the attribute name
-			return;
-		}
-
-		throw new HibernateException(
-				String.format(
-						Locale.ROOT,
-						"Cannot interpret natural-id value [%s] for compound natural-id: %s",
-						naturalIdValue,
-						entityPersister().getEntityName()
-				)
-		);
 	}
 
 	@Override
@@ -110,13 +106,13 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public SimpleNaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		super.with( graph, semantic );
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	public SimpleNaturalIdLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return SimpleNaturalIdLoadAccess.super.withLoadGraph(graph);
 	}
 

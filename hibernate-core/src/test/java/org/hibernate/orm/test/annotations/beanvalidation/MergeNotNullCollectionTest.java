@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.beanvalidation;
@@ -15,36 +15,31 @@ import jakarta.persistence.Table;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotNull;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
-import org.hibernate.boot.beanvalidation.ValidationMode;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.ValidationSettings;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Ryan Emerson
  */
+@ServiceRegistry(
+		settings = @Setting(name = ValidationSettings.JAKARTA_VALIDATION_MODE, value = "AUTO")
+)
+@DomainModel(annotatedClasses = {MergeNotNullCollectionTest.Parent.class, MergeNotNullCollectionTest.Child.class})
+@SessionFactory
 @JiraKey( value = "HHH-9979")
-public class MergeNotNullCollectionTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {Parent.class, Child.class};
-	}
-
-	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( JAKARTA_VALIDATION_MODE, ValidationMode.AUTO );
-	}
+public class MergeNotNullCollectionTest {
 
 	@Test
-	public void testOneToManyNotNullCollection() {
+	void testOneToManyNotNullCollection(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		parent.id = 1L;
 		Child child = new Child();
@@ -56,35 +51,18 @@ public class MergeNotNullCollectionTest extends BaseCoreFunctionalTestCase {
 		child.setParent( parent );
 		parent.setChildren( children );
 
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		parent = (Parent) s.merge( parent );
-		t.commit();
-		s.close();
+		Parent p = scope.fromTransaction( s -> s.merge( parent ) );
 
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( parent );
-		t.commit();
-		s.close();
+		scope.inTransaction( s -> s.remove( p ) );
 	}
 
-	@Test(expected = ConstraintViolationException.class)
-	public void testOneToManyNullCollection() {
+	@Test
+	void testOneToManyNullCollection(SessionFactoryScope scope) {
 		Parent parent = new Parent();
 		parent.id = 1L;
 
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		parent = (Parent) s.merge( parent );
-		t.commit();
-		s.close();
-
-		s = openSession();
-		t = s.beginTransaction();
-		s.remove( parent );
-		t.commit();
-		s.close();
+		assertThatThrownBy( () -> scope.fromTransaction( s -> s.merge( parent ) ) )
+				.isInstanceOf( ConstraintViolationException.class );
 	}
 
 	@Entity

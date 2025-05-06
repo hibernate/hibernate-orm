@@ -233,7 +233,7 @@ An EntityGraph is the root of a "load plan" and must correspond to an EntityType
 [[fetching-strategies-dynamic-fetching-entity-subgraph]]
 ==== Jakarta Persistence (key) subgraphs
 
-A sub-graph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
+A subgraph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
 It is generally defined via the {jpaJavadocUrlPrefix}NamedSubgraph.html[`@NamedSubgraph`] annotation.
 
 If we have a `Project` parent entity which has an `employees` child associations,
@@ -264,24 +264,19 @@ include::{extrasdir}/fetching-strategies-dynamic-fetching-entity-subgraph-exampl
 ----
 ====
 
-Specifying a sub-graph is only valid for an attribute (or its "key") whose type is a ManagedType.  So
-while an EntityGraph must correspond to an EntityType, a Subgraph is legal for any ManagedType.  An
-attribute's key is defined as either:
+Specifying a subgraph is only valid for an attribute (or its "key") whose type is a ManagedType.
+So while an EntityGraph must correspond to an EntityType, a Subgraph is legal for any ManagedType.
 
-* For a singular attribute, the attribute's type must be an IdentifiableType and that IdentifiableType must
-	have a composite identifier.  The "key sub-graph" is applied to the identifier type.  The
-	non-key sub-graph applies to the attribute's value, which must be a ManagedType.
-* For a plural attribute, the attribute must be a Map and the Map's key value must be a ManagedType.
-	The "key sub-graph" is applied to the Map's key type.  In this case, the non-key sub-graph applies
-	to the plural attribute's value/element.
+If the attribute is a Map and the Map's key is a ManagedType, the "key subgraph" is applied to the Map's key type.
+In this case, the non-key subgraph applies to the Map value/element.
 
 
 [[fetching-strategies-dynamic-fetching-entity-subgraph-subtype]]
 ==== Jakarta Persistence SubGraph sub-typing
 
-SubGraphs can also be sub-type specific.  Given an attribute whose value is an inheritance hierarchy,
-we can refer to attributes of a specific sub-type using the forms of sub-graph definition that accept
-the sub-type Class.
+Subgraphs can also be subtype specific.  Given an attribute whose value is an inheritance hierarchy,
+we can refer to attributes of a specific subtype using the forms of subgraph definition that accept
+the subtype Class.
 
 
 [[fetching-strategies-dynamic-fetching-entity-graph-parsing]]
@@ -289,8 +284,9 @@ the sub-type Class.
 
 Hibernate allows the creation of Jakarta Persistence fetch/load graphs by parsing a textual representation
 of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
-list of attribute names, optionally including any sub-graph specifications.
-`org.hibernate.graph.GraphParser` is the starting point for such parsing operations.
+list of attribute names, optionally including any subgraph specifications.
+The starting point for such parsing operations is either `org.hibernate.graph.GraphParser`
+or `SessionFactory#parseEntityGraph`
 
 [NOTE]
 ====
@@ -312,16 +308,8 @@ This example actually functions exactly as <<fetching-strategies-dynamic-fetchin
 just using a parsed graph rather than a named graph.
 
 
-The syntax also supports defining "key sub-graphs".  To specify a key sub-graph, `.key` is added
+The syntax also supports defining "key subgraphs".  To specify a key subgraph, `.key` is added
 to the end of the attribute name.
-
-.Parsing an entity key graph
-====
-[source, java, indent=0]
-----
-include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-parsing-key-example-1]
-----
-====
 
 .Parsing a map key graph
 ====
@@ -331,7 +319,7 @@ include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-d
 ----
 ====
 
-Parsing can also handle sub-type specific sub-graphs.  For example, given an entity hierarchy of
+Parsing can also handle subtype specific subgraphs.  For example, given an entity hierarchy of
 `LegalEntity` <- (`Corporation` | `Person` | `NonProfit`) and an attribute named `responsibleParty` whose
 type is the `LegalEntity` base type we might have:
 
@@ -342,7 +330,7 @@ responsibleParty(Corporation: ceo)
 ----
 ====
 
-We can even duplicate the attribute names to apply different sub-type sub-graphs:
+We can even duplicate the attribute names to apply different subtype subgraphs:
 
 ====
 [source, java, indent=0]
@@ -379,6 +367,28 @@ the previous example can also be built by combining separate aspect graphs into 
 [source, java, indent=0]
 ----
 include::{example-dir-fetching}/GraphParsingTest.java[tags=fetching-strategies-dynamic-fetching-entity-graph-merging-example]
+----
+====
+
+
+[[fetching-strategies-dynamic-fetching-entity-graph-parsing-annotation]]
+==== @NamedEntityGraph with text representation
+
+Hibernate also offers a `@org.hibernate.annotations.NamedEntityGraph` annotation, as a corollary
+to the `@jakarta.persistence.NamedEntityGraph`, supporting the text representation
+<<fetching-strategies-dynamic-fetching-entity-graph-parsing,discussed previously>>.  The annotation
+may be placed on an entity or on a package.
+
+
+.@NamedEntityGraph example
+====
+[source, java, indent=0]
+----
+@Entity
+@NamedEntityGraph( graph="title,isbn,author(name,phoneNumber)" )
+class Book {
+	// ...
+}
 ----
 ====
 

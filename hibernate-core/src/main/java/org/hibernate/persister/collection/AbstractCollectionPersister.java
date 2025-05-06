@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
@@ -126,6 +126,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -162,7 +163,8 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements CollectionPersister, InFlightCollectionMapping, CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
+		implements CollectionPersister, InFlightCollectionMapping, CollectionMutationTarget,
+				PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
@@ -284,7 +286,8 @@ public abstract class AbstractCollectionPersister
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
 		collectionType = collectionBootDescriptor.getCollectionType();
 		navigableRole = new NavigableRole( collectionBootDescriptor.getRole() );
-		ownerPersister = creationContext.getDomainModel().getEntityDescriptor( collectionBootDescriptor.getOwnerEntityName() );
+		ownerPersister = creationContext.getDomainModel()
+				.getEntityDescriptor( collectionBootDescriptor.getOwnerEntityName() );
 		queryLoaderName = collectionBootDescriptor.getLoaderName();
 		isMutable = collectionBootDescriptor.isMutable();
 		mappedByProperty = collectionBootDescriptor.getMappedByProperty();
@@ -322,10 +325,15 @@ public abstract class AbstractCollectionPersister
 		keyColumnNames = new String[keySpan];
 		keyColumnAliases = new String[keySpan];
 		int k = 0;
-		for ( Column column: collectionBootDescriptor.getKey().getColumns() ) {
+		for ( Selectable selectable: collectionBootDescriptor.getKey().getSelectables() ) {
 			// NativeSQL: collect key column and auto-aliases
-			keyColumnNames[k] = column.getQuotedName( dialect );
-			keyColumnAliases[k] = column.getAlias( dialect, table );
+			keyColumnAliases[k] = selectable.getAlias( dialect, table );
+			if ( selectable instanceof Column column ) {
+				keyColumnNames[k] = column.getQuotedName( dialect );
+			}
+			else {
+				throw new MappingException( "Collection keys may not contain formulas: " + navigableRole.getFullPath() );
+			}
 			k++;
 		}
 
@@ -344,6 +352,8 @@ public abstract class AbstractCollectionPersister
 		// Defer this after the element persister was determined,
 		// because it is needed in OneToManyPersister.getTableName()
 		spaces[0] = getTableName();
+
+		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 
 		final int elementSpan = elementBootDescriptor.getColumnSpan();
 		elementColumnAliases = new String[elementSpan];
@@ -366,23 +376,15 @@ public abstract class AbstractCollectionPersister
 			elementColumnAliases[j] = selectable.getAlias( dialect, table );
 			if ( selectable.isFormula() ) {
 				Formula form = (Formula) selectable;
-				elementFormulaTemplates[j] = form.getTemplate(
-						dialect,
-						creationContext.getTypeConfiguration(),
-						creationContext.getFunctionRegistry()
-				);
+				elementFormulaTemplates[j] = form.getTemplate( dialect, typeConfiguration );
 				elementFormulas[j] = form.getFormula();
 			}
 			else {
-				Column col = (Column) selectable;
+				final Column col = (Column) selectable;
 				elementColumnNames[j] = col.getQuotedName( dialect );
-				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory, j ), dialect );
+				elementColumnWriters[j] = col.getWriteExpr( elementBootDescriptor.getSelectableType( factory.getRuntimeMetamodels(), j ), dialect );
 				elementColumnReaders[j] = col.getReadExpr( dialect );
-				elementColumnReaderTemplates[j] = col.getTemplate(
-						dialect,
-						creationContext.getTypeConfiguration(),
-						creationContext.getFunctionRegistry()
-				);
+				elementColumnReaderTemplates[j] = col.getTemplate( dialect, typeConfiguration );
 				elementColumnIsGettable[j] = true;
 				if ( elementType instanceof ComponentType || elementType instanceof AnyType ) {
 					// Implements desired behavior specifically for @ElementCollection mappings.
@@ -420,11 +422,7 @@ public abstract class AbstractCollectionPersister
 				indexColumnAliases[i] = selectable.getAlias( dialect );
 				if ( selectable.isFormula() ) {
 					final Formula indexForm = (Formula) selectable;
-					indexFormulaTemplates[i] = indexForm.getTemplate(
-							dialect,
-							creationContext.getTypeConfiguration(),
-							creationContext.getFunctionRegistry()
-					);
+					indexFormulaTemplates[i] = indexForm.getTemplate( dialect, typeConfiguration );
 					indexFormulas[i] = indexForm.getFormula();
 					hasFormula = true;
 				}
@@ -485,13 +483,11 @@ public abstract class AbstractCollectionPersister
 
 		keyIsUpdateable = collectionBootDescriptor.getKey().isUpdateable();
 
-		if ( collectionBootDescriptor instanceof Array arrayDescriptor ) {
-			elementClass = arrayDescriptor.getElementClass();
-		}
-		else {
-			// for non-arrays, we don't need to know the element class
-			elementClass = null; // elementType.returnedClass();
-		}
+		elementClass =
+				collectionBootDescriptor instanceof Array arrayDescriptor
+						? arrayDescriptor.getElementClass()
+						// for non-arrays, we don't need to know the element class
+						: null; // elementType.returnedClass();
 
 		hasOrder = collectionBootDescriptor.getOrderBy() != null;
 		hasManyToManyOrder = collectionBootDescriptor.getManyToManyOrdering() != null;
@@ -524,11 +520,8 @@ public abstract class AbstractCollectionPersister
 		}
 		else {
 			manyToManyWhereString = "( " + collectionBootDescriptor.getManyToManyWhere() + ")";
-			manyToManyWhereTemplate = renderWhereStringTemplate(
-					manyToManyWhereString,
-					creationContext.getDialect(),
-					creationContext.getTypeConfiguration()
-			);
+			manyToManyWhereTemplate =
+					renderWhereStringTemplate( manyToManyWhereString, creationContext.getDialect(), typeConfiguration );
 		}
 
 		comparator = collectionBootDescriptor.getComparator();
@@ -916,9 +909,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String getIdentifierColumnName() {
-		return collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG
-				? identifierColumnName
-				: null;
+		return hasId() ? identifierColumnName : null;
 	}
 
 	/**
@@ -936,7 +927,7 @@ public abstract class AbstractCollectionPersister
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				new LoadQueryInfluencers( factory ),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 
 		final NavigablePath entityPath = new NavigablePath( attributeMapping.getRootPathName() );
@@ -981,7 +972,7 @@ public abstract class AbstractCollectionPersister
 				i++;
 			}
 		}
-		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
+		if ( hasId() ) {
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
@@ -1067,6 +1058,10 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean hasIndex() {
 		return collectionSemantics.getCollectionClassification().isIndexed();
+	}
+
+	private boolean hasId() {
+		return collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG;
 	}
 
 	@Override
@@ -1400,7 +1395,7 @@ public abstract class AbstractCollectionPersister
 		if ( hasIndex() ) {
 			initCollectionPropertyMap( "index", indexType, indexColumnAliases );
 		}
-		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
+		if ( hasId() ) {
 			initCollectionPropertyMap( "id", identifierType, new String[] { identifierColumnAlias } );
 		}
 	}
@@ -1862,21 +1857,11 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public String[] getIndexColumnAliases(String suffix) {
-		if ( hasIndex() ) {
-			return new Alias( suffix ).toAliasStrings( indexColumnAliases );
-		}
-		else {
-			return null;
-		}
+		return hasIndex() ? new Alias( suffix ).toAliasStrings( indexColumnAliases ) : null;
 	}
 
 	@Override
 	public String getIdentifierColumnAlias(String suffix) {
-		if ( collectionSemantics.getCollectionClassification() == CollectionClassification.ID_BAG ) {
-			return new Alias( suffix ).toAliasString( identifierColumnAlias );
-		}
-		else {
-			return null;
-		}
+		return hasId() ? new Alias( suffix ).toAliasString( identifierColumnAlias ) : null;
 	}
 }

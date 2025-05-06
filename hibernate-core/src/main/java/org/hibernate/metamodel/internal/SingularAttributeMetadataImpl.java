@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -23,9 +23,8 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 			Property propertyMapping,
 			ManagedDomainType<X> ownerType,
 			Member member,
-			AttributeClassification attributeClassification,
-			MetadataContext metadataContext) {
-		super( propertyMapping, ownerType, member, attributeClassification, metadataContext );
+			AttributeClassification attributeClassification) {
+		super( propertyMapping, ownerType, member, attributeClassification );
 		valueContext = new ValueContext() {
 			@Override
 			public Value getHibernateValue() {

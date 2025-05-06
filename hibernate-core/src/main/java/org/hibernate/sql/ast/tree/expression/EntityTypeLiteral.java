@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -31,7 +31,7 @@ public class EntityTypeLiteral
 
 	public EntityTypeLiteral(EntityPersister entityTypeDescriptor) {
 		this.entityTypeDescriptor = entityTypeDescriptor;
-		this.discriminatorType = (DiscriminatorType) entityTypeDescriptor.getTypeDiscriminatorMetadata().getResolutionType();
+		this.discriminatorType = entityTypeDescriptor.getDiscriminatorDomainType();
 	}
 
 	public EntityPersister getEntityTypeDescriptor() {
@@ -42,7 +42,7 @@ public class EntityTypeLiteral
 	// BasicValuedMapping
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return this;
 	}
 
@@ -141,7 +141,7 @@ public class EntityTypeLiteral
 	}
 
 	@Override
-	public JavaType getExpressibleJavaType() {
+	public JavaType<?> getExpressibleJavaType() {
 		return discriminatorType.getExpressibleJavaType();
 	}
 }

@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.loader;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -14,13 +13,33 @@ import org.hibernate.annotations.FetchMode;
 
 @Entity
 public class Player {
-
 	private Long id;
-	private Team team;
 	private String name;
+	private Team team;
+
+	public Player() {
+	}
+
+	public Player(Long id) {
+		this( id, "Player #" + id );
+	}
+
+	public Player(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
+	public Player(Long id, Team team) {
+		this( id, "Player #" + id, team );
+	}
+
+	public Player(Long id, String name, Team team) {
+		this.id = id;
+		this.name = name;
+		this.team = team;
+	}
 
 	@Id
-	@GeneratedValue
 	public Long getId() {
 		return id;
 	}

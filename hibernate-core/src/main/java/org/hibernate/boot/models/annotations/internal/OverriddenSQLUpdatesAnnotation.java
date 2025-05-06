@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_UPDATES;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -25,7 +25,7 @@ public class OverriddenSQLUpdatesAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenSQLUpdatesAnnotation(SourceModelBuildingContext sourceModelBuildingContext) {
+	public OverriddenSQLUpdatesAnnotation(ModelsContext ModelsContext) {
 	}
 
 	/**
@@ -33,7 +33,7 @@ public class OverriddenSQLUpdatesAnnotation
 	 */
 	public OverriddenSQLUpdatesAnnotation(
 			DialectOverride.SQLUpdates annotation,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		this.value = extractJdkValue( annotation, DIALECT_OVERRIDE_SQL_UPDATES, "value", sourceModelContext );
 	}
 
@@ -42,7 +42,7 @@ public class OverriddenSQLUpdatesAnnotation
 	 */
 	public OverriddenSQLUpdatesAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext sourceModelContext) {
+			ModelsContext sourceModelContext) {
 		this.value = (DialectOverride.SQLUpdate[]) attributeValues.get( "value" );
 	}
 

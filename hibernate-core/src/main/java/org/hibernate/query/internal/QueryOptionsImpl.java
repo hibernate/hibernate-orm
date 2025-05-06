@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +22,8 @@ import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.MutableQueryOptions;
+
+import static java.util.Collections.emptyList;
 
 /**
  * @author Steve Ebersole
@@ -83,7 +84,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 
 	@Override
 	public List<String> getDatabaseHints() {
-		return databaseHints == null ? Collections.emptyList() : databaseHints;
+		return databaseHints == null ? emptyList() : databaseHints;
 	}
 
 	@Override

@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.embeddable.strategy.instantiator.intf2;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
@@ -15,7 +14,7 @@ public class NameInstantiator implements EmbeddableInstantiator {
 	public static int callCount = 0;
 
 	@Override
-	public Object instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public Object instantiate(ValueAccess valueAccess) {
 		callCount++;
 		// alphabetical
 		final String first = valueAccess.getValue( 0, String.class );
@@ -24,12 +23,12 @@ public class NameInstantiator implements EmbeddableInstantiator {
 	}
 
 	@Override
-	public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isInstance(Object object) {
 		return object instanceof Name;
 	}
 
 	@Override
-	public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
+	public boolean isSameClass(Object object) {
 		return object.getClass().equals( Name.class );
 	}
 }

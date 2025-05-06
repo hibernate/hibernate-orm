@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
@@ -322,7 +322,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			querySpec.setFetchClauseExpression(
 					new QueryLiteral<>(
 							1,
-							executionContext.getSession().getFactory().getNodeBuilder() .getIntegerType()
+							executionContext.getSession().getFactory().getQueryEngine().getCriteriaBuilder().getIntegerType()
 					),
 					FetchClauseType.ROWS_ONLY
 			);

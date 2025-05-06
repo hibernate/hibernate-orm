@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.jaxb.mapping;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.List;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
@@ -33,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.orm.test.boot.jaxb.JaxbHelper.withStaxEventReader;
 
@@ -64,9 +64,8 @@ public class HbmTransformationJaxbTests {
 							new Origin( SourceType.RESOURCE, resourceName )
 					) ).buildMetadata();
 					final List<Binding<JaxbEntityMappingsImpl>> transformedBindingList = HbmXmlTransformer.transform(
-							Collections.singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
+							singletonList( new Binding<>( hbmMapping, new Origin( SourceType.RESOURCE, resourceName ) ) ),
 							metadata,
-							scope.getRegistry(),
 							UnsupportedFeatureHandling.ERROR
 					);
 					final JaxbEntityMappingsImpl transformed = transformedBindingList.get( 0 ).getRoot();

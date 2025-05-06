@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree;
@@ -18,11 +18,11 @@ public interface SqmVisitableNode extends SqmNode {
 	 */
 	<X> X accept(SemanticQueryWalker<X> walker);
 
-	void appendHqlString(StringBuilder sb);
+	void appendHqlString(StringBuilder hql, SqmRenderContext context);
 
 	default String toHqlString() {
-		StringBuilder sb = new StringBuilder();
-		appendHqlString( sb );
-		return sb.toString();
+		final StringBuilder hql = new StringBuilder();
+		appendHqlString( hql, SqmRenderContext.simpleContext() );
+		return hql.toString();
 	}
 }

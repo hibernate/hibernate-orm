@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -82,6 +82,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -189,6 +190,7 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAmount;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -204,10 +206,13 @@ import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.*;
@@ -278,7 +283,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
-	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(where|join)\\b.+?)$" );
+	private static final Pattern QUERY_PATTERN = Pattern.compile(
+		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$");
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 
@@ -838,11 +844,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Generate a check condition for column with the given set of values.
+	 * Generate a SQL {@code check} condition for the given column,
+	 * constraining to the given values.
 	 *
-	 * @apiNote Only supports TINYINT, SMALLINT and (VAR)CHAR
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 *
+	 * @apiNote Only supports {@code TINYINT}, {@code SMALLINT}, {@code CHAR},
+	 *          and {@code VARCHAR}
+	 *
+	 * @since 7.0
 	 */
-	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+	public String getCheckCondition(String columnName, Collection<?> valueSet, JdbcType jdbcType) {
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
@@ -855,11 +867,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				nullIsValid = true;
 				continue;
 			}
+			check.append( separator );
 			if ( isCharacterJdbcType ) {
-				check.append( separator ).append('\'').append( value ).append('\'');
+				check.append('\'').append( value ).append('\'');
 			}
 			else {
-				check.append( separator ).append( value );
+				check.append( value );
 			}
 			separator = ",";
 		}
@@ -1963,7 +1976,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -1980,7 +1993,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -1997,7 +2010,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -2257,8 +2270,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code LOCK} clause string.
 	 */
 	public String getWriteLockString(String aliases, int timeout) {
-		// by default we simply return the getWriteLockString(timeout) result since
-		// the default is to say no support for "FOR UPDATE OF ..."
+		// by default, we simply return getWriteLockString(timeout),
+		// since the default is no support for "FOR UPDATE OF ..."
 		return getWriteLockString( timeout );
 	}
 
@@ -2727,13 +2740,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		res.append( " add constraint " )
 				.append( quote( constraintName ) )
 				.append( " foreign key (" )
-				.append( String.join( ", ", foreignKey ) )
+				.append( join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );
 
 		if ( !referencesPrimaryKey ) {
 			res.append( " (" )
-					.append( String.join( ", ", primaryKey ) )
+					.append( join( ", ", primaryKey ) )
 					.append( ')' );
 		}
 
@@ -3075,9 +3088,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param sqlType The {@link Types} type code.
 	 * @param typeConfiguration The type configuration
 	 * @return The appropriate select clause value fragment.
+	 * @deprecated Use {@link #getSelectClauseNullString(SqlTypedMapping, TypeConfiguration)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return "null";
+	}
+
+	/**
+	 * Given a type mapping, return the expression
+	 * for a literal null value of that type, to use in a {@code select}
+	 * clause.
+	 * <p>
+	 * The {@code select} query will be an element of a {@code UNION}
+	 * or {@code UNION ALL}.
+	 *
+	 * @implNote Some databases require an explicit type cast.
+	 *
+	 * @param sqlTypeMapping The type mapping.
+	 * @param typeConfiguration The type configuration
+	 * @return The appropriate select clause value fragment.
+	 */
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		return getSelectClauseNullString( sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode(), typeConfiguration );
 	}
 
 	/**
@@ -3529,7 +3562,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The sort of {@linkplain TempTableDdlTransactionHandling transaction handling}
 	 * to use when creating or dropping temporary tables.
+	 *
+	 * @deprecated No dialect currently overrides this, so it's obsolete
 	 */
+	@Deprecated(since = "7.0")
 	public TempTableDdlTransactionHandling getTemporaryTableDdlTransactionHandling() {
 		return TempTableDdlTransactionHandling.NONE;
 	}
@@ -3621,7 +3657,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * make use of the Java 1.7 {@link Connection#getSchema()} method.
 	 *
 	 * @return The current schema retrieval SQL
+	 *
+	 * @deprecated Since Hibernate now baselines on Java 17,
+	 * {@link Connection#getSchema()} is always available directly.
+	 * Never used internally.
 	 */
+	@Deprecated
 	public String getCurrentSchemaCommand() {
 		return null;
 	}
@@ -3817,17 +3858,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Does this dialect support {@code nulls first} and {@code nulls last}?
 	 */
 	public boolean supportsNullPrecedence() {
-		return true;
-	}
-
-	/**
-	 * A setting specific to {@link SybaseASEDialect}.
-	 *
-	 * @deprecated This is only called from {@link SybaseASESqlAstTranslator}
-	 *             so it doesn't need to be declared here.
-	 */
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
 		return true;
 	}
 
@@ -4135,7 +4165,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         {@code false} (the default) indicates that locking
 	 *                      should be applied to the main SQL statement.
 	 *
-	 * @since 5.2
+	 * @since 6.0
 	 */
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return false;
@@ -4163,8 +4193,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The modified SQL
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
-		final String hints = String.join( ", ", hintList );
-		return StringHelper.isEmpty( hints ) ? query : getQueryHintString( query, hints);
+		if ( hintList.isEmpty() ) {
+			return query;
+		}
+		else {
+			final String hints = join( ", ", hintList );
+			return isEmpty( hints ) ? query : getQueryHintString( query, hints );
+		}
 	}
 
 	/**
@@ -4747,12 +4782,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Modify the SQL, adding hints or comments, if necessary
+	 * Modify the SQL, adding hints or comments, if necessary.
+	 *
+	 * @see #getQueryHintString(String,List)
+	 * @see #prependComment
 	 */
-	public String addSqlHintOrComment(
-			String sql,
-			QueryOptions queryOptions,
-			boolean commentsEnabled) {
+	public String addSqlHintOrComment(String sql, QueryOptions queryOptions, boolean commentsEnabled) {
 		// Keep this here, rather than moving to Select.
 		// Some Dialects may need the hint to be appended to the very end or beginning
 		// of the finalized SQL statement, so wait until everything is processed.
@@ -4766,7 +4801,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Adds an INDEX query hint as follows:
+	 * Adds an {@code INDEX} query hint as follows:
 	 *
 	 * <pre>
 	 * SELECT *
@@ -4774,18 +4809,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * USE INDEX (hint1, hint2)
 	 * WHERE X=1
 	 * </pre>
+	 *
+	 * @since 7.0
 	 */
-	public static String addQueryHints(String query, String hints) {
-		Matcher matcher = QUERY_PATTERN.matcher( query );
+	public static String addUseIndexQueryHint(String query, String hints) {
+		final Matcher matcher = QUERY_PATTERN.matcher( query );
 		if ( matcher.matches() && matcher.groupCount() > 1 ) {
-			String startToken = matcher.group( 1 );
-			String endToken = matcher.group( 2 );
-
-			return startToken +
-					" use index (" +
-					hints +
-					") " +
-					endToken;
+			final String startToken = matcher.group(1);
+			// Null if there is no join in the query
+			final String joinToken = Objects.toString( matcher.group(2), "" );
+			final String endToken = matcher.group(3);
+			return startToken + " use index (" + hints + ") " + joinToken + endToken;
 		}
 		else {
 			return query;
@@ -5810,7 +5844,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		final String constraint = constraintName == null
+		final String constraint = isBlank( constraintName )
 				? " check (" + checkConstraint.getConstraint() + ")"
 				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
 		return appendCheckConstraintOptions( checkConstraint, constraint );
@@ -5857,6 +5891,182 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsBindingNullForSetObject() {
 		return false;
+	}
+
+	/**
+	 * Whether the FILTER clause for aggregate functions is supported.
+	 */
+	public boolean supportsFilterClause() {
+		// By default, we report false because not many dialects support this
+		return false;
+	}
+
+	/**
+	 * Whether the SQL row constructor is supported.
+	 */
+	public boolean supportsRowConstructor() {
+		return false;
+	}
+
+	/**
+	 * Whether the SQL array constructor is supported.
+	 */
+	public boolean supportsArrayConstructor() {
+		return false;
+	}
+
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return true;
+	}
+
+	public boolean supportsIntersect() {
+		return true;
+	}
+
+	/**
+	 * If the dialect supports using joins in mutation statement subquery
+	 * that could also use columns from the mutation target table
+	 */
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return true;
+	}
+
+	public boolean supportsJoinsInDelete() {
+		return false;
+	}
+
+	public boolean supportsNestedSubqueryCorrelation() {
+		return true;
+	}
+
+	/**
+	 * Whether the SQL cycle clause is supported, which can be used for recursive CTEs.
+	 */
+	public boolean supportsRecursiveCycleClause() {
+		return false;
+	}
+
+	/**
+	 * Whether the SQL cycle clause supports the using sub-clause.
+	 */
+	public boolean supportsRecursiveCycleUsingClause() {
+		return false;
+	}
+
+	/**
+	 * Whether the SQL search clause is supported, which can be used for recursive CTEs.
+	 */
+	public boolean supportsRecursiveSearchClause() {
+		return false;
+	}
+
+	public boolean supportsSimpleQueryGrouping() {
+		return true;
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
+	 * and <code>&ge;</code> operators.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with relational comparison operators; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorGtLtSyntax() {
+		return supportsRowValueConstructorSyntax();
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
+	 * and <code>is not distinct from</code> operators.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with distinct from comparison operators; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
+	}
+
+	/**
+	 * Whether the SQL with clause is supported.
+	 */
+	public boolean supportsWithClause() {
+		return true;
+	}
+
+	/**
+	 * Whether the SQL with clause is supported within a subquery.
+	 */
+	public boolean supportsWithClauseInSubquery() {
+		return supportsWithClause();
+	}
+
+	/**
+	 * Whether the SQL with clause is supported within a CTE.
+	 */
+	public boolean supportsNestedWithClause() {
+		return supportsWithClauseInSubquery();
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with quantified predicates; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return true;
+	}
+
+	/**
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
+	 * does it offer such support in IN lists as well?
+	 * <p>
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax in the IN list; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
+	}
+
+	/**
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
+	 * does it offer such support in IN subqueries as well?
+	 * <p>
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax in the IN subqueries; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return supportsRowValueConstructorSyntaxInInList();
 	}
 
 }

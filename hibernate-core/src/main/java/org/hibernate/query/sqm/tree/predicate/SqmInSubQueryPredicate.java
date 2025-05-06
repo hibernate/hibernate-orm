@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
@@ -105,13 +106,13 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		testExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " in " );
-		subQueryExpression.appendHqlString( sb );
+		hql.append( " in " );
+		subQueryExpression.appendHqlString( hql, context );
 	}
 
 	@Override

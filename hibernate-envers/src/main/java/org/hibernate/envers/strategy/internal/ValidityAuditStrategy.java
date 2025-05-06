@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.strategy.internal;
@@ -695,7 +695,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		public int bind(int index, PreparedStatement statement, SessionImplementor session) throws SQLException {
 			type.nullSafeSet( statement, value, index, session );
-			return type.getColumnSpan( session.getSessionFactory() );
+			return type.getColumnSpan( session.getSessionFactory().getRuntimeMetamodels() );
 		}
 	}
 

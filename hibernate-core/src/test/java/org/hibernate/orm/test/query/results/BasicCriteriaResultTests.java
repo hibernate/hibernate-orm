@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.results;
@@ -49,7 +49,7 @@ public class BasicCriteriaResultTests {
 	public void testBasicSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final SingularPersistentAttribute<? super SimpleEntity, Integer> idAttribute = entityDescriptor.getId( Integer.class );
 
@@ -69,7 +69,7 @@ public class BasicCriteriaResultTests {
 	public void testBasicStatelessSelection(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final SingularPersistentAttribute<? super SimpleEntity, Integer> idAttribute = entityDescriptor.getId( Integer.class );
 
@@ -89,7 +89,7 @@ public class BasicCriteriaResultTests {
 	public void testBasicStatelessSelectionMixedPathRefs(SessionFactoryScope scope) {
 		scope.inStatelessTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final Class<Integer> idType = (Class<Integer>) entityDescriptor.getIdType().getJavaType();
 
@@ -107,7 +107,7 @@ public class BasicCriteriaResultTests {
 	public void testBasicTupleSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final SingularAttribute<? super SimpleEntity, Integer> idAttribute = entityDescriptor.getId( Integer.class );
 			final SingularAttribute<? super SimpleEntity, String> nameAttribute = entityDescriptor.getSingularAttribute( "name", String.class );
@@ -136,7 +136,7 @@ public class BasicCriteriaResultTests {
 	public void testCompositeSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final SingularAttribute<? super SimpleEntity, SimpleComposite> compositeAttribute;
 			compositeAttribute = entityDescriptor.getSingularAttribute( "composite", SimpleComposite.class );
@@ -156,7 +156,7 @@ public class BasicCriteriaResultTests {
 	public void testBasicAndCompositeTuple(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final SingularAttribute<? super SimpleEntity, Integer> idAttribute = entityDescriptor.getId( Integer.class );
 			final SingularAttribute<? super SimpleEntity, SimpleComposite> compositeAttribute = entityDescriptor.getSingularAttribute( "composite", SimpleComposite.class );
@@ -186,7 +186,7 @@ public class BasicCriteriaResultTests {
 	public void testBasicAndCompositeArray(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
-			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getJpaMetamodel();
 			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
 			final SingularAttribute<? super SimpleEntity, Integer> idAttribute = entityDescriptor.getId( Integer.class );
 			final SingularAttribute<? super SimpleEntity, SimpleComposite> compositeAttribute = entityDescriptor.getSingularAttribute( "composite", SimpleComposite.class );

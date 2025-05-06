@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -20,8 +20,21 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.type.OracleBooleanJdbcType;
+import org.hibernate.dialect.type.OracleJdbcHelper;
+import org.hibernate.dialect.type.OracleJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.OracleJsonJdbcType;
+import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
+import org.hibernate.dialect.OracleTypes;
+import org.hibernate.dialect.type.OracleUserDefinedTypeExporter;
+import org.hibernate.dialect.type.OracleXmlJdbcType;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -30,7 +43,7 @@ import org.hibernate.dialect.function.NvlCoalesceEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
+import org.hibernate.community.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
@@ -53,7 +66,9 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -81,6 +96,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
@@ -172,6 +188,17 @@ public class OracleLegacyDialect extends Dialect {
 	private final OracleUserDefinedTypeExporter userDefinedTypeExporter = new OracleUserDefinedTypeExporter( this );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final SequenceSupport oracleSequenceSupport = OracleSequenceSupport.getInstance(this);
+	private final StandardTableExporter oracleTableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( dialect.getVersion().isBefore( 23, 6 ) && jdbcType.isXml() ) {
+				// ORA-00600 when selecting XML columns that have a check constraint was fixed in 23.6
+				return;
+			}
+			super.applyAggregateColumnCheck( buf, aggregateColumn );
+		}
+	};
 
 	public OracleLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
@@ -503,6 +530,8 @@ public class OracleLegacyDialect extends Dialect {
 					return "to_timestamp_tz(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
 				}
 				break;
+			case XML:
+				return "xmlparse(document ?1)";
 		}
 		return super.castPattern(from, to);
 	}
@@ -773,13 +802,6 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
-	protected void initDefaultProperties() {
-		super.initDefaultProperties();
-		String newerVersion = Boolean.toString( getVersion().isSameOrAfter( 12 ) );
-		getDefaultProperties().setProperty( Environment.BATCH_VERSIONED_DATA, newerVersion );
-	}
-
-	@Override
 	public int getDefaultStatementBatchSize() {
 		return 15;
 	}
@@ -1040,6 +1062,11 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public SequenceSupport getSequenceSupport() {
 		return oracleSequenceSupport;
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return oracleTableExporter;
 	}
 
 	@Override
@@ -1384,16 +1411,12 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
-		}
+		return switch ( timeout ) {
+			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case LockOptions.WAIT_FOREVER -> lockString;
+			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1630,6 +1653,53 @@ public class OracleLegacyDialect extends Dialect {
 	@Override
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
+	}
+
+	@Override
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		// It seems it doesn't support it, at least on version 11
+		return false;
+	}
+
+	@Override
+	public boolean supportsRecursiveCycleClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRecursiveSearchClause() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		// Oracle has some limitations, see ORA-32034, so we just report false here for simplicity
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 8, 2 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return getVersion().isSameOrAfter( 9 );
 	}
 
 }

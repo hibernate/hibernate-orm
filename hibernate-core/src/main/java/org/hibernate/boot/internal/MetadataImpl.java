@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -66,6 +65,7 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -164,17 +164,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderService factoryBuilderService = metadataBuildingOptions.getServiceRegistry().requireService( SessionFactoryBuilderService.class );
-		final SessionFactoryBuilderImplementor defaultBuilder = factoryBuilderService.createSessionFactoryBuilder( this, bootstrapContext );
-
-		final ClassLoaderService cls = metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
-		final java.util.Collection<SessionFactoryBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( SessionFactoryBuilderFactory.class );
-
+		final SessionFactoryBuilderImplementor defaultBuilder = getFactoryBuilder();
 		SessionFactoryBuilder builder = null;
 		List<String> activeFactoryNames = null;
-
-		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : discoveredBuilderFactories ) {
-			final SessionFactoryBuilder returnedBuilder = discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
+		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
+			final SessionFactoryBuilder returnedBuilder =
+					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
 				if ( activeFactoryNames == null ) {
 					activeFactoryNames = new ArrayList<>();
@@ -186,21 +181,31 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 		if ( activeFactoryNames != null && activeFactoryNames.size() > 1 ) {
 			throw new HibernateException(
-					"Multiple active SessionFactoryBuilderFactory definitions were discovered : " +
-							String.join(", ", activeFactoryNames)
+					"Multiple active SessionFactoryBuilderFactory definitions were discovered: " +
+							join( ", ", activeFactoryNames )
 			);
 		}
 
-		if ( builder != null ) {
-			return builder;
-		}
+		return builder == null ? defaultBuilder : builder;
+	}
 
-		return defaultBuilder;
+	private Iterable<SessionFactoryBuilderFactory> getSessionFactoryBuilderFactories() {
+		return getClassLoaderService().loadJavaServices( SessionFactoryBuilderFactory.class );
+	}
+
+	private SessionFactoryBuilderImplementor getFactoryBuilder() {
+		return metadataBuildingOptions.getServiceRegistry()
+				.requireService( SessionFactoryBuilderService.class )
+				.createSessionFactoryBuilder( this, bootstrapContext );
+	}
+
+	private ClassLoaderService getClassLoaderService() {
+		return metadataBuildingOptions.getServiceRegistry().requireService( ClassLoaderService.class );
 	}
 
 	@Override
-	public SessionFactory buildSessionFactory() {
-		return getSessionFactoryBuilder().build();
+	public SessionFactoryImplementor buildSessionFactory() {
+		return (SessionFactoryImplementor) getSessionFactoryBuilder().build();
 	}
 
 	@Override
@@ -423,16 +428,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				}
 			}
 			for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
-				if ( userDefinedType instanceof UserDefinedObjectType ) {
-					final UserDefinedObjectType objectType = (UserDefinedObjectType) userDefinedType;
-					if ( objectType.getColumns().size() > 1 ) {
-						final List<Column> objectTypeColumns = columnOrderingStrategy.orderUserDefinedTypeColumns(
-								objectType,
-								this
-						);
-						if ( objectTypeColumns != null ) {
-							objectType.reorderColumns( objectTypeColumns );
-						}
+				if ( userDefinedType instanceof UserDefinedObjectType objectType
+						&& objectType.getColumns().size() > 1 ) {
+					final List<Column> objectTypeColumns =
+							columnOrderingStrategy.orderUserDefinedTypeColumns( objectType, this );
+					if ( objectTypeColumns != null ) {
+						objectType.reorderColumns( objectTypeColumns );
 					}
 				}
 			}
@@ -440,17 +441,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private boolean shouldOrderTableColumns() {
-		final ConfigurationService configurationService = metadataBuildingOptions.getServiceRegistry()
-				.requireService( ConfigurationService.class );
-		final Set<SchemaManagementToolCoordinator.ActionGrouping> groupings = SchemaManagementToolCoordinator.ActionGrouping.interpret(
-				this,
-				configurationService.getSettings()
-		);
+		final ConfigurationService configurationService =
+				metadataBuildingOptions.getServiceRegistry().requireService( ConfigurationService.class );
+		final Set<SchemaManagementToolCoordinator.ActionGrouping> groupings =
+				SchemaManagementToolCoordinator.ActionGrouping.interpret( this,
+						configurationService.getSettings() );
 		if ( groupings.isEmpty() ) {
 			return false;
 		}
 		for ( SchemaManagementToolCoordinator.ActionGrouping grouping : groupings ) {
-			if ( isColumnOrderingRelevant( grouping.getScriptAction() ) || isColumnOrderingRelevant( grouping.getDatabaseAction() ) ) {
+			if ( isColumnOrderingRelevant( grouping.getScriptAction() )
+				|| isColumnOrderingRelevant( grouping.getDatabaseAction() ) ) {
 				return true;
 			}
 		}
@@ -458,14 +459,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private static boolean isColumnOrderingRelevant(Action grouping) {
-		switch ( grouping ) {
-			case CREATE:
-			case CREATE_DROP:
-			case CREATE_ONLY:
-				return true;
-			default:
-				return false;
-		}
+		return switch ( grouping ) {
+			case CREATE, CREATE_DROP, CREATE_ONLY -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -488,15 +485,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+		// must not use BootstrapContext services here
 		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
-
 		assert sessionFactoryServiceRegistry != null;
-
-		final EventListenerRegistry eventListenerRegistry = sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
-		final ConfigurationService cfgService = sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
-
-		for ( Map.Entry<String,Object> entry : cfgService.getSettings().entrySet() ) {
+		final ConfigurationService configurationService =
+				sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService =
+				sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
+		final EventListenerRegistry eventListenerRegistry =
+				sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
+		for ( Map.Entry<String,Object> entry : configurationService.getSettings().entrySet() ) {
 			final String propertyName = entry.getKey();
 			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {
 				final String eventTypeName = propertyName.substring( EVENT_LISTENER_PREFIX.length() + 1 );
@@ -517,8 +515,8 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			@SuppressWarnings("unchecked")
 			T listener = (T) instantiate( listenerImpl, classLoaderService );
 			if ( !eventType.baseListenerInterface().isInstance( listener ) ) {
-				throw new HibernateException( "Event listener '" + listenerImpl  + "' must implement '"
-						+ eventType.baseListenerInterface().getName() + "'");
+				throw new HibernateException( "Event listener '" + listenerImpl
+						+ "' must implement '" + eventType.baseListenerInterface().getName() + "'");
 			}
 			eventListenerGroup.appendListener( listener );
 		}
@@ -554,7 +552,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public org.hibernate.type.Type getIdentifierType(String entityName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
+			throw new MappingException( "Persistent class not known: " + entityName );
 		}
 		return pc.getIdentifier().getType();
 	}
@@ -563,7 +561,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public String getIdentifierPropertyName(String entityName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
+			throw new MappingException( "Persistent class not known: " + entityName );
 		}
 		if ( !pc.hasIdentifierProperty() ) {
 			return null;
@@ -575,14 +573,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	public org.hibernate.type.Type getReferencedPropertyType(String entityName, String propertyName) throws MappingException {
 		final PersistentClass pc = entityBindingMap.get( entityName );
 		if ( pc == null ) {
-			throw new MappingException( "persistent class not known: " + entityName );
+			throw new MappingException( "Persistent class not known: " + entityName );
 		}
-		Property prop = pc.getReferencedProperty( propertyName );
+		final Property prop = pc.getReferencedProperty( propertyName );
 		if ( prop == null ) {
-			throw new MappingException(
-					"property not known: " +
-							entityName + '.' + propertyName
-			);
+			throw new MappingException( "Property not known: " + entityName + '.' + propertyName );
 		}
 		return prop.getType();
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ColumnResult;
 
@@ -20,14 +20,14 @@ public class ColumnResultJpaAnnotation implements ColumnResult {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ColumnResultJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ColumnResultJpaAnnotation(ModelsContext modelContext) {
 		this.type = void.class;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ColumnResultJpaAnnotation(ColumnResult annotation, SourceModelBuildingContext modelContext) {
+	public ColumnResultJpaAnnotation(ColumnResult annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.type = annotation.type();
 	}
@@ -35,7 +35,7 @@ public class ColumnResultJpaAnnotation implements ColumnResult {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ColumnResultJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ColumnResultJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.type = (Class<?>) attributeValues.get( "type" );
 	}

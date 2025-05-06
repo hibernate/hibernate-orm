@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.hqlsql;
@@ -10,7 +10,6 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
-import org.hibernate.query.Order;
 
 import java.util.List;
 
@@ -36,5 +35,5 @@ public abstract class Books {
 	static class Summary { Summary(String title, String publisher, String isbn) {} }
 
 	@HQL("select title, publisher.name, isbn from Book")
-	abstract List<Summary> summarize(Session session, Order<Summary> order);
+	abstract List<Summary> summarize(Session session);
 }

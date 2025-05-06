@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.batch;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -30,6 +31,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 100501, max = 101000)
+@Internal
 public interface JdbcBatchLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc.batch";
 

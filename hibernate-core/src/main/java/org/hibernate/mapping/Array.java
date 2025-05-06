@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -7,15 +7,17 @@ package org.hibernate.mapping;
 import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.usertype.UserCollectionType;
+
+import static org.hibernate.mapping.MappingHelper.classForName;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -47,16 +49,14 @@ public class Array extends List {
 		if ( elementClassName == null ) {
 			final org.hibernate.type.Type elementType = getElement().getType();
 			if ( isPrimitiveArray() ) {
-				return ( (PrimitiveJavaType<?>) ( (BasicType<?>) elementType ).getJavaTypeDescriptor() ).getPrimitiveClass();
+				final JavaType<?> javaTypeDescriptor = ((BasicType<?>) elementType).getJavaTypeDescriptor();
+				return ( (PrimitiveJavaType<?>) javaTypeDescriptor ).getPrimitiveClass();
 			}
 			return elementType.getReturnedClass();
 		}
 		else {
 			try {
-				return getMetadata().getMetadataBuildingOptions()
-						.getServiceRegistry()
-						.requireService( ClassLoaderService.class )
-						.classForName( elementClassName );
+				return classForName( elementClassName, getBuildingContext().getBootstrapContext() );
 			}
 			catch (ClassLoadingException e) {
 				throw new MappingException( e );
@@ -65,7 +65,7 @@ public class Array extends List {
 	}
 
 	@Override
-	public CollectionType getDefaultCollectionType() throws MappingException {
+	public CollectionType getDefaultCollectionType() {
 		return new ArrayType( getRole(), getReferencedPropertyName(), getElementClass() );
 	}
 

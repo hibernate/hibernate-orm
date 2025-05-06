@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -153,21 +154,21 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "case " );
-		fixture.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "case " );
+		fixture.appendHqlString( hql, context );
 		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
-			sb.append( " when " );
-			whenFragment.checkValue.appendHqlString( sb );
-			sb.append( " then " );
-			whenFragment.result.appendHqlString( sb );
+			hql.append( " when " );
+			whenFragment.checkValue.appendHqlString( hql, context );
+			hql.append( " then " );
+			whenFragment.result.appendHqlString( hql, context );
 		}
 
 		if ( otherwise != null ) {
-			sb.append( " else " );
-			otherwise.appendHqlString( sb );
+			hql.append( " else " );
+			otherwise.appendHqlString( hql, context );
 		}
-		sb.append( " end" );
+		hql.append( " end" );
 	}
 
 

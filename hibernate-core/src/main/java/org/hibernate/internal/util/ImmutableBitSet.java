@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
@@ -60,14 +60,13 @@ public class ImmutableBitSet {
 
 	@Override
 	public boolean equals(Object obj) {
-		if ( !( obj instanceof ImmutableBitSet ) ) {
+		if ( !(obj instanceof ImmutableBitSet set) ) {
 			return false;
 		}
 		if ( this == obj ) {
 			return true;
 		}
 
-		final ImmutableBitSet set = (ImmutableBitSet) obj;
 		return Arrays.equals( words, set.words );
 	}
 

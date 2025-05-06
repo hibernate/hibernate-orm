@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -74,20 +74,23 @@ public final class MutableAttributeMappingList implements AttributeMappingsList 
 		this.list.set( i, attributeMapping );
 	}
 
-	private static AttributeMapping asAttributeMapping(final Object o) {
+	private static AttributeMapping asAttributeMapping(final Object object) {
 		//Check for BasicAttributeMapping as it's not an interface and has
 		//a very high likelihood to match; this helps to mitigate JDK-8180450.
-		if ( o instanceof BasicAttributeMapping ) {
-			return (BasicAttributeMapping) o;
+		if ( object instanceof BasicAttributeMapping basicAttributeMapping ) {
+			return basicAttributeMapping;
 		}
-		else {
+		else if ( object instanceof Fetchable fetchable ) {
 			//Alternatively, cast to Fetchable for consistency with most other code:
 			//again this is a likelihood game to mitigate for JDK-8180450;
 			//For the longer term we hope that either JDK-8180450 gets fixed
 			//or this implementation can be deleted (using exclusively the
 			//immutable versions of AttributeMappingsList, which isn't affected by this issue);
 			//ideally both the JDK issue gets fixed and this class gets removed.
-			return ((Fetchable) o).asAttributeMapping();
+			return fetchable.asAttributeMapping();
+		}
+		else {
+			throw new IllegalArgumentException( "Unexpected attribute mapping" );
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.hand.query;
@@ -10,7 +10,6 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -63,7 +62,6 @@ public class EntityReturnClassTests {
 
 	@Test
 	@JiraKey("HHH-18864")
-	@NotImplementedYet
 	public void testAddEntityWithEntityReturn(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			NativeQuery<Speech> query = session.createNativeQuery( "select {s.*} from Speech s", Speech.class );
@@ -75,7 +73,6 @@ public class EntityReturnClassTests {
 
 	@Test
 	@JiraKey("HHH-18864")
-	@NotImplementedYet
 	public void testAddRootWithEntityReturn(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			NativeQuery<Speech> query = session.createNativeQuery( "select {s.*} from Speech s", Speech.class );
@@ -91,7 +88,6 @@ public class EntityReturnClassTests {
 
 	@Test
 	@JiraKey("HHH-18864")
-	@NotImplementedYet
 	public void testAddEntityWithInterfaceReturn(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			NativeQuery<SpeechInterface> query = session.createNativeQuery( "select {s.*} from Speech s", SpeechInterface.class );
@@ -103,7 +99,6 @@ public class EntityReturnClassTests {
 
 	@Test
 	@JiraKey("HHH-18864")
-	@NotImplementedYet
 	public void testAddRootWithInterfaceReturn(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			NativeQuery<SpeechInterface> query = session.createNativeQuery( "select {s.*} from Speech s", SpeechInterface.class );

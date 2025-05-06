@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,14 +19,14 @@ public class OverrideVersionAnnotation implements DialectOverride.Version {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverrideVersionAnnotation(SourceModelBuildingContext modelContext) {
+	public OverrideVersionAnnotation(ModelsContext modelContext) {
 		this.minor = 0;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public OverrideVersionAnnotation(DialectOverride.Version annotation, SourceModelBuildingContext modelContext) {
+	public OverrideVersionAnnotation(DialectOverride.Version annotation, ModelsContext modelContext) {
 		major( annotation.major() );
 		minor( annotation.minor() );
 	}
@@ -34,7 +34,7 @@ public class OverrideVersionAnnotation implements DialectOverride.Version {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OverrideVersionAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public OverrideVersionAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		major( (Integer) attributeValues.get( "major" ) );
 		minor( (Integer) attributeValues.get( "minor" ) );
 	}

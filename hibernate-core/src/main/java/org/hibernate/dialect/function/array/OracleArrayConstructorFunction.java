@@ -1,13 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -31,13 +30,11 @@ public class OracleArrayConstructorFunction extends ArrayConstructorFunction {
 					"Oracle array constructor emulation requires knowledge about the return type, but resolved return type could not be determined"
 			);
 		}
-		final DomainType<?> type = returnType.getSqmType();
-		if ( !( type instanceof BasicPluralType<?, ?> ) ) {
+		if ( !(returnType instanceof BasicPluralType<?, ?> pluralType) ) {
 			throw new SemanticException(
-					"Oracle array constructor emulation requires a basic plural return type, but resolved return type was: " + type
+					"Oracle array constructor emulation requires a basic plural return type, but resolved return type was: " + returnType
 			);
 		}
-		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
 		final String arrayTypeName = DdlTypeHelper.getCastTypeName(
 				pluralType,
 				walker.getSessionFactory().getTypeConfiguration()

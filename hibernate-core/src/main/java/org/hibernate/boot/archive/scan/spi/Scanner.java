@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.scan.spi;
@@ -32,6 +32,10 @@ public interface Scanner {
 	 */
 	ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters params);
 
+	/**
+	 * @deprecated (since 7.0) Not used; no replacement.
+	 */
+	@Deprecated
 	default void setArchiveDescriptorFactory(ArchiveDescriptorFactory archiveDescriptorFactory){
 		throw new UnsupportedOperationException();
 	}

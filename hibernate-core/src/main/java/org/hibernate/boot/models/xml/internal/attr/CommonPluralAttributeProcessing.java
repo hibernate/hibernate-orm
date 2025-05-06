@@ -13,6 +13,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.ListIndexBaseAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyEnumeratedJpaAnnotation;
@@ -28,8 +29,8 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableMemberDetails;
 
 /**
  * @author Marco Belladelli
@@ -210,16 +211,28 @@ public class CommonPluralAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final JaxbOrderColumnImpl jaxbOrderColumn = jaxbPluralAttribute.getOrderColumn();
+		final Integer listIndexBase = jaxbPluralAttribute.getListIndexBase();
 		if ( jaxbOrderColumn != null
-			|| jaxbPluralAttribute.getClassification() == LimitedCollectionClassification.LIST ) {
+				|| listIndexBase != null
+				|| jaxbPluralAttribute.getClassification() == LimitedCollectionClassification.LIST ) {
+			// apply @OrderColumn in any of these cases
 			final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
 					JpaAnnotations.ORDER_COLUMN,
 					xmlDocumentContext.getModelBuildingContext()
 			);
 
 			if ( jaxbOrderColumn != null ) {
+				// apply any explicit config
 				orderColumnAnn.apply( jaxbOrderColumn, xmlDocumentContext );
 			}
+		}
+
+		if ( listIndexBase != null ) {
+			final ListIndexBaseAnnotation annUsage = (ListIndexBaseAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.LIST_INDEX_BASE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			annUsage.value( listIndexBase );
 		}
 	}
 }

@@ -16,6 +16,7 @@
             </many-to-one>
             <one-to-many name="children" mapped-by="parent" target-entity="ListOwner">
                 <order-column name="list_index"/>
+                <list-index-base>1</list-index-base>
                 <cascade>
                     <cascade-all/>
                 </cascade>
@@ -32,6 +33,7 @@
             <basic name="code"/>
             <one-to-many name="lineItems" mapped-by="order">
                 <order-column name="list_index"/>
+                <list-index-base>1</list-index-base>
                 <cascade>
                     <cascade-all/>
                 </cascade>

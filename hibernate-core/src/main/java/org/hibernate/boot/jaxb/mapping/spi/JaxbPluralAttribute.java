@@ -38,6 +38,9 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbOrderColumnImpl getOrderColumn();
 	void setOrderColumn(JaxbOrderColumnImpl value);
 
+	Integer getListIndexBase();
+	void setListIndexBase(Integer value);
+
 	String getSort();
 	void setSort(String value);
 

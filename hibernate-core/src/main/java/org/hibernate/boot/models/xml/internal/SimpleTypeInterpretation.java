@@ -6,6 +6,7 @@ package org.hibernate.boot.models.xml.internal;
 
 import org.hibernate.internal.util.StringHelper;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -74,6 +75,7 @@ public enum SimpleTypeInterpretation {
 	JDBC_TIME( Time.class ),
 	CALENDAR( Calendar.class ),
 	TIME_ZONE( TimeZone.class ),
+	SERIALIZABLE( Serializable.class ),
 
 	PRIMITIVE_BOOLEAN( boolean.class, BOOLEAN ),
 	PRIMITIVE_BYTE( byte.class, BYTE ),

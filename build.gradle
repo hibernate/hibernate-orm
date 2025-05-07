@@ -28,8 +28,6 @@ plugins {
 	id 'org.checkerframework' version '0.6.40'
 	id 'org.hibernate.orm.build.jdks'
 
-	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
 	id 'eclipse'
@@ -59,12 +57,6 @@ tasks.register('publish') {
 	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any publish-related activities to perform"
-}
-
-nexusPublishing {
-	repositories {
-		sonatype()
-	}
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -97,6 +89,3 @@ idea {
 		name = "hibernate-orm"
 	}
 }
-
-
-

@@ -9,25 +9,20 @@ import java.util.Set;
 
 
 public class Tour {
-
-//	@Id
-//	@SequenceGenerator(name="TOUR_SEQ", sequenceName="TOUR_SEQ", initialValue=1, allocationSize=1)
-//	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="TOUR_SEQ")
-	private Long tourID;
-
+	private Integer tourID;
 	private long version;
-
 	private String name;
-
-	/** A List of nodes contained in this tour. */
-//	@OneToMany(targetEntity=Node.class, fetch=FetchType.LAZY, cascade={CascadeType.MERGE, CascadeType.REFRESH}, mappedBy="tour")
-	private Set nodes = new HashSet(0);
+	private Set<Node> nodes = new HashSet<>(0);
 
 	public String getName() {
 		return name;
 	}
 
-	protected void setTourID(Long tourID) {
+	public Integer getTourID() {
+		return tourID;
+	}
+
+	protected void setTourID(Integer tourID) {
 		this.tourID = tourID;
 	}
 
@@ -43,15 +38,11 @@ public class Tour {
 		this.name = name;
 	}
 
-	public Set getNodes() {
+	public Set<Node> getNodes() {
 		return nodes;
 	}
 
-	public void setNodes(Set nodes) {
+	public void setNodes(Set<Node> nodes) {
 		this.nodes = nodes;
-	}
-
-	public Long getTourID() {
-		return tourID;
 	}
 }

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.component.cascading.collection</package>
+
+	<entity class="Definition">
+		<table name="definitions"/>
+		<attributes>
+			<id name="id"/>
+			<basic name="name"/>
+			<one-to-many name="values" mapped-by="definition" fetch="EAGER" orphan-removal="true">
+				<cascade>
+					<cascade-all/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<entity class="Value">
+		<table name="`values`"/>
+		<attributes>
+			<id name="id"/>
+			<many-to-one name="definition">
+				<join-column name="definition_fk"/>
+			</many-to-one>
+			<embedded name="localizedStrings"/>
+		</attributes>
+	</entity>
+
+	<embeddable class="LocalizedStrings" name="true">
+		<attributes>
+			<element-collection name="strings" fetch="EAGER">
+				<map-key-column name="loc"/>
+				<column name="str_val"/>
+				<collection-table name="localized_strings">
+					<join-column name="value_fk"/>
+				</collection-table>
+			</element-collection>
+		</attributes>
+	</embeddable>
+</entity-mappings>
+

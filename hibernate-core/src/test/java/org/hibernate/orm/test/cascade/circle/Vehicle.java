@@ -4,32 +4,52 @@
  */
 package org.hibernate.orm.test.cascade.circle;
 
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
+
 import java.util.HashSet;
 import java.util.Set;
 
 
+@Entity
+@Table(name = "t_vehicles")
 public class Vehicle {
+	@Id
+	@GeneratedValue(generator = "increment")
+	private Integer vehicleID;
 
-//	@Id
-//	@SequenceGenerator(name="TRANSPORT_SEQ", sequenceName="TRANSPORT_SEQ", initialValue=1, allocationSize=1)
-//	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="TRANSPORT_SEQ")
-	private Long vehicleID;
-
+	@Version
+	@Column(name = "vers")
 	private long version;
 
+	@Basic(optional = false)
 	private String name;
 
-	private Set transports = new HashSet();
-
+	@ManyToOne(optional = false)
+	@JoinColumn(name = "route_fk")
 	private Route route;
 
+	@OneToMany(mappedBy = "vehicle", cascade = {CascadeType.MERGE,CascadeType.REFRESH})
+	private Set<Transport> transports = new HashSet<>();
+
+	@Transient
 	private String transientField = "vehicle original value";
 
-	protected void setVehicleID(Long vehicleID) {
+	protected void setVehicleID(Integer vehicleID) {
 		this.vehicleID = vehicleID;
 	}
 
-	public Long getVehicleID() {
+	public Integer getVehicleID() {
 		return vehicleID;
 	}
 
@@ -41,11 +61,11 @@ public class Vehicle {
 		this.version = version;
 	}
 
-	public Set getTransports() {
+	public Set<Transport> getTransports() {
 		return transports;
 	}
 
-	public void setTransports(Set transports) {
+	public void setTransports(Set<Transport> transports) {
 		this.transports = transports;
 	}
 

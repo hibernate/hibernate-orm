@@ -4,14 +4,13 @@
  */
 package org.hibernate.orm.test.cascade;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,24 +23,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Gail Badner
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/Child.hbm.xml",
-				"org/hibernate/orm/test/cascade/DeleteOrphanChild.hbm.xml",
-				"org/hibernate/orm/test/cascade/Parent.hbm.xml"
+				"org/hibernate/orm/test/cascade/Child.xml",
+				"org/hibernate/orm/test/cascade/DeleteOrphanChild.xml",
+				"org/hibernate/orm/test/cascade/Parent.xml"
 		}
 )
 @SessionFactory
 public class BidirectionalOneToManyCascadeTest {
 
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List parents = session.createQuery( "from Parent" ).list();
-					parents.forEach( parent -> session.remove( parent ) );
-				}
-		);
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	/**
@@ -62,7 +57,7 @@ public class BidirectionalOneToManyCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent result = session.get( Parent.class, parent.getId() );
+					Parent result = session.find( Parent.class, parent.getId() );
 					assertEquals( 1, result.getChildren().size() );
 					assertEquals( 0, result.getDeleteOrphanChildren().size() );
 				}
@@ -88,7 +83,7 @@ public class BidirectionalOneToManyCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent result = session.get( Parent.class, parent.getId() );
+					Parent result = session.find( Parent.class, parent.getId() );
 					assertEquals( 1, result.getChildren().size() );
 					assertEquals( 0, result.getDeleteOrphanChildren().size() );
 				}
@@ -115,7 +110,7 @@ public class BidirectionalOneToManyCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent result = session.get( Parent.class, parent.getId() );
+					Parent result = session.find( Parent.class, parent.getId() );
 					assertEquals( 0, result.getChildren().size() );
 					assertEquals( 1, result.getDeleteOrphanChildren().size() );
 				}
@@ -141,7 +136,7 @@ public class BidirectionalOneToManyCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Parent result = session.get( Parent.class, parent.getId() );
+					Parent result = session.find( Parent.class, parent.getId() );
 					assertEquals( 0, result.getChildren().size() );
 					assertEquals( 1, result.getDeleteOrphanChildren().size() );
 				}

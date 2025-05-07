@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.component.cascading.toone</package>
+
+    <entity class="Document">
+        <attributes>
+            <id name="id"/>
+            <many-to-one name="owner">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-remove/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="User">
+        <table name="t_users"/>
+        <attributes>
+            <id name="id"/>
+            <embedded name="personalInfo"/>
+        </attributes>
+    </entity>
+
+    <entity class="Address">
+        <attributes>
+            <id name="id"/>
+            <basic name="street1"/>
+            <basic name="street2"/>
+            <basic name="city"/>
+            <basic name="state"/>
+            <basic name="zipCode"/>
+        </attributes>
+    </entity>
+
+    <embeddable class="PersonalInfo">
+        <attributes>
+            <many-to-one name="homeAddress">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-remove/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </embeddable>
+</entity-mappings>
+
+

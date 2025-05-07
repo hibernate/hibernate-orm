@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.dialect.function;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -15,7 +12,6 @@ import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -25,16 +21,17 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
-
 import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -43,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Christian Beikov
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry
 public class AnsiTrimEmulationFunctionTest  {
 	private static final String trimSource = "a.column";
@@ -51,7 +49,6 @@ public class AnsiTrimEmulationFunctionTest  {
 	private static final String BOTH = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
 
 	@Test
-//	@RequiresDialect( SQLServerDialect.class )
 	public void testBasicSqlServerProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SQLServerDialect();
 		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
@@ -75,7 +72,6 @@ public class AnsiTrimEmulationFunctionTest  {
 	}
 
 	@Test
-//	@RequiresDialect( SybaseDialect.class )
 	public void testBasicSybaseProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SybaseDialect();
 		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
@@ -143,7 +139,7 @@ public class AnsiTrimEmulationFunctionTest  {
 				return null;
 			}
 		} );
-		function.render( walker, sqlAstArguments, (ReturnableType<?>) null, walker );
+		function.render( walker, sqlAstArguments, null, walker );
 		return walker.getSql();
 	}
 

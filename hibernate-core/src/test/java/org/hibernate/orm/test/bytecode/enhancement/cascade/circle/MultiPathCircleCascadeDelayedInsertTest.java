@@ -18,17 +18,11 @@ import org.hibernate.testing.orm.junit.Setting;
 /**
  * @author Gail Badner
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.hbm.xml"
-		}
-)
-@ServiceRegistry(
-		settings = {
-				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "0" ),
-		}
-)
+@ServiceRegistry(settings = {
+		@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		@Setting( name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "0" ),
+})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.xml")
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })

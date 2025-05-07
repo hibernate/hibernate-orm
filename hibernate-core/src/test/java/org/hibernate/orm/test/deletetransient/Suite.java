@@ -13,7 +13,7 @@ import java.util.Set;
 public class Suite {
 	private Long id;
 	private String location;
-	private Set notes = new HashSet();
+	private Set<Note> notes = new HashSet<>();
 
 	public Suite() {
 	}
@@ -38,11 +38,11 @@ public class Suite {
 		this.location = location;
 	}
 
-	public Set getNotes() {
+	public Set<Note> getNotes() {
 		return notes;
 	}
 
-	public void setNotes(Set notes) {
+	public void setNotes(Set<Note> notes) {
 		this.notes = notes;
 	}
 }

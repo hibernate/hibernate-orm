@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.deletetransient</package>
+
+    <entity class="Person">
+        <table name="t_person"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name"/>
+            <one-to-many name="addresses">
+                <join-column name="person_fk"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <many-to-many name="friends">
+                <join-table name="t_friends">
+                    <join-column name="friend_fk1"/>
+                    <inverse-join-column name="friend_fk2"/>
+                </join-table>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Address">
+        <table name="t_address"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="info"/>
+            <one-to-many name="suites" orphan-removal="true">
+                <join-column name="address_fk"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Suite">
+        <table name="t_suite"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="location"/>
+            <one-to-many name="notes" orphan-removal="true">
+                <join-column name="suite_fk"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Note">
+        <table name="t_note"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="description"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>
+

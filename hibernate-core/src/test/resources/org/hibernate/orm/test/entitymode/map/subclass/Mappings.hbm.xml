@@ -4,20 +4,31 @@
   ~ SPDX-License-Identifier: Apache-2.0
   ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
-<!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <entity name="Superclass" metadata-complete="true">
+        <discriminator-value>A</discriminator-value>
+        <discriminator-column name="DISC" discriminator-type="STRING"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <target>Integer</target>
+            </id>
+            <basic name="dataA">
+                <target>String</target>
+            </basic>
+        </attributes>
+    </entity>
 
-<hibernate-mapping>
+    <entity name="Subclass" metadata-complete="true">
+        <extends>Superclass</extends>
+        <discriminator-value>BA</discriminator-value>
+        <attributes>
+            <basic name="dataB">
+                <target>String</target>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>
 
-    <class entity-name="Superclass" discriminator-value="A">
-        <id name="id" type="integer"><generator class="native"/></id>
-        <discriminator column="DISC" type="string" />
-        <property name="dataA" type="string"/>
-
-        <subclass entity-name="Subclass" discriminator-value="B">
-            <property name="dataB" type="string"/>
-        </subclass>
-    </class>
-
-</hibernate-mapping>

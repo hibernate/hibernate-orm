@@ -31,15 +31,9 @@ import static org.junit.Assert.fail;
  */
 
 public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunctionalTestCase {
-
 	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
-
-	@Override
-	public final String[] getMappings() {
-		return new String[] { "connections/Silly.hbm.xml" };
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Silly.class, Other.class };
 	}
 
 
@@ -151,8 +145,11 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 	}
 
 	/**
-	 * Tests to validate that a session holding JDBC resources will not
+	 * Tests to validate that a session holding an enabled filter will not
 	 * be allowed to serialize.
+	 *
+	 * @apiNote This test is really misplaced as it has nothing to do with
+	 * connection-management nor even JDBC at all.
 	 */
 	@Test
 	public final void testEnabledFilterSerialization() throws Throwable {

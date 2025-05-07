@@ -3,54 +3,47 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.function;
+
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.query.Query;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
 import java.math.BigDecimal;
 
-import org.junit.Test;
-
-import org.hibernate.query.Query;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-
 /**
-@author Strong Liu
+ * @author Strong Liu
  */
-@RequiresDialect( MySQLDialect.class )
-public class MySQLRoundFunctionTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	public String[] getMappings() {
-		return new String[]{"dialect/function/Product.hbm.xml"};
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
+@RequiresDialect(MySQLDialect.class)
+@DomainModel(annotatedClasses = Product.class)
+@SessionFactory
+@SuppressWarnings("JUnitMalformedDeclaration")
+class MySQLRoundFunctionTest {
+	@AfterEach
+	public void tearDown(SessionFactoryScope factoryScope) throws Exception {
+		factoryScope.dropData();
 	}
 
 	@Test
-	public void testRoundFunction(){
-		Product product = new Product();
-		product.setLength( 100 );
-		product.setPrice( new BigDecimal( 1.298 ) );
-		Session s=openSession();
-		Transaction tx=s.beginTransaction();
-		s.persist( product );
-		tx.commit();
-		s.close();
-		s=openSession();
-		tx=s.beginTransaction();
-		Query q=s.createQuery( "select round(p.price,1) from Product p" );
-		Object o=q.uniqueResult();
-		assertEquals( BigDecimal.class , o.getClass() );
-		assertEquals( BigDecimal.valueOf( 1.3 ) , o );
-		tx.commit();
-		s.close();
+	void testRoundFunction(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (s) -> {
+			Product product = new Product(1L);
+			product.setLength( 100 );
+			product.setPrice( new BigDecimal( 1.298 ) );
+			s.persist( product );
+		} );
 
+		factoryScope.inTransaction( (s) -> {
+			Query q=s.createQuery( "select round(p.price,1) from Product p" );
+			Object o=q.uniqueResult();
+			Assertions.assertEquals( BigDecimal.class, o.getClass() );
+			Assertions.assertEquals( BigDecimal.valueOf( 1.3 ), o );
+		} );
 	}
 
 }

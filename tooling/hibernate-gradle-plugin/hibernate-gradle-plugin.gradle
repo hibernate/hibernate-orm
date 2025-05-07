@@ -164,8 +164,8 @@ gradle.taskGraph.whenReady { tg ->
 		if ( t.repository == null ) {
 			logger.info( "Task `{}` had null repository", t.path )
 		}
-		else if ( t.repository.name == "sonatype" ) {
-			logger.debug( "Disabling task `{}` because it publishes to Sonatype", t.path )
+		else if ( t.repository.name == "staging" || t.repository.name == "snapshots" ) {
+			logger.debug( "Disabling task `{}` because it publishes to remote Maven repository", t.path )
 			t.enabled = false
 		}
 	}

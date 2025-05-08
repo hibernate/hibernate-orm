@@ -128,138 +128,6 @@ task uploadDocumentation(type:Exec, dependsOn: assembleDocumentation) {
     }
 }
 
-
-/**
- * Configuration of the distribution plugin, used to build release bundle as both ZIP and TGZ
- */
-distributions {
-    main {
-        baseName = 'hibernate-release'
-        contents {
-            from rootProject.file( 'lgpl.txt' )
-            from rootProject.file( 'changelog.txt' )
-            from rootProject.file( 'hibernate_logo.gif' )
-
-            into('lib/required') {
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
-                from parent.project( 'hibernate-core' ).configurations.runtime
-                from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-            }
-
-//            into( 'lib/jpa' ) {
-//                from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-//            }
-
-            into( 'lib/spatial' ) {
-                from(
-                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
-
-            into( 'lib/jpa-metamodel-generator' ) {
-                from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-            }
-
-            into( 'lib/envers' ) {
-                from(
-                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-envers' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-            }
-
-            into( 'lib/osgi' ) {
-                from(
-                        ( parent.project( 'hibernate-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-osgi' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                )
-                from(
-                        parent.project( 'hibernate-osgi' ).extensions.karaf.features.outputFile
-                )
-            }
-
-            // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
-            // due to http://issues.gradle.org/browse/GRADLE-1450
-            [ 'hibernate-agroal', 'hibernate-c3p0', 'hibernate-ehcache', 'hibernate-hikaricp', 'hibernate-jcache', 'hibernate-proxool', 'hibernate-vibur' ].each { feature ->
-                final String shortName = feature.substring( 'hibernate-'.length() )
-// WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
-//                into('lib/optional/' + shortName) {
-                owner.into('lib/optional/' + shortName) {
-                    from (
-                            ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                    + parent.project( feature ).configurations.runtime )
-                                    - parent.project( 'hibernate-core' ).configurations.runtime
-                                    - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                    )
-                }
-            }
-
-            into('documentation') {
-                from documentationDir
-            }
-
-            into( 'project' ) {
-                from ( rootProject.projectDir ) {
-                    exclude( '.git' )
-                    exclude( '.gitignore' )
-                    exclude( 'changelog.txt' )
-                    exclude( 'lgpl.txt' )
-                    exclude( 'hibernate_logo.gif' )
-                    exclude( 'tagRelease.sh' )
-                    exclude( 'gradlew' )
-                    exclude( 'gradlew.bat' )
-                    exclude( 'wrapper/*' )
-                    exclude( '**/.gradle/**' )
-                    exclude( '**/target/**' )
-                    exclude( '.idea' )
-                    exclude( '**/*.ipr' )
-                    exclude( '**/*.iml' )
-                    exclude( '**/*.iws' )
-                    exclude( '**/atlassian-ide-plugin.xml' )
-                    exclude( '**/.classpath' )
-                    exclude( '**/.project' )
-                    exclude( '**/.settings' )
-                    exclude( '**/.nbattrs' )
-                    exclude( '**/out/**' )
-                    exclude( '**/bin/**' )
-                    exclude( 'build/**' )
-                    exclude( '*/build/**' )
-                }
-            }
-        }
-    }
-}
-
-distZip.dependsOn assembleDocumentation
-distTar.dependsOn assembleDocumentation
-distTar {
-    compression = Compression.GZIP
-}
-
-/**
- * "virtual" task for building both types of dist bundles
- */
-task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
-    description = "Builds all release bundles"
-}
-
-configurations {
-    bundles {
-        description = 'Configuration used to group the archives output from the distribution plugin.'
-    }
-}
-
-artifacts {
-    bundles distTar
-    bundles distZip
-}
-
 task releasePerform( dependsOn: [releaseChecks, uploadDocumentation] ) {
     doLast {
         String tag = null
@@ -305,7 +173,7 @@ rootProject.subprojects.each { Project subProject ->
     }
 }
 
-task releasePrepare( dependsOn: [releaseChecks, addVersionCommit, buildBundles, assembleDocumentation] ) {
+task releasePrepare( dependsOn: [releaseChecks, addVersionCommit, assembleDocumentation] ) {
     group = "Release"
     description = "Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one."
     doLast {

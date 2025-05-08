@@ -191,8 +191,6 @@ public interface QueryProducer {
 	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
-	 *
-	 * @apiNote Changes in JPA 3.2 required de-typing this to be compilable with their changes
 	 */
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 

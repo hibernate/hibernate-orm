@@ -60,7 +60,7 @@ public class DynamicTypingTests {
 		verifyBasicAttribute( entityBinding, "theString", StringJavaType.class, SqlTypes.VARCHAR, /*HANA Cloud uses UTF8 by default*/ SqlTypes.NVARCHAR );
 		verifyBasicAttribute( entityBinding, "theInt", IntegerJavaType.class, SqlTypes.INTEGER );
 		verifyBasicAttribute( entityBinding, "theInteger", IntegerJavaType.class, SqlTypes.INTEGER );
-		verifyBasicAttribute( entityBinding, "theUrl", UrlJavaType.class, SqlTypes.VARCHAR );
+		verifyBasicAttribute( entityBinding, "theUrl", UrlJavaType.class, SqlTypes.VARCHAR, /*HANA Cloud uses UTF8 by default*/ SqlTypes.NVARCHAR );
 		verifyBasicAttribute( entityBinding, "theClob", ClobJavaType.class, SqlTypes.CLOB, /*CockroachDB doesn't support CLOBs*/ SqlTypes.VARCHAR );
 		verifyBasicAttribute( entityBinding, "theInstant", InstantJavaType.class, SqlTypes.INSTANT );
 		verifyBasicAttribute( entityBinding, "theDate", JdbcDateJavaType.class, SqlTypes.DATE );

@@ -12,15 +12,9 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'jboss-snapshots-repository'
-        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
-}
-
-dependencies {
-    // NOTE : The version used here is irrelevant in terms of testing the plugin.
-    // We just need a resolvable version
-    implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
 }
 
 sourceSets {
@@ -31,14 +25,20 @@ sourceSets {
     }
 }
 
+dependencies {
+    // NOTE : The version used here is irrelevant in terms of testing the plugin.
+    // We just need a resolvable version
+    mySpecialSourceSetImplementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
+}
+
 hibernate {
     useSameVersion = false
     sourceSet = 'mySpecialSourceSet'
     enhancement {
         enableLazyInitialization.set(true)
-        lazyInitialization = true
+        enableLazyInitialization = true
 
         enableDirtyTracking.set(true)
-        dirtyTracking = true
+        enableDirtyTracking = true
     }
 }

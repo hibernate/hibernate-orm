@@ -1162,7 +1162,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			// it also expects an IllegalArgumentException, so wrap UnknownNamedQueryException
 			return new IllegalArgumentException( e.getMessage(), e );
 		}
-		else if ( e instanceof IllegalArgumentException) {
+		else if ( e instanceof IllegalArgumentException ) {
 			return e;
 		}
 		else {

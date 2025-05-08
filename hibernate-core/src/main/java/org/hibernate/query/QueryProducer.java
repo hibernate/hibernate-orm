@@ -18,9 +18,41 @@ import org.hibernate.query.criteria.JpaCriteriaInsert;
  * {@link jakarta.persistence.EntityManager}. They are declared here to allow reuse by
  * {@code StatelessSession}.
  * <p>
- * Unlike the corresponding operations of {@code EntityManager}, operations for creating untyped
- * instances of {@code Query} are all marked as deprecated. Clients must migrate to the use of
- * the equivalent operations which accept a {@link Class} and return a typed {@code Query}.
+ * Operations like {@link #createQuery(String, Class)}, {@link #createNamedQuery(String, Class)},
+ * and {@link #createNativeQuery(String, Class)} accept an instance indicating the return type
+ * of the query.
+ * <ul>
+ * <li>The result type might be an {@linkplain jakarta.persistence.Entity entity} class, when
+ *     the query returns an entity:
+ * <pre>
+ * List&lt;Book&gt; allBooks =
+ *         session.createNativeQuery("select * from books order by title", Book.class)
+ *                 .getResultList();
+ * </pre>
+ * <li>It might be a {@linkplain org.hibernate.type.descriptor.java.JavaType basic type} like
+ *     {@code String} or {@code Long}:
+ * <pre>
+ * List&lt;String&gt; allTitles =
+ *         session.createNativeQuery("select distinct title from books order by title", String.class)
+ *                 .getResultList();
+ * </pre>
+ * <li>Finally, the result type might be a class used to package the elements of a {@code select}
+ *     list, such as a Java record with an appropriate constructor, {@code Map}, {@code List}, or
+ *     {@code Object[]}:
+ * <pre>
+ * record IsbnAndTitle(String isbn, String title) {}
+ *
+ * List&lt;IsbnAndTitle&gt; allBooks =
+ *         session.createNativeQuery("select isbn, title from books order by title", IsbnAndTitle.class)
+ *                 .getResultList();
+ * </pre>
+ * </ul>
+ * For a {@linkplain #createQuery(CriteriaQuery) criteria query}, the result type is already
+ * determined by {@link CriteriaQuery#getResultType()}.
+ *
+ * @apiNote Unlike the corresponding operations of {@code EntityManager}, operations for creating
+ * untyped instances of {@code Query} are all marked as deprecated. Clients must migrate to the
+ * use of the equivalent operations which accept a {@link Class} and return a typed {@code Query}.
  *
  * @author Steve Ebersole
  */

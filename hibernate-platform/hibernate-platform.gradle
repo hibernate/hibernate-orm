@@ -75,9 +75,3 @@ publishing {
         }
     }
 }
-
-project( ":release" ).getTasks().named( "publishReleaseArtifacts" ).configure {
-    dependsOn tasks.release
-}
-
-tasks.release.dependsOn tasks.publishToSonatype

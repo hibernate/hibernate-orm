@@ -148,7 +148,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( clazz, INSTANTIATOR_PROXY_NAMING_SUFFIX );
 				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 						.with( namingStrategy )
 						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
@@ -210,7 +210,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				fastClass = null;
 			}
 			else {
-				final String className = clazz.getName() + "$" + INSTANTIATOR_PROXY_NAMING_SUFFIX;
+				final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( clazz, INSTANTIATOR_PROXY_NAMING_SUFFIX );
 				fastClass = byteBuddyState.load( clazz, className, (byteBuddy, namingStrategy) -> byteBuddy
 						.with( namingStrategy )
 						.subclass( ReflectionOptimizer.InstantiationOptimizer.class )
@@ -236,7 +236,8 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
 		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
 
-		final String className = clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( propertyNames, getters, setters );
+		final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( clazz, OPTIMIZER_PROXY_NAMING_SUFFIX )
+								+ encodeName( propertyNames, getters, setters );
 		final Class<?> bulkAccessor;
 		if ( className.getBytes( StandardCharsets.UTF_8 ).length >= 0x10000 ) {
 			// The JVM has a 64K byte limit on class name length, so fallback to random name if encoding exceeds that
@@ -305,16 +306,25 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int i = 0; i < getters.length; i++ ) {
 				final Member getter = getters[i];
 				final Member setter = setters[i];
-				boolean found = false;
-				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( getter.getModifiers() ) ) {
-					foreignPackageClassInfo.getters.add( getter );
-					found = true;
+				boolean addPropertyname = false;
+				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz  ) {
+					if( !Modifier.isPublic( getter.getModifiers())) {
+						foreignPackageClassInfo.getters.add( getter );
+					}
+					else {
+						addPropertyname = true;
+					}
 				}
-				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( setter.getModifiers() ) ) {
-					foreignPackageClassInfo.setters.add( setter );
-					found = true;
+				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz  ) {
+					if(!Modifier.isPublic( setter.getModifiers() )) {
+						foreignPackageClassInfo.setters.add( setter );
+					}
+					else {
+						addPropertyname = true;
+					}
+
 				}
-				if ( found ) {
+				if ( addPropertyname ) {
 					foreignPackageClassInfo.propertyNames.add( propertyNames[i] );
 				}
 			}
@@ -328,7 +338,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			final ForeignPackageClassInfo foreignPackageClassInfo = foreignPackageClassInfos.get( i );
 			final Class<?> newSuperClass = superClass;
 
-			final String className = foreignPackageClassInfo.clazz.getName() + "$" + OPTIMIZER_PROXY_NAMING_SUFFIX + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
+			final String className = ByteBuddyProxyHelper.getClassNameWithSuffix( foreignPackageClassInfo.clazz, OPTIMIZER_PROXY_NAMING_SUFFIX ) + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
 			superClass = byteBuddyState.load(
 					foreignPackageClassInfo.clazz,
 					className,
@@ -351,7 +361,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 											TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
 													getterType
 											),
-											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
+											Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
 									)
 									.withParameter( foreignPackageClassInfo.clazz )
 									.intercept(
@@ -377,7 +387,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 							builder = builder.defineMethod(
 											"set_" + setter.getName(),
 											TypeDescription.Generic.VOID,
-											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
+											Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
 									)
 									.withParameter( foreignPackageClassInfo.clazz )
 									.withParameter( setterType )

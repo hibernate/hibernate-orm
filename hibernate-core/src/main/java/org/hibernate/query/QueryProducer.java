@@ -12,15 +12,67 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 
 /**
- * Contract for things that can produce instances of {@link Query} and {@link NativeQuery}.
+ * An object which can produce instances of {@link SelectionQuery} and {@link MutationQuery}.
  * Implementors include {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}.
  * Many operations of the interface have the same or very similar signatures to operations of
  * {@link jakarta.persistence.EntityManager}. They are declared here to allow reuse by
  * {@code StatelessSession}.
  * <p>
- * Operations like {@link #createQuery(String, Class)}, {@link #createNamedQuery(String, Class)},
- * and {@link #createNativeQuery(String, Class)} accept an instance indicating the return type
- * of the query.
+ * There are three fundamental ways to express a query:
+ * <ul>
+ * <li>in <em>Hibernate Query Language</em>, an object-oriented query dialect of SQL which is
+ *     a superset of the <em>Jakarta Persistence Query Language</em>,
+ * <li>in the native SQL dialect of the database, or
+ * <li>using the {@linkplain jakarta.persistence.criteria.CriteriaBuilder Criteria API} defined
+ *     by JPA, along with {@linkplain org.hibernate.query.criteria.HibernateCriteriaBuilder
+ *     extensions} defined by Hibernate.
+ * </ul>
+ * <p>
+ * In each case, the object used to execute the query depends on whether the query is a
+ * selection query or a mutation query.
+ * <ul>
+ * <li>selection queries are executed via an instance of {@link SelectionQuery}, while
+ * <li>mutation queries are executed via an instance of {@link MutationQuery}, but
+ * <li>since JPA makes no such distinction within its API, the type {@link Query} is a mixin of
+ *     {@code SelectionQuery}, {@code MutationQuery}, and {@link jakarta.persistence.TypedQuery}.
+ * </ul>
+ * This interface declares operations for creating instances of these objects.
+ * <table style="width:100%;margin:10px">
+ *     <tr>
+ *         <th style="width:10%"></th>
+ *         <th style="text-align:left;width:45%">Selection</th>
+ *         <th style="text-align:left;width:45%">Mutation</th>
+ *     </tr>
+ *     <tr>
+ *         <td>HQL</td>
+ *         <td>{@link #createSelectionQuery(String,Class)} and
+ *             {@link #createSelectionQuery(String,EntityGraph)}</td>
+ *         <td>{@link #createMutationQuery(String)}</td>
+ *     </tr>
+ *     <tr>
+ *         <td>SQL</td>
+ *         <td>{@link #createNativeQuery(String,Class)} and
+ *             {@link #createNativeQuery(String,String,Class)}</td>
+ *         <td>{@link #createNativeMutationQuery(String)}</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Criteria</td>
+ *         <td>{@link #createSelectionQuery(CriteriaQuery)}</td>
+ *         <td>{@link #createMutationQuery(CriteriaUpdate)},
+ *             {@link #createMutationQuery(CriteriaDelete)}, and
+ *             {@link #createMutationQuery(JpaCriteriaInsert)}</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Named queries</td>
+ *         <td>{@link #createNamedSelectionQuery(String,Class)}</td>
+ *         <td>{@link #createNamedMutationQuery(String)}</td>
+ *     </tr>
+ * </table>
+ * <p>
+ * Operations like {@link #createSelectionQuery(String, Class) createSelectionQuery()},
+ * {@link #createNamedSelectionQuery(String, Class) createNamedSelectionQuery()}, and
+ * {@link #createNativeQuery(String, Class) createNativeQuery()} accept a Java
+ * {@linkplain Class class object} indicating the <em>result type</em> of the query.
  * <ul>
  * <li>The result type might be an {@linkplain jakarta.persistence.Entity entity} class, when
  *     the query returns an entity:

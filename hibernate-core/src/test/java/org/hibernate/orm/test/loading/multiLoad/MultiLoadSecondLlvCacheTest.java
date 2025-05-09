@@ -4,21 +4,19 @@
  */
 package org.hibernate.orm.test.loading.multiLoad;
 
-import java.util.List;
-
-import org.hibernate.CacheMode;
-import org.hibernate.LockOptions;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.stat.Statistics;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.SharedCacheMode;
+import org.hibernate.CacheMode;
+import org.hibernate.LockMode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.stat.Statistics;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,7 +54,7 @@ public class MultiLoadSecondLlvCacheTest extends BaseCoreFunctionalTestCase {
 		inSession( session -> {
 			List<Event> events = session.byMultipleIds( Event.class )
 					.with( CacheMode.NORMAL )
-					.with( LockOptions.NONE )
+					.with( LockMode.NONE )
 					.multiLoad( 1, 2, 3 );
 
 			// check all elements are not null

@@ -4,6 +4,10 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+import org.hibernate.query.Query;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,11 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import jakarta.persistence.FindOption;
-import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.RefreshOption;
-import org.hibernate.query.Query;
 
 import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static java.util.Collections.emptySet;
@@ -51,7 +50,7 @@ import static java.util.Collections.unmodifiableSet;
  *
  * @author Scott Marlow
  */
-public class LockOptions implements FindOption, RefreshOption, Serializable {
+public class LockOptions implements Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
@@ -109,26 +108,22 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	public static final LockOptions UPGRADE = PESSIMISTIC_WRITE;
 
 	/**
-	 * Indicates that the database should not wait at all to acquire
-	 * a pessimistic lock which is not immediately available. This
-	 * has the same effect as {@link LockMode#UPGRADE_NOWAIT}.
-	 *
+	 * @see Timeouts#NO_WAIT_MILLI
+	 * @see Timeouts#NO_WAIT
 	 * @see #getTimeOut
 	 */
-	public static final int NO_WAIT = 0;
+	public static final int NO_WAIT = Timeouts.NO_WAIT_MILLI;
 
 	/**
-	 * Indicates that there is no timeout for the lock acquisition,
-	 * that is, that the database should in principle wait forever
-	 * to obtain the lock.
-	 *
+	 * @see Timeouts#WAIT_FOREVER_MILLI
+	 * @see Timeouts#WAIT_FOREVER
 	 * @see #getTimeOut
 	 */
-	public static final int WAIT_FOREVER = -1;
+	public static final int WAIT_FOREVER = Timeouts.WAIT_FOREVER_MILLI;
 
 	/**
-	 * Indicates that rows which are already locked should be skipped.
-	 *
+	 * @see Timeouts#SKIP_LOCKED_MILLI
+	 * @see Timeouts#SKIP_LOCKED
 	 * @see #getTimeOut()
 	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
 	 */
@@ -137,7 +132,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 
 	private final boolean immutable;
 	private LockMode lockMode;
-	private int timeout;
+	private Timeout timeout;
 	private PessimisticLockScope pessimisticLockScope;
 	private Boolean followOnLocking;
 	private Map<String, LockMode> aliasSpecificLockModes;
@@ -149,7 +144,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	public LockOptions() {
 		immutable = false;
 		lockMode = LockMode.NONE;
-		timeout = WAIT_FOREVER;
+		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
 
@@ -162,7 +157,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	public LockOptions(LockMode lockMode) {
 		immutable = false;
 		this.lockMode = lockMode;
-		timeout = WAIT_FOREVER;
+		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
 
@@ -171,13 +166,27 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * and timeout.
 	 *
 	 * @param lockMode The initial lock mode
-	 * @param timeout  The initial timeout
+	 * @param timeout  The initial timeout, in milliseconds
 	 */
-	public LockOptions(LockMode lockMode, int timeout) {
+	public LockOptions(LockMode lockMode, Timeout timeout) {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
 		pessimisticLockScope = NORMAL;
+	}
+
+	/**
+	 * Construct an instance with the given {@linkplain LockMode mode}
+	 * and timeout.
+	 *
+	 * @param lockMode The initial lock mode
+	 * @param timeout  The initial timeout, in milliseconds
+	 *
+	 * @deprecated Use {@linkplain #LockOptions(LockMode, Timeout)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public LockOptions(LockMode lockMode, int timeout) {
+		this( lockMode, Timeouts.interpretMilliSeconds( timeout ) );
 	}
 
 	/**
@@ -188,11 +197,26 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * @param timeout The initial timeout
 	 * @param scope The initial lock scope
 	 */
-	public LockOptions(LockMode lockMode, int timeout, PessimisticLockScope scope) {
+	public LockOptions(LockMode lockMode, Timeout timeout, PessimisticLockScope scope) {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
 		this.pessimisticLockScope = scope;
+	}
+
+	/**
+	 * Construct an instance with the given {@linkplain LockMode mode},
+	 * timeout, and {@link PessimisticLockScope scope}.
+	 *
+	 * @param lockMode The initial lock mode
+	 * @param timeout The initial timeout, in milliseconds
+	 * @param scope The initial lock scope
+	 *
+	 * @deprecated Use {@linkplain #LockOptions(LockMode, Timeout, PessimisticLockScope)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public LockOptions(LockMode lockMode, int timeout, PessimisticLockScope scope) {
+		this( lockMode, Timeouts.interpretMilliSeconds( timeout ), scope );
 	}
 
 	/**
@@ -201,7 +225,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	private LockOptions(boolean immutable, LockMode lockMode) {
 		this.immutable = immutable;
 		this.lockMode = lockMode;
-		timeout = WAIT_FOREVER;
+		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
 	/**
@@ -212,7 +236,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public boolean isEmpty() {
 		return lockMode == LockMode.NONE
-			&& timeout == WAIT_FOREVER
+			&& timeout == Timeouts.WAIT_FOREVER
 			&& followOnLocking == null
 			&& pessimisticLockScope == NORMAL
 			&& !hasAliasSpecificLockModes();
@@ -370,10 +394,33 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	}
 
 	/**
-	 * The current timeout, a maximum amount of time in milliseconds
-	 * that the database should wait to obtain a pessimistic lock before
-	 * returning an error to the client.
-	 * <p>
+	 * The timeout associated with {@code this} options, defining a maximum
+	 * amount of time that the database should wait to obtain a pessimistic
+	 * lock before returning an error to the client.
+	 */
+	public Timeout getTimeout() {
+		return timeout;
+	}
+
+	/**
+	 * Set the {@linkplain #getTimeout() timeout} associated with {@code this} options.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @see #getTimeout()
+	 */
+	public LockOptions setTimeout(Timeout timeout) {
+		if ( immutable ) {
+			throw new UnsupportedOperationException("immutable global instance of LockMode");
+		}
+		this.timeout = timeout;
+		return this;
+	}
+
+	/**
+	 * The {@linkplain #getTimeout() timeout}, in milliseconds, associated
+	 * with {@code this} options.
+	 * <p/>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.
 	 *
@@ -381,18 +428,15 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 *         {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 */
 	public int getTimeOut() {
-		return timeout;
+		return timeout.milliseconds();
 	}
 
 	/**
-	 * Set the timeout, that is, the maximum amount of time in milliseconds
-	 * that the database should wait to obtain a pessimistic lock before
-	 * returning an error to the client.
-	 * <p>
+	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated with {@code this} options.
+	 * <p/>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.
 	 *
-	 * @param timeout the new timeout setting, in milliseconds
 	 * @return {@code this} for method chaining
 	 *
 	 * @see #getTimeOut
@@ -401,8 +445,7 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 		if ( immutable ) {
 			throw new UnsupportedOperationException("immutable global instance of LockMode");
 		}
-		this.timeout = timeout;
-		return this;
+		return setTimeout( Timeouts.interpretMilliSeconds( timeout ) );
 	}
 
 	/**

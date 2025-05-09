@@ -5,9 +5,11 @@
 package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -52,9 +54,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -1003,6 +1005,42 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout.milliseconds() );
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString( aliases );
+		}
+		else {
+			return getForUpdateString( aliases );
+		}
+	}
+
+	@Override
 	public String getReadLockString(int timeout) {
 		return getWriteLockString( timeout );
 	}
@@ -1017,7 +1055,7 @@ public class HANADialect extends Dialect {
 		if ( timeout > 0 ) {
 			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
 		}
-		else if ( timeout == 0 ) {
+		else if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return getForUpdateNowaitString();
 		}
 		else {

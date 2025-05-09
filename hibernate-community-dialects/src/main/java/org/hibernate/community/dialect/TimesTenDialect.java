@@ -6,8 +6,9 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTimesTenDatabaseImpl;
@@ -260,6 +261,35 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+
+	private String withTimeout(String lockString, Timeout timeout) {
+		return switch ( timeout.milliseconds() ) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
 		return withTimeout( getForUpdateString(), timeout );
 	}
@@ -282,8 +312,8 @@ public class TimesTenDialect extends Dialect {
 
 	private String withTimeout(String lockString, int timeout) {
 		return switch ( timeout ) {
-			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED, LockOptions.WAIT_FOREVER -> lockString;
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
 			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		};
 	}

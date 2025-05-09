@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -285,6 +287,18 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public SqmSelectionQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
 		getDelegate().setHibernateLockMode( lockMode );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQueryImplementor<R> setTimeout(Timeout timeout) {
+		getDelegate().setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getDelegate().setLockScope( lockScope );
 		return this;
 	}
 

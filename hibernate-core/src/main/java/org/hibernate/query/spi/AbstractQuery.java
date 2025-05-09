@@ -21,6 +21,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
@@ -263,15 +264,15 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public LockModeType getLockMode() {
-		getSession().checkOpen( false );
-		return super.getLockMode();
-	}
-
-	@Override
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;
+	}
+
+	@Override
+	public LockModeType getLockMode() {
+		getSession().checkOpen( false );
+		return super.getLockMode();
 	}
 
 	@Override
@@ -284,6 +285,20 @@ public abstract class AbstractQuery<R>
 	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
 		getSession().checkOpen();
 		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getSession().checkOpen();
+		super.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setTimeout(Timeout timeout) {
+		getSession().checkOpen();
+		super.setTimeout( timeout );
 		return this;
 	}
 

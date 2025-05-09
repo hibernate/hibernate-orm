@@ -4,14 +4,11 @@
  */
 package org.hibernate.internal;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Supplier;
-
 import jakarta.persistence.EntityGraph;
-
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MultiIdentifierLoadAccess;
 import org.hibernate.UnknownProfileException;
@@ -21,8 +18,13 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
+import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 
@@ -51,6 +53,25 @@ class MultiIdentifierLoadAccessImpl<T> implements MultiIdentifierLoadAccess<T>, 
 	public MultiIdentifierLoadAccessImpl(SharedSessionContractImplementor session, EntityPersister entityPersister) {
 		this.session = session;
 		this.entityPersister = entityPersister;
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public MultiIdentifierLoadAccess<T> with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
 	}
 
 	@Override

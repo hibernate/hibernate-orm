@@ -4,31 +4,14 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.hibernate.LockOptions;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2GetObjectExtractor;
-import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -49,6 +32,7 @@ import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -70,9 +54,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -118,7 +102,23 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -782,15 +782,29 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_SHARE_SKIP_LOCKED_SQL
+				: FOR_SHARE_SQL;
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_SHARE_SKIP_LOCKED_SQL
 				: FOR_SHARE_SQL;
 	}

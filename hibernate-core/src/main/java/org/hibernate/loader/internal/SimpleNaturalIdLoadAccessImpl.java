@@ -11,7 +11,10 @@ import java.util.Optional;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
@@ -50,6 +53,18 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	@Override
 	public boolean isSynchronizationEnabled() {
 		return super.isSynchronizationEnabled();
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		//noinspection unchecked
+		return (SimpleNaturalIdLoadAccess<T>) super.with( lockMode, lockScope );
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> with(Timeout timeout) {
+		//noinspection unchecked
+		return (SimpleNaturalIdLoadAccess<T>) super.with( timeout );
 	}
 
 	@Override

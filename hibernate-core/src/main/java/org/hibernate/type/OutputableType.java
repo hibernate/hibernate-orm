@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query;
+package org.hibernate.type;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.BindableType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**

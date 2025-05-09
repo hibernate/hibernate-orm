@@ -15,7 +15,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;

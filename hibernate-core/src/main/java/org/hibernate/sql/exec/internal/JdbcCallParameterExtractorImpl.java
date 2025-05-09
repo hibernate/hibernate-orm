@@ -8,7 +8,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 
 /**

@@ -30,10 +30,7 @@ import org.hibernate.type.BasicTypeReference;
  * <p>
  * Unless explicitly specified, the ProcedureCall is assumed to follow the
  * procedure call syntax.  To explicitly specify that this should be a function
- * call, use {@link #markAsFunctionCall}.  JPA users could either:<ul>
- *     <li>use {@code storedProcedureQuery.unwrap( ProcedureCall.class }.markAsFunctionCall()</li>
- *     <li>set the {@link #FUNCTION_RETURN_TYPE_HINT} hint (avoids casting to Hibernate-specific classes)</li>
- * </ul>
+ * call, use {@link #markAsFunctionCall}.
  * <p>
  * When using function-call syntax:<ul>
  *     <li>parameters must be registered by position (not name)</li>
@@ -55,11 +52,6 @@ import org.hibernate.type.BasicTypeReference;
  */
 public interface ProcedureCall
 		extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery, AutoCloseable {
-	/**
-	 * The hint key (for use with JPA's "hint system") indicating the function's return JDBC type code
-	 * (aka, {@link java.sql.Types} code)
-	 */
-	String FUNCTION_RETURN_TYPE_HINT = "hibernate.procedure.function_return_jdbc_type_code";
 
 	/**
 	 * Get the name of the stored procedure (or function) to be called.
@@ -282,4 +274,12 @@ public interface ProcedureCall
 
 	@Override
 	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
+
+	/**
+	 * The hint key indicating the function's return {@linkplain java.sql.Types JDBC type code}.
+	 *
+	 * @deprecated This hint no longer has any effect. Use {@link #markAsFunctionCall(int)}.
+	 */
+	@Deprecated(since="7", forRemoval = true)
+	String FUNCTION_RETURN_TYPE_HINT = "hibernate.procedure.function_return_jdbc_type_code";
 }

@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 /**
  * A function for producing an {@link Expression} from a {@link NavigablePath} for a {@link TableGroup} and {@link SelectableMapping}.
  */
-public class SelectableMappingExpressionConverter implements Function<SemanticQueryWalker, Expression> {
+public class SelectableMappingExpressionConverter implements Function<SemanticQueryWalker<?>, Expression> {
 
 	private final NavigablePath navigablePath;
 	private final SelectableMapping selectableMapping;
@@ -30,11 +30,11 @@ public class SelectableMappingExpressionConverter implements Function<SemanticQu
 		this.selectableMapping = selectableMapping;
 	}
 
-	public static SqmSelection<Object> forSelectableMapping(SqmFrom<?, ?> from, SelectableMapping selectableMapping) {
+	public static <T> SqmSelection<T> forSelectableMapping(SqmFrom<?, T> from, SelectableMapping selectableMapping) {
 		return new SqmSelection<>(
 				new SqmSelfRenderingExpression<>(
 						new SelectableMappingExpressionConverter( from.getNavigablePath(), selectableMapping ),
-						(SqmExpressible) selectableMapping.getJdbcMapping(),
+						(SqmExpressible<T>) selectableMapping.getJdbcMapping(),
 						from.nodeBuilder()
 				),
 				from.nodeBuilder()

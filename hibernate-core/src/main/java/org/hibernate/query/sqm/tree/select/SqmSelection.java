@@ -10,6 +10,8 @@ import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
 /**
  * Represents an individual selection within a select clause.
  *
@@ -67,5 +69,18 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 		if ( alias != null ) {
 			hql.append( " as " ).append( alias );
 		}
+	}
+
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmSelection<?> that
+			&& Objects.equals( this.selectableNode, that.selectableNode )
+			&& Objects.equals( this.alias, that.alias );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( selectableNode, alias );
 	}
 }

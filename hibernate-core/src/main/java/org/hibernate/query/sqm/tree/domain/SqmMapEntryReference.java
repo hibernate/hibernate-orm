@@ -4,12 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -19,8 +15,12 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 
 /**
@@ -138,6 +138,18 @@ public class SqmMapEntryReference<K,V>
 		hql.append( "entry(" );
 		mapPath.appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmMapEntryReference<?, ?> that
+			&& Objects.equals( mapPath, that.mapPath )
+			&& Objects.equals( explicitAlias, that.explicitAlias );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( mapPath, explicitAlias );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

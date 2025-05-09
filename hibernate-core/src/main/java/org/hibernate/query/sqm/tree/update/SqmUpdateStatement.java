@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.update;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -79,7 +80,7 @@ public class SqmUpdateStatement<T>
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						!nodeBuilder.isJpaQueryComplianceEnabled(),
 						nodeBuilder
 				),
@@ -287,7 +288,22 @@ public class SqmUpdateStatement<T>
 		SqmFromClause.appendJoins( root, hql, context );
 		SqmFromClause.appendTreatJoins( root, hql, context );
 		setClause.appendHqlString( hql, context );
-
 		super.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object node) {
+		return node instanceof SqmUpdateStatement<?> that
+			&& super.equals( node )
+			&& this.versioned == that.versioned
+			&& Objects.equals( this.setClause, that.setClause )
+			&& Objects.equals( this.getTarget(), that.getTarget() )
+			&& Objects.equals( this.getWhereClause(), that.getWhereClause() )
+			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( versioned, setClause, getTarget(), getWhereClause(), getCteStatements() );
 	}
 }

@@ -34,7 +34,7 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	public SqmSortSpecification(
-				SqmExpression sortExpression,
+				SqmExpression<?> sortExpression,
 				SortDirection sortOrder,
 				Nulls nullPrecedence,
 				boolean ignoreCase) {
@@ -141,19 +141,15 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object other) {
+		if ( this == other ) {
 			return true;
 		}
-		else if ( !(o instanceof SqmSortSpecification that) ) {
-			return false;
-		}
-		else {
-			// used in SqmInterpretationsKey.equals()
-			return Objects.equals( sortExpression, that.sortExpression )
-				&& sortOrder == that.sortOrder
-				&& nullPrecedence == that.nullPrecedence;
-		}
+		// used in SqmInterpretationsKey.equals()
+		return other instanceof SqmSortSpecification that
+			&& Objects.equals( this.sortExpression, that.sortExpression )
+			&& this.sortOrder == that.sortOrder
+			&& this.nullPrecedence == that.nullPrecedence;
 	}
 
 	@Override

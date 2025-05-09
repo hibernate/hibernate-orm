@@ -17,10 +17,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  * @author Steve Ebersole
  */
 public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
-	private final Function<SemanticQueryWalker, Expression> renderer;
+	private final Function<SemanticQueryWalker<?>, Expression> renderer;
 
 	public SqmSelfRenderingExpression(
-			Function<SemanticQueryWalker, Expression> renderer,
+			Function<SemanticQueryWalker<?>, Expression> renderer,
 			SqmExpressible<T> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
@@ -51,4 +51,6 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		throw new UnsupportedOperationException();
 	}
+
+	//TODO: what is a correct impl of equals() / hashCode() here?
 }

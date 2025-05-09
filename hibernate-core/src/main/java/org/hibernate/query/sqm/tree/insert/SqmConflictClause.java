@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaConflictUpdateAction;
@@ -211,5 +212,19 @@ public class SqmConflictClause<T> implements SqmVisitableNode, JpaConflictClause
 			sb.append( '.' );
 		}
 		sb.append( path.getReferencedPathSource().getPathName() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmConflictClause<?> that
+			&& Objects.equals( excludedRoot, that.excludedRoot )
+			&& Objects.equals( constraintName, that.constraintName )
+			&& Objects.equals( constraintPaths, that.constraintPaths )
+			&& Objects.equals( updateAction, that.updateAction );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( excludedRoot, constraintName, constraintPaths, updateAction );
 	}
 }

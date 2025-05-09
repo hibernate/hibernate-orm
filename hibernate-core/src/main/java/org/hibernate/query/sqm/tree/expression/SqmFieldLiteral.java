@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.hibernate.QueryException;
 import org.hibernate.query.criteria.JpaSelection;
@@ -116,11 +117,8 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		if ( expressible == this ) {
-			return fieldJavaType;
-		}
+		return expressible == this ? fieldJavaType : expressible.getExpressibleJavaType();
 
-		return expressible.getExpressibleJavaType();
 	}
 
 	@Override
@@ -141,6 +139,17 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		SqmLiteral.appendHqlString( hql, getJavaTypeDescriptor(), getValue() );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFieldLiteral<?> that
+			&& Objects.equals( value, that.value );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( value );
 	}
 
 	@Override

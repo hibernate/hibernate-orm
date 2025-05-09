@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.spi;
 
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -23,6 +24,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 /**
  * @author Steve Ebersole
  */
+@Internal
 public class SqmCreationHelper {
 
 	/**
@@ -39,17 +41,38 @@ public class SqmCreationHelper {
 	private static final AtomicLong UNIQUE_ID_COUNTER = new AtomicLong();
 
 	public static NavigablePath buildRootNavigablePath(String base, String alias) {
+		// call to determineAlias() currently prevents caching certain plans
 		return new NavigablePath( base, determineAlias( alias ) );
 	}
 
 	public static NavigablePath buildSubNavigablePath(NavigablePath lhs, String base, String alias) {
+		// call to determineAlias() currently prevents caching certain plans
 		return lhs.append( base, determineAlias( alias ) );
 	}
 
+	/**
+	 * DO NOT USE ME
+	 *
+	 * @deprecated This method returns a globally-unique alias which
+	 * introduces a temporal dependence in the query interpretation
+	 * process, leading to misses on the query interpretation cache.
+	 * Aliases only need to be unique in the scope of a given query,
+	 * and so alias generation should be contextual to the query.
+	 */
+	@Deprecated(since = "7")
 	public static String acquireUniqueAlias() {
 		return Long.toString(UNIQUE_ID_COUNTER.incrementAndGet());
 	}
 
+	/**
+	 * DO NOT USE ME
+	 *
+	 * @deprecated When the argument is null, this method returns a
+	 * globally-unique alias which introduces a temporal dependence
+	 * in the query interpretation process, leading to misses on the
+	 * query interpretation cache.
+	 */
+	@Deprecated(since = "7")
 	public static String determineAlias(String alias) {
 		// Make sure we always create a unique alias, otherwise we might use a wrong table group for the same join
 		if ( alias == null ) {

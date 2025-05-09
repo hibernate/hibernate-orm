@@ -16,10 +16,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.query.SynchronizeableQuery;
-import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.procedure.ProcedureParameter;
-import org.hibernate.query.named.NameableQuery;
 import org.hibernate.type.BasicTypeReference;
 
 /**
@@ -56,7 +54,7 @@ import org.hibernate.type.BasicTypeReference;
  * @author Steve Ebersole
  */
 public interface ProcedureCall
-		extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery, NameableQuery, AutoCloseable {
+		extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery, AutoCloseable {
 	/**
 	 * The hint key (for use with JPA's "hint system") indicating the function's return JDBC type code
 	 * (aka, {@link java.sql.Types} code)
@@ -245,9 +243,6 @@ public interface ProcedureCall
 
 	@Override
 	ProcedureCall addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) throws MappingException;
-
-	@Override
-	NamedCallableQueryMemento toMemento(String name);
 
 	@Override
 	ProcedureCall setHint(String hintName, Object value);

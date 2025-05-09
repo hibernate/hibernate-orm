@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.BasicTypeReference;
@@ -23,7 +24,7 @@ import jakarta.persistence.TemporalType;
 /**
  * @author Steve Ebersole
  */
-public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImplementor<R> {
+public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuery, QueryImplementor<R> {
 	@Override
 	default List<R> getResultList() {
 		return list();
@@ -93,4 +94,6 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	@Override
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
+	@Override
+	NamedCallableQueryMemento toMemento(String name);
 }

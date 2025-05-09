@@ -4,9 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
-import java.util.Collections;
-
-import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
@@ -76,7 +74,7 @@ public class LockExceptionTests extends AbstractJPATest {
 												Item.class,
 												item.getId(),
 												LockModeType.PESSIMISTIC_WRITE,
-												Collections.singletonMap( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
+												Timeouts.NO_WAIT
 										);
 										fail( "Expecting a failure" );
 									}
@@ -118,7 +116,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										secondSession.refresh(
 												item2,
 												LockModeType.PESSIMISTIC_WRITE,
-												Collections.singletonMap( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
+												Timeouts.NO_WAIT
 										);
 										fail( "Expecting a failure" );
 									}
@@ -156,11 +154,11 @@ public class LockExceptionTests extends AbstractJPATest {
 								secondSession -> {
 									try {
 										// generally speaking we should be able to read the row
-										Item item2 = secondSession.get( Item.class, item.getId() );
+										Item item2 = secondSession.find( Item.class, item.getId() );
 										secondSession.lock(
 												item2,
 												LockModeType.PESSIMISTIC_WRITE,
-												Collections.singletonMap( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
+												Timeouts.NO_WAIT
 										);
 										fail( "Expecting a failure" );
 									}

@@ -2212,7 +2212,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param timeout the timeout
 	 * @return The appropriate {@code for update} fragment.
 	 */
-	private String getForUpdateString(LockMode lockMode, int timeout) {
+	public String getForUpdateString(LockMode lockMode, int timeout) {
 		return switch (lockMode) {
 			case PESSIMISTIC_READ -> getReadLockString( timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );

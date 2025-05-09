@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.locking;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.query.Query;
 
 /**
@@ -17,9 +16,7 @@ public class UpgradeSkipLockedTest
 
 	@Override
 	protected void applySkipLocked(Query query) {
-		query.setLockOptions(
-			new LockOptions( lockMode() ).setFollowOnLocking( false )
-		);
+		query.setHibernateLockMode( lockMode() ).setFollowOnLocking( false );
 	}
 
 	@Override

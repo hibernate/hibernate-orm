@@ -4,22 +4,20 @@
  */
 package org.hibernate.orm.test.ops.genericApi;
 
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.Table;
-
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.annotations.GenericGenerator;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		annotatedClasses = BasicGetLoadAccessTest.User.class
 )
@@ -37,11 +36,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class BasicGetLoadAccessTest {
 
 	@AfterEach
-	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from User" ).executeUpdate()
-		);
+	public void tearDown(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
@@ -54,21 +50,20 @@ public class BasicGetLoadAccessTest {
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// test `get` access
+		// test `find` access
 		scope.inTransaction(
 				session ->
-						session.get( User.class, 1 )
-		);
-
-
-		scope.inTransaction(
-				session ->
-						session.get( User.class, 1, LockMode.PESSIMISTIC_WRITE )
+						session.find( User.class, 1 )
 		);
 
 		scope.inTransaction(
 				session ->
-						session.get( User.class, 1, LockOptions.UPGRADE )
+						session.find( User.class, 1, LockMode.PESSIMISTIC_WRITE )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.find( User.class, 1, LockModeType.PESSIMISTIC_WRITE )
 		);
 
 		scope.inTransaction(
@@ -78,11 +73,11 @@ public class BasicGetLoadAccessTest {
 
 		scope.inTransaction(
 				session ->
-						session.byId( User.class ).with( LockOptions.UPGRADE ).load( 1 )
+						session.byId( User.class ).with( LockMode.PESSIMISTIC_WRITE ).load( 1 )
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// test `load` access
+		// test `getReference` access
 		scope.inTransaction(
 				session ->
 						session.getReference( User.class, 1 )
@@ -90,12 +85,7 @@ public class BasicGetLoadAccessTest {
 
 		scope.inTransaction(
 				session ->
-						session.get( User.class, 1, LockMode.PESSIMISTIC_WRITE )
-		);
-
-		scope.inTransaction(
-				session ->
-						session.get( User.class, 1, LockOptions.UPGRADE )
+						session.find( User.class, 1, LockMode.PESSIMISTIC_WRITE )
 		);
 
 		scope.inTransaction(
@@ -105,7 +95,7 @@ public class BasicGetLoadAccessTest {
 
 		scope.inTransaction(
 				session ->
-						session.byId( User.class ).with( LockOptions.UPGRADE ).getReference( 1 )
+						session.byId( User.class ).with( LockMode.PESSIMISTIC_WRITE ).getReference( 1 )
 		);
 	}
 
@@ -164,7 +154,6 @@ public class BasicGetLoadAccessTest {
 
 		@Id
 		@GeneratedValue(generator = "increment")
-		@GenericGenerator(name = "increment", strategy = "increment")
 		public Integer getId() {
 			return id;
 		}

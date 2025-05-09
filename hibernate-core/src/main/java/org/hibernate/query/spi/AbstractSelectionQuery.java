@@ -16,6 +16,8 @@ import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.ScrollableResults;
@@ -437,6 +439,18 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		getLockOptions().setLockMode( lockMode );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setTimeout(Timeout timeout) {
+		getLockOptions().setTimeOut( timeout.milliseconds() );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setLockScope(PessimisticLockScope lockScope) {
+		getLockOptions().setLockScope( lockScope );
 		return this;
 	}
 

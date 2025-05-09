@@ -8,7 +8,10 @@ import java.util.List;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
@@ -41,6 +44,25 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	public NaturalIdMultiLoadAccessStandard(EntityPersister entityDescriptor, SharedSessionContractImplementor session) {
 		this.entityDescriptor = entityDescriptor;
 		this.session = session;
+	}
+
+	@Override
+	public NaturalIdMultiLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public NaturalIdMultiLoadAccess<T> with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
 	}
 
 	@Override

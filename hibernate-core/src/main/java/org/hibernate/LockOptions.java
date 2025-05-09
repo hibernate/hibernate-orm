@@ -109,26 +109,22 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	public static final LockOptions UPGRADE = PESSIMISTIC_WRITE;
 
 	/**
-	 * Indicates that the database should not wait at all to acquire
-	 * a pessimistic lock which is not immediately available. This
-	 * has the same effect as {@link LockMode#UPGRADE_NOWAIT}.
-	 *
+	 * @see Timeouts#NO_WAIT_MILLI
+	 * @see Timeouts#NO_WAIT
 	 * @see #getTimeOut
 	 */
-	public static final int NO_WAIT = 0;
+	public static final int NO_WAIT = Timeouts.NO_WAIT_MILLI;
 
 	/**
-	 * Indicates that there is no timeout for the lock acquisition,
-	 * that is, that the database should in principle wait forever
-	 * to obtain the lock.
-	 *
+	 * @see Timeouts#WAIT_FOREVER_MILLI
+	 * @see Timeouts#WAIT_FOREVER
 	 * @see #getTimeOut
 	 */
-	public static final int WAIT_FOREVER = -1;
+	public static final int WAIT_FOREVER = Timeouts.WAIT_FOREVER_MILLI;
 
 	/**
-	 * Indicates that rows which are already locked should be skipped.
-	 *
+	 * @see Timeouts#SKIP_LOCKED_MILLI
+	 * @see Timeouts#SKIP_LOCKED
 	 * @see #getTimeOut()
 	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
 	 */

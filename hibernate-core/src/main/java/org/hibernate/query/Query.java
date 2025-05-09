@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -357,7 +359,10 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @return The {@link LockOptions} currently in effect
 	 *
 	 * @see LockOptions
+	 *
+	 * @deprecated To be removed with no replacement - this is an SPI/internal concern.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
 	LockOptions getLockOptions();
 
@@ -375,7 +380,12 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getLockOptions()
+	 *
+	 * @deprecated Use one of {@linkplain #setLockMode(LockModeType)},
+	 * {@linkplain #setHibernateLockMode}, {@linkplain #setLockScope}
+	 * and/or {@linkplain #setTimeout} instead.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	Query<R> setLockOptions(LockOptions lockOptions);
 
 	/**
@@ -398,6 +408,24 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 */
 	@Override
 	Query<R> setLockMode(String alias, LockMode lockMode);
+
+	/**
+	 * Apply a timeout to the corresponding database query.
+	 *
+	 * @param timeout The timeout to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setTimeout(Timeout timeout);
+
+	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setLockScope(PessimisticLockScope lockScope);
 
 	/**
 	 * Set a {@link TupleTransformer}.

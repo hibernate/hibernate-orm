@@ -6,7 +6,7 @@ package org.hibernate.metamodel.model.domain;
 
 import jakarta.persistence.metamodel.BasicType;
 
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 
 /**
  * Hibernate extension to the JPA {@link BasicType} contract.

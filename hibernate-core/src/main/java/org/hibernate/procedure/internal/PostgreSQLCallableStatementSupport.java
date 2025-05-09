@@ -11,7 +11,7 @@ import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;

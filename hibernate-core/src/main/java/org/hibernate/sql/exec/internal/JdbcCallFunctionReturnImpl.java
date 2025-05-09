@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.exec.internal;
 
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
 
 import jakarta.persistence.ParameterMode;

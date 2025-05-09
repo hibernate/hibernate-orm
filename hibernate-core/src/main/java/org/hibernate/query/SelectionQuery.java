@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -27,13 +28,11 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
-import org.hibernate.engine.profile.DefaultFetchProfile;
 import org.hibernate.graph.GraphSemantic;
 
 /**
@@ -95,9 +94,10 @@ import org.hibernate.graph.GraphSemantic;
  * </ul>
  * <p>
  * The special built-in fetch profile named
- * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds a fetch join for
- * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
- * {@code @OneToOne} association belonging to an entity returned by the query.
+ * {@value org.hibernate.engine.profile.DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE}
+ * adds a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
+ * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
+ * returned by the query.
  * <p>
  * Finally, three alternative approaches to pagination are available:
  * <ol>
@@ -146,8 +146,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Returns scrollable access to the query results, using the
-	 * {@linkplain Dialect#defaultScrollMode() default scroll mode
-	 * of the SQL dialect.}
+	 * {@linkplain org.hibernate.dialect.Dialect#defaultScrollMode
+	 * default scroll mode of the SQL dialect.}
 	 *
 	 * @see #scroll(ScrollMode)
 	 */

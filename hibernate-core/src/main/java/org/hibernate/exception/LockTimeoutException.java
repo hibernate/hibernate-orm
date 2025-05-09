@@ -21,6 +21,7 @@ import java.sql.SQLException;
  *
  * @author Steve Ebersole
  *
+ * @see jakarta.persistence.Timeout
  * @see org.hibernate.LockOptions#getTimeOut
  * @see org.hibernate.LockOptions#setTimeOut
  * @see jakarta.persistence.LockTimeoutException

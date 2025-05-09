@@ -9,8 +9,11 @@ import java.util.Set;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
@@ -62,6 +65,24 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 	public LockOptions getLockOptions() {
 		return lockOptions;
+	}
+
+	protected Object with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+
+	protected Object with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
 	}
 
 	public Object with(EntityGraph<T> graph, GraphSemantic semantic) {

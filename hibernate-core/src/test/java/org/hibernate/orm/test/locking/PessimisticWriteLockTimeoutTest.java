@@ -4,15 +4,14 @@
  */
 package org.hibernate.orm.test.locking;
 
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.query.Query;
+import jakarta.persistence.LockModeType;
 import org.hibernate.Session;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-
+import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -59,19 +58,16 @@ public class PessimisticWriteLockTimeoutTest
 	@RequiresDialect(OracleDialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(SQLServerDialect.class)
-	public void testNoWait()
-			throws NoSuchFieldException, IllegalAccessException {
+	public void testNoWait() {
 
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		try {
-			session.createQuery(
-				"select a from A a", A.class )
-			.unwrap( Query.class )
-			.setLockOptions(
-				new LockOptions( LockMode.PESSIMISTIC_WRITE )
-			.setTimeOut( LockOptions.NO_WAIT ) )
-			.list();
+			session.createQuery( "select a from A a", A.class )
+					.unwrap( Query.class )
+					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+					.setTimeout( Timeouts.NO_WAIT )
+					.list();
 
 			String lockingQuery = sqlStatementInterceptor.getSqlQueries().getLast();
 			assertTrue( lockingQuery.toLowerCase().contains( "nowait") );
@@ -85,19 +81,15 @@ public class PessimisticWriteLockTimeoutTest
 	@Test
 	@RequiresDialect(OracleDialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
-	public void testSkipLocked()
-			throws NoSuchFieldException, IllegalAccessException {
+	public void testSkipLocked() {
 
 		Session session = sessionFactory().openSession();
 		session.beginTransaction();
 		try {
-			session.createQuery(
-				"select a from A a", A.class )
-			.unwrap( Query.class )
-			.setLockOptions(
-				new LockOptions( LockMode.PESSIMISTIC_WRITE )
-			.setTimeOut( LockOptions.SKIP_LOCKED ) )
-			.list();
+			session.createQuery("select a from A a", A.class )
+					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
+					.setTimeout( Timeouts.SKIP_LOCKED )
+					.list();
 
 			String lockingQuery = sqlStatementInterceptor.getSqlQueries().getLast();
 			assertTrue( lockingQuery.toLowerCase().contains( "skip locked") );

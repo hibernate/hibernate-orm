@@ -169,6 +169,7 @@ pipeline {
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
+					env.JRELEASER_DRY_RUN = params.RELEASE_DRY_RUN
 
 					// Determine version id to check if Jira version exists
 					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"
@@ -194,7 +195,7 @@ pipeline {
 									// Increase the amount of memory for this part since asciidoctor doc rendering consumes a lot of metaspace
 									"GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'"
 							]) {
-								sh ".release/scripts/prepare-release.sh -b ${env.GIT_BRANCH} -d ${env.DEVELOPMENT_VERSION} ${env.PROJECT} ${env.RELEASE_VERSION}"
+								sh ".release/scripts/prepare-release.sh -j -b ${env.GIT_BRANCH} -v ${env.DEVELOPMENT_VERSION} ${env.PROJECT} ${env.RELEASE_VERSION}"
 							}
 						}
 					}
@@ -233,8 +234,7 @@ pipeline {
 								withEnv([
 										"DISABLE_REMOTE_GRADLE_CACHE=true"
 								]) {
-									env.RELEASE_GPG_HOMEDIR = env.WORKSPACE_TMP + '/.gpg'
-									sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
+									sh ".release/scripts/publish.sh -j ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION} ${env.GIT_BRANCH}"
 								}
 							}
 						}

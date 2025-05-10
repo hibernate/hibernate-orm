@@ -14,6 +14,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.SynchronizeableQuery;
@@ -233,6 +234,16 @@ public interface ProcedureCall
 	 * @return The ProcedureOutputs representation
 	 */
 	ProcedureOutputs getOutputs();
+
+	/**
+	 * The {@link FunctionReturn} describing the return value of
+	 * the function, or {@code null} if this {@code ProcedureCall}
+	 * is not a function call.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	FunctionReturn<?> getFunctionReturn();
 
 	/**
 	 * Release the underlying JDBC {@link java.sql.CallableStatement}

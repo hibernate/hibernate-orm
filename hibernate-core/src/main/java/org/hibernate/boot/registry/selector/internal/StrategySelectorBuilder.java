@@ -45,7 +45,9 @@ import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLoca
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jackson.JacksonJsonFormatMapper;
+import org.hibernate.type.format.jackson.JacksonOsonFormatMapper;
 import org.hibernate.type.format.jackson.JacksonXmlFormatMapper;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import org.hibernate.type.format.jakartajson.JsonBJsonFormatMapper;
@@ -303,14 +305,21 @@ public class StrategySelectorBuilder {
 	private static void addJsonFormatMappers(StrategySelectorImpl strategySelector) {
 		strategySelector.registerStrategyImplementor(
 				FormatMapper.class,
-				JacksonJsonFormatMapper.SHORT_NAME,
-				JacksonJsonFormatMapper.class
-		);
-		strategySelector.registerStrategyImplementor(
-				FormatMapper.class,
 				JsonBJsonFormatMapper.SHORT_NAME,
 				JsonBJsonFormatMapper.class
 		);
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JacksonJsonFormatMapper.SHORT_NAME,
+				JacksonJsonFormatMapper.class
+		);
+		if ( JacksonIntegration.isJacksonOsonExtensionAvailable() ) {
+			strategySelector.registerStrategyImplementor(
+					FormatMapper.class,
+					JacksonOsonFormatMapper.SHORT_NAME,
+					JacksonOsonFormatMapper.class
+			);
+		}
 	}
 
 	private static void addXmlFormatMappers(StrategySelectorImpl strategySelector) {

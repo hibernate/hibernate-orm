@@ -113,18 +113,22 @@ import java.time.temporal.TemporalAccessor;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jboss.logging.Logger;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
+import static org.hibernate.dialect.DialectLogging.DIALECT_LOGGER;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
 import static org.hibernate.query.common.TemporalUnit.MINUTE;
@@ -214,6 +218,7 @@ public class OracleDialect extends Dialect {
 
 	// Is the database accessed using a database service protected by Application Continuity.
 	protected final boolean applicationContinuity;
+
 	protected final int driverMajorVersion;
 	protected final int driverMinorVersion;
 	private boolean useBinaryFloat;
@@ -839,6 +844,7 @@ public class OracleDialect extends Dialect {
 		}
 		// We need the DDL type during runtime to produce the proper encoding in certain functions
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( BIT, "number(1,0)", this ) );
+
 	}
 
 	@Override
@@ -1002,8 +1008,24 @@ public class OracleDialect extends Dialect {
 		}
 
 		if ( getVersion().isSameOrAfter( 21 ) ) {
-			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
-			typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
+			final boolean osonDisabled = getBoolean( ORACLE_OSON_DISABLED, configurationService.getSettings() );
+			if ( !osonDisabled && OracleJdbcHelper.isOsonAvailable( serviceRegistry ) ) {
+				// We must check that that extension is available and actually used.
+				typeContributions.contributeJdbcType( OracleOsonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleOsonArrayJdbcTypeConstructor.INSTANCE );
+
+				DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON extension enabled" );
+			}
+			else {
+				if ( osonDisabled ) {
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON extension disabled" );
+				}
+				else {
+					DIALECT_LOGGER.log( Logger.Level.DEBUG, "Oracle OSON extension not available" );
+				}
+				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
+				typeContributions.contributeJdbcTypeConstructor( OracleJsonArrayJdbcTypeConstructor.NATIVE_INSTANCE );
+			}
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );

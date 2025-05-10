@@ -90,6 +90,7 @@ public class OracleServerConfiguration {
 		boolean extended;
 		boolean autonomous;
 		boolean applicationContinuity;
+
 		int majorVersion;
 		int minorVersion;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();

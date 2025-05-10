@@ -79,6 +79,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
@@ -93,6 +94,7 @@ import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
 import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
 import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
@@ -111,6 +113,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJacksonFormatMapperOrNull;
+import static org.hibernate.type.format.jackson.JacksonIntegration.getOsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull;
 
@@ -304,8 +307,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		jsonFormatMapper = determineJsonFormatMapper(
 				settings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
+				!getBoolean( ORACLE_OSON_DISABLED ,settings),
 				strategySelector
 		);
+
 		xmlFormatMapper = determineXmlFormatMapper(
 				settings.get( AvailableSettings.XML_FORMAT_MAPPER ),
 				strategySelector,
@@ -786,12 +791,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {
+	private static FormatMapper determineJsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector strategySelector) {
 		return strategySelector.resolveDefaultableStrategy(
 				FormatMapper.class,
 				setting,
 				(Callable<FormatMapper>) () -> {
-					final FormatMapper jsonJacksonFormatMapper = getJsonJacksonFormatMapperOrNull();
+					// Prefer the OSON Jackson FormatMapper by default if available
+					final FormatMapper jsonJacksonFormatMapper =
+							(osonExtensionEnabled && JacksonIntegration.isJacksonOsonExtensionAvailable())
+									? getOsonJacksonFormatMapperOrNull()
+									: getJsonJacksonFormatMapperOrNull();
 					return jsonJacksonFormatMapper != null ? jsonJacksonFormatMapper : getJakartaJsonBFormatMapperOrNull();
 				}
 		);

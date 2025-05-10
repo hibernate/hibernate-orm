@@ -6,31 +6,40 @@ package org.hibernate.type.format.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import oracle.jdbc.provider.oson.OsonModule;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.lang.reflect.Type;
 
-/**
- * @author Christian Beikov
- * @author Yanming Zhou
- */
-public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 
-	public static final String SHORT_NAME = "jackson";
+/**
+ * Implementation of FormatMapper for Oracle OSON support
+ *
+ * @author Emmanuel Jannetti
+ * @author Bidyadhar Mohanty
+ */
+public final class JacksonOsonFormatMapper extends AbstractJsonFormatMapper {
+
+	public static final String SHORT_NAME = "jackson-oson";
 
 	private final ObjectMapper objectMapper;
 
-	public JacksonJsonFormatMapper() {
+	/**
+	 * Creates a new JacksonOsonFormatMapper
+	 */
+	public JacksonOsonFormatMapper() {
 		this( new ObjectMapper().findAndRegisterModules() );
 	}
 
-	public JacksonJsonFormatMapper(ObjectMapper objectMapper) {
+	public JacksonOsonFormatMapper(ObjectMapper objectMapper) {
+		objectMapper.registerModule( new OsonModule() );
+		objectMapper.disable( SerializationFeature.WRITE_DATES_AS_TIMESTAMPS );
 		this.objectMapper = objectMapper;
 	}
 
@@ -75,4 +84,5 @@ public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 			throw new IllegalArgumentException( "Could not serialize object of java type: " + type, e );
 		}
 	}
+
 }

@@ -5,6 +5,7 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
@@ -1334,6 +1335,36 @@ public class MySQLLegacyDialect extends Dialect {
 				.replace("SSS", "%f")
 				.replace("SS", "%f")
 				.replace("S", "%f");
+	}
+
+	private String withTimeout(String lockString, Timeout timeout) {
+		return withTimeout( lockString, Timeouts.getTimeoutInSeconds( timeout ) );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return withTimeout( supportsForShare() ? " for share" : " lock in share mode", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		if ( supportsAliasLocks() && supportsForShare() ) {
+			return withTimeout( " for share of " + aliases, timeout );
+		}
+		else {
+			// fall back to locking all aliases
+			return getReadLockString( timeout );
+		}
 	}
 
 	private String withTimeout(String lockString, int timeout) {

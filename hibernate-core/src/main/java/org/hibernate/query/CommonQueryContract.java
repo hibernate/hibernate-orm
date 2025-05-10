@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 
@@ -155,7 +156,9 @@ public interface CommonQueryContract {
 	 * Any value set here is eventually passed directly along to the
 	 * {@linkplain java.sql.Statement#setQueryTimeout(int) JDBC
 	 * statement}, which expressly disallows negative values.  So
-	 * negative values should be avoided as a general rule.
+	 * negative values should be avoided <em>as a general rule</em>,
+	 * although certain "magic values" are handled - see
+	 * {@linkplain org.hibernate.Timeouts#NO_WAIT}.
 	 * <p>
 	 * A value of zero indicates no timeout.
 	 *
@@ -163,9 +166,20 @@ public interface CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
+	 * @see org.hibernate.Timeouts
+	 * @see #setTimeout(Timeout)
 	 * @see #getTimeout()
 	 */
 	CommonQueryContract setTimeout(int timeout);
+
+	/**
+	 * Apply a timeout to the corresponding database query.
+	 *
+	 * @param timeout The timeout to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	CommonQueryContract setTimeout(Timeout timeout);
 
 	/**
 	 * Get the comment that has been set for this query, if any.

@@ -5,6 +5,7 @@
 package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -848,6 +849,20 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
 		return getForUpdateSkipLockedString();
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_SHARE_SKIP_LOCKED_SQL
+				: FOR_SHARE_SQL;
 	}
 
 	@Override

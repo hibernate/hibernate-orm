@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
@@ -1302,6 +1303,34 @@ public class PostgreSQLDialect extends Dialect {
 			default:
 				throw new IllegalArgumentException();
 		}
+	}
+
+	private String withTimeout(String lockString, Timeout timeout) {
+		return switch (timeout.milliseconds()) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default -> lockString;
+		};
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return withTimeout(" for share", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return withTimeout(" for share of " + aliases, timeout );
 	}
 
 	private String withTimeout(String lockString, int timeout) {

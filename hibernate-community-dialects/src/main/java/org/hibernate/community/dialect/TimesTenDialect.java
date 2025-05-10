@@ -6,6 +6,7 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
@@ -257,6 +258,35 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString() {
 		return " for update nowait";
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+
+	private String withTimeout(String lockString, Timeout timeout) {
+		return switch ( timeout.milliseconds() ) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override

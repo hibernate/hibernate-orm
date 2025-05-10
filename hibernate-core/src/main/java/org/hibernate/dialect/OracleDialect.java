@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.Timeouts;
@@ -1462,6 +1463,30 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
 		return " for update of " + aliases + " skip locked";
+	}
+
+	private String withTimeout(String lockString, Timeout timeout) {
+		return withTimeout( lockString, timeout.milliseconds() );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
 	}
 
 	private String withTimeout(String lockString, int timeout) {

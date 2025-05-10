@@ -4,7 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.LockOptions;
+import jakarta.persistence.TemporalType;
+import org.hibernate.Timeouts;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
+import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
@@ -14,20 +17,16 @@ import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-
-import jakarta.persistence.TemporalType;
 
 /**
  * A {@linkplain Dialect SQL dialect} for TiDB.
@@ -156,7 +155,7 @@ public class TiDBDialect extends MySQLDialect {
 
 	@Override
 	public String getReadLockString(int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
+		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return getForUpdateNowaitString();
 		}
 		return super.getReadLockString( timeout );
@@ -164,7 +163,7 @@ public class TiDBDialect extends MySQLDialect {
 
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
+		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return getForUpdateNowaitString( aliases );
 		}
 		return super.getReadLockString( aliases, timeout );
@@ -172,7 +171,7 @@ public class TiDBDialect extends MySQLDialect {
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( timeout == LockOptions.NO_WAIT ) {
+		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return getForUpdateNowaitString();
 		}
 

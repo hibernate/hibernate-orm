@@ -19,7 +19,6 @@ import org.hibernate.MappingException;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.SynchronizeableQuery;
 import org.hibernate.query.CommonQueryContract;
-import org.hibernate.query.procedure.ProcedureParameter;
 
 /**
  * Defines support for executing database stored procedures and functions using the

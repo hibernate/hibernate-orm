@@ -164,7 +164,7 @@ public abstract class AbstractFlushingEventListener {
 		final Status status = entry.getStatus();
 		return status == Status.MANAGED
 			|| status == Status.SAVING
-			|| status == Status.READ_ONLY;
+			|| status == Status.READ_ONLY; // debatable, see HHH-19398
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)

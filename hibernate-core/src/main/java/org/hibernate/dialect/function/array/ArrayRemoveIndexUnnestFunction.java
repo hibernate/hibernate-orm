@@ -24,7 +24,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
  */
 public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private final boolean castEmptyArrayLiteral;
+	protected final boolean castEmptyArrayLiteral;
 
 	public ArrayRemoveIndexUnnestFunction(boolean castEmptyArrayLiteral) {
 		super(

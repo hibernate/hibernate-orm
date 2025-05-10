@@ -14,6 +14,7 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -1016,7 +1017,7 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09' as Date)", Date.class).getSingleResult(), instanceOf(Date.class) );
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp)", Timestamp.class).getSingleResult(), instanceOf(Timestamp.class) );
 
-					assertThat( session.createQuery("select cast(date 1911-10-09 as String)", String.class).getSingleResult(), is("1911-10-09") );
+					assertThat( session.createQuery("select cast(date 1911-10-09 as String)", String.class).getSingleResult(), anyOf( is("1911-10-09"), is("1911-10-09 00:00:00") ) );
 					assertThat( session.createQuery("select cast(time 12:13:14 as String)", String.class).getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12.13.14") ) );
 					assertThat( session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)", String.class).getSingleResult(), anyOf( startsWith("1911-10-09 12:13:14"), startsWith("1911-10-09-12.13.14") ) );
 
@@ -1169,6 +1170,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase cast to raw does not do truncatation")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB bytea doesn't have a length")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1216,7 +1218,8 @@ public class FunctionTests {
 					session.createQuery("select str(e.id), str(e.theInt), str(e.theDouble) from EntityOfBasics e", Object[].class)
 							.list();
 					assertThat( session.createQuery("select str(69)", String.class).getSingleResult(), is("69") );
-					assertThat( session.createQuery("select str(date 1911-10-09)", String.class).getSingleResult(), is("1911-10-09") );
+					// str() do not specify the standard of date & time format
+					assertThat( session.createQuery("select str(date 1911-10-09)", String.class).getSingleResult(), anyOf( is("1911-10-09"), is( "1911-10-09 00:00:00" ) ) );
 					assertThat( session.createQuery("select str(time 12:13:14)", String.class).getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000"), is( "12.13.14") ) );
 				}
 		);
@@ -1784,6 +1787,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "GaussDB driver does not support implicit type casting to Long or Duration.")
 	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1886,6 +1891,8 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class,
 			matchSubTypes = true,
 			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "numeric overflow")
 	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1966,6 +1973,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "GaussDB driver does not support implicit type casting to Long or Duration.")
 	public void testIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

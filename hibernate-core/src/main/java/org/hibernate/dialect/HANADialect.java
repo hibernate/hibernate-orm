@@ -1017,7 +1017,7 @@ public class HANADialect extends Dialect {
 	@Override
 	public String getWriteLockString(Timeout timeout) {
 		if ( Timeouts.isRealTimeout( timeout ) ) {
-			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
+			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout.milliseconds() );
 		}
 		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
 			return getForUpdateNowaitString();

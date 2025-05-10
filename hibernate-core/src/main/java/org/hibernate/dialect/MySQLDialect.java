@@ -1434,7 +1434,12 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, Timeout timeout) {
-		return withTimeout( lockString, Timeouts.getTimeoutInSeconds( timeout ) );
+		return switch (timeout.milliseconds()) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override

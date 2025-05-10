@@ -2563,6 +2563,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
+	/**
+	 * @deprecated Use {@linkplain Timeouts#getTimeoutInSeconds(int)} instead.
+	 */
+	@Deprecated
 	protected int getTimeoutInSeconds(int millis) {
 		return Timeouts.getTimeoutInSeconds( millis );
 	}

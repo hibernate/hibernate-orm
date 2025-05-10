@@ -205,8 +205,8 @@ public class TiDBDialect extends MySQLDialect {
 			return getForUpdateNowaitString();
 		}
 
-		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout );
 		}
 
 		return getForUpdateString();

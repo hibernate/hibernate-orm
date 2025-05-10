@@ -11,10 +11,9 @@ import java.util.function.BiConsumer;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterBinding;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.procedure.ProcedureParameterBinding;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -32,7 +31,7 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	private final ProcedureParameterMetadataImpl parameterMetadata;
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Map<ProcedureParameterImplementor<?>, ProcedureParameterBindingImplementor<?>> bindingMap = new HashMap<>();
+	private final Map<ProcedureParameterImplementor<?>, ProcedureParameterBinding<?>> bindingMap = new HashMap<>();
 
 	public ProcedureParamBindings(
 			ProcedureParameterMetadataImpl parameterMetadata,
@@ -57,18 +56,15 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	public <P> ProcedureParameterBinding<P> getQueryParamerBinding(ProcedureParameterImplementor<P> parameter) {
-		final ProcedureParameterImplementor<P> procParam = parameterMetadata.resolve( parameter );
-		ProcedureParameterBindingImplementor<?> binding = bindingMap.get( procParam );
-
+		final var procParam = parameterMetadata.resolve( parameter );
+		var binding = bindingMap.get( procParam );
 		if ( binding == null ) {
 			if ( !parameterMetadata.containsReference( parameter ) ) {
 				throw new IllegalArgumentException( "Passed parameter is not registered with this query" );
 			}
-
 			binding = new ProcedureParameterBindingImpl<>( procParam, sessionFactory );
 			bindingMap.put( procParam, binding );
 		}
-
 		//noinspection unchecked
 		return (ProcedureParameterBinding<P>) binding;
 	}
@@ -76,8 +72,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(String name) {
 		//noinspection unchecked
-		final ProcedureParameterImplementor<P> parameter =
-				(ProcedureParameterImplementor<P>) parameterMetadata.getQueryParameter( name );
+		final var parameter =
+				(ProcedureParameterImplementor<P>)
+						parameterMetadata.getQueryParameter( name );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter does not exist: " + name );
 		}
@@ -87,8 +84,9 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(int position) {
 		//noinspection unchecked
-		final ProcedureParameterImplementor<P> parameter =
-				(ProcedureParameterImplementor<P>) parameterMetadata.getQueryParameter( position );
+		final var parameter =
+				(ProcedureParameterImplementor<P>)
+						parameterMetadata.getQueryParameter( position );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Parameter at position " + position + "does not exist" );
 		}

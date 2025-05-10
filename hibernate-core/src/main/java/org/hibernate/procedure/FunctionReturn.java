@@ -5,7 +5,6 @@
 package org.hibernate.procedure;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.procedure.ProcedureParameter;
 
 /**
  * Describes the function return value of a {@link ProcedureCall}

@@ -141,7 +141,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		);
 		final EntityEntry entityEntry = persistenceContextInternal.addEntry(
 				getInstance(),
-				( getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+				getPersister().isMutable() ? Status.MANAGED : Status.READ_ONLY,
 				getState(),
 				getRowId(),
 				getEntityKey().getIdentifier(),

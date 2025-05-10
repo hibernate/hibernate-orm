@@ -48,7 +48,7 @@ import org.hibernate.type.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;

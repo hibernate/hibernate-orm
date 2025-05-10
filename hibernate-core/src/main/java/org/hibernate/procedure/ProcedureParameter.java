@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.procedure;
+package org.hibernate.procedure;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.QueryParameter;

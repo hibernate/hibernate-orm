@@ -34,7 +34,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;

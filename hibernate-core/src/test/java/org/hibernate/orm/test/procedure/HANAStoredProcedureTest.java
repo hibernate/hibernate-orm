@@ -22,7 +22,7 @@ import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.NumericBooleanConverter;

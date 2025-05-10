@@ -78,7 +78,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										);
 										fail( "Expecting a failure" );
 									}
-									catch ( LockTimeoutException | PessimisticLockException expected ) {
+									catch (LockTimeoutException | PessimisticLockException | org.hibernate.exception.LockTimeoutException expected ) {
 										// expected outcome
 									}
 								}

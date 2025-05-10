@@ -7,7 +7,7 @@ package org.hibernate.community.dialect;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTimesTenDatabaseImpl;
@@ -282,8 +282,8 @@ public class TimesTenDialect extends Dialect {
 
 	private String withTimeout(String lockString, int timeout) {
 		return switch ( timeout ) {
-			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED, LockOptions.WAIT_FOREVER -> lockString;
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI, Timeouts.WAIT_FOREVER_MILLI -> lockString;
 			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		};
 	}

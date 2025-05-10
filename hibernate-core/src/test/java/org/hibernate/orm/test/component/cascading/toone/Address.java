@@ -11,18 +11,34 @@ package org.hibernate.orm.test.component.cascading.toone;
  * @author Steve Ebersole
  */
 public class Address {
-	private Long id;
+	private Integer id;
 	private String street1;
 	private String street2;
 	private String city;
 	private String state;
 	private String zipCode;
 
-	public Long getId() {
+	public Address() {
+	}
+
+	public Address(Integer id) {
+		this.id = id;
+	}
+
+	public Address(Integer id, String street1, String street2, String city, String state, String zipCode) {
+		this.id = id;
+		this.street1 = street1;
+		this.street2 = street2;
+		this.city = city;
+		this.state = state;
+		this.zipCode = zipCode;
+	}
+
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

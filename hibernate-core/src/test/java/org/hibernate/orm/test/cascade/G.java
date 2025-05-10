@@ -7,15 +7,9 @@ package org.hibernate.orm.test.cascade;
 import java.util.HashSet;
 import java.util.Set;
 
-public class G
-{
-	// Constants -----------------------------------------------------------------------------------
+public class G {
 
-	// Static --------------------------------------------------------------------------------------
-
-	// Attributes ----------------------------------------------------------------------------------
-
-	private long id;
+	private int id;
 
 	private String data;
 
@@ -25,66 +19,47 @@ public class G
 	// G * <-> * H
 	private Set hs;
 
-	// Constructors --------------------------------------------------------------------------------
 
-	public G()
-	{
-		this(null);
+	public G() {
+		this( null );
 	}
 
-	public G(String data)
-	{
+	public G(String data) {
 		this.data = data;
 		hs = new HashSet();
 	}
 
-	// Public --------------------------------------------------------------------------------------
 
-	public String getData()
-	{
+	public String getData() {
 		return data;
 	}
 
-	public void setData(String data)
-	{
+	public void setData(String data) {
 		this.data = data;
 	}
 
-	public A getA()
-	{
+	public A getA() {
 		return a;
 	}
 
-	public void setA(A a)
-	{
+	public void setA(A a) {
 		this.a = a;
 	}
 
-	public Set getHs()
-	{
+	public Set getHs() {
 		return hs;
 	}
 
-	public void setHs(Set s)
-	{
+	public void setHs(Set s) {
 		hs = s;
 	}
 
-	// Package protected ---------------------------------------------------------------------------
-
-	long getId()
-	{
+	int getId() {
 		return id;
 	}
 
-	// Protected -----------------------------------------------------------------------------------
-
-	// Private -------------------------------------------------------------------------------------
-
-	private void setId(long id)
-	{
+	private void setId(int id) {
 		this.id = id;
 	}
 
-	// Inner classes -------------------------------------------------------------------------------
 }

@@ -11,15 +11,24 @@ package org.hibernate.orm.test.component.cascading.toone;
  * @author Steve Ebersole
  */
 public class Document {
-	private Long id;
+	private Integer id;
 	private String location;
 	private User owner;
 
-	public Long getId() {
+	public Document() {
+	}
+
+	public Document(Integer id, String location, User owner) {
+		this.id = id;
+		this.location = location;
+		this.owner = owner;
+	}
+
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

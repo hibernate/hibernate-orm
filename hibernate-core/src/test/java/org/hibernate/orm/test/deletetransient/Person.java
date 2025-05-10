@@ -16,8 +16,8 @@ import java.util.Set;
 public class Person {
 	private Long id;
 	private String name;
-	private Set addresses = new HashSet();
-	private Collection friends = new ArrayList();
+	private Set<Address> addresses = new HashSet<>();
+	private Collection<Person> friends = new ArrayList<>();
 
 	public Person() {
 	}
@@ -42,19 +42,19 @@ public class Person {
 		this.name = name;
 	}
 
-	public Set getAddresses() {
+	public Set<Address> getAddresses() {
 		return addresses;
 	}
 
-	public void setAddresses(Set addresses) {
+	public void setAddresses(Set<Address> addresses) {
 		this.addresses = addresses;
 	}
 
-	public Collection getFriends() {
+	public Collection<Person> getFriends() {
 		return friends;
 	}
 
-	public void setFriends(Collection friends) {
+	public void setFriends(Collection<Person> friends) {
 		this.friends = friends;
 	}
 }

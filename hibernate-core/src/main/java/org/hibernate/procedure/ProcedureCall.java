@@ -21,34 +21,53 @@ import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.procedure.ProcedureParameter;
 
 /**
- * Defines support for executing database stored procedures and functions.
+ * Defines support for executing database stored procedures and functions using the
+ * {@linkplain java.sql.CallableStatement JDBC stored procedure SQL escape syntax}.
  * <p>
- * Note that here we use the terms "procedure" and "function" as follows:<ul>
- *     <li>procedure is a named database executable we expect to call via : {@code {call procedureName(...)}}</li>
- *     <li>function is a named database executable we expect to call via : {@code {? = call functionName(...)}}</li>
+ * Here we use the terms "procedure" and "function" as follows:<ul>
+ *     <li>A <em>procedure</em> is a named database executable called via:
+ *         {@code {call procedureName(...)}}</li>
+ *     <li>A <em>function</em> is a named database executable called via:
+ *         {@code {? = call functionName(...)}}</li>
  * </ul>
  * <p>
- * Unless explicitly specified, the ProcedureCall is assumed to follow the
- * procedure call syntax.  To explicitly specify that this should be a function
- * call, use {@link #markAsFunctionCall}.
- * <p>
- * When using function-call syntax:<ul>
- *     <li>parameters must be registered by position (not name)</li>
- *     <li>The first parameter is considered to be the function return (the `?` before the call)</li>
- *     <li>the first parameter must have mode of OUT, INOUT or REF_CURSOR; IN is invalid</li>
+ * Unless explicitly specified, the {@code ProcedureCall} is executed using the
+ * procedure call syntax. To explicitly specify that the function call syntax
+ * should be used, call {@link #markAsFunctionCall}. Clients of the JPA-standard
+ * {@link StoredProcedureQuery} interface may choose between:
+ * <ul>
+ * <li>using {@link #unwrap storedProcedureQuery.unwrap(ProcedureCall.class).markAsFunctionCall(returnType)},
+ *     or
+ * <li>setting the {@value org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION}
+ *     or {@value org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION_RETURN_TYPE}
+ *     {@linkplain #setHint(String, Object) hint} to avoid the cast to a
+ *     Hibernate-specific class.
  * </ul>
  * <p>
- * In some cases, based on the Dialect, we will have other validations and
- * assumptions as well.  For example, on PGSQL, whenever we see a REF_CURSOR mode
- * parameter, we know that:<ul>
- *     <li>
- *         this will be a function call (so we call {@link #markAsFunctionCall} implicitly) because
- *         that is the only way PGSQL supports returning REF_CURSOR results.
- *     </li>
- *     <li>there can be only one REF_CURSOR mode parameter</li>
+ * When the function call syntax is used:
+ * <ul>
+ * <li>parameters must be registered by position (not name),
+ * <li>the first parameter is considered to represent the function return value
+ *     (corresponding to the {@code ?} which occurs before the {@code =}), and
+ * <li>the first parameter must have {@linkplain ParameterMode mode} OUT, INOUT,
+ *     or REF_CURSOR; {@linkplain ParameterMode#IN IN} is illegal.
+ * </ul>
+ * <p>
+ * Depending on the {@linkplain org.hibernate.dialect.Dialect SQL dialect},
+ * further constraints are enforced or inferred. For example, on PostgreSQL:
+ * <ul>
+ * <li>If a parameter has mode {@linkplain ParameterMode#REF_CURSOR REF_CURSOR},
+ *     it's automatically inferred that the call is a function call because this
+ *     is the only context in which PostgreSQL returns REF_CURSOR results.
+ *     So it's not necessary to call {@link #markAsFunctionCall} explicitly.
+ * <li>The restriction that there may be at most one REF_CURSOR mode parameter
+ *     is enforced.
  * </ul>
  *
  * @author Steve Ebersole
+ *
+ * @see java.sql.CallableStatement
+ * @see StoredProcedureQuery
  */
 public interface ProcedureCall
 		extends CommonQueryContract, SynchronizeableQuery, StoredProcedureQuery, AutoCloseable {
@@ -274,10 +293,10 @@ public interface ProcedureCall
 	ProcedureCall registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 	/**
-	 * The hint key indicating the function's return {@linkplain java.sql.Types JDBC type code}.
+	 * The hint key indicating the return {@linkplain java.sql.Types JDBC type code} of a function.
 	 *
-	 * @deprecated This hint no longer has any effect. Use {@link #markAsFunctionCall(int)}.
+	 * @deprecated Use {@link org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION_RETURN_TYPE}.
 	 */
 	@Deprecated(since="7", forRemoval = true)
-	String FUNCTION_RETURN_TYPE_HINT = "hibernate.procedure.function_return_jdbc_type_code";
+	String FUNCTION_RETURN_TYPE_HINT = org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION_RETURN_TYPE;
 }

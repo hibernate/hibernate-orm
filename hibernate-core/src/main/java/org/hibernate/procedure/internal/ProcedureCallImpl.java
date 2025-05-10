@@ -95,6 +95,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
+import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION_RETURN_TYPE;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
 
@@ -294,17 +295,6 @@ public class ProcedureCallImpl<R>
 		applyOptions( memento );
 	}
 
-	protected void applyOptions(NamedCallableQueryMemento memento) {
-		super.applyOptions( memento );
-
-		if ( memento.getHints() != null ) {
-			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
-			if ( callableFunction != null && parseBoolean( callableFunction.toString() ) ) {
-				applyCallableFunctionHint();
-			}
-		}
-	}
-
 	private void applyCallableFunctionHint() {
 		final List<Class<?>> resultTypes = new ArrayList<>();
 		resultSetMapping.visitResultBuilders(
@@ -360,7 +350,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImpl<R> markAsFunctionCall(int sqlType) {
+	public ProcedureCallImplementor<R> markAsFunctionCall(int sqlType) {
 		functionReturn = new FunctionReturnImpl<>( this, sqlType );
 		return this;
 	}
@@ -1069,13 +1059,41 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
-		if ( HINT_CALLABLE_FUNCTION.equals( hintName ) ) {
-			if ( value != null && parseBoolean( value.toString() ) ) {
-				applyCallableFunctionHint();
-			}
-		}
-		else {
-			super.setHint( hintName, value );
+		switch ( hintName ) {
+			case HINT_CALLABLE_FUNCTION:
+				if ( value != null ) {
+					if ( value instanceof Boolean bool ) {
+						if ( bool ) {
+							applyCallableFunctionHint();
+						}
+					}
+					else if ( parseBoolean( value.toString() ) ) {
+						applyCallableFunctionHint();
+					}
+				}
+				break;
+			case HINT_CALLABLE_FUNCTION_RETURN_TYPE:
+				if ( value != null ) {
+					if ( value instanceof Integer code ) {
+						//noinspection resource
+						markAsFunctionCall( code );
+					}
+					else if ( value instanceof BindableType<?> type ) {
+						//noinspection resource
+						markAsFunctionCall( type );
+					}
+					else if ( value instanceof Class<?> type ) {
+						//noinspection resource
+						markAsFunctionCall( type );
+					}
+					else {
+						//noinspection resource
+						markAsFunctionCall( Integer.parseInt( value.toString() ) );
+					}
+				}
+				break;
+			default:
+				super.setHint( hintName, value );
 		}
 		return this;
 	}

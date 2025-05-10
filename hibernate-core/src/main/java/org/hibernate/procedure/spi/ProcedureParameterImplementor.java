@@ -5,7 +5,7 @@
 package org.hibernate.procedure.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 

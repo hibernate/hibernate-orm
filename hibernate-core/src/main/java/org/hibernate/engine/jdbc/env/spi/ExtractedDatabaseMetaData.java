@@ -151,6 +151,11 @@ public interface ExtractedDatabaseMetaData {
 	int getDefaultTransactionIsolation();
 
 	/**
+	 * Retrieve the default JDBC {@link java.sql.Statement#getFetchSize fetch size}.
+	 */
+	int getDefaultFetchSize();
+
+	/**
 	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.
 	 *
 	 * @return {@code SequenceInformation} objects.

@@ -459,7 +459,7 @@ public class SQLiteDialect extends Dialect {
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle ) & 0xFF;
 				if (errorCode == SQLITE_CONSTRAINT) {
-					return extractUsingTemplate( "constraint failed:", "$", sqle.getMessage() );
+					return extractUsingTemplate( "constraint failed: ", "$", sqle.getMessage() );
 				}
 				return null;
 			} );

@@ -32,6 +32,7 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 
 	ParameterStrategy getParameterStrategy();
 
+	@Override
 	FunctionReturnImplementor<R> getFunctionReturn();
 
 	@Override

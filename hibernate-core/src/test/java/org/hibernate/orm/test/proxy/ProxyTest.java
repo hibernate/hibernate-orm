@@ -4,14 +4,10 @@
  */
 package org.hibernate.orm.test.proxy;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -21,10 +17,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -296,7 +294,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.byId( DataPoint.class ).with( LockOptions.READ ).getReference( dp.getId() );
+		dp2 = s.find( DataPoint.class, dp.getId(), LockMode.READ );
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
 		s.clear();
@@ -346,7 +344,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		dp = s.getReference( DataPoint.class, dp.getId() );
 		assertFalse( Hibernate.isInitialized(dp) );
-		dp2 = s.byId( DataPoint.class ).with( LockOptions.READ ).getReference( dp.getId() );
+		dp2 = s.find( DataPoint.class, dp.getId(), LockMode.READ );
 		assertSame(dp, dp2);
 		assertTrue( Hibernate.isInitialized(dp) );
 		s.clear();
@@ -528,8 +526,8 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		dp.getX();
 		assertTrue( Hibernate.isInitialized( dp ) );
 
-		s.refresh( dp, LockOptions.UPGRADE );
-		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
+		s.refresh( dp, LockMode.PESSIMISTIC_WRITE );
+		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
 
 		s.remove( dp );
 		t.commit();
@@ -546,8 +544,8 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
 
-		s.refresh( dp, LockOptions.UPGRADE );
-		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
+		s.refresh( dp, LockMode.PESSIMISTIC_WRITE );
+		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
 
 		s.remove( dp );
 		t.commit();
@@ -574,9 +572,9 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
-		s.refresh( dp, LockOptions.UPGRADE );
+		s.refresh( dp, LockMode.PESSIMISTIC_WRITE );
 		dp.getX();
-		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
+		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
 
 		s.remove( dp );
 		t.commit();
@@ -591,8 +589,8 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 
 		dp = s.getReference( DataPoint.class, dp.getId());
 		assertFalse( Hibernate.isInitialized( dp ) );
-		s.lock( dp, LockOptions.UPGRADE );
-		assertSame( LockOptions.UPGRADE.getLockMode(), s.getCurrentLockMode( dp ) );
+		s.lock( dp, LockMode.PESSIMISTIC_WRITE );
+		assertSame( LockMode.PESSIMISTIC_WRITE, s.getCurrentLockMode( dp ) );
 
 		s.remove( dp );
 		t.commit();

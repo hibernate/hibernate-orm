@@ -7,11 +7,11 @@ package org.hibernate.orm.test.locking;
 import java.util.Collections;
 
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.community.dialect.AltibaseDialect;
@@ -80,11 +80,10 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
-	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
-			A it = session.byId( A.class ).with( LockOptions.UPGRADE ).load( id );
+			A it = session.find( A.class, id, LockMode.PESSIMISTIC_WRITE );
 			// make sure we got it
 			assertNotNull( it );
 
@@ -168,10 +167,10 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 		// todo : need an association here to make sure the alias-specific lock modes are applied correctly
 		doInHibernate( this::sessionFactory, session -> {
 			session.createQuery( "from A a" )
-					.setLockOptions( new LockOptions( LockMode.PESSIMISTIC_WRITE ) )
+					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.uniqueResult();
 			session.createQuery( "from A a" )
-					.setLockOptions( new LockOptions().setAliasSpecificLockMode( "a", LockMode.PESSIMISTIC_WRITE ) )
+					.setLockMode( "a", LockMode.PESSIMISTIC_WRITE )
 					.uniqueResult();
 		} );
 	}
@@ -204,7 +203,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12257")
 	public void testRefreshLockedEntity() {
 		doInHibernate( this::sessionFactory, session -> {
-			A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
+			A a = session.find( A.class, id, LockMode.PESSIMISTIC_READ );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 			session.refresh( a );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
@@ -219,7 +218,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12257")
 	public void testRefreshWithExplicitLowerLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
-						A a = session.get( A.class, id, LockMode.PESSIMISTIC_READ );
+						A a = session.find( A.class, id, LockMode.PESSIMISTIC_READ );
 						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
 						session.refresh( a, LockMode.READ );
 						checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
@@ -236,7 +235,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@SkipForDialect( dialectClass = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode1() {
 		doInHibernate( this::sessionFactory, session -> {
-						A a = session.get( A.class, id );
+						A a = session.find( A.class, id );
 						checkLockMode( a, LockMode.READ, session );
 						session.refresh( a, LockMode.UPGRADE_NOWAIT );
 						checkLockMode( a, LockMode.UPGRADE_NOWAIT, session );
@@ -250,7 +249,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@SkipForDialect( dialectClass = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode2() {
 		doInHibernate( this::sessionFactory, session -> {
-			A a = session.get( A.class, id );
+			A a = session.find( A.class, id );
 			checkLockMode( a, LockMode.READ, session );
 			session.refresh( a, LockModeType.PESSIMISTIC_READ );
 			checkLockMode( a, LockMode.PESSIMISTIC_READ, session );
@@ -263,7 +262,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12257")
 	public void testRefreshAfterUpdate() {
 		doInHibernate( this::sessionFactory, session -> {
-			A a = session.get( A.class, id );
+			A a = session.find( A.class, id );
 			checkLockMode( a, LockMode.READ, session );
 			a.setValue( "new value" );
 			session.flush();
@@ -294,10 +293,11 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 						try {
 							// load with write lock to deal with databases that block (wait indefinitely) direct attempts
 							// to write a locked row
-							A it = _session.get(
+							A it = _session.find(
 									A.class,
 									id,
-									new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeOut( LockOptions.NO_WAIT )
+									LockMode.PESSIMISTIC_WRITE,
+									Timeout.milliseconds( 0 )
 							);
 							_session.createNativeQuery( updateStatement() )
 									.setParameter( "value", "changed" )

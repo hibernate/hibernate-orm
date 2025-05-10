@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
-
+import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -587,6 +587,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @see #setLockMode(LockModeType)
 	 */
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
+
+	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query

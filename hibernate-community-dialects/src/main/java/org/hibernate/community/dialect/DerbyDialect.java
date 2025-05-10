@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
@@ -575,6 +576,16 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public String getForUpdateString() {
 		return " for update with rs";
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return " for update with rs";
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return " for read only with rs";
 	}
 
 	@Override

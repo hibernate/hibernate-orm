@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -579,6 +581,18 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
 		super.setHibernateLockMode( lockMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setTimeout(Timeout timeout) {
+		super.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		super.setLockScope( lockScope );
 		return this;
 	}
 

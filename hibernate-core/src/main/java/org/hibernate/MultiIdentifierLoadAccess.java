@@ -8,6 +8,8 @@ import java.util.List;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
 
 /**
@@ -31,6 +33,38 @@ import org.hibernate.graph.GraphSemantic;
  * @author Steve Ebersole
  */
 public interface MultiIdentifierLoadAccess<T> {
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 * @return {@code this}, for method chaining
+	 */
+	default MultiIdentifierLoadAccess<T> with(LockMode lockMode) {
+		return with( lockMode, PessimisticLockScope.NORMAL );
+	}
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MultiIdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope);
+
+	/**
+	 * Specify the {@linkplain Timeout timeout} to use when
+	 * querying the database.
+	 *
+	 * @param timeout The timeout to apply to the database operation
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MultiIdentifierLoadAccess<T> with(Timeout timeout);
+
 	/**
 	 * Specify the {@linkplain LockOptions lock options} to use when
 	 * querying the database.
@@ -38,7 +72,12 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * @param lockOptions The lock options to use
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use one of {@linkplain #with(LockMode)},
+	 * {@linkplain #with(LockMode, PessimisticLockScope)}
+	 * and/or {@linkplain #with(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	MultiIdentifierLoadAccess<T> with(LockOptions lockOptions);
 
 	/**

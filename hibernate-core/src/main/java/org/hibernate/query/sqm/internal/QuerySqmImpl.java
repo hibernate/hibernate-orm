@@ -11,7 +11,9 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -777,6 +779,20 @@ public class QuerySqmImpl<R>
 		verifySelect();
 		getSession().checkOpen( false );
 		return getLockOptions().getLockMode().toJpaLockMode();
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getSession().checkOpen( false );
+		getQueryOptions().getLockOptions().setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setTimeout(Timeout timeout) {
+		getSession().checkOpen( false );
+		getQueryOptions().getLockOptions().setTimeOut( timeout.milliseconds() );
+		return this;
 	}
 
 	@Override

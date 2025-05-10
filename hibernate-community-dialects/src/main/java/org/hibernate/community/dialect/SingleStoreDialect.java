@@ -16,6 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.Metadata;
@@ -1222,6 +1223,11 @@ public class SingleStoreDialect extends Dialect {
 	@Override
 	public String getAddPrimaryKeyConstraintString(String constraintName) {
 		throw new UnsupportedOperationException( "SingleStore does not support altering primary key." );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return getForUpdateString( aliases );
 	}
 
 	@Override

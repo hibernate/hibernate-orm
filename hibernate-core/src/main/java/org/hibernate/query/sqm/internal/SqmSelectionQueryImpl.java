@@ -18,8 +18,10 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
@@ -35,6 +37,7 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
@@ -564,6 +567,18 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	@Override
 	public SqmSelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		super.setHibernateLockMode( lockMode );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setTimeout(Timeout timeout) {
+		super.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setLockScope(PessimisticLockScope lockScope) {
+		super.setLockScope( lockScope );
 		return this;
 	}
 

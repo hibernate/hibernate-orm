@@ -4,18 +4,26 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
-import org.hibernate.LockOptions;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.InnoDBStorageEngine;
+import org.hibernate.dialect.MyISAMStorageEngine;
+import org.hibernate.dialect.MySQLServerConfiguration;
+import org.hibernate.dialect.MySQLStorageEngine;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -46,15 +54,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -79,7 +86,11 @@ import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -1326,12 +1337,47 @@ public class MySQLLegacyDialect extends Dialect {
 				.replace("S", "%f");
 	}
 
+	private String withTimeout(String lockString, Timeout timeout) {
+		return switch ( timeout.milliseconds() ) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return withTimeout( supportsForShare() ? " for share" : " lock in share mode", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		if ( supportsAliasLocks() && supportsForShare() ) {
+			return withTimeout( " for share of " + aliases, timeout );
+		}
+		else {
+			// fall back to locking all aliases
+			return getReadLockString( timeout );
+		}
+	}
+
 	private String withTimeout(String lockString, int timeout) {
 		return switch ( timeout ) {
-			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER -> lockString;
-			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
 		};
 	}
 

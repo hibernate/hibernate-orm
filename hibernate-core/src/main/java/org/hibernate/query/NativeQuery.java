@@ -10,7 +10,9 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -599,6 +601,21 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setReadOnly(boolean readOnly);
 
+	@Override
+	NativeQuery<T> setComment(String comment);
+
+	@Override
+	NativeQuery<T> addQueryHint(String hint);
+
+	@Override
+	NativeQuery<T> setMaxResults(int maxResults);
+
+	@Override
+	NativeQuery<T> setFirstResult(int startPosition);
+
+	@Override
+	NativeQuery<T> setHint(String hintName, Object value);
+
 	/**
 	 * @inheritDoc
 	 *
@@ -620,29 +637,6 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 */
 	@Override
 	NativeQuery<T> setLockOptions(LockOptions lockOptions);
-
-	/**
-	 * Not applicable to native SQL queries.
-	 *
-	 * @throws IllegalStateException for consistency with JPA
-	 */
-	@Override
-	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
-
-	@Override
-	NativeQuery<T> setComment(String comment);
-
-	@Override
-	NativeQuery<T> addQueryHint(String hint);
-
-	@Override
-	NativeQuery<T> setMaxResults(int maxResults);
-
-	@Override
-	NativeQuery<T> setFirstResult(int startPosition);
-
-	@Override
-	NativeQuery<T> setHint(String hintName, Object value);
 
 	/**
 	 * Not applicable to native SQL queries, due to an unfortunate
@@ -689,6 +683,32 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 */
 	@Override
 	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
+
+	/**
+	 * Apply a timeout to the corresponding database query.
+	 *
+	 * @param timeout The timeout to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> setTimeout(Timeout timeout);
+
+	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> setLockScope(PessimisticLockScope lockScope);
+
+	/**
+	 * Not applicable to native SQL queries.
+	 *
+	 * @throws IllegalStateException for consistency with JPA
+	 */
+	@Override
+	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
 
 	@Override
 	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);

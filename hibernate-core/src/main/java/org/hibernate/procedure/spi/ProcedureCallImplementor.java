@@ -9,10 +9,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.BasicTypeReference;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -41,10 +41,16 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 	R getSingleResult();
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, BasicTypeReference<?> type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, BasicTypeReference<?> type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, BindableType<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, BindableType<?> type, ParameterMode mode);
 
 	@Override
 	ProcedureCallImplementor<R> setHint(String hintName, Object value);
@@ -87,12 +93,6 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 
 	@Override
 	ProcedureCallImplementor<R> setTimeout(Integer timeout);
-
-	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
-
-	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 	@Override
 	NamedCallableQueryMemento toMemento(String name);

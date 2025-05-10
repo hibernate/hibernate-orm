@@ -74,7 +74,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.NoMoreOutputsException;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -385,13 +384,19 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImpl<R> markAsFunctionCall(BasicTypeReference<?> typeReference) {
-		final BasicType<?> basicType =
-				getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference );
-		if ( basicType == null ) {
-			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + typeReference.getName() );
+	public ProcedureCall markAsFunctionCall(BindableType<?> typeReference) {
+		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
+			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
-		markAsFunctionCall( basicType );
+		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+			final SqmExpressible<?> expressible =
+					typeReference.resolveExpressible( getSessionFactory().getRuntimeMetamodels() );
+			// Function returns might not be represented as callable parameters,
+			// but we still want to convert the result to the requested java type if possible
+			resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+		}
+		//noinspection unchecked
+		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<R>) outputableType );
 		return this;
 	}
 
@@ -452,7 +457,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			int position,
-			BasicTypeReference<?> type,
+			BindableType<?> type,
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 
@@ -472,7 +477,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			String parameterName,
-			BasicTypeReference<?> type,
+			BindableType<?> type,
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
@@ -501,12 +506,12 @@ public class ProcedureCallImpl<R>
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(
 			int position,
-			BasicTypeReference<T> typeReference,
+			BindableType<T> typeReference,
 			ParameterMode mode) {
-		final BasicType<T> basicType =
-				getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference );
+		final SqmExpressible<T> expressible =
+				typeReference.resolveExpressible( getSessionFactory().getRuntimeMetamodels() );
 		final ProcedureParameterImpl<T> procedureParameter =
-				new ProcedureParameterImpl<>( position, mode, basicType.getJavaType(), basicType );
+				new ProcedureParameterImpl<>( position, mode, typeReference.getBindableJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
 	}
@@ -545,12 +550,12 @@ public class ProcedureCallImpl<R>
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(
 			String name,
-			BasicTypeReference<T> typeReference,
+			BindableType<T> typeReference,
 			ParameterMode mode) {
-		final BasicType<T> basicType =
-				getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference );
+		final SqmExpressible<T> expressible =
+				typeReference.resolveExpressible( getSessionFactory().getRuntimeMetamodels() );
 		final ProcedureParameterImpl<T> parameter =
-				new ProcedureParameterImpl<>( name, mode, basicType.getJavaType(), basicType );
+				new ProcedureParameterImpl<>( name, mode, typeReference.getBindableJavaType(), expressible );
 		registerParameter( parameter );
 		return parameter;
 	}

@@ -15,10 +15,10 @@ import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
+import org.hibernate.query.BindableType;
 import org.hibernate.query.SynchronizeableQuery;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.procedure.ProcedureParameter;
-import org.hibernate.type.BasicTypeReference;
 
 /**
  * Defines support for executing database stored procedures and functions.
@@ -74,7 +74,7 @@ public interface ProcedureCall
 	boolean isFunctionCall();
 
 	/**
-	 * Mark this ProcedureCall as representing a call to a database function,
+	 * Mark this {@code ProcedureCall} as representing a call to a database function,
 	 * rather than a database procedure.
 	 *
 	 * @param sqlType The {@link java.sql.Types} code for the function return
@@ -84,7 +84,7 @@ public interface ProcedureCall
 	ProcedureCall markAsFunctionCall(int sqlType);
 
 	/**
-	 * Mark this ProcedureCall as representing a call to a database function,
+	 * Mark this {@code ProcedureCall} as representing a call to a database function,
 	 * rather than a database procedure.
 	 *
 	 * @param resultType The result type for the function return
@@ -95,7 +95,7 @@ public interface ProcedureCall
 	ProcedureCall markAsFunctionCall(Class<?> resultType);
 
 	/**
-	 * Mark this ProcedureCall as representing a call to a database function,
+	 * Mark this {@code ProcedureCall} as representing a call to a database function,
 	 * rather than a database procedure.
 	 *
 	 * @param typeReference The result type for the function return
@@ -103,7 +103,7 @@ public interface ProcedureCall
 	 * @return {@code this}, for method chaining
 	 * @since 6.2
 	 */
-	ProcedureCall markAsFunctionCall(BasicTypeReference<?> typeReference);
+	ProcedureCall markAsFunctionCall(BindableType<?> typeReference);
 
 	/**
 	 * Basic form for registering a positional parameter.
@@ -127,13 +127,13 @@ public interface ProcedureCall
 	 *
 	 * @return The parameter registration memento
 	 */
-	<T> ProcedureParameter<T> registerParameter(int position, BasicTypeReference<T> type, ParameterMode mode);
+	<T> ProcedureParameter<T> registerParameter(int position, BindableType<T> type, ParameterMode mode);
 
 	/**
-	 * Like {@link #registerStoredProcedureParameter(int, Class, ParameterMode)} but a basic type reference is given
+	 * Like {@link #registerStoredProcedureParameter(int, Class, ParameterMode)} but a type reference is given
 	 * instead of a class for the parameter type.
 	 */
-	ProcedureCall registerStoredProcedureParameter(int position, BasicTypeReference<?> type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(int position, BindableType<?> type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the position under which it was registered.
@@ -176,14 +176,14 @@ public interface ProcedureCall
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	<T> ProcedureParameter<T> registerParameter(String parameterName, BasicTypeReference<T> type, ParameterMode mode)
+	<T> ProcedureParameter<T> registerParameter(String parameterName, BindableType<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
-	 * Like {@link #registerStoredProcedureParameter(String, Class, ParameterMode)} but a basic type reference is given
+	 * Like {@link #registerStoredProcedureParameter(String, Class, ParameterMode)} but a type reference is given
 	 * instead of a class for the parameter type.
 	 */
-	ProcedureCall registerStoredProcedureParameter(String parameterName, BasicTypeReference<?> type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(String parameterName, BindableType<?> type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the name under which it was registered.
@@ -223,9 +223,7 @@ public interface ProcedureCall
 		getOutputs().release();
 	}
 
-	/*
-	Covariant overrides
-	 */
+	/* Covariant overrides */
 
 	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);

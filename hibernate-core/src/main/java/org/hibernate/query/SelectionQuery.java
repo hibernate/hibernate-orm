@@ -17,7 +17,6 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -588,15 +587,6 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @see #setLockMode(LockModeType)
 	 */
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
-
-	/**
-	 * Apply a timeout to the corresponding database query.
-	 *
-	 * @param timeout The timeout to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 */
-	SelectionQuery<R> setTimeout(Timeout timeout);
 
 	/**
 	 * Apply a scope to any pessimistic locking applied to the query.

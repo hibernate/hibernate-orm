@@ -5,6 +5,7 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
@@ -990,6 +991,42 @@ public class HANALegacyDialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait";
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString( aliases );
+		}
+		else {
+			return getForUpdateString( aliases );
+		}
 	}
 
 	@Override

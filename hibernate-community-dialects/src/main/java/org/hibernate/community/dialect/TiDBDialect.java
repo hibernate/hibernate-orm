@@ -5,6 +5,7 @@
 package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
@@ -151,6 +152,35 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return getVersion().isSameOrAfter( 5, 7 );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString();
+		}
+		return super.getReadLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString( aliases );
+		}
+		return super.getReadLockString( aliases, timeout );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString();
+		}
+
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout );
+		}
+
+		return getForUpdateString();
 	}
 
 	@Override

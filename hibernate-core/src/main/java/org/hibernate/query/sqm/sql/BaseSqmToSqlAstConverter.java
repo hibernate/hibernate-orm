@@ -39,6 +39,7 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
@@ -2863,7 +2864,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
-		else if ( projectedPath.getNodeType().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
+		else if ( projectedPath.getReferencedPathSource().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
 			treatedType = entityDomainType;
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, treatedType.getTypeName(), true );
 			if ( projectedPath instanceof SqmFrom<?, ?> sqmFrom ) {
@@ -3283,7 +3284,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		registerPathAttributeEntityNameUsage( sqmJoin, ownerTableGroup );
 		if ( !sqmJoin.hasTreats()
-				&& sqmJoin.getNodeType().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
+				&& sqmJoin.getReferencedPathSource().getPathType() instanceof EntityDomainType<?> entityDomainType ) {
 			final TableGroup elementTableGroup =
 					joinedTableGroup instanceof PluralTableGroup pluralTableGroup
 							? pluralTableGroup.getElementTableGroup()
@@ -6034,7 +6035,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return resolveInferredValueMappingForParameter( inferredValueMapping );
 			}
 		}
-		else if ( paramType instanceof EntityDomainType ) {
+		else if ( paramType instanceof EntityDomainType || paramType instanceof AnyMappingDomainType ) {
 			// In JPA Criteria, it is possible to define a parameter of an entity type,
 			// but that should infer the mapping type from context,
 			// otherwise this would default to binding the PK which might be wrong
@@ -6598,9 +6599,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( type instanceof SqmExpressible<?> sqmExpressible ) {
 					adjustedTimestampType = sqmExpressible;
 				}
-				else if ( type instanceof ValueMapping valueMapping ) {
-					adjustedTimestampType = (SqmExpressible<?>) valueMapping.getMappedType();
-				}
+//				else if ( type instanceof ValueMapping valueMapping ) {
+//					adjustedTimestampType = (SqmExpressible<?>) valueMapping.getMappedType();
+//				}
 				else {
 					// else we know it has not been transformed
 					adjustedTimestampType = lhs.getNodeType();

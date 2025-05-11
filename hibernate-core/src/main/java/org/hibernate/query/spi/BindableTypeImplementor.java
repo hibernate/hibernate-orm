@@ -6,6 +6,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmExpressible;
 
 /**
@@ -27,5 +28,5 @@ public interface BindableTypeImplementor<J> extends BindableType<J> {
 	/**
 	 * Resolve this parameter type to the corresponding {@link SqmExpressible}.
 	 */
-	SqmExpressible<J> resolveExpressible(BindingContext bindingContext);
+	SqmBindable<J> resolveExpressible(BindingContext bindingContext);
 }

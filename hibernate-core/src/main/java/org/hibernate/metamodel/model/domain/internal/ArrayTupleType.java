@@ -13,6 +13,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -28,9 +29,9 @@ public class ArrayTupleType implements TupleType<Object[]>,
 		MappingModelExpressible<Object[]> {
 
 	private final ObjectArrayJavaType javaType;
-	private final SqmExpressible<?>[] components;
+	private final SqmBindable<?>[] components;
 
-	public ArrayTupleType(SqmExpressible<?>[] components) {
+	public ArrayTupleType(SqmBindable<?>[] components) {
 		this.components = components;
 		this.javaType = new ObjectArrayJavaType( getTypeDescriptors( components ) );
 	}
@@ -69,12 +70,12 @@ public class ArrayTupleType implements TupleType<Object[]>,
 	}
 
 	@Override
-	public SqmExpressible<?> get(int index) {
+	public SqmBindable<?> get(int index) {
 		return components[index];
 	}
 
 	@Override
-	public SqmExpressible<?> get(String componentName) {
+	public SqmBindable<?> get(String componentName) {
 		throw new UnsupportedMappingException( "Array tuple has no component names" );
 	}
 

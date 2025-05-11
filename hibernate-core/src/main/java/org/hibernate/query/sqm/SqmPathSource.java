@@ -162,7 +162,7 @@ public interface SqmPathSource<J>
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource);
 
 	@Override
-	default SqmExpressible<J> getExpressible() {
+	default SqmBindable<J> getExpressible() {
 		return getPathType();
 	}
 

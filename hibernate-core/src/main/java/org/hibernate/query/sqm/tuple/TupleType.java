@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tuple;
 
 import java.util.List;
 
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmExpressible;
 
 /**
@@ -19,6 +20,6 @@ public interface TupleType<J> extends SqmExpressible<J> {
 	String getComponentName(int index);
 	List<String> getComponentNames();
 
-	SqmExpressible<?> get(int index);
-	SqmExpressible<?> get(String componentName);
+	SqmBindable<?> get(int index);
+	SqmBindable<?> get(String componentName);
 }

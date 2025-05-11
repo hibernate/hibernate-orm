@@ -8,6 +8,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -18,7 +19,6 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.BasicPluralType;
@@ -32,7 +32,7 @@ import static java.util.Arrays.asList;
  */
 public class SqmBasicValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements SqmExpressible<T> {
+		implements SqmBindable<T> {
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -73,7 +73,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
+	public SqmBindable<T> getExpressible() {
 		return this;
 	}
 
@@ -113,8 +113,8 @@ public class SqmBasicValuedSimplePath<T>
 					new SqmFunctionPath<>(
 							getIndexFunction(
 									selector,
-									getNodeType().getPathType(),
-//									getReferencedPathSource().getPathType(),
+//									getNodeType().getPathType(),
+									getReferencedPathSource().getPathType(),
 									creationState.getCreationContext().getQueryEngine()
 							)
 					);

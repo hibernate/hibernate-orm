@@ -45,6 +45,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.type.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -380,8 +381,7 @@ public class ProcedureCallImpl<R>
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
 		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
-			final SqmExpressible<?> expressible =
-					getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
+			final SqmExpressible<?> expressible = resolveExpressible( typeReference );
 			// Function returns might not be represented as callable parameters,
 			// but we still want to convert the result to the requested java type if possible
 			resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
@@ -499,12 +499,15 @@ public class ProcedureCallImpl<R>
 			int position,
 			BindableType<T> typeReference,
 			ParameterMode mode) {
-		final SqmExpressible<T> expressible =
-				getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
+		final SqmBindable<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> procedureParameter =
 				new ProcedureParameterImpl<>( position, mode, typeReference.getBindableJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
+	}
+
+	private <T> SqmBindable<T> resolveExpressible(BindableType<T> typeReference) {
+		return getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
 	}
 
 	private void registerParameter(ProcedureParameterImplementor<?> parameter) {
@@ -546,8 +549,7 @@ public class ProcedureCallImpl<R>
 			String name,
 			BindableType<T> typeReference,
 			ParameterMode mode) {
-		final SqmExpressible<T> expressible =
-				getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
+		final SqmBindable<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> parameter =
 				new ProcedureParameterImpl<>( name, mode, typeReference.getBindableJavaType(), expressible );
 		registerParameter( parameter );

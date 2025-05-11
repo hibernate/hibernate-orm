@@ -13,6 +13,7 @@ import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -120,7 +121,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressible<?> newType) {
+	protected void internalApplyInferableType(SqmBindable<?> newType) {
 		super.internalApplyInferableType( newType );
 	}
 

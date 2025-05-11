@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -55,11 +55,11 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
-		super( referencedPathSource, nodeBuilder );
+		super( referencedPathSource.getSqmType(), nodeBuilder );
 		this.navigablePath = navigablePath;
 		this.referencedPathSource = referencedPathSource;
 		this.lhs = lhs;
-		assert super.getNodeType() == referencedPathSource;
+//		assert super.getNodeType() == referencedPathSource;
 	}
 
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
@@ -81,8 +81,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public SqmPathSource<T> getNodeType() {
-		return referencedPathSource;
+	public SqmBindable<T> getNodeType() {
+		return referencedPathSource.getPathType();
 	}
 
 	@Override
@@ -159,8 +159,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
-		return getResolvedModel();
+	public SqmBindable<T> getExpressible() {
+		return getResolvedModel().getExpressible();
 	}
 
 	@Override

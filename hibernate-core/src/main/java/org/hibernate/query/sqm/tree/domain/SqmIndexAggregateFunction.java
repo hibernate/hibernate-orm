@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -65,7 +65,7 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
+	public SqmBindable<T> getExpressible() {
 		return returnableType == null
 				? super.getExpressible()
 				: nodeBuilder().resolveExpressible( returnableType );

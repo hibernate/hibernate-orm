@@ -10,7 +10,6 @@ import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -39,10 +38,10 @@ public class BasicSqmPathSource<J>
 		return super.getTypeName();
 	}
 
-	@Override
-	public SqmDomainType<J> getSqmType() {
-		return getPathType();
-	}
+//	@Override
+//	public SqmDomainType<J> getSqmType() {
+//		return getPathType();
+//	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {

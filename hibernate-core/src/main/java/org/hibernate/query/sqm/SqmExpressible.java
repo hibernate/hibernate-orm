@@ -4,8 +4,6 @@
  */
 package org.hibernate.query.sqm;
 
-import org.hibernate.query.spi.BindableTypeImplementor;
-import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -18,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface SqmExpressible<J> extends BindableTypeImplementor<J> {
+public interface SqmExpressible<J> {
 	/**
 	 * The Java type descriptor for this expressible
 	 */
@@ -26,11 +24,6 @@ public interface SqmExpressible<J> extends BindableTypeImplementor<J> {
 
 	default JavaType<?> getRelationalJavaType() {
 		return getExpressibleJavaType();
-	}
-
-	@Override
-	default SqmExpressible<J> resolveExpressible(BindingContext bindingContext) {
-		return this;
 	}
 
 	/**

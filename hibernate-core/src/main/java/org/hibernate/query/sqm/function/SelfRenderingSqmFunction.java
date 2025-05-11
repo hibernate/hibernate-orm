@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -159,8 +159,9 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		);
 	}
 
-	public @Nullable SqmExpressible<T> getNodeType() {
-		final SqmExpressible<T> nodeType = super.getNodeType();
+	@Override
+	public @Nullable SqmBindable<T> getNodeType() {
+		final SqmBindable<T> nodeType = super.getNodeType();
 		if ( nodeType == null ) {
 			final NodeBuilder nodeBuilder = nodeBuilder();
 			final ReturnableType<?> resultType =
@@ -169,8 +170,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				return null;
 			}
 			else {
-				final SqmExpressible<?> expressibleType = nodeBuilder.resolveExpressible( resultType );
-				setExpressibleType( expressibleType );
+				setExpressibleType( nodeBuilder.resolveExpressible( resultType ) );
 				return super.getNodeType();
 			}
 		}

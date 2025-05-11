@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -15,14 +15,14 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
  */
 public class SqmLiteralNull<T> extends SqmLiteral<T> {
 
-	private static final SqmExpressible<Object> NULL_TYPE = NullSqmExpressible.NULL_SQM_EXPRESSIBLE;
+	private static final SqmBindable<Object> NULL_TYPE = NullSqmExpressible.NULL_SQM_EXPRESSIBLE;
 
 	public SqmLiteralNull(NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		this( (SqmExpressible<T>) NULL_TYPE, nodeBuilder );
+		this( (SqmBindable<T>) NULL_TYPE, nodeBuilder );
 	}
 
-	public SqmLiteralNull(SqmExpressible<T> expressibleType, NodeBuilder nodeBuilder) {
+	public SqmLiteralNull(SqmBindable<T> expressibleType, NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
 	}
 

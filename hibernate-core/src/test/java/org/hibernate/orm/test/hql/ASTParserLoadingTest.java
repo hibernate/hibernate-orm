@@ -24,8 +24,8 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.orm.test.any.xml.IntegerPropertyValue;
 import org.hibernate.orm.test.any.xml.PropertySet;
@@ -1460,7 +1460,7 @@ public class ASTParserLoadingTest {
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections()
 							.get( 0 );
 					final SqmExpressible<?> selectionType = selection.getSelectableNode().getNodeType();
-					assertThat( selectionType ).isInstanceOf( EmbeddedSqmPathSource.class );
+					assertThat( selectionType ).isInstanceOf( EmbeddableDomainType.class );
 					assertThat( selection.getNodeJavaType().getJavaTypeClass() ).isEqualTo( Name.class );
 
 

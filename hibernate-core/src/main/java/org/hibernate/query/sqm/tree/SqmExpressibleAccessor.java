@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -21,5 +22,5 @@ public interface SqmExpressibleAccessor<T> {
 		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
-	SqmExpressible<T> getExpressible();
+	SqmBindable<T> getExpressible();
 }

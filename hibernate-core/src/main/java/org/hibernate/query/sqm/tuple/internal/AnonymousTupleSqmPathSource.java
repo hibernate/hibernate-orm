@@ -43,14 +43,14 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public SqmDomainType<J> getPathType() {
-		return path.getNodeType().getPathType();
-//		return (SqmDomainType<J>) path.getReferencedPathSource().getPathType();
+//		return path.getNodeType().getPathType();
+		return path.getResolvedModel().getPathType();
 	}
 
 	@Override
 	public BindableType getBindableType() {
-		return path.getNodeType().getBindableType();
-//		return path.getReferencedPathSource().getBindableType();
+//		return path.getNodeType().getBindableType();
+		return path.getResolvedModel().getBindableType();
 	}
 
 	@Override
@@ -60,14 +60,14 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		return path.getNodeType().findSubPathSource( name );
-//		return path.getReferencedPathSource().findSubPathSource( name );
+//		return path.getNodeType().findSubPathSource( name );
+		return path.getReferencedPathSource().findSubPathSource( name );
 	}
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final DomainType<?> domainType = path.getNodeType().getPathType();
-//		final DomainType<?> domainType = path.getReferencedPathSource().getPathType();
+//		final DomainType<?> domainType = path.getNodeType().getPathType();
+		final DomainType<?> domainType = path.getReferencedPathSource().getPathType();
 		if ( domainType instanceof BasicDomainType<?> ) {
 			return new SqmBasicValuedSimplePath<>(
 					PathHelper.append( lhs, this, intermediatePathSource ),

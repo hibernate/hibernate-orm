@@ -4,14 +4,14 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
-public class NullSqmExpressible implements SqmExpressible<Object> {
+public class NullSqmExpressible implements SqmBindable<Object> {
 	/**
 	 * Singleton access
 	 */

@@ -71,6 +71,7 @@ import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.hql.HqlLogging;
@@ -4457,7 +4458,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private <T> SqmNamedParameter<T> visitNamedParameter(
 			HqlParser.NamedParameterContext ctx,
-			SqmExpressible<T> expressibleType) {
+			SqmBindable<T> expressibleType) {
 		parameterStyle = parameterStyle.withNamed();
 		return resolveParameter(
 				new SqmNamedParameter<>(
@@ -4476,7 +4477,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private <T> SqmPositionalParameter<T> visitPositionalParameter(
 			HqlParser.PositionalParameterContext ctx,
-			SqmExpressible<T> expressibleType) {
+			SqmBindable<T> expressibleType) {
 		if ( ctx.getChildCount() == 1 ) {
 			throw new ParameterLabelException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
 		}

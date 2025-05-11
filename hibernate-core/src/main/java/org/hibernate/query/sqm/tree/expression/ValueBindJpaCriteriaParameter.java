@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -21,9 +21,9 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 	public ValueBindJpaCriteriaParameter(BindableType<? super T> type, T value, NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );
 		assert value == null || type == null
-			|| ( type instanceof SqmExpressible<? super T> expressible
+			|| ( type instanceof SqmBindable<? super T> bindable
 					// TODO: why does SqmExpressible.getBindableJavaType() return an apparently-wrong type?
-					? expressible.getExpressibleJavaType().isInstance( value )
+					? bindable.getExpressibleJavaType().isInstance( value )
 					: type.getBindableJavaType().isInstance( value ) );
 		this.value = value;
 	}

@@ -237,13 +237,9 @@ public class AttributeFactory {
 
 	private static <Y> EmbeddableDomainType<Y> embeddableDomainType(ValueContext typeContext, MetadataContext context) {
 		final Component component = (Component) typeContext.getHibernateValue();
-		if ( component.isDynamic() ) {
-			return dynamicEmbeddableType( context, component );
-		}
-		else {
-			// we should have a non-dynamic embeddable
-			return classEmbeddableType( context, component );
-		}
+		return component.isDynamic()
+				? dynamicEmbeddableType( context, component )
+				: classEmbeddableType( context, component ); // we should have a non-dynamic embeddable
 	}
 
 	private static <Y> EmbeddableDomainType<Y> classEmbeddableType(MetadataContext context, Component component) {

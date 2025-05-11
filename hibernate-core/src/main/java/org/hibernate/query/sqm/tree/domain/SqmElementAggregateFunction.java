@@ -62,12 +62,16 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 
 	@Override
 	public SqmExpressible<T> getExpressible() {
-		return returnableType == null ? super.getExpressible() : nodeBuilder().resolveExpressible( returnableType );
+		return returnableType == null
+				? super.getExpressible()
+				: nodeBuilder().resolveExpressible( returnableType );
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return returnableType == null ? super.getJavaTypeDescriptor() : returnableType.getExpressibleJavaType();
+		return returnableType == null
+				? super.getJavaTypeDescriptor()
+				: returnableType.getExpressibleJavaType();
 	}
 
 	@Override

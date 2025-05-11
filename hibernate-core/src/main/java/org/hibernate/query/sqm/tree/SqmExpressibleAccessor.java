@@ -18,7 +18,7 @@ public interface SqmExpressibleAccessor<T> {
 	 */
 	default JavaType<T> getNodeJavaType() {
 		final SqmExpressible<T> nodeType = getExpressible();
-		return nodeType != null ? nodeType.getExpressibleJavaType() : null;
+		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
 	SqmExpressible<T> getExpressible();

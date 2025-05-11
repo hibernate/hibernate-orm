@@ -58,6 +58,7 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 
 	@Override
 	public SqmPluralPersistentAttribute<L, C, E> getModel() {
-		return (SqmPluralPersistentAttribute<L, C, E>) super.getNodeType();
+//		return (SqmPluralPersistentAttribute<L, C, E>) super.getNodeType();
+		return (SqmPluralPersistentAttribute<L, C, E>) super.getModel();
 	}
 }

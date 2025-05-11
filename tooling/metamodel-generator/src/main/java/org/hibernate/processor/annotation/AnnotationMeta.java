@@ -91,49 +91,47 @@ public abstract class AnnotationMeta implements Metamodel {
 			final Context context = getContext();
 			final boolean reportErrors = context.checkNamedQuery( name );
 			final AnnotationValue value = getAnnotationValue( mirror, "query" );
-			if ( value != null ) {
-				if ( value.getValue() instanceof String hql ) {
-					final SqmStatement<?> statement =
-							Validation.validate(
-									hql,
-									null,
-									true,
-									// If we are in the scope of @CheckHQL, semantic errors in the
-									// query result in compilation errors. Otherwise, they only
-									// result in warnings, so we don't break working code.
-									new WarningErrorHandler( context, getElement(), mirror, value, hql,
-											reportErrors, checkHql ),
-									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-											context.getEntityNameMappings(), context.getEnumTypesByValue(),
-											context.isIndexing() )
-							);
-					if ( !isJakartaDataStyle()
-							&& statement instanceof SqmSelectStatement<?> selectStatement ) {
-						if ( isQueryMethodName( name ) ) {
-							final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
-							final String resultType = annotationValue != null
-									? annotationValue.getValue().toString()
-									: resultType( selectStatement );
-							putMember( name,
-									new NamedQueryMethod(
-											this,
-											selectStatement,
-											name.substring(1),
-											isRepository(),
-											getSessionType(),
-											getSessionVariableName(),
-											context.addNonnullAnnotation(),
-											resultType
-									)
-							);
-						}
-						if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
-							final String resultType = resultType( selectStatement );
-							if ( resultType != null ) {
-								putMember( "QUERY_" + name,
-										new TypedMetaAttribute( this, name, "QUERY_", resultType,
-												TYPED_QUERY_REFERENCE, hql ) );
-							}
+			if ( value != null && value.getValue() instanceof String hql ) {
+				final SqmStatement<?> statement =
+						Validation.validate(
+								hql,
+								null,
+								true,
+								// If we are in the scope of @CheckHQL, semantic errors in the
+								// query result in compilation errors. Otherwise, they only
+								// result in warnings, so we don't break working code.
+								new WarningErrorHandler( context, getElement(), mirror, value, hql,
+										reportErrors, checkHql ),
+								ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+										context.getEntityNameMappings(), context.getEnumTypesByValue(),
+										context.isIndexing() )
+						);
+				if ( !isJakartaDataStyle()
+					&& statement instanceof SqmSelectStatement<?> selectStatement ) {
+					if ( isQueryMethodName( name ) ) {
+						final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
+						final String resultType = annotationValue != null
+								? annotationValue.getValue().toString()
+								: resultType( selectStatement );
+						putMember( name,
+								new NamedQueryMethod(
+										this,
+										selectStatement,
+										name.substring( 1 ),
+										isRepository(),
+										getSessionType(),
+										getSessionVariableName(),
+										context.addNonnullAnnotation(),
+										resultType
+								)
+						);
+					}
+					if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
+						final String resultType = resultType( selectStatement );
+						if ( resultType != null ) {
+							putMember( "QUERY_" + name,
+									new TypedMetaAttribute( this, name, "QUERY_", resultType,
+											TYPED_QUERY_REFERENCE, hql ) );
 						}
 					}
 				}

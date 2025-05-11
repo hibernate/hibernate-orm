@@ -2154,6 +2154,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return sqmPath.getResolvedModel() instanceof SqmSingularPersistentAttribute<?,?> attribute
 					? attribute.getSqmPathSource()
 					: sqmPath.getResolvedModel();
+//					: sqmPath.getExpressible();
 		}
 		else {
 			return expression.getNodeType();
@@ -2169,13 +2170,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		final T coercedValue =
 				resolveExpressible( bindableType ).getExpressibleJavaType()
 						.coerce(value, this::getTypeConfiguration );
-		if ( isInstance( bindableType, coercedValue ) ) {
-			return new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this );
-		}
-		else {
-			// ignore typeInferenceSource and fall back the value type
-			return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
-		}
+		return isInstance( bindableType, coercedValue )
+				? new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this )
+				// ignore typeInferenceSource and fall back the value type
+				: new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
 	}
 
 	private <E> ValueBindJpaCriteriaParameter<? extends Collection<E>> collectionValueParameter(Collection<E> value, SqmExpression<E> elementTypeInferenceSource) {

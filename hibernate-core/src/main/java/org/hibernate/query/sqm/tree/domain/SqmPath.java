@@ -170,6 +170,4 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	SqmPath<T> copy(SqmCopyContext context);
-
-
 }

@@ -3,6 +3,21 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.14.Final (May 11, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33241
+
+** Bug
+    * [HHH-19425] - incorrect class literals in Processor-generated code
+    * [HHH-19375] - fix check for presence of Quarkus in reactive case
+    * [HHH-19374] - repositories should always be @Dependent
+    * [HHH-19320] - Assigned id value is not passed into BeforeExecutionGenerator#generate() method when allowAssignedIdentifiers() is true and id has been assigned
+    * [HHH-19314] - StackOverflowException when using onConflict with createCriteriaInsertValues and createCriteriaInsertSelect
+    * [HHH-19306] - Composite generator may not respect the event types of generators it consits of
+    * [HHH-19036] - ORM Filter are searched for in the wrong order
+
+
 Changes in 6.6.13.Final (April 06, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

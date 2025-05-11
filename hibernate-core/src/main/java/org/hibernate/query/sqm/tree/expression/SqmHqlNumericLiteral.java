@@ -40,7 +40,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
 		this( literalValue,
-				interpretCategory( literalValue, type.resolveExpressible( criteriaBuilder ) ),
+				interpretCategory( literalValue, criteriaBuilder.resolveExpressible( type ) ),
 				type, criteriaBuilder );
 		this.type = type;
 	}
@@ -50,7 +50,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 			NumericTypeCategory typeCategory,
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
-		super( type.resolveExpressible( criteriaBuilder ), criteriaBuilder );
+		super( criteriaBuilder.resolveExpressible( type ), criteriaBuilder );
 		this.literalValue = literalValue;
 		this.typeCategory = typeCategory;
 		this.type = type;

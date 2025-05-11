@@ -8,7 +8,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.descriptor.WrapperOptions;
 

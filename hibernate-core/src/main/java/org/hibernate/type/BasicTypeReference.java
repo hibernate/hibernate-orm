@@ -6,17 +6,19 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindableTypeImplementor;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * A basic type reference.
  *
  * @author Christian Beikov
+ *
+ * @see StandardBasicTypes
  */
-public final class BasicTypeReference<T> implements BindableType<T>, Serializable {
+public final class BasicTypeReference<T> implements BindableTypeImplementor<T>, Serializable {
 	private final String name;
 	private final Class<T> javaType;
 	private final int sqlTypeCode;

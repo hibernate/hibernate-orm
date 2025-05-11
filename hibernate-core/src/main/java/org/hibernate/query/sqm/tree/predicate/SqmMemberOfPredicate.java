@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.BindableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -36,9 +37,8 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 		this.pluralPath = pluralPath;
 		this.leftHandExpression = leftHandExpression;
 
-		final SqmExpressible<?> simpleDomainType =
-				pluralPath.getPluralAttribute().getElementType()
-						.resolveExpressible( nodeBuilder );
+		final BindableType<?> elementType = pluralPath.getPluralAttribute().getElementType();
+		final SqmExpressible<?> simpleDomainType = nodeBuilder.resolveExpressible( elementType );
 
 		if ( !areTypesComparable( leftHandExpression.getNodeType(), simpleDomainType, nodeBuilder ) ) {
 			throw new SemanticException(

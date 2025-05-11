@@ -10,7 +10,6 @@ import java.util.Date;
 
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryArgumentException;
-import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -40,7 +39,7 @@ public class QueryParameterBindingValidator {
 			return;
 		}
 
-		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible(bindingContext);
+		final SqmExpressible<?> sqmExpressible = bindingContext.resolveExpressible( paramType );
 		final Class<?> parameterJavaType =
 				paramType.getBindableJavaType() != null
 						? paramType.getBindableJavaType()

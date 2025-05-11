@@ -5,11 +5,15 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
-import org.hibernate.Internal;
-import org.hibernate.query.sqm.SqmExpressible;
 
 /**
- * Types that can be used to handle binding {@link Query} parameters
+ * Represents a type which can be bound to a {@linkplain CommonQueryContract query}
+ * parameter. An instance of {@code BindableType} may be passed to operations like
+ * {@link CommonQueryContract#setParameter(int, Object, BindableType)} and
+ * {@link CommonQueryContract#setParameter(String, Object, BindableType)}.
+ *
+ * @implNote Every implementation of this interface must also implement
+ *           the SPI {@link org.hibernate.query.spi.BindableTypeImplementor}.
  *
  * @see org.hibernate.type.BasicTypeReference
  * @see org.hibernate.type.StandardBasicTypes
@@ -19,19 +23,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 @Incubating
 public interface BindableType<J> {
 	/**
-	 * The expected Java type
+	 * The expected Java type of the argument to the query parameter.
 	 */
 	Class<J> getBindableJavaType();
-
-	default boolean isInstance(J value) {
-		return getBindableJavaType().isInstance( value );
-	}
-
-	/**
-	 * Resolve this parameter type to the corresponding {@link SqmExpressible}
-	 *
-	 * @apiNote This internal operation is a layer-breaker, exposing an SQM-specific type
-	 */
-	@Internal
-	SqmExpressible<J> resolveExpressible(BindingContext bindingContext);
 }

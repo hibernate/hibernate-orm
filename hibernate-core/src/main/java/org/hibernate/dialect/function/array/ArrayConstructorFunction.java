@@ -8,7 +8,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;

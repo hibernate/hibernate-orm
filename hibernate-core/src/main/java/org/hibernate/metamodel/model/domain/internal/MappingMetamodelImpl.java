@@ -43,7 +43,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -674,7 +674,7 @@ public class MappingMetamodelImpl
 
 		else if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
 			return resolveMappingExpressible(
-					anonymousTupleSqmPathSource.getPathType().resolveExpressible( this ),
+					resolveExpressible( anonymousTupleSqmPathSource.getPathType() ),
 					tableGroupLocator
 			);
 		}

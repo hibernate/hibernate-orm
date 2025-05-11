@@ -49,8 +49,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			NodeBuilder nodeBuilder,
 			String name) {
 		super( name, descriptor,
-				impliedResultType == null ? null
-						: impliedResultType.resolveExpressible( nodeBuilder ),
+				nodeBuilder.resolveExpressible( impliedResultType ),
 				arguments, nodeBuilder );
 		this.renderer = renderer;
 		this.impliedResultType = impliedResultType;
@@ -170,7 +169,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				return null;
 			}
 			else {
-				final SqmExpressible<?> expressibleType = resultType.resolveExpressible( nodeBuilder );
+				final SqmExpressible<?> expressibleType = nodeBuilder.resolveExpressible( resultType );
 				setExpressibleType( expressibleType );
 				return super.getNodeType();
 			}
@@ -184,7 +183,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		if ( resultType == null ) {
 			resultType = determineResultType( walker, walker.getCreationContext().getTypeConfiguration() );
 			if ( resultType != null ) {
-				setExpressibleType( resultType.resolveExpressible( nodeBuilder() ) );
+				setExpressibleType( nodeBuilder().resolveExpressible( resultType ) );
 			}
 		}
 		return resultType;

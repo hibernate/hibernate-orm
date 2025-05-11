@@ -5909,7 +5909,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmExpression instanceof SelfRenderingSqmFunction<?> selfRenderingSqmFunction ) {
 			final ReturnableType<?> returnableType = selfRenderingSqmFunction.resolveResultType( this );
 			return domainModel.resolveMappingExpressible(
-					returnableType == null ? null : returnableType.resolveExpressible( getCreationContext() ),
+					getCreationContext().resolveExpressible( returnableType ),
 					this::findTableGroupByPath
 			);
 		}
@@ -6048,7 +6048,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter, BindableType<?> paramType) {
-		final SqmExpressible<?> paramSqmType = paramType.resolveExpressible( creationContext );
+		final SqmExpressible<?> paramSqmType = creationContext.resolveExpressible( paramType );
 		if ( paramSqmType instanceof SqmPath<?> sqmPath ) {
 			final MappingModelExpressible<?> modelPart = determineValueMapping( sqmPath );
 			if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {

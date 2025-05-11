@@ -66,7 +66,7 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 
 	@Override
 	public SqmExpressible<T> getExpressible() {
-		return returnableType == null ? super.getExpressible() : returnableType.resolveExpressible( nodeBuilder() );
+		return returnableType == null ? super.getExpressible() : nodeBuilder().resolveExpressible( returnableType );
 	}
 
 	@Override

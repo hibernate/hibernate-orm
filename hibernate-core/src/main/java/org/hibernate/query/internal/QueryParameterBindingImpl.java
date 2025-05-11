@@ -253,7 +253,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private JavaType<? super T> determineJavaType(BindableType<? super T> bindType) {
-		final SqmExpressible<? super T> sqmExpressible = bindType.resolveExpressible( getCriteriaBuilder() );
+		final SqmExpressible<? super T> sqmExpressible = getCriteriaBuilder().resolveExpressible( bindType );
 		assert sqmExpressible != null;
 		return sqmExpressible.getExpressibleJavaType();
 	}
@@ -337,7 +337,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return null;
 		}
 		else {
-			final SqmExpressible<? super T> sqmExpressible = parameterType.resolveExpressible( getCriteriaBuilder() );
+			final SqmExpressible<? super T> sqmExpressible = getCriteriaBuilder().resolveExpressible( parameterType );
 			assert sqmExpressible != null;
 			return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 		}

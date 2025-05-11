@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -34,7 +34,7 @@ public class SqmExpressionHelper {
 			return null;
 		}
 		else {
-			final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( bindingContext );
+			final SqmExpressible<T> sqmExpressible = bindingContext.resolveExpressible( anticipatedType );
 			assert sqmExpressible != null;
 			return sqmExpressible;
 		}

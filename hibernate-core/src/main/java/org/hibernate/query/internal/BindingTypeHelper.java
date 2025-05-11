@@ -13,7 +13,7 @@ import java.util.Calendar;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -41,7 +41,7 @@ public class BindingTypeHelper {
 		if ( precision != null ) {
 			final TemporalJavaType<T> temporalJtd;
 			if ( declaredParameterType != null ) {
-				final SqmExpressible<T> sqmExpressible = declaredParameterType.resolveExpressible( bindingContext );
+				final SqmExpressible<T> sqmExpressible = bindingContext.resolveExpressible( declaredParameterType );
 				if ( !( JavaTypeHelper.isTemporal( sqmExpressible.getExpressibleJavaType() ) ) ) {
 					throw new UnsupportedOperationException(
 							"Cannot treat non-temporal parameter type with temporal precision"

@@ -106,7 +106,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
-import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
@@ -2095,7 +2094,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			//noinspection unchecked
 			return (SqmExpression<T>) value;
 		}
-		return inlineValue( value ) ? literal( value, typeInferenceSource ) : valueParameter( value, typeInferenceSource );
+		else {
+			return inlineValue( value )
+					? literal( value, typeInferenceSource )
+					: valueParameter( value, typeInferenceSource );
+		}
 	}
 
 	private <E> SqmExpression<? extends Collection<?>> collectionValue(Collection<E> value, SqmExpression<E> typeInferenceSource) {
@@ -2120,7 +2123,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private <T> boolean isInstance(BindableType<T> bindableType, T value) {
+	private <T> boolean isInstance(BindableType<? extends T> bindableType, T value) {
 		if ( bindableType instanceof SqmExpressible<?> expressible ) {
 			return expressible.getExpressibleJavaType().isInstance( value );
 		}
@@ -2130,50 +2133,49 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> BindableType<T> resolveInferredParameterType(
-			T value,
-			SqmExpression<? extends T> typeInferenceSource,
+	private static <X, T extends X> BindableType<? extends X> resolveInferredParameterType(
+			X value,
+			SqmExpression<T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 
 		if ( typeInferenceSource != null ) {
 			if ( typeInferenceSource instanceof BindableType ) {
+				//noinspection unchecked
 				return (BindableType<T>) typeInferenceSource;
 			}
-			final SqmExpressible<?> nodeType = getNodeType( typeInferenceSource );
+			final SqmExpressible<T> nodeType = typeInferenceSource.getExpressible();
 			if ( nodeType != null ) {
-				return (BindableType<T>) nodeType;
+				return nodeType;
 			}
 		}
 
-		return value == null ? null : (BasicType<T>) typeConfiguration.getBasicTypeForJavaType( value.getClass() );
-	}
-
-	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
-		if ( expression instanceof SqmPath<?> sqmPath ) {
-			return sqmPath.getResolvedModel() instanceof SqmSingularPersistentAttribute<?,?> attribute
-					? attribute.getSqmPathSource()
-					: sqmPath.getResolvedModel();
-//					: sqmPath.getExpressible();
+		if ( value == null ) {
+			return null;
 		}
 		else {
-			return expression.getNodeType();
+			@SuppressWarnings("unchecked") // this is completely safe
+			final Class<? extends X> valueClass = (Class<? extends X>) value.getClass();
+			return typeConfiguration.getBasicTypeForJavaType( valueClass );
 		}
 	}
 
 	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value, SqmExpression<? extends T> typeInferenceSource) {
-		final BindableType<T> bindableType =
-				resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
+		final var bindableType = resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
 		if ( bindableType == null || isInstance( bindableType, value) ) {
-			return new ValueBindJpaCriteriaParameter<>( bindableType, value, this );
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var widerType = (BindableType<? super T>) bindableType;
+			return new ValueBindJpaCriteriaParameter<>( widerType, value, this );
 		}
 		final T coercedValue =
 				resolveExpressible( bindableType ).getExpressibleJavaType()
-						.coerce(value, this::getTypeConfiguration );
-		return isInstance( bindableType, coercedValue )
-				? new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this )
-				// ignore typeInferenceSource and fall back the value type
-				: new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
+						.coerce( value, this::getTypeConfiguration );
+		// ignore typeInferenceSource and fall back the value type
+		if ( isInstance( bindableType, coercedValue ) ) {
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var widerType = (BindableType<? super T>) bindableType;
+			return new ValueBindJpaCriteriaParameter<>( widerType, coercedValue, this );
+		}
+		return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
 	}
 
 	private <E> ValueBindJpaCriteriaParameter<? extends Collection<E>> collectionValueParameter(Collection<E> value, SqmExpression<E> elementTypeInferenceSource) {

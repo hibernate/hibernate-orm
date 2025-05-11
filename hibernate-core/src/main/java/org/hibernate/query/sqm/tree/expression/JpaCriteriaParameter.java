@@ -39,7 +39,7 @@ public class JpaCriteriaParameter<T>
 			BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
-		super( toSqmType( type, nodeBuilder ), nodeBuilder );
+		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
 		this.name = name;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
@@ -48,10 +48,6 @@ public class JpaCriteriaParameter<T>
 		super( original.getNodeType(), original.nodeBuilder() );
 		this.name = original.name;
 		this.allowsMultiValuedBinding = original.allowsMultiValuedBinding;
-	}
-
-	private static <T> SqmExpressible<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
-		return type == null ? null : type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override
@@ -104,7 +100,7 @@ public class JpaCriteriaParameter<T>
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void applyAnticipatedType(BindableType type) {
-		super.internalApplyInferableType( toSqmType( type, nodeBuilder() ) );
+		super.internalApplyInferableType( nodeBuilder().resolveExpressible( type ) );
 	}
 
 	@Override

@@ -47,7 +47,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 
 	@Override
 	public SqmExpressible<T> getNodeType() {
-		return type.resolveExpressible( nodeBuilder() );
+		return nodeBuilder().resolveExpressible( type );
 	}
 
 	@Override

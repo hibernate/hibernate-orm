@@ -147,7 +147,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	private Class<?> getJavaTypeClass(SqmDomainType<T> sqmPathType) {
-		return sqmPathType.resolveExpressible( nodeBuilder() )
+		return nodeBuilder().resolveExpressible( sqmPathType )
 				.getRelationalJavaType()
 				.getJavaTypeClass();
 	}

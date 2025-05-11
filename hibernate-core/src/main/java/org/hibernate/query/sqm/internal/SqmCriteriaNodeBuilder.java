@@ -51,7 +51,7 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
@@ -1595,10 +1595,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return new SqmLiteralNull<>( this );
 		}
 		else {
-			final BindableType<? super T> valueParamType = getParameterBindType( value );
-			final SqmExpressible<? super T> sqmExpressible =
-					valueParamType == null ? null : valueParamType.resolveExpressible( this );
-			return new SqmLiteral<>( value, sqmExpressible, this );
+			return new SqmLiteral<>( value, resolveExpressible( getParameterBindType( value ) ), this );
 		}
 	}
 
@@ -1644,7 +1641,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			// if there's no basic type, it might be an entity type
 			final SqmExpressible<T> sqmExpressible =
 					basicTypeForJavaType == null
-							? getDomainModel().managedType( resultClass ).resolveExpressible( this )
+							? resolveExpressible( getDomainModel().managedType( resultClass ) )
 							: basicTypeForJavaType;
 			return new SqmLiteralNull<>( sqmExpressible, this );
 		}
@@ -2129,7 +2126,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 		else {
 			return bindableType.getBindableJavaType().isInstance( value )
-				|| bindableType.resolveExpressible( this ).getExpressibleJavaType().isInstance( value );
+				|| resolveExpressible( bindableType ).getExpressibleJavaType().isInstance( value );
 		}
 	}
 
@@ -2170,7 +2167,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return new ValueBindJpaCriteriaParameter<>( bindableType, value, this );
 		}
 		final T coercedValue =
-				bindableType.resolveExpressible( this ).getExpressibleJavaType()
+				resolveExpressible( bindableType ).getExpressibleJavaType()
 						.coerce(value, this::getTypeConfiguration );
 		if ( isInstance( bindableType, coercedValue ) ) {
 			return new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this );
@@ -2192,11 +2189,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				bindableType = elementTypeInferenceSource.getNodeType();
 			}
 		}
-		DomainType<E> elementType = null;
-		if ( bindableType != null ) {
-			final SqmExpressible<E> sqmExpressible = bindableType.resolveExpressible( this );
-			elementType = sqmExpressible.getSqmType();
-		}
+		final DomainType<E> elementType = resolveExpressible( bindableType ).getSqmType();
 		if ( elementType == null ) {
 			throw new UnsupportedOperationException( "Can't infer collection type based on element expression: " + elementTypeInferenceSource );
 		}

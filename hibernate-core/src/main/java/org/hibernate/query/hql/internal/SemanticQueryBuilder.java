@@ -1567,7 +1567,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			// make sure this selection exists
 			final SqmAliasedNode<?> nodeByPosition;
 			if ( queryPart instanceof SqmQueryGroup<?> ) {
-				final List<SqmSelection<?>> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
+				final var selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
 				nodeByPosition = position <= selections.size() ? selections.get( position - 1 ) : null;
 			}
 			else {
@@ -1579,7 +1579,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						query );
 			}
 
-			return new SqmAliasedNodeRef( position, integerDomainType.resolveExpressible( nodeBuilder ), nodeBuilder);
+			return new SqmAliasedNodeRef(
+					position,
+					nodeBuilder.resolveExpressible( integerDomainType ),
+					nodeBuilder
+			);
 		}
 		else if ( child instanceof HqlParser.IdentifierContext identifierContext ) {
 			final String identifierText = visitIdentifier( identifierContext );
@@ -1629,7 +1633,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					);
 				}
 				else if ( sqmPosition != 0 ) {
-					return new SqmAliasedNodeRef( sqmPosition,  nodeBuilder.getIntegerType(), nodeBuilder );
+					return new SqmAliasedNodeRef(
+							sqmPosition,
+							nodeBuilder.getIntegerType(),
+							nodeBuilder
+					);
 				}
 			}
 			else {
@@ -1643,7 +1651,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						// This is syntactically disallowed
 						throw new SyntaxException( "'collate' is not allowed for alias-based 'order by' or 'group by' items" );
 					}
-					return new SqmAliasedNodeRef( correspondingPosition, integerDomainType.resolveExpressible( nodeBuilder ), nodeBuilder );
+					return new SqmAliasedNodeRef(
+							correspondingPosition,
+							nodeBuilder.resolveExpressible( integerDomainType ),
+							nodeBuilder
+					);
 				}
 
 				final SqmFrom<?, ?> sqmFrom =

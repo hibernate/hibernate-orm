@@ -651,7 +651,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			final EntityDomainType<T> entityDescriptor = nodeBuilder.getDomainModel().findEntityType( type );
 			expressibleType =
 					entityDescriptor != null
-							? entityDescriptor.resolveExpressible( nodeBuilder )
+							? nodeBuilder.resolveExpressible( entityDescriptor )
 							: nodeBuilder.getTypeConfiguration().getBasicTypeForJavaType( type );
 		}
 	}

@@ -154,7 +154,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> getQueryParameter(String name) {
-		final ProcedureParameterImplementor<?> parameter = findQueryParameter( name );
+		final var parameter = findQueryParameter( name );
 		if ( parameter != null ) {
 			return parameter;
 		}
@@ -213,8 +213,9 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	public Set<Integer> getOrdinalParameterLabels() {
 		final Set<Integer> labels = new HashSet<>();
 		visitRegistrations( parameter -> {
-			if ( parameter.getPosition() != null ) {
-				labels.add( parameter.getPosition() );
+			final Integer position = parameter.getPosition();
+			if ( position != null ) {
+				labels.add( position );
 			}
 		} );
 		return labels;

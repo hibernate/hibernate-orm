@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.SqmExpressible;

@@ -68,15 +68,15 @@ public class EmbeddableTypeImpl<J>
 		return getTypeName();
 	}
 
-	@Override
-	public SqmEmbeddableDomainType<J> getPathType() {
-		return this;
-	}
+//	@Override
+//	public SqmEmbeddableDomainType<J> getPathType() {
+//		return this;
+//	}
 
-	@Override
-	public SqmEmbeddableDomainType<J> getSqmType() {
-		return SqmEmbeddableDomainType.super.getSqmType();
-	}
+//	@Override
+//	public SqmEmbeddableDomainType<J> getSqmType() {
+//		return this;
+//	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {

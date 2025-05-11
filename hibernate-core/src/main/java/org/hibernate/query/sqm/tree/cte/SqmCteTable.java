@@ -11,10 +11,10 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -114,8 +114,8 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	}
 
 	@Override
-	public SqmExpressible<?> get(String componentName) {
-		final SqmExpressible<?> sqmExpressible = super.get( componentName );
+	public SqmBindable<?> get(String componentName) {
+		final SqmBindable<?> sqmExpressible = super.get( componentName );
 		if ( sqmExpressible != null ) {
 			return sqmExpressible;
 		}

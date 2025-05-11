@@ -7,17 +7,17 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 
 @Incubating
 public interface SqmDomainType<T>
-		extends DomainType<T>, SqmExpressible<T>, BindableType<T> {
+		extends DomainType<T>, SqmBindable<T>, BindableType<T> {
 	@Override
 	SqmDomainType<T> getSqmType();
 
 	@Override
 	default String getTypeName() {
-		return SqmExpressible.super.getTypeName();
+		return SqmBindable.super.getTypeName();
 	}
 
 	default int getTupleLength() {

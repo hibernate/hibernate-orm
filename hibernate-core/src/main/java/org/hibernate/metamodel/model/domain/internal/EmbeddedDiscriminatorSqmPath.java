@@ -38,8 +38,8 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 
 	@Override
 	public EmbeddedDiscriminatorSqmPathSource<T> getExpressible() {
-		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
-//		return (EmbeddedDiscriminatorSqmPathSource<T>) super.getExpressible();
+//		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
+		return (EmbeddedDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}
 
 	@Override

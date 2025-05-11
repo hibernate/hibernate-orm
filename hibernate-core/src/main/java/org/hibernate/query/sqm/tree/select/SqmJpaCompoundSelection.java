@@ -12,7 +12,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -39,9 +39,9 @@ import jakarta.persistence.criteria.Selection;
  */
 public class SqmJpaCompoundSelection<T>
 		extends AbstractSqmExpression<T>
-		implements JpaCompoundSelection<T>, SqmExpressible<T> {
+		implements JpaCompoundSelection<T>, SqmBindable<T> {
 
-	// todo (6.0) : should this really be SqmExpressible?
+	// todo (6.0) : should this really be SqmBindable?
 	//		- seems like it ought to be limited to just `SqmSelectableNode`.
 	//			otherwise why the distinction? why not just just re-use the same
 	//			impl between this and `org.hibernate.query.sqm.tree.expression.SqmTuple`?

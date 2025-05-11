@@ -9,13 +9,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
@@ -30,7 +33,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
@@ -48,7 +50,7 @@ public class AnonymousTupleType<T>
 
 	private final JavaType<T> javaTypeDescriptor;
 	private final @Nullable NavigablePath[] componentSourcePaths;
-	private final SqmExpressible<?>[] expressibles;
+	private final SqmBindable<?>[] expressibles;
 	private final String[] componentNames;
 	private final Map<String, Integer> componentIndexMap;
 
@@ -57,7 +59,7 @@ public class AnonymousTupleType<T>
 	}
 
 	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
-		expressibles = new SqmExpressible<?>[components.length];
+		expressibles = new SqmBindable<?>[components.length];
 		componentSourcePaths = new NavigablePath[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
 			expressibles[i] = components[i].getNodeType();
@@ -81,7 +83,7 @@ public class AnonymousTupleType<T>
 		}
 	}
 
-	public AnonymousTupleType(SqmExpressible<?>[] expressibles, String[] componentNames) {
+	public AnonymousTupleType(SqmBindable<?>[] expressibles, String[] componentNames) {
 		this.expressibles = expressibles;
 		this.componentNames = componentNames;
 
@@ -175,12 +177,12 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
-	public SqmExpressible<?> get(int index) {
+	public SqmBindable<?> get(int index) {
 		return expressibles[index];
 	}
 
 	@Override
-	public SqmExpressible<?> get(String componentName) {
+	public SqmBindable<?> get(String componentName) {
 		final Integer index = componentIndexMap.get( componentName );
 		return index == null ? null : expressibles[index];
 	}
@@ -209,20 +211,24 @@ public class AnonymousTupleType<T>
 					pluralAttribute.getElementType()
 			);
 		}
-		else if ( sqmType instanceof BasicType<T> ) {
+		else if ( sqmType instanceof BasicDomainType<?> ) {
 			return new AnonymousTupleSimpleSqmPathSource<>(
 					name,
 					sqmType,
 					BindableType.SINGULAR_ATTRIBUTE
 			);
 		}
-		else {
+		// TODO: introduce SqmSimpleDomainType to get rid of unchecked cast
+		else if ( sqmType instanceof SimpleDomainType<?> ) {
 			return new AnonymousTupleSqmAssociationPathSourceNew<>(
 					name,
 					(SqmPathSource<T>) expressible,
 					sqmType,
 					(SimpleDomainType<T>) sqmType
 			);
+		}
+		else {
+			throw new AssertionFailure( "Unsupported domain type " + sqmType );
 		}
 	}
 

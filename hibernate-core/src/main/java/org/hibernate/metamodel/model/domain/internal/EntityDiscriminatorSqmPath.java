@@ -49,8 +49,8 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public EntityDiscriminatorSqmPathSource getExpressible() {
-		return (EntityDiscriminatorSqmPathSource) getNodeType();
-//		return (EntityDiscriminatorSqmPathSource) super.getExpressible();
+//		return (EntityDiscriminatorSqmPathSource) getNodeType();
+		return (EntityDiscriminatorSqmPathSource) getReferencedPathSource();
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -56,7 +56,7 @@ public class SqmLiteralEntityType<T>
 	}
 
 	@Override
-	public void internalApplyInferableType(SqmExpressible<?> type) {
+	public void internalApplyInferableType(SqmBindable<?> type) {
 	}
 
 	@Override

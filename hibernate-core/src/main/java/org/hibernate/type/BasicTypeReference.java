@@ -8,8 +8,8 @@ import java.io.Serializable;
 
 import org.hibernate.query.spi.BindableTypeImplementor;
 import org.hibernate.query.spi.BindingContext;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * A basic type reference.
@@ -83,7 +83,7 @@ public final class BasicTypeReference<T> implements BindableTypeImplementor<T>, 
 	}
 
 	@Override
-	public SqmExpressible<T> resolveExpressible(BindingContext bindingContext) {
+	public SqmBindable<T> resolveExpressible(BindingContext bindingContext) {
 		return bindingContext.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
 	}
 }

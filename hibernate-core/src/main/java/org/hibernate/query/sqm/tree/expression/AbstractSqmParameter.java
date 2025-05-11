@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmExpressible;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,17 +22,17 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
-			SqmExpressible<T> inherentType,
+			SqmBindable<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.canBeMultiValued = canBeMultiValued;
 	}
 
 	@Override
-	public void applyInferableType(@Nullable SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmBindable<?> type) {
 		if ( type != null ) {
 			if ( type instanceof PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute ) {
-				internalApplyInferableType( (SqmExpressible<?>) pluralPersistentAttribute.getElementType() );
+				internalApplyInferableType( (SqmBindable<?>) pluralPersistentAttribute.getElementType() );
 			}
 			else {
 				internalApplyInferableType( type );

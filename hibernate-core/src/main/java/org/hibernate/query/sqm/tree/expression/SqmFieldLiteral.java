@@ -17,7 +17,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -33,13 +33,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Steve Ebersole
  */
-public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, SqmSelectableNode<T>, SemanticPathPart {
+public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmBindable<T>, SqmSelectableNode<T>, SemanticPathPart {
 	private final T value;
 	private final JavaType<T> fieldJavaType;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
 
-	private final SqmExpressible<T> expressible;
+	private final SqmBindable<T> expressible;
 
 	public SqmFieldLiteral(
 			Field field,
@@ -106,12 +106,12 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
-	public SqmExpressible<T> getNodeType() {
+	public SqmBindable<T> getNodeType() {
 		return expressible;
 	}
 
 	@Override
-	public void applyInferableType(@Nullable SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmBindable<?> type) {
 	}
 
 	@Override

@@ -20,7 +20,7 @@ import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -87,10 +87,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 * This node's type is its "referenced path source"
 	 */
 	@Override
-	SqmPathSource<T> getNodeType();
+	SqmBindable<T> getNodeType();
 
 	@Override
-	default void applyInferableType(@Nullable SqmExpressible<?> type) {
+	default void applyInferableType(@Nullable SqmBindable<?> type) {
 		// do nothing
 	}
 

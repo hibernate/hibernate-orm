@@ -27,7 +27,7 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -85,7 +85,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		implements SqmSelectQuery<T>, JpaSubQuery<T>, SqmExpression<T> {
 	private final SqmQuery<?> parent;
 
-	private SqmExpressible<T> expressibleType;
+	private SqmBindable<T> expressibleType;
 	private String alias;
 
 	public SqmSubQuery(
@@ -140,7 +140,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 			Map<String, SqmCteStatement<?>> cteStatements,
 			Class<T> resultType,
 			SqmQuery<?> parent,
-			SqmExpressible<T> expressibleType,
+			SqmBindable<T> expressibleType,
 			String alias) {
 		super( builder, cteStatements, resultType );
 		this.parent = parent;
@@ -635,14 +635,14 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public @Nullable SqmExpressible<T> getNodeType() {
+	public @Nullable SqmBindable<T> getNodeType() {
 		return expressibleType;
 	}
 
 	@Override
-	public void applyInferableType(@Nullable SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmBindable<?> type) {
 		//noinspection unchecked
-		expressibleType = (SqmExpressible<T>) type;
+		expressibleType = (SqmBindable<T>) type;
 	}
 
 	private void applyInferableType(Class<T> type) {

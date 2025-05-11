@@ -4,9 +4,7 @@
  */
 package org.hibernate;
 
-import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
 import org.hibernate.query.Query;
 
@@ -52,7 +50,7 @@ import static java.util.Collections.unmodifiableSet;
  *
  * @author Scott Marlow
  */
-public class LockOptions implements FindOption, RefreshOption, Serializable {
+public class LockOptions implements Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.

@@ -4,27 +4,26 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.hibernate.orm.test.jpa.model.Item;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.LockTimeoutException;
-import jakarta.persistence.PessimisticLockException;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -78,7 +77,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										);
 										fail( "Expecting a failure" );
 									}
-									catch (LockTimeoutException | PessimisticLockException | org.hibernate.exception.LockTimeoutException expected ) {
+									catch (LockTimeoutException | PessimisticLockException | LockAcquisitionException expected ) {
 										// expected outcome
 									}
 								}

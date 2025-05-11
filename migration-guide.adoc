@@ -729,11 +729,47 @@ Now, `varchar(1)` is used by default.
 
 
 [[settings]]
-=== Changes Related to Settings
+== Changes Related to Settings
 
 * Removed `hibernate.mapping.precedence` and friends
 * Removed `hibernate.allow_refresh_detached_entity`
 
+[[lock-options]]
+== LockOptions
+
+The exposure of `LockOptions` as an API has been deprecated.  Applications should instead prefer the use of `LockMode` (or `LockModeType`), `Timeout` and `PessimisticLockScope`.
+
+Use this
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    LockMode.PESSIMISTIC_WRITE,
+    Timeouts.NO_WAIT
+);
+----
+====
+
+instead of this
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    new LockOptions(
+        LockMode.PESSIMISTIC_WRITE,
+        0
+    )
+);
+----
+====
+
+See the link:{whatsNewBase}#operation-options[What's New] guide for more details.
 
 
 [[pools]]

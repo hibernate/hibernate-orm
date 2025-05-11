@@ -18,7 +18,6 @@ import org.hibernate.query.spi.BindingContext;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -101,7 +100,7 @@ public class TypecheckUtil {
 	 * @param lhsType the type of the expression on the LHS of the comparison operator
 	 * @param rhsType the type of the expression on the RHS of the comparison operator
 	 *
-	 * @see #isTypeAssignable(SqmPathSource, SqmExpressible, BindingContext)
+	 * @see #isTypeAssignable(SqmExpressible, SqmExpressible, BindingContext)
 	 */
 	public static boolean areTypesComparable(
 			SqmExpressible<?> lhsType,
@@ -315,7 +314,7 @@ public class TypecheckUtil {
 	 * @see #areTypesComparable(SqmExpressible, SqmExpressible, BindingContext)
 	 */
 	private static boolean isTypeAssignable(
-			SqmPathSource<?> targetType, SqmExpressible<?> expressionType,
+			SqmExpressible<?> targetType, SqmExpressible<?> expressionType,
 			BindingContext bindingContext) {
 
 		if ( targetType == null || expressionType == null || targetType == expressionType ) {
@@ -466,7 +465,7 @@ public class TypecheckUtil {
 			// TODO: check that the target path is nullable
 		}
 		else {
-			final SqmPathSource<?> targetType = targetPath.getNodeType();
+			final SqmExpressible<?> targetType = targetPath.getNodeType();
 			final SqmExpressible<?> expressionType = expression.getNodeType();
 			if ( targetType != null && expressionType != null && targetPath.isEnum() ) {
 				// this is needed by Hibernate Processor due to the weird

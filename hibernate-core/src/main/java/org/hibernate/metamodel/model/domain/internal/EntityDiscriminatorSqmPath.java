@@ -50,6 +50,7 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 	@Override
 	public EntityDiscriminatorSqmPathSource getExpressible() {
 		return (EntityDiscriminatorSqmPathSource) getNodeType();
+//		return (EntityDiscriminatorSqmPathSource) super.getExpressible();
 	}
 
 	@Override
@@ -58,18 +59,19 @@ public class EntityDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements
 		if ( existing != null ) {
 			return existing;
 		}
-		return context.registerCopy(
-				this,
-				(EntityDiscriminatorSqmPath) getLhs().copy( context ).type()
-		);
+		else {
+			return context.registerCopy(
+					this,
+					(EntityDiscriminatorSqmPath) getLhs().copy( context ).type()
+			);
+		}
 	}
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
-		if ( ! entityDescriptor.hasSubclasses() ) {
-			return walker.visitEntityTypeLiteralExpression( new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
-		}
+		return entityDescriptor.hasSubclasses()
+				? walker.visitDiscriminatorPath( this )
+				: walker.visitEntityTypeLiteralExpression( new SqmLiteralEntityType( entityDomainType, nodeBuilder() ) );
 
-		return walker.visitDiscriminatorPath( this );
 	}
 }

@@ -16,14 +16,14 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -43,7 +43,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
  * @author Christian Beikov
  */
 @Incubating
-public class AnonymousTupleType<T> implements TupleType<T>, SqmDomainType<T>, ReturnableType<T>, SqmPathSource<T> {
+public class AnonymousTupleType<T>
+		implements TupleType<T>, SqmDomainType<T>, ReturnableType<T>, SqmPathSource<T> {
 
 	private final JavaType<T> javaTypeDescriptor;
 	private final @Nullable NavigablePath[] componentSourcePaths;
@@ -137,12 +138,10 @@ public class AnonymousTupleType<T> implements TupleType<T>, SqmDomainType<T>, Re
 		final SqlTypedMapping[] jdbcMappings = new SqlTypedMapping[sqlSelections.size()];
 		for ( int i = 0; i < sqlSelections.size(); i++ ) {
 			final JdbcMappingContainer expressionType = sqlSelections.get( i ).getExpressionType();
-			if ( expressionType instanceof SqlTypedMapping sqlTypedMapping ) {
-				jdbcMappings[i] = sqlTypedMapping;
-			}
-			else {
-				jdbcMappings[i] = new SqlTypedMappingImpl( expressionType.getSingleJdbcMapping() );
-			}
+			jdbcMappings[i] =
+					expressionType instanceof SqlTypedMapping sqlTypedMapping
+							? sqlTypedMapping
+							: new SqlTypedMappingImpl( expressionType.getSingleJdbcMapping() );
 		}
 		return jdbcMappings;
 	}

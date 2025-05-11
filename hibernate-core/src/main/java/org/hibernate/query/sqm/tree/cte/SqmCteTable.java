@@ -40,13 +40,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add(
-					new SqmCteTableColumn(
-							this,
-							getComponentName( i ),
-							get( i )
-					)
-			);
+			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
 		}
 		this.columns = columns;
 	}
@@ -97,11 +91,9 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 
 	@Override
 	public String getName() {
-		if ( Character.isDigit( name.charAt( 0 ) ) ) {
-			// Created through JPA criteria without an explicit name
-			return null;
-		}
-		return name;
+		return Character.isDigit( name.charAt( 0 ) )
+				? null // Created through JPA criteria without an explicit name
+				: name;
 	}
 
 	@Override
@@ -118,10 +110,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	@Override
 	public JpaCteCriteriaAttribute getAttribute(String name) {
 		final Integer index = getIndex( name );
-		if ( index == null ) {
-			return null;
-		}
-		return columns.get( index );
+		return index == null ? null : columns.get( index );
 	}
 
 	@Override

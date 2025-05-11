@@ -114,6 +114,7 @@ public class SqmBasicValuedSimplePath<T>
 							getIndexFunction(
 									selector,
 									getNodeType().getPathType(),
+//									getReferencedPathSource().getPathType(),
 									creationState.getCreationContext().getQueryEngine()
 							)
 					);
@@ -155,16 +156,6 @@ public class SqmBasicValuedSimplePath<T>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqmPath
-
-	@Override
-	public SqmPathSource<T> getReferencedPathSource() {
-		return super.getReferencedPathSource();
-	}
-
-	@Override
-	public SqmPathSource<T> getNodeType() {
-		return getReferencedPathSource();
-	}
 
 	@Override
 	public BasicJavaType<T> getJavaTypeDescriptor() {

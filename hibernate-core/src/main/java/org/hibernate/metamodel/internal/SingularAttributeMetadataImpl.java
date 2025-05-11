@@ -38,17 +38,11 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 
 			@Override
 			public ValueClassification getValueClassification() {
-				switch ( attributeClassification ) {
-					case EMBEDDED: {
-						return ValueClassification.EMBEDDABLE;
-					}
-					case BASIC: {
-						return ValueClassification.BASIC;
-					}
-					default: {
-						return ValueClassification.ENTITY;
-					}
-				}
+				return switch ( attributeClassification ) {
+					case EMBEDDED -> ValueClassification.EMBEDDABLE;
+					case BASIC -> ValueClassification.BASIC;
+					default -> ValueClassification.ENTITY;
+				};
 			}
 
 			@Override

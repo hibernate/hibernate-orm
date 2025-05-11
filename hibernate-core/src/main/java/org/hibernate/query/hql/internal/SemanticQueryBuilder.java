@@ -2550,10 +2550,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private <T> SqmExpression<T> createDiscriminatorValue(
 			AnyDiscriminatorSqmPath<T> anyDiscriminatorTypeSqmPath,
 			HqlParser.ExpressionContext valueExpressionContext) {
+		final var expressible = anyDiscriminatorTypeSqmPath.getExpressible();
 		return new SqmAnyDiscriminatorValue<>(
-				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
-				creationContext.getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
-				anyDiscriminatorTypeSqmPath.getExpressible().getPathType(),
+				expressible.getPathName(),
+				getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
+				expressible.getPathType(),
 				creationContext.getNodeBuilder()
 		);
 	}

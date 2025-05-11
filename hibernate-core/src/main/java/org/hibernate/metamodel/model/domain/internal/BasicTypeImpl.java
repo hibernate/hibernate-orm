@@ -76,17 +76,17 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, J
 	}
 
 	@Override
-	public JavaType getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ValueExtractor<?> getJdbcValueExtractor() {
+	public ValueExtractor<J> getJdbcValueExtractor() {
 		return jdbcType.getExtractor( javaType );
 	}
 
 	@Override
-	public ValueBinder getJdbcValueBinder() {
+	public ValueBinder<J> getJdbcValueBinder() {
 		return jdbcType.getBinder( javaType );
 	}
 }

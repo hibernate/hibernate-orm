@@ -54,7 +54,6 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -78,6 +77,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -324,12 +324,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 		entityEntryContext.downgradeLocks();
 	}
 
-	/**
-	 * Get the current state of the entity as known to the underlying
-	 * database, or null if there is no corresponding row
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Object[] getDatabaseSnapshot(Object id, EntityPersister persister) throws HibernateException {
 		final EntityKey key = session.generateEntityKey( id, persister );
@@ -1193,14 +1187,13 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction ) {
 		if ( loadCounter == 0 ) {
 			LOG.trace( "Initializing non-lazy collections" );
-
-			//do this work only at the very highest level of the load
-			//don't let this method be called recursively
+			// do this work only at the very highest level of the load
+			// don't let this method be called recursively
 			loadCounter++;
 			try {
-				int size;
-				while ( nonlazyCollections != null && ( size = nonlazyCollections.size() ) > 0 ) {
-					//note that each iteration of the loop may add new elements
+				while ( nonlazyCollections != null && !nonlazyCollections.isEmpty() ) {
+					final int size = nonlazyCollections.size();
+					// note that each iteration of the loop may add new elements
 					initializeAction.accept( nonlazyCollections.remove( size - 1 ) );
 				}
 			}
@@ -1733,14 +1726,15 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void addNullProperty(EntityKey ownerKey, String propertyName) {
 		if ( nullAssociations == null ) {
-			nullAssociations = CollectionHelper.setOfSize( INIT_COLL_SIZE );
+			nullAssociations = setOfSize( INIT_COLL_SIZE );
 		}
 		nullAssociations.add( new AssociationKey( ownerKey, propertyName ) );
 	}
 
 	@Override
 	public boolean isPropertyNull(EntityKey ownerKey, String propertyName) {
-		return nullAssociations != null && nullAssociations.contains( new AssociationKey( ownerKey, propertyName ) );
+		return nullAssociations != null
+			&& nullAssociations.contains( new AssociationKey( ownerKey, propertyName ) );
 	}
 
 	private void clearNullProperties() {

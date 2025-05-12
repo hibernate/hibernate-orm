@@ -27,7 +27,7 @@ public class QueryParameterBindingValidator {
 	}
 
 	public void validate(BindableType<?> paramType, Object bind, BindingContext bindingContext) {
-		validate( paramType, bind, null, bindingContext);
+		validate( paramType, bind, null, bindingContext );
 	}
 
 	public void validate(

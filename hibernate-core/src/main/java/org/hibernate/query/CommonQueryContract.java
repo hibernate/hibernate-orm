@@ -33,8 +33,26 @@ import jakarta.persistence.metamodel.Type;
  * Queries may have <em>parameters</em>, either ordinal or named, and the various
  * {@code setParameter()} operations of this interface allow an argument to be
  * bound to a parameter. It's not usually necessary to explicitly specify the type
- * of an argument, but in rare cases where this is needed, {@link TypedParameterValue}
- * may be used.
+ * of an argument, but in rare cases where this is needed:
+ * <ul>
+ * <li>an instance of an appropriate metamodel {@link Type} may be passed to
+ *     {@link #setParameter(int, Object, Type)}, or
+ * <li>the argument may be wrapped in a {@link TypedParameterValue}. (For JPA users,
+ *     this second option avoids the need to cast the {@link jakarta.persistence.Query}
+ *     to a Hibernate-specific type.)
+ * </ul>
+ * <p>
+ * For example:
+ * <pre>
+ * session.createSelectionQuery("from Person where address = :address", Person.class)
+ *         .setParameter("address", address, Person_.address.getType())
+ *         .getResultList()
+ * </pre>
+ * <pre>
+ * entityManager.createQuery( "from Person where address = :address", Person.class)
+ *         .setParameter("address", TypedParameterValue.of(Person_.address.getType(), address))
+ *         .getResultList()
+ * </pre>
  * <p>
  * The operation {@link #setQueryFlushMode(QueryFlushMode)} allows a temporary flush
  * mode to be specified, which is in effect only during the execution of this query.

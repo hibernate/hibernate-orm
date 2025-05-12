@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.metamodel.Type;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BasicTypeReference;
 
@@ -24,6 +25,10 @@ import java.util.Objects;
  * <pre>
  * query.setParameter("stringNamedParam",
  *         TypedParameterValue.ofNull(StandardBasicTypes.STRING))
+ * </pre>
+ * <pre>
+ * query.setParameter("address",
+ *         TypedParameterValue.of(Address_.class_, address))
  * </pre>
  * <p>
  * Here, a "null string" argument was bound to the named parameter
@@ -51,8 +56,8 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @since 7.0
 	 */
-	public static <J> TypedParameterValue<J> of(BindableType<J> type, J value) {
-		return new TypedParameterValue<>( type, value );
+	public static <J> TypedParameterValue<J> of(Type<J> type, J value) {
+		return new TypedParameterValue<>( (BindableType<J>) type, value );
 	}
 
 	/**
@@ -60,8 +65,8 @@ public record TypedParameterValue<J>(BindableType<J> type, J value) {
 	 *
 	 * @since 7.0
 	 */
-	public static <J> TypedParameterValue<J> ofNull(BindableType<J> type) {
-		return new TypedParameterValue<>( type, null );
+	public static <J> TypedParameterValue<J> ofNull(Type<J> type) {
+		return new TypedParameterValue<>( (BindableType<J>) type, null );
 	}
 
 	/**

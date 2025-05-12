@@ -249,7 +249,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private void setExplicitTemporalPrecision(TemporalType precision) {
 		explicitTemporalPrecision = precision;
 		if ( bindType == null || JavaTypeHelper.isTemporal( determineJavaType( bindType ) ) ) {
-			bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision( precision, bindType, getCriteriaBuilder() );
+			bindType = BindingTypeHelper.resolveTemporalPrecision( precision, bindType, getCriteriaBuilder() );
 		}
 	}
 

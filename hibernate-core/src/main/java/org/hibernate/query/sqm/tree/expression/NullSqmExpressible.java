@@ -18,6 +18,11 @@ public class NullSqmExpressible implements SqmBindable<Object> {
 	public static final NullSqmExpressible NULL_SQM_EXPRESSIBLE = new NullSqmExpressible();
 
 	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
 	public Class<Object> getBindableJavaType() {
 		return null;
 	}

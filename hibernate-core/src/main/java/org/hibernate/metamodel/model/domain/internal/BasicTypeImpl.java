@@ -46,7 +46,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, J
 
 	@Override
 	public Class<J> getJavaType() {
-		return this.getExpressibleJavaType().getJavaTypeClass();
+		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

@@ -72,10 +72,21 @@ public class SqmMapEntryReference<K,V>
 		return mapPath;
 	}
 
+	@Override @SuppressWarnings("unchecked")
+	public Class<Map.Entry<K, V>> getJavaType() {
+		final Class<?> entryClass = Map.Entry.class;
+		return (Class<Map.Entry<K, V>>) entryClass;
+	}
+
 	@Override
 	public JpaSelection<Map.Entry<K, V>> alias(String name) {
 		this.explicitAlias = name;
 		return this;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
 	}
 
 	@Override

@@ -72,6 +72,11 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
+	@Override
 	public SqmDomainType<T> getSqmType() {
 		return getResolvedModel().getSqmType();
 	}

@@ -68,6 +68,16 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class<E> getJavaType() {
+		return getBindableJavaType();
+	}
+
+	@Override
 	public SqmDomainType<E> getSqmType() {
 		return null;
 	}

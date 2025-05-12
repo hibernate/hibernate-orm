@@ -4,6 +4,7 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.metamodel.Type;
 import org.hibernate.Incubating;
 
 /**
@@ -21,9 +22,14 @@ import org.hibernate.Incubating;
  * @author Steve Ebersole
  */
 @Incubating
-public interface BindableType<J> {
+public interface BindableType<J> extends Type<J> {
 	/**
 	 * The expected Java type of the argument to the query parameter.
 	 */
 	Class<J> getBindableJavaType();
+
+	@Override
+	default Class<J> getJavaType() {
+		return getBindableJavaType();
+	}
 }

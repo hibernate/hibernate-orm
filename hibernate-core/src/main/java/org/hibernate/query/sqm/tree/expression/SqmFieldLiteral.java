@@ -33,7 +33,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * @author Steve Ebersole
  */
-public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmBindable<T>, SqmSelectableNode<T>, SemanticPathPart {
+public class SqmFieldLiteral<T>
+		implements SqmExpression<T>, SqmBindable<T>, SqmSelectableNode<T>, SemanticPathPart {
 	private final T value;
 	private final JavaType<T> fieldJavaType;
 	private final String fieldName;
@@ -64,6 +65,16 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmBindable<T>, Sqm
 		this.nodeBuilder = nodeBuilder;
 
 		this.expressible = this;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
+	@Override
+	public Class<T> getJavaType() {
+		return getBindableJavaType();
 	}
 
 	private static <T> T extractValue(Field field) {

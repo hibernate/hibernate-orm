@@ -213,6 +213,11 @@ public class AggregatedClassLoader extends ClassLoader {
 		throw new ClassNotFoundException( "Could not load requested class : " + name, ( t != null && t.getSuppressed().length > 0 ? t : null ) );
 	}
 
+	@Override
+	public Class<?> loadClass(String name) throws ClassNotFoundException {
+	       return findClass(name);
+	}
+
 	private static ClassLoader locateSystemClassLoader() {
 		try {
 			return ClassLoader.getSystemClassLoader();

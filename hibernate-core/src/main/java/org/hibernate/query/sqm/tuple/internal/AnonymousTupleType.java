@@ -23,7 +23,6 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
 import org.hibernate.query.sqm.tuple.TupleType;
-import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -46,7 +45,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
  */
 @Incubating
 public class AnonymousTupleType<T>
-		implements TupleType<T>, SqmDomainType<T>, ReturnableType<T>, SqmPathSource<T> {
+		implements TupleType<T>, SqmDomainType<T>, SqmPathSource<T> {
 
 	private final JavaType<T> javaTypeDescriptor;
 	private final @Nullable NavigablePath[] componentSourcePaths;
@@ -277,7 +276,7 @@ public class AnonymousTupleType<T>
 
 	@Override
 	public Class<T> getJavaType() {
-		return getBindableJavaType();
+		return SqmDomainType.super.getJavaType();
 	}
 
 	@Override

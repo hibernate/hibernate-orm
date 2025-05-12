@@ -7,9 +7,11 @@ package org.hibernate.query;
 import java.util.Collection;
 import java.util.Set;
 import java.util.function.Consumer;
+
 import jakarta.persistence.Parameter;
 
 import org.hibernate.Incubating;
+import org.hibernate.type.BindableType;
 
 
 /**

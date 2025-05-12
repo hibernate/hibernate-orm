@@ -2,12 +2,13 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.spi;
+package org.hibernate.type;
+
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -19,7 +20,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @since 7.0
  *
- * @see BindableTypeImplementor#resolveExpressible(BindingContext)
+ * @see BindableType#resolveExpressible(BindingContext)
  * @see org.hibernate.query.sqm.SqmBindable#resolveExpressible(BindingContext)
  * @see org.hibernate.query.sqm.produce.function.ArgumentsValidator#validate(java.util.List, String, BindingContext)
  * @see org.hibernate.query.sqm.internal.TypecheckUtil
@@ -42,11 +43,11 @@ public interface BindingContext {
 	 *
 	 * @since 7.0
 	 */
-	default <J> SqmBindable<J> resolveExpressible(BindableType<J> bindableType) {
+	default <J> SqmBindable<J> resolveExpressible(Type<J> bindableType) {
 		if ( bindableType == null ) {
 			return null;
 		}
-		else if ( bindableType instanceof BindableTypeImplementor<J> implementor) {
+		else if ( bindableType instanceof BindableType<J> implementor) {
 			return implementor.resolveExpressible( this );
 		}
 		else {

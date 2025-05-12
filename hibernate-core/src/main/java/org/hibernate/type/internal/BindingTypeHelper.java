@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.query.internal;
+package org.hibernate.type.internal;
 
 import java.time.Instant;
 import java.time.LocalTime;
@@ -12,8 +12,8 @@ import java.time.ZonedDateTime;
 import java.util.Calendar;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.spi.BindingContext;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;

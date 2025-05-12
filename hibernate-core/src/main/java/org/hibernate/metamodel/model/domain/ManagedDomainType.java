@@ -10,15 +10,13 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.RepresentationMode;
 
 import jakarta.persistence.metamodel.ManagedType;
-import org.hibernate.query.BindableType;
 
 /**
  * Extensions to the JPA-defined {@link ManagedType} contract.
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J>
-		extends DomainType<J>, ManagedType<J>, BindableType<J> {
+public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 	/**
 	 * Get the type name.
 	 *

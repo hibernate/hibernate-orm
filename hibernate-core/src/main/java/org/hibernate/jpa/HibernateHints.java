@@ -4,6 +4,8 @@
  */
 package org.hibernate.jpa;
 
+import org.hibernate.type.BindableType;
+
 /**
  * List of Hibernate-specific (extension) hints available to query,
  * load, and lock scenarios.
@@ -165,7 +167,7 @@ public interface HibernateHints {
 
 	/**
 	 * The {@linkplain org.hibernate.type.SqlTypes JDBC type code},
-	 * {@linkplain org.hibernate.query.BindableType type}, or
+	 * {@linkplain BindableType type}, or
 	 * {@link Class} of the value returned by a SQL function called
 	 * via {@link org.hibernate.procedure.ProcedureCall} or
 	 * {@link jakarta.persistence.StoredProcedureQuery}. Has the side
@@ -173,7 +175,7 @@ public interface HibernateHints {
 	 * rather than a call to a stored procedure.
 	 *
 	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(int)
-	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(org.hibernate.query.BindableType)
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(BindableType)
 	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(Class)
 	 */
 	String HINT_CALLABLE_FUNCTION_RETURN_TYPE = "hibernate.procedure.function_return_jdbc_type_code";

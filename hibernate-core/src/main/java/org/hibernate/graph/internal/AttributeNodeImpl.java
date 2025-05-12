@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.type.BindableType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -259,7 +260,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	@Override @Deprecated
 	public <S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype) {
 		final ManagedDomainType<E> managedType = asManagedType( valueGraphType );
-		if ( !managedType.getBindableJavaType().isAssignableFrom( subtype ) ) {
+		if ( !((BindableType<K>) managedType).getBindableJavaType().isAssignableFrom( subtype ) ) {
 			throw new IllegalArgumentException( "Not a subtype: " + subtype.getName() );
 		}
 		@SuppressWarnings("unchecked")
@@ -283,7 +284,7 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	public <S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype) {
 		checkMap();
 		final ManagedDomainType<K> type = asManagedType( keyGraphType );
-		if ( !type.getBindableJavaType().isAssignableFrom( subtype ) ) {
+		if ( ! ((BindableType<K>) type).getBindableJavaType().isAssignableFrom( subtype ) ) {
 			throw new IllegalArgumentException( "Not a key subtype: " + subtype.getName() );
 		}
 		@SuppressWarnings("unchecked")

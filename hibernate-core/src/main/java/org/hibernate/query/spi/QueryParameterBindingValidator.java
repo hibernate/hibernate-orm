@@ -8,9 +8,10 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.TemporalType;

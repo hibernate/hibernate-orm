@@ -13,15 +13,15 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.transform.ResultTransformer;
+
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> QueryImplementor<R> setParameter(String name, P value, BindableType<P> type);
+	<P> QueryImplementor<R> setParameter(String name, P value, Type<P> type);
 
 	@Override
 	QueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
@@ -78,7 +78,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> QueryImplementor<R> setParameter(int position, P value, BindableType<P> type);
+	<P> QueryImplementor<R> setParameter(int position, P value, Type<P> type);
 
 	@Override
 	QueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
@@ -96,7 +96,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<T> QueryImplementor<R> setParameter(Parameter<T> param, T value);
@@ -114,7 +114,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	QueryImplementor<R> setParameterList(String name, Object[] values);
@@ -123,7 +123,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> QueryImplementor<R> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	QueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -132,7 +132,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	QueryImplementor<R> setParameterList(int position, Object[] values);
@@ -141,7 +141,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type);
+	<P> QueryImplementor<R> setParameterList(int position, P[] values, Type<P> type);
 
 	@Override
 	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -150,7 +150,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -159,7 +159,7 @@ public interface QueryImplementor<R> extends Query<R> {
 	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	QueryImplementor<R> setProperties(Object bean);

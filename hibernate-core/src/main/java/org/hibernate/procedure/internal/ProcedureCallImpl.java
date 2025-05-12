@@ -41,9 +41,9 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.type.OutputableType;
@@ -89,6 +89,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
@@ -376,7 +377,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCall markAsFunctionCall(BindableType<?> typeReference) {
+	public ProcedureCall markAsFunctionCall(Type<?> typeReference) {
 		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
 			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
@@ -448,7 +449,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			int position,
-			BindableType<?> type,
+			Type<?> type,
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 
@@ -468,7 +469,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			String parameterName,
-			BindableType<?> type,
+			Type<?> type,
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
@@ -497,16 +498,16 @@ public class ProcedureCallImpl<R>
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(
 			int position,
-			BindableType<T> typeReference,
+			Type<T> typeReference,
 			ParameterMode mode) {
 		final SqmBindable<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> procedureParameter =
-				new ProcedureParameterImpl<>( position, mode, typeReference.getBindableJavaType(), expressible );
+				new ProcedureParameterImpl<>( position, mode, ((BindableType<T>) typeReference).getBindableJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
 	}
 
-	private <T> SqmBindable<T> resolveExpressible(BindableType<T> typeReference) {
+	private <T> SqmBindable<T> resolveExpressible(Type<T> typeReference) {
 		return getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
 	}
 
@@ -529,7 +530,7 @@ public class ProcedureCallImpl<R>
 		return parameter;
 	}
 
-	private <T> Class<T> getExpressibleJavaType(BindableType<T> parameterType) {
+	private <T> Class<T> getExpressibleJavaType(Type<T> parameterType) {
 		if ( parameterType == null ) {
 			return null;
 		}
@@ -547,11 +548,11 @@ public class ProcedureCallImpl<R>
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(
 			String name,
-			BindableType<T> typeReference,
+			Type<T> typeReference,
 			ParameterMode mode) {
 		final SqmBindable<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> parameter =
-				new ProcedureParameterImpl<>( name, mode, typeReference.getBindableJavaType(), expressible );
+				new ProcedureParameterImpl<>( name, mode, ((BindableType<T>) typeReference).getBindableJavaType(), expressible );
 		registerParameter( parameter );
 		return parameter;
 	}
@@ -1084,7 +1085,7 @@ public class ProcedureCallImpl<R>
 						//noinspection resource
 						markAsFunctionCall( code );
 					}
-					else if ( value instanceof BindableType<?> type ) {
+					else if ( value instanceof Type<?> type ) {
 						//noinspection resource
 						markAsFunctionCall( type );
 					}
@@ -1142,7 +1143,7 @@ public class ProcedureCallImpl<R>
 	public <P> ProcedureCallImplementor<R> setParameter(
 			QueryParameter<P> parameter,
 			P value,
-			BindableType<P> type) {
+			Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1154,7 +1155,7 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1166,7 +1167,7 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}

@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.type.BindableType;
 
 /**
  * @author Steve Ebersole

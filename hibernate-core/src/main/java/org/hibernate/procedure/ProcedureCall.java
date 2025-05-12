@@ -13,10 +13,10 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.SynchronizeableQuery;
 import org.hibernate.query.CommonQueryContract;
 
@@ -122,7 +122,7 @@ public interface ProcedureCall
 	 * @return {@code this}, for method chaining
 	 * @since 6.2
 	 */
-	ProcedureCall markAsFunctionCall(BindableType<?> typeReference);
+	ProcedureCall markAsFunctionCall(Type<?> typeReference);
 
 	/**
 	 * Basic form for registering a positional parameter.
@@ -146,13 +146,13 @@ public interface ProcedureCall
 	 *
 	 * @return The parameter registration memento
 	 */
-	<T> ProcedureParameter<T> registerParameter(int position, BindableType<T> type, ParameterMode mode);
+	<T> ProcedureParameter<T> registerParameter(int position, Type<T> type, ParameterMode mode);
 
 	/**
 	 * Like {@link #registerStoredProcedureParameter(int, Class, ParameterMode)} but a type reference is given
 	 * instead of a class for the parameter type.
 	 */
-	ProcedureCall registerStoredProcedureParameter(int position, BindableType<?> type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(int position, Type<?> type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the position under which it was registered.
@@ -195,14 +195,14 @@ public interface ProcedureCall
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	<T> ProcedureParameter<T> registerParameter(String parameterName, BindableType<T> type, ParameterMode mode)
+	<T> ProcedureParameter<T> registerParameter(String parameterName, Type<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
 
 	/**
 	 * Like {@link #registerStoredProcedureParameter(String, Class, ParameterMode)} but a type reference is given
 	 * instead of a class for the parameter type.
 	 */
-	ProcedureCall registerStoredProcedureParameter(String parameterName, BindableType<?> type, ParameterMode mode);
+	ProcedureCall registerStoredProcedureParameter(String parameterName, Type<?> type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the name under which it was registered.

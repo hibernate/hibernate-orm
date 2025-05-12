@@ -14,6 +14,7 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.type.BindingContext;
 
 /**
  * Aggregation and encapsulation of the components Hibernate uses

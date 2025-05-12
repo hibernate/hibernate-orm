@@ -43,7 +43,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.query.spi.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -53,7 +53,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSqmPathSource;
@@ -722,7 +722,7 @@ public class MappingMetamodelImpl
 
 		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaClass );
 		if ( managedType != null ) {
-			return managedType;
+			return (BindableType<T>) managedType;
 		}
 
 		final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();

@@ -9,7 +9,6 @@ import java.sql.SQLException;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**

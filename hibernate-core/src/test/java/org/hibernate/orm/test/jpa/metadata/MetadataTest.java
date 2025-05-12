@@ -4,7 +4,9 @@
  */
 package org.hibernate.orm.test.jpa.metadata;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.Attribute;
@@ -118,16 +120,17 @@ public class MetadataTest {
 				JoinedManyToOneOwner.class);
 		final SingularAttribute attr = entityType.getDeclaredSingularAttribute("house");
 		assertEquals(Attribute.PersistentAttributeType.MANY_TO_ONE, attr.getPersistentAttributeType());
+		assertEquals(House.class, attr.getJavaType());
 		assertEquals(House.class, attr.getBindableJavaType());
 		final EntityType<House> houseType = scope.getEntityManagerFactory().getMetamodel().entity(House.class);
-		assertEquals(houseType.getBindableJavaType(), attr.getBindableJavaType());
+		assertEquals(houseType.getJavaType(), attr.getJavaType());
 		assertFalse(entityType.getDeclaredSingularAttribute("house2").isOptional());
 	}
 
 	@Test
 	public void testEntity(EntityManagerFactoryScope scope) {
 		final EntityType<Fridge> fridgeType = scope.getEntityManagerFactory().getMetamodel().entity(Fridge.class);
-		assertEquals(Fridge.class, fridgeType.getBindableJavaType());
+		assertEquals(Fridge.class, fridgeType.getJavaType());
 		assertEquals(Bindable.BindableType.ENTITY_TYPE, fridgeType.getBindableType());
 		SingularAttribute<Fridge, Integer> wrapped = fridgeType.getDeclaredSingularAttribute(
 				"temperature",
@@ -226,7 +229,7 @@ public class MetadataTest {
 				"temperature",
 				Integer.class
 		);
-		assertEquals( int.class, singularAttribute.getBindableJavaType() );
+		assertEquals( int.class, singularAttribute.getJavaType() );
 		assertEquals( int.class, singularAttribute.getType().getJavaType() );
 		assertEquals(Bindable.BindableType.SINGULAR_ATTRIBUTE, singularAttribute.getBindableType());
 		assertFalse(singularAttribute.isId());
@@ -316,11 +319,15 @@ public class MetadataTest {
 		assertEquals(String.class, roomsByName.getKeyJavaType());
 		assertEquals(Type.PersistenceType.BASIC, roomsByName.getKeyType().getPersistenceType());
 		assertEquals(PluralAttribute.CollectionType.MAP, roomsByName.getCollectionType());
+		assertEquals(Map.class, roomsByName.getJavaType());
+		assertEquals(Room.class, roomsByName.getBindableJavaType());
 
 		final ListAttribute<House, Room> roomsBySize = entityType.getDeclaredList("roomsBySize", Room.class);
 		assertNotNull(roomsBySize);
 		assertEquals(Type.PersistenceType.EMBEDDABLE, roomsBySize.getElementType().getPersistenceType());
 		assertEquals(PluralAttribute.CollectionType.LIST, roomsBySize.getCollectionType());
+		assertEquals( Room.class, roomsBySize.getBindableJavaType() );
+		assertEquals( List.class, roomsBySize.getJavaType() );
 	}
 
 	@Test

@@ -73,11 +73,6 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public Class<E> getJavaType() {
-		return getBindableJavaType();
-	}
-
-	@Override
 	public SqmDomainType<E> getSqmType() {
 		return null;
 	}
@@ -92,7 +87,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public Class<E> getBindableJavaType() {
+	public Class<E> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

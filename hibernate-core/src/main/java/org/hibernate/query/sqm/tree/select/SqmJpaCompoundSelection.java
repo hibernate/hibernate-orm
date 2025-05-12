@@ -91,7 +91,7 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 //	@Override
-//	public Class<T> getBindableJavaType() {
+//	public Class<T> getJavaType() {
 //		return getJavaType();
 //	}
 

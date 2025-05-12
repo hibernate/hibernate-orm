@@ -331,7 +331,7 @@ public class SqmDynamicInstantiation<T>
 		}
 
 //		@Override
-//		public Class<T> getBindableJavaType() {
+//		public Class<T> getJavaType() {
 //			return getTargetTypeDescriptor().getJavaTypeClass();
 //		}
 

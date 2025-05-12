@@ -373,7 +373,7 @@ public class TypecheckUtil {
 	}
 
 	private static boolean sameJavaType(SqmBindable<?> leftType, SqmBindable<?> rightType) {
-		return canonicalize( leftType.getBindableJavaType() ) == canonicalize( rightType.getBindableJavaType() );
+		return canonicalize( leftType.getJavaType() ) == canonicalize( rightType.getJavaType() );
 	}
 
 	private static boolean isConvertedType(SqmExpressible<?> type) {

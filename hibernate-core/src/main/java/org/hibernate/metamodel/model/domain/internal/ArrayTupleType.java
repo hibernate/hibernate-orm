@@ -35,8 +35,8 @@ public class ArrayTupleType
 	}
 
 	@Override
-	public Class<Object[]> getBindableJavaType() {
-		return TupleType.super.getBindableJavaType();
+	public Class<Object[]> getJavaType() {
+		return TupleType.super.getJavaType();
 	}
 
 	@Override
@@ -90,11 +90,6 @@ public class ArrayTupleType
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	public Class<Object[]> getJavaType() {
-		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

@@ -7,6 +7,7 @@ package org.hibernate.metamodel.model.domain;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.metamodel.RepresentationMode;
 
 import jakarta.persistence.metamodel.ManagedType;
@@ -18,22 +19,33 @@ import jakarta.persistence.metamodel.ManagedType;
  */
 public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 	/**
-	 * Get the type name.
+	 * The name of the managed type.
 	 *
 	 * @apiNote This usually returns the name of the Java class. However, for
 	 *          {@linkplain RepresentationMode#MAP dynamic models}, this returns
 	 *          the symbolic name since the Java type is {@link java.util.Map}.
 	 *
-	 * @return The type name.
-	 *
 	 * @see #getRepresentationMode()
 	 */
+	@Override
 	String getTypeName();
 
+	/**
+	 * The parent {@linkplain JpaMetamodel metamodel}.
+	 */
 	JpaMetamodel getMetamodel();
 
+	/**
+	 * The representation mode.
+	 *
+	 * @return {@link RepresentationMode#POJO POJO} for Java class entities,
+	 *         or {@link RepresentationMode#MAP MAP} for dynamic entities.
+	 */
 	RepresentationMode getRepresentationMode();
 
+	/**
+	 * The Java class of the entity type.
+	 */
 	@Override
 	default Class<J> getJavaType() {
 		return getExpressibleJavaType().getJavaTypeClass();
@@ -44,8 +56,12 @@ public interface ManagedDomainType<J> extends DomainType<J>, ManagedType<J> {
 	 */
 	ManagedDomainType<? super J> getSuperType();
 
+	/**
+	 * The descriptors of all known managed subtypes of this type.
+	 */
 	Collection<? extends ManagedDomainType<? extends J>> getSubTypes();
 
+	@Internal
 	void addSubType(ManagedDomainType<? extends J> subType);
 
 	void visitAttributes(Consumer<? super PersistentAttribute<? super J, ?>> action);

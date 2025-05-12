@@ -44,6 +44,11 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
+	}
+
+	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
 	}

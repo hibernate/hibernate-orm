@@ -32,7 +32,7 @@ public class AnonymousTupleSimpleSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return domainType.getBindableJavaType();
+		return domainType.getJavaType();
 	}
 
 	@Override

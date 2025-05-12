@@ -29,8 +29,6 @@ public interface SqmPathSource<J>
 
 	/**
 	 * The type of {@linkplain SqmPath path} this source creates.
-	 *
-	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
 	@Override
 	SqmDomainType<J> getPathType();

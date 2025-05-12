@@ -72,11 +72,6 @@ public class SqmFieldLiteral<T>
 		return PersistenceType.BASIC;
 	}
 
-	@Override
-	public Class<T> getJavaType() {
-		return getBindableJavaType();
-	}
-
 	private static <T> T extractValue(Field field) {
 		try {
 			//noinspection unchecked
@@ -140,7 +135,7 @@ public class SqmFieldLiteral<T>
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

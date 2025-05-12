@@ -123,6 +123,11 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
+	public Class<T> getBindableJavaType() {
+		return polymorphicJavaType.getJavaTypeClass();
+	}
+
+	@Override
 	public String getName() {
 		return polymorphicJavaType.getTypeName();
 	}
@@ -153,18 +158,13 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<T> getJavaType() {
 		return polymorphicJavaType.getJavaTypeClass();
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.ENTITY;
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return getBindableJavaType();
 	}
 
 	@Override

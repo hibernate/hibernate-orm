@@ -8,7 +8,6 @@ import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.SqmBindable;
-import org.hibernate.query.sqm.SqmExpressible;
 
 /**
  * Represents a type of argument which can be bound to a positional or named
@@ -32,17 +31,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 @Incubating
 public interface BindableType<J> extends Type<J> {
 	/**
-	 * Resolve this parameter type to the corresponding {@link SqmExpressible}.
+	 * Resolve this parameter type to the corresponding {@link SqmBindable}.
 	 */
 	SqmBindable<J> resolveExpressible(BindingContext bindingContext);
-
-	/**
-	 * The expected Java type of the argument to the query parameter.
-	 */
-	Class<J> getBindableJavaType();
-
-	@Override
-	default Class<J> getJavaType() {
-		return getBindableJavaType();
-	}
 }

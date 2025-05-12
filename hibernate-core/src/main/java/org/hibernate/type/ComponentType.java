@@ -837,7 +837,7 @@ public class ComponentType extends AbstractType
 	}
 
 	@Override
-	public Class<?> getBindableJavaType() {
+	public Class<?> getJavaType() {
 		return getReturnedClass();
 	}
 

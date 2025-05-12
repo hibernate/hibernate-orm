@@ -35,18 +35,13 @@ public interface BasicType<T>
 	String[] getRegistrationKeys();
 
 	@Override
-	default Class<T> getBindableJavaType() {
-		return BasicDomainType.super.getBindableJavaType();
+	default Class<T> getJavaType() {
+		return BasicDomainType.super.getJavaType();
 	}
 
 	@Override
 	default MappingType getMappedType() {
 		return this;
-	}
-
-	@Override
-	default Class<T> getJavaType() {
-		return BasicDomainType.super.getJavaType();
 	}
 
 	@Override

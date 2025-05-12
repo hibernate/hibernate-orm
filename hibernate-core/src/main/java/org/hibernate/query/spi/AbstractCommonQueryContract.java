@@ -895,7 +895,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			if ( type == null ) {
 				throw new IllegalArgumentException( "TypedParameterValue has no type" );
 			}
-			if ( !parameterType.isAssignableFrom( type.getBindableJavaType() ) ) {
+			if ( !parameterType.isAssignableFrom( type.getJavaType() ) ) {
 				throw new QueryArgumentException( "Given TypedParameterValue is not assignable to given Parameter type",
 						parameterType, typedParameterValue.value() );
 			}
@@ -1159,7 +1159,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( type == null && retType != null ) {
 			type = getSession().getFactory().getMappingMetamodel().resolveParameterBindType( retType );
 		}
-		if ( retType!= null && !retType.isAssignableFrom( type.getBindableJavaType() ) ) {
+		if ( retType!= null && !retType.isAssignableFrom( type.getJavaType() ) ) {
 			throw new IllegalStateException( "Parameter not of expected type: " + retType.getName() );
 		}
 		//noinspection unchecked

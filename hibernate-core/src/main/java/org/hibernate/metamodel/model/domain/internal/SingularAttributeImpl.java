@@ -121,7 +121,8 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return getJavaType();
+//		return getJavaType();
+		return sqmPathSource.getBindableJavaType();
 	}
 
 	@Override
@@ -294,8 +295,9 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public boolean isAssociation() {
-		return getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
-			|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
+		final PersistentAttributeType persistentAttributeType = getPersistentAttributeType();
+		return persistentAttributeType == PersistentAttributeType.MANY_TO_ONE
+			|| persistentAttributeType == PersistentAttributeType.ONE_TO_ONE;
 	}
 
 	@Override

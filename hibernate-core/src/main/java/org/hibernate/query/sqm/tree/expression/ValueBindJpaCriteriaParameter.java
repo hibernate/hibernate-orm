@@ -22,9 +22,9 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T> {
 		super( null, type, false, nodeBuilder );
 		assert value == null || type == null
 			|| ( type instanceof SqmBindable<? super T> bindable
-					// TODO: why does SqmExpressible.getBindableJavaType() return an apparently-wrong type?
+					// TODO: why does SqmExpressible.getJavaType() return an apparently-wrong type?
 					? bindable.getExpressibleJavaType().isInstance( value )
-					: type.getBindableJavaType().isInstance( value ) );
+					: type.getJavaType().isInstance( value ) );
 		this.value = value;
 	}
 

@@ -270,13 +270,12 @@ public class AnonymousTupleType<T>
 
 	@Override
 	public Class<T> getBindableJavaType() {
-		//noinspection unchecked
-		return (Class<T>) javaTypeDescriptor.getJavaType();
+		return javaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override
 	public Class<T> getJavaType() {
-		return SqmDomainType.super.getJavaType();
+		return javaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override

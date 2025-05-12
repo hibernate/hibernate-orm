@@ -285,7 +285,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			}
 		}
 
-		return typeConfiguration.getBasicTypeForJavaType( bindType.getBindableJavaType() );
+		return typeConfiguration.getBasicTypeForJavaType( bindType.getJavaType() );
 	}
 
 	private static class MutableCacheKeyImpl implements MutableCacheKeyBuilder {

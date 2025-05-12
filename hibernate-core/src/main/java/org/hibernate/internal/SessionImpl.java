@@ -1174,17 +1174,22 @@ public class SessionImpl
 		}
 	}
 
-	@Override
+	@Override @Deprecated
 	public <T> T get(Class<T> entityClass, Object id, LockMode lockMode) {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
-	@Override
+	@Override @Deprecated
+	public <T> T get(Class<T> entityClass, Object id, LockOptions lockOptions) {
+		return this.byId( entityClass ).with( lockOptions ).load( id );
+	}
+
+	@Override @Deprecated
 	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return this.byId( entityName ).with( lockOptions ).load( id );
 	}

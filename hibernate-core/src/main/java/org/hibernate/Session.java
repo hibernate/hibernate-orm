@@ -102,9 +102,9 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  * behavior is appropriate for programs which use optimistic locking.
  * <ul>
  * <li>A different lock level may be obtained by explicitly specifying the mode using
- *     {@link #get(Class, Object, LockMode)}, {@link #find(Class, Object, LockModeType)},
- *     {@link #refresh(Object, LockMode)}, {@link #refresh(Object, LockModeType)}, or
- *     {@link org.hibernate.query.SelectionQuery#setLockMode(LockModeType)}.
+ *     {@link #find(Class,Object,LockModeType)}, {@link #find(Class,Object,FindOption...)},
+ *     {@link #refresh(Object,LockModeType)}, {@link #refresh(Object,RefreshOption...)},
+ *     or {@link org.hibernate.query.SelectionQuery#setLockMode(LockModeType)}.
  * <li>The lock level of a managed instance already held by the session may be upgraded
  *     to a more restrictive lock level by calling {@link #lock(Object, LockMode)} or
  *     {@link #lock(Object, LockModeType)}.
@@ -802,7 +802,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * with {@link jakarta.persistence.CascadeType#REFRESH}.
 	 * <p>
 	 * This operation requests {@link LockMode#READ}. To obtain a stronger lock,
-	 * call {@link #refresh(Object, LockMode)}.
+	 * call {@link #refresh(Object, RefreshOption...)}, passing the appropriate
+	 * {@link LockMode} as an option.
 	 *
 	 * @param object a persistent instance associated with this session
 	 */
@@ -944,13 +945,35 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * with the session, return that instance. This method never returns an uninitialized
 	 * instance. Obtain the specified lock mode if the instance exists.
 	 *
+	 * @param entityType the entity type
+	 * @param id an identifier
+	 * @param lockOptions the lock mode
+	 *
+	 * @return a persistent instance or null
+	 *
+	 * @deprecated This method will be removed.
+	 *             Use {@link #find(Class, Object, FindOption...)} instead.
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	<T> T get(Class<T> entityType, Object id, LockOptions lockOptions);
+
+	/**
+	 * Return the persistent instance of the given entity class with the given identifier,
+	 * or null if there is no such persistent instance. If the instance is already associated
+	 * with the session, return that instance. This method never returns an uninitialized
+	 * instance. Obtain the specified lock mode if the instance exists.
+	 *
 	 * @param entityName the entity name
 	 * @param id an identifier
 	 * @param lockOptions contains the lock mode
 	 *
 	 * @return a persistent instance or null
 	 *
-	 * @deprecated Use {@linkplain #find(Class, Object, FindOption...)} instead
+	 * @deprecated This method will be removed.
+	 *             Use {@link SessionFactory#createGraphForDynamicEntity(String)}
+	 *             together with {@link #find(EntityGraph, Object, FindOption...)}
+	 *             to load {@link org.hibernate.metamodel.RepresentationMode#MAP
+	 *             dynamic entities}.
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	Object get(String entityName, Object id, LockOptions lockOptions);
@@ -967,7 +990,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @since 6.2
 	 *
-	 * @deprecated Use {@linkplain #lock(Object, LockModeType, LockOption...)} instead
+	 * @deprecated This method will be removed.
+	 *             Use {@linkplain #lock(Object, LockModeType, LockOption...)} instead
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	void lock(Object object, LockOptions lockOptions);
@@ -979,7 +1003,8 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @param object a persistent instance associated with this session
 	 * @param lockOptions contains the lock mode to use
 	 *
-	 * @deprecated Use {@linkplain #refresh(Object, RefreshOption...)} instead
+	 * @deprecated This method will be removed.
+	 *             Use {@linkplain #refresh(Object, RefreshOption...)} instead
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	void refresh(Object object, LockOptions lockOptions);

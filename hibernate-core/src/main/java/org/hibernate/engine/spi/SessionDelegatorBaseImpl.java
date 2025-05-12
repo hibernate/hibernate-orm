@@ -983,6 +983,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return delegate.get( entityType, id, lockOptions );
+	}
+
+	@Override
 	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return delegate.get( entityName, id, lockOptions );
 	}

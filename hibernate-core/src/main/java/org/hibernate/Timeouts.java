@@ -65,16 +65,12 @@ public interface Timeouts {
 	 * the "magic values".
 	 */
 	static Timeout interpretMilliSeconds(int timeoutInMilliseconds) {
-		if ( timeoutInMilliseconds == NO_WAIT_MILLI ) {
-			return NO_WAIT;
-		}
-		else if ( timeoutInMilliseconds == WAIT_FOREVER_MILLI ) {
-			return WAIT_FOREVER;
-		}
-		else if ( timeoutInMilliseconds == SKIP_LOCKED_MILLI ) {
-			return SKIP_LOCKED;
-		}
-		return Timeout.milliseconds( timeoutInMilliseconds );
+		return switch ( timeoutInMilliseconds ) {
+			case NO_WAIT_MILLI -> NO_WAIT;
+			case WAIT_FOREVER_MILLI -> WAIT_FOREVER;
+			case SKIP_LOCKED_MILLI -> SKIP_LOCKED;
+			default -> Timeout.milliseconds( timeoutInMilliseconds );
+		};
 	}
 
 	/**

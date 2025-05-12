@@ -103,7 +103,7 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * <p>
 	 * This lock mode is for internal use only and is not a legal
 	 * argument to {@link Session#get(Class, Object, LockMode)},
-	 * {@link Session#refresh(Object, LockMode)}, or
+	 * {@link Session#refresh(Object, RefreshOption...)}, or
 	 * {@link Session#lock(Object, LockMode)}. These methods throw
 	 * an exception if {@code WRITE} is given as an argument.
 	 * <p>

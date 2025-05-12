@@ -297,6 +297,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return this.lazySession.get().get( entityType, id, lockOptions );
+	}
+
+	@Override
 	public Object get(String entityName, Object id, LockOptions lockOptions) {
 		return this.lazySession.get().get( entityName, id, lockOptions );
 	}

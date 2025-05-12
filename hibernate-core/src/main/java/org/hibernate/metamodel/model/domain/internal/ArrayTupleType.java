@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tuple.TupleType;
-import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
@@ -24,9 +23,8 @@ import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 /**
  * @author Christian Beikov
  */
-public class ArrayTupleType implements TupleType<Object[]>,
-		ReturnableType<Object[]>, SqmDomainType<Object[]>,
-		MappingModelExpressible<Object[]> {
+public class ArrayTupleType
+		implements TupleType<Object[]>, SqmDomainType<Object[]>, MappingModelExpressible<Object[]> {
 
 	private final ObjectArrayJavaType javaType;
 	private final SqmBindable<?>[] components;

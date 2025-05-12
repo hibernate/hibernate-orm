@@ -40,6 +40,11 @@ public interface BasicType<T>
 	}
 
 	@Override
+	default Class<T> getJavaType() {
+		return BasicDomainType.super.getJavaType();
+	}
+
+	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
 		return this.getMappedJavaType();
 	}

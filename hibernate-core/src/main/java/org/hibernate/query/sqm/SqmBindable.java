@@ -8,8 +8,10 @@ import org.hibernate.query.spi.BindableTypeImplementor;
 import org.hibernate.query.spi.BindingContext;
 
 /**
- * @param <J>
+ * An SQM node which may be used to disambiguate the type of an argument to a query parameter.
+ *
  * @author Gavin King
+ *
  * @since 7.0
  */
 public interface SqmBindable<J> extends SqmExpressible<J>, BindableTypeImplementor<J> {

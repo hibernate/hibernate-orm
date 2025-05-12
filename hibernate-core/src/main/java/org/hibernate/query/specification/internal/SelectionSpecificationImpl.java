@@ -14,7 +14,6 @@ import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
 import org.hibernate.query.SelectionQuery;
@@ -44,6 +43,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 
@@ -299,7 +299,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 
 		final SqmSelectClause sqmSelectClause = sqmStatement.getQuerySpec().getSelectClause();
 		final List<SqmSelection<?>> sqmSelections = sqmSelectClause.getSelections();
-		if ( CollectionHelper.isEmpty( sqmSelections ) ) {
+		if ( isEmpty( sqmSelections ) ) {
 			// implicit select clause, verify that resultType matches the root type
 			if ( resultType.isAssignableFrom( rootJavaType ) ) {
 				// it does, we are fine

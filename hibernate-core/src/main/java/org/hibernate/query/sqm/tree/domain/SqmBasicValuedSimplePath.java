@@ -77,6 +77,11 @@ public class SqmBasicValuedSimplePath<T>
 		return this;
 	}
 
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SemanticPathPart
 

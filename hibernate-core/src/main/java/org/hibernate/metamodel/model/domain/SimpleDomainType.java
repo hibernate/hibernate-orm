@@ -12,7 +12,7 @@ import org.hibernate.query.BindableType;
  * @author Steve Ebersole
  */
 public interface SimpleDomainType<J>
-		extends DomainType<J>, BindableType<J>, jakarta.persistence.metamodel.Type<J> {
+		extends DomainType<J>, BindableType<J> {
 	@Override
 	default Class<J> getBindableJavaType() {
 		return getJavaType();

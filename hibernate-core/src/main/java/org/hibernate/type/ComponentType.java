@@ -156,6 +156,11 @@ public class ComponentType extends AbstractType
 		return true;
 	}
 
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.EMBEDDABLE;
+	}
+
 	public Class<?> getReturnedClass() {
 		return componentClass;
 	}

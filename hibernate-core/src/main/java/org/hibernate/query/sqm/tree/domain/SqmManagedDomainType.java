@@ -13,6 +13,11 @@ public interface SqmManagedDomainType<J> extends ManagedDomainType<J>, SqmDomain
 	String getTypeName();
 
 	@Override
+	default Class<J> getJavaType() {
+		return ManagedDomainType.super.getJavaType();
+	}
+
+	@Override
 	SqmPersistentAttribute<? super J, ?> findAttribute(String name);
 
 	@Override @Deprecated(since = "7.0", forRemoval = true)

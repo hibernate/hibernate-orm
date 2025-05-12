@@ -10,7 +10,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Anything in the application domain model that can be used in an
- * SQM query as an expression
+ * SQM query as an expression.
  *
  * @see SqmExpression#getNodeType
  *

@@ -23,4 +23,7 @@ public interface SqmDomainType<T>
 	default int getTupleLength() {
 		return 1;
 	}
+
+	@Override
+	Class<T> getJavaType();
 }

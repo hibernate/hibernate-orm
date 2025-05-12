@@ -60,6 +60,11 @@ public final class BasicTypeReference<T> implements BindableTypeImplementor<T>, 
 		return javaType;
 	}
 
+	@Override
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.BASIC;
+	}
+
 	public int getSqlTypeCode() {
 		return sqlTypeCode;
 	}

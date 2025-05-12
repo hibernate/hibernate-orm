@@ -91,7 +91,7 @@ public class ArrayTupleType implements TupleType<Object[]>,
 
 	@Override
 	public Class<Object[]> getJavaType() {
-		return this.getExpressibleJavaType().getJavaTypeClass();
+		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

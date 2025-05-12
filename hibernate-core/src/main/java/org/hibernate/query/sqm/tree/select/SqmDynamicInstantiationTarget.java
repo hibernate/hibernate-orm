@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.select;
 
 
 import org.hibernate.query.sqm.DynamicInstantiationNature;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface SqmDynamicInstantiationTarget<T> extends SqmBindable<T> {
+public interface SqmDynamicInstantiationTarget<T> extends SqmExpressible<T> {
 
 	/**
 	 * Retrieves the enum describing the nature of this target.

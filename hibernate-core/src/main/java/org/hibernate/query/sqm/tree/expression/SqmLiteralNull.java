@@ -15,11 +15,9 @@ import org.hibernate.query.sqm.tree.SqmRenderContext;
  */
 public class SqmLiteralNull<T> extends SqmLiteral<T> {
 
-	private static final SqmBindable<Object> NULL_TYPE = NullSqmExpressible.NULL_SQM_EXPRESSIBLE;
-
 	public SqmLiteralNull(NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		this( (SqmBindable<T>) NULL_TYPE, nodeBuilder );
+		this( (SqmBindable<T>) NullSqmExpressible.NULL_SQM_EXPRESSIBLE, nodeBuilder );
 	}
 
 	public SqmLiteralNull(SqmBindable<T> expressibleType, NodeBuilder nodeBuilder) {

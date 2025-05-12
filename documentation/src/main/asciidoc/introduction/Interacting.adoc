@@ -95,6 +95,29 @@ A great deal of human suffering has resulted from users mismanaging the lifecycl
 We'll conclude by noting that whether a persistence context helps or harms the performance of a given unit of work depends greatly on the nature of the unit of work.
 For this reason Hibernate provides both stateful and stateless sessions.
 
+[[transient-vs-detached]]
+=== Transient vs detached
+
+Sometimes, Hibernate needs to be able to distinguish whether an entity instance is:
+
+- a brand-new transient object the client just instantiated using `new`, or
+- a detached object, which previously belonged to a persistence context.
+
+This is a bit of a problem, since there's no good way for Hibernate to just tag an entity with a Post-it saying "I've seen you before" that wouldn't have a negative impact on performance.
+
+Therefore, Hibernate uses heuristics.
+The two most useful heuristics are:
+
+1. If the entity has a <<generated-identifiers,generated identifier>>, the value of the id field is inspected: if the value currently assigned to the id field is the default value for the type of the field, then the object is transient; otherwise, the object is detached.
+2. If the entity has a <<version-attributes,version>>, the value of the version field is inspected: if the value currently assigned to the version field is the default value, or a negative number, then the object is transient; otherwise, the object is detached.
+
+If the entity has neither a generated id, nor a version, Hibernate falls back to just doing something reasonable.
+
+[WARNING]
+These heuristics aren't perfect.
+It's quite easy to confuse Hibernate by assigning a value to the id field or version field that makes a new transient instance look like it's detached.
+We therefore strongly discourage assigning values to fields annotated `@GeneratedValue` or `@Version` before passing an entity to Hibernate.
+
 [[creating-session]]
 === Creating a session
 

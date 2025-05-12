@@ -7,9 +7,9 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.Objects;
 
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.JpaParameterExpression;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;

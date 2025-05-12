@@ -30,6 +30,11 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, J
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return BasicDomainType.super.getBindableJavaType();
+	}
+
+	@Override
 	public String getTypeName() {
 		return javaType.getTypeName();
 	}

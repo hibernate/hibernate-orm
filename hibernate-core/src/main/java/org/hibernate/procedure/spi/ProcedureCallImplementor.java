@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
@@ -20,6 +19,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * @author Steve Ebersole
@@ -48,10 +48,10 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuer
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, BindableType<?> type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Type<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, BindableType<?> type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Type<?> type, ParameterMode mode);
 
 	@Override
 	ProcedureCallImplementor<R> setHint(String hintName, Object value);

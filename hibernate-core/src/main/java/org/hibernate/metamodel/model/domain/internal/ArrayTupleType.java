@@ -35,6 +35,11 @@ public class ArrayTupleType
 	}
 
 	@Override
+	public Class<Object[]> getBindableJavaType() {
+		return TupleType.super.getBindableJavaType();
+	}
+
+	@Override
 	public String getTypeName() {
 		return SqmDomainType.super.getTypeName();
 	}

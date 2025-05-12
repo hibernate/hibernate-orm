@@ -12,9 +12,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
+import org.hibernate.type.internal.BindingTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

@@ -17,6 +17,7 @@ import org.hibernate.Session;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * Defines the aspects of query execution and parameter binding that apply to all
@@ -227,7 +228,7 @@ public interface CommonQueryContract {
 	 * or pass a {@link TypedParameterValue}.
 	 *
 	 * @see #setParameter(String, Object, Class)
-	 * @see #setParameter(String, Object, BindableType)
+	 * @see #setParameter(String, Object, Type)
 	 *
 	 * @see TypedParameterValue
 	 */
@@ -235,19 +236,19 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
-	 * {@link Class} reference to attempt to infer the {@link BindableType}.
-	 * If unable to infer an appropriate {@link BindableType}, fall back to
+	 * {@link Class} reference to attempt to infer the {@link Type}.
+	 * If unable to infer an appropriate {@link Type}, fall back to
 	 * {@link #setParameter(String, Object)}.
 	 *
-	 * @see #setParameter(String, Object, BindableType)
+	 * @see #setParameter(String, Object, Type)
 	 */
 	<P> CommonQueryContract setParameter(String parameter, P value, Class<P> type);
 
 	/**
 	 * Bind the given argument to a named query parameter using the given
-	 * {@link BindableType}.
+	 * {@link Type}.
 	 */
-	<P> CommonQueryContract setParameter(String parameter, P value, BindableType<P> type);
+	<P> CommonQueryContract setParameter(String parameter, P value, Type<P> type);
 
 	/**
 	 * Bind an {@link Instant} to the named query parameter using just the
@@ -282,7 +283,7 @@ public interface CommonQueryContract {
 	 * or pass a {@link TypedParameterValue}.
 	 *
 	 * @see #setParameter(int, Object, Class)
-	 * @see #setParameter(int, Object, BindableType)
+	 * @see #setParameter(int, Object, Type)
 	 *
 	 * @see TypedParameterValue
 	 */
@@ -290,19 +291,19 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
-	 * {@link Class} reference to attempt to infer the {@link BindableType}.
-	 * If unable to infer an appropriate {@link BindableType}, fall back to
+	 * {@link Class} reference to attempt to infer the {@link Type}.
+	 * If unable to infer an appropriate {@link Type}, fall back to
 	 * {@link #setParameter(int, Object)}.
 	 *
-	 * @see #setParameter(int, Object, BindableType)
+	 * @see #setParameter(int, Object, Type)
 	 */
 	<P> CommonQueryContract setParameter(int parameter, P value, Class<P> type);
 
 	/**
 	 * Bind the given argument to an ordinal query parameter using the given
-	 * {@link BindableType}.
+	 * {@link Type}.
 	 */
-	<P> CommonQueryContract setParameter(int parameter, P value, BindableType<P> type);
+	<P> CommonQueryContract setParameter(int parameter, P value, Type<P> type);
 
 	/**
 	 * Bind an {@link Instant} to an ordinal query parameter using just the
@@ -336,7 +337,7 @@ public interface CommonQueryContract {
 	 * If the type of the parameter cannot be inferred from the context in
 	 * which it occurs, use one of the overloads which accepts a "type".
 	 *
-	 * @see #setParameter(QueryParameter, Object, BindableType)
+	 * @see #setParameter(QueryParameter, Object, Type)
 	 *
 	 * @param parameter the query parameter memento
 	 * @param value the argument, which might be null
@@ -348,30 +349,30 @@ public interface CommonQueryContract {
 	/**
 	 * Bind an argument to the query parameter represented by the given
 	 * {@link QueryParameter}, using the given {@link Class} reference to attempt
-	 * to infer the {@link BindableType} to use.  If unable to infer an appropriate
-	 * {@link BindableType}, fall back to {@link #setParameter(QueryParameter, Object)}.
+	 * to infer the {@link Type} to use.  If unable to infer an appropriate
+	 * {@link Type}, fall back to {@link #setParameter(QueryParameter, Object)}.
 	 *
 	 * @param parameter the query parameter memento
 	 * @param value the argument, which might be null
-	 * @param type a {@link BindableType} representing the type of the parameter
+	 * @param type a {@link Type} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see #setParameter(QueryParameter, Object, BindableType)
+	 * @see #setParameter(QueryParameter, Object, Type)
 	 */
 	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	/**
 	 * Bind an argument to the query parameter represented by the given
-	 * {@link QueryParameter}, using the given {@link BindableType}.
+	 * {@link QueryParameter}, using the given {@link Type}.
 	 *
 	 * @param parameter the query parameter memento
 	 * @param val the argument, which might be null
-	 * @param type a {@link BindableType} representing the type of the parameter
+	 * @param type a {@link Type} representing the type of the parameter
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> CommonQueryContract setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	/**
 	 * @see jakarta.persistence.Query#setParameter(Parameter, Object)
@@ -400,7 +401,7 @@ public interface CommonQueryContract {
 	 * The "type mapping" for the binding is inferred from the type of
 	 * the first collection element.
 	 *
-	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
+	 * @see #setParameterList(java.lang.String, java.util.Collection, Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -411,11 +412,11 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
-	 * {@link Class} reference to attempt to infer the {@link BindableType}
-	 * If unable to infer an appropriate {@link BindableType}, fall back to
+	 * {@link Class} reference to attempt to infer the {@link Type}
+	 * If unable to infer an appropriate {@link Type}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see #setParameterList(java.lang.String, java.util.Collection, BindableType)
+	 * @see #setParameterList(java.lang.String, java.util.Collection, Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -426,14 +427,14 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
-	 * {@link BindableType}.
+	 * {@link Type}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(String parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> CommonQueryContract setParameterList(String parameter, Collection<? extends P> values, Type<P> type);
 
 
 	/**
@@ -451,11 +452,11 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
-	 * Class reference to attempt to determine the {@link BindableType}
-	 * to use.  If unable to determine an appropriate {@link BindableType},
+	 * Class reference to attempt to determine the {@link Type}
+	 * to use.  If unable to determine an appropriate {@link Type},
 	 * {@link #setParameterList(String, Collection)} is used
 	 *
-	 * @see #setParameterList(java.lang.String, Object[], BindableType)
+	 * @see #setParameterList(java.lang.String, Object[], Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -467,14 +468,14 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to a named query parameter using the given
-	 * {@link BindableType}.
+	 * {@link Type}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(String parameter, P[] values, BindableType<P> type);
+	<P> CommonQueryContract setParameterList(String parameter, P[] values, Type<P> type);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
@@ -491,11 +492,11 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
-	 * {@link Class} reference to attempt to infer the {@link BindableType}.
-	 * If unable to infer an appropriate {@link BindableType}, fall back to
+	 * {@link Class} reference to attempt to infer the {@link Type}.
+	 * If unable to infer an appropriate {@link Type}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see #setParameterList(int, Collection, BindableType)
+	 * @see #setParameterList(int, Collection, Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -506,14 +507,14 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
-	 * {@link BindableType}.
+	 * {@link Type}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(int parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> CommonQueryContract setParameterList(int parameter, Collection<? extends P> values, Type<P> type);
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter.
@@ -530,11 +531,11 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
-	 * {@link Class} reference to attempt to infer the {@link BindableType}.
-	 * If unable to infer an appropriate {@link BindableType}, fall back to
+	 * {@link Class} reference to attempt to infer the {@link Type}.
+	 * If unable to infer an appropriate {@link Type}, fall back to
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see #setParameterList(int, Object[], BindableType)
+	 * @see #setParameterList(int, Object[], Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -545,14 +546,14 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to an ordinal query parameter using the given
-	 * {@link BindableType}.
+	 * {@link Type}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(int parameter, P[] values, BindableType<P> type);
+	<P> CommonQueryContract setParameterList(int parameter, P[] values, Type<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -571,11 +572,11 @@ public interface CommonQueryContract {
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
 	 * given {@link QueryParameter} using the given {@link Class} reference
-	 * to attempt to infer the {@link BindableType} to use.  If unable to
-	 * infer an appropriate {@link BindableType}, fall back to using
+	 * to attempt to infer the {@link Type} to use.  If unable to
+	 * infer an appropriate {@link Type}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see #setParameterList(QueryParameter, java.util.Collection, BindableType)
+	 * @see #setParameterList(QueryParameter, java.util.Collection, Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -586,14 +587,14 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter}, using the given {@link BindableType}.
+	 * given {@link QueryParameter}, using the given {@link Type}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
@@ -613,11 +614,11 @@ public interface CommonQueryContract {
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
 	 * given {@link QueryParameter} using the given {@link Class} reference
-	 * to attempt to infer the {@link BindableType} to use.  If unable to
-	 * infer an appropriate {@link BindableType}, fall back to using
+	 * to attempt to infer the {@link Type} to use.  If unable to
+	 * infer an appropriate {@link Type}, fall back to using
 	 * {@link #setParameterList(String, Collection)}.
 	 *
-	 * @see #setParameterList(QueryParameter, Object[], BindableType)
+	 * @see #setParameterList(QueryParameter, Object[], Type)
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
@@ -628,14 +629,14 @@ public interface CommonQueryContract {
 
 	/**
 	 * Bind multiple arguments to the query parameter represented by the
-	 * given {@link QueryParameter}, using the given the {@link BindableType}.
+	 * given {@link QueryParameter}, using the given the {@link Type}.
 	 *
 	 * @apiNote This is used for binding a list of values to an expression
 	 * such as {@code entity.field in (:values)}.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of

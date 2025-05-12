@@ -21,6 +21,11 @@ public interface BasicDomainType<J>
 	}
 
 	@Override
+	default Class<J> getBindableJavaType() {
+		return ReturnableType.super.getBindableJavaType();
+	}
+
+	@Override
 	default Class<J> getJavaType() {
 		return ReturnableType.super.getJavaType();
 	}

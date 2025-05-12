@@ -4,8 +4,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.query.spi.BindableTypeImplementor;
-
 /**
  * Optional {@link Type} contract for implementations that are aware of
  * how to extract values from stored procedure OUT/INOUT parameters.
@@ -13,5 +11,5 @@ import org.hibernate.query.spi.BindableTypeImplementor;
  * @author Steve Ebersole
  */
 public interface ProcedureParameterExtractionAware<T>
-		extends BindableTypeImplementor<T>, OutputableType<T> {
+		extends BindableType<T>, OutputableType<T> {
 }

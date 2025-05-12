@@ -5,8 +5,8 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.spi.BindingContext;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;

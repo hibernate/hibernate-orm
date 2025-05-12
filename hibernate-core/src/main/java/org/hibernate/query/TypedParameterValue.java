@@ -4,7 +4,7 @@
  */
 package org.hibernate.query;
 
-
+import org.hibernate.type.BindableType;
 import org.hibernate.type.BasicTypeReference;
 
 import java.util.Objects;

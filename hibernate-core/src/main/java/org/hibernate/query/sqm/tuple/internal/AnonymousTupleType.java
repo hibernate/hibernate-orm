@@ -18,7 +18,7 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
@@ -51,7 +51,7 @@ public class AnonymousTupleType<T>
 
 	private final JavaType<T> javaTypeDescriptor;
 	private final @Nullable NavigablePath[] componentSourcePaths;
-	private final SqmBindable<?>[] expressibles;
+	private final SqmBindableType<?>[] expressibles;
 	private final String[] componentNames;
 	private final Map<String, Integer> componentIndexMap;
 
@@ -60,7 +60,7 @@ public class AnonymousTupleType<T>
 	}
 
 	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
-		expressibles = new SqmBindable<?>[components.length];
+		expressibles = new SqmBindableType<?>[components.length];
 		componentSourcePaths = new NavigablePath[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
 			expressibles[i] = components[i].getNodeType();
@@ -84,7 +84,7 @@ public class AnonymousTupleType<T>
 		}
 	}
 
-	public AnonymousTupleType(SqmBindable<?>[] expressibles, String[] componentNames) {
+	public AnonymousTupleType(SqmBindableType<?>[] expressibles, String[] componentNames) {
 		this.expressibles = expressibles;
 		this.componentNames = componentNames;
 
@@ -178,12 +178,12 @@ public class AnonymousTupleType<T>
 	}
 
 	@Override
-	public SqmBindable<?> get(int index) {
+	public SqmBindableType<?> get(int index) {
 		return expressibles[index];
 	}
 
 	@Override
-	public SqmBindable<?> get(String componentName) {
+	public SqmBindableType<?> get(String componentName) {
 		final Integer index = componentIndexMap.get( componentName );
 		return index == null ? null : expressibles[index];
 	}

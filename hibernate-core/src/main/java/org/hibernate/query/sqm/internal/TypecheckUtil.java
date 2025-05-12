@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
@@ -101,11 +101,11 @@ public class TypecheckUtil {
 	 * @param lhsType the type of the expression on the LHS of the comparison operator
 	 * @param rhsType the type of the expression on the RHS of the comparison operator
 	 *
-	 * @see #isTypeAssignable(SqmBindable, SqmBindable, BindingContext)
+	 * @see #isTypeAssignable(SqmBindableType, SqmBindableType, BindingContext)
 	 */
 	public static boolean areTypesComparable(
-			SqmBindable<?> lhsType,
-			SqmBindable<?> rhsType,
+			SqmBindableType<?> lhsType,
+			SqmBindableType<?> rhsType,
 			BindingContext bindingContext) {
 		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
 			return true;
@@ -298,8 +298,8 @@ public class TypecheckUtil {
 			final EntityPersister rhsEntity = bindingContext.getMappingMetamodel().getEntityDescriptor( rhsEntityName );
 			return rhsEntity.getRootEntityName().equals( lhsEntity.getRootEntityName() );
 		}
-		else if ( rhsType instanceof SqmBindable<?> rhsExpressible ) {
-			final SqmBindable<?> discriminatorType = (SqmBindable<?>)
+		else if ( rhsType instanceof SqmBindableType<?> rhsExpressible ) {
+			final SqmBindableType<?> discriminatorType = (SqmBindableType<?>)
 					lhsDiscriminator.getEntityMapping().getDiscriminatorMapping().getMappedType();
 			return areTypesComparable( discriminatorType, rhsExpressible, bindingContext);
 		}
@@ -312,10 +312,10 @@ public class TypecheckUtil {
 	 * @param targetType the type of the path expression to which a value is assigned
 	 * @param expressionType the type of the value expression being assigned to the path
 	 *
-	 * @see #areTypesComparable(SqmBindable, SqmBindable, BindingContext)
+	 * @see #areTypesComparable(SqmBindableType, SqmBindableType, BindingContext)
 	 */
 	private static boolean isTypeAssignable(
-			SqmBindable<?> targetType, SqmBindable<?> expressionType,
+			SqmBindableType<?> targetType, SqmBindableType<?> expressionType,
 			BindingContext bindingContext) {
 
 		if ( targetType == null || expressionType == null || targetType == expressionType ) {
@@ -372,7 +372,7 @@ public class TypecheckUtil {
 		return targetType.getRelationalJavaType() == expressionType.getRelationalJavaType();
 	}
 
-	private static boolean sameJavaType(SqmBindable<?> leftType, SqmBindable<?> rightType) {
+	private static boolean sameJavaType(SqmBindableType<?> leftType, SqmBindableType<?> rightType) {
 		return canonicalize( leftType.getJavaType() ) == canonicalize( rightType.getJavaType() );
 	}
 
@@ -428,8 +428,8 @@ public class TypecheckUtil {
 
 		// allow comparing literal null to things
 		if ( !( left instanceof SqmLiteralNull ) && !( right instanceof SqmLiteralNull ) ) {
-			final SqmBindable<?> leftType = left.getExpressible();
-			final SqmBindable<?> rightType = right.getExpressible();
+			final SqmBindableType<?> leftType = left.getExpressible();
+			final SqmBindableType<?> rightType = right.getExpressible();
 			if ( leftType != null && rightType != null
 					&& left.isEnum() && right.isEnum() ) {
 				// this is needed by Hibernate Processor due to the weird
@@ -466,8 +466,8 @@ public class TypecheckUtil {
 			// TODO: check that the target path is nullable
 		}
 		else {
-			final SqmBindable<?> targetType = targetPath.getNodeType();
-			final SqmBindable<?> expressionType = expression.getNodeType();
+			final SqmBindableType<?> targetType = targetPath.getNodeType();
+			final SqmBindableType<?> expressionType = expression.getNodeType();
 			if ( targetType != null && expressionType != null && targetPath.isEnum() ) {
 				// this is needed by Hibernate Processor due to the weird
 				// handling of enumerated types in the annotation processor

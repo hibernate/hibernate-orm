@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver;
@@ -56,7 +56,7 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		}
 
 		final BasicType<?> elementType = pluralType.getElementType();
-		final SqmBindable<?>[] componentTypes;
+		final SqmBindableType<?>[] componentTypes;
 		final String[] componentNames;
 		if ( elementType.getJdbcType() instanceof AggregateJdbcType aggregateJdbcType
 			&& aggregateJdbcType.getEmbeddableMappingType() != null ) {
@@ -76,7 +76,7 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 			componentNames[index] = CollectionPart.Nature.INDEX.getName();
 		}
 		else {
-			componentTypes = new SqmBindable<?>[]{ elementType, typeConfiguration.getBasicTypeForJavaType( Long.class ) };
+			componentTypes = new SqmBindableType<?>[]{ elementType, typeConfiguration.getBasicTypeForJavaType( Long.class ) };
 			componentNames = new String[]{ CollectionPart.Nature.ELEMENT.getName(), CollectionPart.Nature.INDEX.getName() };
 		}
 		return new AnonymousTupleType<>( componentTypes, componentNames );
@@ -209,17 +209,17 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 		return returnType;
 	}
 
-	private static SqmBindable<?>[] determineComponentTypes(EmbeddableMappingType embeddableMappingType) {
+	private static SqmBindableType<?>[] determineComponentTypes(EmbeddableMappingType embeddableMappingType) {
 		final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-		final ArrayList<SqmBindable<?>> expressibles = new ArrayList<>( numberOfAttributeMappings + 1 );
+		final ArrayList<SqmBindableType<?>> expressibles = new ArrayList<>( numberOfAttributeMappings + 1 );
 
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMapping( i );
 			final MappingType mappedType = attributeMapping.getMappedType();
-			if ( mappedType instanceof SqmBindable<?> sqmExpressible ) {
+			if ( mappedType instanceof SqmBindableType<?> sqmExpressible ) {
 				expressibles.add( sqmExpressible );
 			}
 		}
-		return expressibles.toArray( new SqmBindable<?>[expressibles.size() + 1] );
+		return expressibles.toArray( new SqmBindableType<?>[expressibles.size() + 1] );
 	}
 }

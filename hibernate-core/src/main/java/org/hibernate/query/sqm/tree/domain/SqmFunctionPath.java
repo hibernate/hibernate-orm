@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -50,7 +50,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
 		//noinspection unchecked
-		final SqmBindable<X> nodeType = (SqmBindable<X>) function.getNodeType();
+		final SqmBindableType<X> nodeType = (SqmBindableType<X>) function.getNodeType();
 		final Class<X> bindableJavaType = nodeType.getJavaType();
 		final ManagedType<X> managedType = function.nodeBuilder()
 				.getJpaMetamodel()

@@ -6,7 +6,7 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
@@ -88,7 +88,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	}
 
 	@Override
-	public SqmBindable<T> resolveExpressible(BindingContext bindingContext) {
+	public SqmBindableType<T> resolveExpressible(BindingContext bindingContext) {
 		return bindingContext.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
 	}
 }

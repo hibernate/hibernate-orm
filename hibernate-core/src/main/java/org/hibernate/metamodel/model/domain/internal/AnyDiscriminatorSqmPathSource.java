@@ -7,7 +7,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
@@ -21,7 +21,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
  *
  */
 public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
-		implements ReturnableType<D>, SqmBindable<D> {
+		implements ReturnableType<D>, SqmBindableType<D> {
 
 	private final BasicType<D> domainType;
 

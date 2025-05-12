@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -28,7 +28,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmBindable<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmBindableType<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaType<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
@@ -65,7 +65,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public SqmBindable<E> getExpressible() {
+	public SqmBindableType<E> getExpressible() {
 		return this;
 	}
 

@@ -7,7 +7,7 @@ package org.hibernate.type;
 import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 
 /**
  * Represents a type of argument which can be bound to a positional or named
@@ -31,7 +31,7 @@ import org.hibernate.query.sqm.SqmBindable;
 @Incubating
 public interface BindableType<J> extends Type<J> {
 	/**
-	 * Resolve this parameter type to the corresponding {@link SqmBindable}.
+	 * Resolve this parameter type to the corresponding {@link SqmBindableType}.
 	 */
-	SqmBindable<J> resolveExpressible(BindingContext bindingContext);
+	SqmBindableType<J> resolveExpressible(BindingContext bindingContext);
 }

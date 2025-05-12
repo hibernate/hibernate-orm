@@ -55,7 +55,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -1241,7 +1241,7 @@ public class SqmUtil {
 	}
 
 	protected static void verifyResultType(Class<?> resultClass, SqmSelectableNode<?> selectableNode) {
-		final SqmBindable<?> selectionExpressible = selectableNode.getExpressible();
+		final SqmBindableType<?> selectionExpressible = selectableNode.getExpressible();
 		final JavaType<?> javaType =
 				selectionExpressible == null
 						? selectableNode.getNodeJavaType() // for SqmDynamicInstantiation

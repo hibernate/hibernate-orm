@@ -6,15 +6,15 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 
 @Incubating
 public interface SqmDomainType<T>
-		extends DomainType<T>, SqmBindable<T> {
+		extends DomainType<T>, SqmBindableType<T> {
 
 	@Override
 	default String getTypeName() {
-		return SqmBindable.super.getTypeName();
+		return SqmBindableType.super.getTypeName();
 	}
 
 	default int getTupleLength() {

@@ -14,9 +14,9 @@ import org.hibernate.type.BindingContext;
  *
  * @since 7.0
  */
-public interface SqmBindable<J> extends SqmExpressible<J>, BindableType<J> {
+public interface SqmBindableType<J> extends SqmExpressible<J>, BindableType<J> {
 	@Override
-	default SqmBindable<J> resolveExpressible(BindingContext bindingContext) {
+	default SqmBindableType<J> resolveExpressible(BindingContext bindingContext) {
 		return this;
 	}
 }

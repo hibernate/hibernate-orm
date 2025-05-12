@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -22,7 +22,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	// The navigable path is optionally set in case this is a reference to an attribute of a selection
 	private final NavigablePath navigablePath;
 
-	public SqmAliasedNodeRef(int position, SqmBindable<Integer> intType, NodeBuilder criteriaBuilder) {
+	public SqmAliasedNodeRef(int position, SqmBindableType<Integer> intType, NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
 		this.position = position;
 		this.navigablePath = null;
@@ -31,7 +31,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	public SqmAliasedNodeRef(
 			int position,
 			NavigablePath navigablePath,
-			SqmBindable<Integer> type,
+			SqmBindableType<Integer> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.position = position;

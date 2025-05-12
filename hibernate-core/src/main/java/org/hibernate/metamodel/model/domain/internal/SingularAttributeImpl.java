@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -141,7 +141,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmBindable<J> getExpressible() {
+	public SqmBindableType<J> getExpressible() {
 		return sqmPathSource.getExpressible();
 	}
 

@@ -9,7 +9,7 @@ import java.util.Locale;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -85,7 +85,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public SqmBindable<T> getNodeType() {
+	public SqmBindableType<T> getNodeType() {
 		return getReferencedPathSource().getExpressible();
 	}
 

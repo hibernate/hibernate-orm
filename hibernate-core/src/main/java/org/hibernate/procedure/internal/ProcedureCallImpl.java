@@ -45,7 +45,7 @@ import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -500,14 +500,14 @@ public class ProcedureCallImpl<R>
 			int position,
 			Type<T> typeReference,
 			ParameterMode mode) {
-		final SqmBindable<T> expressible = resolveExpressible( typeReference );
+		final SqmBindableType<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> procedureParameter =
 				new ProcedureParameterImpl<>( position, mode, ((BindableType<T>) typeReference).getJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
 	}
 
-	private <T> SqmBindable<T> resolveExpressible(Type<T> typeReference) {
+	private <T> SqmBindableType<T> resolveExpressible(Type<T> typeReference) {
 		return getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
 	}
 
@@ -550,7 +550,7 @@ public class ProcedureCallImpl<R>
 			String name,
 			Type<T> typeReference,
 			ParameterMode mode) {
-		final SqmBindable<T> expressible = resolveExpressible( typeReference );
+		final SqmBindableType<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> parameter =
 				new ProcedureParameterImpl<>( name, mode, ((BindableType<T>) typeReference).getJavaType(), expressible );
 		registerParameter( parameter );

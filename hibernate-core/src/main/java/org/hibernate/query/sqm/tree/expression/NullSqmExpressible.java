@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -13,7 +13,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 /**
  * @author Steve Ebersole
  */
-public class NullSqmExpressible implements SqmBindable<Object> {
+public class NullSqmExpressible implements SqmBindableType<Object> {
 	/**
 	 * Singleton access
 	 */

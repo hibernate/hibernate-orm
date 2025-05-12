@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -85,7 +85,7 @@ public class SqmTreatedPluralPartJoin extends SqmPluralPartJoin implements SqmTr
 	}
 
 	@Override
-	public SqmBindable getNodeType() {
+	public SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 

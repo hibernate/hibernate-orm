@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -26,7 +26,7 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public @Nullable SqmBindable<T> getNodeType() {
+	public @Nullable SqmBindableType<T> getNodeType() {
 		return subquery.getNodeType();
 	}
 

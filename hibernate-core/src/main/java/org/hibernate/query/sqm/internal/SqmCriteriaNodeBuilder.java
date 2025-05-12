@@ -167,6 +167,7 @@ import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static java.util.Arrays.asList;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -1655,7 +1656,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 		@Override
 		public PersistenceType getPersistenceType() {
-			return PersistenceType.BASIC;
+			return BASIC;
 		}
 
 		@Override

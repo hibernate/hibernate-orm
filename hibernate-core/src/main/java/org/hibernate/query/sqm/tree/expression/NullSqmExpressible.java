@@ -8,6 +8,8 @@ import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+
 /**
  * @author Steve Ebersole
  */
@@ -19,7 +21,7 @@ public class NullSqmExpressible implements SqmBindable<Object> {
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override

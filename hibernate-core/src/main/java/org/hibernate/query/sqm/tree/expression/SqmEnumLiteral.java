@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+
 /**
  * Specialized SQM literal defined by an enum reference.  E.g.
  * {@code ".. where p.sex = Sex.MALE"}
@@ -69,7 +71,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override

@@ -17,6 +17,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+
 /**
  * @author Steve Ebersole
  */
@@ -73,7 +75,7 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
+		return EMBEDDABLE;
 	}
 
 	@Override

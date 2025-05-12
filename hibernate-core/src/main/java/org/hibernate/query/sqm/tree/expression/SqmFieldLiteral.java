@@ -30,6 +30,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+
 /**
  * @author Steve Ebersole
  */
@@ -63,13 +65,12 @@ public class SqmFieldLiteral<T>
 		this.fieldJavaType = fieldJavaType;
 		this.fieldName = fieldName;
 		this.nodeBuilder = nodeBuilder;
-
 		this.expressible = this;
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	private static <T> T extractValue(Field field) {

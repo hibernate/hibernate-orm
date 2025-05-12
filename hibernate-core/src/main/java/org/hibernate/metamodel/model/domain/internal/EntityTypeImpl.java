@@ -31,6 +31,8 @@ import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.isCompatible;
 
 /**
@@ -237,12 +239,12 @@ public class EntityTypeImpl<J>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
+		return ENTITY_TYPE;
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
+		return ENTITY;
 	}
 
 	@Override

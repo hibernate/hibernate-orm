@@ -9,6 +9,8 @@ import java.io.Serializable;
 import org.hibernate.query.sqm.SqmBindable;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+
 /**
  * A basic type reference.
  *
@@ -60,7 +62,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	public int getSqlTypeCode() {

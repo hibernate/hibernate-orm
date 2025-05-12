@@ -37,6 +37,8 @@ import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 
 
@@ -238,12 +240,14 @@ public class AnonymousTupleType<T>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
+		// TODO: should this be SINGULAR_ATTRIBUTE
+		return ENTITY_TYPE;
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
+		// TODO: should this be EMBEDDABLE
+		return ENTITY;
 	}
 
 	@Override

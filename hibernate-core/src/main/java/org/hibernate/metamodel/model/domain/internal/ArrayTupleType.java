@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+
 /**
  * @author Christian Beikov
  */
@@ -89,7 +91,7 @@ public class ArrayTupleType
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
+		return EMBEDDABLE;
 	}
 
 	@Override

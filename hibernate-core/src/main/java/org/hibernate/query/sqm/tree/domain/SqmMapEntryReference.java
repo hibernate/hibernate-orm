@@ -22,6 +22,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+
 
 /**
  * Represents the reference to a Map attribute's {@link Map.Entry} entries
@@ -86,7 +88,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
+		return EMBEDDABLE;
 	}
 
 	@Override

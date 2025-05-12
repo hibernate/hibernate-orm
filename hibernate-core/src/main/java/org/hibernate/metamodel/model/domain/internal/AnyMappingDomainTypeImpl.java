@@ -60,10 +60,10 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 		return this;
 	}
 
-	@Override
-	public Class<T> getBindableJavaType() {
-		return AnyMappingDomainType.super.getBindableJavaType();
-	}
+//	@Override
+//	public Class<T> getJavaType() {
+//		return AnyMappingDomainType.super.getJavaType();
+//	}
 
 	@Override
 	public String getTypeName() {

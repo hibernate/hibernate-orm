@@ -13,11 +13,6 @@ public interface SqmDomainType<T>
 		extends DomainType<T>, SqmBindable<T> {
 
 	@Override
-	default Class<T> getJavaType() {
-		return SqmBindable.super.getJavaType();
-	}
-
-	@Override
 	default String getTypeName() {
 		return SqmBindable.super.getTypeName();
 	}

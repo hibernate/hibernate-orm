@@ -42,9 +42,9 @@ public class QueryParameterBindingValidator {
 
 		final SqmBindable<?> sqmExpressible = bindingContext.resolveExpressible( paramType );
 		final Class<?> parameterJavaType =
-				paramType.getBindableJavaType() != null
-						? paramType.getBindableJavaType()
-						: sqmExpressible.getBindableJavaType();
+				paramType.getJavaType() != null
+						? paramType.getJavaType()
+						: sqmExpressible.getJavaType();
 
 		if ( parameterJavaType != null ) {
 			if ( bind instanceof Collection<?> collection

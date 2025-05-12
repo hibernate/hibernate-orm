@@ -115,11 +115,6 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
-		return getJavaType();
-	}
-
-	@Override
 	public JavaType<?> getRelationalJavaType() {
 		return super.getExpressible().getRelationalJavaType();
 	}

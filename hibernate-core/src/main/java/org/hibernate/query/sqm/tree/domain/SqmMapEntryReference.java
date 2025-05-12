@@ -135,11 +135,6 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public Class<Map.Entry<K, V>> getBindableJavaType() {
-		return getNodeType().getBindableJavaType();
-	}
-
-	@Override
 	public NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}

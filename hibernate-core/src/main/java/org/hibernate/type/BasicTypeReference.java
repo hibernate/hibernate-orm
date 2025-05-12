@@ -54,7 +54,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<T> getJavaType() {
 		return javaType;
 	}
 

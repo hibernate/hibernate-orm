@@ -38,7 +38,7 @@ public abstract class AbstractParameterDescriptor<T> implements QueryParameter<T
 
 	@Override
 	public Class<T> getParameterType() {
-		return expectedType == null ? null : expectedType.getBindableJavaType();
+		return expectedType == null ? null : expectedType.getJavaType();
 	}
 
 	@Override

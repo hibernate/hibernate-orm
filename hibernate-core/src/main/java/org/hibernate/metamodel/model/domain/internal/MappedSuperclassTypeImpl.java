@@ -63,6 +63,11 @@ public class MappedSuperclassTypeImpl<J>
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
+	}
+
+	@Override
 	public SqmMappedSuperclassDomainType<J> getSqmType() {
 		return this;
 	}

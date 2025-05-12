@@ -1664,7 +1664,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
-		public Class<T> getBindableJavaType() {
+		public Class<T> getJavaType() {
 			return javaType.getJavaTypeClass();
 		}
 
@@ -2133,7 +2133,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return expressible.getExpressibleJavaType().isInstance( value );
 		}
 		else {
-			return bindableType.getBindableJavaType().isInstance( value )
+			return bindableType.getJavaType().isInstance( value )
 				|| resolveExpressible( bindableType ).getExpressibleJavaType().isInstance( value );
 		}
 	}

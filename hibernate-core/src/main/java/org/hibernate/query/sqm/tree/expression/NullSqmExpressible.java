@@ -23,7 +23,7 @@ public class NullSqmExpressible implements SqmBindable<Object> {
 	}
 
 	@Override
-	public Class<Object> getBindableJavaType() {
+	public Class<Object> getJavaType() {
 		return null;
 	}
 

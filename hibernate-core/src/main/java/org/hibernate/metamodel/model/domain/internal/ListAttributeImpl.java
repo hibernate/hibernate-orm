@@ -62,16 +62,9 @@ public class ListAttributeImpl<X, E>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
-		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
-		if ( nature != null ) {
-			switch ( nature ) {
-				case INDEX:
-					return indexPathSource;
-				case ELEMENT:
-					return getElementPathSource();
-			}
-		}
-		return getElementPathSource().findSubPathSource( name, includeSubtypes );
+		return CollectionPart.Nature.INDEX.getName().equals( name )
+				? indexPathSource
+				: super.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

@@ -112,7 +112,7 @@ public class BindingTypeHelper {
 			Class javaType,
 			BindableType baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( baseType.getBindableJavaType().isAssignableFrom( javaType ) ) {
+		if ( baseType.getJavaType().isAssignableFrom( javaType ) ) {
 			return baseType;
 		}
 
@@ -147,7 +147,7 @@ public class BindingTypeHelper {
 			Class<?> javaType,
 			BindableType<?> baseType,
 			TypeConfiguration typeConfiguration) {
-		if ( baseType.getBindableJavaType().isAssignableFrom( javaType ) ) {
+		if ( baseType.getJavaType().isAssignableFrom( javaType ) ) {
 			return baseType;
 		}
 

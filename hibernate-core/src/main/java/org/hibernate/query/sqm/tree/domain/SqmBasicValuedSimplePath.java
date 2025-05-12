@@ -188,11 +188,6 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
-		return getJavaType();
-	}
-
-	@Override
 	public SqmDomainType<T> getSqmType() {
 		return getResolvedModel().getSqmType();
 	}

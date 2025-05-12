@@ -22,16 +22,20 @@ public interface SqmExpressible<J> {
 	 */
 	JavaType<J> getExpressibleJavaType();
 
+	/**
+	 * Usually the same as {@link #getExpressibleJavaType()}. But for types with
+	 * {@linkplain org.hibernate.type.descriptor.converter.spi.BasicValueConverter
+	 * value conversion}, the Java type of the converted value.
+	 */
 	default JavaType<?> getRelationalJavaType() {
 		return getExpressibleJavaType();
 	}
 
 	/**
-	 * The name of the type.
+	 * The name of the type. Usually, but not always, the name of a Java class.
 	 *
-	 * @apiNote This is the Hibernate notion of the type name. For most
-	 *          types this is just the Java type ({@link Class}) name.
-	 *          However, using the string allows for dynamic models.
+	 * @see org.hibernate.metamodel.model.domain.DomainType#getTypeName()
+	 * @see JavaType#getTypeName()
 	 */
 	default String getTypeName() {
 		// default impl to handle the general case returning the Java type name

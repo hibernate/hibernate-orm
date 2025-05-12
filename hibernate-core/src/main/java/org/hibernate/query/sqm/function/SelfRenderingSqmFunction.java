@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -160,8 +160,8 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	}
 
 	@Override
-	public @Nullable SqmBindable<T> getNodeType() {
-		final SqmBindable<T> nodeType = super.getNodeType();
+	public @Nullable SqmBindableType<T> getNodeType() {
+		final SqmBindableType<T> nodeType = super.getNodeType();
 		if ( nodeType == null ) {
 			final NodeBuilder nodeBuilder = nodeBuilder();
 			final ReturnableType<?> resultType =

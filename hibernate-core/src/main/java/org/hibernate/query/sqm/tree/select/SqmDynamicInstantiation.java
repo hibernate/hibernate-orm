@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -129,7 +129,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	private SqmDynamicInstantiation(
-			SqmBindable<T> sqmExpressible,
+			SqmBindableType<T> sqmExpressible,
 			NodeBuilder criteriaBuilder,
 			SqmDynamicInstantiationTarget<T> instantiationTarget,
 			List<SqmDynamicInstantiationArgument<?>> arguments) {

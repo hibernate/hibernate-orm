@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -43,7 +43,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	}
 
 	@Override
-	public SqmBindable<T> getNodeType() {
+	public SqmBindableType<T> getNodeType() {
 		return getReferencedPathSource().getExpressible();
 	}
 

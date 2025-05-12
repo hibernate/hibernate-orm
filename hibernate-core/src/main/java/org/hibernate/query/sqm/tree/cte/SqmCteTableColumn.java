@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.cte;
 
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 
 /**
@@ -16,12 +16,12 @@ import org.hibernate.query.sqm.SqmExpressible;
 public class SqmCteTableColumn implements JpaCteCriteriaAttribute {
 	private final SqmCteTable<?> cteTable;
 	private final String columnName;
-	private final SqmBindable<?> typeExpressible;
+	private final SqmBindableType<?> typeExpressible;
 
 	public SqmCteTableColumn(
 			SqmCteTable<?> cteTable,
 			String columnName,
-			SqmBindable<?> typeExpressible) {
+			SqmBindableType<?> typeExpressible) {
 		this.cteTable = cteTable;
 		this.columnName = columnName;
 		this.typeExpressible = typeExpressible;

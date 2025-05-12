@@ -79,7 +79,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -937,7 +937,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			//noinspection unchecked
 			tupleType = (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
 		}
-		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), (SqmBindable<R>) tupleType, this );
+		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), (SqmBindableType<R>) tupleType, this );
 	}
 
 	@Override
@@ -1353,7 +1353,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 								operator
 						);
 		@SuppressWarnings("unchecked")
-		final var castType = (SqmBindable<N>) arithmeticType;
+		final var castType = (SqmBindableType<N>) arithmeticType;
 		return new SqmBinaryArithmetic<>(
 				operator,
 				leftHandExpression,
@@ -1539,7 +1539,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				: createLiteral( value, resolveInferredType( value, typeInferenceSource ) );
 	}
 
-	private <T> SqmLiteral<T> createLiteral(T value, SqmBindable<T> expressible) {
+	private <T> SqmLiteral<T> createLiteral(T value, SqmBindableType<T> expressible) {
 		if ( expressible.getExpressibleJavaType().isInstance( value ) ) {
 			return new SqmLiteral<>( value, expressible, this );
 		}
@@ -1555,7 +1555,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private <T> SqmBindable<? extends T> resolveInferredType(
+	private <T> SqmBindableType<? extends T> resolveInferredType(
 			T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( typeInferenceSource != null ) {
 			return typeInferenceSource.getNodeType();
@@ -1639,7 +1639,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		else {
 			final BasicType<T> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType( resultClass );
 			// if there's no basic type, it might be an entity type
-			final SqmBindable<T> sqmExpressible =
+			final SqmBindableType<T> sqmExpressible =
 					basicTypeForJavaType == null
 							? resolveExpressible( getDomainModel().managedType( resultClass ) )
 							: basicTypeForJavaType;
@@ -1647,7 +1647,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	class MultiValueParameterType<T> implements SqmBindable<T> {
+	class MultiValueParameterType<T> implements SqmBindableType<T> {
 		private final JavaType<T> javaType;
 
 		public MultiValueParameterType(Class<T> type) {
@@ -2149,7 +2149,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				//noinspection unchecked
 				return (BindableType<T>) typeInferenceSource;
 			}
-			final SqmBindable<T> nodeType = typeInferenceSource.getExpressible();
+			final SqmBindableType<T> nodeType = typeInferenceSource.getExpressible();
 			if ( nodeType != null ) {
 				return nodeType;
 			}
@@ -2240,7 +2240,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		@SuppressWarnings("unchecked")
-		final var sqmExpressible = (SqmBindable<Y>) highestPrecedenceType(
+		final var sqmExpressible = (SqmBindableType<Y>) highestPrecedenceType(
 				( (SqmExpression<? extends Y>) x ).getExpressible(),
 				( (SqmExpression<? extends Y>) y ).getExpressible()
 		);

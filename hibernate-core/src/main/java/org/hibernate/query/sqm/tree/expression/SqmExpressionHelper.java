@@ -11,7 +11,7 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -29,13 +29,13 @@ public class SqmExpressionHelper {
 		return toSqmType( parameterType, creationState.getCreationContext() );
 	}
 
-	public static <T> SqmBindable<T> toSqmType(
+	public static <T> SqmBindableType<T> toSqmType(
 			BindableType<T> anticipatedType, BindingContext bindingContext) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
 		else {
-			final SqmBindable<T> sqmExpressible = bindingContext.resolveExpressible( anticipatedType );
+			final SqmBindableType<T> sqmExpressible = bindingContext.resolveExpressible( anticipatedType );
 			assert sqmExpressible != null;
 			return sqmExpressible;
 		}

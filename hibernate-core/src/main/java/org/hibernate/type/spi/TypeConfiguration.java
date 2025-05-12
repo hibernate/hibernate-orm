@@ -37,7 +37,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -639,11 +639,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
-	public SqmBindable<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final SqmBindable<?>[] components = new SqmBindable<?>[typedNodes.size()];
+	public SqmBindableType<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
+		final SqmBindableType<?>[] components = new SqmBindableType<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
 			final SqmTypedNode<?> tupleElement = typedNodes.get(i);
-			final SqmBindable<?> sqmExpressible = tupleElement.getNodeType();
+			final SqmBindableType<?> sqmExpressible = tupleElement.getNodeType();
 			// keep null value for Named Parameters
 			if ( tupleElement instanceof SqmParameter<?> && sqmExpressible == null ) {
 				components[i] = QueryParameterJavaObjectType.INSTANCE;
@@ -659,9 +659,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	private static class ArrayCacheKey {
-		final SqmBindable<?>[] components;
+		final SqmBindableType<?>[] components;
 
-		public ArrayCacheKey(SqmBindable<?>[] components) {
+		public ArrayCacheKey(SqmBindableType<?>[] components) {
 			this.components = components;
 		}
 

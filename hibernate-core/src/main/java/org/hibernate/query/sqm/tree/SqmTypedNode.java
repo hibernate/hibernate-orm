@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -25,12 +25,12 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T>, Sqm
 	}
 
 	@Override
-	default @Nullable SqmBindable<T> getExpressible() {
+	default @Nullable SqmBindableType<T> getExpressible() {
 		return getNodeType();
 	}
 
 	@Nullable
-	SqmBindable<T> getNodeType();
+	SqmBindableType<T> getNodeType();
 
 	@Override
 	SqmTypedNode<T> copy(SqmCopyContext context);

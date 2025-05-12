@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -41,7 +41,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 */
 	@Override
 	@Nullable
-	SqmBindable<T> getNodeType();
+	SqmBindableType<T> getNodeType();
 
 	/**
 	 * Used to apply type information based on the expression's usage
@@ -52,7 +52,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * an implicit cast)
 	 */
 	@Internal
-	void applyInferableType(@Nullable SqmBindable<?> type);
+	void applyInferableType(@Nullable SqmBindableType<?> type);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {

@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -33,7 +33,7 @@ import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
  * @author Steve Ebersole
  */
 public class SqmMapEntryReference<K,V>
-		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, SqmBindable<Map.Entry<K,V>> {
+		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, SqmBindableType<Map.Entry<K,V>> {
 	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	private final SqmPath<?> mapPath;
 	private final NodeBuilder nodeBuilder;
@@ -127,7 +127,7 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public SqmBindable<Map.Entry<K, V>> getNodeType() {
+	public SqmBindableType<Map.Entry<K, V>> getNodeType() {
 		return this;
 	}
 

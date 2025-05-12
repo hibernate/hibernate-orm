@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tuple;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 
 import java.util.List;
 
@@ -20,6 +20,6 @@ public interface TupleType<J> extends ReturnableType<J> {
 	String getComponentName(int index);
 	List<String> getComponentNames();
 
-	SqmBindable<?> get(int index);
-	SqmBindable<?> get(String componentName);
+	SqmBindableType<?> get(int index);
+	SqmBindableType<?> get(String componentName);
 }

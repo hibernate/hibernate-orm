@@ -8,7 +8,7 @@ import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -46,7 +46,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	}
 
 	@Override
-	public SqmBindable<T> getNodeType() {
+	public SqmBindableType<T> getNodeType() {
 		return nodeBuilder().resolveExpressible( type );
 	}
 

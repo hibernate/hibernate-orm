@@ -9,7 +9,7 @@ import java.util.List;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.type.BindingContext;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
@@ -77,9 +77,9 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 				String functionName,
 				BindingContext bindingContext) {
 			final int size = arguments.size();
-			SqmBindable<?> firstType = null;
+			SqmBindableType<?> firstType = null;
 			for ( int i = 0; i < size; i++ ) {
-				final SqmBindable<?> argument = arguments.get( i ).getExpressible();
+				final SqmBindableType<?> argument = arguments.get( i ).getExpressible();
 				if ( firstType == null ) {
 					firstType = argument;
 				}

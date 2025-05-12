@@ -11,7 +11,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
@@ -36,13 +36,13 @@ public class SqmCaseSimple<T, R>
 		this( fixture, null, estimatedWhenSize, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, SqmBindable<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(SqmExpression<T> fixture, SqmBindableType<R> inherentType, NodeBuilder nodeBuilder) {
 		this( fixture, inherentType, 10, nodeBuilder );
 	}
 
 	private SqmCaseSimple(
 			SqmExpression<T> fixture,
-			SqmBindable<R> inherentType,
+			SqmBindableType<R> inherentType,
 			int estimatedWhenSize,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
@@ -102,10 +102,10 @@ public class SqmCaseSimple<T, R>
 		applyInferableResultType( result.getNodeType() );
 	}
 
-	private void applyInferableResultType(SqmBindable<?> type) {
+	private void applyInferableResultType(SqmBindableType<?> type) {
 		if ( type != null ) {
-			final SqmBindable<?> oldType = getExpressible();
-			final SqmBindable<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
+			final SqmBindableType<?> oldType = getExpressible();
+			final SqmBindableType<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
 			if ( newType != null && newType != oldType ) {
 				internalApplyInferableType( newType );
 			}
@@ -113,7 +113,7 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmBindable<?> newType) {
+	protected void internalApplyInferableType(SqmBindableType<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {

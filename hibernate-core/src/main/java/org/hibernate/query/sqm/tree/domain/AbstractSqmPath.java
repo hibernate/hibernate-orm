@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmBindable;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -81,7 +81,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public SqmBindable<T> getNodeType() {
+	public SqmBindableType<T> getNodeType() {
 		return referencedPathSource.getPathType();
 	}
 
@@ -159,7 +159,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public SqmBindable<T> getExpressible() {
+	public SqmBindableType<T> getExpressible() {
 		return getResolvedModel().getExpressible();
 	}
 

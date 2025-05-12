@@ -231,6 +231,17 @@ This feature is considered incubating.
 ====
 
 
+[[metamode-param-binding]]
+== Use of metamodel in query parameter binding
+
+When an argument to a query parameter is of ambiguous type, the static metamodel may now be used to disambiguate.
+
+[source,java]
+session.createSelectionQuery("from Thing where uniqueKey = ?1")
+        .setParameter(1, key, Thing_.uniqueKey.getType())
+        .getSingleResult();
+
+
 [[enum-checks]]
 == Converted Enums and Check Constraints
 

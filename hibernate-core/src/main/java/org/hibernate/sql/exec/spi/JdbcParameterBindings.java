@@ -14,8 +14,9 @@ import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
-import org.hibernate.type.internal.BindingTypeHelper;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.internal.BindingTypeHelper.resolveBindType;
 
 /**
  * Access to all the externalized JDBC parameter bindings
@@ -93,10 +94,7 @@ public interface JdbcParameterBindings {
 			JdbcMapping type) {
 		addBinding(
 				params.get( selectionIndex ),
-				new JdbcParameterBindingImpl(
-						BindingTypeHelper.INSTANCE.resolveBindType( jdbcValue, type, typeConfiguration ),
-						jdbcValue
-				)
+				new JdbcParameterBindingImpl( resolveBindType( jdbcValue, type, typeConfiguration ), jdbcValue )
 		);
 	}
 }

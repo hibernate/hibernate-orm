@@ -103,16 +103,14 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
 		final boolean isNamed = procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && this.name != null;
-
-		final BindableType<T> bindableType = getBindableType( binding );
-
 		final SharedSessionContractImplementor session = procedureCall.getSession();
 
-		final OutputableType<T> typeToUse = (OutputableType<T>) BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
-				binding == null ? null : binding.getExplicitTemporalPrecision(),
-				bindableType,
-				session.getFactory().getQueryEngine().getCriteriaBuilder()
-		);
+		final OutputableType<T> typeToUse = (OutputableType<T>)
+				BindingTypeHelper.resolveTemporalPrecision(
+						binding == null ? null : binding.getExplicitTemporalPrecision(),
+						getBindableType( binding ),
+						session.getFactory().getQueryEngine().getCriteriaBuilder()
+				);
 
 		final String jdbcParamName;
 		final JdbcParameterBinder parameterBinder;

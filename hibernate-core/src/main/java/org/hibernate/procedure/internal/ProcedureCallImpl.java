@@ -502,7 +502,7 @@ public class ProcedureCallImpl<R>
 			ParameterMode mode) {
 		final SqmBindableType<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> procedureParameter =
-				new ProcedureParameterImpl<>( position, mode, ((BindableType<T>) typeReference).getJavaType(), expressible );
+				new ProcedureParameterImpl<>( position, mode, typeReference.getJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
 	}
@@ -552,7 +552,7 @@ public class ProcedureCallImpl<R>
 			ParameterMode mode) {
 		final SqmBindableType<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> parameter =
-				new ProcedureParameterImpl<>( name, mode, ((BindableType<T>) typeReference).getJavaType(), expressible );
+				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(), expressible );
 		registerParameter( parameter );
 		return parameter;
 	}

@@ -28,8 +28,6 @@ plugins {
 	id 'org.checkerframework' version '0.6.34'
 	id 'org.hibernate.orm.build.jdks'
 
-	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
 	id 'eclipse'
@@ -61,13 +59,6 @@ tasks.register('publish') {
 			"themselves if they have any publish-related activities to perform"
 }
 
-nexusPublishing {
-	repositories {
-		sonatype()
-	}
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task
 
@@ -98,6 +89,3 @@ idea {
 		name = "hibernate-orm"
 	}
 }
-
-
-

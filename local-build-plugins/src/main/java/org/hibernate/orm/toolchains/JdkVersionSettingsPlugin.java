@@ -18,6 +18,13 @@ import static org.hibernate.orm.toolchains.JdkVersionConfig.createVersionConfig;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.extractVersion;
 
 /**
+ * Gathers JDK versions of interest from settings and exposes them to earlier phases of the build
+ * than {@link JdkVersionPlugin}.
+ *
+ * @see JdkVersionConfig
+ * @see JdkVersionPlugin
+ * @see JavaModulePlugin
+ *
  * @author Steve Ebersole
  */
 public class JdkVersionSettingsPlugin implements Plugin<Settings> {

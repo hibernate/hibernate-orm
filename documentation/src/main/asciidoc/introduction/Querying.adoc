@@ -34,8 +34,8 @@ Selection queries usually start with the keyword `select` or `from`, whereas mut
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection | `createSelectionQuery(String,Class)` | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation | `createMutationQuery(String)` | `createQuery(String)` | `executeUpdate()`
+| Selection | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createSelectionQuery(java.lang.String,java.lang.Class)[`createSelectionQuery(String,Class)`] | `createQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createMutationQuery(java.lang.String)[`createMutationQuery(String)`] | `createQuery(String)` | `executeUpdate()`
 |===
 
 So for the `Session` API we would write:
@@ -58,11 +58,42 @@ List<Book> matchingBooks =
             .getResultList();
 ----
 
-The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throws an exception if passed an `insert`, `delete`, or `update`.
+The main difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throws an exception if passed a query string that begins with `insert`, `delete`, or `update`.
 
-In the query above, `:titleSearchPattern` is called a _named parameter_.
-We may also identify parameters by a number.
-These are called _ordinal parameters_.
+We've been using link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html#getResultList()[`getResultList()`] because we've been expecting our queries to return multiple results.
+If we're expecting a query to return a single result, we can use link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html#getSingleResult()[`getSingleResult()`].
+
+[source,java]
+----
+Book book =
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResult();
+----
+
+Or, if we're expecting it to return at most one result, we can use link:{doc-javadoc-url}org/hibernate/query/SelectionQuery.html#getSingleResultOrNull()[`getSingleResultOrNull()`].
+
+[source,java]
+----
+Book bookOrNull =
+        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
+            .setParameter(1, isbn)
+            .getSingleResultOrNull();
+----
+
+The difference, of course, is that `getSingleResult()` throws an exception if there's no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
+
+To execute a `MutationQuery`, we use link:{doc-javadoc-url}org/hibernate/query/MutationQuery.html#executeUpdate()[`executeUpdate()`], which returns the number of entities affected by the `insert`, `update`, or `delete`.
+
+[[query-parameters]]
+=== Query parameters
+
+Queries are often parameterized.
+
+- In the query above, `:titleSearchPattern` is called a _named parameter_.
+- Alternatively, we may label a parameter by a number. Such a parameter is called an _ordinal parameter_.
+
+We may easily rewrite our query to use an ordinal parameter:
 
 [source,java]
 ----
@@ -81,45 +112,61 @@ _Never_ concatenate user input with HQL and pass the concatenated string to `cre
 This would open up the possibility for an attacker to execute arbitrary code on your database server.
 ====
 
-If we're expecting a query to return a single result, we can use `getSingleResult()`.
+The link:{doc-javadoc-url}org/hibernate/query/CommonQueryContract.html#setParameter(java.lang.String,java.lang.Object)[`setParameter()`] methods specify arguments to query parameters.
+
+[TIP]
+====
+The two-argument forms of `setParameter()` are perfect for most purposes, but _very occasionally_ it's necessary to resolve an ambiguity in the interpretation of the argument value by explicitly specifying the <<compositional-basic-types,type>> of the argument.
+The best way to identify the type is via a reference to a JPA metamodel `Type`.
+There are two ways to do this:
+
+// - by passing a Java `Class` as a third argument to link:{doc-javadoc-url}org/hibernate/query/CommonQueryContract.html#setParameter(java.lang.String,java.lang.Object,java.lang.Class)[`setParameter()`] (this doesn't usually help very much),
+- by passing the `Type` as a third argument to link:{doc-javadoc-url}org/hibernate/query/CommonQueryContract.html#setParameter(java.lang.String,java.lang.Object,jakarta.persistence.metamodel.Type)[`setParameter()`], or
+- by packaging the argument and its `Type` in a link:{doc-javadoc-url}org/hibernate/query/TypedParameterValue.html[`TypedParameterValue`].
+
+For example, we may pass a <<static-metamodel,static metamodel>> reference to `setParameter()`.
 
 [source,java]
 ----
-Book book =
+session.createSelectionQuery("from Person where address = :address")
+        .setParameter("address" address, Person_.address.getType())
+        .getResultList();
+----
+====
+
+[[auto-flush]]
+=== Auto-flush
+
+By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if there are changes which have not yet been flushed to the database, but which might affect the results of the query.
+If there are unflushed changes, then Hibernate goes ahead and executes an automatic <<flush,flush>> before executing the query.
+That way, the query won't return stale results which fail to reflect changes made to data within the current unit of work.
+But if there are many entities association with the persistence context, then this can be an expensive operation.
+
+To disable this behavior, set the link:{doc-javadoc-url}org/hibernate/query/QueryFlushMode.html[query flush mode] to `NO_FLUSH`:
+
+[source,java]
+----
+Book bookOrNull =
         session.createSelectionQuery("from Book where isbn = ?1", Book.class)
             .setParameter(1, isbn)
+            .setQueryFlushMode(QueryFlushMode.NO_FLUSH)
             .getSingleResult();
 ----
 
-Or, if we're expecting it to return at most one result, we can use `getSingleResultOrNull()`.
+Or, especially if you're using JPA-standard APIs, use `FlushModeType.COMMIT`:
 
 [source,java]
 ----
 Book bookOrNull =
         session.createSelectionQuery("from Book where isbn = ?1", Book.class)
             .setParameter(1, isbn)
-            .getSingleResultOrNull();
-----
-
-The difference, of course, is that `getSingleResult()` throws an exception if there's no matching row in the database, whereas `getSingleResultOrNull()` just returns `null`.
-
-By default, Hibernate dirty checks entities in the persistence context before executing a query, in order to determine if the session should be flushed.
-If there are many entities association with the persistence context, then this can be an expensive operation.
-
-To disable this behavior, set the flush mode to `COMMIT` or `MANUAL`:
-
-[source,java]
-----
-Book bookOrNull =
-        session.createSelectionQuery("from Book where isbn = ?1", Book.class)
-            .setParameter(1, isbn)
-            .setHibernateFlushMode(MANUAL)
+            .setFlushMode(FlushModeType.COMMIT)
             .getSingleResult();
 ----
 
 [CAUTION]
 ====
-Setting the flush mode to `COMMIT` or `MANUAL` might cause the query to return stale results.
+Setting the flush mode to `NO_FLUSH`, `COMMIT`, or `MANUAL` might cause the query to return stale results.
 ====
 
 Occasionally we need to build a query at runtime, from a set of optional conditions.
@@ -178,6 +225,7 @@ HibernateCriteriaBuilder builder =
 
 We're ready to create a criteria query.
 
+[[criteria-query-example]]
 [source,java]
 ----
 CriteriaQuery<Book> query = builder.createQuery(Book.class);
@@ -210,8 +258,8 @@ Execution of a criteria query works almost exactly like execution of HQL.
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection | `createSelectionQuery(CriteriaQuery)` | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation | `createMutationQuery(CriteriaUpdate)` or `createMutationQuery(CriteriaDelete)` | `createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelte)` | `executeUpdate()`
+| Selection | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createSelectionQuery(jakarta.persistence.criteria.CriteriaQuery)[`createSelectionQuery(CriteriaQuery)`] | `createQuery(CriteriaQuery)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createMutationQuery(jakarta.persistence.criteria.CriteriaUpdate)[`createMutationQuery(CriteriaUpdate)`] or link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createMutationQuery(jakarta.persistence.criteria.CriteriaDelete)[`createMutationQuery(CriteriaDelete)`] |`createQuery(CriteriaUpdate)` or `createQuery(CriteriaDelete)` | `executeUpdate()`
 |===
 
 For example:
@@ -261,8 +309,8 @@ The reason it works this way is that each JPA provider has its own implementatio
 // [%unbreakable]
 // [TIP]
 // ====
-Hibernate 6.3 introduces the helper class link:{doc-javadoc-url}org/hibernate/query/criteria/CriteriaDefinition.html[`CriteriaDefinition`] to reduce the verbosity of criteria queries.
-Our example looks like this:
+The helper class link:{doc-javadoc-url}org/hibernate/query/criteria/CriteriaDefinition.html[`CriteriaDefinition`] can reduce the verbosity of criteria queries by eliminating the need to explicitly qualify calls to the methods of `CriteriaBuilder`.
+Our <<criteria-query-example,previous example>> would look like this:
 
 [source,java]
 ----
@@ -295,9 +343,9 @@ As we said <<introduction,right up front>>, Hibernate's generated SQL is meant t
 |===
 | Kind | `Session` method | `EntityManager` method | `Query` execution method
 
-| Selection | `createNativeQuery(String,Class)` | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
-| Mutation | `createNativeMutationQuery(String)` | `createNativeQuery(String)` | `executeUpdate()`
-| Stored procedure | `createStoredProcedureCall(String)` | `createStoredProcedureQuery(String)` | `execute()`
+| Selection | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createNativeQuery(java.lang.String,java.lang.Class)[`createNativeQuery(String,Class)`] | `createNativeQuery(String,Class)` | `getResultList()`, `getSingleResult()`, or `getSingleResultOrNull()`
+| Mutation | link:{doc-javadoc-url}org/hibernate/query/QueryProducer.html#createNativeMutationQuery(java.lang.String)[`createNativeMutationQuery(String)`] | `createNativeQuery(String)` | `executeUpdate()`
+| Stored procedure | link:{doc-javadoc-url}org/hibernate/SharedSessionContract.html#createStoredProcedureCall(java.lang.String)[`createStoredProcedureCall(String)`] | `createStoredProcedureQuery(String)` | `execute()`
 |===
 
 For the most simple cases, Hibernate can infer the shape of the result set:

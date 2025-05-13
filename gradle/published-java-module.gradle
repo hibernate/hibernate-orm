@@ -9,8 +9,6 @@ apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-apply plugin: 'signing'
-
 // Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
 tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
 
@@ -122,80 +120,19 @@ tasks.withType(PublishToMavenRepository).configureEach {
 	}
 }
 
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Signing
-
-def signingKey = resolveSigningKey()
-def signingPassphrase = resolveSigningPassphrase()
-
-var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
-signingExtension.sign publishing.publications.publishedArtifacts
-signingExtension.useInMemoryPgpKeys(signingKey, signingPassphrase)
-
-
-gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
-	// are we publishing to OSSRH?
-	boolean wasPublishingRequested = false
-
-	graph.allTasks.each {task ->
-		if ( task instanceof PublishToMavenRepository ) {
-			if ( "sonatype" == task.repository.name ) {
-				wasPublishingRequested = true
-			}
-		}
-	}
-
-	if ( wasPublishingRequested ) {
-		def ossrhUser = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypeUsername" )
-		def ossrhPass = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypePassword" )
-		if ( ossrhUser == null || ossrhPass == null ) {
-			throw new RuntimeException( "Cannot perform publishing to OSSRH without credentials." )
-		}
-		logger.lifecycle "Publishing {} : {} : {}", project.group, project.name, project.version
-		signingExtension.required = true
-	}
-	else if ( signingKey == null || signingPassphrase == null ) {
-		tasks.withType( Sign ).each { t-> t.enabled = false }
-	}
-}
-
-static String resolveSigningKey() {
-	var key = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY" )
-	if ( key != null ) {
-		return key
-	}
-
-	var keyFile = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY_PATH" )
-	if ( keyFile != null ) {
-		return new File( keyFile ).text
-	}
-
-	return null
-}
-
-static String resolveSigningPassphrase() {
-	return System.getenv().get( "SIGNING_GPG_PASSPHRASE" )
-}
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release / publishing tasks
 
 tasks.register('ciBuild') {
-	dependsOn test, tasks.publishToSonatype
+	dependsOn test
 }
 
-tasks.release.dependsOn tasks.test, tasks.publishToSonatype
+tasks.release.dependsOn tasks.test
 
 tasks.preVerifyRelease.dependsOn build
 tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
 tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
 tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
-
-tasks.publishToSonatype.mustRunAfter test
-
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Ancillary tasks

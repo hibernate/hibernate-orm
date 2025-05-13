@@ -25,8 +25,11 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -528,8 +531,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 		//      in 'select' list (we don't even need to hit the database to
 		//      know they return exactly one row)
 		if ( queryPart.isSimpleQueryPart()
-				&& !( querySpec = (SqmQuerySpec<?>) queryPart ).isDistinct()
-				&& querySpec.getGroupingExpressions().isEmpty() ) {
+				&& !( querySpec = queryPart.getFirstQuerySpec() ).isDistinct()
+				&& querySpec.getGroupingExpressions().isEmpty()
+				&& !selectsEntityValuedPaths( querySpec ) ) {
 			for ( SqmRoot<?> root : querySpec.getRootList() ) {
 				root.removeLeftFetchJoins();
 			}
@@ -551,6 +555,31 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			}
 			return query;
 		}
+	}
+
+	private static boolean selectsEntityValuedPaths(SqmQuerySpec<?> querySpec) {
+		for ( SqmSelectableNode<?> selection : querySpec.getSelectClause().getSelectionItems() ) {
+			if ( selection instanceof SqmEntityValuedSimplePath<?> entityPath ) {
+				final SqmPath<?> lhs = entityPath.getLhs();
+				if ( lhs instanceof SqmFrom<?, ?> from ) {
+					// force an explicit inner join for this implicit entity valued path
+					from.join( entityPath.getNavigablePath().getLocalName() );
+				}
+				else {
+					return true;
+				}
+			}
+			else if ( selection instanceof SqmPath<?> path ) {
+				SqmPath<?> lhs = path.getLhs();
+				while ( lhs != null ) {
+					if ( lhs instanceof SqmEntityValuedSimplePath<?> ) {
+						return true;
+					}
+					lhs = lhs.getLhs();
+				}
+			}
+		}
+		return false;
 	}
 
 	private <S> void aliasSelections(SqmQueryPart<S> queryPart) {

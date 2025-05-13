@@ -1,0 +1,21 @@
+
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.boot.models.xml.bad</package>
+    <access>FIELD</access>
+    
+    <entity class="Product" metadata-complete="true">
+        <attributes>
+            <embedded-id name="di"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+    
+    <embeddable class="ProductKey" metadata-complete="true">
+        <attributes>
+            <basic name="companyId"/>
+            <basic name="sku"/>
+        </attributes>
+    </embeddable>
+</entity-mappings>

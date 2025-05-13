@@ -4,10 +4,7 @@
  */
 package org.hibernate;
 
-import jakarta.persistence.FindOption;
-import jakarta.persistence.LockOption;
 import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
 
 import java.io.Serializable;
@@ -15,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.PessimisticLockScope.NORMAL;
@@ -274,10 +272,10 @@ public class LockOptions implements Serializable {
 	 */
 	public boolean isEmpty() {
 		return lockMode == LockMode.NONE
-			   && timeout == Timeouts.WAIT_FOREVER
-			   && followOnLocking == null
-			   && pessimisticLockScope == NORMAL
-			   && !hasAliasSpecificLockModes();
+			&& timeout == Timeouts.WAIT_FOREVER
+			&& followOnLocking == null
+			&& pessimisticLockScope == NORMAL
+			&& !hasAliasSpecificLockModes();
 	}
 
 	/**
@@ -613,5 +611,27 @@ public class LockOptions implements Serializable {
 		}
 		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( this == object ) {
+			return true;
+		}
+		else if ( !(object instanceof LockOptions that) ) {
+			return false;
+		}
+		else {
+			return timeout == that.timeout
+				&& pessimisticLockScope == that.pessimisticLockScope
+				&& lockMode == that.lockMode
+				&& Objects.equals( aliasSpecificLockModes, that.aliasSpecificLockModes )
+				&& Objects.equals( followOnLocking, that.followOnLocking );
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
 	}
 }

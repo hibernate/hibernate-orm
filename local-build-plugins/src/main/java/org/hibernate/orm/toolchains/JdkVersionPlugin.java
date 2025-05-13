@@ -60,7 +60,6 @@ public class JdkVersionPlugin implements Plugin<Project> {
 		);
 
 		project.getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
-		JdkVersionsLogging.logVersions( jdkVersionConfig );
 	}
 
 	@NotNull

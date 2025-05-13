@@ -5,11 +5,12 @@
 package org.hibernate.orm.toolchains;
 
 import org.gradle.StartParameter;
+import org.gradle.api.Action;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.initialization.Settings;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
-
 import org.jetbrains.annotations.NotNull;
 
 import static org.hibernate.orm.toolchains.JdkVersionConfig.MAIN_JDK_VERSION;
@@ -47,7 +48,24 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 
 		settings.getGradle().getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
 		settings.getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
-		JdkVersionsLogging.logVersions( jdkVersionConfig );
+
+		// Log version information at the start of every build.
+		// `projectsLoaded` allows us to bypass the Gradle cache, and we want that.
+		settings.getGradle().projectsLoaded( new Action<Gradle>() {
+			@Override
+			public void execute(Gradle gradle) {
+				final String implicitExplicitString = jdkVersionConfig.isExplicit() ? "explicit" : "implicit";
+
+				System.out.println(
+						"Java versions for main code: " + jdkVersionConfig.getMain()
+						+ " (" + implicitExplicitString + ")"
+				);
+				System.out.println(
+						"Java versions for test code: " + jdkVersionConfig.getTest()
+						+ " (" + implicitExplicitString + ")"
+				);
+			}
+		} );
 	}
 
 	@NotNull

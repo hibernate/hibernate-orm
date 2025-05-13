@@ -55,6 +55,7 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -1513,7 +1514,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public Object getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap) {
 		final String collectionRole = entityName + '.' + propertyName;
 
-		final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
+		final MappingMetamodel mappingMetamodel = session.getFactory().getMappingMetamodel();
 		final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entityName );
 		final CollectionPersister collectionPersister = mappingMetamodel.getCollectionDescriptor( collectionRole );
 
@@ -1534,7 +1535,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		for ( Entry<Object,EntityEntry> me : reentrantSafeEntityEntries() ) {
+		for ( var me : reentrantSafeEntityEntries() ) {
 			final EntityEntry entityEntry = me.getValue();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
@@ -1680,7 +1681,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		//Not found in cache, proceed
-		for ( Entry<Object, EntityEntry> me : reentrantSafeEntityEntries() ) {
+		for ( var me : reentrantSafeEntityEntries() ) {
 			final EntityEntry ee = me.getValue();
 			if ( persister.isSubclassEntityName( ee.getEntityName() ) ) {
 				final Object instance = me.getKey();

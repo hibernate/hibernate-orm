@@ -127,6 +127,8 @@ public class EntityMetamodel implements Serializable {
 
 	private boolean lazy; //not final because proxy factory creation can fail
 	private final boolean hasCascades;
+	private final boolean hasToOnes;
+	private final boolean hasCascadePersist;
 	private final boolean hasCascadeDelete;
 	private final boolean mutable;
 	private final boolean isAbstract;
@@ -240,6 +242,8 @@ public class EntityMetamodel implements Serializable {
 
 		int tempVersionProperty = NO_VERSION_INDX;
 		boolean foundCascade = false;
+		boolean foundToOne = false;
+		boolean foundCascadePersist = false;
 		boolean foundCascadeDelete = false;
 		boolean foundCollection = false;
 		boolean foundOwnedCollection = false;
@@ -376,10 +380,17 @@ public class EntityMetamodel implements Serializable {
 			if ( cascadeStyles[i] != CascadeStyles.NONE ) {
 				foundCascade = true;
 			}
+			if ( cascadeStyles[i].doCascade(CascadingActions.PERSIST)
+					|| cascadeStyles[i].doCascade(CascadingActions.PERSIST_ON_FLUSH) ) {
+				foundCascadePersist = true;
+			}
 			if ( cascadeStyles[i].doCascade(CascadingActions.REMOVE) ) {
 				foundCascadeDelete = true;
 			}
 
+			if ( indicatesToOne( attribute.getType() ) ) {
+				foundToOne = true;
+			}
 			if ( indicatesCollection( attribute.getType() ) ) {
 				foundCollection = true;
 			}
@@ -414,6 +425,8 @@ public class EntityMetamodel implements Serializable {
 		versionGenerator = tempVersionGenerator;
 
 		hasCascades = foundCascade;
+		hasToOnes = foundToOne;
+		hasCascadePersist = foundCascadePersist;
 		hasCascadeDelete = foundCascadeDelete;
 		hasNonIdentifierPropertyNamedId = foundNonIdentifierPropertyNamedId;
 		versionPropertyIndex = tempVersionProperty;
@@ -621,13 +634,26 @@ public class EntityMetamodel implements Serializable {
 		return subclassEntityNames;
 	}
 
+	private static boolean indicatesToOne(Type type) {
+		if ( type.isEntityType() ) {
+			return true;
+		}
+		else if ( type instanceof CompositeType compositeType ) {
+			for ( Type subtype : compositeType.getSubtypes() ) {
+				if ( indicatesToOne( subtype ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	private static boolean indicatesCollection(Type type) {
 		if ( type instanceof CollectionType ) {
 			return true;
 		}
-		else if ( type.isComponentType() ) {
-			Type[] subtypes = ( (CompositeType) type ).getSubtypes();
-			for ( Type subtype : subtypes ) {
+		else if ( type instanceof CompositeType compositeType ) {
+			for ( Type subtype : compositeType.getSubtypes() ) {
 				if ( indicatesCollection( subtype ) ) {
 					return true;
 				}
@@ -640,8 +666,7 @@ public class EntityMetamodel implements Serializable {
 		if ( type instanceof CollectionType collectionType ) {
 			return !metadata.getCollectionBinding( collectionType.getRole() ).isInverse();
 		}
-		else if ( type.isComponentType() ) {
-			final CompositeType compositeType = (CompositeType) type;
+		else if ( type instanceof CompositeType compositeType ) {
 			for ( Type subtype : compositeType.getSubtypes() ) {
 				if ( indicatesOwnedCollection( subtype, metadata ) ) {
 					return true;
@@ -742,8 +767,16 @@ public class EntityMetamodel implements Serializable {
 		return hasCascades;
 	}
 
+	public boolean hasToOnes() {
+		return hasToOnes;
+	}
+
 	public boolean hasCascadeDelete() {
 		return hasCascadeDelete;
+	}
+
+	public boolean hasCascadePersist() {
+		return hasCascadePersist;
 	}
 
 	public boolean isMutable() {

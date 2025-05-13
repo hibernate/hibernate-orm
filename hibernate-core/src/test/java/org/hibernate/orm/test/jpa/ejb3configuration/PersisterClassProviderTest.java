@@ -330,6 +330,26 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean hasCascadeDelete() {
+			return false;
+		}
+
+		@Override
+		public boolean hasToOnes() {
+			return false;
+		}
+
+		@Override
+		public boolean hasCascadePersist() {
+			return false;
+		}
+
+		@Override
+		public boolean hasOwnedCollections() {
+			return false;
+		}
+
+		@Override
 		public boolean isMutable() {
 			return false;
 		}

@@ -44,6 +44,10 @@ public class HierarchyPropertyAccessTest {
 			assertThat( entity.getSuperProperty() ).isEqualTo( 8 );
 
 			entity.setProperty( "transient: updated" );
+			// I had to add this call because this test was
+			// assuming that Hibernate would call this getter
+			// during flush, but that is no longer true
+			entity.getPersistProperty();
 		} );
 
 		scope.inTransaction( session -> {
@@ -66,6 +70,10 @@ public class HierarchyPropertyAccessTest {
 			assertThat( entity.getSuperProperty() ).isEqualTo( 8 );
 
 			entity.setProperty( "transient: updated" );
+			// I had to add this call because this test was
+			// assuming that Hibernate would call this getter
+			// during flush, but that is no longer true
+			entity.getPersistProperty();
 		} );
 
 		scope.inTransaction( session -> {

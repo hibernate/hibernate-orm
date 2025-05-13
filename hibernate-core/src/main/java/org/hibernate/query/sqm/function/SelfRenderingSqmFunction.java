@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -49,8 +49,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			NodeBuilder nodeBuilder,
 			String name) {
 		super( name, descriptor,
-				impliedResultType == null ? null
-						: impliedResultType.resolveExpressible( nodeBuilder ),
+				nodeBuilder.resolveExpressible( impliedResultType ),
 				arguments, nodeBuilder );
 		this.renderer = renderer;
 		this.impliedResultType = impliedResultType;
@@ -160,8 +159,9 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		);
 	}
 
-	public @Nullable SqmExpressible<T> getNodeType() {
-		final SqmExpressible<T> nodeType = super.getNodeType();
+	@Override
+	public @Nullable SqmBindableType<T> getNodeType() {
+		final SqmBindableType<T> nodeType = super.getNodeType();
 		if ( nodeType == null ) {
 			final NodeBuilder nodeBuilder = nodeBuilder();
 			final ReturnableType<?> resultType =
@@ -170,8 +170,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				return null;
 			}
 			else {
-				final SqmExpressible<?> expressibleType = resultType.resolveExpressible( nodeBuilder );
-				setExpressibleType( expressibleType );
+				setExpressibleType( nodeBuilder.resolveExpressible( resultType ) );
 				return super.getNodeType();
 			}
 		}
@@ -184,7 +183,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		if ( resultType == null ) {
 			resultType = determineResultType( walker, walker.getCreationContext().getTypeConfiguration() );
 			if ( resultType != null ) {
-				setExpressibleType( resultType.resolveExpressible( nodeBuilder() ) );
+				setExpressibleType( nodeBuilder().resolveExpressible( resultType ) );
 			}
 		}
 		return resultType;

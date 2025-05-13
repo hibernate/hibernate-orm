@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -43,7 +43,7 @@ public class SqmFormat extends SqmLiteral<String> {
 
 	public SqmFormat(
 			String value,
-			SqmExpressible<String> inherentType,
+			SqmBindableType<String> inherentType,
 			NodeBuilder nodeBuilder) {
 		super(value, inherentType, nodeBuilder);
 		if (!FORMAT.matcher(value).matches()) {

@@ -17,6 +17,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -120,7 +121,8 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public Class<J> getBindableJavaType() {
-		return getJavaType();
+//		return getJavaType();
+		return sqmPathSource.getBindableJavaType();
 	}
 
 	@Override
@@ -136,6 +138,11 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public SqmPathSource<J> getSqmPathSource() {
 		return sqmPathSource;
+	}
+
+	@Override
+	public SqmBindableType<J> getExpressible() {
+		return sqmPathSource.getExpressible();
 	}
 
 	@Override
@@ -288,8 +295,9 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public boolean isAssociation() {
-		return getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
-			|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
+		final PersistentAttributeType persistentAttributeType = getPersistentAttributeType();
+		return persistentAttributeType == PersistentAttributeType.MANY_TO_ONE
+			|| persistentAttributeType == PersistentAttributeType.ONE_TO_ONE;
 	}
 
 	@Override

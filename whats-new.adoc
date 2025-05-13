@@ -126,6 +126,53 @@ The new operations `Session.findMultiple()` and `StatelessSession.getMultiple()`
 Combined with the `BatchSize` option, allows breaking up the JDBC calls into "batches".
 
 
+[[operation-options]]
+== FindOption, LockOption, RefreshOption
+
+As a more typesafe replacement for hints, Jakarta Persistence now allows for "option objects" which indicate these hints.  Not only is it more typesafe, but also more concise - a double win!
+
+These "option objects" come in 3 flavors depending on what operation is being performed -
+
+FindOption:: Used to indicate options for find operations :
+    * `Session.find`
+    * `Session.findMultiple`
+    * etc
+LockOption:: Used to indicate options for `Session.lock`
+RefreshOption:: Used to indicate options for `Session.refresh`
+
+Each of these are interfaces.  Jakarta Persistence does provide some built-in options:
+
+CacheRetrieveMode:: Is now a `FindOption`.
+CacheStoreMode:: Is now a `FindOption` and a `RefreshOption`.
+LockModeType:: Is now a `FindOption` and a `RefreshOption`.
+Timeout (new):: Is a `FindOption`, a `RefreshOption` and a `LockOption`.  See also `org.hibernate.Timeouts` for some magic values.
+PessimisticLockScope:: Is now a `FindOption`, a `RefreshOption` and a `LockOption`
+
+Hibernate provides a few additional options:
+
+ReadOnlyMode (new):: Is a `FindOption` which indicates whether the entities and collections being loaded should be considered read-only.
+EnabledFetchProfile (new):: Is a `FindOption` indicating a fetch-profile to be enabled for the find operation.
+LockMode:: Is now a `FindOption` and a `RefreshOption` (expanded version of JPA's `LockModeType`).
+CacheMode:: Is now a `FindOption`.
+BatchSize (new):: Is now a `FindOption`.
+
+
+All operations which accept options (which previously accepted hints) accept a varargs grouping of them.  E.g.
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    LockMode.PESSIMISTIC_WRITE,
+    Timeouts.NO_WAIT,
+    new EnabledFetchProfile("with-authors")
+);
+----
+====
+
+
 [[QuerySpecification]]
 == QuerySpecification, Restriction, and Range
 
@@ -182,6 +229,17 @@ The new operation `Session.getManagedEntities()` allows the application to itera
 ====
 This feature is considered incubating.
 ====
+
+
+[[metamode-param-binding]]
+== Use of metamodel in query parameter binding
+
+When an argument to a query parameter is of ambiguous type, the static metamodel may now be used to disambiguate.
+
+[source,java]
+session.createSelectionQuery("from Thing where uniqueKey = ?1")
+        .setParameter(1, key, Thing_.uniqueKey.getType())
+        .getSingleResult();
 
 
 [[enum-checks]]

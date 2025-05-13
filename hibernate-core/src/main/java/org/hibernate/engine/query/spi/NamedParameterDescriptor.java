@@ -5,7 +5,7 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 
 /**
  * Descriptor regarding a named parameter.

@@ -142,7 +142,7 @@ class NamedGraphCreatorJpa implements NamedGraphCreator {
 	private static <T, E, K> SubGraphImplementor<?> makeAttributeNodeKeySubgraph(
 			AttributeNodeImplementor<T, E, K> attributeNode, Class<?> subgraphType) {
 		final Class<?> attributeKeyType =
-				attributeNode.getAttributeDescriptor().getKeyGraphType().getBindableJavaType();
+				attributeNode.getAttributeDescriptor().getKeyGraphType().getJavaType();
 		if ( !attributeKeyType.isAssignableFrom( subgraphType ) ) {
 			throw new AnnotationException( "Named subgraph type '" + subgraphType.getName()
 										+ "' is not a subtype of the key type '" + attributeKeyType.getName() + "'" );

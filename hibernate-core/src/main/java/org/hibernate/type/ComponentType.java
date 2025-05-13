@@ -34,12 +34,12 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
 import static org.hibernate.internal.util.ReflectHelper.isRecord;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
@@ -49,7 +49,8 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  *
  * @author Gavin King
  */
-public class ComponentType extends AbstractType implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
+public class ComponentType extends AbstractType
+		implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
 	private final Class<?> componentClass;
 	private final boolean mutable;
 
@@ -153,6 +154,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public final boolean isComponentType() {
 		return true;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return EMBEDDABLE;
 	}
 
 	public Class<?> getReturnedClass() {
@@ -832,7 +838,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public Class<?> getBindableJavaType() {
+	public Class<?> getJavaType() {
 		return getReturnedClass();
 	}
 

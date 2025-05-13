@@ -43,6 +43,7 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 
 	@Override
 	public AnyDiscriminatorSqmPathSource<T> getExpressible() {
-		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
+//		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
+		return (AnyDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}
 }

@@ -13,4 +13,10 @@ public interface SqmEmbeddableDomainType<E> extends EmbeddableDomainType<E>, Sqm
 	default SqmEmbeddableDomainType<E> getSqmType() {
 		return this;
 	}
+
+	@Override
+	default SqmEmbeddableDomainType<E> getPathType() {
+		return this;
+	}
+
 }

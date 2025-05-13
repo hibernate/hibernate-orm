@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import jakarta.persistence.Timeout;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
@@ -304,9 +303,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		);
 
 		doInJPA( this::entityManagerFactory, _entityManagaer -> {
-			Map<String, Object> properties = new HashMap<>();
-			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
-			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
+			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, Timeout.milliseconds( 0 ) );
 
 			try {
 				doInJPA( this::entityManagerFactory, entityManager -> {

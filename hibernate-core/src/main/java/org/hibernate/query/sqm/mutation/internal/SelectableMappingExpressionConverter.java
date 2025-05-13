@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmSelfRenderingExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -34,7 +34,7 @@ public class SelectableMappingExpressionConverter implements Function<SemanticQu
 		return new SqmSelection<>(
 				new SqmSelfRenderingExpression<>(
 						new SelectableMappingExpressionConverter( from.getNavigablePath(), selectableMapping ),
-						(SqmExpressible) selectableMapping.getJdbcMapping(),
+						(SqmBindableType<Object>) selectableMapping.getJdbcMapping(),
 						from.nodeBuilder()
 				),
 				from.nodeBuilder()

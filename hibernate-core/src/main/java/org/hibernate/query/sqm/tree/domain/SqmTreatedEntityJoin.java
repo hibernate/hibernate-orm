@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -87,7 +87,7 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
-	public SqmPathSource<S> getNodeType() {
+	public SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 

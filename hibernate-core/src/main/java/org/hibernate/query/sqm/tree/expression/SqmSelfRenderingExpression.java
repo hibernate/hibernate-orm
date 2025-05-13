@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -21,7 +21,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 
 	public SqmSelfRenderingExpression(
 			Function<SemanticQueryWalker, Expression> renderer,
-			SqmExpressible<T> type,
+			SqmBindableType<T> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.renderer = renderer;

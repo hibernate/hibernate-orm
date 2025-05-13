@@ -4,6 +4,9 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,11 +14,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import jakarta.persistence.FindOption;
-import jakarta.persistence.PessimisticLockScope;
-import jakarta.persistence.RefreshOption;
-import org.hibernate.query.Query;
 
 import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static java.util.Collections.emptySet;
@@ -29,9 +27,9 @@ import static java.util.Collections.unmodifiableSet;
  * {@link Session#refresh(Object, LockOptions)}, the relevant options
  * are:
  * <ul>
- * <li>the {@linkplain #getLockMode() lock mode},
- * <li>the {@linkplain #getTimeOut() pessimistic lock timeout}, and
- * <li>the {@linkplain #getLockScope() lock scope}, that is, whether
+ * <li>the {@linkplain #getLockMode lock mode},
+ * <li>the {@linkplain #getTimeOut pessimistic lock timeout}, and
+ * <li>the {@linkplain #getLockScope lock scope}, that is, whether
  *     the lock extends to rows of owned collections.
  * </ul>
  * <p>
@@ -49,9 +47,37 @@ import static java.util.Collections.unmodifiableSet;
  * default behavior of the SQL dialect} by passing a non-null argument
  * to {@link #setFollowOnLocking(Boolean)}.
  *
+ * @deprecated
+ * Since JPA 3.2 and Hibernate 7, a {@link LockMode}, {@link Timeout},
+ * or {@link PessimisticLockScope} may be passed directly as an option
+ * to {@code find()}, {@code refresh()}, or {@code lock()}. Therefore,
+ * this class is obsolete as an API and will be moved to an SPI package.
+ * <p>
+ * For HQL/JPQL queries, locking should be controlled via operations of
+ * the {@link org.hibernate.query.SelectionQuery} interface:
+ * <ul>
+ * <li>A timeout may be set via
+ * {@link org.hibernate.query.CommonQueryContract#setTimeout(Timeout)}
+ * <li>The {@code PessimisticLockScope} may be set using
+ * {@link org.hibernate.query.SelectionQuery#setLockScope(PessimisticLockScope)}
+ * <li>Alias-specific lock modes may be specified using
+ * {@link org.hibernate.query.SelectionQuery#setLockMode(String, LockMode)}
+ * <li>Use of follow-on locking may be enabled via
+ * {@link org.hibernate.query.SelectionQuery#setFollowOnLocking(boolean)}
+ * </ul>
+ * The interface {@link Timeouts} provides several operations to simplify
+ * migration.
+ *
+ * @see Timeout
+ * @see Timeouts
+ * @see LockMode
+ * @see jakarta.persistence.LockModeType
+ * @see PessimisticLockScope
+ *
  * @author Scott Marlow
  */
-public class LockOptions implements FindOption, RefreshOption, Serializable {
+@Deprecated(since = "7.0", forRemoval = true) // moving to an SPI package
+public class LockOptions implements Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
 	 * not applicable.
@@ -109,26 +135,22 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	public static final LockOptions UPGRADE = PESSIMISTIC_WRITE;
 
 	/**
-	 * Indicates that the database should not wait at all to acquire
-	 * a pessimistic lock which is not immediately available. This
-	 * has the same effect as {@link LockMode#UPGRADE_NOWAIT}.
-	 *
+	 * @see Timeouts#NO_WAIT_MILLI
+	 * @see Timeouts#NO_WAIT
 	 * @see #getTimeOut
 	 */
-	public static final int NO_WAIT = 0;
+	public static final int NO_WAIT = Timeouts.NO_WAIT_MILLI;
 
 	/**
-	 * Indicates that there is no timeout for the lock acquisition,
-	 * that is, that the database should in principle wait forever
-	 * to obtain the lock.
-	 *
+	 * @see Timeouts#WAIT_FOREVER_MILLI
+	 * @see Timeouts#WAIT_FOREVER
 	 * @see #getTimeOut
 	 */
-	public static final int WAIT_FOREVER = -1;
+	public static final int WAIT_FOREVER = Timeouts.WAIT_FOREVER_MILLI;
 
 	/**
-	 * Indicates that rows which are already locked should be skipped.
-	 *
+	 * @see Timeouts#SKIP_LOCKED_MILLI
+	 * @see Timeouts#SKIP_LOCKED
 	 * @see #getTimeOut()
 	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
 	 */
@@ -137,32 +159,37 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 
 	private final boolean immutable;
 	private LockMode lockMode;
-	private int timeout;
+	private Timeout timeout;
 	private PessimisticLockScope pessimisticLockScope;
 	private Boolean followOnLocking;
 	private Map<String, LockMode> aliasSpecificLockModes;
 
 	/**
 	 * Construct an instance with mode {@link LockMode#NONE} and
-	 * timeout {@link #WAIT_FOREVER}.
+	 * no timeout.
+	 *
+	 * @see LockMode#NONE
+	 * @see Timeouts#WAIT_FOREVER
 	 */
 	public LockOptions() {
 		immutable = false;
 		lockMode = LockMode.NONE;
-		timeout = WAIT_FOREVER;
+		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
 
 	/**
 	 * Construct an instance with the given {@linkplain LockMode mode}
-	 * and {@link #WAIT_FOREVER}.
+	 * and no timeout.
 	 *
 	 * @param lockMode The initial lock mode
+	 *
+	 * @see Timeouts#WAIT_FOREVER
 	 */
 	public LockOptions(LockMode lockMode) {
 		immutable = false;
 		this.lockMode = lockMode;
-		timeout = WAIT_FOREVER;
+		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
 
@@ -171,9 +198,9 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 * and timeout.
 	 *
 	 * @param lockMode The initial lock mode
-	 * @param timeout  The initial timeout
+	 * @param timeout  The initial timeout, in milliseconds
 	 */
-	public LockOptions(LockMode lockMode, int timeout) {
+	public LockOptions(LockMode lockMode, Timeout timeout) {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
@@ -182,13 +209,13 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 
 	/**
 	 * Construct an instance with the given {@linkplain LockMode mode},
-	 * timeout, and {@link PessimisticLockScope scope}.
+	 * timeout, and {@linkplain PessimisticLockScope scope}.
 	 *
 	 * @param lockMode The initial lock mode
 	 * @param timeout The initial timeout
 	 * @param scope The initial lock scope
 	 */
-	public LockOptions(LockMode lockMode, int timeout, PessimisticLockScope scope) {
+	public LockOptions(LockMode lockMode, Timeout timeout, PessimisticLockScope scope) {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
@@ -198,21 +225,54 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	/**
 	 * Internal operation used to create immutable global instances.
 	 */
-	private LockOptions(boolean immutable, LockMode lockMode) {
+	protected LockOptions(boolean immutable, LockMode lockMode) {
 		this.immutable = immutable;
 		this.lockMode = lockMode;
-		timeout = WAIT_FOREVER;
+		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
+
+
 	/**
-	 * Determine of the lock options are empty.
+	 * Construct an instance with the given {@linkplain LockMode mode}
+	 * and timeout.
+	 *
+	 * @param lockMode The initial lock mode
+	 * @param timeout  The initial timeout, in milliseconds
+	 *
+	 * @deprecated Use {@linkplain #LockOptions(LockMode, Timeout)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public LockOptions(LockMode lockMode, int timeout) {
+		this( lockMode, Timeouts.interpretMilliSeconds( timeout ) );
+	}
+
+
+	/**
+	 * Construct an instance with the given {@linkplain LockMode mode},
+	 * timeout, and {@linkplain PessimisticLockScope scope}.
+	 *
+	 * @param lockMode The initial lock mode
+	 * @param timeout The initial timeout, in milliseconds
+	 * @param scope The initial lock scope
+	 *
+	 * @deprecated Use {@linkplain #LockOptions(LockMode, Timeout, PessimisticLockScope)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public LockOptions(LockMode lockMode, int timeout, PessimisticLockScope scope) {
+		this( lockMode, Timeouts.interpretMilliSeconds( timeout ), scope );
+	}
+
+	/**
+	 * Whether this {@code LockOptions} instance is "empty", meaning
+	 * it has any non-default values set (which is the same as
 	 *
 	 * @return {@code true} if the lock options are equivalent to
-	 *         {@link LockOptions#NONE}.
+	 *         {@link org.hibernate.LockOptions#NONE}.
 	 */
 	public boolean isEmpty() {
 		return lockMode == LockMode.NONE
-			&& timeout == WAIT_FOREVER
+			&& timeout == Timeouts.WAIT_FOREVER
 			&& followOnLocking == null
 			&& pessimisticLockScope == NORMAL
 			&& !hasAliasSpecificLockModes();
@@ -243,13 +303,24 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	}
 
 	/**
+	 * Set of {@link Map.Entry}s, each associating an alias with its
+	 * specified {@linkplain #setAliasSpecificLockMode alias-specific}
+	 * {@link LockMode}.
+	 *
+	 * @return an iterable with the {@link Map.Entry}s
+	 */
+	public Set<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
+		return aliasSpecificLockModes == null ? emptySet() : unmodifiableSet( aliasSpecificLockModes.entrySet() );
+	}
+
+	/**
 	 * Specify the {@link LockMode} to be used for the given query alias.
 	 *
 	 * @param alias the query alias to which the lock mode applies
 	 * @param lockMode the lock mode to apply to the given alias
 	 * @return {@code this} for method chaining
 	 *
-	 * @see Query#setLockMode(String, LockMode)
+	 * @see org.hibernate.query.Query#setLockMode(String, LockMode)
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( immutable ) {
@@ -268,6 +339,25 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	}
 
 	/**
+	 * The number of aliases that have alias-specific lock modes specified.
+	 *
+	 * @return the number of explicitly defined alias lock modes.
+	 */
+	public int getAliasLockCount() {
+		return aliasSpecificLockModes == null ? 0 : aliasSpecificLockModes.size();
+	}
+
+	/**
+	 * Whether this {@code LockOptions} instance defines alias-specific lock-modes
+	 *
+	 * @return {@code true} if this object defines alias-specific lock modes;
+	 *        {@code false} otherwise.
+	 */
+	public boolean hasAliasSpecificLockModes() {
+		return aliasSpecificLockModes != null && !aliasSpecificLockModes.isEmpty();
+	}
+
+	/**
 	 * Get the {@link LockMode} explicitly specified for the given alias
 	 * via {@link #setAliasSpecificLockMode(String, LockMode)}.
 	 * <p>
@@ -279,47 +369,6 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 */
 	public LockMode getAliasSpecificLockMode(String alias) {
 		return aliasSpecificLockModes == null ? null : aliasSpecificLockModes.get( alias );
-	}
-
-	/**
-	 * Determine the {@link LockMode} to apply to the given alias. If no
-	 * mode was {@linkplain #setAliasSpecificLockMode(String, LockMode)}
-	 * explicitly set}, the {@linkplain #getLockMode()}  overall mode} is
-	 * returned. If the overall lock mode is also {@code null},
-	 * {@link LockMode#NONE} is returned.
-	 * <p>
-	 * Differs from {@link #getAliasSpecificLockMode(String)} in that here
-	 * we fall back to only returning the overall lock mode.
-	 *
-	 * @param alias The alias for which to locate the effective lock mode.
-	 * @return The effective lock mode.
-	 */
-	public LockMode getEffectiveLockMode(String alias) {
-		LockMode lockMode = getAliasSpecificLockMode( alias );
-		if ( lockMode == null ) {
-			lockMode = this.lockMode;
-		}
-		return lockMode == null ? LockMode.NONE : lockMode;
-	}
-
-	/**
-	 * Does this {@code LockOptions} instance define alias-specific lock
-	 * modes?
-	 *
-	 * @return {@code true} if this object defines alias-specific lock modes;
-	 *        {@code false} otherwise.
-	 */
-	public boolean hasAliasSpecificLockModes() {
-		return aliasSpecificLockModes != null && !aliasSpecificLockModes.isEmpty();
-	}
-
-	/**
-	 * The number of aliases that have alias-specific lock modes specified.
-	 *
-	 * @return the number of explicitly defined alias lock modes.
-	 */
-	public int getAliasLockCount() {
-		return aliasSpecificLockModes == null ? 0 : aliasSpecificLockModes.size();
 	}
 
 	/**
@@ -335,14 +384,24 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	}
 
 	/**
-	 * Set of {@link Map.Entry}s, each associating an alias with its
-	 * specified {@linkplain #setAliasSpecificLockMode alias-specific}
-	 * {@link LockMode}.
+	 * Determine the {@link LockMode} to apply to the given alias. If no
+	 * mode was {@linkplain #setAliasSpecificLockMode(String, LockMode)
+	 * explicitly set}, the {@linkplain #getLockMode() overall mode} is
+	 * returned. If the overall lock mode is also {@code null},
+	 * {@link LockMode#NONE} is returned.
+	 * <p>
+	 * Differs from {@link #getAliasSpecificLockMode(String)} in that here
+	 * we fall back to only returning the overall lock mode.
 	 *
-	 * @return an iterable with the {@link Map.Entry}s
+	 * @param alias The alias for which to locate the effective lock mode.
+	 * @return The effective lock mode.
 	 */
-	public Set<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
-		return aliasSpecificLockModes == null ? emptySet() : unmodifiableSet( aliasSpecificLockModes.entrySet() );
+	public LockMode getEffectiveLockMode(String alias) {
+		LockMode lockMode = getAliasSpecificLockMode( alias );
+		if ( lockMode == null ) {
+			lockMode = this.lockMode;
+		}
+		return lockMode == null ? LockMode.NONE : lockMode;
 	}
 
 	/**
@@ -370,10 +429,33 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	}
 
 	/**
-	 * The current timeout, a maximum amount of time in milliseconds
-	 * that the database should wait to obtain a pessimistic lock before
-	 * returning an error to the client.
-	 * <p>
+	 * The timeout associated with {@code this} options, defining a maximum
+	 * amount of time that the database should wait to obtain a pessimistic
+	 * lock before returning an error to the client.
+	 */
+	public Timeout getTimeout() {
+		return timeout;
+	}
+
+	/**
+	 * Set the {@linkplain #getTimeout() timeout} associated with {@code this} options.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @see #getTimeout()
+	 */
+	public LockOptions setTimeout(Timeout timeout) {
+		if ( immutable ) {
+			throw new UnsupportedOperationException("immutable global instance of LockMode");
+		}
+		this.timeout = timeout;
+		return this;
+	}
+
+	/**
+	 * The {@linkplain #getTimeout() timeout}, in milliseconds, associated
+	 * with {@code this} options.
+	 * <p/>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.
 	 *
@@ -381,29 +463,24 @@ public class LockOptions implements FindOption, RefreshOption, Serializable {
 	 *         {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 */
 	public int getTimeOut() {
-		return timeout;
+		return getTimeout().milliseconds();
 	}
 
 	/**
-	 * Set the timeout, that is, the maximum amount of time in milliseconds
-	 * that the database should wait to obtain a pessimistic lock before
-	 * returning an error to the client.
-	 * <p>
+	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated
+	 * with {@code this} options.
+	 * <p/>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.
 	 *
-	 * @param timeout the new timeout setting, in milliseconds
 	 * @return {@code this} for method chaining
 	 *
 	 * @see #getTimeOut
 	 */
 	public LockOptions setTimeOut(int timeout) {
-		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
-		}
-		this.timeout = timeout;
-		return this;
+		return setTimeout( Timeouts.interpretMilliSeconds( timeout ) );
 	}
+
 
 	/**
 	 * The current lock scope:

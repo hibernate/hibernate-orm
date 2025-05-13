@@ -20,7 +20,9 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
@@ -31,7 +33,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
@@ -257,21 +258,21 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockOptions getLockOptions() {
 		return getQueryOptions().getLockOptions();
+	}
+
+	@Override @Deprecated
+	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
+		getQueryOptions().getLockOptions().overlay( lockOptions );
+		return this;
 	}
 
 	@Override
 	public LockModeType getLockMode() {
 		getSession().checkOpen( false );
 		return super.getLockMode();
-	}
-
-	@Override
-	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
-		getQueryOptions().getLockOptions().overlay( lockOptions );
-		return this;
 	}
 
 	@Override
@@ -284,6 +285,20 @@ public abstract class AbstractQuery<R>
 	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
 		getSession().checkOpen();
 		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getSession().checkOpen();
+		super.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setTimeout(Timeout timeout) {
+		getSession().checkOpen();
+		super.setTimeout( timeout );
 		return this;
 	}
 
@@ -390,7 +405,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -414,7 +429,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
@@ -438,7 +453,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -466,7 +481,7 @@ public abstract class AbstractQuery<R>
 
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -483,7 +498,7 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	public <P> QueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -501,7 +516,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -518,7 +533,7 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	public <P> QueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -536,7 +551,7 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -555,7 +570,7 @@ public abstract class AbstractQuery<R>
 
 
 	@Override
-	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+	public <P> QueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}

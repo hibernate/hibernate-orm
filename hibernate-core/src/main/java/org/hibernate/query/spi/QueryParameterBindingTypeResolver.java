@@ -6,7 +6,7 @@ package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

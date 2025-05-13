@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -20,13 +20,15 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
+
 /**
  * Specialized SQM literal defined by an enum reference.  E.g.
  * {@code ".. where p.sex = Sex.MALE"}
  *
  * @author Steve Ebersole
  */
-public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmExpressible<E>, SemanticPathPart {
+public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements SqmBindableType<E>, SemanticPathPart {
 	private final E enumValue;
 	private final EnumJavaType<E> referencedEnumTypeDescriptor;
 	private final String enumValueName;
@@ -63,8 +65,13 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public SqmExpressible<E> getExpressible() {
+	public SqmBindableType<E> getExpressible() {
 		return this;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return BASIC;
 	}
 
 	@Override
@@ -82,7 +89,7 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 	}
 
 	@Override
-	public Class<E> getBindableJavaType() {
+	public Class<E> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
 	}
 

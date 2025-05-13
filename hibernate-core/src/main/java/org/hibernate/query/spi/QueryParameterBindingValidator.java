@@ -8,10 +8,10 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 
-import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryArgumentException;
-import org.hibernate.query.BindingContext;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.TemporalType;
@@ -27,7 +27,7 @@ public class QueryParameterBindingValidator {
 	}
 
 	public void validate(BindableType<?> paramType, Object bind, BindingContext bindingContext) {
-		validate( paramType, bind, null, bindingContext);
+		validate( paramType, bind, null, bindingContext );
 	}
 
 	public void validate(
@@ -40,11 +40,11 @@ public class QueryParameterBindingValidator {
 			return;
 		}
 
-		final SqmExpressible<?> sqmExpressible = paramType.resolveExpressible(bindingContext);
+		final SqmBindableType<?> sqmExpressible = bindingContext.resolveExpressible( paramType );
 		final Class<?> parameterJavaType =
-				paramType.getBindableJavaType() != null
-						? paramType.getBindableJavaType()
-						: sqmExpressible.getBindableJavaType();
+				paramType.getJavaType() != null
+						? paramType.getJavaType()
+						: sqmExpressible.getJavaType();
 
 		if ( parameterJavaType != null ) {
 			if ( bind instanceof Collection<?> collection

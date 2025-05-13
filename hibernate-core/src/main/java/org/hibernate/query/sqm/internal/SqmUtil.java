@@ -55,6 +55,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -936,7 +937,7 @@ public class SqmUtil {
 		else if ( selection != null && selection.getSelectableNode() instanceof SqmParameter<?> sqmParameter ) {
 			final Class<?> anticipatedClass =
 					sqmParameter.getAnticipatedType() != null
-							? sqmParameter.getAnticipatedType().getBindableJavaType()
+							? sqmParameter.getAnticipatedType().getJavaType()
 							: null;
 			return anticipatedClass != null
 				&& expectedResultType.isAssignableFrom( anticipatedClass );
@@ -1218,7 +1219,7 @@ public class SqmUtil {
 		}
 
 		if ( !jpaCompliance.isJpaQueryComplianceEnabled() ) {
-			verifyResultType( expectedResultClass, selection.getExpressible() );
+			verifyResultType( expectedResultClass, selection );
 		}
 	}
 
@@ -1239,15 +1240,17 @@ public class SqmUtil {
 			|| expectedResultClass == Tuple.class;
 	}
 
-	protected static void verifyResultType(Class<?> resultClass, @Nullable SqmExpressible<?> selectionExpressible) {
-		if ( selectionExpressible != null ) {
-			final JavaType<?> javaType = selectionExpressible.getExpressibleJavaType();
-			if ( javaType != null ) {
-				final Class<?> javaTypeClass = javaType.getJavaTypeClass();
-				if ( javaTypeClass != Object.class ) {
-					if ( !isValid( resultClass, selectionExpressible, javaTypeClass, javaType ) ) {
-						throwQueryTypeMismatchException( resultClass, selectionExpressible );
-					}
+	protected static void verifyResultType(Class<?> resultClass, SqmSelectableNode<?> selectableNode) {
+		final SqmBindableType<?> selectionExpressible = selectableNode.getExpressible();
+		final JavaType<?> javaType =
+				selectionExpressible == null
+						? selectableNode.getNodeJavaType() // for SqmDynamicInstantiation
+						: selectionExpressible.getExpressibleJavaType();
+		if ( javaType != null ) {
+			final Class<?> javaTypeClass = javaType.getJavaTypeClass();
+			if ( javaTypeClass != Object.class ) {
+				if ( !isValid( resultClass, selectionExpressible, javaTypeClass, javaType ) ) {
+					throwQueryTypeMismatchException( resultClass, selectionExpressible, javaTypeClass );
 				}
 			}
 		}
@@ -1267,10 +1270,10 @@ public class SqmUtil {
 
 	private static boolean isEntityIdType(SqmExpressible<?> selectionExpressible, Class<?> resultClass) {
 		if ( selectionExpressible instanceof IdentifiableDomainType<?> identifiableDomainType ) {
-			return resultClass.isAssignableFrom( identifiableDomainType.getIdType().getBindableJavaType() );
+			return resultClass.isAssignableFrom( identifiableDomainType.getIdType().getJavaType() );
 		}
 		else if ( selectionExpressible instanceof EntitySqmPathSource<?> entityPath ) {
-			return resultClass.isAssignableFrom( entityPath.getPathType().getIdType().getBindableJavaType() );
+			return resultClass.isAssignableFrom( entityPath.getPathType().getIdType().getJavaType() );
 		}
 		else {
 			return false;
@@ -1313,11 +1316,13 @@ public class SqmUtil {
 		}
 	}
 
-	private static void throwQueryTypeMismatchException(Class<?> resultClass, SqmExpressible<?> sqmExpressible) {
+	private static void throwQueryTypeMismatchException(
+			Class<?> resultClass,
+			@Nullable SqmExpressible<?> sqmExpressible, @Nullable Class<?> javaTypeClass) {
 		throw new QueryTypeMismatchException( String.format(
 				Locale.ROOT,
 				"Incorrect query result type: query produces '%s' but type '%s' was given",
-				sqmExpressible.getTypeName(),
+				sqmExpressible == null ? javaTypeClass.getName() : sqmExpressible.getTypeName(),
 				resultClass.getName()
 		) );
 	}

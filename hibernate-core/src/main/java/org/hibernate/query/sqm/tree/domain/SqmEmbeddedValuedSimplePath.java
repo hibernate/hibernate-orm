@@ -10,19 +10,21 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+
 /**
  * @author Steve Ebersole
  */
 public class SqmEmbeddedValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements SqmExpressible<T> {
+		implements SqmBindableType<T> {
 
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
@@ -67,8 +69,13 @@ public class SqmEmbeddedValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
+	public SqmBindableType<T> getExpressible() {
 		return this;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return EMBEDDABLE;
 	}
 
 	@Override
@@ -107,11 +114,6 @@ public class SqmEmbeddedValuedSimplePath<T>
 	@Override
 	public Class<T> getJavaType() {
 		return getJavaTypeDescriptor().getJavaTypeClass();
-	}
-
-	@Override
-	public Class<T> getBindableJavaType() {
-		return getJavaType();
 	}
 
 	@Override

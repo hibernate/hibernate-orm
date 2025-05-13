@@ -5,6 +5,7 @@
 package org.hibernate.query;
 
 import org.hibernate.Incubating;
+import org.hibernate.type.BindableType;
 
 /**
  * Represents a parameter defined in the source (HQL/JPQL or criteria) query.

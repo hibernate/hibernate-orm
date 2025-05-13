@@ -4,21 +4,28 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * @author Steve Ebersole
  */
-public class NullSqmExpressible implements SqmExpressible<Object> {
+public class NullSqmExpressible implements SqmBindableType<Object> {
 	/**
 	 * Singleton access
 	 */
 	public static final NullSqmExpressible NULL_SQM_EXPRESSIBLE = new NullSqmExpressible();
 
 	@Override
-	public Class<Object> getBindableJavaType() {
+	public PersistenceType getPersistenceType() {
+		return BASIC;
+	}
+
+	@Override
+	public Class<Object> getJavaType() {
 		return null;
 	}
 

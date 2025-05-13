@@ -6,6 +6,7 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -13,6 +14,7 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
@@ -130,10 +132,10 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
-import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -2200,7 +2202,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code for update} fragment.
 	 */
 	public String getForUpdateString(LockOptions lockOptions) {
-		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeOut() );
+		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeout() );
 	}
 
 	/**
@@ -2212,7 +2214,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param timeout the timeout
 	 * @return The appropriate {@code for update} fragment.
 	 */
-	private String getForUpdateString(LockMode lockMode, int timeout) {
+	public String getForUpdateString(LockMode lockMode, Timeout timeout) {
+		return switch (lockMode) {
+			case PESSIMISTIC_READ -> getReadLockString( timeout );
+			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString();
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString();
+			default -> "";
+		};
+	}
+
+	/**
+	 * Given a {@linkplain LockMode lock level} and timeout,
+	 * determine the appropriate {@code for update} fragment to
+	 * use to obtain the lock.
+	 *
+	 * @param lockMode the lock mode to apply.
+	 * @param timeout the timeout
+	 * @return The appropriate {@code for update} fragment.
+	 *
+	 * @deprecated Use {@linkplain #getForUpdateString(LockMode,Timeout)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public String getForUpdateString(LockMode lockMode, int timeout) {
 		return switch (lockMode) {
 			case PESSIMISTIC_READ -> getReadLockString( timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
@@ -2230,7 +2254,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockMode lockMode) {
-		return getForUpdateString( lockMode, LockOptions.WAIT_FOREVER );
+		return getForUpdateString( lockMode, Timeouts.WAIT_FOREVER );
 	}
 
 	/**
@@ -2246,33 +2270,108 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Get the string to append to {@code SELECT} statements to
 	 * acquire pessimistic WRITE locks for this dialect.
+	 *
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate lock clause.
+	 */
+	public String getWriteLockString(Timeout timeout) {
+		if ( timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked() ) {
+			return getForUpdateSkipLockedString();
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI && supportsNoWait() ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire pessimistic WRITE locks for this dialect.
 	 * <p>
 	 * Location of the returned string is treated the same as
 	 * {@link #getForUpdateString()}.
 	 *
-	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @param timeout How long, in milliseconds, the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
 	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getWriteLockString(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0")
 	public String getWriteLockString(int timeout) {
-		return getForUpdateString();
+		if ( timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked() ) {
+			return getForUpdateSkipLockedString();
+		}
+		else if ( timeout == Timeouts.NO_WAIT_MILLI && supportsNoWait() ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
 	}
 
 	/**
 	 * Get the string to append to {@code SELECT} statements to
 	 * acquire WRITE locks for this dialect, given the aliases of
-	 * the columns to be write locked.
+	 * the columns to be WRITE locked.
+	 * 	 *
+	 * 	 * @param timeout How long the database should wait to acquire the lock.
 	 * <p>
 	 * Location of the returned string is treated the same as
 	 * {@link #getForUpdateString()}.
 	 *
 	 * @param aliases The columns to be read locked.
-	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
 	 * @return The appropriate {@code LOCK} clause string.
 	 */
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		// by default, we simply return getWriteLockString(timeout),
+		// since the default is no support for "FOR UPDATE OF ..."
+		return getWriteLockString( timeout );
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire WRITE locks for this dialect, given the aliases of
+	 * the columns to be WRITE locked.
+	 * <p>
+	 * Location of the returned string is treated the same as
+	 * {@link #getForUpdateString()}.
+	 *
+	 * @param aliases The columns to be read locked.
+	 *
+	 * @param timeout How long, in milliseconds, the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getWriteLockString(String, Timeout)} instead.
+	 */
+	@Deprecated(since = "7.0")
 	public String getWriteLockString(String aliases, int timeout) {
 		// by default, we simply return getWriteLockString(timeout),
 		// since the default is no support for "FOR UPDATE OF ..."
 		return getWriteLockString( timeout );
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire READ locks for this dialect.
+	 *
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate {@code LOCK} clause string.
+	 */
+	public String getReadLockString(Timeout timeout) {
+		return getForUpdateString();
 	}
 
 	/**
@@ -2284,9 +2383,30 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
 	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getReadLockString(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0")
 	public String getReadLockString(int timeout) {
 		return getForUpdateString();
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire READ locks for this dialect, given the aliases of
+	 * the columns to be read locked.
+	 *
+	 * @param aliases The columns to be read locked.
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @implNote By default, simply returns the {@linkplain #getReadLockString(Timeout)}
+	 * result since the default is to say no support for "FOR UPDATE OF ...".
+	 */
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getReadLockString( timeout );
 	}
 
 	/**
@@ -2299,8 +2419,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @param aliases The columns to be read locked.
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 *
 	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getReadLockString(String, Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0")
 	public String getReadLockString(String aliases, int timeout) {
 		// by default we simply return the getReadLockString(timeout) result since
 		// the default is to say no support for "FOR UPDATE OF ..."
@@ -2439,8 +2563,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
+	/**
+	 * @deprecated Use {@linkplain Timeouts#getTimeoutInSeconds(int)} instead.
+	 */
+	@Deprecated
 	protected int getTimeoutInSeconds(int millis) {
-		return millis == 0 ? 0 : Math.max( 1, Math.round( millis / 1e3f ) );
+		return Timeouts.getTimeoutInSeconds( millis );
 	}
 
 
@@ -4504,6 +4632,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public AggregateSupport getAggregateSupport() {
 		return AggregateSupportImpl.INSTANCE;
+	}
+
+	/**
+	 * Does the database support user defined types?
+	 *
+	 * @see org.hibernate.annotations.Struct
+	 *
+	 * @since 7.1
+	 */
+	public boolean supportsUserDefinedTypes() {
+		return false;
 	}
 
 	/**

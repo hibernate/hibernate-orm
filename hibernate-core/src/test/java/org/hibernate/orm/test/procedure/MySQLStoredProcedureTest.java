@@ -20,7 +20,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.type.StandardBasicTypes;

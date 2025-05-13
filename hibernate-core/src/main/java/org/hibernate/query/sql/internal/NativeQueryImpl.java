@@ -18,6 +18,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -47,7 +49,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.MathHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
@@ -100,6 +101,9 @@ import org.hibernate.sql.results.spi.SingleResultConsumer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.CacheRetrieveMode;
@@ -112,9 +116,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
-import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Character.isWhitespace;
 import static java.util.Collections.addAll;
@@ -570,7 +572,7 @@ public class NativeQueryImpl<R>
 		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
-	@Override
+	@Override @Deprecated
 	public NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		super.setLockOptions( lockOptions );
 		return this;
@@ -579,6 +581,18 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setHibernateLockMode(LockMode lockMode) {
 		super.setHibernateLockMode( lockMode );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setTimeout(Timeout timeout) {
+		super.setTimeout( timeout );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		super.setLockScope( lockScope );
 		return this;
 	}
 
@@ -1426,7 +1440,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1462,7 +1476,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
@@ -1498,7 +1512,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1534,7 +1548,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -1552,7 +1566,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -1570,7 +1584,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -1588,7 +1602,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -1608,7 +1622,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -1626,7 +1640,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+	public <P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}

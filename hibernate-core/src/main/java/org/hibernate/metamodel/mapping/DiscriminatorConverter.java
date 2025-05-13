@@ -66,18 +66,18 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 
 	@Override
 	public R toRelationalValue(O domainForm) {
-		assert domainForm == null || domainForm instanceof String || domainForm instanceof Class;
-
+		final String entityName;
 		if ( domainForm == null ) {
 			return null;
 		}
-
-		final String entityName;
-		if ( domainForm instanceof Class<?> clazz ) {
+		else if ( domainForm instanceof Class<?> clazz ) {
 			entityName = clazz.getName();
 		}
+		else if ( domainForm instanceof String name ) {
+			entityName = name;
+		}
 		else {
-			entityName = (String) domainForm;
+			throw new IllegalArgumentException( "Illegal discriminator value: " + domainForm );
 		}
 
 		final DiscriminatorValueDetails discriminatorValueDetails = getDetailsForEntityName( entityName );

@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -48,7 +48,7 @@ public class SqmXmlAttributesExpression implements SqmTypedNode<Object> {
 	}
 
 	@Override
-	public @Nullable SqmExpressible<Object> getNodeType() {
+	public @Nullable SqmBindableType<Object> getNodeType() {
 		return null;
 	}
 

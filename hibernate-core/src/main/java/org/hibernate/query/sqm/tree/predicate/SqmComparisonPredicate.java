@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -44,7 +44,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 
 		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder );
 
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType(
 				leftHandExpression.getExpressible(),
 				rightHandExpression.getExpressible()
 		);

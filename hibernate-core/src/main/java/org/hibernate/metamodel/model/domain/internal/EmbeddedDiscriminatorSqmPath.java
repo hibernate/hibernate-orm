@@ -22,12 +22,11 @@ import org.hibernate.spi.NavigablePath;
 public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements DiscriminatorSqmPath<T> {
 	private final EmbeddableDomainType<T> embeddableDomainType;
 
-	@SuppressWarnings( { "rawtypes", "unchecked" } )
 	protected EmbeddedDiscriminatorSqmPath(
 			NavigablePath navigablePath,
-			SqmPathSource referencedPathSource,
+			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
-			EmbeddableDomainType embeddableDomainType,
+			EmbeddableDomainType<T> embeddableDomainType,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 		this.embeddableDomainType = embeddableDomainType;
@@ -39,7 +38,8 @@ public class EmbeddedDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implemen
 
 	@Override
 	public EmbeddedDiscriminatorSqmPathSource<T> getExpressible() {
-		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
+//		return (EmbeddedDiscriminatorSqmPathSource<T>) getNodeType();
+		return (EmbeddedDiscriminatorSqmPathSource<T>) getReferencedPathSource();
 	}
 
 	@Override

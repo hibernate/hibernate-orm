@@ -16,6 +16,9 @@ import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.MAPPED_SUPERCLASS;
+
 /**
  * Implementation of {@link jakarta.persistence.metamodel.MappedSuperclassType}.
  *
@@ -60,6 +63,11 @@ public class MappedSuperclassTypeImpl<J>
 				superType,
 				jpaMetamodel
 		);
+	}
+
+	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
 	}
 
 	@Override
@@ -112,12 +120,12 @@ public class MappedSuperclassTypeImpl<J>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
+		return ENTITY_TYPE;
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.MAPPED_SUPERCLASS;
+		return MAPPED_SUPERCLASS;
 	}
 
 	@Override

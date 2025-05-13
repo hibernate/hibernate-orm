@@ -17,7 +17,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.HqlInterpretationException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -41,7 +41,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 public class FullyQualifiedReflectivePathTerminal<E>
 		extends FullyQualifiedReflectivePath
 		implements SqmExpression<E> {
-	private final @Nullable SqmExpressible<E> expressibleType;
+	private final @Nullable SqmBindableType<E> expressibleType;
 	private final SqmCreationState creationState;
 
 	private final Function<SemanticQueryWalker<?>,?> handler;
@@ -137,7 +137,7 @@ public class FullyQualifiedReflectivePathTerminal<E>
 	}
 
 	@Override
-	public @Nullable SqmExpressible<E> getNodeType() {
+	public @Nullable SqmBindableType<E> getNodeType() {
 		return expressibleType;
 	}
 
@@ -153,7 +153,7 @@ public class FullyQualifiedReflectivePathTerminal<E>
 
 
 	@Override
-	public void applyInferableType(@Nullable SqmExpressible<?> type) {
+	public void applyInferableType(@Nullable SqmBindableType<?> type) {
 	}
 
 	@Override

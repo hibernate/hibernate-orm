@@ -41,14 +41,16 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.BindableType;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryOptionsImpl;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -74,7 +76,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.NoMoreOutputsException;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -88,6 +89,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.emptyList;
@@ -96,6 +98,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION;
+import static org.hibernate.jpa.HibernateHints.HINT_CALLABLE_FUNCTION_RETURN_TYPE;
 import static org.hibernate.procedure.internal.NamedCallableQueryMementoImpl.ParameterMementoImpl.fromRegistration;
 import static org.hibernate.query.results.ResultSetMapping.resolveResultSetMapping;
 
@@ -295,17 +298,6 @@ public class ProcedureCallImpl<R>
 		applyOptions( memento );
 	}
 
-	protected void applyOptions(NamedCallableQueryMemento memento) {
-		super.applyOptions( memento );
-
-		if ( memento.getHints() != null ) {
-			final Object callableFunction = memento.getHints().get( HINT_CALLABLE_FUNCTION );
-			if ( callableFunction != null && parseBoolean( callableFunction.toString() ) ) {
-				applyCallableFunctionHint();
-			}
-		}
-	}
-
 	private void applyCallableFunctionHint() {
 		final List<Class<?>> resultTypes = new ArrayList<>();
 		resultSetMapping.visitResultBuilders(
@@ -361,7 +353,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImpl<R> markAsFunctionCall(int sqlType) {
+	public ProcedureCallImplementor<R> markAsFunctionCall(int sqlType) {
 		functionReturn = new FunctionReturnImpl<>( this, sqlType );
 		return this;
 	}
@@ -385,13 +377,18 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImpl<R> markAsFunctionCall(BasicTypeReference<?> typeReference) {
-		final BasicType<?> basicType =
-				getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference );
-		if ( basicType == null ) {
-			throw new IllegalArgumentException( "Could not resolve a BasicType for the java type: " + typeReference.getName() );
+	public ProcedureCall markAsFunctionCall(Type<?> typeReference) {
+		if ( !(typeReference instanceof OutputableType<?> outputableType) ) {
+			throw new IllegalArgumentException( "Given type is not an OutputableType: " + typeReference );
 		}
-		markAsFunctionCall( basicType );
+		if ( resultSetMapping.getNumberOfResultBuilders() == 0 ) {
+			final SqmExpressible<?> expressible = resolveExpressible( typeReference );
+			// Function returns might not be represented as callable parameters,
+			// but we still want to convert the result to the requested java type if possible
+			resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( expressible.getExpressibleJavaType() ) );
+		}
+		//noinspection unchecked
+		functionReturn = new FunctionReturnImpl<>( this, (OutputableType<R>) outputableType );
 		return this;
 	}
 
@@ -452,7 +449,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			int position,
-			BasicTypeReference<?> type,
+			Type<?> type,
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 
@@ -472,7 +469,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
 			String parameterName,
-			BasicTypeReference<?> type,
+			Type<?> type,
 			ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
@@ -501,14 +498,17 @@ public class ProcedureCallImpl<R>
 	@Override
 	public <T> ProcedureParameter<T> registerParameter(
 			int position,
-			BasicTypeReference<T> typeReference,
+			Type<T> typeReference,
 			ParameterMode mode) {
-		final BasicType<T> basicType =
-				getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference );
+		final SqmBindableType<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> procedureParameter =
-				new ProcedureParameterImpl<>( position, mode, basicType.getJavaType(), basicType );
+				new ProcedureParameterImpl<>( position, mode, typeReference.getJavaType(), expressible );
 		registerParameter( procedureParameter );
 		return procedureParameter;
+	}
+
+	private <T> SqmBindableType<T> resolveExpressible(Type<T> typeReference) {
+		return getSessionFactory().getRuntimeMetamodels().resolveExpressible( typeReference );
 	}
 
 	private void registerParameter(ProcedureParameterImplementor<?> parameter) {
@@ -530,27 +530,29 @@ public class ProcedureCallImpl<R>
 		return parameter;
 	}
 
-	private <T> Class<T> getExpressibleJavaType(BindableType<T> parameterType) {
+	private <T> Class<T> getExpressibleJavaType(Type<T> parameterType) {
 		if ( parameterType == null ) {
 			return null;
 		}
 		else {
-			final SqmExpressible<T> sqmExpressible =
-					parameterType.resolveExpressible( getSessionFactory().getQueryEngine().getCriteriaBuilder() );
+			final SqmExpressible<T> sqmExpressible = getNodeBuilder().resolveExpressible( parameterType );
 			assert sqmExpressible != null;
 			return sqmExpressible.getExpressibleJavaType().getJavaTypeClass();
 		}
 	}
 
+	private NodeBuilder getNodeBuilder() {
+		return getSessionFactory().getQueryEngine().getCriteriaBuilder();
+	}
+
 	@Override
 	public <T> ProcedureParameterImplementor<T> registerParameter(
 			String name,
-			BasicTypeReference<T> typeReference,
+			Type<T> typeReference,
 			ParameterMode mode) {
-		final BasicType<T> basicType =
-				getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference );
+		final SqmBindableType<T> expressible = resolveExpressible( typeReference );
 		final ProcedureParameterImpl<T> parameter =
-				new ProcedureParameterImpl<>( name, mode, basicType.getJavaType(), basicType );
+				new ProcedureParameterImpl<>( name, mode, typeReference.getJavaType(), expressible );
 		registerParameter( parameter );
 		return parameter;
 	}
@@ -1057,20 +1059,48 @@ public class ProcedureCallImpl<R>
 		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		throw new UnsupportedOperationException( "setLockOptions does not apply to procedure calls" );
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setHint(String hintName, Object value) {
-		if ( HINT_CALLABLE_FUNCTION.equals( hintName ) ) {
-			if ( value != null && parseBoolean( value.toString() ) ) {
-				applyCallableFunctionHint();
-			}
-		}
-		else {
-			super.setHint( hintName, value );
+		switch ( hintName ) {
+			case HINT_CALLABLE_FUNCTION:
+				if ( value != null ) {
+					if ( value instanceof Boolean bool ) {
+						if ( bool ) {
+							applyCallableFunctionHint();
+						}
+					}
+					else if ( parseBoolean( value.toString() ) ) {
+						applyCallableFunctionHint();
+					}
+				}
+				break;
+			case HINT_CALLABLE_FUNCTION_RETURN_TYPE:
+				if ( value != null ) {
+					if ( value instanceof Integer code ) {
+						//noinspection resource
+						markAsFunctionCall( code );
+					}
+					else if ( value instanceof Type<?> type ) {
+						//noinspection resource
+						markAsFunctionCall( type );
+					}
+					else if ( value instanceof Class<?> type ) {
+						//noinspection resource
+						markAsFunctionCall( type );
+					}
+					else {
+						//noinspection resource
+						markAsFunctionCall( Integer.parseInt( value.toString() ) );
+					}
+				}
+				break;
+			default:
+				super.setHint( hintName, value );
 		}
 		return this;
 	}
@@ -1113,7 +1143,7 @@ public class ProcedureCallImpl<R>
 	public <P> ProcedureCallImplementor<R> setParameter(
 			QueryParameter<P> parameter,
 			P value,
-			BindableType<P> type) {
+			Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1125,7 +1155,7 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1137,7 +1167,7 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}

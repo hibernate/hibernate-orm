@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -50,8 +50,8 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 
 	private static <X> SqmPathSource<X> determinePathSource(NavigablePath navigablePath, SqmFunction<?> function) {
 		//noinspection unchecked
-		final SqmExpressible<X> nodeType = (SqmExpressible<X>) function.getNodeType();
-		final Class<X> bindableJavaType = nodeType.getBindableJavaType();
+		final SqmBindableType<X> nodeType = (SqmBindableType<X>) function.getNodeType();
+		final Class<X> bindableJavaType = nodeType.getJavaType();
 		final ManagedType<X> managedType = function.nodeBuilder()
 				.getJpaMetamodel()
 				.findManagedType( bindableJavaType );
@@ -125,7 +125,7 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		if ( !( getNodeType().getPathType() instanceof BasicPluralType<?, ?> ) ) {
+		if ( !( getReferencedPathSource().getPathType() instanceof BasicPluralType<?, ?> ) ) {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural types." );
 		}
 		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();

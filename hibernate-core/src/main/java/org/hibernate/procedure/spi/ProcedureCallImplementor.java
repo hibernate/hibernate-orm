@@ -9,9 +9,9 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.type.BasicTypeReference;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -19,11 +19,12 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImplementor<R> {
+public interface ProcedureCallImplementor<R> extends ProcedureCall, NameableQuery, QueryImplementor<R> {
 	@Override
 	default List<R> getResultList() {
 		return list();
@@ -31,6 +32,7 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	ParameterStrategy getParameterStrategy();
 
+	@Override
 	FunctionReturnImplementor<R> getFunctionReturn();
 
 	@Override
@@ -40,10 +42,16 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	R getSingleResult();
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, BasicTypeReference<?> type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, BasicTypeReference<?> type, ParameterMode mode);
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Type<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Type<?> type, ParameterMode mode);
 
 	@Override
 	ProcedureCallImplementor<R> setHint(String hintName, Object value);
@@ -88,9 +96,5 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	ProcedureCallImplementor<R> setTimeout(Integer timeout);
 
 	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class<?> type, ParameterMode mode);
-
-	@Override
-	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class<?> type, ParameterMode mode);
-
+	NamedCallableQueryMemento toMemento(String name);
 }

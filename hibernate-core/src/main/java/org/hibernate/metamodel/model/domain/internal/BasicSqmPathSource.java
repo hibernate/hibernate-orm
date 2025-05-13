@@ -10,8 +10,9 @@ import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * @author Steve Ebersole
@@ -39,10 +40,10 @@ public class BasicSqmPathSource<J>
 		return super.getTypeName();
 	}
 
-	@Override
-	public SqmDomainType<J> getSqmType() {
-		return getPathType();
-	}
+//	@Override
+//	public SqmDomainType<J> getSqmType() {
+//		return getPathType();
+//	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
@@ -63,7 +64,7 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override

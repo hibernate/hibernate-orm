@@ -7,12 +7,13 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.Objects;
 
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.criteria.JpaParameterExpression;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -39,7 +40,7 @@ public class JpaCriteriaParameter<T>
 			BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
-		super( toSqmType( type, nodeBuilder ), nodeBuilder );
+		super( nodeBuilder.resolveExpressible( type ), nodeBuilder );
 		this.name = name;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
@@ -48,10 +49,6 @@ public class JpaCriteriaParameter<T>
 		super( original.getNodeType(), original.nodeBuilder() );
 		this.name = original.name;
 		this.allowsMultiValuedBinding = original.allowsMultiValuedBinding;
-	}
-
-	private static <T> SqmExpressible<T> toSqmType(BindableType<T> type, NodeBuilder nodeBuilder) {
-		return type == null ? null : type.resolveExpressible( nodeBuilder );
 	}
 
 	@Override
@@ -104,7 +101,7 @@ public class JpaCriteriaParameter<T>
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void applyAnticipatedType(BindableType type) {
-		super.internalApplyInferableType( toSqmType( type, nodeBuilder() ) );
+		super.internalApplyInferableType( nodeBuilder().resolveExpressible( type ) );
 	}
 
 	@Override
@@ -124,7 +121,7 @@ public class JpaCriteriaParameter<T>
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressible<?> newType) {
+	protected void internalApplyInferableType(SqmBindableType<?> newType) {
 		super.internalApplyInferableType( newType );
 	}
 

@@ -8,7 +8,6 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.Bindable;
 
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
@@ -29,21 +28,9 @@ public interface SqmPathSource<J>
 
 	/**
 	 * The type of {@linkplain SqmPath path} this source creates.
-	 *
-	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
 	@Override
 	SqmDomainType<J> getPathType();
-
-	/**
-	 * The type of {@linkplain SqmPath path} this source creates.
-	 *
-	 * @deprecated Use {@link #getPathType()}.
-	 */
-	@Deprecated(since = "7.0", forRemoval = true)
-	default SqmDomainType<J> getSqmPathType() {
-		return getPathType();
-	}
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
@@ -53,18 +40,6 @@ public interface SqmPathSource<J>
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
 	SqmPathSource<?> findSubPathSource(String name);
-
-	/**
-	 * Find a {@link SqmPathSource} by name relative to this source.
-	 *
-	 * @return null if the subPathSource is not found
-	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
-	 * @deprecated Use {@link #findSubPathSource(String, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true, since = "7.0")
-	default SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
-		return findSubPathSource( name, true );
-	}
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source. If {@code includeSubtypes} is set
@@ -102,29 +77,6 @@ public interface SqmPathSource<J>
 	}
 
 	/**
-	 * Find a {@link SqmPathSource} by name relative to this source and all its subtypes.
-	 *
-	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
-	 * @throws IllegalArgumentException if the subPathSource is not found
-	 * @deprecated Use #{@link #getSubPathSource(String, boolean)} instead
-	 */
-	@Deprecated(forRemoval = true, since = "7.0")
-	default SqmPathSource<?> getSubPathSource(String name, JpaMetamodel metamodel) {
-		final SqmPathSource<?> subPathSource = findSubPathSource( name, true );
-		if ( subPathSource == null ) {
-			throw new PathElementException(
-					String.format(
-							Locale.ROOT,
-							"Could not resolve attribute '%s' of '%s'",
-							name,
-							getExpressible().getTypeName()
-					)
-			);
-		}
-		return subPathSource;
-	}
-
-	/**
 	 * Find a {@link SqmPathSource} by name relative to this source. If {@code subtypes} is set
 	 * to {@code true} and this path source is polymorphic, also try finding subtype attributes.
 	 *
@@ -134,7 +86,7 @@ public interface SqmPathSource<J>
 	 * @throws IllegalArgumentException if the subPathSource is not found
 	 */
 	default SqmPathSource<?> getSubPathSource(String name, boolean subtypes) {
-		final SqmPathSource<?> subPathSource = findSubPathSource( name, true );
+		final SqmPathSource<?> subPathSource = findSubPathSource( name, subtypes );
 		if ( subPathSource == null ) {
 			throw new PathElementException(
 					String.format(
@@ -162,7 +114,7 @@ public interface SqmPathSource<J>
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource);
 
 	@Override
-	default SqmExpressible<J> getExpressible() {
+	default SqmBindableType<J> getExpressible() {
 		return getPathType();
 	}
 

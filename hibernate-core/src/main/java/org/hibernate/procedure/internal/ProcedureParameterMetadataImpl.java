@@ -17,10 +17,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -119,7 +119,8 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public boolean containsReference(QueryParameter<?> parameter) {
-		return parameters != null && parameters.contains( (ProcedureParameterImplementor<?>) parameter );
+		return parameters != null
+			&& parameters.contains( (ProcedureParameterImplementor<?>) parameter );
 	}
 
 	public ParameterStrategy getParameterStrategy() {
@@ -132,7 +133,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 			return false;
 		}
 		else {
-			for ( ProcedureParameterImplementor<?> parameter : parameters ) {
+			for ( var parameter : parameters ) {
 				if ( filter.test( parameter ) ) {
 					return true;
 				}
@@ -143,7 +144,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> findQueryParameter(String name) {
-		for ( ProcedureParameterImplementor<?> parameter : parameters ) {
+		for ( var parameter : parameters ) {
 			if ( name.equals( parameter.getName() ) ) {
 				return parameter;
 			}
@@ -153,7 +154,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> getQueryParameter(String name) {
-		final ProcedureParameterImplementor<?> parameter = findQueryParameter( name );
+		final var parameter = findQueryParameter( name );
 		if ( parameter != null ) {
 			return parameter;
 		}
@@ -162,7 +163,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> findQueryParameter(int positionLabel) {
-		for ( ProcedureParameterImplementor<?> parameter : parameters ) {
+		for ( var parameter : parameters ) {
 			if ( parameter.getName() == null && positionLabel == parameter.getPosition() ) {
 				return parameter;
 			}
@@ -172,7 +173,7 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public ProcedureParameterImplementor<?> getQueryParameter(int positionLabel) {
-		final ProcedureParameterImplementor<?> queryParameter = findQueryParameter( positionLabel );
+		final var queryParameter = findQueryParameter( positionLabel );
 		if ( queryParameter != null ) {
 			return queryParameter;
 		}
@@ -181,10 +182,10 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public <P> ProcedureParameterImplementor<P> resolve(Parameter<P> parameter) {
-		if ( parameter instanceof ProcedureParameterImplementor<P> procedureParameterImplementor ) {
-			for ( ProcedureParameterImplementor<?> registered : parameters ) {
+		if ( parameter instanceof ProcedureParameterImplementor<P> parameterImplementor ) {
+			for ( var registered : parameters ) {
 				if ( registered == parameter ) {
-					return procedureParameterImplementor;
+					return parameterImplementor;
 				}
 			}
 		}
@@ -210,10 +211,11 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 
 	@Override
 	public Set<Integer> getOrdinalParameterLabels() {
-		final HashSet<Integer> labels = new HashSet<>();
+		final Set<Integer> labels = new HashSet<>();
 		visitRegistrations( parameter -> {
-			if ( parameter.getPosition() != null ) {
-				labels.add( parameter.getPosition() );
+			final Integer position = parameter.getPosition();
+			if ( position != null ) {
+				labels.add( position );
 			}
 		} );
 		return labels;

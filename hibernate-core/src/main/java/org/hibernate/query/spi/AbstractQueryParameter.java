@@ -4,7 +4,8 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.query.BindableType;
+
+import org.hibernate.type.BindableType;
 
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 
@@ -55,6 +56,6 @@ public abstract class AbstractQueryParameter<T> implements QueryParameterImpleme
 
 	@Override
 	public Class<T> getParameterType() {
-		return anticipatedType == null ? null : anticipatedType.getBindableJavaType();
+		return anticipatedType == null ? null : anticipatedType.getJavaType();
 	}
 }

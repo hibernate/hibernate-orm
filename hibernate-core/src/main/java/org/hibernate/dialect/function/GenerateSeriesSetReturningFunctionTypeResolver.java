@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -53,7 +54,7 @@ public class GenerateSeriesSetReturningFunctionTypeResolver implements SetReturn
 			throw new IllegalArgumentException( "Couldn't determine types of arguments to function 'generate_series'" );
 		}
 
-		final SqmExpressible<?>[] componentTypes = new SqmExpressible<?>[]{ type, typeConfiguration.getBasicTypeForJavaType( Long.class ) };
+		final SqmBindableType<?>[] componentTypes = new SqmBindableType<?>[]{ type, typeConfiguration.getBasicTypeForJavaType( Long.class ) };
 		final String[] componentNames = new String[]{ CollectionPart.Nature.ELEMENT.getName(), CollectionPart.Nature.INDEX.getName() };
 		return new AnonymousTupleType<>( componentTypes, componentNames );
 	}

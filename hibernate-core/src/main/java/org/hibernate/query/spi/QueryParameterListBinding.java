@@ -8,7 +8,7 @@ import java.util.Collection;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.Type;
 
 /**

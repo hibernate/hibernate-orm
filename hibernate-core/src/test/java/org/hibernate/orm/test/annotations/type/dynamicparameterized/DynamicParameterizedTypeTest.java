@@ -7,7 +7,6 @@ package org.hibernate.orm.test.annotations.type.dynamicparameterized;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -122,9 +121,7 @@ public class DynamicParameterizedTypeTest {
 								@Nullable SqmToSqlAstConverter converter,
 								List<? extends SqmTypedNode<?>> arguments,
 								TypeConfiguration typeConfiguration) {
-							SqmTypedNode<?> sqmTypedNode = arguments.get(0);
-							var sqmPathType = ((PathSource<?>) sqmTypedNode.getNodeType()).getPathType();
-							assertInstanceOf(CustomType.class, sqmPathType);
+							assertInstanceOf(CustomType.class, arguments.get(0).getNodeType());
 							return null;
 						}
 

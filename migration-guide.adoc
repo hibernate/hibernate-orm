@@ -259,7 +259,6 @@ Also, `LockAcquisitionException` now extends `PessimisticLockException`.
 `Query#setOrder` was an incubating API added in support of Hibernate's Jakarta Data and Repositories implementations.
 It was never a great solution and has been replaced with a better alternative - link:{whatsNewBase}#QuerySpecification[QuerySpecification].
 
-
 [[misc-api]]
 === Miscellaneous
 
@@ -269,7 +268,7 @@ It was never a great solution and has been replaced with a better alternative - 
 * Removed `Session.LockRequest` - use `LockOptions` instead
 * `SessionFactory.createEntityManager()` now returns `Session` for convenience
 * `CommonQueryContract.setFlushMode()` was deprecated in favor of `setQueryFlushMode` accepting a `QueryFlushMode`
-
+* Incubating interfaces `BindableType`, `OutputableType`, and `BindingContext` were moved to `org.hibernate.type`
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -729,11 +728,49 @@ Now, `varchar(1)` is used by default.
 
 
 [[settings]]
-=== Changes Related to Settings
+== Changes Related to Settings
 
 * Removed `hibernate.mapping.precedence` and friends
 * Removed `hibernate.allow_refresh_detached_entity`
 
+[[lock-options]]
+== LockOptions
+
+`LockOptions` has been marked deprecated.
+Since JPA 3.2 and Hibernate 7, a `LockMode` (or `LockModeType`), `Timeout`, or `PessimisticLockScope` may be passed directly as an option to `find()`, `refresh()`, or `lock()`.
+Therefore, this class is obsolete as an API and will be moved to an SPI package.
+
+Use this
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    LockMode.PESSIMISTIC_WRITE,
+    Timeouts.NO_WAIT
+);
+----
+====
+
+instead of this
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    new LockOptions(
+        LockMode.PESSIMISTIC_WRITE,
+        0
+    )
+);
+----
+====
+
+See the link:{whatsNewBase}#operation-options[What's New] guide for more details.
 
 
 [[pools]]

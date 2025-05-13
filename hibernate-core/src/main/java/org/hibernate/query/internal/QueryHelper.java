@@ -4,7 +4,7 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
@@ -16,7 +16,7 @@ public class QueryHelper {
 	}
 
 	@SafeVarargs
-	public static <T> SqmExpressible<? extends T> highestPrecedenceType(SqmExpressible<? extends T>... types) {
+	public static <T> SqmBindableType<? extends T> highestPrecedenceType(SqmBindableType<? extends T>... types) {
 		if ( types == null || types.length == 0 ) {
 			return null;
 		}
@@ -33,9 +33,9 @@ public class QueryHelper {
 		return highest;
 	}
 
-	public static <X> SqmExpressible<? extends X> highestPrecedenceType2(
-			SqmExpressible<? extends X> type1,
-			SqmExpressible<? extends X> type2) {
+	public static <X> SqmBindableType<? extends X> highestPrecedenceType2(
+			SqmBindableType<? extends X> type1,
+			SqmBindableType<? extends X> type2) {
 		if ( type1 == null && type2 == null ) {
 			return null;
 		}

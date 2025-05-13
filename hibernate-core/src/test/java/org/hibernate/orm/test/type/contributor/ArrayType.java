@@ -10,11 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.query.BindingContext;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
@@ -26,23 +23,12 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Vlad Mihalcea
  */
-public class ArrayType implements UserType<Array>, BindableType<Array>, BasicValueConverter<Array, String> {
+public class ArrayType implements UserType<Array>, BasicValueConverter<Array, String> {
+
 	public static final ArrayType INSTANCE = new ArrayType();
 
 	private final BasicJavaType<Array> javaType = ArrayJavaType.INSTANCE;
 	private final JdbcType jdbcType = VarcharJdbcType.INSTANCE;
-
-	@Override
-	public Class<Array> getBindableJavaType() {
-		// really a UserType should not implement BindableType
-		return Array.class;
-	}
-
-	@Override
-	public SqmExpressible<Array> resolveExpressible(BindingContext bindingContext) {
-		// really a UserType should not implement BindableType
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public int getSqlType() {

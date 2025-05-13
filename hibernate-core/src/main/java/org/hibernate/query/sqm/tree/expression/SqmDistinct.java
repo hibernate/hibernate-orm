@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -44,7 +44,7 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T> {
 	}
 
 	@Override
-	public SqmExpressible<T> getNodeType() {
+	public SqmBindableType<T> getNodeType() {
 		return expression.getNodeType();
 	}
 

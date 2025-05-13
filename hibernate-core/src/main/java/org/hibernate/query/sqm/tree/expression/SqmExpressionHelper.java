@@ -5,12 +5,13 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
@@ -28,13 +29,13 @@ public class SqmExpressionHelper {
 		return toSqmType( parameterType, creationState.getCreationContext() );
 	}
 
-	public static <T> SqmExpressible<T> toSqmType(
+	public static <T> SqmBindableType<T> toSqmType(
 			BindableType<T> anticipatedType, BindingContext bindingContext) {
 		if ( anticipatedType == null ) {
 			return null;
 		}
 		else {
-			final SqmExpressible<T> sqmExpressible = anticipatedType.resolveExpressible( bindingContext );
+			final SqmBindableType<T> sqmExpressible = bindingContext.resolveExpressible( anticipatedType );
 			assert sqmExpressible != null;
 			return sqmExpressible;
 		}
@@ -92,8 +93,9 @@ public class SqmExpressionHelper {
 
 	public static boolean isCompositeTemporal(SqmExpression<?> expression) {
 		// When TimeZoneStorageStrategy.COLUMN is used, that implies using a composite user type
-		return expression instanceof SqmPath<?> && expression.getNodeType() instanceof EmbeddedSqmPathSource<?>
-				&& JavaTypeHelper.isTemporal( expression.getJavaTypeDescriptor() );
+		return expression instanceof SqmPath<?> path
+			&& path.getReferencedPathSource() instanceof EmbeddedSqmPathSource
+			&& JavaTypeHelper.isTemporal( expression.getJavaTypeDescriptor() );
 	}
 
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {

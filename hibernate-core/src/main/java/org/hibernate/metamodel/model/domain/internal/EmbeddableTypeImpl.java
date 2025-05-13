@@ -18,6 +18,9 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
+
 /**
  * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
  *
@@ -44,8 +47,13 @@ public class EmbeddableTypeImpl<J>
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return getJavaType();
+	}
+
+	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.EMBEDDABLE;
+		return EMBEDDABLE;
 	}
 
 	@Override
@@ -68,15 +76,15 @@ public class EmbeddableTypeImpl<J>
 		return getTypeName();
 	}
 
-	@Override
-	public SqmEmbeddableDomainType<J> getPathType() {
-		return this;
-	}
+//	@Override
+//	public SqmEmbeddableDomainType<J> getPathType() {
+//		return this;
+//	}
 
-	@Override
-	public SqmEmbeddableDomainType<J> getSqmType() {
-		return SqmEmbeddableDomainType.super.getSqmType();
-	}
+//	@Override
+//	public SqmEmbeddableDomainType<J> getSqmType() {
+//		return this;
+//	}
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
@@ -104,6 +112,6 @@ public class EmbeddableTypeImpl<J>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.SINGULAR_ATTRIBUTE;
+		return SINGULAR_ATTRIBUTE;
 	}
 }

@@ -6,7 +6,7 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;

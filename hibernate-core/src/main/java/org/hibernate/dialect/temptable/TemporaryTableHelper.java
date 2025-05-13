@@ -172,22 +172,27 @@ public class TemporaryTableHelper {
 		}
 	}
 
+	/**
+	 * Differs from
+	 * {@link org.hibernate.engine.jdbc.spi.SqlExceptionHelper.StandardWarningHandler}
+	 * because it logs only at DEBUG level.
+	 */
+	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER =
+			new SqlExceptionHelper.WarningHandlerLoggingSupport() {
+				public boolean doProcess() {
+					return log.isDebugEnabled();
+				}
 
-	private static final SqlExceptionHelper.WarningHandler WARNING_HANDLER = new SqlExceptionHelper.WarningHandlerLoggingSupport() {
-		public boolean doProcess() {
-			return log.isDebugEnabled();
-		}
+				public void prepare(SQLWarning warning) {
+					log.warningsCreatingTempTable( warning );
+				}
 
-		public void prepare(SQLWarning warning) {
-			log.warningsCreatingTempTable( warning );
-		}
-
-		@Override
-		protected void logWarning(String description, String message) {
-			log.debug( description );
-			log.debug( message );
-		}
-	};
+				@Override
+				protected void logWarning(String description, String message) {
+					log.debug( description );
+					log.debug( message );
+				}
+			};
 
 
 	private static void logStatement(String sql, JdbcServices jdbcServices) {

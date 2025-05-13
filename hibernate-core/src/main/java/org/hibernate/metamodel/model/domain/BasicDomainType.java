@@ -6,7 +6,9 @@ package org.hibernate.metamodel.model.domain;
 
 import jakarta.persistence.metamodel.BasicType;
 
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * Hibernate extension to the JPA {@link BasicType} contract.
@@ -17,7 +19,7 @@ public interface BasicDomainType<J>
 		extends ReturnableType<J>, BasicType<J>, OutputableType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override

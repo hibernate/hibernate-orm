@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -29,7 +29,7 @@ import static org.hibernate.internal.util.QuotingHelper.appendSingleQuoteEscaped
 public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 	private final T value;
 
-	public SqmLiteral(T value, SqmExpressible<? super T> inherentType, NodeBuilder nodeBuilder) {
+	public SqmLiteral(T value, SqmBindableType<? super T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		assert value != null;
 		assert inherentType == null
@@ -37,7 +37,7 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 		this.value = value;
 	}
 
-	protected SqmLiteral(SqmExpressible<T> inherentType, NodeBuilder nodeBuilder) {
+	protected SqmLiteral(SqmBindableType<T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
 		this.value = null;
 	}

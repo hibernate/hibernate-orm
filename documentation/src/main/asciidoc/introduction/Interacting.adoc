@@ -799,6 +799,39 @@ class OrderEvents {
 ----
 A single entity listener class may even be a generic listener that receives lifecycle callbacks for multiple different entity classes.
 
+[TIP]
+The venerable link:{doc-javadoc-url}org/hibernate/Interceptor.html[`Interceptor`] interface is a more powerful alternative to entity listeners.
+`Interceptor` and its friend link:{doc-javadoc-url}org/hibernate/CustomEntityDirtinessStrategy.html[`CustomEntityDirtinessStrategy`] allow advanced users to augment the built-in handling of managed entities with custom behavior.
+These interfaces are very useful if you're building your own persistence framework with Hibernate as the foundation.
+
+We're about to see one way `Interceptor` can be used.
+
+[[transient-vs-detached]]
+=== Transient vs detached
+
+Sometimes, Hibernate needs to be able to distinguish whether an entity instance is:
+
+- a brand-new transient object the client just instantiated using `new`, or
+- a detached object, which previously belonged to a persistence context.
+
+This is a bit of a problem, since there's no good and efficient way for Hibernate to just tag an entity with a Post-it saying "I've seen you before".
+
+Therefore, Hibernate uses heuristics.
+The two most useful heuristics are:
+
+1. If the entity has a <<generated-identifiers,generated identifier>>, the value of the id field is inspected: if the value currently assigned to the id field is the default value for the type of the field, then the object is transient; otherwise, the object is detached.
+2. If the entity has a <<version-attributes,version>>, the value of the version field is inspected: if the value currently assigned to the version field is the default value, or a negative number, then the object is transient; otherwise, the object is detached.
+
+If the entity has neither a generated id, nor a version, Hibernate usually falls back to just doing something reasonable.
+In extreme cases a `SELECT` query will be issued to determine whether a matching row exists in the database.
+
+[WARNING]
+These heuristics aren't perfect.
+It's quite easy to confuse Hibernate by assigning a value to the id field or version field, making a new transient instance look like it's detached.
+We therefore strongly discourage assigning values to fields annotated `@GeneratedValue` or `@Version` before passing an entity to Hibernate.
+
+If the heuristics ever happen cause a real problem, you may implement your own Post-it tagging via link:{doc-javadoc-url}org/hibernate/Interceptor.html#isTransient(java.lang.Object)[`Interceptor.isTransient()`].
+
 
 [[jdbc]]
 === Interacting directly with JDBC

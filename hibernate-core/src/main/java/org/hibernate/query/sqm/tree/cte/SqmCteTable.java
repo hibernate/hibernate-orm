@@ -11,10 +11,10 @@ import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -40,13 +40,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add(
-					new SqmCteTableColumn(
-							this,
-							getComponentName( i ),
-							get( i )
-					)
-			);
+			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
 		}
 		this.columns = columns;
 	}
@@ -97,11 +91,9 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 
 	@Override
 	public String getName() {
-		if ( Character.isDigit( name.charAt( 0 ) ) ) {
-			// Created through JPA criteria without an explicit name
-			return null;
-		}
-		return name;
+		return Character.isDigit( name.charAt( 0 ) )
+				? null // Created through JPA criteria without an explicit name
+				: name;
 	}
 
 	@Override
@@ -118,15 +110,12 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	@Override
 	public JpaCteCriteriaAttribute getAttribute(String name) {
 		final Integer index = getIndex( name );
-		if ( index == null ) {
-			return null;
-		}
-		return columns.get( index );
+		return index == null ? null : columns.get( index );
 	}
 
 	@Override
-	public SqmExpressible<?> get(String componentName) {
-		final SqmExpressible<?> sqmExpressible = super.get( componentName );
+	public SqmBindableType<?> get(String componentName) {
+		final SqmBindableType<?> sqmExpressible = super.get( componentName );
 		if ( sqmExpressible != null ) {
 			return sqmExpressible;
 		}

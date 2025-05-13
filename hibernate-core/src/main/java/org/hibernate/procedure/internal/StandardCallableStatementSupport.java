@@ -4,8 +4,6 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.util.List;
-
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -49,16 +47,13 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
 		final SharedSessionContractImplementor session = procedureCall.getSession();
-		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
-		final int paramStringSizeEstimate;
-		if ( functionReturn == null && parameterMetadata.hasNamedParameters() ) {
-			// That's just a rough estimate. I guess most params will have fewer than 8 chars on average
-			paramStringSizeEstimate = registrations.size() * 10;
-		}
-		else {
-			// For every param rendered as '?' we have a comma, hence the estimate
-			paramStringSizeEstimate = registrations.size() * 2;
-		}
+		final var registrations = parameterMetadata.getRegistrationsAsList();
+		final int paramStringSizeEstimate =
+				functionReturn == null && parameterMetadata.hasNamedParameters()
+						// That's just a rough estimate. I guess most params will have fewer than 8 chars on average
+						? registrations.size() * 10
+						// For every param rendered as '?' we have a comma, hence the estimate
+						: registrations.size() * 2;
 		final JdbcCallImpl.Builder builder = new JdbcCallImpl.Builder();
 		final StringBuilder buffer;
 		final int offset;
@@ -110,7 +105,7 @@ public class StandardCallableStatementSupport extends AbstractStandardCallableSt
 
 	protected void appendNameParameter(
 			StringBuilder buffer,
-			ProcedureParameterImplementor parameter,
+			ProcedureParameterImplementor<?> parameter,
 			JdbcCallParameterRegistration registration) {
 		buffer.append( '?' );
 	}

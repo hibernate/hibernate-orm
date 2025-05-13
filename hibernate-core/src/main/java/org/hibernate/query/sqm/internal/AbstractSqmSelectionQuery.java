@@ -8,7 +8,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;

@@ -6,15 +6,17 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.query.BindingContext;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressible;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * A basic type reference.
  *
  * @author Christian Beikov
+ *
+ * @see StandardBasicTypes
  */
 public final class BasicTypeReference<T> implements BindableType<T>, Serializable {
 	private final String name;
@@ -54,8 +56,13 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<T> getJavaType() {
 		return javaType;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return BASIC;
 	}
 
 	public int getSqlTypeCode() {
@@ -81,7 +88,7 @@ public final class BasicTypeReference<T> implements BindableType<T>, Serializabl
 	}
 
 	@Override
-	public SqmExpressible<T> resolveExpressible(BindingContext bindingContext) {
+	public SqmBindableType<T> resolveExpressible(BindingContext bindingContext) {
 		return bindingContext.getTypeConfiguration().getBasicTypeRegistry().resolve( this );
 	}
 }

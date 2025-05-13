@@ -91,6 +91,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 
 		final ModelsContext modelBuildingContext = new BasicModelsContextImpl(
 				SIMPLE_CLASS_LOADING,
+				false,
 				(contributions, inFlightContext) -> {
 					OrmAnnotationHelper.forEachOrmAnnotation( contributions::registerAnnotation );
 				}

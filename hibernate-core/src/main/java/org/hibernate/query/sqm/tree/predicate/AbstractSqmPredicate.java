@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 
 import jakarta.persistence.criteria.Expression;
@@ -18,7 +18,7 @@ import jakarta.persistence.criteria.Expression;
  */
 public abstract class AbstractSqmPredicate extends AbstractSqmExpression<Boolean> implements SqmPredicate {
 
-	public AbstractSqmPredicate(SqmExpressible<Boolean> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmPredicate(SqmBindableType<Boolean> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 

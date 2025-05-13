@@ -13,7 +13,7 @@ import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -37,7 +37,7 @@ public class SqmTuple<T>
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 	}
 
-	public SqmTuple(NodeBuilder nodeBuilder, SqmExpressible<T> type, SqmExpression<?>... groupedExpressions) {
+	public SqmTuple(NodeBuilder nodeBuilder, SqmBindableType<T> type, SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), type, nodeBuilder );
 	}
 
@@ -45,7 +45,7 @@ public class SqmTuple<T>
 		this( groupedExpressions, null, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressible<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmBindableType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new SemanticException( "Tuple constructor must have at least one element" );

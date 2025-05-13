@@ -9,15 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -109,7 +111,7 @@ public class SqmDynamicInstantiation<T>
 	private SqmDynamicInstantiation(
 			SqmDynamicInstantiationTarget<T> instantiationTarget,
 			NodeBuilder nodeBuilder) {
-		super( instantiationTarget, nodeBuilder );
+		super( instantiationTarget.getSqmType(), nodeBuilder );
 		this.instantiationTarget = instantiationTarget;
 	}
 
@@ -117,7 +119,7 @@ public class SqmDynamicInstantiation<T>
 			SqmDynamicInstantiationTarget<T> instantiationTarget,
 			List<? extends SqmSelectableNode<?>> arguments,
 			NodeBuilder nodeBuilder) {
-		super( instantiationTarget, nodeBuilder );
+		super( instantiationTarget.getSqmType(), nodeBuilder );
 		this.instantiationTarget = instantiationTarget;
 		for ( SqmSelectableNode<?> argument : arguments ) {
 			final SqmDynamicInstantiationArgument<?> arg =
@@ -127,7 +129,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	private SqmDynamicInstantiation(
-			SqmExpressible<T> sqmExpressible,
+			SqmBindableType<T> sqmExpressible,
 			NodeBuilder criteriaBuilder,
 			SqmDynamicInstantiationTarget<T> instantiationTarget,
 			List<SqmDynamicInstantiationArgument<?>> arguments) {
@@ -299,10 +301,14 @@ public class SqmDynamicInstantiation<T>
 		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );
 	}
 
+	@Override
+	public @Nullable JavaType<T> getNodeJavaType() {
+		return instantiationTarget.getExpressibleJavaType();
+	}
+
 	private static class DynamicInstantiationTargetImpl<T> implements SqmDynamicInstantiationTarget<T> {
 		private final DynamicInstantiationNature nature;
 		private final JavaType<T> javaType;
-
 
 		private DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, JavaType<T> javaType) {
 			this.nature = nature;
@@ -324,10 +330,10 @@ public class SqmDynamicInstantiation<T>
 			return getTargetTypeDescriptor();
 		}
 
-		@Override
-		public Class<T> getBindableJavaType() {
-			return getTargetTypeDescriptor().getJavaTypeClass();
-		}
+//		@Override
+//		public Class<T> getJavaType() {
+//			return getTargetTypeDescriptor().getJavaTypeClass();
+//		}
 
 		@Override
 		public SqmDomainType<T> getSqmType() {

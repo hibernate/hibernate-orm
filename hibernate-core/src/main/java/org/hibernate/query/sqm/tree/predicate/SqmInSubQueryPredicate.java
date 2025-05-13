@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -43,7 +43,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 
 		assertComparable( testExpression, subQueryExpression, nodeBuilder );
 
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType2(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType2(
 				testExpression.getExpressible(),
 				subQueryExpression.getExpressible()
 		);

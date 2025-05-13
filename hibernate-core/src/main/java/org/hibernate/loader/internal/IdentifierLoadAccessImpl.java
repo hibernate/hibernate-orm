@@ -11,8 +11,11 @@ import java.util.function.Supplier;
 
 import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.UnknownProfileException;
@@ -60,6 +63,25 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@Override
 	public final IdentifierLoadAccessImpl<T> with(LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
+		return this;
+	}
+
+	@Override
+	public IdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public IdentifierLoadAccess<T> with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
 		return this;
 	}
 

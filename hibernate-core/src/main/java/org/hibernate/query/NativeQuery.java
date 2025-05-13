@@ -10,8 +10,12 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -599,36 +603,6 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setReadOnly(boolean readOnly);
 
-	/**
-	 * @inheritDoc
-	 *
-	 * This operation is supported even for native queries.
-	 * Note that specifying an explicit lock mode might
-	 * result in changes to the native SQL query that is
-	 * actually executed.
-	 */
-	@Override
-	LockOptions getLockOptions();
-
-	/**
-	 * @inheritDoc
-	 *
-	 * This operation is supported even for native queries.
-	 * Note that specifying an explicit lock mode might
-	 * result in changes to the native SQL query that is
-	 * actually executed.
-	 */
-	@Override
-	NativeQuery<T> setLockOptions(LockOptions lockOptions);
-
-	/**
-	 * Not applicable to native SQL queries.
-	 *
-	 * @throws IllegalStateException for consistency with JPA
-	 */
-	@Override
-	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
-
 	@Override
 	NativeQuery<T> setComment(String comment);
 
@@ -643,6 +617,28 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	@Override
 	NativeQuery<T> setHint(String hintName, Object value);
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override @Deprecated(forRemoval = true)
+	LockOptions getLockOptions();
+
+	/**
+	 * @inheritDoc
+	 *
+	 * This operation is supported even for native queries.
+	 * Note that specifying an explicit lock mode might
+	 * result in changes to the native SQL query that is
+	 * actually executed.
+	 */
+	@Override @Deprecated(forRemoval = true)
+	NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
 	/**
 	 * Not applicable to native SQL queries, due to an unfortunate
@@ -690,6 +686,32 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	@Override
 	NativeQuery<T> setHibernateLockMode(LockMode lockMode);
 
+	/**
+	 * Apply a timeout to the corresponding database query.
+	 *
+	 * @param timeout The timeout to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> setTimeout(Timeout timeout);
+
+	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> setLockScope(PessimisticLockScope lockScope);
+
+	/**
+	 * Not applicable to native SQL queries.
+	 *
+	 * @throws IllegalStateException for consistency with JPA
+	 */
+	@Override
+	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
+
 	@Override
 	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);
 
@@ -706,7 +728,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(String name, P val, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(String name, P val, BindableType<P> type);
+	<P> NativeQuery<T> setParameter(String name, P val, Type<P> type);
 
 	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(String name, Instant value, TemporalType temporalType);
@@ -724,7 +746,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(int position, P val, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(int position, P val, BindableType<P> type);
+	<P> NativeQuery<T> setParameter(int position, P val, Type<P> type);
 
 	@Override @Deprecated(since = "7")
 	NativeQuery<T> setParameter(int position, Instant value, TemporalType temporalType);
@@ -742,7 +764,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<P> NativeQuery<T> setParameter(Parameter<P> param, P value);
@@ -760,7 +782,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	NativeQuery<T> setParameterList(String name, Object[] values);
@@ -769,7 +791,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(String name, P[] values, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> NativeQuery<T> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -778,7 +800,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, BindableType<P> javaType);
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Type<P> javaType);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Object[] values);
@@ -787,7 +809,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(int position, P[] values, BindableType<P> javaType);
+	<P> NativeQuery<T> setParameterList(int position, P[] values, Type<P> javaType);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -796,7 +818,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -805,7 +827,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	NativeQuery<T> setProperties(Object bean);

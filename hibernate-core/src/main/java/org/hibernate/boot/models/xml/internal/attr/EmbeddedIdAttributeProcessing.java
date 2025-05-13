@@ -34,7 +34,7 @@ public class EmbeddedIdAttributeProcessing {
 			AccessType classAccessType,
 			XmlDocumentContext xmlDocumentContext) {
 		final AccessType accessType = coalesce( jaxbEmbeddedId.getAccess(), classAccessType );
-		final MutableMemberDetails memberDetails = XmlProcessingHelper.findAttributeMember(
+		final MutableMemberDetails memberDetails = XmlProcessingHelper.getAttributeMember(
 				jaxbEmbeddedId.getName(),
 				accessType,
 				classDetails

@@ -14,7 +14,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ReturnableType;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;

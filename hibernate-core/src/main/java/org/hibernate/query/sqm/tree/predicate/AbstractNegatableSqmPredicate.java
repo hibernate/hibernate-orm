@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.predicate;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 
 /**
  * @author Steve Ebersole
@@ -21,7 +21,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 		this( nodeBuilder.getBooleanType(), negated, nodeBuilder );
 	}
 
-	public AbstractNegatableSqmPredicate(SqmExpressible<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
+	public AbstractNegatableSqmPredicate(SqmBindableType<Boolean> type, boolean negated, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		this.negated = negated;
 	}

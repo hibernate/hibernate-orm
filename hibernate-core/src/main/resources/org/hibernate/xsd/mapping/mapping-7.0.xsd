@@ -3288,6 +3288,8 @@
                     <xsd:complexType/>
                 </xsd:element>
             </xsd:choice>
+            <!-- @ListIndexBase -->
+            <xsd:element name="list-index-base" type="xsd:int" minOccurs="0"/>
             <xsd:choice>
                 <xsd:element name="map-key" type="orm:map-key" minOccurs="0"/>
                 <xsd:sequence>
@@ -3302,7 +3304,10 @@
                     </xsd:choice>
                     <xsd:choice>
                         <xsd:sequence>
-                            <xsd:element name="map-key-column" type="orm:map-key-column" minOccurs="0"/>
+                            <xsd:choice minOccurs="0">
+                                <xsd:element name="map-key-column" type="orm:map-key-column" minOccurs="0"/>
+                                <xsd:element name="map-key-formula" type="xsd:string" minOccurs="0"/>
+                            </xsd:choice>
                             <xsd:element name="map-key-type" type="orm:user-type" minOccurs="0"/>
                         </xsd:sequence>
                         <xsd:sequence>

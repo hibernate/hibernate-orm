@@ -6,7 +6,7 @@ package org.hibernate.metamodel.spi;
 
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.type.MappingContext;
 
 /**

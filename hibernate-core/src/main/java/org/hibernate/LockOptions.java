@@ -4,7 +4,10 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.FindOption;
+import jakarta.persistence.LockOption;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.RefreshOption;
 import jakarta.persistence.Timeout;
 
 import java.io.Serializable;
@@ -12,7 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import static jakarta.persistence.PessimisticLockScope.NORMAL;
@@ -72,6 +74,15 @@ import static java.util.Collections.unmodifiableSet;
  * @see Timeouts
  *
  * @author Scott Marlow
+ *
+ * @deprecated Use methods accepting {@linkplain FindOption}, {@linkplain LockOption} or {@linkplain RefreshOption}
+ * instead.
+ *
+ * @see Timeout
+ * @see Timeouts
+ * @see LockMode
+ * @see jakarta.persistence.LockModeType
+ * @see PessimisticLockScope
  */
 @Deprecated(since = "7.0", forRemoval = true) // moving to an SPI package
 public class LockOptions implements Serializable {
@@ -163,7 +174,10 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Construct an instance with mode {@link LockMode#NONE} and
-	 * timeout {@link #WAIT_FOREVER}.
+	 * no timeout.
+	 *
+	 * @see LockMode#NONE
+	 * @see Timeouts#WAIT_FOREVER
 	 */
 	public LockOptions() {
 		immutable = false;
@@ -174,9 +188,11 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Construct an instance with the given {@linkplain LockMode mode}
-	 * and {@link #WAIT_FOREVER}.
+	 * and no timeout.
 	 *
 	 * @param lockMode The initial lock mode
+	 *
+	 * @see Timeouts#WAIT_FOREVER
 	 */
 	public LockOptions(LockMode lockMode) {
 		immutable = false;
@@ -200,20 +216,6 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Construct an instance with the given {@linkplain LockMode mode}
-	 * and timeout.
-	 *
-	 * @param lockMode The initial lock mode
-	 * @param timeout  The initial timeout, in milliseconds
-	 *
-	 * @deprecated Use {@linkplain #LockOptions(LockMode, Timeout)} instead
-	 */
-	@Deprecated(since = "7.0")
-	public LockOptions(LockMode lockMode, int timeout) {
-		this( lockMode, Timeouts.interpretMilliSeconds( timeout ) );
-	}
-
-	/**
 	 * Construct an instance with the given {@linkplain LockMode mode},
 	 * timeout, and {@linkplain PessimisticLockScope scope}.
 	 *
@@ -227,6 +229,32 @@ public class LockOptions implements Serializable {
 		this.timeout = timeout;
 		this.pessimisticLockScope = scope;
 	}
+
+	/**
+	 * Internal operation used to create immutable global instances.
+	 */
+	protected LockOptions(boolean immutable, LockMode lockMode) {
+		this.immutable = immutable;
+		this.lockMode = lockMode;
+		timeout = Timeouts.WAIT_FOREVER;
+		pessimisticLockScope = NORMAL;
+	}
+
+
+	/**
+	 * Construct an instance with the given {@linkplain LockMode mode}
+	 * and timeout.
+	 *
+	 * @param lockMode The initial lock mode
+	 * @param timeout  The initial timeout, in milliseconds
+	 *
+	 * @deprecated Use {@linkplain #LockOptions(LockMode, Timeout)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public LockOptions(LockMode lockMode, int timeout) {
+		this( lockMode, Timeouts.interpretMilliSeconds( timeout ) );
+	}
+
 
 	/**
 	 * Construct an instance with the given {@linkplain LockMode mode},
@@ -244,27 +272,18 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Internal operation used to create immutable global instances.
-	 */
-	private LockOptions(boolean immutable, LockMode lockMode) {
-		this.immutable = immutable;
-		this.lockMode = lockMode;
-		timeout = Timeouts.WAIT_FOREVER;
-		pessimisticLockScope = NORMAL;
-	}
-
-	/**
-	 * Determine of the lock options are empty.
+	 * Whether this {@code LockOptions} instance is "empty", meaning
+	 * it has any non-default values set (which is the same as
 	 *
 	 * @return {@code true} if the lock options are equivalent to
-	 *         {@link LockOptions#NONE}.
+	 *         {@link org.hibernate.LockOptions#NONE}.
 	 */
 	public boolean isEmpty() {
 		return lockMode == LockMode.NONE
-			&& timeout == Timeouts.WAIT_FOREVER
-			&& followOnLocking == null
-			&& pessimisticLockScope == NORMAL
-			&& !hasAliasSpecificLockModes();
+			   && timeout == Timeouts.WAIT_FOREVER
+			   && followOnLocking == null
+			   && pessimisticLockScope == NORMAL
+			   && !hasAliasSpecificLockModes();
 	}
 
 	/**
@@ -289,6 +308,17 @@ public class LockOptions implements Serializable {
 		}
 		this.lockMode = lockMode;
 		return this;
+	}
+
+	/**
+	 * Set of {@link Map.Entry}s, each associating an alias with its
+	 * specified {@linkplain #setAliasSpecificLockMode alias-specific}
+	 * {@link LockMode}.
+	 *
+	 * @return an iterable with the {@link Map.Entry}s
+	 */
+	public Set<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
+		return aliasSpecificLockModes == null ? emptySet() : unmodifiableSet( aliasSpecificLockModes.entrySet() );
 	}
 
 	/**
@@ -317,6 +347,25 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
+	 * The number of aliases that have alias-specific lock modes specified.
+	 *
+	 * @return the number of explicitly defined alias lock modes.
+	 */
+	public int getAliasLockCount() {
+		return aliasSpecificLockModes == null ? 0 : aliasSpecificLockModes.size();
+	}
+
+	/**
+	 * Whether this {@code LockOptions} instance defines alias-specific lock-modes
+	 *
+	 * @return {@code true} if this object defines alias-specific lock modes;
+	 *        {@code false} otherwise.
+	 */
+	public boolean hasAliasSpecificLockModes() {
+		return aliasSpecificLockModes != null && !aliasSpecificLockModes.isEmpty();
+	}
+
+	/**
 	 * Get the {@link LockMode} explicitly specified for the given alias
 	 * via {@link #setAliasSpecificLockMode(String, LockMode)}.
 	 * <p>
@@ -328,6 +377,18 @@ public class LockOptions implements Serializable {
 	 */
 	public LockMode getAliasSpecificLockMode(String alias) {
 		return aliasSpecificLockModes == null ? null : aliasSpecificLockModes.get( alias );
+	}
+
+	/**
+	 * Iterator over {@link Map.Entry}s, each containing an alias and its
+	 * {@link LockMode}.
+	 *
+	 * @return an iterator over the {@link Map.Entry}s
+	 * @deprecated use {@link #getAliasSpecificLocks()}
+	 */
+	@Deprecated
+	public Iterator<Map.Entry<String,LockMode>> getAliasLockIterator() {
+		return getAliasSpecificLocks().iterator();
 	}
 
 	/**
@@ -349,49 +410,6 @@ public class LockOptions implements Serializable {
 			lockMode = this.lockMode;
 		}
 		return lockMode == null ? LockMode.NONE : lockMode;
-	}
-
-	/**
-	 * Does this {@code LockOptions} instance define alias-specific lock
-	 * modes?
-	 *
-	 * @return {@code true} if this object defines alias-specific lock modes;
-	 *        {@code false} otherwise.
-	 */
-	public boolean hasAliasSpecificLockModes() {
-		return aliasSpecificLockModes != null && !aliasSpecificLockModes.isEmpty();
-	}
-
-	/**
-	 * The number of aliases that have alias-specific lock modes specified.
-	 *
-	 * @return the number of explicitly defined alias lock modes.
-	 */
-	public int getAliasLockCount() {
-		return aliasSpecificLockModes == null ? 0 : aliasSpecificLockModes.size();
-	}
-
-	/**
-	 * Iterator over {@link Map.Entry}s, each containing an alias and its
-	 * {@link LockMode}.
-	 *
-	 * @return an iterator over the {@link Map.Entry}s
-	 * @deprecated use {@link #getAliasSpecificLocks()}
-	 */
-	@Deprecated
-	public Iterator<Map.Entry<String,LockMode>> getAliasLockIterator() {
-		return getAliasSpecificLocks().iterator();
-	}
-
-	/**
-	 * Set of {@link Map.Entry}s, each associating an alias with its
-	 * specified {@linkplain #setAliasSpecificLockMode alias-specific}
-	 * {@link LockMode}.
-	 *
-	 * @return an iterable with the {@link Map.Entry}s
-	 */
-	public Set<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
-		return aliasSpecificLockModes == null ? emptySet() : unmodifiableSet( aliasSpecificLockModes.entrySet() );
 	}
 
 	/**
@@ -453,7 +471,7 @@ public class LockOptions implements Serializable {
 	 *         {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 */
 	public int getTimeOut() {
-		return timeout.milliseconds();
+		return getTimeout().milliseconds();
 	}
 
 	/**
@@ -468,11 +486,9 @@ public class LockOptions implements Serializable {
 	 * @see #getTimeOut
 	 */
 	public LockOptions setTimeOut(int timeout) {
-		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockMode");
-		}
 		return setTimeout( Timeouts.interpretMilliSeconds( timeout ) );
 	}
+
 
 	/**
 	 * The current lock scope:
@@ -603,27 +619,5 @@ public class LockOptions implements Serializable {
 		}
 		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		if ( this == object ) {
-			return true;
-		}
-		else if ( !(object instanceof LockOptions that) ) {
-			return false;
-		}
-		else {
-			return timeout == that.timeout
-				&& pessimisticLockScope == that.pessimisticLockScope
-				&& lockMode == that.lockMode
-				&& Objects.equals( aliasSpecificLockModes, that.aliasSpecificLockModes )
-				&& Objects.equals( followOnLocking, that.followOnLocking );
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
 	}
 }

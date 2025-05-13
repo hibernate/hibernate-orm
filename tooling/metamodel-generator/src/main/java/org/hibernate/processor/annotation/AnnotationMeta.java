@@ -23,6 +23,7 @@ import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
 import static org.hibernate.processor.util.Constants.ENTITY_GRAPH;
+import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
@@ -182,22 +183,26 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
-		if ( "QUERY_".equals(prefix) ) {
-			final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
-			// if there is no explicit result class, we will infer it later by
-			// type checking the query (this is allowed but not required by JPA)
-			// and then we will replace this TypedMetaAttribute
-			return new TypedMetaAttribute( this, name, prefix,
-					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
-					TYPED_QUERY_REFERENCE, null );
-		}
-		else if ( "GRAPH_".equals(prefix) ) {
-			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
-					ENTITY_GRAPH, null );
-		}
-		else {
-			return new NameMetaAttribute( this, name, prefix);
-		}
+		return switch (prefix) {
+			case "QUERY_" -> {
+				final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
+				// if there is no explicit result class, we will infer it later by
+				// type checking the query (this is allowed but not required by JPA)
+				// and then we will replace this TypedMetaAttribute
+				final String resultTypeName =
+						resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString();
+				yield new TypedMetaAttribute( this, name, prefix, resultTypeName,
+						TYPED_QUERY_REFERENCE, null );
+			}
+			case "GRAPH_" ->
+					new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
+							ENTITY_GRAPH, null );
+			case "PROFILE_" ->
+					new EnabledFetchProfileMetaAttribute( this, name, prefix,
+							HIB_ENABLED_FETCH_PROFILE );
+			default ->
+					new NameMetaAttribute( this, name, prefix );
+		};
 	}
 
 	protected String getSessionVariableName() {

@@ -70,19 +70,13 @@ import static java.util.Collections.unmodifiableSet;
  * The interface {@link Timeouts} provides several operations to simplify
  * migration.
  *
- * @see LockMode
- * @see Timeouts
- *
- * @author Scott Marlow
- *
- * @deprecated Use methods accepting {@linkplain FindOption}, {@linkplain LockOption} or {@linkplain RefreshOption}
- * instead.
- *
  * @see Timeout
  * @see Timeouts
  * @see LockMode
  * @see jakarta.persistence.LockModeType
  * @see PessimisticLockScope
+ *
+ * @author Scott Marlow
  */
 @Deprecated(since = "7.0", forRemoval = true) // moving to an SPI package
 public class LockOptions implements Serializable {

@@ -56,6 +56,12 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 			return JavaLanguageVersion.of( fromProjProp );
 		}
 
+		// This extracts info from gradle.properties
+		final String fromGradleProp = settings.getProviders().gradleProperty( name ).getOrNull();
+		if ( fromGradleProp != null && !fromGradleProp.isEmpty() ) {
+			return JavaLanguageVersion.of( fromGradleProp );
+		}
+
 		return JavaLanguageVersion.of( JavaVersion.current().getMajorVersion() );
 	}
 }

@@ -59,5 +59,18 @@ publishing {
 
 		}
 	}
+	repositories {
+		maven {
+			name = "staging"
+			url = rootProject.layout.buildDirectory.dir("staging-deploy${File.separator}maven")
+		}
+		maven {
+			name = 'snapshots'
+			url = "https://oss.sonatype.org/content/repositories/snapshots/"
+			// So that Gradle uses the `ORG_GRADLE_PROJECT_snapshotsPassword` / `ORG_GRADLE_PROJECT_snapshotsUsername`
+			//  env variables to read the username/password for the `snapshots` repository publishing:
+			credentials(PasswordCredentials)
+		}
+	}
 
 }

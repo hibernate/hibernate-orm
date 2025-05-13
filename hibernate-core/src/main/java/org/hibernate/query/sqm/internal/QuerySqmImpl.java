@@ -707,7 +707,7 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().overlay( lockOptions );

@@ -258,12 +258,12 @@ public abstract class AbstractQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockOptions getLockOptions() {
 		return getQueryOptions().getLockOptions();
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		getQueryOptions().getLockOptions().overlay( lockOptions );
 		return this;

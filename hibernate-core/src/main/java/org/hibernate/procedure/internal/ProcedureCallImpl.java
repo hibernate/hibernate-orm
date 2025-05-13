@@ -1059,7 +1059,7 @@ public class ProcedureCallImpl<R>
 		throw new IllegalStateException( "Illegal attempt to get lock mode on a native-query" );
 	}
 
-	@Override
+	@Override @Deprecated
 	public QueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		throw new UnsupportedOperationException( "setLockOptions does not apply to procedure calls" );
 	}

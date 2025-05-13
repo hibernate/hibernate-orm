@@ -263,7 +263,7 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 		return getDelegate().getCacheRegion();
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockOptions getLockOptions() {
 		return getDelegate().getLockOptions();
 	}

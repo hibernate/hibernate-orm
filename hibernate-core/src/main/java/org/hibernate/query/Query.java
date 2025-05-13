@@ -361,10 +361,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 *
 	 * @see LockOptions
 	 *
-	 * @deprecated To be removed with no replacement - this is an SPI/internal concern.
+	 * @deprecated Since {@link LockOptions} is transitioning to
+	 *             a new role as an SPI.
 	 */
-	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
+	@Deprecated(since = "7.0", forRemoval = true)
 	LockOptions getLockOptions();
 
 	/**

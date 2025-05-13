@@ -558,7 +558,11 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * The {@link LockOptions} currently in effect for the query
+	 *
+	 * @deprecated Since {@link LockOptions} is transitioning to
+	 *             a new role as an SPI.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	LockOptions getLockOptions();
 
 	/**

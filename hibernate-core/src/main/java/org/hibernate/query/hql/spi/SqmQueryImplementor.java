@@ -92,7 +92,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	@Override
 	SqmQueryImplementor<R> addQueryHint(String hint);
 
-	@Override
+	@Override @Deprecated
 	SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions);
 
 	@Override

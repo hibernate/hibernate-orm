@@ -16,13 +16,3 @@ dependencies {
     testImplementation project( ':hibernate-testing' )
     testImplementation testLibs.jfrUnit
 }
-
-
-// JfrUnit requires JDK 17
-compileTestJava.onlyIf{
-    jdkVersions.test.release.asInt() >= 17
-}
-
-test.onlyIf {
-    jdkVersions.test.release.asInt() >= 17
-}

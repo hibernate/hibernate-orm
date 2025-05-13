@@ -398,7 +398,7 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockOptions getLockOptions() {
 		return getQueryOptions().getLockOptions();
 	}

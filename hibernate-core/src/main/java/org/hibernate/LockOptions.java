@@ -6,7 +6,6 @@ package org.hibernate;
 
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
-import org.hibernate.query.Query;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -28,9 +27,9 @@ import static java.util.Collections.unmodifiableSet;
  * {@link Session#refresh(Object, LockOptions)}, the relevant options
  * are:
  * <ul>
- * <li>the {@linkplain #getLockMode() lock mode},
- * <li>the {@linkplain #getTimeOut() pessimistic lock timeout}, and
- * <li>the {@linkplain #getLockScope() lock scope}, that is, whether
+ * <li>the {@linkplain #getLockMode lock mode},
+ * <li>the {@linkplain #getTimeOut pessimistic lock timeout}, and
+ * <li>the {@linkplain #getLockScope lock scope}, that is, whether
  *     the lock extends to rows of owned collections.
  * </ul>
  * <p>
@@ -48,8 +47,33 @@ import static java.util.Collections.unmodifiableSet;
  * default behavior of the SQL dialect} by passing a non-null argument
  * to {@link #setFollowOnLocking(Boolean)}.
  *
+ * @deprecated
+ * Since JPA 3.2 and Hibernate 7, a {@link LockMode}, {@link Timeout},
+ * or {@link PessimisticLockScope} may be passed directly as an option
+ * to {@code find()}, {@code refresh()}, or {@code lock()}. Therefore,
+ * this class is obsolete as an API and will be moved to an SPI package.
+ * <p>
+ * For HQL/JPQL queries, locking should be controlled via operations of
+ * the {@link org.hibernate.query.SelectionQuery} interface:
+ * <ul>
+ * <li>A timeout may be set via
+ * {@link org.hibernate.query.CommonQueryContract#setTimeout(Timeout)}
+ * <li>The {@code PessimisticLockScope} may be set using
+ * {@link org.hibernate.query.SelectionQuery#setLockScope(PessimisticLockScope)}
+ * <li>Alias-specific lock modes may be specified using
+ * {@link org.hibernate.query.SelectionQuery#setLockMode(String, LockMode)}
+ * <li>Use of follow-on locking may be enabled via
+ * {@link org.hibernate.query.SelectionQuery#setFollowOnLocking(boolean)}
+ * </ul>
+ * The interface {@link Timeouts} provides several operations to simplify
+ * migration.
+ *
+ * @see LockMode
+ * @see Timeouts
+ *
  * @author Scott Marlow
  */
+@Deprecated(since = "7.0", forRemoval = true) // moving to an SPI package
 public class LockOptions implements Serializable {
 	/**
 	 * Represents {@link LockMode#NONE}, to which timeout and scope are
@@ -191,7 +215,7 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Construct an instance with the given {@linkplain LockMode mode},
-	 * timeout, and {@link PessimisticLockScope scope}.
+	 * timeout, and {@linkplain PessimisticLockScope scope}.
 	 *
 	 * @param lockMode The initial lock mode
 	 * @param timeout The initial timeout
@@ -206,7 +230,7 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Construct an instance with the given {@linkplain LockMode mode},
-	 * timeout, and {@link PessimisticLockScope scope}.
+	 * timeout, and {@linkplain PessimisticLockScope scope}.
 	 *
 	 * @param lockMode The initial lock mode
 	 * @param timeout The initial timeout, in milliseconds
@@ -228,6 +252,7 @@ public class LockOptions implements Serializable {
 		timeout = Timeouts.WAIT_FOREVER;
 		pessimisticLockScope = NORMAL;
 	}
+
 	/**
 	 * Determine of the lock options are empty.
 	 *
@@ -273,7 +298,7 @@ public class LockOptions implements Serializable {
 	 * @param lockMode the lock mode to apply to the given alias
 	 * @return {@code this} for method chaining
 	 *
-	 * @see Query#setLockMode(String, LockMode)
+	 * @see org.hibernate.query.Query#setLockMode(String, LockMode)
 	 */
 	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
 		if ( immutable ) {
@@ -307,8 +332,8 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Determine the {@link LockMode} to apply to the given alias. If no
-	 * mode was {@linkplain #setAliasSpecificLockMode(String, LockMode)}
-	 * explicitly set}, the {@linkplain #getLockMode()}  overall mode} is
+	 * mode was {@linkplain #setAliasSpecificLockMode(String, LockMode)
+	 * explicitly set}, the {@linkplain #getLockMode() overall mode} is
 	 * returned. If the overall lock mode is also {@code null},
 	 * {@link LockMode#NONE} is returned.
 	 * <p>
@@ -432,7 +457,8 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated with {@code this} options.
+	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated
+	 * with {@code this} options.
 	 * <p/>
 	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
 	 * represent 3 "magic" values.

@@ -736,7 +736,9 @@ Now, `varchar(1)` is used by default.
 [[lock-options]]
 == LockOptions
 
-The exposure of `LockOptions` as an API has been deprecated.  Applications should instead prefer the use of `LockMode` (or `LockModeType`), `Timeout` and `PessimisticLockScope`.
+`LockOptions` has been marked deprecated.
+Since JPA 3.2 and Hibernate 7, a `LockMode` (or `LockModeType`), `Timeout`, or `PessimisticLockScope` may be passed directly as an option to `find()`, `refresh()`, or `lock()`.
+Therefore, this class is obsolete as an API and will be moved to an SPI package.
 
 Use this
 

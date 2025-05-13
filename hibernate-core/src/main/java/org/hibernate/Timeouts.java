@@ -7,12 +7,12 @@ package org.hibernate;
 import jakarta.persistence.Timeout;
 
 /**
- * Helpers for dealing with {@linkplain jakarta.persistence.Timeout time out} values,
- * including some "magic values".
+ * Helpers for dealing with {@linkplain jakarta.persistence.Timeout timeout}
+ * values, including some "magic values".
  *
- * @apiNote The {@linkplain #NO_WAIT} and {@linkplain #SKIP_LOCKED} magic values have
- * special {@linkplain LockMode} values as well ({@linkplain LockMode#UPGRADE_NOWAIT}
- * and {@linkplain LockMode#UPGRADE_SKIPLOCKED}, respectively).
+ * @apiNote The {@link #NO_WAIT} and {@link #SKIP_LOCKED} magic values each
+ * have a corresponding {@link LockMode} ({@link LockMode#UPGRADE_NOWAIT}
+ * and {@link LockMode#UPGRADE_SKIPLOCKED}, respectively).
  *
  * @author Steve Ebersole
  *

@@ -626,7 +626,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * result in changes to the native SQL query that is
 	 * actually executed.
 	 */
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	LockOptions getLockOptions();
 
 	/**
@@ -637,7 +637,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * result in changes to the native SQL query that is
 	 * actually executed.
 	 */
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	NativeQuery<T> setLockOptions(LockOptions lockOptions);
 
 	/**

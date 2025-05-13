@@ -174,7 +174,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setReadOnly(boolean readOnly);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions);
 
 	@Override

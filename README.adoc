@@ -17,7 +17,7 @@ See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.
 
 == Building from sources
 
-The build requires at least Java 11 and at most Java 17.
+The build requires at least JDK 21, and produces Java 17 bytecode.
 
 Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
 Gradle.

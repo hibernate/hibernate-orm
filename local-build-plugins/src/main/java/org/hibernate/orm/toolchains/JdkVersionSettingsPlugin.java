@@ -36,6 +36,7 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 
 		final JavaLanguageVersion gradleJdkVersion = JavaLanguageVersion.of( JavaVersion.current().getMajorVersion() );
 		final JavaLanguageVersion baselineJdkVersion = getJavaLanguageVersion( settings, "orm.jdk.base" );
+		final JavaLanguageVersion minSupportedJdkVersion = getJavaLanguageVersion( settings, "orm.jdk.min" );
 		final JavaLanguageVersion maxSupportedJdkVersion = getJavaLanguageVersion( settings, "orm.jdk.max" );
 
 		final JdkVersionConfig jdkVersionConfig = createVersionConfig(
@@ -43,6 +44,7 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 				explicitTestVersion,
 				gradleJdkVersion,
 				baselineJdkVersion,
+				minSupportedJdkVersion,
 				maxSupportedJdkVersion
 		);
 

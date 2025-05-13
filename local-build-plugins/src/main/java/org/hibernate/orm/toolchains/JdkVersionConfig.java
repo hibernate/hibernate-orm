@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.gradle.StartParameter;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -32,6 +33,7 @@ public class JdkVersionConfig {
 
 	private final boolean explicit;
 	private final JavaLanguageVersion baseline;
+	private final JavaLanguageVersion min;
 	private final JavaLanguageVersion max;
 	private final MainJdks main;
 	private final TestJdks test;
@@ -39,6 +41,7 @@ public class JdkVersionConfig {
 	public JdkVersionConfig(
 			boolean explicit,
 			JavaLanguageVersion baseline,
+			JavaLanguageVersion min,
 			JavaLanguageVersion max,
 			JavaLanguageVersion mainCompilerVersion,
 			JavaLanguageVersion mainReleaseVersion,
@@ -47,6 +50,7 @@ public class JdkVersionConfig {
 			JavaLanguageVersion testLauncherVersion) {
 		this.explicit = explicit;
 		this.baseline = baseline;
+		this.min = min;
 		this.max = max;
 		this.main = new MainJdks( mainCompilerVersion, mainReleaseVersion );
 		this.test = new TestJdks( testCompileVersion, testReleaseVersion, testLauncherVersion );
@@ -70,6 +74,18 @@ public class JdkVersionConfig {
 
 	public JavaLanguageVersion getBaselineVersion() {
 		return getBaseline();
+	}
+
+	public JavaLanguageVersion getMin() {
+		return min;
+	}
+
+	public String getMinStr() {
+		return getMin().toString();
+	}
+
+	public JavaLanguageVersion getMinVersion() {
+		return getMin();
 	}
 
 	public JavaLanguageVersion getMax() {
@@ -128,36 +144,36 @@ public class JdkVersionConfig {
 			JavaLanguageVersion explicitTestVersion,
 			JavaLanguageVersion gradleJdkVersion,
 			JavaLanguageVersion baselineJdkVersion,
+			JavaLanguageVersion minSupportedJdkVersion,
 			JavaLanguageVersion maxSupportedJdkVersion) {
 		final boolean explicitlyConfigured = explicitMainVersion != null || explicitTestVersion != null;
 
 		final JavaLanguageVersion mainCompilerVersion;
 		final JavaLanguageVersion mainReleaseVersion;
 		final JavaLanguageVersion testCompilerVersion;
-		final JavaLanguageVersion testReleaseVersion;
+		JavaLanguageVersion testReleaseVersion;
 		final JavaLanguageVersion testLauncherVersion;
 
 		if ( explicitlyConfigured ) {
-			mainCompilerVersion = requireNonNullElse( explicitMainVersion, baselineJdkVersion );
-			testCompilerVersion = requireNonNullElse( explicitTestVersion, baselineJdkVersion );
+			mainCompilerVersion = requireNonNullElse( explicitMainVersion, minSupportedJdkVersion );
+			testCompilerVersion = requireNonNullElse( explicitTestVersion, minSupportedJdkVersion );
 			mainReleaseVersion = baselineJdkVersion;
 
-			if ( testCompilerVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
+			testReleaseVersion = requireNonNullElse( explicitTestVersion, mainReleaseVersion );
+			if ( testReleaseVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
 				System.out.println(
-						"[WARN] Gradle does not support bytecode version '" + testCompilerVersion + "'."
+						"[WARN] Gradle does not support bytecode version '" + testReleaseVersion + "'."
 								+ " Forcing test bytecode to version " + maxSupportedJdkVersion + "."
 				);
 				testReleaseVersion = maxSupportedJdkVersion;
 			}
-			else {
-				testReleaseVersion = testCompilerVersion;
-			}
 
-			testLauncherVersion = testCompilerVersion;
+			testLauncherVersion = testReleaseVersion;
 
 			return new JdkVersionConfig(
 					true,
 					baselineJdkVersion,
+					minSupportedJdkVersion,
 					maxSupportedJdkVersion,
 					mainCompilerVersion,
 					mainReleaseVersion,
@@ -170,6 +186,11 @@ public class JdkVersionConfig {
 			// Not testing a particular JDK version: we will use the same JDK used to run Gradle.
 			// We disable toolchains for convenience, so that anyone can just run the build with their own JDK
 			// without any additional options and without downloading the whole JDK.
+
+			if ( gradleJdkVersion.asInt() > minSupportedJdkVersion.asInt() ) {
+				throw new GradleException("This build requires at least JDK " + minSupportedJdkVersion + ", but you are using JDK " + gradleJdkVersion.asInt());
+			}
+
 			if ( gradleJdkVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
 				System.out.println(
 						"[WARN] Gradle does not support this JDK, because it is too recent; build is likely to fail."
@@ -184,6 +205,7 @@ public class JdkVersionConfig {
 			return new JdkVersionConfig(
 					false,
 					baselineJdkVersion,
+					minSupportedJdkVersion,
 					maxSupportedJdkVersion,
 					gradleJdkVersion,
 					baselineJdkVersion,

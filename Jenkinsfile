@@ -14,7 +14,7 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 @Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '17'
+@Field final String DEFAULT_JDK_VERSION = '21'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -40,10 +40,11 @@ stage('Configure') {
 // Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
+		// We build with JDK 21, but produce Java 17 bytecode, so we test with JDK 17, to be sure everything works.
+		new BuildEnvironment( testJdkVersion: '17' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
 		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview' ),
 		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview' ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:

@@ -49,6 +49,7 @@ public class JdkVersionPlugin implements Plugin<Project> {
 		final VersionCatalogsExtension versionCatalogs = project.getExtensions().getByType( VersionCatalogsExtension.class );
 		final VersionCatalog jdkVersions = versionCatalogs.named( "jdks" );
 		final JavaLanguageVersion baselineJdkVersion = getJavaLanguageVersion( jdkVersions, "baseline" );
+		final JavaLanguageVersion minSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "minSupportedJdk" );
 		final JavaLanguageVersion maxSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "maxSupportedBytecode" );
 
 		final JdkVersionConfig jdkVersionConfig = createVersionConfig(
@@ -56,6 +57,7 @@ public class JdkVersionPlugin implements Plugin<Project> {
 				explicitTestVersion,
 				gradleJdkVersion,
 				baselineJdkVersion,
+				minSupportedJdkVersion,
 				maxSupportedJdkVersion
 		);
 

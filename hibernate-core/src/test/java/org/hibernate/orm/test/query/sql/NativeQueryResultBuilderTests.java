@@ -20,7 +20,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -245,8 +244,8 @@ public class NativeQueryResultBuilderTests {
 		);
 	}
 
-	private Matcher matchesOrdinal(Enum enumValue) {
-		return new CustomMatcher<Object>( "Enum ordinal value" ) {
+	private Matcher<Object> matchesOrdinal(Enum<?> enumValue) {
+		return new CustomMatcher<>( "Enum ordinal value" ) {
 			@Override
 			public boolean matches(Object item) {
 				return ( (Number) item ).intValue() == enumValue.ordinal();
@@ -258,7 +257,7 @@ public class NativeQueryResultBuilderTests {
 	public void testConvertedAttributeBasedBuilder(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final NativeQuery qry = session.createNativeQuery(
+					final var qry = session.createNativeQuery(
 							"select converted_gender from EntityOfBasics"
 					);
 
@@ -268,7 +267,7 @@ public class NativeQueryResultBuilderTests {
 							"convertedGender"
 					);
 
-					final List results = qry.list();
+					final var results = qry.list();
 					assertThat( results.size(), is( 1 ) );
 
 					final Object result = results.get( 0 );
@@ -332,7 +331,7 @@ public class NativeQueryResultBuilderTests {
 
 		assertThat( attrMapping.getJavaType().getJavaTypeClass(), equalTo( EntityOfBasics.Gender.class ) );
 
-		final BasicValueConverter valueConverter = attrMapping.getJdbcMapping().getValueConverter();
+		final var valueConverter = attrMapping.getJdbcMapping().getValueConverter();
 		assertThat( valueConverter, instanceOf( JpaAttributeConverter.class ) );
 		assertThat( valueConverter.getDomainJavaType(), is( attrMapping.getJavaType() ) );
 		assertThat( valueConverter.getRelationalJavaType().getJavaTypeClass(), equalTo( Character.class ) );

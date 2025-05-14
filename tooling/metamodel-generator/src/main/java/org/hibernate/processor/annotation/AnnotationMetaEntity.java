@@ -417,8 +417,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 
 			primaryEntity = primaryEntity( lifecycleMethods );
-			if ( primaryEntity != null && !hasAnnotation(primaryEntity, ENTITY)
-					|| !checkEntities(lifecycleMethods)) {
+			final boolean hibernateRepo = isExplicitlyHibernateRepository();
+			if ( !checkEntity( primaryEntity, hibernateRepo )
+					|| !checkEntities( lifecycleMethods, hibernateRepo ) ) {
 				// NOTE EARLY EXIT with initialized = false
 				return;
 			}
@@ -466,6 +467,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private boolean checkEntity(@Nullable TypeElement entity, boolean hibernateRepo) {
+		if ( entity != null && !hasAnnotation( entity, ENTITY ) ) {
+			if ( hibernateRepo ) {
+				context.message( element,
+						"unrecognized primary entity type: " + entity.getQualifiedName(),
+						Diagnostic.Kind.ERROR );
+			}
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isExplicitlyHibernateRepository() {
+		final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
+		if ( repository != null ) {
+			final AnnotationValue provider = getAnnotationValue( repository, "provider" );
+			return provider != null && provider.getValue().toString().equalsIgnoreCase( "hibernate" );
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -612,7 +636,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& isSameType( context.getTypeUtils().boxedClass( ((PrimitiveType) type) ).asType(), match );
 	}
 
-	private boolean checkEntities(List<ExecutableElement> lifecycleMethods) {
+	private boolean checkEntities(List<ExecutableElement> lifecycleMethods, boolean hibernateRepo) {
 		boolean foundPersistenceEntity = false;
 		VariableElement nonPersistenceParameter = null;
 		for (ExecutableElement lifecycleMethod : lifecycleMethods) {
@@ -637,7 +661,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			message(nonPersistenceParameter,
 					"parameter type '" + nonPersistenceParameter.asType()
 							+ "' is not a Jakarta Persistence entity class (skipping entire repository)",
-					Diagnostic.Kind.WARNING);
+					hibernateRepo ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING);
 		}
 		return nonPersistenceParameter == null;
 	}

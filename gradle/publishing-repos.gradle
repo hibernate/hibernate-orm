@@ -6,9 +6,6 @@
  */
 
 apply plugin: 'maven-publish'
-if ( rootProject.ormVersion.isSnapshot ) {
-	apply plugin: 'org.hibernate.build.maven-repo-auth'
-}
 
 publishing {
 	publications {

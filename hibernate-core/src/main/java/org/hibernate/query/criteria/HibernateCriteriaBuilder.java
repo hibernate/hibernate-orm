@@ -1119,7 +1119,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return ordering corresponding to the CTE attribute
 	 */
 	@Incubating
-	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder, NullPrecedence nullPrecedence);
+	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder, Nulls nullPrecedence);
 
 	/**
 	 * Create a search ordering based on the sort order of the value of the CTE attribute.
@@ -2176,30 +2176,30 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Expression<String> separator);
 
 	/**
-	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
-	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
+	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, Nulls nullPrecedence);
 
 	/**
-	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
 	 * Create a {@code mode} ordered set-aggregate function expression.
@@ -2221,20 +2221,20 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileCont(
@@ -2242,10 +2242,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileCont(
@@ -2253,7 +2253,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
 	 * Create a {@code percentile_cont} ordered set-aggregate function expression.
@@ -2276,20 +2276,20 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileDisc(
@@ -2297,10 +2297,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
-	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, Nulls)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileDisc(
@@ -2308,7 +2308,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
 	 * Create a {@code percentile_disc} ordered set-aggregate function expression.
@@ -2331,7 +2331,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence);
+			Nulls nullPrecedence);
 
 	/**
 	 * @see #rank(JpaOrder, JpaPredicate, JpaWindow, Expression...)

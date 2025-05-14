@@ -34,7 +34,7 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	public SqmSortSpecification(
-				SqmExpression sortExpression,
+				SqmExpression<?> sortExpression,
 				SortDirection sortOrder,
 				Nulls nullPrecedence,
 				boolean ignoreCase) {
@@ -50,7 +50,7 @@ public class SqmSortSpecification implements JpaOrder {
 	/**
 	 * @deprecated Use {@link SqmSortSpecification#SqmSortSpecification(SqmExpression, SortDirection, Nulls)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7", forRemoval = true)
 	public SqmSortSpecification(
 			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
 			SortDirection sortOrder,

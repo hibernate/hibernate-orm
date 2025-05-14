@@ -7,6 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -15,7 +16,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -117,7 +117,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
 		apply(
 				getReferenceModelPart(),
@@ -131,14 +131,14 @@ public abstract class AbstractDomainPath implements DomainPath {
 		);
 	}
 
-	public void apply(
+	private void apply(
 			ModelPart referenceModelPart,
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
 		final BasicValuedModelPart basicPart = referenceModelPart.asBasicValuedModelPart();
 		if ( basicPart != null ) {
@@ -193,7 +193,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
 		if ( embeddableValuedModelPart.getFetchableName()
 				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
@@ -231,7 +231,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String collation,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = tableGroup.resolveTableReference( null, selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
@@ -271,7 +271,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	private static boolean selectClauseDoesNotContainOrderExpression(Expression expression, SelectClause selectClause) {

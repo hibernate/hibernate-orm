@@ -4,13 +4,12 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -86,7 +85,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			String collation,
 			String modelPartName,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
 		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );
 		// It makes no sense to order by an expression multiple times
@@ -99,12 +98,9 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			}
 		}
 
-		final Expression sortExpression = OrderingExpression.applyCollation(
-				expression,
-				collation,
-				creationState
-		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
+		final Expression sortExpression =
+				OrderingExpression.applyCollation( expression, collation, creationState );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {
@@ -114,9 +110,8 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 				return tableGroup.getPrimaryTableReference();
 			}
 
-			final MappingType elementMappingType = pluralAttribute.getElementDescriptor().getPartMappingType();
-
-			if ( elementMappingType instanceof EntityPersister entityPersister ) {
+			if ( pluralAttribute.getElementDescriptor().getPartMappingType()
+					instanceof EntityPersister entityPersister ) {
 				final String tableName = entityPersister.getTableNameForColumn( columnExpression );
 				return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableName );
 			}

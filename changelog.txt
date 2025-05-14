@@ -3,6 +3,43 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.0.CR2 (May 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33340
+
+** Bug
+    * [HHH-19425] - incorrect class literals in Processor-generated code
+    * [HHH-19389] - use of @Struct on databases without UDTs
+    * [HHH-19386] - MutationSepectification#getResultType should return null
+
+** Deprecation
+    * [HHH-19440] - Deprecate exposing of LockOptions
+
+** Improvement
+    * [HHH-19460] - mis-named <embedded-id/> leads to NPE
+    * [HHH-19456] - Upgrade to hibernate-models 1.0.0.CR3
+    * [HHH-19449] - how does client obtain a BindableType
+    * [HHH-19448] - API/SPI split for BindableType/BindingContext
+    * [HHH-19447] - org.hibernate.query.procedure
+    * [HHH-19445] - methods of ProcedureCall accept BasicTypeReference
+    * [HHH-19444] - [SQLiteDialect] Fix ViolatedConstraintNameExtractor
+    * [HHH-19442] - ProcedureCall should not extend NameableQuery
+    * [HHH-19438] - move OutputableType
+    * [HHH-19428] - Support @ListIndexBase in mapping.xml
+    * [HHH-19422] - Introduce @CollectionIdJavaClass
+    * [HHH-19420] - Support batch-size for collections in mapping.xml
+    * [HHH-19399] - setting to enable logging of SQLExceptions
+    * [HHH-19397] - LIMIT clause does not work without ORDER BY clause
+    * [HHH-19324] - Switch tests using hbm.xml to use mapping.xml
+    * [HHH-19310] - Simplified declaration of type for basic mappings in XML
+    * [HHH-19299] - <element-collection/> with LIST classification interpreted as BAG
+    * [HHH-19209] - Verify and fix ID class generation for inner classes
+
+** New Feature
+    * [HHH-19450] - Have processor generate EnabledFetchProfile for all discovered profiles
+
+
 Changes in 7.0.0.CR1 (April 24, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

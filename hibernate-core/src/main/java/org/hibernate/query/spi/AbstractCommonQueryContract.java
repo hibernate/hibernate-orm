@@ -14,6 +14,8 @@ import java.util.Set;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Internal;
+import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
@@ -28,8 +30,6 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
@@ -112,8 +112,20 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		this.queryOptions = original.queryOptions;
 	}
 
-	public SharedSessionContractImplementor getSession() {
+	public final SharedSessionContractImplementor getSession() {
 		return session;
+	}
+
+	public final SessionFactoryImplementor getSessionFactory() {
+		return session.getFactory();
+	}
+
+	public final TypeConfiguration getTypeConfiguration() {
+		return session.getFactory().getTypeConfiguration();
+	}
+
+	protected final ExceptionConverter getExceptionConverter() {
+		return session.getExceptionConverter();
 	}
 
 	protected int getIntegerLiteral(JpaExpression<Number> expression, int defaultValue) {
@@ -379,14 +391,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			);
 		}
 
-		final RuntimeMetamodels runtimeMetamodels = getSession().getFactory().getRuntimeMetamodels();
-		final JpaMetamodel jpaMetamodel = runtimeMetamodels.getJpaMetamodel();
+		final var factory = getSessionFactory();
 
-		final String entityName = runtimeMetamodels.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
+		final String entityName =
+				factory.getMappingMetamodel()
+						.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
 		final String graphNodes = graphString.substring( separatorPosition + 1, terminatorPosition );
 
-		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ) );
-		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSession().getSessionFactory() );
+		final RootGraphImpl<?> rootGraph =
+				new RootGraphImpl<>( null, factory.getJpaMetamodel().entity( entityName ) );
+		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSessionFactory() );
 		applyGraph( rootGraph, graphSemantic );
 	}
 
@@ -587,7 +601,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return getParameterMetadata().getQueryParameter( name );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -608,7 +622,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return parameter;
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -619,7 +633,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return getParameterMetadata().getQueryParameter( position );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -639,7 +653,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return parameter;
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -652,7 +666,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	protected abstract boolean resolveJdbcParameterTypeIfNecessary();
 
 	private <P> JavaType<P> getJavaType(Class<P> javaType) {
-		return getSession().getFactory().getTypeConfiguration().getJavaTypeRegistry()
+		return getTypeConfiguration().getJavaTypeRegistry()
 				.getDescriptor( javaType );
 	}
 
@@ -667,7 +681,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return locateBinding( parameter.getPosition() );
 		}
 
-		throw getSession().getExceptionConverter().convert(
+		throw getExceptionConverter().convert(
 				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
 		);
 	}
@@ -788,7 +802,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private NodeBuilder getNodeuilder() {
-		return getSession().getFactory().getQueryEngine().getCriteriaBuilder();
+		return getSessionFactory().getQueryEngine().getCriteriaBuilder();
 	}
 
 	@Override
@@ -835,7 +849,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private boolean isRegisteredAsBasicType(Class<?> valueClass) {
-		return getSession().getFactory().getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
+		return getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
 	}
 
 	@Override
@@ -1028,14 +1042,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	private <P> Type<P> getParamType(Class<P> javaType) {
-		final TypeConfiguration typeConfiguration = getSession().getFactory().getTypeConfiguration();
-		final BasicType<P> basicType = typeConfiguration.standardBasicTypeForJavaType( javaType );
+		final BasicType<P> basicType =
+				getTypeConfiguration()
+						.standardBasicTypeForJavaType( javaType );
 		if ( basicType != null ) {
 			return basicType;
 		}
 		else {
-			final JpaMetamodel metamodel = getSession().getFactory().getJpaMetamodel();
-			final ManagedDomainType<P> managedDomainType = metamodel.managedType( javaType );
+			final ManagedDomainType<P> managedDomainType =
+					getSessionFactory().getJpaMetamodel()
+							.managedType( javaType );
 			if ( managedDomainType != null ) {
 				return managedDomainType;
 			}
@@ -1157,7 +1173,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null && retType != null ) {
-			type = getSession().getFactory().getMappingMetamodel().resolveParameterBindType( retType );
+			type = getSessionFactory().getMappingMetamodel().resolveParameterBindType( retType );
 		}
 		if ( retType!= null && !retType.isAssignableFrom( type.getJavaType() ) ) {
 			throw new IllegalStateException( "Parameter not of expected type: " + retType.getName() );

@@ -29,7 +29,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
@@ -150,7 +149,7 @@ public abstract class AbstractSelectionQuery<R>
 			throw new IllegalStateException( e );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
+			throw getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
 		finally {
 			afterQueryHandlingFetchProfiles( success, fetchProfiles );
@@ -279,7 +278,7 @@ public abstract class AbstractSelectionQuery<R>
 			return uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
 		}
 	}
 
@@ -311,7 +310,7 @@ public abstract class AbstractSelectionQuery<R>
 			return uniqueElement( list() );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
+			throw getExceptionConverter().convert( e, getLockOptions() );
 		}
 	}
 
@@ -383,7 +382,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> enableFetchProfile(String profileName) {
-		if ( getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+		if ( this.getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
 			getQueryOptions().enableFetchProfile( profileName );
 			return this;
 		}
@@ -836,9 +835,5 @@ public abstract class AbstractSelectionQuery<R>
 	public SelectionQuery<R> setProperties(Object bean) {
 		super.setProperties( bean );
 		return this;
-	}
-
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
 	}
 }

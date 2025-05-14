@@ -76,7 +76,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.NoMoreOutputsException;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -172,7 +171,7 @@ public class ProcedureCallImpl<R>
 				resultClasses,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				() -> getSession().getFactory()
+				this::getSessionFactory
 		);
 	}
 
@@ -205,7 +204,7 @@ public class ProcedureCallImpl<R>
 				resultSetMappingNames,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				() -> getSession().getFactory()
+				this::getSessionFactory
 		);
 	}
 
@@ -232,7 +231,7 @@ public class ProcedureCallImpl<R>
 				memento.getResultSetMappingClasses(),
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				() -> getSession().getFactory()
+				this::getSessionFactory
 		);
 
 		applyOptions( memento );
@@ -265,7 +264,7 @@ public class ProcedureCallImpl<R>
 				resultTypes,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				getSession()::getFactory
+				this::getSessionFactory
 		);
 
 		applyOptions( memento );
@@ -292,7 +291,7 @@ public class ProcedureCallImpl<R>
 				null,
 				resultSetMapping,
 				synchronizedQuerySpaces::add,
-				() -> getSession().getFactory()
+				this::getSessionFactory
 		);
 
 		applyOptions( memento );
@@ -362,10 +361,6 @@ public class ProcedureCallImpl<R>
 		functionReturn = new FunctionReturnImpl<>( this, Types.REF_CURSOR );
 	}
 
-	private TypeConfiguration getTypeConfiguration() {
-		return getSessionFactory().getTypeConfiguration();
-	}
-
 	@Override
 	public ProcedureCallImpl<R> markAsFunctionCall(Class<?> resultType) {
 		final BasicType<?> basicType = getTypeConfiguration().getBasicTypeForJavaType( resultType );
@@ -418,7 +413,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( position, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -437,7 +432,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( parameterName, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -457,7 +452,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( position, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -476,7 +471,7 @@ public class ProcedureCallImpl<R>
 			registerParameter( parameterName, type, mode );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -726,7 +721,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityName(String entityName) {
 		final EntityPersister entityDescriptor =
-				getSession().getFactory().getMappingMetamodel()
+				this.getSessionFactory().getMappingMetamodel()
 						.getEntityDescriptor( entityName );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
@@ -739,7 +734,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	public ProcedureCallImplementor<R> addSynchronizedEntityClass(@SuppressWarnings("rawtypes") Class entityClass) {
 		final EntityPersister entityDescriptor =
-				getSession().getFactory().getMappingMetamodel()
+				this.getSessionFactory().getMappingMetamodel()
 						.getEntityDescriptor( entityClass );
 		addSynchronizedQuerySpaces( entityDescriptor );
 		return this;
@@ -810,7 +805,7 @@ public class ProcedureCallImpl<R>
 			return false;
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -892,7 +887,7 @@ public class ProcedureCallImpl<R>
 			return -1;
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getExceptionConverter().convert( he );
 		}
 		catch (RuntimeException e) {
 			getSession().markForRollbackOnly();
@@ -922,7 +917,7 @@ public class ProcedureCallImpl<R>
 				return null;
 			}
 			catch (HibernateException he) {
-				throw getSession().getExceptionConverter().convert( he );
+				throw getExceptionConverter().convert( he );
 			}
 			catch (RuntimeException e) {
 				getSession().markForRollbackOnly();

@@ -520,7 +520,7 @@ public class QuerySqmImpl<R>
 			throw new IllegalStateException( e );
 		}
 		catch (HibernateException e) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			afterQueryHandlingFetchProfiles( success, fetchProfiles );

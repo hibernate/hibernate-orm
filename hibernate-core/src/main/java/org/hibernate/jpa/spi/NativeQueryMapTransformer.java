@@ -14,6 +14,8 @@ import static java.util.Locale.ROOT;
 /**
  * A {@link TupleTransformer} for handling {@link Map} results from native queries.
  *
+ * @since 6.3
+ *
  * @author Gavin King
  */
 public class NativeQueryMapTransformer implements TupleTransformer<Map<String,Object>> {

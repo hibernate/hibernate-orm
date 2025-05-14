@@ -481,7 +481,6 @@ public class LockOptions implements Serializable {
 		return setTimeout( Timeouts.interpretMilliSeconds( timeout ) );
 	}
 
-
 	/**
 	 * The current lock scope:
 	 * <ul>

@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -18,7 +19,6 @@ import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -237,7 +237,7 @@ public class CriteriaOrderedSetAggregateTest {
 					cb.literal( 0.5 ),
 					root.get( "theInt" ),
 					SortDirection.ASCENDING,
-					NullPrecedence.NONE
+					Nulls.NONE
 			);
 
 			cr.select( function );
@@ -266,7 +266,7 @@ public class CriteriaOrderedSetAggregateTest {
 					window,
 					root.get( "theInt" ),
 					SortDirection.ASCENDING,
-					NullPrecedence.NONE
+					Nulls.NONE
 			);
 
 			cr.select( function ).orderBy( cb.asc( cb.literal( 1 ) ) );

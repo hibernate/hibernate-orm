@@ -1359,7 +1359,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public JpaSearchOrder search(
 			JpaCteCriteriaAttribute cteAttribute,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.search( cteAttribute, sortOrder, nullPrecedence );
 	}
 
@@ -2014,7 +2014,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	public <T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
 		return criteriaBuilder.mode( sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2023,7 +2023,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.mode( filter, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2032,7 +2032,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.mode( window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2042,7 +2042,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.mode( filter, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2051,7 +2051,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2061,7 +2061,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, filter, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2071,7 +2071,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2082,7 +2082,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, filter, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2091,7 +2091,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2101,7 +2101,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, filter, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2111,7 +2111,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -2122,7 +2122,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, filter, window, sortExpression, sortOrder, nullPrecedence );
 	}
 

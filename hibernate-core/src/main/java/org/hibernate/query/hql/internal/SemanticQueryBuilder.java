@@ -31,6 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.QuerySettings;
@@ -55,7 +56,6 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
@@ -937,7 +937,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 			SortDirection sortOrder = SortDirection.ASCENDING;
-			NullPrecedence nullPrecedence = NullPrecedence.NONE;
+			Nulls nullPrecedence = Nulls.NONE;
 			int index = 1;
 			if ( index < specCtx.getChildCount() ) {
 				if ( specCtx.getChild( index ) instanceof HqlParser.SortDirectionContext ) {
@@ -955,8 +955,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					final HqlParser.NullsPrecedenceContext nullsPrecedenceContext = specCtx.nullsPrecedence();
 					final Token symbol = ((TerminalNode) nullsPrecedenceContext.getChild( 1 )).getSymbol();
 					nullPrecedence = switch ( symbol.getType() ) {
-						case HqlParser.FIRST -> NullPrecedence.FIRST;
-						case HqlParser.LAST -> NullPrecedence.LAST;
+						case HqlParser.FIRST -> Nulls.FIRST;
+						case HqlParser.LAST -> Nulls.LAST;
 						default -> throw new UnsupportedOperationException(
 								"Unrecognized null precedence: " + nullsPrecedenceContext.getText() );
 					};
@@ -1737,16 +1737,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				: SortDirection.DESCENDING;
 	}
 
-	private static NullPrecedence nullPrecedence(HqlParser.SortSpecificationContext ctx) {
+	private static Nulls nullPrecedence(HqlParser.SortSpecificationContext ctx) {
 		if ( ctx.nullsPrecedence() == null ) {
-			return NullPrecedence.NONE;
+			return Nulls.NONE;
 		}
 		else {
 			if ( ctx.nullsPrecedence().FIRST() != null ) {
-				return NullPrecedence.FIRST;
+				return Nulls.FIRST;
 			}
 			else if ( ctx.nullsPrecedence().LAST() != null ) {
-				return NullPrecedence.LAST;
+				return Nulls.LAST;
 			}
 			else {
 				throw new ParsingException( "Unrecognized null precedence" );

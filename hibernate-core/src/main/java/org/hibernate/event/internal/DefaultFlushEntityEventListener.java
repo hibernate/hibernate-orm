@@ -357,8 +357,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static Object[] currentState(Object entity, SessionFactoryImplementor factory) {
-		return factory.getRuntimeMetamodels()
-				.getEntityMappingType( entity.getClass() )
+		return factory.getMappingMetamodel()
+				.getEntityDescriptor( entity.getClass() )
 				.getEntityPersister()
 				.getValues( entity );
 	}

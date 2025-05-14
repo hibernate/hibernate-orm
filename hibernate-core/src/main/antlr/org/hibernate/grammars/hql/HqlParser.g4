@@ -167,9 +167,9 @@ queryExpression
  * A query with an optional 'order by' clause
  */
 orderedQuery
-	: query queryOrder?										# QuerySpecExpression
-	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
-	| queryOrder											# QueryOrderExpression
+	: query orderByClause? limitOffset                                   # QuerySpecExpression
+	| LEFT_PAREN queryExpression RIGHT_PAREN orderByClause? limitOffset  # NestedQueryExpression
+	| orderByClause	limitOffset                                          # QueryOrderExpression
 	;
 
 /**
@@ -182,10 +182,10 @@ setOperator
 	;
 
 /**
- * The 'order by' clause and optional subclauses for limiting and pagination
+ * Optional subclauses for limiting and pagination
  */
-queryOrder
-	: orderByClause limitClause? offsetClause? fetchClause?
+limitOffset
+	: limitClause? offsetClause? fetchClause?
 	;
 
 /**

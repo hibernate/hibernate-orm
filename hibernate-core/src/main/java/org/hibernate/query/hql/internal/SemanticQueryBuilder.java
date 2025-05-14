@@ -1031,35 +1031,32 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmFromClause fromClause = buildInferredFromClause(null);
 		sqmQuerySpec.setFromClause( fromClause );
 		sqmQuerySpec.setSelectClause( buildInferredSelectClause( fromClause ) );
-		visitQueryOrder( sqmQuerySpec, ctx.queryOrder() );
+		visitOrderBy( sqmQuerySpec, ctx.orderByClause() );
+		visitLimitOffset( sqmQuerySpec, ctx.limitOffset() );
 		return sqmQuerySpec;
 	}
 
 	@Override
 	public SqmQueryPart<?> visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
 		final SqmQueryPart<?> queryPart = visitQuery( ctx.query() );
-		final HqlParser.QueryOrderContext queryOrderContext = ctx.queryOrder();
-		if ( queryOrderContext != null ) {
-			visitQueryOrder( queryPart, queryOrderContext );
-		}
+		visitOrderBy( queryPart, ctx.orderByClause() );
+		visitLimitOffset( queryPart, ctx.limitOffset() );
 		return queryPart;
 	}
 
 	@Override
 	public SqmQueryPart<?> visitNestedQueryExpression(HqlParser.NestedQueryExpressionContext ctx) {
 		final SqmQueryPart<?> queryPart = (SqmQueryPart<?>) ctx.queryExpression().accept( this );
-		final HqlParser.QueryOrderContext queryOrderContext = ctx.queryOrder();
-		if ( queryOrderContext != null ) {
-			final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
-			processingStateStack.push(
-					new SqmQueryPartCreationProcessingStateStandardImpl(
-							processingStateStack.getCurrent(),
-							firstProcessingState.getProcessingQuery(),
-							this
-					)
-			);
-			visitQueryOrder( queryPart, queryOrderContext);
-		}
+		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
+		processingStateStack.push(
+				new SqmQueryPartCreationProcessingStateStandardImpl(
+						processingStateStack.getCurrent(),
+						firstProcessingState.getProcessingQuery(),
+						this
+				)
+		);
+		visitOrderBy( queryPart, ctx.orderByClause() );
+		visitLimitOffset( queryPart, ctx.limitOffset() );
 		return queryPart;
 	}
 
@@ -1178,44 +1175,36 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	protected void visitQueryOrder(SqmQueryPart<?> sqmQueryPart, HqlParser.QueryOrderContext ctx) {
-		if ( ctx == null ) {
-			return;
+	protected void visitLimitOffset(SqmQueryPart<?> sqmQueryPart, HqlParser.LimitOffsetContext ctx) {
+		if (ctx != null) {
+			final HqlParser.LimitClauseContext limitClauseContext = ctx.limitClause();
+			final HqlParser.OffsetClauseContext offsetClauseContext = ctx.offsetClause();
+			final HqlParser.FetchClauseContext fetchClauseContext = ctx.fetchClause();
+			if (limitClauseContext != null || offsetClauseContext != null || fetchClauseContext != null) {
+				if (getCreationOptions().useStrictJpaCompliance()) {
+					throw new StrictJpaComplianceViolation(
+							StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
+					);
+				}
+				if ( processingStateStack.depth() > 1 && sqmQueryPart.getOrderByClause() == null ) {
+					throw new SemanticException(
+							"A 'limit', 'offset', or 'fetch' clause requires an 'order by' clause when used in a subquery",
+							query
+					);
+				}
+				setOffsetFetchLimit( sqmQueryPart, limitClauseContext, offsetClauseContext, fetchClauseContext );
+			}
 		}
-		final SqmOrderByClause orderByClause;
-		final HqlParser.OrderByClauseContext orderByClauseContext = ctx.orderByClause();
-		if ( orderByClauseContext != null ) {
+	}
+
+	protected void visitOrderBy(SqmQueryPart<?> sqmQueryPart, HqlParser.OrderByClauseContext ctx) {
+		if ( ctx != null ) {
 			if ( creationOptions.useStrictJpaCompliance() && processingStateStack.depth() > 1 ) {
 				throw new StrictJpaComplianceViolation(
 						StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
 				);
 			}
-
-			orderByClause = visitOrderByClause( orderByClauseContext );
-			sqmQueryPart.setOrderByClause( orderByClause );
-		}
-		else {
-			orderByClause = null;
-		}
-
-		final HqlParser.LimitClauseContext limitClauseContext = ctx.limitClause();
-		final HqlParser.OffsetClauseContext offsetClauseContext = ctx.offsetClause();
-		final HqlParser.FetchClauseContext fetchClauseContext = ctx.fetchClause();
-		if ( limitClauseContext != null || offsetClauseContext != null || fetchClauseContext != null ) {
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				throw new StrictJpaComplianceViolation(
-						StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
-				);
-			}
-
-			if ( processingStateStack.depth() > 1 && orderByClause == null ) {
-				throw new SemanticException(
-						"A 'limit', 'offset', or 'fetch' clause requires an 'order by' clause when used in a subquery",
-						query
-				);
-			}
-
-			setOffsetFetchLimit(sqmQueryPart, limitClauseContext, offsetClauseContext, fetchClauseContext);
+			sqmQueryPart.setOrderByClause( visitOrderByClause( ctx ) );
 		}
 	}
 

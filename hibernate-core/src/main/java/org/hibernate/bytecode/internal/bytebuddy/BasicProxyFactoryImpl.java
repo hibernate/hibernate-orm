@@ -15,6 +15,7 @@ import org.hibernate.proxy.ProxyConfiguration;
 
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
+import org.hibernate.proxy.pojo.bytebuddy.ByteBuddyProxyHelper;
 
 public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
@@ -36,7 +37,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaceClass;
 		final ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
-		final String proxyClassName = superClassOrMainInterface.getName() + "$" + PROXY_NAMING_SUFFIX;
+		final String proxyClassName = ByteBuddyProxyHelper.getClassNameWithSuffix( superClassOrMainInterface, PROXY_NAMING_SUFFIX );
 
 		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, proxyClassName, (byteBuddy, namingStrategy) ->
 				helpers.appendIgnoreAlsoAtEnd( byteBuddy

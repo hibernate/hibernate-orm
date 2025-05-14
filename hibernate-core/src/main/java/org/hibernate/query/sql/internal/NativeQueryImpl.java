@@ -691,7 +691,7 @@ public class NativeQueryImpl<R>
 			final FlushMode flushMode = getQueryOptions().getFlushMode();
 			return switch ( flushMode == null ? getSession().getHibernateFlushMode() : flushMode ) {
 				// The JPA spec requires that we auto-flush before native queries
-				case AUTO -> getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap();
+				case AUTO -> getSessionFactory().getSessionFactoryOptions().isJpaBootstrap();
 				case ALWAYS -> true;
 				default -> false;
 			};

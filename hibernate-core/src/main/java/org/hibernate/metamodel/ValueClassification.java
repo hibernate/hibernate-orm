@@ -5,10 +5,13 @@
 package org.hibernate.metamodel;
 
 /**
- * At the end of the day, any "value mapping" (id, version, attribute, collection element, etc.)
- * can be one of a few classifications.  This defines an enumeration of those classifications.
+ * Any "value mapping" (id, version, attribute, collection element, etc.)
+ * belongs to one of several broad categories. This enumeration is quite
+ * similar to {@link jakarta.persistence.metamodel.Type.PersistenceType}.
  *
  * @author Steve Ebersole
+ *
+ * @see jakarta.persistence.metamodel.Type.PersistenceType
  */
 public enum ValueClassification {
 	/**

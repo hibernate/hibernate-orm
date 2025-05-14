@@ -10,9 +10,9 @@ import java.util.List;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.query.NullPrecedence;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +33,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, NullPrecedence.LAST );
+		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, Nulls.LAST );
 	}
 
 	@Override

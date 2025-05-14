@@ -46,11 +46,12 @@ public class FetchProfileHelper {
 			MetadataImplementor bootMetamodel,
 			RuntimeMetamodels runtimeMetamodels,
 			Map<String, FetchProfile> fetchProfiles) {
-		for ( org.hibernate.mapping.FetchProfile mappingProfile : bootMetamodel.getFetchProfiles() ) {
-			final FetchProfile fetchProfile = createFetchProfile( runtimeMetamodels.getMappingMetamodel(), mappingProfile );
+		final MappingMetamodel mappingMetamodel = runtimeMetamodels.getMappingMetamodel();
+		for ( var mappingProfile : bootMetamodel.getFetchProfiles() ) {
+			final FetchProfile fetchProfile = createFetchProfile( mappingMetamodel, mappingProfile );
 			fetchProfiles.put( fetchProfile.getName(), fetchProfile );
 		}
-		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( runtimeMetamodels ) );
+		fetchProfiles.put( HIBERNATE_DEFAULT_PROFILE, new DefaultFetchProfile( mappingMetamodel ) );
 	}
 
 	private static FetchProfile createFetchProfile(
@@ -58,7 +59,7 @@ public class FetchProfileHelper {
 			org.hibernate.mapping.FetchProfile mappingProfile) {
 		final String profileName = mappingProfile.getName();
 		final FetchProfile fetchProfile = new FetchProfile( profileName );
-		for ( org.hibernate.mapping.FetchProfile.Fetch mappingFetch : mappingProfile.getFetches() ) {
+		for ( var mappingFetch : mappingProfile.getFetches() ) {
 			// resolve the persister owning the fetch
 			final EntityPersister owner = getEntityPersister( mappingMetamodel, fetchProfile, mappingFetch );
 			if ( owner instanceof FetchProfileAffectee fetchProfileAffectee ) {

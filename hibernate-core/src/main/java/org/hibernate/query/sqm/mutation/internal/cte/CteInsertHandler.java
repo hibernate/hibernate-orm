@@ -136,7 +136,7 @@ public class CteInsertHandler implements InsertHandler {
 				.getModel()
 				.getHibernateEntityName();
 
-		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );
+		this.entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		this.cteTable = cteTable;
 		this.domainParameterXref = domainParameterXref;
 	}

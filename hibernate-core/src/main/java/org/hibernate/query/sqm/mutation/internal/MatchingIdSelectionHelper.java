@@ -226,10 +226,11 @@ public class MatchingIdSelectionHelper {
 			DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final EntityMappingType entityDescriptor = factory.getRuntimeMetamodels().getEntityMappingType(
-				sqmMutationStatement.getTarget().getModel().getHibernateEntityName()
-		);
-		final SqmSelectStatement<?> sqmSelectStatement = generateMatchingIdSelectStatement( sqmMutationStatement, entityDescriptor );
+		final EntityMappingType entityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( sqmMutationStatement.getTarget().getModel().getHibernateEntityName() );
+		final SqmSelectStatement<?> sqmSelectStatement =
+				generateMatchingIdSelectStatement( sqmMutationStatement, entityDescriptor );
 		final SqmQuerySpec<?> sqmQuerySpec = sqmSelectStatement.getQuerySpec();
 
 		if ( sqmMutationStatement instanceof SqmDeleteStatement<?> ) {

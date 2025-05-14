@@ -86,7 +86,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
 		final String mutatingEntityName = sqmDeleteStatement.getTarget().getModel().getHibernateEntityName();
-		final EntityMappingType entityDescriptor = factory.getRuntimeMetamodels().getEntityMappingType( mutatingEntityName );
+		final EntityMappingType entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( mutatingEntityName );
 
 		final List<Expression> inListExpressions = matchingIdsPredicateProducer.produceIdExpressionList( idsAndFks, entityDescriptor );
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( domainParameterXref.getQueryParameterCount() );

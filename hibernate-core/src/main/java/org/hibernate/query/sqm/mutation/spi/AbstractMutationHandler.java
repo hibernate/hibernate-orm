@@ -28,7 +28,7 @@ public abstract class AbstractMutationHandler implements Handler {
 				.getModel()
 				.getHibernateEntityName();
 
-		this.entityDescriptor = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );
+		this.entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 
 	}
 

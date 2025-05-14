@@ -70,7 +70,7 @@ pipeline {
 		cron('0 0 * * 0')
 	}
 	tools {
-		jdk 'OpenJDK 17 Latest'
+		jdk 'OpenJDK 21 Latest'
 	}
 	options {
 		buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '10')

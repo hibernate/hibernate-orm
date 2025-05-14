@@ -23,6 +23,13 @@ import static org.hibernate.orm.toolchains.JdkVersionConfig.createVersionConfig;
 import static org.hibernate.orm.toolchains.JdkVersionConfig.extractVersion;
 
 /**
+ * Gathers JDK versions of interest from settings and exposes them to later phases of the build
+ * than {@link JdkVersionSettingsPlugin}.
+ *
+ * @see JdkVersionConfig
+ * @see JdkVersionSettingsPlugin
+ * @see JavaModulePlugin
+ *
  * @author Steve Ebersole
  */
 public class JdkVersionPlugin implements Plugin<Project> {
@@ -42,6 +49,7 @@ public class JdkVersionPlugin implements Plugin<Project> {
 		final VersionCatalogsExtension versionCatalogs = project.getExtensions().getByType( VersionCatalogsExtension.class );
 		final VersionCatalog jdkVersions = versionCatalogs.named( "jdks" );
 		final JavaLanguageVersion baselineJdkVersion = getJavaLanguageVersion( jdkVersions, "baseline" );
+		final JavaLanguageVersion minSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "minSupportedJdk" );
 		final JavaLanguageVersion maxSupportedJdkVersion = getJavaLanguageVersion( jdkVersions, "maxSupportedBytecode" );
 
 		final JdkVersionConfig jdkVersionConfig = createVersionConfig(
@@ -49,11 +57,11 @@ public class JdkVersionPlugin implements Plugin<Project> {
 				explicitTestVersion,
 				gradleJdkVersion,
 				baselineJdkVersion,
+				minSupportedJdkVersion,
 				maxSupportedJdkVersion
 		);
 
 		project.getExtensions().add( JdkVersionConfig.DSL_NAME, jdkVersionConfig );
-		JdkVersionsLogging.logVersions( jdkVersionConfig );
 	}
 
 	@NotNull

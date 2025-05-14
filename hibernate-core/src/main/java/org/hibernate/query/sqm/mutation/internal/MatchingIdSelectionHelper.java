@@ -274,7 +274,7 @@ public class MatchingIdSelectionHelper {
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslator<JdbcOperationQuerySelect> sqlAstSelectTranslator = jdbcEnvironment
 				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( factory, translation.getSqlAst() );
+				.buildSelectTranslator( factory, translation.getSqlAst(), translation.getParameterInfo() );
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),

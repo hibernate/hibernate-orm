@@ -491,7 +491,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 								executionContext.getQueryParameterBindings(),
 								executionContext.getSession().getLoadQueryInfluencers(),
 								sessionFactory.getSqlTranslationEngine(),
-								true
+								sqm.getCteStatements().isEmpty()
 						)
 						.translate();
 

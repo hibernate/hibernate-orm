@@ -34,13 +34,14 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private SqmCteTable(
 			String name,
 			SqmCteStatement<T> cteStatement,
-			SqmSelectableNode<?>[] sqmSelectableNodes) {
-		super( sqmSelectableNodes );
+			SqmSelectableNode<?>[] sqmSelectableNodes,
+			List<String> aliases) {
+		super( sqmSelectableNodes, aliases );
 		this.name = name;
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
+			columns.add( new SqmCteTableColumn( this, aliases.get(i), get(i) ) );
 		}
 		this.columns = columns;
 	}
@@ -54,7 +55,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 				.getSelectClause()
 				.getSelectionItems()
 				.toArray( SqmSelectableNode[]::new );
-		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes );
+		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes, extractAliases(selectStatement) );
 	}
 
 	@Override

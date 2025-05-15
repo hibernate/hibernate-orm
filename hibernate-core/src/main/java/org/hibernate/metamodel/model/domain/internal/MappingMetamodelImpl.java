@@ -26,7 +26,6 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
@@ -580,11 +579,6 @@ public class MappingMetamodelImpl
 	@Override
 	public <T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		return jpaMetamodel.findEntityGraphsByJavaType( entityClass );
-	}
-
-	@Override
-	public JpaCompliance getJpaCompliance() {
-		return jpaMetamodel.getJpaCompliance();
 	}
 
 	@Override

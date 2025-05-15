@@ -1755,7 +1755,7 @@ public class SessionImpl
 				return createCriteriaQuery( selectStatement, selectStatement.getResultType() );
 			}
 			catch (RuntimeException e) {
-				if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
+				if ( getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
 					markForRollbackOnly();
 				}
 				throw getExceptionConverter().convert( e );

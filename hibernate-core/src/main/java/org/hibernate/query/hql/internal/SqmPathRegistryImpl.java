@@ -51,7 +51,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 	public SqmPathRegistryImpl(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
-		this.jpaCompliance = associatedProcessingState.getCreationState().getCreationContext().getJpaMetamodel().getJpaCompliance();
+		this.jpaCompliance = associatedProcessingState.getCreationState().getCreationContext().getNodeBuilder().getJpaCompliance();
 	}
 
 	@Override

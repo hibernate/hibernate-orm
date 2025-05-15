@@ -1651,8 +1651,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						castNonNull( discriminatorAssembler ),
 						entityDescriptor
 				);
-				if (data.concreteDescriptor == null) {
-					// Return because the value is null
+				if ( data.concreteDescriptor == null ) {
 					return;
 				}
 			}

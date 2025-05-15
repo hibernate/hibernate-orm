@@ -37,11 +37,11 @@ import static jakarta.persistence.EnumType.STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @author miroslav silhavy
+ * @author Miroslav Silhavy
  */
 @DomainModel(annotatedClasses = {
 		EntityWithCollectionReloadCacheInheritanceTest.HighSchoolStudent.class,
-		EntityWithCollectionReloadCacheInheritanceTest.DefaultSubject.class,
+		EntityWithCollectionReloadCacheInheritanceTest.Subject.class,
 		EntityWithCollectionReloadCacheInheritanceTest.EnglishSubject.class
 })
 @SessionFactory
@@ -105,12 +105,12 @@ public class EntityWithCollectionReloadCacheInheritanceTest {
 		@Column(name = "name")
 		private String name;
 
-		@ManyToMany(targetEntity = DefaultSubject.class, fetch = FetchType.LAZY)
+		@ManyToMany(targetEntity = Subject.class, fetch = FetchType.LAZY)
 		@JoinTable(name = "STUDENT_SUBJECT",
 				joinColumns = { @JoinColumn(name = "student_id") },
 				inverseJoinColumns = { @JoinColumn(name = "subject_id") }
 		)
-		private Set<DefaultSubject> subjects;
+		private Set<Subject> subjects;
 
 		public Long getId() {
 			return id;
@@ -128,21 +128,21 @@ public class EntityWithCollectionReloadCacheInheritanceTest {
 			this.name = name;
 		}
 
-		public Set<DefaultSubject> getSubjects() {
+		public Set<Subject> getSubjects() {
 			return subjects;
 		}
 
-		public void setMajors(Set<DefaultSubject> subjects) {
+		public void setSubjects(Set<Subject> subjects) {
 			this.subjects = subjects;
 		}
 
 	}
 
-	@Entity(name = "DefaultSubject")
+	@Entity(name = "Subject")
 	@DiscriminatorValue("DEFAULT")
 	@DiscriminatorColumn(name = "TYPE", length = 20)
 	@Access(FIELD)
-	static class DefaultSubject {
+	static class Subject {
 
 		enum SubjectType {
 			DEFAULT,
@@ -172,7 +172,7 @@ public class EntityWithCollectionReloadCacheInheritanceTest {
 	@Entity(name = "EnglishSubject")
 	@DiscriminatorValue("ENGLISH")
 	@Access(FIELD)
-	static class EnglishSubject extends DefaultSubject {
+	static class EnglishSubject extends Subject {
 	}
 
 }

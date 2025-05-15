@@ -9,9 +9,6 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.metamodel.EmbeddableType;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.ManagedType;
 
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -125,16 +122,7 @@ public interface JpaMetamodel extends Metamodel {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA defined bulk accessors
-
-	@Override
-	Set<ManagedType<?>> getManagedTypes();
-
-	@Override
-	Set<EntityType<?>> getEntities();
-
-	@Override
-	Set<EmbeddableType<?>> getEmbeddables();
+	// Entity graphs
 
 	void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph);
 

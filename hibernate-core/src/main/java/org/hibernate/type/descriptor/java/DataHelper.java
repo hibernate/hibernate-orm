@@ -222,10 +222,6 @@ public final class DataHelper {
 					break;
 				}
 				outputStream.write( buffer, 0, amountRead );
-				if ( amountRead < buffer.length ) {
-					// we have read up to the end of stream
-					break;
-				}
 				bytesRead += amountRead;
 				if ( bytesRead >= length ) {
 					break;

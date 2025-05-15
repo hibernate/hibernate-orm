@@ -112,12 +112,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
-	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
-	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
 	}

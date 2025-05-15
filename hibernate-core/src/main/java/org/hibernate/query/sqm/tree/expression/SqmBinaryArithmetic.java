@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -29,11 +28,10 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> lhsOperand,
 			SqmExpression<?> rhsOperand,
-			JpaMetamodel domainModel,
 			NodeBuilder nodeBuilder) {
 		//noinspection unchecked
 		super(
-				(SqmBindableType<T>) domainModel.getTypeConfiguration().resolveArithmeticType(
+				(SqmBindableType<T>) nodeBuilder.getTypeConfiguration().resolveArithmeticType(
 						lhsOperand.getExpressible(),
 						rhsOperand.getExpressible(),
 						operator

@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleSimpleSqmPathSource;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
@@ -34,13 +35,14 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private SqmCteTable(
 			String name,
 			SqmCteStatement<T> cteStatement,
-			SqmSelectableNode<?>[] sqmSelectableNodes) {
-		super( sqmSelectableNodes );
+			SqmSelectableNode<?>[] sqmSelectableNodes,
+			List<String> aliases) {
+		super( sqmSelectableNodes, aliases );
 		this.name = name;
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
+			columns.add( new SqmCteTableColumn( this, aliases.get(i), get(i) ) );
 		}
 		this.columns = columns;
 	}
@@ -49,12 +51,20 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String name,
 			SqmCteStatement<X> cteStatement,
 			SqmSelectQuery<X> selectStatement) {
-		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQueryPart()
+		final SqmSelectClause selectClause = selectStatement.getQueryPart()
 				.getFirstQuerySpec()
-				.getSelectClause()
+				.getSelectClause();
+		final SqmSelectableNode<?>[] sqmSelectableNodes = selectClause
 				.getSelectionItems()
 				.toArray( SqmSelectableNode[]::new );
-		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes );
+		final var aliases = new ArrayList<String>();
+		for (final var selection : selectClause.getSelections()) {
+			final var alias = selection.getAlias();
+			selection.getSelectableNode().visitSubSelectableNodes( node ->
+					aliases.add( alias == null ? node.getAlias() : alias )
+			);
+		}
+		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes, aliases );
 	}
 
 	@Override

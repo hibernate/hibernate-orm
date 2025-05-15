@@ -23,7 +23,6 @@ import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -37,7 +36,6 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -565,12 +563,12 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph) {
+	public void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph) {
 		jpaMetamodel.addNamedEntityGraph( graphName, entityGraph );
 	}
 
 	@Override
-	public <T> RootGraphImplementor<T> findEntityGraphByName(String name) {
+	public RootGraph<?> findEntityGraphByName(String name) {
 		return jpaMetamodel.findEntityGraphByName( name );
 	}
 
@@ -580,7 +578,7 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
+	public <T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		return jpaMetamodel.findEntityGraphsByJavaType( entityClass );
 	}
 
@@ -639,8 +637,8 @@ public class MappingMetamodelImpl
 			SqmExpressible<?> sqmExpressible,
 			Function<NavigablePath, TableGroup> tableGroupLocator) {
 		if ( sqmExpressible instanceof SqmPath<?> sqmPath ) {
-			final DomainType<?> sqmPathType = sqmPath.getResolvedModel().getPathType();
-			if ( sqmPathType instanceof MappingModelExpressible<?> mappingExpressible ) {
+			if ( sqmPath.getResolvedModel().getPathType()
+					instanceof MappingModelExpressible<?> mappingExpressible ) {
 				return mappingExpressible;
 			}
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
@@ -656,7 +654,8 @@ public class MappingMetamodelImpl
 		}
 
 		else if ( sqmExpressible instanceof BasicDomainType<?> ) {
-			return getTypeConfiguration().getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
+			return getTypeConfiguration()
+					.getBasicTypeForJavaType( sqmExpressible.getRelationalJavaType().getJavaType() );
 		}
 
 		else if ( sqmExpressible instanceof BasicSqmPathSource<?>
@@ -714,7 +713,9 @@ public class MappingMetamodelImpl
 
 	@Override
 	public  <T> BindableType<T> resolveQueryParameterType(Class<T> javaClass) {
-		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( javaClass );
+		final TypeConfiguration typeConfiguration = getTypeConfiguration();
+
+		final BasicType<T> basicType = typeConfiguration.getBasicTypeForJavaType( javaClass );
 		// For enums, we simply don't know the exact mapping if there is no basic type registered
 		if ( basicType != null || javaClass.isEnum() ) {
 			return basicType;
@@ -725,22 +726,22 @@ public class MappingMetamodelImpl
 			return (BindableType<T>) managedType;
 		}
 
-		final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<T> javaType = javaTypeRegistry.findDescriptor( javaClass );
 		if ( javaType != null ) {
 			final JdbcType recommendedJdbcType =
-					javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+					javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
-				return getTypeConfiguration().getBasicTypeRegistry().resolve( javaType, recommendedJdbcType );
+				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, recommendedJdbcType );
 			}
 		}
 
 		if ( javaClass.isArray() && javaTypeRegistry.findDescriptor( javaClass.getComponentType() ) != null ) {
 			final JavaType<T> resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaClass );
 			final JdbcType recommendedJdbcType =
-					resolvedJavaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+					resolvedJavaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
-				return getTypeConfiguration().getBasicTypeRegistry().resolve( resolvedJavaType, recommendedJdbcType );
+				return typeConfiguration.getBasicTypeRegistry().resolve( resolvedJavaType, recommendedJdbcType );
 			}
 		}
 

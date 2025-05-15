@@ -16,7 +16,7 @@ import jakarta.persistence.metamodel.ManagedType;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.service.ServiceRegistry;
@@ -150,11 +150,11 @@ public interface JpaMetamodel extends Metamodel {
 	@Override
 	Set<EmbeddableType<?>> getEmbeddables();
 
-	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
+	void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph);
 
-	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
+	RootGraph<?> findEntityGraphByName(String name);
 
-	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
+	<T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
 	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType);
 

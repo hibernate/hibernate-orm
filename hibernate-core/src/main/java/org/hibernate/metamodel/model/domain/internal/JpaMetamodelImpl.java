@@ -31,7 +31,6 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -118,11 +117,6 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
-	}
-
-	@Override
-	public JpaCompliance getJpaCompliance() {
-		return typeConfiguration.getJpaCompliance();
 	}
 
 	@Override

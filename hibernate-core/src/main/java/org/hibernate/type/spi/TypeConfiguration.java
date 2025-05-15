@@ -252,7 +252,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	/**
 	 * Obtain the {@link JpaCompliance} setting.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	public JpaCompliance getJpaCompliance() {
 		return scope.getJpaCompliance();
 	}

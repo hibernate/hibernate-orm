@@ -17,7 +17,6 @@ import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -144,6 +143,4 @@ public interface JpaMetamodel extends Metamodel {
 	<T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
 	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType);
-
-	JpaCompliance getJpaCompliance();
 }

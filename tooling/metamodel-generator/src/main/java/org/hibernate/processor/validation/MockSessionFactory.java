@@ -46,7 +46,6 @@ import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
@@ -912,11 +911,6 @@ public abstract class MockSessionFactory
 		@Override
 		public @Nullable Set<String> getEnumTypesForValue(String enumValue) {
 			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
-		}
-
-		@Override
-		public JpaCompliance getJpaCompliance() {
-			return jpaCompliance;
 		}
 	}
 

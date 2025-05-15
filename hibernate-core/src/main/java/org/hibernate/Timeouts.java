@@ -18,6 +18,7 @@ import jakarta.persistence.Timeout;
  *
  * @since 7.0
  */
+@Incubating
 public interface Timeouts {
 	/**
 	 * Raw magic millisecond value for {@linkplain #NO_WAIT}

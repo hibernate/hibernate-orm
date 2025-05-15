@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.type.BindableType;
@@ -186,7 +185,7 @@ public interface MappingMetamodel extends Metamodel {
 	// JPA entity graphs
 
 	RootGraph<?> findNamedGraph(String name);
-	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
+	void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph);
 	void forEachNamedGraph(Consumer<RootGraph<?>> action);
 	RootGraph<?> defaultGraph(String entityName);
 	RootGraph<?> defaultGraph(Class<?> entityJavaType);

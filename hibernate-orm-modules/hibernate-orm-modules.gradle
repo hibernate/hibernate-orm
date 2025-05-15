@@ -130,7 +130,7 @@ publishing {
 }
 
 task ciBuild( dependsOn: [clean, test, publish] )
-task release( dependsOn: [clean, test, publishToSonatype] )
+task release( dependsOn: [clean, test] )
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // tasks related to in-container (Arquillian + WF) testing

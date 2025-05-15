@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -56,10 +57,10 @@ public class AnonymousTupleType<T>
 	private final Map<String, Integer> componentIndexMap;
 
 	public AnonymousTupleType(SqmSubQuery<T> subQuery) {
-		this( extractSqmExpressibles( subQuery ) );
+		this( extractSqmExpressibles( subQuery ), extractAliases( subQuery ) );
 	}
 
-	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
+	public AnonymousTupleType(SqmSelectableNode<?>[] components, List<String> aliases) {
 		expressibles = new SqmBindableType<?>[components.length];
 		componentSourcePaths = new NavigablePath[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
@@ -74,7 +75,10 @@ public class AnonymousTupleType<T>
 		componentIndexMap = linkedMapOfSize( components.length );
 		for ( int i = 0; i < components.length; i++ ) {
 			final SqmSelectableNode<?> component = components[i];
-			final String alias = component.getAlias();
+			String alias = aliases == null ? null : aliases.get( i );
+			if ( alias == null ) {
+				alias = component.getAlias();
+			}
 			if ( alias == null ) {
 				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
 						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
@@ -119,6 +123,20 @@ public class AnonymousTupleType<T>
 		//  i.e. what if the subquery changes later on? Or should we somehow mark the subquery to signal,
 		//  that changes to the select clause are invalid after a certain point?
 		return selectClause.getSelectionItems().toArray( SqmSelectableNode[]::new );
+	}
+
+	protected static List<String> extractAliases(SqmSelectQuery<?> subQuery) {
+		final SqmSelectClause selectClause = subQuery.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause();
+		final var aliases = new ArrayList<String>();
+		for (final var selection : selectClause.getSelections()) {
+			final var alias = selection.getAlias();
+			selection.getSelectableNode().visitSubSelectableNodes( node ->
+					aliases.add( alias == null ? node.getAlias() : alias )
+			);
+		}
+		return aliases;
 	}
 
 	private static JavaType<?>[] getTypeDescriptors(SqmSelectableNode<?>[] components) {

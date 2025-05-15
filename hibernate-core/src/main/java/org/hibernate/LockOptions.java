@@ -162,6 +162,8 @@ public class LockOptions implements Serializable {
 	private Timeout timeout;
 	private PessimisticLockScope pessimisticLockScope;
 	private Boolean followOnLocking;
+
+
 	private Map<String, LockMode> aliasSpecificLockModes;
 
 	/**
@@ -300,132 +302,6 @@ public class LockOptions implements Serializable {
 		}
 		this.lockMode = lockMode;
 		return this;
-	}
-
-	/**
-	 * Set of {@link Map.Entry}s, each associating an alias with its
-	 * specified {@linkplain #setAliasSpecificLockMode alias-specific}
-	 * {@link LockMode}.
-	 *
-	 * @return an iterable with the {@link Map.Entry}s
-	 */
-	public Set<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
-		return aliasSpecificLockModes == null ? emptySet() : unmodifiableSet( aliasSpecificLockModes.entrySet() );
-	}
-
-	/**
-	 * Specify the {@link LockMode} to be used for the given query alias.
-	 *
-	 * @param alias the query alias to which the lock mode applies
-	 * @param lockMode the lock mode to apply to the given alias
-	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.query.Query#setLockMode(String, LockMode)
-	 */
-	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
-		if ( immutable ) {
-			throw new UnsupportedOperationException("immutable global instance of LockOptions");
-		}
-		if ( aliasSpecificLockModes == null ) {
-			aliasSpecificLockModes = new LinkedHashMap<>();
-		}
-		if ( lockMode == null ) {
-			aliasSpecificLockModes.remove( alias );
-		}
-		else {
-			aliasSpecificLockModes.put( alias, lockMode );
-		}
-		return this;
-	}
-
-	/**
-	 * The number of aliases that have alias-specific lock modes specified.
-	 *
-	 * @return the number of explicitly defined alias lock modes.
-	 */
-	public int getAliasLockCount() {
-		return aliasSpecificLockModes == null ? 0 : aliasSpecificLockModes.size();
-	}
-
-	/**
-	 * Whether this {@code LockOptions} instance defines alias-specific lock-modes
-	 *
-	 * @return {@code true} if this object defines alias-specific lock modes;
-	 *        {@code false} otherwise.
-	 */
-	public boolean hasAliasSpecificLockModes() {
-		return aliasSpecificLockModes != null && !aliasSpecificLockModes.isEmpty();
-	}
-
-	/**
-	 * Get the {@link LockMode} explicitly specified for the given alias
-	 * via {@link #setAliasSpecificLockMode(String, LockMode)}.
-	 * <p>
-	 * Differs from {@link #getEffectiveLockMode(String)} in that here we
-	 * only return an explicitly specified alias-specific lock mode.
-	 *
-	 * @param alias The alias for which to locate the explicit lock mode.
-	 * @return The explicit lock mode for that alias.
-	 */
-	public LockMode getAliasSpecificLockMode(String alias) {
-		return aliasSpecificLockModes == null ? null : aliasSpecificLockModes.get( alias );
-	}
-
-	/**
-	 * Iterator over {@link Map.Entry}s, each containing an alias and its
-	 * {@link LockMode}.
-	 *
-	 * @return an iterator over the {@link Map.Entry}s
-	 * @deprecated use {@link #getAliasSpecificLocks()}
-	 */
-	@Deprecated
-	public Iterator<Map.Entry<String,LockMode>> getAliasLockIterator() {
-		return getAliasSpecificLocks().iterator();
-	}
-
-	/**
-	 * Determine the {@link LockMode} to apply to the given alias. If no
-	 * mode was {@linkplain #setAliasSpecificLockMode(String, LockMode)
-	 * explicitly set}, the {@linkplain #getLockMode() overall mode} is
-	 * returned. If the overall lock mode is also {@code null},
-	 * {@link LockMode#NONE} is returned.
-	 * <p>
-	 * Differs from {@link #getAliasSpecificLockMode(String)} in that here
-	 * we fall back to only returning the overall lock mode.
-	 *
-	 * @param alias The alias for which to locate the effective lock mode.
-	 * @return The effective lock mode.
-	 */
-	public LockMode getEffectiveLockMode(String alias) {
-		LockMode lockMode = getAliasSpecificLockMode( alias );
-		if ( lockMode == null ) {
-			lockMode = this.lockMode;
-		}
-		return lockMode == null ? LockMode.NONE : lockMode;
-	}
-
-	/**
-	 * Currently needed for follow-on locking.
-	 *
-	 * @return The greatest of all requested lock modes.
-	 */
-	public LockMode findGreatestLockMode() {
-		LockMode lockModeToUse = getLockMode();
-		if ( lockModeToUse == null ) {
-			lockModeToUse = LockMode.NONE;
-		}
-
-		if ( aliasSpecificLockModes == null ) {
-			return lockModeToUse;
-		}
-
-		for ( LockMode lockMode : aliasSpecificLockModes.values() ) {
-			if ( lockMode.greaterThan( lockModeToUse ) ) {
-				lockModeToUse = lockMode;
-			}
-		}
-
-		return lockModeToUse;
 	}
 
 	/**
@@ -632,5 +508,161 @@ public class LockOptions implements Serializable {
 	@Override
 	public int hashCode() {
 		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
+	}
+
+
+
+	/**
+	 * Set of {@link Map.Entry}s, each associating an alias with its
+	 * specified {@linkplain #setAliasSpecificLockMode alias-specific}
+	 * {@link LockMode}.
+	 *
+	 * @return an iterable with the {@link Map.Entry}s
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}
+	 */
+	@Remove
+	public Set<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
+		return aliasSpecificLockModes == null ? emptySet() : unmodifiableSet( aliasSpecificLockModes.entrySet() );
+	}
+
+	/**
+	 * Specify the {@link LockMode} to be used for the given query alias.
+	 *
+	 * @param alias the query alias to which the lock mode applies
+	 * @param lockMode the lock mode to apply to the given alias
+	 * @return {@code this} for method chaining
+	 *
+	 * @see org.hibernate.query.Query#setLockMode(String, LockMode)
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}
+	 */
+	@Remove
+	public LockOptions setAliasSpecificLockMode(String alias, LockMode lockMode) {
+		if ( immutable ) {
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
+		}
+		if ( aliasSpecificLockModes == null ) {
+			aliasSpecificLockModes = new LinkedHashMap<>();
+		}
+		if ( lockMode == null ) {
+			aliasSpecificLockModes.remove( alias );
+		}
+		else {
+			aliasSpecificLockModes.put( alias, lockMode );
+		}
+		return this;
+	}
+
+	/**
+	 * The number of aliases that have alias-specific lock modes specified.
+	 *
+	 * @return the number of explicitly defined alias lock modes.
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}
+	 */
+	@Remove
+	public int getAliasLockCount() {
+		return aliasSpecificLockModes == null ? 0 : aliasSpecificLockModes.size();
+	}
+
+	/**
+	 * Whether this {@code LockOptions} instance defines alias-specific lock-modes
+	 *
+	 * @return {@code true} if this object defines alias-specific lock modes;
+	 *        {@code false} otherwise.
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}
+	 */
+	@Remove
+	public boolean hasAliasSpecificLockModes() {
+		return aliasSpecificLockModes != null && !aliasSpecificLockModes.isEmpty();
+	}
+
+	/**
+	 * Get the {@link LockMode} explicitly specified for the given alias
+	 * via {@link #setAliasSpecificLockMode(String, LockMode)}.
+	 * <p>
+	 * Differs from {@link #getEffectiveLockMode(String)} in that here we
+	 * only return an explicitly specified alias-specific lock mode.
+	 *
+	 * @param alias The alias for which to locate the explicit lock mode.
+	 * @return The explicit lock mode for that alias.
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}
+	 */
+	@Remove
+	public LockMode getAliasSpecificLockMode(String alias) {
+		return aliasSpecificLockModes == null ? null : aliasSpecificLockModes.get( alias );
+	}
+
+	/**
+	 * Iterator over {@link Map.Entry}s, each containing an alias and its
+	 * {@link LockMode}.
+	 *
+	 * @return an iterator over the {@link Map.Entry}s
+	 * @deprecated use {@link #getAliasSpecificLocks()}
+	 */
+	@Deprecated
+	public Iterator<Map.Entry<String,LockMode>> getAliasLockIterator() {
+		return getAliasSpecificLocks().iterator();
+	}
+
+	/**
+	 * Determine the {@link LockMode} to apply to the given alias. If no
+	 * mode was {@linkplain #setAliasSpecificLockMode(String, LockMode)
+	 * explicitly set}, the {@linkplain #getLockMode() overall mode} is
+	 * returned. If the overall lock mode is also {@code null},
+	 * {@link LockMode#NONE} is returned.
+	 * <p>
+	 * Differs from {@link #getAliasSpecificLockMode(String)} in that here
+	 * we fall back to only returning the overall lock mode.
+	 *
+	 * @param alias The alias for which to locate the effective lock mode.
+	 * @return The effective lock mode.
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}
+	 */
+	@Remove
+	public LockMode getEffectiveLockMode(String alias) {
+		LockMode lockMode = getAliasSpecificLockMode( alias );
+		if ( lockMode == null ) {
+			lockMode = this.lockMode;
+		}
+		return lockMode == null ? LockMode.NONE : lockMode;
+	}
+
+	/**
+	 * Currently needed for follow-on locking.
+	 *
+	 * @return The greatest of all requested lock modes.
+	 *
+	 * @apiNote This will be removed in 7.1 and replaced with an extension
+	 * to JPA's {@linkplain PessimisticLockScope}.  See {@linkplain #getLockMode()}
+	 */
+	@Remove
+	public LockMode findGreatestLockMode() {
+		LockMode lockModeToUse = getLockMode();
+		if ( lockModeToUse == null ) {
+			lockModeToUse = LockMode.NONE;
+		}
+
+		if ( aliasSpecificLockModes == null ) {
+			return lockModeToUse;
+		}
+
+		for ( LockMode lockMode : aliasSpecificLockModes.values() ) {
+			if ( lockMode.greaterThan( lockModeToUse ) ) {
+				lockModeToUse = lockMode;
+			}
+		}
+
+		return lockModeToUse;
 	}
 }

@@ -13,8 +13,11 @@ import java.util.Locale;
  * Defines the possible values for {@value AvailableSettings#HBM2DDL_AUTO}.
  *
  * @deprecated This enumeration is currently unused and will be removed.
+ *             Use {@link org.hibernate.tool.schema.Action} instead.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.tool.schema.Action
  */
 @Deprecated(since = "7.0", forRemoval = true)
 public enum SchemaAutoTooling {

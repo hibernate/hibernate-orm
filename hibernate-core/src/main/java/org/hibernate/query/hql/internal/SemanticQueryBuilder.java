@@ -3685,7 +3685,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				operator,
 				left,
 				right,
-				creationContext.getJpaMetamodel(),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -3713,7 +3712,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					operator,
 					left,
 					right,
-					creationContext.getJpaMetamodel(),
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -5779,7 +5777,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 												BinaryArithmeticOperator.SUBTRACT,
 												end,
 												start,
-												creationContext.getJpaMetamodel(),
 												creationContext.getNodeBuilder()
 										),
 										new SqmLiteral<>(
@@ -5787,7 +5784,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 												creationContext.getNodeBuilder().getIntegerType(),
 												creationContext.getNodeBuilder()
 										),
-										creationContext.getJpaMetamodel(),
 										creationContext.getNodeBuilder()
 								)
 						),

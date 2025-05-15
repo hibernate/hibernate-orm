@@ -19,10 +19,8 @@ import org.hibernate.Incubating;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Extensions to the JPA-defined {@linkplain Metamodel metamodel} of
@@ -35,17 +33,6 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Incubating
 public interface JpaMetamodel extends Metamodel {
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Context
-
-	/**
-	 * todo (6.0) : should we expose JpaMetamodel from TypeConfiguration?
-	 */
-	TypeConfiguration getTypeConfiguration();
-
-	ServiceRegistry getServiceRegistry();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Extended features

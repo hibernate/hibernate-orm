@@ -35,15 +35,13 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDirFactory;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.engine.config.CachingJupiterConfiguration;
-import org.junit.jupiter.engine.config.DefaultJupiterConfiguration;
+import org.junit.jupiter.engine.JupiterTestEngine;
 import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
 import org.junit.jupiter.engine.descriptor.ClassTestDescriptor;
 import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
 import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
-import org.junit.jupiter.engine.discovery.DiscoverySelectorResolver;
 import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
@@ -62,10 +60,9 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		JupiterConfiguration configuration = new CachingJupiterConfiguration(
-				new DefaultJupiterConfiguration( discoveryRequest.getConfigurationParameters() ) );
-		JupiterEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor( uniqueId, configuration );
-		new DiscoverySelectorResolver().resolveSelectors( discoveryRequest, engineDescriptor );
+		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
+				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
+		);
 
 		for ( TestDescriptor testDescriptor : new HashSet<>( engineDescriptor.getChildren() ) ) {
 			if ( testDescriptor instanceof ClassBasedTestDescriptor ) {

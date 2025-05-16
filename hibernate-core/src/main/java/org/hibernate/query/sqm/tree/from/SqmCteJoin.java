@@ -20,6 +20,8 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.JoinType;
 
+import java.util.Objects;
+
 /**
  * @author Christian Beikov
  */
@@ -153,5 +155,17 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	@Override
 	public JoinType getJoinType() {
 		return getSqmJoinType().getCorrespondingJpaJoinType();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCteJoin<?> that
+			&& super.equals( object )
+			&& Objects.equals( this.cte.getName(), that.cte.getName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), cte.getName() );
 	}
 }

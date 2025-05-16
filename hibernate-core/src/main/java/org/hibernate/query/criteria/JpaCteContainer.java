@@ -33,7 +33,11 @@ public interface JpaCteContainer extends JpaCriteriaNode {
 	 * which can be used for querying.
 	 *
 	 * @see JpaCriteriaQuery#from(JpaCteCriteria)
+	 *
+	 * @deprecated Use {@link #with(String, AbstractQuery)} and provide an explicit
+	 *             name for the CTE
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	<T> JpaCteCriteria<T> with(AbstractQuery<T> criteria);
 
 	/**

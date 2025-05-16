@@ -206,24 +206,25 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return treat;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
 		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );

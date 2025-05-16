@@ -23,10 +23,9 @@ public class SimpleSqmRenderContext implements SqmRenderContext {
 	@Override
 	public String resolveAlias(SqmFrom<?, ?> from) {
 		final String explicitAlias = from.getExplicitAlias();
-		if ( explicitAlias != null ) {
-			return explicitAlias;
-		}
-		return fromAliases.computeIfAbsent( from, f -> "alias_" + (fromId++) );
+		return explicitAlias == null
+				? fromAliases.computeIfAbsent( from, f -> "alias_" + (fromId++) )
+				: explicitAlias;
 	}
 
 	@Override

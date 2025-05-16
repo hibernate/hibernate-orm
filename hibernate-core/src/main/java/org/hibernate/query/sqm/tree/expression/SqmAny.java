@@ -13,6 +13,8 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Objects;
+
 /**
  * @author Gavin King
  */
@@ -67,4 +69,14 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 		subquery.appendHqlString( hql, context );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmAny<?> sqmAny
+			&& Objects.equals( subquery, sqmAny.subquery );
+	}
+
+	@Override
+	public int hashCode() {
+		return subquery.hashCode();
+	}
 }

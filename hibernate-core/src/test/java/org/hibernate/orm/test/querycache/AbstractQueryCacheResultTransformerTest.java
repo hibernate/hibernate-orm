@@ -111,7 +111,7 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 				query.setResultTransformer( getResultTransformer() );
 			}
 
-			return ( isSingleResult ? query.uniqueResult() : query.list() );
+			return isSingleResult ? query.uniqueResult() : query.list();
 		}
 	}
 

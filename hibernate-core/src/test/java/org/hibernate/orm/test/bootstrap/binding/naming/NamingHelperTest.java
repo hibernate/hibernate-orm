@@ -64,27 +64,27 @@ class NamingHelperTest {
 				Arguments.of(
 						StandardCharsets.UTF_8.name(),
 						"fk_", "table_name", "other_table_name", List.of( "col1", "col2", "col3" ),
-						"fk_f4u43ook9b825fxbm3exb18q6", "fk_1o8k3sa4q2a2wb596v4htt8qf" ),
+						"fk_ka01ji8vk10osbgp6ve604cm1kfsso7byjr6s294jaukhv3ajq", "fk_kv2dq7fp00eyv1vq5yc29rvc3yftq2fmyg9iacv99wrn3nn0l6" ),
 				Arguments.of(
 						StandardCharsets.ISO_8859_1.name(),
 						"fk_", "table_name", "other_table_name", List.of( "col1", "col2", "col3" ),
-						"fk_f4u43ook9b825fxbm3exb18q6", "fk_1o8k3sa4q2a2wb596v4htt8qf" ),
+						"fk_ka01ji8vk10osbgp6ve604cm1kfsso7byjr6s294jaukhv3ajq", "fk_kv2dq7fp00eyv1vq5yc29rvc3yftq2fmyg9iacv99wrn3nn0l6" ),
 				Arguments.of(
 						StandardCharsets.UTF_8.name(),
 						"fk_", "café", "le_déjeuner", List.of( "col1", "col2", "col3" ),
-						"fk_jdvsrk14lxab6a829ok160vyj", "fk_h34kugb2bguwmcn1g5h1q3snf" ),
+						"fk_ih8sokb1hh74aiucascp5pv0dlecescli8httwu7ca8ggbvxx4", "fk_1mlbg6hqesxj797eo16lo82hd491j5ag67833h3i1k7q99wo9b" ),
 				Arguments.of(
 						StandardCharsets.ISO_8859_1.name(),
 						"fk_", "café", "le_déjeuner", List.of( "col1", "col2", "col3" ),
-						"fk_g1py0mkjd1tu46tr8c2e1vm2l", "fk_1pitt5gtytwpy6ea02o7l5men" ),
+						"fk_i2tnixfnx9ylanksjrn8u41wvg5cdgl8wr7264olc17srxpa95", "fk_h8iedvm0im7uuapsek0b5wsc5goahu7wvjgtc3a5snqi79outg" ),
 				Arguments.of(
 						StandardCharsets.UTF_8.name(),
 						"fk_", "abcdefghijklmnopqrstuvwxyzäöüß", "stuvwxyzäöüß", List.of( "col1" ),
-						"fk_q11mlivmrc3sdfnncd2hwkpqp", "fk_gm8xsqu7ayucv5w5w2gj2dfly" ),
+						"fk_eh9134y0qw0bck215ws5kixdw8v41w26nuq76p5p6vdheyvbpk", "fk_megnb1o6em9hrlel3dvyomlmo41my964kfvdudonbumofve1jx" ),
 				Arguments.of(
 						StandardCharsets.ISO_8859_1.name(),
 						"fk_", "abcdefghijklmnopqrstuvwxyzäöüß", "stuvwxyzäöüß", List.of( "col1" )
-						, "fk_fua9hgc6dn6eno8hlqt58j72o", "fk_3iig3yrgsf5bjlbdo05d7mp2" )
+						, "fk_t8yjwdnsr4el6guwpgnxtlsvcgodr9rtaod8uor849w36552h", "fk_x5u4f3i64gnbca1jxu03q2968mn4b66bb6lbqbtf5apo6ux13" )
 		);
 	}
 

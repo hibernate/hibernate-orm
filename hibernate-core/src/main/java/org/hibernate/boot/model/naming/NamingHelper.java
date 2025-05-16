@@ -122,7 +122,7 @@ public class NamingHelper {
 	}
 
 	/**
-	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
+	 * Hash a constraint name using SHA-256. Convert the SHA-256 digest to base 35
 	 * (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
@@ -133,10 +133,10 @@ public class NamingHelper {
 	 */
 	public String hashedName(String name) {
 		try {
-			final MessageDigest md5 = MessageDigest.getInstance( "MD5" );
-			md5.reset();
-			md5.update( charset != null ? name.getBytes( charset ) : name.getBytes() );
-			final BigInteger bigInt = new BigInteger( 1, md5.digest() );
+			final MessageDigest md = MessageDigest.getInstance( "SHA-256" );
+			md.reset();
+			md.update( charset != null ? name.getBytes( charset ) : name.getBytes() );
+			final BigInteger bigInt = new BigInteger( 1, md.digest() );
 			// By converting to base 35 (full alphanumeric), we guarantee
 			// that the length of the name will always be smaller than the 30
 			// character identifier restriction enforced by a few dialects.

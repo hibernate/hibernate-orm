@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 
-	private static final int MAX_NAME_LENGTH = 30;
+	private static final int MAX_NAME_LENGTH = 170;
 
 	private static final String EXPLICIT_FK_NAME_NATIVE = "fk_explicit_native";
 

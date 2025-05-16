@@ -18,6 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.type.SqlTypes;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -106,6 +107,15 @@ public abstract class OracleOsonCompatibilityTest {
 							.setParameter( "id", 1 )
 							.setParameter( "json", json )
 							.executeUpdate();
+				}
+		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					session.createNativeQuery( session.getDialect().getDropTableString( "TEST_OSON_COMPAT" ) ).executeUpdate();
 				}
 		);
 	}

@@ -80,6 +80,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 		TypeDescription targetType = FieldLocator.ForClassHierarchy.Factory.INSTANCE.make( targetEntity )
 				.locate( bidirectionalAttributeName )
 				.getField()
+				.asDefined()
 				.getType()
 				.asErasure();
 

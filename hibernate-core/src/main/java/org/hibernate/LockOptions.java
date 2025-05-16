@@ -163,7 +163,6 @@ public class LockOptions implements Serializable {
 	private PessimisticLockScope pessimisticLockScope;
 	private Boolean followOnLocking;
 
-
 	private Map<String, LockMode> aliasSpecificLockModes;
 
 	/**
@@ -509,8 +508,6 @@ public class LockOptions implements Serializable {
 	public int hashCode() {
 		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
 	}
-
-
 
 	/**
 	 * Set of {@link Map.Entry}s, each associating an alias with its

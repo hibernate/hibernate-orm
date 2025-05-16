@@ -1148,7 +1148,15 @@ session.enableFetchProfile(Book_.PROFILE_EAGER_BOOK);
 Book eagerBook = session.find(Book.class, bookId);
 ----
 
-Alternatively, an instance of link:{doc-javadoc-url}org/hibernate/EnabledFetchProfile.html[`EnabledFetchProfile`] may be obtained in a type safe way from the static metamodel, and used as a `FindOption`:
+Alternatively, an instance of link:{doc-javadoc-url}org/hibernate/EnabledFetchProfile.html[`EnabledFetchProfile`] may be obtained in a type safe way from the static metamodel, and applied to the session:
+
+[source,java]
+----
+Book_._EagerBook.enable(session);
+Book eagerBook = session.find(Book.class, bookId);
+----
+
+Even better, the `EnabledFetchProfile` may be passed as a `FindOption`:
 
 [source,java]
 ----

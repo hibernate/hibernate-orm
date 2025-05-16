@@ -1140,12 +1140,19 @@ We may define as many different fetch profiles as we like.
 | `@FetchProfileOverride` | Specifies the fetch strategy for the annotated association, in a given fetch profile
 |===
 
-A fetch profile must be explicitly enabled for a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
+A fetch profile must be explicitly enabled for a given session by passing the name of the profile to link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
 
 [source,java]
 ----
 session.enableFetchProfile(Book_.PROFILE_EAGER_BOOK);
 Book eagerBook = session.find(Book.class, bookId);
+----
+
+Alternatively, an instance of link:{doc-javadoc-url}org/hibernate/EnabledFetchProfile.html[`EnabledFetchProfile`] may be obtained in a type safe way from the static metamodel, and used as a `FindOption`:
+
+[source,java]
+----
+Book eagerBook = entityManager.find(Book.class, bookId, Book_._EagerBook);
 ----
 
 So why or when might we prefer named fetch profiles to entity graphs?

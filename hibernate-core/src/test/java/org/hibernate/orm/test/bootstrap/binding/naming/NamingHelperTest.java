@@ -9,13 +9,17 @@ import org.hibernate.boot.model.naming.NamingHelper;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class NamingHelperTest {
 
@@ -55,6 +59,51 @@ class NamingHelperTest {
 						columnNames.stream().map( Identifier::toIdentifier )
 								.toArray( Identifier[]::new ) ) )
 				.isEqualTo( expectedConstraintName );
+	}
+
+	@Test
+	void testHashWithAlgorithm_md5_utf8() throws Exception {
+		NamingHelper helper = NamingHelper.withCharset(StandardCharsets.UTF_8.name());
+		String hash = helper.hashWithAlgorithm("table_name", "MD5");
+		assertNotNull(hash);
+		assertFalse(hash.isEmpty());
+		// MD5 hash of "table_name" in base 35 should be deterministic
+		assertEquals("8q6ok4ne4ufel54crtitkq7ir", hash);
+	}
+
+	@Test
+	void testHashWithAlgorithm_sha256_utf8() throws Exception {
+		NamingHelper helper = NamingHelper.withCharset(StandardCharsets.UTF_8.name());
+		String hash = helper.hashWithAlgorithm("table_name", "SHA-256");
+		assertNotNull(hash);
+		assertFalse(hash.isEmpty());
+		// SHA-256 hash of "table_name" in base 35 should be deterministic
+		assertEquals("nie2bx5e7mderevrnl4gkuhtmy45nwfvst7dv6cx3pb3yy9ul1", hash);
+	}
+
+	@Test
+	void testHashWithAlgorithm_md5_iso88591() throws Exception {
+		NamingHelper helper = NamingHelper.withCharset(StandardCharsets.ISO_8859_1.name());
+		String hash = helper.hashWithAlgorithm("café", "MD5");
+		assertNotNull(hash);
+		assertFalse(hash.isEmpty());
+		assertEquals("hgll69c0qdhsjikniholqfcj4", hash);
+	}
+
+	@Test
+	void testHashWithAlgorithm_invalidAlgorithm() {
+		NamingHelper helper = NamingHelper.withCharset(StandardCharsets.UTF_8.name());
+		assertThrows(NoSuchAlgorithmException.class, () -> {
+			helper.hashWithAlgorithm("table_name", "NOPE");
+		});
+	}
+
+	@Test
+	void testHashWithAlgorithm_invalidCharset() {
+		NamingHelper helper = NamingHelper.withCharset("NOPE-CHARSET");
+		assertThrows(UnsupportedEncodingException.class, () -> {
+			helper.hashWithAlgorithm("table_name", "MD5");
+		});
 	}
 
 	private static Stream<Arguments> args() {

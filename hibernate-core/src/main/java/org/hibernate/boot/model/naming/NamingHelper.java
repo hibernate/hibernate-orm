@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.jboss.logging.Logger;
 
 import static java.util.Comparator.comparing;
 
@@ -29,6 +30,8 @@ public class NamingHelper {
 	}
 
 	private final String charset;
+
+	private static final Logger log = Logger.getLogger(NamingHelper.class);
 
 	public NamingHelper() {
 		this(null);
@@ -124,8 +127,8 @@ public class NamingHelper {
 	}
 
 	/**
-	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
-	 * (full alphanumeric), guaranteeing
+	 * Hash a constraint name using MD5. If MD5 is not available, fall back to SHA-256.
+	 * Convert the digest to base 35 (full alphanumeric), guaranteeing
 	 * that the length of the name will always be smaller than the 30
 	 * character identifier restriction enforced by a few dialects.
 	 *
@@ -135,17 +138,36 @@ public class NamingHelper {
 	 */
 	public String hashedName(String name) {
 		try {
-			final MessageDigest md5 = MessageDigest.getInstance( "MD5" );
-			md5.reset();
-			md5.update( charset != null ? name.getBytes( charset ) : name.getBytes() );
-			final BigInteger bigInt = new BigInteger( 1, md5.digest() );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
+			return hashWithAlgorithm(name, "MD5");
 		}
-		catch ( NoSuchAlgorithmException | UnsupportedEncodingException e ) {
-			throw new HibernateException( "Unable to generate a hashed name", e );
+		catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+			log.infof("MD5 algorithm failed for hashedName, falling back to SHA-256: %s", e.getMessage());
+			try {
+				return hashWithAlgorithm(name, "SHA-256");
+			}
+			catch (NoSuchAlgorithmException | UnsupportedEncodingException ex) {
+				throw new HibernateException("Unable to generate a hashed name", ex);
+			}
 		}
+	}
+
+	/**
+	 * Helper to hash a name with the given algorithm and convert to base 35.
+	 *
+	 * @param name The name to be hashed.
+	 * @param algorithm The hashing algorithm to use.
+	 *
+	 * @return String The hashed name.
+	 */
+	public String hashWithAlgorithm(String name, String algorithm)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		final MessageDigest md = MessageDigest.getInstance(algorithm);
+		md.reset();
+		md.update( charset != null ? name.getBytes( charset ) : name.getBytes() );
+		final BigInteger bigInt = new BigInteger( 1, md.digest() );
+		// By converting to base 35 (full alphanumeric), we guarantee
+		// that the length of the name will always be smaller than the 30
+		// character identifier restriction enforced by a few dialects.
+		return bigInt.toString( 35 );
 	}
 }

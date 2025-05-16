@@ -22,6 +22,8 @@ import org.hibernate.type.descriptor.java.JavaType;
  * Extensions to the JPA-defined {@linkplain Metamodel metamodel} of
  * persistent Java types.
  *
+ * @apiNote This is an incubating API. Its name and package may change.
+ *
  * @see MappingMetamodel
  *
  * @since 6.0

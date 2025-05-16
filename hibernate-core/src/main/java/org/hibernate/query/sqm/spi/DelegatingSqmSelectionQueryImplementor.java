@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -28,6 +29,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.SqmSelectionQuery;
@@ -161,6 +163,12 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	@Override
 	public SqmSelectionQueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		getDelegate().setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> enableFetchProfile(EnabledFetchProfile fetchProfile) {
+		getDelegate().enableFetchProfile( fetchProfile );
 		return this;
 	}
 

@@ -1980,6 +1980,11 @@ public class SessionImpl
 	}
 
 	@Override
+	public void enableFetchProfile(EnabledFetchProfile fetchProfile) {
+		enableFetchProfile( fetchProfile.profileName() );
+	}
+
+	@Override
 	public void disableFetchProfile(String name) throws UnknownProfileException {
 		loadQueryInfluencers.disableFetchProfile( name );
 	}

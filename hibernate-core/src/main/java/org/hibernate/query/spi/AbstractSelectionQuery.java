@@ -19,6 +19,7 @@ import java.util.stream.StreamSupport;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -378,6 +379,11 @@ public abstract class AbstractSelectionQuery<R>
 	public SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		applyGraph( (RootGraphImplementor<? super R>) graph, semantic );
 		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> enableFetchProfile(EnabledFetchProfile fetchProfile) {
+		return enableFetchProfile( fetchProfile.profileName() );
 	}
 
 	@Override

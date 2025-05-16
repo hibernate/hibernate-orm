@@ -18,6 +18,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -285,6 +286,30 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
+
+	/**
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch
+	 * profile} represented by the given instance of {@link EnabledFetchProfile}
+	 * during execution of this query. If the requested fetch profile is already
+	 * enabled, the call has no effect.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 * <p>
+	 * An instance of {@link EnabledFetchProfile} may be obtained in a typesafe
+	 * way from the static metamodel.
+	 *
+	 * @param fetchProfile the {@link EnabledFetchProfile}
+	 *
+	 * @throws UnknownProfileException Indicates that the given object has
+	 *                                 a profile name which does not match
+	 *                                 any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 *
+	 * @since 7
+	 */
+	SelectionQuery<R> enableFetchProfile(EnabledFetchProfile fetchProfile);
 
 	/**
 	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch

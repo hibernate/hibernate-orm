@@ -114,14 +114,12 @@ public class StringJsonDocumentReader extends StringJsonDocument implements Json
 				assert this.processingStates.getCurrent() == JsonProcessingState.OBJECT;
 				break;
 			case QUOTE:
-				switch ( currentState ) {
-					case STARTING_ARRAY:
-						this.processingStates.push( JsonProcessingState.ARRAY );
-						break;
-					case STARTING_OBJECT:
-						this.processingStates.push( JsonProcessingState.OBJECT );
-						this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
-						break;
+				if (currentState == JsonProcessingState.STARTING_ARRAY) {
+					this.processingStates.push( JsonProcessingState.ARRAY );
+				}
+				if (currentState == JsonProcessingState.STARTING_OBJECT) {
+					this.processingStates.push( JsonProcessingState.OBJECT );
+					this.processingStates.push( JsonProcessingState.OBJECT_KEY_NAME );
 				}
 				break;
 			case OTHER:

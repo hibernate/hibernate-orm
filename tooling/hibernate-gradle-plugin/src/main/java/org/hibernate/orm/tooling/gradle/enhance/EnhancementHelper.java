@@ -52,20 +52,20 @@ public class EnhancementHelper {
 		}
 		final Enhancer enhancer = generateEnhancer( classLoader, enhancementDsl );
 
-		discoverTypes( classesDir, classesDir, enhancer, logger, ormDsl.getFileOperations() );
-		doEnhancement( classesDir, classesDir, enhancer, logger, ormDsl.getFileOperations(), classesToEnhance );
+		discoverTypes( classesDir, classesDir, enhancer, ormDsl.getFileOperations() );
+		doEnhancement( classesDir, classesDir, enhancer, ormDsl.getFileOperations(), classesToEnhance );
 	}
 
-	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, Logger logger, FileOperations fileOperations) {
+	private static void discoverTypes(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				discoverTypes( classesDir, subLocation, enhancer, logger, fileOperations );
+				discoverTypes( classesDir, subLocation, enhancer, fileOperations );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
 				final long lastModified = subLocation.lastModified();
 
-				discoverTypes( subLocation, className, enhancer, logger );
+				discoverTypes( subLocation, className, enhancer);
 
 				final boolean timestampReset = subLocation.setLastModified( lastModified );
 				if ( !timestampReset ) {
@@ -76,10 +76,10 @@ public class EnhancementHelper {
 		}
 	}
 
-	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, Logger logger, FileOperations fileOperations, List<String> classesToEnhance) {
+	private static void doEnhancement(File classesDir, File dir, Enhancer enhancer, FileOperations fileOperations, List<String> classesToEnhance) {
 		for ( File subLocation : dir.listFiles() ) {
 			if ( subLocation.isDirectory() ) {
-				doEnhancement( classesDir, subLocation, enhancer, logger, fileOperations, classesToEnhance );
+				doEnhancement( classesDir, subLocation, enhancer, fileOperations, classesToEnhance );
 			}
 			else if ( subLocation.isFile() && subLocation.getName().endsWith( ".class" ) ) {
 				final String className = determineClassName( classesDir, subLocation );
@@ -89,7 +89,7 @@ public class EnhancementHelper {
 					continue;
 				}
 
-				enhance( subLocation, className, enhancer, logger );
+				enhance( subLocation, className, enhancer );
 
 				final boolean timestampReset = subLocation.setLastModified( lastModified );
 				if ( !timestampReset ) {
@@ -103,8 +103,7 @@ public class EnhancementHelper {
 	private static void discoverTypes(
 			File javaClassFile,
 			String className,
-			Enhancer enhancer,
-			Logger logger) {
+			Enhancer enhancer) {
 		try {
 			enhancer.discoverTypes( className, Files.readAllBytes( javaClassFile.toPath() ) );
 			logger.info( "Successfully discovered types for class : " + className );
@@ -117,11 +116,10 @@ public class EnhancementHelper {
 	private static void enhance(
 			File javaClassFile,
 			String className,
-			Enhancer enhancer,
-			Logger logger) {
+			Enhancer enhancer) {
 		final byte[] enhancedBytecode = doEnhancement( javaClassFile, className, enhancer );
 		if ( enhancedBytecode != null ) {
-			writeOutEnhancedClass( enhancedBytecode, javaClassFile, logger );
+			writeOutEnhancedClass( enhancedBytecode, javaClassFile );
 			logger.info( "Successfully enhanced class : " + className );
 		}
 		else {
@@ -176,7 +174,7 @@ public class EnhancementHelper {
 		return buildDefaultBytecodeProvider().getEnhancer( enhancementContext );
 	}
 
-	private static void writeOutEnhancedClass(byte[] enhancedBytecode, File file, Logger logger) {
+	private static void writeOutEnhancedClass(byte[] enhancedBytecode, File file) {
 		try {
 			if ( file.delete() ) {
 				if ( !file.createNewFile() ) {

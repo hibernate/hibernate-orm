@@ -1144,8 +1144,15 @@ A fetch profile must be explicitly enabled for a given session by calling link:{
 
 [source,java]
 ----
-session.enableFetchProfile(Book_.PROFILE_EAGER_BOOK);
+session.enableFetchProfile(Book_._EagerBook);
 Book eagerBook = session.find(Book.class, bookId);
+----
+
+Alternatively, a profile may be passed as a `FindOption`:
+
+[source,java]
+----
+Book eagerBook = session.find(Book.class, bookId, Book_._EagerBook);
 ----
 
 So why or when might we prefer named fetch profiles to entity graphs?

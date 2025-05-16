@@ -17,6 +17,7 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
@@ -945,6 +946,9 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
+
+	@Override
+	Query<R> enableFetchProfile(EnabledFetchProfile fetchProfile);
 
 	@Override
 	Query<R> enableFetchProfile(String profileName);

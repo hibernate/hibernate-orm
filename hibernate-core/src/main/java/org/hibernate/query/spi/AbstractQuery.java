@@ -24,6 +24,7 @@ import jakarta.persistence.metamodel.Type;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
@@ -124,6 +125,12 @@ public abstract class AbstractQuery<R>
 	@Override
 	public QueryImplementor<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
 		super.setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> enableFetchProfile(EnabledFetchProfile fetchProfile) {
+		super.enableFetchProfile( fetchProfile );
 		return this;
 	}
 

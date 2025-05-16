@@ -1275,7 +1275,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	boolean isFetchProfileEnabled(String name) throws UnknownProfileException;
 
 	/**
-	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
 	 * with the given name in this session. If the requested fetch profile is
 	 * already enabled, the call has no effect.
 	 *
@@ -1287,6 +1287,26 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * @see org.hibernate.annotations.FetchProfile
 	 */
 	void enableFetchProfile(String name) throws UnknownProfileException;
+
+	/**
+	 * Enable the {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * represented by the given instance of {@link EnabledFetchProfile}. If
+	 * the requested fetch profile is already enabled, the call has no effect.
+	 * <p>
+	 * An instance of {@link EnabledFetchProfile} may be obtained in a typesafe
+	 * way from the static metamodel.
+	 *
+	 * @param fetchProfile the {@link EnabledFetchProfile}
+	 *
+	 * @throws UnknownProfileException Indicates that the given object has
+	 *                                 a profile name which does not match
+	 *                                 any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 *
+	 * @since 7
+	 */
+	void enableFetchProfile(EnabledFetchProfile fetchProfile) throws UnknownProfileException;
 
 	/**
 	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}

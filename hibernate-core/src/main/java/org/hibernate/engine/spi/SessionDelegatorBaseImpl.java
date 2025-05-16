@@ -22,6 +22,7 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
+import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -1100,6 +1101,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void enableFetchProfile(String name) throws UnknownProfileException {
 		delegate.enableFetchProfile( name );
+	}
+
+	@Override
+	public void enableFetchProfile(EnabledFetchProfile fetchProfile) {
+		delegate.enableFetchProfile( fetchProfile );
 	}
 
 	@Override

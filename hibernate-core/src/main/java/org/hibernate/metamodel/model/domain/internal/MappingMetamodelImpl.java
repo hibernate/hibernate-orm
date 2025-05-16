@@ -706,43 +706,6 @@ public class MappingMetamodelImpl
 	}
 
 	@Override
-	public  <T> BindableType<T> resolveQueryParameterType(Class<T> javaClass) {
-		final TypeConfiguration typeConfiguration = getTypeConfiguration();
-
-		final BasicType<T> basicType = typeConfiguration.getBasicTypeForJavaType( javaClass );
-		// For enums, we simply don't know the exact mapping if there is no basic type registered
-		if ( basicType != null || javaClass.isEnum() ) {
-			return basicType;
-		}
-
-		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaClass );
-		if ( managedType != null ) {
-			return (BindableType<T>) managedType;
-		}
-
-		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<T> javaType = javaTypeRegistry.findDescriptor( javaClass );
-		if ( javaType != null ) {
-			final JdbcType recommendedJdbcType =
-					javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-			if ( recommendedJdbcType != null ) {
-				return typeConfiguration.getBasicTypeRegistry().resolve( javaType, recommendedJdbcType );
-			}
-		}
-
-		if ( javaClass.isArray() && javaTypeRegistry.findDescriptor( javaClass.getComponentType() ) != null ) {
-			final JavaType<T> resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaClass );
-			final JdbcType recommendedJdbcType =
-					resolvedJavaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-			if ( recommendedJdbcType != null ) {
-				return typeConfiguration.getBasicTypeRegistry().resolve( resolvedJavaType, recommendedJdbcType );
-			}
-		}
-
-		return null;
-	}
-
-	@Override
 	public Set<String> getCollectionRolesByEntityParticipant(String entityName) {
 		return collectionRolesByEntityParticipant.get( entityName );
 	}
@@ -764,7 +727,40 @@ public class MappingMetamodelImpl
 
 	@Override
 	public <T> BindableType<T> resolveParameterBindType(Class<T> javaType) {
-		return resolveQueryParameterType( javaType );
+		final TypeConfiguration typeConfiguration = getTypeConfiguration();
+
+		final BasicType<T> basicType = typeConfiguration.getBasicTypeForJavaType( javaType );
+		// For enums, we simply don't know the exact mapping if there is no basic type registered
+		if ( basicType != null || javaType.isEnum() ) {
+			return basicType;
+		}
+
+		final ManagedDomainType<T> managedType = jpaMetamodel.findManagedType( javaType );
+		if ( managedType != null ) {
+			return (BindableType<T>) managedType;
+		}
+
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final JavaType<T> javaType1 = javaTypeRegistry.findDescriptor( javaType );
+		if ( javaType1 != null ) {
+			final JdbcType recommendedJdbcType =
+					javaType1.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			if ( recommendedJdbcType != null ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve( javaType1, recommendedJdbcType );
+			}
+		}
+
+		if ( javaType.isArray()
+				&& javaTypeRegistry.findDescriptor( javaType.getComponentType() ) != null ) {
+			final JavaType<T> resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaType );
+			final JdbcType recommendedJdbcType =
+					resolvedJavaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+			if ( recommendedJdbcType != null ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve( resolvedJavaType, recommendedJdbcType );
+			}
+		}
+
+		return null;
 	}
 
 	@Override

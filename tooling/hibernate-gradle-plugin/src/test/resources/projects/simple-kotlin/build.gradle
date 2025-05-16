@@ -24,6 +24,12 @@ dependencies {
     implementation 'org.hibernate.orm:hibernate-core:6.1.0.Final'
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
 hibernate {
     useSameVersion = false
     enhancement {

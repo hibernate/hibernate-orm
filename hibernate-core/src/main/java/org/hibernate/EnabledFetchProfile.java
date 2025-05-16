@@ -5,6 +5,7 @@
 package org.hibernate;
 
 import jakarta.persistence.FindOption;
+import org.hibernate.query.SelectionQuery;
 
 /**
  * A {@link jakarta.persistence.FindOption} which requests a named
@@ -12,9 +13,7 @@ import jakarta.persistence.FindOption;
  * <p>
  * An instance of this class may be obtained in a type safe way
  * from the static metamodel for the class annotated
- * {@link org.hibernate.annotations.FetchProfile @FetchProfile}
- * and passed as an option to
- * {@link Session#find(Class, Object, FindOption...) find()}.
+ * {@link org.hibernate.annotations.FetchProfile @FetchProfile}.
  * <p>
  * For example, this class defines a fetch profile:
  * <pre>
@@ -28,10 +27,19 @@ import jakarta.persistence.FindOption;
  *     Set&lt;Author&gt; authors;
  * }
  * </pre>
- * The fetch profile may be requested like this:
+ * <p>
+ * An {@code EnabledFetchProfile} may be obtained from the static
+ * metamodel for the entity {@code Book} and passed as an option to
+ * {@link Session#find(Class, Object, FindOption...) find()}.
  * <pre>
  * Book bookWithAuthors =
  *         session.find(Book.class, isbn, Book_._WithAuthors)
+ * </pre>
+ * Alternatively, it may be {@linkplain #enable(Session) applied}
+ * to a {@code Session} or {@code Query}.
+ * <pre>
+ * Book_._WithAuthors.enable(session);
+ * Book bookWithAuthors = session.find(Book.class, isbn);
  * </pre>
  * <p>
  * When the static metamodel is not used, an {@code EnabledFetchProfile}
@@ -54,4 +62,20 @@ import jakarta.persistence.FindOption;
  */
 public record EnabledFetchProfile(String profileName)
 		implements FindOption {
+
+	/**
+	 * Enable the fetch profile represented by this
+	 * object in the given session.
+	 */
+	public void enable(Session session) {
+		session.enableFetchProfile(profileName);
+	}
+
+	/**
+	 * Enable the fetch profile represented by this
+	 * object during execution of the given query.
+	 */
+	public void enable(SelectionQuery<?> query) {
+		query.enableFetchProfile(profileName);
+	}
 }

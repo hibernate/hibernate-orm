@@ -127,7 +127,9 @@ public class ArrayTrimTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionTrim( root.<Collection<String>>get( "theCollection" ), cb.literal( 1 ) ),
-					cb.collectionTrim( root.get( "theCollection" ), 1 )
+					cb.collectionTrim( root.get( "theCollection" ), 1 ),
+					cb.collectionTrim( root.<Collection<Label>>get( "theLabels" ), cb.literal( 1 ) ),
+					cb.collectionTrim( root.get( "theLabels" ), 1 )
 			);
 			em.createQuery( cq ).getResultList();
 		} );

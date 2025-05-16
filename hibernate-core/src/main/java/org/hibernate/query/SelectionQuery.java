@@ -4,6 +4,29 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.Remove;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.UnknownProfileException;
+import org.hibernate.graph.GraphSemantic;
+
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -12,29 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.PessimisticLockScope;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.Incubating;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.UnknownProfileException;
-import org.hibernate.graph.GraphSemantic;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.Type;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -604,7 +604,15 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
+	 *
+	 * @apiNote Support for alias-specific lock modes will be removed in a future version; they
+	 * were never really supported anyway, as Hibernate always used the most restrictive one it
+	 * found.  7.1 will introduce an extension to the JPA {@linkplain PessimisticLockScope}
+	 * which should be used instead, in conjunction with a {@linkplain #setHibernateLockMode lock mode}.
+	 *
+	 * @see #setLockScope
 	 */
+	@Remove
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**

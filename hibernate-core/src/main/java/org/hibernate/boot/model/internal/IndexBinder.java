@@ -158,10 +158,11 @@ class IndexBinder {
 			String[] columnNames,
 			String[] orderings,
 			boolean unique,
+			boolean declaredAsIndex,
 			String options,
 			Selectable[] columns) {
 		final IndexOrUniqueKeyNameSource source =
-				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName );
+				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName, declaredAsIndex );
 		boolean hasFormula = false;
 		for ( Selectable selectable : columns ) {
 			if ( selectable.isFormula() ) {
@@ -212,6 +213,7 @@ class IndexBinder {
 					columnExpressions,
 					ordering,
 					unique,
+					true,
 					options,
 					selectables( table, name, columnExpressions )
 			);
@@ -230,6 +232,7 @@ class IndexBinder {
 					columnNames,
 					null,
 					true,
+					false,
 					options,
 					columns( table, name, columnNames )
 			);
@@ -255,17 +258,32 @@ class IndexBinder {
 		}
 	}
 
-	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
+	private class IndexOrUniqueKeyNameSource
+			implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
 		private final MetadataBuildingContext buildingContext;
 		private final Table table;
 		private final String[] columnNames;
 		private final String originalKeyName;
+		private final boolean declaredAsIndex;
 
-		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
+		private IndexOrUniqueKeyNameSource(
+				MetadataBuildingContext buildingContext,
+				Table table,
+				String[] columnNames,
+				String originalKeyName,
+				boolean declaredAsIndex) {
 			this.buildingContext = buildingContext;
 			this.table = table;
 			this.columnNames = columnNames;
 			this.originalKeyName = originalKeyName;
+			this.declaredAsIndex = declaredAsIndex;
+		}
+
+		@Override
+		public Kind kind() {
+			return declaredAsIndex
+					? ImplicitIndexNameSource.super.kind()
+					: ImplicitUniqueKeyNameSource.super.kind();
 		}
 
 		@Override

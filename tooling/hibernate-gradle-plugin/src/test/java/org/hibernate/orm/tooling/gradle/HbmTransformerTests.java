@@ -37,7 +37,7 @@ class HbmTransformerTests {
 				.withProjectDir( projectDir.toFile() )
 				.withPluginClasspath()
 				.withDebug( true )
-				.withArguments( "clean", "hbmTransform", "--stacktrace", "--no-build-cache" )
+				.withArguments( "clean", "hbmTransform", "--stacktrace", "--no-build-cache", "--configuration-cache" )
 				.forwardOutput();
 		final BuildResult result = gradleRunner.build();
 

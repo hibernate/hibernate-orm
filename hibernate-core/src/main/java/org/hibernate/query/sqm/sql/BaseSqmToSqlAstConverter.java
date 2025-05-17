@@ -1915,6 +1915,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final boolean oldInNestedContext = inNestedContext;
 		inNestedContext = false;
 
+		final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
+		sqmQueryPartStack.push( sqmQuerySpec );
+		// In sub-queries, we can never deduplicate the selection items as that might change semantics
+		deduplicateSelectionItems = false;
+
 		final SqlAstQueryPartProcessingStateImpl processingState;
 		if ( trackAliasedNodePositions( sqmQuerySpec ) ) {
 			processingState = new SqlAstQueryPartProcessingStateImpl(
@@ -1936,10 +1941,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
-		final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
-		sqmQueryPartStack.push( sqmQuerySpec );
-		// In sub-queries, we can never deduplicate the selection items as that might change semantics
-		deduplicateSelectionItems = false;
 		pushProcessingState( processingState );
 		queryTransformers.push( new ArrayList<>() );
 

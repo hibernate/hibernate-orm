@@ -7,6 +7,7 @@ package org.hibernate.orm.test.cascade.circle;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -36,28 +37,16 @@ import org.junit.jupiter.api.Test;
  *
  * @author Gail Badner (based on original model provided by Pavol Zibrita)
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/CascadeMergeToChildBeforeParent.hbm.xml"
-		}
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings= "org/hibernate/orm/test/cascade/circle/CascadeMergeToChildBeforeParent.xml")
 @SessionFactory
-@ServiceRegistry(
-		settings = @Setting(name = Environment.CHECK_NULLABILITY, value = "true")
-)
+@ServiceRegistry(settings = @Setting(name = Environment.CHECK_NULLABILITY, value = "true"))
+@JiraKey( "HHH-3544" )
 public class CascadeMergeToChildBeforeParentTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Transport" );
-					session.createQuery( "delete from Tour" );
-					session.createQuery( "delete from Node" );
-					session.createQuery( "delete from Route" );
-					session.createQuery( "delete from Vehicle" );
-				}
-		);
+		scope.dropData();
 	}
 
 	@Test

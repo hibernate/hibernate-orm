@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/MultiPathCascade.hbm.xml"
+				"org/hibernate/orm/test/cascade/MultiPathCascade.xml"
 		}
 )
 @SessionFactory

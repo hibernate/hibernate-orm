@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/ChildForParentWithAssignedId.hbm.xml",
-				"org/hibernate/orm/test/cascade/ParentWithAssignedId.hbm.xml"
+				"org/hibernate/orm/test/cascade/ChildForParentWithAssignedId.xml",
+				"org/hibernate/orm/test/cascade/ParentWithAssignedId.xml"
 		}
 )
 @SessionFactory
@@ -38,7 +38,7 @@ public class CascadeTestWithAssignedParentIdTest {
 					Child child = new Child();
 					child.setParent( parent );
 					parent.setChildren( Collections.singleton( child ) );
-					parent.setId( Long.valueOf( 123L ) );
+					parent.setId( 123 );
 					// this should figure out that the parent needs saving first since id is assigned.
 					session.persist( child );
 				}

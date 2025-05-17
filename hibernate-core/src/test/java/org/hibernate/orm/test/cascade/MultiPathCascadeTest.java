@@ -22,23 +22,14 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Ovidiu Feodorov
  * @author Gail Badner
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/MultiPathCascade.hbm.xml"
-		}
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/cascade/MultiPathCascade.xml")
 @SessionFactory
 public class MultiPathCascadeTest {
 
 	@AfterEach
-	public void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from A" );
-					session.createQuery( "delete from G" );
-					session.createQuery( "delete from H" );
-				}
-		);
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test

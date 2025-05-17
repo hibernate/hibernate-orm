@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.component.cascading.collection;
+
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -13,17 +14,17 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public class LocalizedStrings {
-	private Map strings = new HashMap();
+	private final Map<Locale,String> strings = new HashMap<>();
 
 	public void addString(Locale locale, String value) {
 		strings.put( locale, value );
 	}
 
 	public String getString(Locale locale) {
-		return ( String ) strings.get( locale );
+		return strings.get( locale );
 	}
 
-	public Map getStringsCopy() {
+	public Map<Locale,String> makeStringsCopy() {
 		return java.util.Collections.unmodifiableMap( strings );
 	}
 }

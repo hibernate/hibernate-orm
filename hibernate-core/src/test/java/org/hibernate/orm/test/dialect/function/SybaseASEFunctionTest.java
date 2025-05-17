@@ -25,23 +25,20 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- *
  * @author Richard H. Tingstad
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/dialect/function/Product.hbm.xml"
-)
+@DomainModel(annotatedClasses = Product.class)
 @SessionFactory
 @RequiresDialect(value = SybaseASEDialect.class)
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "JUnitMalformedDeclaration"})
 public class SybaseASEFunctionTest {
 
 	@BeforeAll
 	protected void prepareTest(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction(
 				session -> {
-					Product product = new Product();
-					product.setPrice(new BigDecimal("0.5"));
+					Product product = new Product( 1L );
+					product.setPrice( new BigDecimal("0.5") );
 					product.setDate( Calendar.getInstance().getTime() );
 					session.persist( product );
 				}
@@ -50,9 +47,7 @@ public class SybaseASEFunctionTest {
 
 	@AfterAll
 	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from Product" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test

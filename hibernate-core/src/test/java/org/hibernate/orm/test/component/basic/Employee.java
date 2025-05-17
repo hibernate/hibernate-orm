@@ -17,7 +17,7 @@ public class Employee {
 	private Person person;
 	private Date hireDate;
 	private OptionalComponent optionalComponent;
-	private Set directReports = new HashSet();
+	private Set<Employee> directReports = new HashSet<>();
 
 	public Long getId() {
 		return id;
@@ -51,11 +51,11 @@ public class Employee {
 		this.optionalComponent = optionalComponent;
 	}
 
-	public Set getDirectReports() {
+	public Set<Employee> getDirectReports() {
 		return directReports;
 	}
 
-	public void setDirectReports(Set directReports) {
+	public void setDirectReports(Set<Employee> directReports) {
 		this.directReports = directReports;
 	}
 }

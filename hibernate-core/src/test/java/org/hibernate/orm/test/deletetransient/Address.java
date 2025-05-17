@@ -14,7 +14,7 @@ import java.util.Set;
 public class Address {
 	private Long id;
 	private String info;
-	private Set suites = new HashSet();
+	private Set<Suite> suites = new HashSet<>();
 
 	public Address() {
 	}
@@ -39,11 +39,11 @@ public class Address {
 		this.info = info;
 	}
 
-	public Set getSuites() {
+	public Set<Suite> getSuites() {
 		return suites;
 	}
 
-	public void setSuites(Set suites) {
+	public void setSuites(Set<Suite> suites) {
 		this.suites = suites;
 	}
 }

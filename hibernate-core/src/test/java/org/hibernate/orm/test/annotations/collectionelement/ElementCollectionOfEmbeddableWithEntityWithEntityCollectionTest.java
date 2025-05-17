@@ -122,7 +122,8 @@ public class ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest {
 	}
 
 	@Entity(name = "Plan")
-	@Table(name = "PLAN_TABLE")
+	// add a table prefix to avoid conflict with system view
+	@Table(name = "PLAN_TEST_TABLE")
 	public static class Plan {
 		@Id
 		public Integer id;

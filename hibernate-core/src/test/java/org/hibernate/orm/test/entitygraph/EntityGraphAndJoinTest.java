@@ -112,7 +112,8 @@ public class EntityGraphAndJoinTest {
 			final EntityGraph<?> entityGraph = session.getEntityGraph( "test-graph" );
 			final List<Person> resultList = query.setHint( HINT_SPEC_FETCH_GRAPH, entityGraph ).getResultList();
 			assertThat( resultList ).hasSize( 2 );
-			assertThat( resultList.stream().map( p -> p.getAddress().getId() ) ).containsExactly( 1L, 2L );
+			// No order by, there is no guarantee of the data order.
+			assertThat( resultList.stream().map( p -> p.getAddress().getId() ) ).containsExactlyInAnyOrder( 1L, 2L );
 			inspector.assertExecutedCount( 1 );
 			inspector.assertNumberOfOccurrenceInQuery( 0, "join", where ? 2 : 1 );
 		} );

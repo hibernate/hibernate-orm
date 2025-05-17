@@ -4,6 +4,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Time;
+import java.util.Calendar;
 import java.util.Comparator;
 
 import jakarta.persistence.TemporalType;
@@ -58,6 +60,18 @@ public abstract class AbstractTemporalJavaType<T>
 	private <X> TemporalJavaType<X> forMissingPrecision(TypeConfiguration typeConfiguration) {
 		//noinspection unchecked,rawtypes
 		return (TemporalJavaType) this;
+	}
+
+	public static Time millisToSqlTime(long millis) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis( millis );
+		calendar.set(Calendar.YEAR, 1970);
+		calendar.set(Calendar.MONTH, 0);
+		calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+		final Time time = new Time(millis);
+		time.setTime( calendar.getTimeInMillis()  );
+		return time;
 	}
 
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {

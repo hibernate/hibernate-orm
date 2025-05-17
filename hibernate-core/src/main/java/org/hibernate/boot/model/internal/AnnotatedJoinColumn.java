@@ -8,6 +8,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -312,6 +313,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		setMappingColumn( null );
 	}
 
+	/**
+	 * The JPA-specified rules implemented in
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl#determineJoinColumnName}
+	 * prevent us from assigning defaulted names to {@link JoinColumn} until the second pass.
+	 */
 	public void linkValueUsingDefaultColumnNaming(
 			Column referencedColumn,
 			PersistentClass referencedEntity,
@@ -325,11 +331,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
+		// In the case of a reference to a composite primary key,
+		// this instance of AnnotatedJoinColumn actually represents
+		// multiple foreign key columns, and this method will be
+		// called multiple times on the same instance
 		final String logicalReferencedColumn =
 				getBuildingContext().getMetadataCollector()
 						.getLogicalColumnName( referencedEntity.getTable(), referencedColumn.getQuotedName() );
 		final String columnName = defaultColumnName( columnIndex, referencedEntity, logicalReferencedColumn );
-		//yuk side effect on an implicit column
+		// awful side effect on an implicit column
 		setLogicalColumnName( columnName );
 		setImplicit( true );
 		setReferencedColumn( logicalReferencedColumn );
@@ -450,10 +460,23 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 	}
 
+	/**
+	 * Assign the column name from the explicit {@code name} given by the annotation, if any. In cases where the column
+	 * name cannot be inferred, the {@link Column} is not assigned a name, and this method returns {@code false}. The
+	 * "dummy" {@code Column} will later be replaced with a {@code Column} with name determined by the rules implemented
+	 * in {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl#determineJoinColumnName},
+	 * as required by the JPA specification, or by any other custom {@link ImplicitNamingStrategy} when
+	 * {@link #linkValueUsingDefaultColumnNaming} is called during a {@link org.hibernate.boot.spi.SecondPass}.
+	 * @return {@code true} if a name could be inferred
+	 */
 	@Override
-	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
+	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
 		if ( isNotEmpty( columnName ) ) {
 			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 

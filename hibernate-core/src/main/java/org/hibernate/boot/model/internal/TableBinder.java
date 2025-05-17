@@ -759,12 +759,13 @@ public class TableBinder {
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
-		final KeyValue keyValue = referencedEntity instanceof JoinedSubclass
-				? referencedEntity.getKey()
-				: referencedEntity.getIdentifier();
-		final List<Column> idColumns = keyValue.getColumns();
-		for ( int i = 0; i < idColumns.size(); i++ ) {
-			final Column column = idColumns.get(i);
+		final KeyValue keyValue =
+				referencedEntity instanceof JoinedSubclass
+						? referencedEntity.getKey()  // a joined subclass is referenced via the key of the subclass table
+						: referencedEntity.getIdentifier();
+		final List<Column> referencedKeyColumns = keyValue.getColumns();
+		for ( int i = 0; i < referencedKeyColumns.size(); i++ ) {
+			final Column column = referencedKeyColumns.get(i);
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );

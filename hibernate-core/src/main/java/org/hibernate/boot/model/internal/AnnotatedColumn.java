@@ -299,7 +299,8 @@ public class AnnotatedColumn {
 		else {
 			mappingColumn = new Column();
 			mappingColumn.setExplicit( !isImplicit );
-			redefineColumnName( columnName, propertyName, applyNamingStrategy );
+			final boolean nameDetermined =
+					inferColumnNameIfPossible( columnName, propertyName, applyNamingStrategy );
 			mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //relevant precision
 				mappingColumn.setPrecision( precision );
@@ -311,7 +312,12 @@ public class AnnotatedColumn {
 			mappingColumn.setArrayLength( arrayLength );
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
-			if ( unique ) {
+			mappingColumn.setUnique( unique );
+			// if the column name is not determined, we will assign the
+			// name to the unique key later this method gets called again
+			// from linkValueUsingDefaultColumnNaming() in second pass
+			if ( unique && nameDetermined ) {
+				// assign a unique key name to the column
 				getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
 			}
 			for ( CheckConstraint constraint : checkConstraints ) {
@@ -341,12 +347,25 @@ public class AnnotatedColumn {
 		return mappingColumn == null || isEmpty( mappingColumn.getName() );
 	}
 
-	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
+	/**
+	 * Attempt to infer the column name from the explicit {@code name} given by the annotation and the property or field
+	 * name. In the case of a {@link jakarta.persistence.JoinColumn}, this is impossible, due to the rules implemented in
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl#determineJoinColumnName}. In cases
+	 * where the column name cannot be inferred, the {@link Column} is not assigned a name, and this method returns
+	 * {@code false}. The "dummy" {@code Column} will later be replaced with a {@code Column} with a name determined by
+	 * the {@link ImplicitNamingStrategy} when {@link AnnotatedJoinColumn#linkValueUsingDefaultColumnNaming} is called
+	 * during a {@link org.hibernate.boot.spi.SecondPass}.
+	 * @return {@code true} if a name could be inferred
+	 */
+	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
 		if ( !isEmpty( columnName ) || !isEmpty( propertyName ) ) {
 			final String logicalColumnName = resolveLogicalColumnName( columnName, propertyName );
 			mappingColumn.setName( processColumnName( logicalColumnName, applyNamingStrategy ) );
+			return true;
 		}
-		// else nothing to do
+		else {
+			return false;
+		}
 	}
 
 	private String resolveLogicalColumnName(String columnName, String propertyName) {

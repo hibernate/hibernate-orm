@@ -469,7 +469,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public Index addIndex(Index index) {
-		Index current =  indexes.get( index.getName() );
+		final Index current =  indexes.get( index.getName() );
 		if ( current != null ) {
 			throw new MappingException( "Index " + index.getName() + " already exists" );
 		}
@@ -478,7 +478,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	public UniqueKey addUniqueKey(UniqueKey uniqueKey) {
-		UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
+		final UniqueKey current = uniqueKeys.get( uniqueKey.getName() );
 		if ( current != null ) {
 			throw new MappingException( "UniqueKey " + uniqueKey.getName() + " already exists" );
 		}
@@ -487,7 +487,9 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	/**
-	 * Mark the given column unique.
+	 * Mark the given column unique and assign a name to the unique key.
+	 * <p>
+	 * This method does not add a {@link UniqueKey} to the table itself!
 	 */
 	public void createUniqueKey(Column column, MetadataBuildingContext context) {
 		final String keyName = context.getBuildingOptions().getImplicitNamingStrategy()

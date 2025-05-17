@@ -157,8 +157,8 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 						tableExpression,
 						true
 				);
-				final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
-				if ( assignmentList == null ) {
+				final List<Assignment> assignmentsForInsert = assignmentsByTable.get( updatingTableReference );
+				if ( assignmentsForInsert == null ) {
 					continue;
 				}
 				final String insertCteTableName = getInsertCteTableName( tableExpression );
@@ -233,7 +233,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				// Collect the target column references from the key expressions
 				final List<ColumnReference> targetColumnReferences = new ArrayList<>( existsKeyColumns );
 				// And transform assignments to target column references and selections
-				for ( Assignment assignment : assignments ) {
+				for ( Assignment assignment : assignmentsForInsert ) {
 					targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(

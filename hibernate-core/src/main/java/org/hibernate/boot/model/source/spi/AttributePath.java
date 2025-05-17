@@ -4,7 +4,7 @@
  */
 package org.hibernate.boot.model.source.spi;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.split;
 
 /**
  * An attribute path is, generally speaking, the path of attribute names back
@@ -40,14 +40,15 @@ public class AttributePath extends AbstractAttributeKey {
 	}
 
 	public static AttributePath parse(String path) {
-		if ( path == null ) {
+		if ( path != null ) {
+			AttributePath attributePath = new AttributePath();
+			for ( String part : split( ".", path ) ) {
+				attributePath = attributePath.append( part );
+			}
+			return attributePath;
+		}
+		else {
 			return null;
 		}
-
-		AttributePath attributePath = new AttributePath();
-		for ( String part : StringHelper.split( ".", path ) ) {
-			attributePath = attributePath.append( part );
-		}
-		return attributePath;
 	}
 }

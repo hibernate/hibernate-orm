@@ -68,7 +68,7 @@ public class NamingHelper {
 			Identifier... columnNames) {
 		// Use a concatenation that guarantees uniqueness, even if identical
 		// names exist between all table and column identifiers.
-		final StringBuilder sb = new StringBuilder()
+		final StringBuilder text = new StringBuilder()
 				.append( "table`" ).append( tableName ).append( "`" )
 				.append( "references`" ).append( referencedTableName ).append( "`" );
 		// Ensure a consistent ordering of columns, regardless of the order
@@ -78,9 +78,10 @@ public class NamingHelper {
 		final Identifier[] alphabeticalColumns = columnNames.clone();
 		Arrays.sort( alphabeticalColumns, comparing( Identifier::getCanonicalName ) );
 		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( "`" );
+			assert columnName != null;
+			text.append( "column`" ).append( columnName ).append( "`" );
 		}
-		return prefix + hashedName( sb.toString() );
+		return prefix + hashedName( text.toString() );
 	}
 
 	/**
@@ -93,7 +94,7 @@ public class NamingHelper {
 			String prefix, Identifier tableName, Identifier... columnNames ) {
 		// Use a concatenation that guarantees uniqueness, even if identical
 		// names exist between all table and column identifiers.
-		final StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
+		final StringBuilder text = new StringBuilder( "table`" + tableName + "`" );
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
 		// Clone the list, as sometimes a set of order-dependent Column
@@ -101,9 +102,10 @@ public class NamingHelper {
 		final Identifier[] alphabeticalColumns = columnNames.clone();
 		Arrays.sort( alphabeticalColumns, comparing(Identifier::getCanonicalName) );
 		for ( Identifier columnName : alphabeticalColumns ) {
-			sb.append( "column`" ).append( columnName ).append( "`" );
+			assert columnName != null;
+			text.append( "column`" ).append( columnName ).append( "`" );
 		}
-		return prefix + hashedName( sb.toString() );
+		return prefix + hashedName( text.toString() );
 	}
 
 	/**

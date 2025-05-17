@@ -55,6 +55,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -262,6 +263,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsSkipLocked implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSkipLocked();
+		}
+	}
+
+	public static class SupportsTableLocking implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getReadRowLockStrategy() != RowLockStrategy.NONE;
 		}
 	}
 

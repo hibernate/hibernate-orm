@@ -11,8 +11,17 @@ import java.util.List;
  *
  * @author Steve Ebersole
  */
-public interface ImplicitConstraintNameSource extends ImplicitNameSource {
+public sealed interface ImplicitConstraintNameSource
+		extends ImplicitNameSource
+		permits ImplicitIndexNameSource, ImplicitUniqueKeyNameSource, ImplicitForeignKeyNameSource {
 	Identifier getTableName();
 	List<Identifier> getColumnNames();
 	Identifier getUserProvidedIdentifier();
+	Kind kind();
+
+	enum Kind {
+		FOREIGN_KEY,
+		UNIQUE_KEY,
+		INDEX
+	}
 }

@@ -9,7 +9,13 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public interface ImplicitForeignKeyNameSource extends ImplicitConstraintNameSource {
+public non-sealed interface ImplicitForeignKeyNameSource
+		extends ImplicitConstraintNameSource {
 	Identifier getReferencedTableName();
 	List<Identifier> getReferencedColumnNames();
+
+	@Override
+	default Kind kind() {
+		return Kind.FOREIGN_KEY;
+	}
 }

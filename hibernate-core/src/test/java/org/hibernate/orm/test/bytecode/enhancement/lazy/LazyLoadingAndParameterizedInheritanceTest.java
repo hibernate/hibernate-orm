@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 @DomainModel(
 		annotatedClasses = {
@@ -101,6 +102,14 @@ public class LazyLoadingAndParameterizedInheritanceTest {
 			//That is the actual test. If three == null ==> lazy load was not performed.
 			assertThat( three ).isNotNull();
 		} );
+	}
+
+	@Test
+	public void testCollectionWrite() {
+		Three three = new Three();
+		Two two = new Two();
+		assertThatNoException().isThrownBy(() -> three.setTwos(Set.of(two)));
+		assertThat(two.getThree()).isSameAs(three);
 	}
 
 	@Entity(name = "One")

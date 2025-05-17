@@ -23,7 +23,7 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 			return "UKinnacp0woeltj5l0k4vgabf8k"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
 		}
 		else {
-			return "UK3punuckhqfc03ddypdrpeahs9cty";
+			return "UKpm66tdjkgtsca5x2uwux487t5";
 		}
 	}
 
@@ -33,7 +33,7 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 			return "FKe1lr9dd16cmmon53r7m736yev"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
 		}
 		else {
-			return "FK6av084md8iluhsdmw8hqv4ep8g98";
+			return "FKgvrnki5fwp3qo0hfp1bu1jj0q";
 		}
 	}
 
@@ -43,7 +43,7 @@ public class Utf8CharsetNamingStrategyTest extends AbstractCharsetNamingStrategy
 			return "IDXinnacp0woeltj5l0k4vgabf8k"; // Non-ASCII, non-alphanumeric identifiers are quoted on HANA
 		}
 		else {
-			return "IDX3punuckhqfc03ddypdrpeahs9ct";
+			return "IDXpm66tdjkgtsca5x2uwux487t5";
 		}
 	}
 }

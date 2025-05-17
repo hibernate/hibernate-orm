@@ -13,7 +13,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -453,7 +452,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	@Override
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( StringHelper.isNotEmpty( columnName ) ) {
+		if ( isNotEmpty( columnName ) ) {
 			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
 		}
 	}

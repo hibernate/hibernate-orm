@@ -10,7 +10,6 @@ import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 
-@SuppressWarnings("serial")
 public class LongIdentifierNamingStrategy
 		extends ImplicitNamingStrategyJpaCompliantImpl {
 

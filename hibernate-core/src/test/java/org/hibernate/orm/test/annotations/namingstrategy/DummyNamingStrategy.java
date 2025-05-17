@@ -8,7 +8,6 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
-@SuppressWarnings("serial")
 public class DummyNamingStrategy extends PhysicalNamingStrategyStandardImpl {
 	@Override
 	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {

@@ -19,7 +19,7 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
  * preferring to conform to JPA standards.
  * <p>
  * For the legacy JPA-based naming standards initially implemented by Hibernate,
- * see/use {@link ImplicitNamingStrategyLegacyJpaImpl}
+ * see/use {@link ImplicitNamingStrategyLegacyJpaImpl}.
  *
  * @author Steve Ebersole
  */
@@ -31,55 +31,50 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 
 	@Override
 	public Identifier determinePrimaryTableName(ImplicitEntityNameSource source) {
-		if ( source == null ) {
-			// should never happen, but to be defensive...
-			throw new HibernateException( "Entity naming information was not provided." );
-		}
-
+		assert source != null;
 		final String tableName = transformEntityName( source.getEntityNaming() );
-
 		if ( tableName == null ) {
-			// todo : add info to error message - but how to know what to write since we failed to interpret the naming source
-			throw new HibernateException( "Could not determine primary table name for entity" );
+			throw new HibernateException( "Could not determine primary table name for entity: "
+											+ source.getEntityNaming().getClassName() );
 		}
-
 		return toIdentifier( tableName, source.getBuildingContext() );
 	}
 
 	protected String transformEntityName(EntityNaming entityNaming) {
-		// prefer the JPA entity name, if specified...
-		if ( isNotEmpty( entityNaming.getJpaEntityName() ) ) {
-			return entityNaming.getJpaEntityName();
-		}
-		else {
-			// otherwise, use the Hibernate entity name
-			return unqualify( entityNaming.getEntityName() );
-		}
+		return isNotEmpty( entityNaming.getJpaEntityName() )
+				// prefer the JPA entity name, if specified
+				? entityNaming.getJpaEntityName()
+				// otherwise, use the unqualified Hibernate entity name
+				: unqualify( entityNaming.getEntityName() );
 	}
 
 
+	/**
+	 * JPA states we should use the following as default:
+	 * <blockquote>The concatenated names of the two associated primary entity
+	 * tables (owning side first), separated by an underscore.</blockquote>
+	 * That is:
+	 * <pre>{OWNING SIDE PRIMARY TABLE NAME}_{NON-OWNING SIDE PRIMARY TABLE NAME}</pre>
+	 */
 	@Override
 	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
-		// JPA states we should use the following as default:
-		//		"The concatenated names of the two associated primary entity tables (owning side
-		//		first), separated by an underscore."
-		// aka:
-		// 		{OWNING SIDE PRIMARY TABLE NAME}_{NON-OWNING SIDE PRIMARY TABLE NAME}
 		final String name = source.getOwningPhysicalTableName()
 				+ '_'
 				+ source.getNonOwningPhysicalTableName();
 		return toIdentifier( name, source.getBuildingContext() );
 	}
 
-
+	/**
+	 * JPA states we should use the following as default:
+	 * <blockquote>The concatenation of the name of the containing entity and the
+	 * name of the collection attribute, separated by an underscore.</blockquote>
+	 * That is, if owning entity has a JPA entity name:
+	 * <pre>{OWNER JPA ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}</pre>
+	 * otherwise:
+	 * <pre>{OWNER ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}</pre>
+	 */
 	@Override
 	public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source) {
-		// JPA states we should use the following as default:
-		//      "The concatenation of the name of the containing entity and the name of the
-		//       collection attribute, separated by an underscore.
-		// aka:
-		//     if owning entity has a JPA entity name: {OWNER JPA ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}
-		//     otherwise: {OWNER ENTITY NAME}_{COLLECTION ATTRIBUTE NAME}
 		final String name = transformEntityName( source.getOwningEntityNaming() )
 				+ '_'
 				+ transformAttributePath( source.getOwningAttributePath() );
@@ -111,51 +106,47 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 		);
 	}
 
+	/**
+	 * JPA states we should use the following as default:
+	 * <blockquote>The property or field name</blockquote>
+	 * That is, the unqualified attribute path.
+	 */
 	@Override
 	public Identifier determineBasicColumnName(ImplicitBasicColumnNameSource source) {
-		// JPA states we should use the following as default:
-		//     "The property or field name"
-		// aka:
-		//     The unqualified attribute path.
 		return toIdentifier( transformAttributePath( source.getAttributePath() ), source.getBuildingContext() );
 	}
 
+	/**
+	 * JPA states we should use the following as default:
+	 * <ul>
+	 * <li>If there is a "referencing relationship property":
+	 *     <blockquote>The concatenation of the following: the name of the referencing
+	 *     relationship property or field of the referencing entity or embeddable class;
+	 *     {@code _}; the name of the referenced primary key column.</blockquote>
+	 * <li>If there is no such "referencing relationship property",
+	 *     or if the association is an element collection:
+	 *     <blockquote>The concatenation of the following: the name of the entity;
+	 *     {@code _}; the name of the referenced primary key column</blockquote>
+	 * </ul>
+	 */
 	@Override
 	public Identifier determineJoinColumnName(ImplicitJoinColumnNameSource source) {
-		// JPA states we should use the following as default:
-		//
-		//	(1) if there is a "referencing relationship property":
-		//		"The concatenation of the following: the name of the referencing relationship
-		// 			property or field of the referencing entity or embeddable class; "_"; the
-		// 			name of the referenced primary key column."
-		//
-		//	(2) if there is no such "referencing relationship property", or if the association is
-		// 			an element collection:
-		//     "The concatenation of the following: the name of the entity; "_"; the name of the
-		// 			referenced primary key column"
-
-		// todo : we need to better account for "referencing relationship property"
-
+		// TODO: we need to better account for "referencing relationship property"
+		final String referencingPropertyOrEntity =
+				source.getNature() == ELEMENT_COLLECTION || source.getAttributePath() == null
+						? transformEntityName( source.getEntityNaming() )
+						: transformAttributePath( source.getAttributePath() );
 		final String referencedColumnName = source.getReferencedColumnName().getText();
-
-		final String name;
-		if ( source.getNature() == ELEMENT_COLLECTION
-				|| source.getAttributePath() == null ) {
-			name = transformEntityName( source.getEntityNaming() )
-					+ '_' + referencedColumnName;
-		}
-		else {
-			name = transformAttributePath( source.getAttributePath() )
-					+ '_' + referencedColumnName;
-		}
-
+		final String name = referencingPropertyOrEntity + '_' + referencedColumnName;
 		return toIdentifier( name, source.getBuildingContext() );
 	}
 
+	/**
+	 * JPA states we should use the following as default:
+	 * <blockquote>the same name as the primary key column [of the referenced table]</blockquote>
+	 */
 	@Override
 	public Identifier determinePrimaryKeyJoinColumnName(ImplicitPrimaryKeyJoinColumnNameSource source) {
-		// JPA states we should use the following as default:
-		// 		"the same name as the primary key column [of the referenced table]"
 		return source.getReferencedPrimaryKeyColumnName();
 	}
 

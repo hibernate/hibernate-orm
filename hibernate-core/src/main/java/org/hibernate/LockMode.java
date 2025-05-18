@@ -39,7 +39,6 @@ import java.util.Locale;
  *
  * @see Session#lock(Object, LockMode)
  * @see LockModeType
- * @see LockOptions
  * @see org.hibernate.annotations.OptimisticLocking
  */
 public enum LockMode implements FindOption, RefreshOption {
@@ -119,7 +118,10 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * lock mode, if the lock is successfully obtained, are the same
 	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
 	 * available, an exception occurs.
+	 *
+	 * @deprecated Use {@linkplain Timeouts#NO_WAIT} instead.
 	 */
+	@Deprecated
 	UPGRADE_NOWAIT,
 
 	/**
@@ -129,7 +131,10 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
 	 * immediately available, no exception occurs, but the locked
 	 * row is not returned from the database.
+	 *
+	 * @deprecated Use {@linkplain Locking.LockedRows#SKIP} instead.
 	 */
+	@Deprecated
 	UPGRADE_SKIPLOCKED,
 
 	/**
@@ -143,6 +148,10 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * lock mode is equivalent to {@link #PESSIMISTIC_WRITE}.
 	 *
 	 * @see LockModeType#PESSIMISTIC_READ
+	 * @see jakarta.persistence.Timeout
+	 * @see Locking.Scope
+	 * @see Locking.FollowOn
+	 * @see Locking.LockedRows
 	 */
 	PESSIMISTIC_READ,
 
@@ -152,6 +161,10 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * Obtained via a {@code select for update} statement.
 	 *
 	 * @see LockModeType#PESSIMISTIC_WRITE
+	 * @see jakarta.persistence.Timeout
+	 * @see Locking.Scope
+	 * @see Locking.FollowOn
+	 * @see Locking.LockedRows
 	 */
 	PESSIMISTIC_WRITE,
 
@@ -163,6 +176,10 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * Only legal for versioned entity types.
 	 *
 	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
+	 * @see jakarta.persistence.Timeout
+	 * @see Locking.Scope
+	 * @see Locking.FollowOn
+	 * @see Locking.LockedRows
 	 */
 	PESSIMISTIC_FORCE_INCREMENT;
 

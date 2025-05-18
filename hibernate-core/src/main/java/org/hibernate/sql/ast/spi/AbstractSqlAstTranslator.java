@@ -22,11 +22,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
+import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.RowLockStrategy;
@@ -1756,7 +1758,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		int timeoutMillis = forUpdateClause.getTimeoutMillis();
+		Timeout timeout = forUpdateClause.getTimeout();
 		LockKind lockKind = LockKind.NONE;
 		switch ( forUpdateClause.getLockMode() ) {
 			case PESSIMISTIC_WRITE:
@@ -1767,11 +1769,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				break;
 			case UPGRADE_NOWAIT:
 			case PESSIMISTIC_FORCE_INCREMENT:
-				timeoutMillis = LockOptions.NO_WAIT;
+				timeout = Timeouts.NO_WAIT;
 				lockKind = LockKind.UPDATE;
 				break;
 			case UPGRADE_SKIPLOCKED:
-				timeoutMillis = LockOptions.SKIP_LOCKED;
+				timeout = Timeouts.SKIP_LOCKED;
 				lockKind = LockKind.UPDATE;
 				break;
 			default:
@@ -1779,7 +1781,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		if ( lockKind != LockKind.NONE ) {
 			if ( lockKind == LockKind.SHARE ) {
-				appendSql( getForShare( timeoutMillis ) );
+				appendSql( getForShare( timeout.milliseconds() ) );
 				if ( forUpdateClause.hasAliases() && dialect.getReadRowLockStrategy() != RowLockStrategy.NONE ) {
 					appendSql( " of " );
 					forUpdateClause.appendAliases( this );
@@ -1793,23 +1795,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			appendSql( getForUpdateWithClause() );
-			switch ( timeoutMillis ) {
-				case LockOptions.NO_WAIT:
+			switch ( timeout.milliseconds() ) {
+				case Timeouts.NO_WAIT_MILLI:
 					if ( dialect.supportsNoWait() ) {
 						appendSql( getNoWait() );
 					}
 					break;
-				case LockOptions.SKIP_LOCKED:
+				case Timeouts.SKIP_LOCKED_MILLI:
 					if ( dialect.supportsSkipLocked() ) {
 						appendSql( getSkipLocked() );
 					}
 					break;
-				case LockOptions.WAIT_FOREVER:
+				case Timeouts.WAIT_FOREVER_MILLI:
 					break;
 				default:
 					if ( dialect.supportsWait() ) {
 						appendSql( " wait " );
-						appendSql( Math.round( timeoutMillis / 1e3f ) );
+						appendSql( Timeouts.getTimeoutInSeconds( timeout ) );
 					}
 					break;
 			}
@@ -1843,22 +1845,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return " skip locked";
 	}
 
-	protected LockMode getEffectiveLockMode(String alias) {
-		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
-		return currentQueryPart == null
-				? LockMode.NONE
-				: getEffectiveLockMode( alias, currentQueryPart.isRoot() );
-	}
-
-	protected LockMode getEffectiveLockMode(String alias, boolean isRoot) {
+	protected LockMode getEffectiveLockMode() {
 		if ( getLockOptions() == null ) {
 			return LockMode.NONE;
 		}
-		LockMode lockMode = getLockOptions().getAliasSpecificLockMode( alias );
-		if ( isRoot && lockMode == null ) {
-			lockMode = getLockOptions().getLockMode();
+
+		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
+		if ( currentQueryPart == null ) {
+			return LockMode.NONE;
 		}
+
+		final LockMode lockMode = getLockOptions().getLockMode();
 		return lockMode == null ? LockMode.NONE : lockMode;
+	}
+
+	protected LockMode getEffectiveLockMode(String alias) {
+		return getEffectiveLockMode();
+	}
+
+	protected LockMode getEffectiveLockMode(String alias, boolean isRoot) {
+		return getEffectiveLockMode();
 	}
 
 	protected int getEffectiveLockTimeout(LockMode lockMode) {
@@ -5878,7 +5884,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				registerAffectedTable( querySpaces[i] );
 			}
 		}
-		if ( !usesLockHint && tableGroup.getSourceAlias() != null && LockMode.READ.lessThan( effectiveLockMode ) ) {
+		if ( !usesLockHint
+			&& tableGroup.getSourceAlias() != null
+			&& LockMode.READ.lessThan( effectiveLockMode ) ) {
 			if ( forUpdate == null ) {
 				forUpdate = new ForUpdateClause( effectiveLockMode );
 			}
@@ -8421,7 +8429,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected static class ForUpdateClause {
 		private LockMode lockMode;
-		private int timeoutMillis = LockOptions.WAIT_FOREVER;
+		private Timeout timeout = Timeouts.WAIT_FOREVER;
 		private Map<String, String[]> keyColumnNames;
 		private Map<String, String> aliases;
 
@@ -8430,21 +8438,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		public ForUpdateClause() {
-			this.lockMode = LockMode.NONE;
+			this( LockMode.NONE );
 		}
 
-		public void applyAliases(RowLockStrategy lockIdentifier, QuerySpec querySpec) {
-			if ( lockIdentifier != RowLockStrategy.NONE ) {
-				querySpec.getFromClause().visitTableGroups( tableGroup -> applyAliases( lockIdentifier, tableGroup ) );
+		public void applyAliases(RowLockStrategy rowLockStrategy, QuerySpec querySpec) {
+			if ( rowLockStrategy != RowLockStrategy.NONE ) {
+				querySpec.getFromClause().visitTableGroups( (tableGroup) -> applyAliases( rowLockStrategy, tableGroup ) );
 			}
 		}
 
-		public void applyAliases(RowLockStrategy lockIdentifier, TableGroup tableGroup) {
-			if ( aliases != null && lockIdentifier != RowLockStrategy.NONE ) {
+		public void applyAliases(RowLockStrategy rowLockStrategy, TableGroup tableGroup) {
+			if ( aliases != null && rowLockStrategy != RowLockStrategy.NONE ) {
 				final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 				if ( aliases.containsKey( tableGroup.getSourceAlias() ) ) {
 					addAlias( tableGroup.getSourceAlias(), tableAlias );
-					if ( lockIdentifier == RowLockStrategy.COLUMN ) {
+					if ( rowLockStrategy == RowLockStrategy.COLUMN ) {
 						addKeyColumnNames( tableGroup );
 					}
 				}
@@ -8507,8 +8515,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			aliases.put( alias, tableAlias );
 		}
 
+		public Timeout getTimeout() {
+			return timeout;
+		}
+
 		public int getTimeoutMillis() {
-			return timeoutMillis;
+			return getTimeout().milliseconds();
 		}
 
 		public boolean hasAliases() {
@@ -8579,7 +8591,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					}
 				}
 				lockMode = upgradeType;
-				timeoutMillis = lockOptions.getTimeOut();
+				timeout = lockOptions.getTimeout();
 			}
 		}
 	}

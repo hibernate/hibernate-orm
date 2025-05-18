@@ -8,14 +8,12 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import static jakarta.persistence.PessimisticLockScope.NORMAL;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 
@@ -28,8 +26,8 @@ import static java.util.Collections.unmodifiableSet;
  * are:
  * <ul>
  * <li>the {@linkplain #getLockMode lock mode},
- * <li>the {@linkplain #getTimeOut pessimistic lock timeout}, and
- * <li>the {@linkplain #getLockScope lock scope}, that is, whether
+ * <li>the {@linkplain #getTimeout pessimistic lock timeout}, and
+ * <li>the {@linkplain #getScope lock scope}, that is, whether
  *     the lock extends to rows of owned collections.
  * </ul>
  * <p>
@@ -160,9 +158,9 @@ public class LockOptions implements Serializable {
 	private final boolean immutable;
 	private LockMode lockMode;
 	private Timeout timeout;
-	private PessimisticLockScope pessimisticLockScope;
-	private Boolean followOnLocking;
-
+	private Locking.LockedRows lockedRowHandling;
+	private Locking.Scope scope;
+	private Locking.FollowOn followOnHandling;
 	private Map<String, LockMode> aliasSpecificLockModes;
 
 	/**
@@ -174,9 +172,10 @@ public class LockOptions implements Serializable {
 	 */
 	public LockOptions() {
 		immutable = false;
-		lockMode = LockMode.NONE;
-		timeout = Timeouts.WAIT_FOREVER;
-		pessimisticLockScope = NORMAL;
+		this.lockMode = LockMode.NONE;
+		this.timeout = Timeouts.WAIT_FOREVER;
+		this.scope = Locking.Scope.ROOT_ONLY;
+		this.lockedRowHandling = Locking.LockedRows.WAIT;
 	}
 
 	/**
@@ -190,8 +189,9 @@ public class LockOptions implements Serializable {
 	public LockOptions(LockMode lockMode) {
 		immutable = false;
 		this.lockMode = lockMode;
-		timeout = Timeouts.WAIT_FOREVER;
-		pessimisticLockScope = NORMAL;
+		this.timeout = Timeouts.WAIT_FOREVER;
+		this.scope = Locking.Scope.ROOT_ONLY;
+		this.lockedRowHandling = Locking.LockedRows.WAIT;
 	}
 
 	/**
@@ -205,7 +205,8 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
-		pessimisticLockScope = NORMAL;
+		this.scope = Locking.Scope.ROOT_ONLY;
+		this.lockedRowHandling = Locking.LockedRows.WAIT;
 	}
 
 	/**
@@ -220,7 +221,8 @@ public class LockOptions implements Serializable {
 		immutable = false;
 		this.lockMode = lockMode;
 		this.timeout = timeout;
-		this.pessimisticLockScope = scope;
+		this.scope = Locking.Scope.fromJpaScope( scope );
+		this.lockedRowHandling = Locking.LockedRows.WAIT;
 	}
 
 	/**
@@ -230,7 +232,7 @@ public class LockOptions implements Serializable {
 		this.immutable = immutable;
 		this.lockMode = lockMode;
 		timeout = Timeouts.WAIT_FOREVER;
-		pessimisticLockScope = NORMAL;
+		scope = Locking.Scope.ROOT_ONLY;
 	}
 
 
@@ -274,8 +276,8 @@ public class LockOptions implements Serializable {
 	public boolean isEmpty() {
 		return lockMode == LockMode.NONE
 			&& timeout == Timeouts.WAIT_FOREVER
-			&& followOnLocking == null
-			&& pessimisticLockScope == NORMAL
+			&& followOnHandling == null
+			&& scope == Locking.Scope.ROOT_ONLY
 			&& !hasAliasSpecificLockModes();
 	}
 
@@ -304,16 +306,16 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * The timeout associated with {@code this} options, defining a maximum
-	 * amount of time that the database should wait to obtain a pessimistic
-	 * lock before returning an error to the client.
+	 * The associated timeout, defining a maximum amount of time that
+	 * the database should wait to obtain a pessimistic lock before
+	 * returning an error to the client.
 	 */
 	public Timeout getTimeout() {
 		return timeout;
 	}
 
 	/**
-	 * Set the {@linkplain #getTimeout() timeout} associated with {@code this} options.
+	 * Set the associated lock {@linkplain #getTimeout() timeout}.
 	 *
 	 * @return {@code this} for method chaining
 	 *
@@ -328,102 +330,56 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * The {@linkplain #getTimeout() timeout}, in milliseconds, associated
-	 * with {@code this} options.
-	 * <p/>
-	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
-	 * represent 3 "magic" values.
-	 *
-	 * @return a timeout in milliseconds, {@link #NO_WAIT},
-	 *         {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
+	 * Get the associated lock scope.
 	 */
-	public int getTimeOut() {
-		return getTimeout().milliseconds();
+	public Locking.Scope getScope() {
+		return scope;
 	}
 
 	/**
-	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated
-	 * with {@code this} options.
-	 * <p/>
-	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
-	 * represent 3 "magic" values.
-	 *
-	 * @return {@code this} for method chaining
-	 *
-	 * @see #getTimeOut
+	 * Set the lock scope.
 	 */
-	public LockOptions setTimeOut(int timeout) {
-		return setTimeout( Timeouts.interpretMilliSeconds( timeout ) );
-	}
-
-	/**
-	 * The current lock scope:
-	 * <ul>
-	 * <li>{@link PessimisticLockScope#EXTENDED} means the lock
-	 *     extends to rows of owned collections, but
-	 * <li>{@link PessimisticLockScope#NORMAL} means only the entity
-	 *     table and secondary tables are locked.
-	 * </ul>
-	 *
-	 * @return the current {@link PessimisticLockScope}
-	 */
-	public PessimisticLockScope getLockScope() {
-		return pessimisticLockScope;
-	}
-
-	/**
-	 * Set the lock scope:
-	 * <ul>
-	 * <li>{@link PessimisticLockScope#EXTENDED} means the lock
-	 *     extends to rows of owned collections, but
-	 * <li>{@link PessimisticLockScope#NORMAL} means only the entity
-	 *     table and secondary tables are locked.
-	 * </ul>
-	 *
-	 * @param scope the new {@link PessimisticLockScope}
-	 * @return {@code this} for method chaining
-	 */
-	public LockOptions setLockScope(PessimisticLockScope scope) {
+	public LockOptions setScope(Locking.Scope lockScope) {
 		if ( immutable ) {
 			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
-		pessimisticLockScope = scope;
+		this.scope = lockScope;
 		return this;
 	}
 
 	/**
-	 * Returns a value indicating if follow-on locking was force
-	 * enabled or disabled, overriding the default behavior of
-	 * the SQL dialect.
-	 *
-	 * @return {@code true} if follow-on locking was force enabled,
-	 *         {@code false} if follow-on locking was force disabled,
-	 *         or {@code null} if the default behavior of the dialect
-	 *         has not been overridden.
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
+	 * Get the associated handling for follow-on locking, if needed.
 	 */
-	public Boolean getFollowOnLocking() {
-		return followOnLocking;
+	public Locking.FollowOn getFollowOn() {
+		return followOnHandling;
 	}
 
 	/**
-	 * Force enable or disable the use of follow-on locking,
-	 * overriding the default behavior of the SQL dialect.
-	 *
-	 * @param followOnLocking The new follow-on locking setting
-	 * @return {@code this} for method chaining
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
-	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
+	 * Set the associated handling for follow-on locking, if needed.
 	 */
-	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
+	public LockOptions setFollowOn(Locking.FollowOn followOnHandling) {
 		if ( immutable ) {
 			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
-		this.followOnLocking = followOnLocking;
+		this.followOnHandling = followOnHandling;
 		return this;
+	}
+
+	/**
+	 * How locked rows should be handled.
+	 */
+	public Locking.LockedRows getLockedRowHandling() {
+		return lockedRowHandling;
+	}
+
+	/**
+	 * Specify how locked rows should be handled.
+	 */
+	public void setLockedRowHandling(Locking.LockedRows lockedRowHandling) {
+		if ( immutable ) {
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
+		}
+		this.lockedRowHandling = lockedRowHandling;
 	}
 
 	/**
@@ -458,13 +414,7 @@ public class LockOptions implements Serializable {
 	 * merging the alias-specific lock modes.
 	 */
 	public void overlay(LockOptions lockOptions) {
-		setLockMode( lockOptions.getLockMode() );
-		setLockScope( lockOptions.getLockScope() );
-		setTimeOut( lockOptions.getTimeOut() );
-		if ( lockOptions.aliasSpecificLockModes != null ) {
-			lockOptions.aliasSpecificLockModes.forEach(this::setAliasSpecificLockMode);
-		}
-		setFollowOnLocking( lockOptions.getFollowOnLocking() );
+		copy( lockOptions, this );
 	}
 
 	/**
@@ -478,12 +428,13 @@ public class LockOptions implements Serializable {
 	 */
 	public static LockOptions copy(LockOptions source, LockOptions destination) {
 		destination.setLockMode( source.getLockMode() );
-		destination.setLockScope( source.getLockScope() );
-		destination.setTimeOut( source.getTimeOut() );
+		destination.setScope( source.getScope() );
+		destination.setTimeout( source.getTimeout() );
+		destination.setFollowOn( source.getFollowOn() );
+		destination.setLockedRowHandling( source.getLockedRowHandling() );
 		if ( source.aliasSpecificLockModes != null ) {
-			destination.aliasSpecificLockModes = new HashMap<>( source.aliasSpecificLockModes );
+			source.aliasSpecificLockModes.forEach(destination::setAliasSpecificLockMode);
 		}
-		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;
 	}
 
@@ -497,16 +448,135 @@ public class LockOptions implements Serializable {
 		}
 		else {
 			return timeout == that.timeout
-				&& pessimisticLockScope == that.pessimisticLockScope
+				&& scope == that.scope
 				&& lockMode == that.lockMode
 				&& Objects.equals( aliasSpecificLockModes, that.aliasSpecificLockModes )
-				&& Objects.equals( followOnLocking, that.followOnLocking );
+				&& Objects.equals( followOnHandling, that.followOnHandling );
 		}
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash( lockMode, timeout, aliasSpecificLockModes, followOnLocking, pessimisticLockScope );
+		return Objects.hash(
+				lockMode,
+				timeout,
+				scope,
+				lockedRowHandling,
+				followOnHandling,
+				aliasSpecificLockModes
+		);
+	}
+
+	/**
+	 * The {@linkplain #getTimeout() timeout}, in milliseconds, associated
+	 * with {@code this} options.
+	 * <p/>
+	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
+	 * represent 3 "magic" values.
+	 *
+	 * @return a timeout in milliseconds, {@link #NO_WAIT},
+	 *         {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
+	 */
+	public int getTimeOut() {
+		return getTimeout().milliseconds();
+	}
+
+	/**
+	 * Set the {@linkplain #getTimeout() timeout}, in milliseconds, associated
+	 * with {@code this} options.
+	 * <p/>
+	 * {@link #NO_WAIT}, {@link #WAIT_FOREVER}, or {@link #SKIP_LOCKED}
+	 * represent 3 "magic" values.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @see #getTimeOut
+	 */
+	public LockOptions setTimeOut(int timeout) {
+		return setTimeout( Timeouts.interpretMilliSeconds( timeout ) );
+	}
+
+	/**
+	 * Returns a value indicating if follow-on locking was force
+	 * enabled or disabled, overriding the default behavior of
+	 * the SQL dialect.
+	 *
+	 * @return {@code true} if follow-on locking was force enabled,
+	 *         {@code false} if follow-on locking was force disabled,
+	 *         or {@code null} if the default behavior of the dialect
+	 *         has not been overridden.
+	 *
+	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
+	 *
+	 * @deprecated Use {@link #getFollowOn()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public Boolean getFollowOnLocking() {
+		return followOnHandling == Locking.FollowOn.ALLOW;
+	}
+
+	/**
+	 * Force enable or disable the use of follow-on locking,
+	 * overriding the default behavior of the SQL dialect.
+	 *
+	 * @param followOnLocking The new follow-on locking setting
+	 * @return {@code this} for method chaining
+	 *
+	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
+	 *
+	 * @deprecated Use {@link #setFollowOn} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
+		if ( immutable ) {
+			throw new UnsupportedOperationException("immutable global instance of LockOptions");
+		}
+		if ( followOnLocking == Boolean.FALSE ) {
+			followOnHandling = Locking.FollowOn.DISALLOW;
+		}
+		else {
+			followOnHandling = Locking.FollowOn.ALLOW;
+		}
+		return this;
+	}
+
+	/**
+	 * The current lock scope:
+	 * <ul>
+	 * <li>{@link PessimisticLockScope#EXTENDED} means the lock
+	 *     extends to rows of owned collections, but
+	 * <li>{@link PessimisticLockScope#NORMAL} means only the entity
+	 *     table and secondary tables are locked.
+	 * </ul>
+	 *
+	 * @return the current {@link PessimisticLockScope}
+	 *
+	 * @deprecated Use {@link #getScope()} instead
+	 */
+	@Deprecated(since = "7.1")
+	public PessimisticLockScope getLockScope() {
+		return scope.getCorrespondingJpaScope();
+	}
+
+	/**
+	 * Set the lock scope:
+	 * <ul>
+	 * <li>{@link PessimisticLockScope#EXTENDED} means the lock
+	 *     extends to rows of owned collections, but
+	 * <li>{@link PessimisticLockScope#NORMAL} means only the entity
+	 *     table and secondary tables are locked.
+	 * </ul>
+	 *
+	 * @param scope the new {@link PessimisticLockScope}
+	 * @return {@code this} for method chaining
+	 *
+	 * @deprecated Use {@link #setScope} instead
+	 */
+	@Deprecated(since = "7.1")
+	public LockOptions setLockScope(PessimisticLockScope scope) {
+		return setScope( Locking.Scope.fromJpaScope( scope ) );
 	}
 
 	/**

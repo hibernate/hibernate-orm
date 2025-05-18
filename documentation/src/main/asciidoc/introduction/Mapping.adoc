@@ -470,6 +470,7 @@ Note that the `foreignKey` member is completely optional and only affects DDL ge
 If you don't supply an explicit name using `@ForeignKey`, Hibernate will generate a quite ugly name.
 The reason for this is that the maximum length of foreign key names on some databases is extremely constrained, and we need to avoid collisions.
 To be fair, this is perfectly fine if you're only using the generated DDL for testing.
+You can customize the generated constraint names by writing your own <<naming-strategies,`ImplicitNamingStrategy`>>.
 ====
 
 For composite foreign keys we might have multiple `@JoinColumn` annotations:

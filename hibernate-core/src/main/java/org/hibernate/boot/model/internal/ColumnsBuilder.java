@@ -133,7 +133,6 @@ class ColumnsBuilder {
 			OneToMany oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
 			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
-//					comment,
 					oneToMany == null ? null : nullIfEmpty( oneToMany.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -172,11 +171,9 @@ class ColumnsBuilder {
 			MemberDetails property,
 			PropertyData inferredData) {
 		final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
-//		final Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
-//					comment,
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -188,7 +185,6 @@ class ColumnsBuilder {
 			final OneToOne oneToOneAnn = property.getDirectAnnotationUsage( OneToOne.class );
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
-//					comment,
 					oneToOneAnn == null ? null : nullIfEmpty( oneToOneAnn.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,

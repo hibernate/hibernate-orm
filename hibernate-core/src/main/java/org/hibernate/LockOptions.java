@@ -76,86 +76,8 @@ import static java.util.Collections.unmodifiableSet;
  *
  * @author Scott Marlow
  */
-@Deprecated(since = "7.0", forRemoval = true) // moving to an SPI package
+@Deprecated(since = "7", forRemoval = true) // moving to an SPI package
 public class LockOptions implements Serializable {
-	/**
-	 * Represents {@link LockMode#NONE}, to which timeout and scope are
-	 * not applicable.
-	 */
-	public static final LockOptions NONE = new LockOptions( true, LockMode.NONE );
-
-	/**
-	 * Represents {@link LockMode#READ}, to which timeout and scope are
-	 * not applicable.
-	 */
-	public static final LockOptions READ = new LockOptions( true, LockMode.READ );
-
-	/**
-	 * Represents {@link LockMode#OPTIMISTIC}.
-	 */
-	static final LockOptions OPTIMISTIC = new LockOptions( true, LockMode.OPTIMISTIC );
-
-	/**
-	 * Represents {@link LockMode#OPTIMISTIC_FORCE_INCREMENT}, to which
-	 * timeout and scope are not applicable.
-	 */
-	static final LockOptions OPTIMISTIC_FORCE_INCREMENT = new LockOptions( true, LockMode.OPTIMISTIC_FORCE_INCREMENT );
-
-	/**
-	 * Represents {@link LockMode#PESSIMISTIC_READ}.
-	 */
-	static final LockOptions PESSIMISTIC_READ = new LockOptions( true, LockMode.PESSIMISTIC_READ );
-
-	/**
-	 * Represents {@link LockMode#PESSIMISTIC_WRITE}.
-	 */
-	static final LockOptions PESSIMISTIC_WRITE = new LockOptions( true, LockMode.PESSIMISTIC_WRITE );
-
-	/**
-	 * Represents {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
-	 */
-	static final LockOptions PESSIMISTIC_FORCE_INCREMENT = new LockOptions( true, LockMode.PESSIMISTIC_FORCE_INCREMENT );
-
-	/**
-	 * Represents {@link LockMode#UPGRADE_NOWAIT}.
-	 */
-	static final LockOptions UPGRADE_NOWAIT = new LockOptions( true, LockMode.UPGRADE_NOWAIT );
-
-	/**
-	 * Represents {@link LockMode#UPGRADE_SKIPLOCKED}.
-	 */
-	static final LockOptions UPGRADE_SKIPLOCKED = new LockOptions( true, LockMode.UPGRADE_SKIPLOCKED );
-
-	/**
-	 * Represents {@link LockMode#PESSIMISTIC_WRITE} with
-	 * {@linkplain #WAIT_FOREVER no timeout}, and
-	 * {@linkplain PessimisticLockScope#NORMAL no extension of the
-	 * lock to owned collections}.
-	 */
-	public static final LockOptions UPGRADE = PESSIMISTIC_WRITE;
-
-	/**
-	 * @see Timeouts#NO_WAIT_MILLI
-	 * @see Timeouts#NO_WAIT
-	 * @see #getTimeOut
-	 */
-	public static final int NO_WAIT = Timeouts.NO_WAIT_MILLI;
-
-	/**
-	 * @see Timeouts#WAIT_FOREVER_MILLI
-	 * @see Timeouts#WAIT_FOREVER
-	 * @see #getTimeOut
-	 */
-	public static final int WAIT_FOREVER = Timeouts.WAIT_FOREVER_MILLI;
-
-	/**
-	 * @see Timeouts#SKIP_LOCKED_MILLI
-	 * @see Timeouts#SKIP_LOCKED
-	 * @see #getTimeOut()
-	 * @deprecated use {@link LockMode#UPGRADE_SKIPLOCKED}
-	 */
-	@Deprecated(since = "6.2", forRemoval = true)
-	public static final int SKIP_LOCKED = -2;
 
 	private final boolean immutable;
 	private LockMode lockMode;
@@ -662,4 +584,121 @@ public class LockOptions implements Serializable {
 
 		return lockModeToUse;
 	}
+
+
+	/**
+	 * Represents {@link LockMode#NONE}, to which timeout and scope are
+	 * not applicable.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public static final LockOptions NONE = new LockOptions( true, LockMode.NONE );
+
+	/**
+	 * Represents {@link LockMode#READ}, to which timeout and scope are
+	 * not applicable.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public static final LockOptions READ = new LockOptions( true, LockMode.READ );
+
+	/**
+	 * Represents {@link LockMode#OPTIMISTIC}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions OPTIMISTIC = new LockOptions( true, LockMode.OPTIMISTIC );
+
+	/**
+	 * Represents {@link LockMode#OPTIMISTIC_FORCE_INCREMENT}, to which
+	 * timeout and scope are not applicable.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions OPTIMISTIC_FORCE_INCREMENT = new LockOptions( true, LockMode.OPTIMISTIC_FORCE_INCREMENT );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_READ}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions PESSIMISTIC_READ = new LockOptions( true, LockMode.PESSIMISTIC_READ );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_WRITE}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions PESSIMISTIC_WRITE = new LockOptions( true, LockMode.PESSIMISTIC_WRITE );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_FORCE_INCREMENT}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions PESSIMISTIC_FORCE_INCREMENT = new LockOptions( true, LockMode.PESSIMISTIC_FORCE_INCREMENT );
+
+	/**
+	 * Represents {@link LockMode#UPGRADE_NOWAIT}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions UPGRADE_NOWAIT = new LockOptions( true, LockMode.UPGRADE_NOWAIT );
+
+	/**
+	 * Represents {@link LockMode#UPGRADE_SKIPLOCKED}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	static final LockOptions UPGRADE_SKIPLOCKED = new LockOptions( true, LockMode.UPGRADE_SKIPLOCKED );
+
+	/**
+	 * Represents {@link LockMode#PESSIMISTIC_WRITE} with
+	 * {@linkplain #WAIT_FOREVER no timeout}, and
+	 * {@linkplain PessimisticLockScope#NORMAL no extension of the
+	 * lock to owned collections}.
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public static final LockOptions UPGRADE = PESSIMISTIC_WRITE;
+
+	/**
+	 * @see Timeouts#NO_WAIT_MILLI
+	 * @see Timeouts#NO_WAIT
+	 * @see #getTimeOut
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public static final int NO_WAIT = Timeouts.NO_WAIT_MILLI;
+
+	/**
+	 * @see Timeouts#WAIT_FOREVER_MILLI
+	 * @see Timeouts#WAIT_FOREVER
+	 * @see #getTimeOut
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public static final int WAIT_FOREVER = Timeouts.WAIT_FOREVER_MILLI;
+
+	/**
+	 * @see Timeouts#SKIP_LOCKED_MILLI
+	 * @see Timeouts#SKIP_LOCKED
+	 * @see #getTimeOut()
+	 *
+	 * @deprecated This, and the other constants on this class, will be removed.
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
+	public static final int SKIP_LOCKED = -2;
 }

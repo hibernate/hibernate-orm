@@ -38,8 +38,10 @@ import java.util.Locale;
  * @author Gavin King
  *
  * @see Session#lock(Object, LockMode)
+ * @see Session#lock(Object, LockMode, jakarta.persistence.LockOption...)
+ * @see Session#find(Class, Object, FindOption...)
+ * @see Session#refresh(Object, RefreshOption...)
  * @see LockModeType
- * @see LockOptions
  * @see org.hibernate.annotations.OptimisticLocking
  */
 public enum LockMode implements FindOption, RefreshOption {
@@ -114,25 +116,6 @@ public enum LockMode implements FindOption, RefreshOption {
 	WRITE,
 
 	/**
-	 * A pessimistic upgrade lock, obtained using an Oracle-style
-	 * {@code select for update nowait}. The semantics of this
-	 * lock mode, if the lock is successfully obtained, are the same
-	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
-	 * available, an exception occurs.
-	 */
-	UPGRADE_NOWAIT,
-
-	/**
-	 * A pessimistic upgrade lock, obtained using an Oracle-style
-	 * {@code select for update skip locked}. The semantics of this
-	 * lock mode, if the lock is successfully obtained, are the same
-	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
-	 * immediately available, no exception occurs, but the locked
-	 * row is not returned from the database.
-	 */
-	UPGRADE_SKIPLOCKED,
-
-	/**
 	 * A pessimistic shared lock, which prevents concurrent
 	 * transactions from writing the locked object. Obtained via
 	 * a {@code select for share} statement in dialects where this
@@ -164,7 +147,34 @@ public enum LockMode implements FindOption, RefreshOption {
 	 *
 	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
 	 */
-	PESSIMISTIC_FORCE_INCREMENT;
+	PESSIMISTIC_FORCE_INCREMENT,
+
+	/**
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update nowait}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
+	 * available, an exception occurs.
+	 *
+	 * @apiNote To be removed in a future version.  A different approach to
+	 * specifying handling for locked rows will be introduced.
+	 */
+	@Remove
+	UPGRADE_NOWAIT,
+
+	/**
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update skip locked}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
+	 * immediately available, no exception occurs, but the locked
+	 * row is not returned from the database.
+	 *
+	 * @apiNote To be removed in a future version.  A different approach to
+	 * specifying handling for locked rows will be introduced.
+	 */
+	@Remove
+	UPGRADE_SKIPLOCKED;
 
 	/**
 	 * @return an instance with the same semantics as the given JPA
@@ -273,9 +283,11 @@ public enum LockMode implements FindOption, RefreshOption {
 	}
 
 	/**
-	 * @return an instance of {@link LockOptions} with this lock mode, and
-	 *         all other settings defaulted.
+	 * @return an instance of {@link LockOptions} with this lock mode, and all other settings defaulted.
+	 *
+	 * @deprecated As LockOptions will become an SPI, this method will be removed with no replacement
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public LockOptions toLockOptions() {
 		return switch (this) {
 			case NONE -> LockOptions.NONE;

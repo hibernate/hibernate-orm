@@ -25,6 +25,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
 import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
 import org.hibernate.jpa.spi.NativeQueryMapTransformer;
@@ -418,7 +419,10 @@ public class NativeQueryImpl<R>
 		else if ( List.class.equals( resultClass ) ) {
 			return NativeQueryListTransformer.INSTANCE;
 		}
-		else if ( resultClass != Object.class && resultClass != Object[].class ) {
+		else if ( Object[].class.equals( resultClass )) {
+			return NativeQueryArrayTransformer.INSTANCE;
+		}
+		else if ( resultClass != Object.class ) {
 			// TODO: this is extremely fragile and probably a bug
 			if ( isClass( resultClass ) && !hasJavaTypeDescriptor( resultClass ) ) {
 				// not a basic type, so something we can attempt

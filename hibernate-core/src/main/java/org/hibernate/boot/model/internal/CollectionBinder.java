@@ -242,7 +242,6 @@ public abstract class CollectionBinder {
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
-//		final Comment comment = property.getAnnotation( Comment.class );
 		final Cascade hibernateCascade = property.getAnnotationUsage( Cascade.class, modelsContext );
 
 		collectionBinder.setElementColumns( elementColumns(
@@ -261,7 +260,6 @@ public abstract class CollectionBinder {
 				entityBinder,
 				context,
 				property
-//				comment
 		) );
 
 		collectionBinder.setMapKeyManyToManyColumns( mapKeyJoinColumns(
@@ -270,7 +268,6 @@ public abstract class CollectionBinder {
 				entityBinder,
 				context,
 				property
-//				comment
 		) );
 
 		bindJoinedTableAssociation(
@@ -351,10 +348,8 @@ public abstract class CollectionBinder {
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
 			MemberDetails property) {
-//			Comment comment) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
 				mapKeyJoinColumnAnnotations( property, context ),
-//				comment,
 				null,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,

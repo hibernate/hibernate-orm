@@ -273,17 +273,20 @@ public abstract class AbstractDeleteCoordinator
 				session
 		);
 
-		mutationExecutor.execute(
-				entity,
-				null,
-				null,
-				(statementDetails, affectedRowCount, batchPosition) ->
-						resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
-				session,
-				staleStateException -> staleObjectState( id, staleStateException )
-		);
-
-		mutationExecutor.release();
+		try {
+			mutationExecutor.execute(
+					entity,
+					null,
+					null,
+					(statementDetails, affectedRowCount, batchPosition) ->
+							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
+					session,
+					staleStateException -> staleObjectState( id, staleStateException )
+			);
+		}
+		finally {
+			mutationExecutor.release();
+		}
 	}
 
 	private StaleObjectStateException staleObjectState(Object id, StaleStateException staleStateException) {

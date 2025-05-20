@@ -672,6 +672,7 @@ public class ProcedureCallImpl<R>
 		}
 		catch (SQLException e) {
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
+			getSession().getJdbcCoordinator().afterStatementExecution();
 			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
 					"Error registering CallableStatement parameters",

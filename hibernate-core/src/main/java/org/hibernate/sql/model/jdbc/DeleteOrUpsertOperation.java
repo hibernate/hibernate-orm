@@ -115,19 +115,25 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 
 		final PreparedStatementGroupSingleTable statementGroup = new PreparedStatementGroupSingleTable( upsertDelete, session );
 		final PreparedStatementDetails statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
-		final PreparedStatement upsertDeleteStatement = statementDetails.resolveStatement();
-		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 
-		bindDeleteKeyValues(
-				jdbcValueBindings,
-				optionalTableUpdate.getParameters(),
-				statementDetails,
-				session
-		);
+		try {
+			final PreparedStatement upsertDeleteStatement = statementDetails.resolveStatement();
+			session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 
-		final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
-				.executeUpdate( upsertDeleteStatement, statementDetails.getSqlString() );
-		MODEL_MUTATION_LOGGER.tracef( "`%s` rows upsert-deleted from `%s`", rowCount, tableMapping.getTableName() );
+			bindDeleteKeyValues(
+					jdbcValueBindings,
+					optionalTableUpdate.getParameters(),
+					statementDetails,
+					session
+			);
+
+			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
+					.executeUpdate( upsertDeleteStatement, statementDetails.getSqlString() );
+			MODEL_MUTATION_LOGGER.tracef( "`%s` rows upsert-deleted from `%s`", rowCount, tableMapping.getTableName() );
+		}
+		finally {
+			statementDetails.releaseStatement( session );
+		}
 	}
 
 	private void bindDeleteKeyValues(
@@ -189,14 +195,19 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		final PreparedStatementGroupSingleTable statementGroup = new PreparedStatementGroupSingleTable( upsertOperation, session );
 		final PreparedStatementDetails statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
 
-		final PreparedStatement updateStatement = statementDetails.resolveStatement();
-		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+		try {
+			final PreparedStatement updateStatement = statementDetails.resolveStatement();
+			session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 
-		jdbcValueBindings.beforeStatement( statementDetails );
+			jdbcValueBindings.beforeStatement( statementDetails );
 
-		final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
-				.executeUpdate( updateStatement, statementDetails.getSqlString() );
+			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
+					.executeUpdate( updateStatement, statementDetails.getSqlString() );
 
-		MODEL_MUTATION_LOGGER.tracef( "`%s` rows upserted into `%s`", rowCount, tableMapping.getTableName() );
+			MODEL_MUTATION_LOGGER.tracef( "`%s` rows upserted into `%s`", rowCount, tableMapping.getTableName() );
+		}
+		finally {
+			statementDetails.releaseStatement( session );
+		}
 	}
 }

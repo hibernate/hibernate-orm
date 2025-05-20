@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
@@ -131,7 +132,9 @@ public class OutputsImpl implements Outputs {
 
 	@Override
 	public void release() {
-		context.getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( jdbcStatement );
+		final JdbcCoordinator jdbcCoordinator = context.getSession().getJdbcCoordinator();
+		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( jdbcStatement );
+		jdbcCoordinator.afterStatementExecution();
 	}
 
 	private List<?> extractCurrentResults() {

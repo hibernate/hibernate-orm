@@ -51,6 +51,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 	protected final EntityMutationTarget mutationTarget;
 	protected final MutationOperationGroup mutationOperationGroup;
 
+	protected final SharedSessionContractImplementor session;
 	protected final PreparedStatementDetails identityInsertStatementDetails;
 
 	/**
@@ -69,6 +70,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 				session
 		);
 		this.mutationOperationGroup = mutationOperationGroup;
+		this.session = session;
 
 		final PreparableMutationOperation identityInsertOperation = (PreparableMutationOperation) mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
 		this.identityInsertStatementDetails = ModelMutationHelper.identityPreparation(
@@ -223,6 +225,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 	@Override
 	public void release() {
+		identityInsertStatementDetails.releaseStatement( session );
 		secondaryTablesStatementGroup.release();
 	}
 

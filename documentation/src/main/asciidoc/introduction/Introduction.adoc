@@ -187,7 +187,7 @@ dependencies {
 
     // Hibernate Validator
     implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
-    implementation 'org.glassfish:jakarta.el:4.0.2'
+    implementation 'org.glassfish.expressly:expressly:6.0.0'
 
     // Agroal connection pool
     runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'

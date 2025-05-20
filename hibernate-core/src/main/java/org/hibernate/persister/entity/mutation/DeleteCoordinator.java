@@ -285,38 +285,41 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 
 		final MutationExecutor mutationExecutor = executor( session, operationGroupToUse );
 
-		for ( int position = 0; position < staticOperationGroup.getNumberOfOperations(); position++ ) {
-			final MutationOperation mutation = staticOperationGroup.getOperation( position );
-			if ( mutation != null ) {
-				mutationExecutor.getPreparedStatementDetails( mutation.getTableDetails().getTableName() );
+		try {
+			for ( int position = 0; position < staticOperationGroup.getNumberOfOperations(); position++ ) {
+				final MutationOperation mutation = staticOperationGroup.getOperation( position );
+				if ( mutation != null ) {
+					mutationExecutor.getPreparedStatementDetails( mutation.getTableDetails().getTableName() );
+				}
 			}
+
+			if ( applyVersion ) {
+				applyLocking( version, null, mutationExecutor, session );
+			}
+			final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+
+			bindPartitionColumnValueBindings( loadedState, session, jdbcValueBindings );
+
+			applyId( id, null, mutationExecutor, staticOperationGroup, session );
+
+			mutationExecutor.execute(
+					entity,
+					null,
+					null,
+					(statementDetails, affectedRowCount, batchPosition) -> identifiedResultsCheck(
+							statementDetails,
+							affectedRowCount,
+							batchPosition,
+							entityPersister(),
+							id,
+							factory()
+					),
+					session
+			);
 		}
-
-		if ( applyVersion ) {
-			applyLocking( version, null, mutationExecutor, session );
+		finally {
+			mutationExecutor.release();
 		}
-		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-
-		bindPartitionColumnValueBindings( loadedState, session, jdbcValueBindings );
-
-		applyId( id, null, mutationExecutor, staticOperationGroup, session );
-
-		mutationExecutor.execute(
-				entity,
-				null,
-				null,
-				(statementDetails, affectedRowCount, batchPosition) -> identifiedResultsCheck(
-						statementDetails,
-						affectedRowCount,
-						batchPosition,
-						entityPersister(),
-						id,
-						factory()
-				),
-				session
-		);
-
-		mutationExecutor.release();
 	}
 
 	protected MutationOperationGroup resolveNoVersionDeleteGroup(SharedSessionContractImplementor session) {

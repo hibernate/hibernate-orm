@@ -17,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -259,9 +260,6 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					"JDBC exception executing SQL [" + finalSql + "]"
 			);
 		}
-		finally {
-			logicalConnection.afterStatement();
-		}
 	}
 
 	protected void skipRows(ResultSet resultSet) throws SQLException {
@@ -321,11 +319,12 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 
 		if ( preparedStatement != null ) {
-			getPersistenceContext().getJdbcCoordinator()
-					.getLogicalConnection()
+			final JdbcCoordinator jdbcCoordinator = getPersistenceContext().getJdbcCoordinator();
+			jdbcCoordinator.getLogicalConnection()
 					.getResourceRegistry()
 					.release( preparedStatement );
 			preparedStatement = null;
+			jdbcCoordinator.afterStatementExecution();
 		}
 	}
 }

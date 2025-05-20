@@ -133,6 +133,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			}
 			finally {
 				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 		catch (SQLException e) {

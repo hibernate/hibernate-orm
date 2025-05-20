@@ -10,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -46,6 +45,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -55,7 +55,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.jboss.logging.Logger;
 
-import static java.util.Collections.singletonMap;
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
@@ -493,14 +492,14 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		final String alias = "tbl";
-		final String query = "select " + qualify( alias, valueColumnName )
-				+ " from " + formattedPhysicalTableName + ' ' + alias
-				+ " where " + qualify( alias, segmentColumnName ) + "=?";
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
-		final Map<String,String[]> updateTargetColumnsMap = singletonMap( alias, new String[] { valueColumnName } );
-		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
+		final String alias = "tbl";
+		final SimpleSelect select = new SimpleSelect( context.getDialect() )
+				.addColumn( qualify( alias, valueColumnName ) )
+				.setTableName( formattedPhysicalTableName, alias )
+				.addRestriction( qualify( alias, segmentColumnName ) )
+				.setLockOptions( lockOptions );
+		return select.toStatementString();
 	}
 
 	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {

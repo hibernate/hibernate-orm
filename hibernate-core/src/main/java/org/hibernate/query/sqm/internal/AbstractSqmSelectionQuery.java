@@ -15,7 +15,6 @@ import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.spi.AbstractSelectionQuery;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -32,7 +31,6 @@ import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.BasicTypeRegistry;
@@ -318,23 +316,24 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	}
 
 	private TupleMetadata getTupleMetadata(List<SqmSelection<?>> selections) {
-		if ( getQueryOptions().getTupleTransformer() == null ) {
+		final var tupleTransformer = getQueryOptions().getTupleTransformer();
+		if ( tupleTransformer == null ) {
 			return new TupleMetadata( buildTupleElementArray( selections ), buildTupleAliasArray( selections ) );
 		}
 		else {
 			throw new IllegalArgumentException(
 					"Illegal combination of Tuple resultType and (non-JpaTupleBuilder) TupleTransformer: "
-							+ getQueryOptions().getTupleTransformer()
+							+ tupleTransformer
 			);
 		}
 	}
 
 	private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
 		if ( selections.size() == 1 ) {
-			final SqmSelectableNode<?> selectableNode = selections.get( 0).getSelectableNode();
+			final var selectableNode = selections.get( 0 ).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
-				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
-				final TupleElement<?>[] elements = new TupleElement<?>[ selectionItems.size() ];
+				final var selectionItems = selectableNode.getSelectionItems();
+				final var elements = new TupleElement<?>[ selectionItems.size() ];
 				for ( int i = 0; i < selectionItems.size(); i++ ) {
 					elements[i] = selectionItems.get( i );
 				}
@@ -345,7 +344,7 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			}
 		}
 		else {
-			final TupleElement<?>[] elements = new TupleElement<?>[ selections.size() ];
+			final var elements = new TupleElement<?>[ selections.size() ];
 			for ( int i = 0; i < selections.size(); i++ ) {
 				elements[i] = selections.get( i ).getSelectableNode();
 			}
@@ -355,10 +354,10 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 
 	private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
 		if ( selections.size() == 1 ) {
-			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
+			final var selectableNode = selections.get(0).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
-				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
-				final String[] elements  = new String[ selectionItems.size() ];
+				final var selectionItems = selectableNode.getSelectionItems();
+				final String[] elements = new String[ selectionItems.size() ];
 				for ( int i = 0; i < selectionItems.size(); i++ ) {
 					elements[i] = selectionItems.get( i ).getAlias();
 				}

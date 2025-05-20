@@ -136,7 +136,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	@Override
-	public final SelectionSpecification<T> resort(List<Order<? super T>> orders) {
+	public final SelectionSpecification<T> resort(List<? extends Order<? super T>> orders) {
 		specifications.add( (sqmStatement, root) -> {
 			sqmStatement.getQuerySpec().setOrderByClause( new SqmOrderByClause() );
 			orders.forEach( order -> addOrder( order, sqmStatement ) );

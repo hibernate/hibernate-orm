@@ -106,7 +106,6 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 				statementDetails.releaseStatement( session );
 			}
 			jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
-			session.getJdbcCoordinator().afterStatementExecution();
 		}
 
 		// the insert is complete, select the generated id...

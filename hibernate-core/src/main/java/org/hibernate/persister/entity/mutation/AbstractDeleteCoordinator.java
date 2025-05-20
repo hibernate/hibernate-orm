@@ -276,22 +276,25 @@ public abstract class AbstractDeleteCoordinator
 				session
 		);
 
-		mutationExecutor.execute(
-				entity,
-				null,
-				null,
-				(statementDetails, affectedRowCount, batchPosition) -> identifiedResultsCheck(
-						statementDetails,
-						affectedRowCount,
-						batchPosition,
-						entityPersister(),
-						id,
-						factory()
-				),
-				session
-		);
-
-		mutationExecutor.release();
+		try {
+			mutationExecutor.execute(
+					entity,
+					null,
+					null,
+					(statementDetails, affectedRowCount, batchPosition) -> identifiedResultsCheck(
+							statementDetails,
+							affectedRowCount,
+							batchPosition,
+							entityPersister(),
+							id,
+							factory()
+					),
+					session
+			);
+		}
+		finally {
+			mutationExecutor.release();
+		}
 	}
 
 	protected void applyStaticDeleteTableDetails(

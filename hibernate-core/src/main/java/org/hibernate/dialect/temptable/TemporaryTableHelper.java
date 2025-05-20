@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -149,18 +150,19 @@ public class TemporaryTableHelper {
 			TemporaryTableExporter exporter,
 			Function<SharedSessionContractImplementor,String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		PreparedStatement ps = null;
 		try {
 			final String sql = exporter.getSqlTruncateCommand( temporaryTable, sessionUidAccess, session );
 
-			ps = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql, false );
+			ps = jdbcCoordinator.getStatementPreparer().prepareStatement( sql, false );
 
 			if ( temporaryTable.getSessionUidColumn() != null ) {
 				final String sessionUid = sessionUidAccess.apply( session );
 				ps.setString( 1, sessionUid );
 			}
 
-			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( ps, sql );
+			jdbcCoordinator.getResultSetReturn().executeUpdate( ps, sql );
 		}
 		catch( Throwable t ) {
 			log.unableToCleanupTemporaryIdTable(t);
@@ -168,11 +170,12 @@ public class TemporaryTableHelper {
 		finally {
 			if ( ps != null ) {
 				try {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( ps );
 				}
 				catch( Throwable ignore ) {
 					// ignore
 				}
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 	}

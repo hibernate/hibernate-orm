@@ -158,7 +158,7 @@ public class NativeQueryImpl<R>
 	private Callback callback;
 
 	/**
-	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
+	 * Constructs a {@code NativeQueryImpl} given a SQL query defined in the mappings.
 	 * Used by Hibernate Reactive.
 	 */
 	@SuppressWarnings("unused")
@@ -191,7 +191,7 @@ public class NativeQueryImpl<R>
 	}
 
 	/**
-	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
+	 * Constructs a {@code NativeQueryImpl} given a SQL query defined in the mappings.
 	 */
 	public NativeQueryImpl(
 			NamedNativeQueryMemento<?> memento,
@@ -228,7 +228,7 @@ public class NativeQueryImpl<R>
 	}
 
 	/**
-	 * Constructs a NativeQueryImpl given a sql query defined in the mappings.
+	 * Constructs a {@code NativeQueryImpl} given a SQL query defined in the mappings.
 	 */
 	public NativeQueryImpl(
 			NamedNativeQueryMemento<?> memento,
@@ -378,7 +378,7 @@ public class NativeQueryImpl<R>
 		else if ( List.class.equals( resultClass ) ) {
 			return NativeQueryListTransformer.INSTANCE;
 		}
-		else if ( Object[].class.equals( resultClass )) {
+		else if ( Object[].class.equals( resultClass ) ) {
 			return NativeQueryArrayTransformer.INSTANCE;
 		}
 		else if ( resultClass != Object.class ) {
@@ -535,9 +535,12 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NamedNativeQueryMemento<R> toMemento(String name) {
+		final QueryOptions options = getQueryOptions();
 		return new NamedNativeQueryMementoImpl<>(
 				name,
-				resultType != null ? resultType : extractResultClass( resultSetMapping ),
+				resultType == null
+						? extractResultClass( resultSetMapping )
+						: resultType,
 				sqlString,
 				originalSqlString,
 				resultSetMapping.getMappingIdentifier(),
@@ -545,13 +548,13 @@ public class NativeQueryImpl<R>
 				isCacheable(),
 				getCacheRegion(),
 				getCacheMode(),
-				getQueryOptions().getFlushMode(),
+				options.getFlushMode(),
 				isReadOnly(),
 				getTimeout(),
 				getFetchSize(),
 				getComment(),
-				getQueryOptions().getLimit().getFirstRow(),
-				getQueryOptions().getLimit().getMaxRows(),
+				options.getLimit().getFirstRow(),
+				options.getLimit().getMaxRows(),
 				getHints()
 		);
 	}
@@ -729,16 +732,16 @@ public class NativeQueryImpl<R>
 	protected SelectQueryPlan<R> resolveSelectQueryPlan() {
 		final ResultSetMapping mapping;
 		if ( resultType != null && resultSetMapping.isDynamic() && resultSetMapping.getNumberOfResultBuilders() == 0 ) {
-			mapping = ResultSetMapping.resolveResultSetMapping( originalSqlString, true, getSessionFactory() );
-
-			if ( getSessionFactory().getMappingMetamodel().isEntityClass( resultType ) ) {
+			final SessionFactoryImplementor sessionFactory = getSessionFactory();
+			mapping = ResultSetMapping.resolveResultSetMapping( originalSqlString, true, sessionFactory );
+			if ( sessionFactory.getMappingMetamodel().isEntityClass( resultType ) ) {
 				mapping.addResultBuilder(
 						Builders.entityCalculated( unqualify( resultType.getName() ), resultType.getName(),
-								LockMode.READ, getSessionFactory() ) );
+								LockMode.READ, sessionFactory ) );
 			}
 			else if ( !isResultTypeAlwaysAllowed( resultType )
 					&& (!isClass( resultType ) || hasJavaTypeDescriptor( resultType )) ) {
-				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, getSessionFactory().getMappingMetamodel() ) );
+				mapping.addResultBuilder( Builders.resultClassBuilder( resultType, sessionFactory.getMappingMetamodel() ) );
 			}
 		}
 		else {
@@ -960,12 +963,13 @@ public class NativeQueryImpl<R>
 	}
 
 	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping resultSetMapping) {
+		final QueryOptions options = getQueryOptions();
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
 				getSynchronizedQuerySpaces(),
-				getQueryOptions().getTupleTransformer(),
-				getQueryOptions().getResultListTransformer()
+				options.getTupleTransformer(),
+				options.getResultListTransformer()
 		);
 	}
 

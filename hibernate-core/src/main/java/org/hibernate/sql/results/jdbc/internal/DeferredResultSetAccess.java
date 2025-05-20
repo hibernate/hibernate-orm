@@ -17,6 +17,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -324,8 +325,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 	@Override
 	public void release() {
-		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator()
-				.getLogicalConnection();
+		final JdbcCoordinator jdbcCoordinator = getPersistenceContext().getJdbcCoordinator();
+		final LogicalConnectionImplementor logicalConnection = jdbcCoordinator.getLogicalConnection();
 		if ( resultSet != null ) {
 			logicalConnection.getResourceRegistry().release( resultSet, preparedStatement );
 			resultSet = null;
@@ -334,9 +335,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		if ( preparedStatement != null ) {
 			logicalConnection.getResourceRegistry().release( preparedStatement );
 			preparedStatement = null;
+			jdbcCoordinator.afterStatementExecution();
 		}
-
-		logicalConnection.afterStatement();
 	}
 
 	@Override

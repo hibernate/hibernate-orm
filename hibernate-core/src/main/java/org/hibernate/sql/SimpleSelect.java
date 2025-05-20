@@ -55,7 +55,9 @@ public class SimpleSelect implements RestrictionRenderingContext {
 
 	public SimpleSelect(Dialect dialect, ParameterMarkerStrategy parameterMarkerStrategy) {
 		this.dialect = dialect;
-		this.parameterMarkerStrategy = parameterMarkerStrategy;
+		this.parameterMarkerStrategy = parameterMarkerStrategy != null
+				? parameterMarkerStrategy
+				: ParameterMarkerStrategyStandard.INSTANCE;
 	}
 
 	@Override

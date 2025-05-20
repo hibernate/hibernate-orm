@@ -1,4 +1,4 @@
-Hibernate 6 Changelog
+Hibernate 7 Changelog
 =======================
 
 Note: Please refer to JIRA to learn more about each issue.

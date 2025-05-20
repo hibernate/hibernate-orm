@@ -170,13 +170,20 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final JdbcDeleteMutation jdbcDelete = createJdbcDelete( session );
 
-		final PreparedStatement deleteStatement = createStatementDetails( jdbcDelete, session );
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final PreparedStatement deleteStatement = createStatementDetails( jdbcDelete, jdbcCoordinator );
 		session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcDelete.getSqlString() );
 
 		bindKeyValues( jdbcValueBindings, deleteStatement, jdbcDelete, session );
 
-		session.getJdbcCoordinator().getResultSetReturn()
-				.executeUpdate( deleteStatement, jdbcDelete.getSqlString() );
+		try {
+			session.getJdbcCoordinator().getResultSetReturn()
+					.executeUpdate( deleteStatement, jdbcDelete.getSqlString() );
+		}
+		finally {
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( deleteStatement );
+			jdbcCoordinator.afterStatementExecution();
+		}
 	}
 
 	private void bindKeyValues(
@@ -343,6 +350,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					statementDetails.getSqlString()
 			);
 		}
+		finally {
+			statementDetails.releaseStatement( session );
+		}
 	}
 
 	/*
@@ -386,7 +396,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final JdbcInsertMutation jdbcInsert = createJdbcInsert( session );
 
-		final PreparedStatement insertStatement = createStatementDetails( jdbcInsert, session );
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		final PreparedStatement insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );
 
 		try {
 			session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcInsert.getSqlString() );
@@ -415,11 +426,12 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 				} );
 			}
 
-			session.getJdbcCoordinator().getResultSetReturn()
+			jdbcCoordinator.getResultSetReturn()
 					.executeUpdate( insertStatement, jdbcInsert.getSqlString() );
 		}
 		finally {
-			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( insertStatement );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );
+			jdbcCoordinator.afterStatementExecution();
 		}
 	}
 
@@ -463,11 +475,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 	private static PreparedStatement createStatementDetails(
 			PreparableMutationOperation operation,
-			SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			JdbcCoordinator jdbcCoordinator) {
 		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
 		final PreparedStatement statement = statementPreparer.prepareStatement( operation.getSqlString(), false );
-		session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().register( null, statement );
+		jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( null, statement );
 		return statement;
 	}
 

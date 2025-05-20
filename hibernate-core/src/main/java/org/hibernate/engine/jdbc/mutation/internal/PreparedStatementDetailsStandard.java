@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.Expectation;
@@ -66,9 +67,11 @@ public class PreparedStatementDetailsStandard implements PreparedStatementDetail
 	@Override
 	public void releaseStatement(SharedSessionContractImplementor session) {
 		if ( statement != null ) {
-			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( statement );
+			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( statement );
 			statement = null;
 			toRelease = false;
+			jdbcCoordinator.afterStatementExecution();
 		}
 	}
 

@@ -104,7 +104,7 @@ public interface SelectionSpecification<T> extends QuerySpecification<T> {
 	 *
 	 * @return {@code this} for method chaining.
 	 */
-	SelectionSpecification<T> resort(List<Order<? super T>> orders);
+	SelectionSpecification<T> resort(List<? extends Order<? super T>> orders);
 
 	@Override
 	SelectionSpecification<T> restrict(Restriction<? super T> restriction);

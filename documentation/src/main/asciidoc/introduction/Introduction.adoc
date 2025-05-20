@@ -186,7 +186,7 @@ dependencies {
     annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
     // Hibernate Validator
-    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
     implementation 'org.glassfish:jakarta.el:4.0.2'
 
     // Agroal connection pool

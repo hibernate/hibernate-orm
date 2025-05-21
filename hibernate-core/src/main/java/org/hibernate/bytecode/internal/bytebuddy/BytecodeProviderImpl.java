@@ -73,6 +73,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 
 	private static final String INSTANTIATOR_PROXY_NAMING_SUFFIX = "HibernateInstantiator";
 	private static final String OPTIMIZER_PROXY_NAMING_SUFFIX = "HibernateAccessOptimizer";
+	private static final String OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX = "HibernateAccessOptimizerBridge";
 	private static final ElementMatcher.Junction<NamedElement> newInstanceMethodName = ElementMatchers.named(
 			"newInstance" );
 	private static final ElementMatcher.Junction<NamedElement> getPropertyValuesMethodName = ElementMatchers.named(
@@ -304,12 +305,14 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		for ( int i = foreignPackageClassInfos.size() - 1; i >= 0; i-- ) {
 			final ForeignPackageClassInfo foreignPackageClassInfo = foreignPackageClassInfos.get( i );
 			final Class<?> newSuperClass = superClass;
+
+			final String suffix = OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
 			superClass = byteBuddyState.load(
 					foreignPackageClassInfo.clazz,
 					byteBuddy -> {
 						DynamicType.Builder<?> builder = byteBuddy.with(
 								new NamingStrategy.SuffixingRandom(
-										OPTIMIZER_PROXY_NAMING_SUFFIX,
+										suffix,
 										new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue(
 												foreignPackageClassInfo.clazz.getName() )
 								)

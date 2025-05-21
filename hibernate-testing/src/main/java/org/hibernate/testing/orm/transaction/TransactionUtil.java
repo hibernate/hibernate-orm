@@ -4,6 +4,7 @@
  */
 package org.hibernate.testing.orm.transaction;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import jakarta.persistence.EntityManager;
@@ -13,7 +14,11 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.testing.orm.AsyncExecutor;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.jboss.logging.Logger;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class TransactionUtil {
 	private static final Logger log = Logger.getLogger( TransactionUtil.class );
@@ -141,4 +146,22 @@ public abstract class TransactionUtil {
 		}
 	}
 
+	public static void deleteFromTable(SessionFactoryScope factoryScope, String tableName, boolean expectingToBlock) {
+		try {
+			AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
+				factoryScope.inTransaction( (session) -> {
+					//noinspection deprecation
+					session.createNativeQuery( "delete from " + tableName ).executeUpdate();
+					if ( expectingToBlock ) {
+						fail( "Expecting delete from " + tableName + " to block dues to locks" );
+					}
+				} );
+			} );
+		}
+		catch (AsyncExecutor.TimeoutException expected) {
+			if ( !expectingToBlock ) {
+				fail( "Expecting delete from " + tableName + " succeed, but failed (presumably due to locks)" );
+			}
+		}
+	}
 }

@@ -11,13 +11,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -167,22 +163,4 @@ public class Helper {
 		}
 	}
 
-	static void deleteFromTable(SessionFactoryScope factoryScope, String tableName, boolean expectingToBlock) {
-		try {
-			AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
-				factoryScope.inTransaction( (session) -> {
-					//noinspection deprecation
-					session.createNativeQuery( "delete from " + tableName ).executeUpdate();
-					if ( expectingToBlock ) {
-						fail( "Expecting delete from " + tableName + " to block dues to locks" );
-					}
-				} );
-			} );
-		}
-		catch (AsyncExecutor.TimeoutException expected) {
-			if ( !expectingToBlock ) {
-				fail( "Expecting delete from " + tableName + " succeed, but failed (presumably due to locks)" );
-			}
-		}
-	}
 }

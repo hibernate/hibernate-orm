@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,13 +65,13 @@ public class ExtendedLockingTests {
 
 
 			// The book_authors table should not be locked.
-			Helper.deleteFromTable( factoryScope, "book_authors", false );
+			TransactionUtil.deleteFromTable( factoryScope, "book_authors", false );
 
 			// The book_tags table should not be locked.
-			Helper.deleteFromTable( factoryScope, "book_tags", false );
+			TransactionUtil.deleteFromTable( factoryScope, "book_tags", false );
 
 			// The book table should be locked.
-			Helper.deleteFromTable( factoryScope, "books", true );
+			TransactionUtil.deleteFromTable( factoryScope, "books", true );
 		} );
 	}
 
@@ -93,13 +94,13 @@ public class ExtendedLockingTests {
 					Helper.Table.BOOKS, Helper.Table.BOOK_TAGS );
 
 			// The book_authors table should not be locked.
-			Helper.deleteFromTable( factoryScope, "book_authors", false );
+			TransactionUtil.deleteFromTable( factoryScope, "book_authors", false );
 
 			// The book_tags table should be locked.
-			Helper.deleteFromTable( factoryScope, "book_tags", true );
+			TransactionUtil.deleteFromTable( factoryScope, "book_tags", true );
 
 			// The book table should be locked.
-			Helper.deleteFromTable( factoryScope, "books", true );
+			TransactionUtil.deleteFromTable( factoryScope, "books", true );
 		} );
 
 	}

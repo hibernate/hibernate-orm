@@ -326,9 +326,4 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
 	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " ignore locked";
-	}
 }

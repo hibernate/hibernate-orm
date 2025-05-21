@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
@@ -34,8 +33,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -45,22 +44,28 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import static java.util.Collections.singletonMap;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Properties;
+import java.util.function.BiConsumer;
+
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
 import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_MESSAGE_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -487,14 +492,13 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	}
 
 	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
-		final String alias = "tbl";
-		final String query = "select " + qualify( alias, valueColumnName )
-				+ " from " + formattedPhysicalTableName + ' ' + alias
-				+ " where " + qualify( alias, segmentColumnName ) + "=?";
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setAliasSpecificLockMode( alias, LockMode.PESSIMISTIC_WRITE );
-		final Map<String,String[]> updateTargetColumnsMap = singletonMap( alias, new String[] { valueColumnName } );
-		return context.getDialect().applyLocksToSql( query, lockOptions, updateTargetColumnsMap );
+		final SimpleSelect select = new SimpleSelect( context.getDialect() )
+				.addColumn( valueColumnName )
+				.setTableName( formattedPhysicalTableName )
+				.addRestriction( segmentColumnName )
+				.setLockOptions( lockOptions );
+		return select.toStatementString();
 	}
 
 	protected String buildUpdateQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {

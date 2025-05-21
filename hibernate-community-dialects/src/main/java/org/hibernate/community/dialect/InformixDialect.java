@@ -41,6 +41,8 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -565,6 +567,11 @@ public class InformixDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.STANDARD_SUPPORT;
 	}
 
 	@Override

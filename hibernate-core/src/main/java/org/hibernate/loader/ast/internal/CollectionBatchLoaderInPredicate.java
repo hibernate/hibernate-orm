@@ -68,7 +68,7 @@ public class CollectionBatchLoaderInPredicate
 				null,
 				sqlBatchSize,
 				influencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);

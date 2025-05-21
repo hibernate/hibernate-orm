@@ -6,6 +6,7 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -36,16 +37,24 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
 		// TimesTen supports locks with aggregates but not with set operators
 		// See https://docs.oracle.com/cd/E11882_01/timesten.112/e21642/state.htm#TTSQL329
 		LockStrategy strategy = LockStrategy.CLAUSE;
 		if ( getQueryPartStack().findCurrentFirst( part -> part instanceof QueryGroup ? part : null ) != null ) {
-			if ( Boolean.FALSE.equals( followOnLocking ) ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported!" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
 		return strategy;
 	}

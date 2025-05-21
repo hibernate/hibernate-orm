@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -237,20 +238,11 @@ public class HSQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		if ( getDialect().getVersion().isBefore( 2 ) ) {
 			return LockStrategy.NONE;
 		}
-		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 2 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
+		return super.determineLockingStrategy( querySpec, followOnLocking );
 	}
 
 	@Override

@@ -82,7 +82,7 @@ public class EntityBatchLoaderInPredicate<T>
 				null,
 				sqlBatchSize,
 				loadQueryInfluencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				sessionFactory
 		);

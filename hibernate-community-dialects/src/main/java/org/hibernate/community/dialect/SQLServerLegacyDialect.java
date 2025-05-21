@@ -4,20 +4,25 @@
  */
 package org.hibernate.community.dialect;
 
-import org.hibernate.*;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.hibernate.Length;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.community.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.SQLServerAggregateSupport;
@@ -27,14 +32,20 @@ import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.function.SqlServerConvertTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.community.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -55,10 +66,10 @@ import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -94,14 +105,34 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import jakarta.persistence.TemporalType;
-
+import static org.hibernate.Timeouts.NO_WAIT_MILLI;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
@@ -159,20 +190,37 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	};
 
 
+	private final LockingSupport lockingSupport;
+
 	public SQLServerLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
 
 	public SQLServerLegacyDialect(DatabaseVersion version) {
 		super(version);
+		lockingSupport = buildLockingSupport();
 		exporter = createSequenceExporter(version);
 		uniqueDelegate = createUniqueDelgate(version);
 	}
 
 	public SQLServerLegacyDialect(DialectResolutionInfo info) {
 		super(info);
+		lockingSupport = buildLockingSupport();
 		exporter = createSequenceExporter(info);
 		uniqueDelegate = createUniqueDelgate(info);
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		final boolean sameOrAfter9 = getVersion().isSameOrAfter( 9 );
+		return new TransactSQLLockingSupport(
+				PessimisticLockStyle.TABLE_HINT,
+				LockTimeoutType.CONNECTION,
+				sameOrAfter9 ? LockTimeoutType.QUERY : LockTimeoutType.NONE,
+				sameOrAfter9 ? LockTimeoutType.QUERY : LockTimeoutType.NONE,
+				RowLockStrategy.TABLE,
+				OuterJoinLockingType.IDENTIFIED,
+				TransactSQLLockingSupport.SQLServerImpl.IMPL
+		);
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
@@ -643,20 +691,22 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
+	}
+
+	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
 		if ( getVersion().isSameOrAfter( 9 ) ) {
-			LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-			if (lockMode == null) {
-				lockMode = lockOptions.getLockMode();
-			}
+			final LockMode lockMode = lockOptions.getLockMode();
+			final Timeout timeout = lockOptions.getTimeout();
+			final int timeoutMillis = timeout.milliseconds();
 
-			final int timeOut = lockOptions.getTimeOut();
+			final String writeLockStr = timeoutMillis == SKIP_LOCKED_MILLI ? "updlock" : "updlock,holdlock";
+			final String readLockStr = timeoutMillis == SKIP_LOCKED_MILLI ? "updlock" : "holdlock";
 
-			final String writeLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-			final String readLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
-
-			final String noWaitStr = timeOut == LockOptions.NO_WAIT ? ",nowait" : "";
-			final String skipLockStr = timeOut == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+			final String noWaitStr = timeoutMillis == NO_WAIT_MILLI ? ",nowait" : "";
+			final String skipLockStr = timeoutMillis == SKIP_LOCKED_MILLI ? ",readpast" : "";
 
 			return switch ( lockMode ) {
 				case PESSIMISTIC_WRITE, WRITE ->
@@ -736,21 +786,6 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsNonQueryWithCTE() {
 		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 9 );
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
 	}
 
 	@Override

@@ -290,11 +290,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for share";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart

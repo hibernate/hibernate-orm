@@ -145,16 +145,6 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
-	@Override
-	protected String getForUpdate() {
-		return " with lock";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return getForUpdate();
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Percent fetches or ties fetches aren't supported in Firebird
 		// Before 3.0 there was also no support for window functions

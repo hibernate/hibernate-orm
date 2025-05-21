@@ -14,7 +14,7 @@ import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 
-import org.hibernate.LockOptions;
+import org.hibernate.LockMode;
 import org.hibernate.community.dialect.CacheDialect;
 import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
@@ -683,7 +683,9 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s2.beginTransaction();
 		TestInterSystemsFunctionsClass test = s2.get(TestInterSystemsFunctionsClass.class, 10L );
 		assertTrue( test.getDate1().equals(testvalue));
-		test = (TestInterSystemsFunctionsClass) s2.byId( TestInterSystemsFunctionsClass.class ).with( LockOptions.NONE ).load( 10L );
+		test = (TestInterSystemsFunctionsClass) s2.byId( TestInterSystemsFunctionsClass.class )
+				.with( LockMode.NONE )
+				.load( 10L );
 		assertTrue( test.getDate1().equals(testvalue));
 		Date value = (Date) s2.createQuery( "select nvl(o.date,o.dateText) from TestInterSystemsFunctionsClass as o" )
 				.list()

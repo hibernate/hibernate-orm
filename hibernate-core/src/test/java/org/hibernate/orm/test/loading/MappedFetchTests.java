@@ -72,7 +72,7 @@ public class MappedFetchTests {
 				null,
 				1,
 				new LoadQueryInfluencers( sessionFactory ),
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParameter -> {
 				},
 				sessionFactory

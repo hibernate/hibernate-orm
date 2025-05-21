@@ -43,6 +43,7 @@ import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
@@ -111,10 +112,14 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.internal.StandardForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
@@ -2154,10 +2159,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	public PessimisticLockStyle getPessimisticLockStyle() {
+		// most dialects support pessimistic locking via locking-clause
+		return PessimisticLockStyle.CLAUSE;
+	}
+
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		return getPessimisticLockStyle() == PessimisticLockStyle.CLAUSE
+				? StandardForUpdateClauseStrategy.strategy( this, querySpec, lockOptions )
+				: NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+	}
+
 	/**
-	 * Does this dialect support specifying timeouts when requesting locks.
+	 * Whether this dialect supports specifying timeouts when requesting locks.
 	 *
-	 * @return True is this dialect supports specifying lock timeouts.
+	 * @return True if this dialect supports specifying lock timeouts.
 	 */
 	public boolean supportsLockTimeouts() {
 		return true;
@@ -2481,13 +2497,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
-		for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-			// seek the highest lock mode
-			final LockMode lm = entry.getValue();
-			if ( lm.greaterThan(lockMode) ) {
-				lockMode = lm;
-			}
-		}
 		lockOptions.setLockMode( lockMode );
 		return getForUpdateString( lockOptions );
 	}
@@ -4283,23 +4292,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Some dialects have trouble applying pessimistic locking depending
-	 * upon what other query options are specified (paging, ordering, etc).
-	 * This method allows these dialects to request that locking be applied
-	 * by subsequent selects.
-	 *
-	 * @return {@code true} indicates that the dialect requests that locking
-	 *                      be applied by subsequent select;
-	 *         {@code false} (the default) indicates that locking
-	 *                      should be applied to the main SQL statement.
-	 *
-	 * @since 6.0
-	 */
-	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		return false;
-	}
-
-	/**
 	 * Get the {@link UniqueDelegate} supported by this dialect
 	 *
 	 * @return The UniqueDelegate
@@ -4823,6 +4815,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsFromClauseInUpdate() {
 		return false;
+	}
+
+	/**
+	 * Whether this dialect supports {@code for update (of)}
+	 */
+	public boolean supportsForUpdate() {
+		return true;
 	}
 
 	/**
@@ -6208,4 +6207,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsRowValueConstructorSyntaxInInList();
 	}
 
+
+	/**
+	 * Some dialects have trouble applying pessimistic locking depending
+	 * upon what other query options are specified (paging, ordering, etc).
+	 * This method allows these dialects to request that locking be applied
+	 * by subsequent selects.
+	 *
+	 * @return {@code true} indicates that the dialect requests that locking
+	 *                      be applied by subsequent select;
+	 *         {@code false} (the default) indicates that locking
+	 *                      should be applied to the main SQL statement.
+	 *
+	 * @since 6.0
+	 */
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
+		return false;
+	}
 }

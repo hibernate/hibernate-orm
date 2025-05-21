@@ -13,6 +13,7 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -641,9 +642,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		final String lockHint = super.appendLockHint( mode, tableName );
-		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
-				? lockHint + " readpast"
-				: lockHint;
+		if ( !mode.getLockMode().greaterThan( LockMode.READ )
+				&& mode.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+			return lockHint + " readpast";
+		}
+		return lockHint;
 	}
 
 	@Override

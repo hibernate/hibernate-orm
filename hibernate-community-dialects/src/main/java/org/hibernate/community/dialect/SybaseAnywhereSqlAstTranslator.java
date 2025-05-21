@@ -132,14 +132,6 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 10 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
-	}
-
-	@Override
 	protected boolean needsRowsToSkip() {
 		return getDialect().getVersion().isBefore( 9 );
 	}

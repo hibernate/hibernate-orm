@@ -55,7 +55,7 @@ public class NativeQueryResultCheckingTests {
 	}
 
 	@Test
-	public void testOkMutateResultSetMappingWithString(SessionFactoryScope scope) {
+	public void testOneColumn(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
 						assertDoesNotThrow(
@@ -64,15 +64,118 @@ public class NativeQueryResultCheckingTests {
 										.getResultList()
 				)
 		);
-	}
-
-	@Test
-	public void testNokMutateResultSetMappingWithString(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
 						assertThrows( IllegalArgumentException.class,
-								() -> session.createNativeQuery( "select title, isbn from Book", String.class )
-										.addScalar( "title", String.class )
+								() -> session.createNativeQuery( "select isbn from Book", Integer.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select isbn from Book", Object[].class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select isbn from Book", Tuple.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select isbn from Book", Map.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select isbn from Book", Object.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select isbn from Book" )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+	}
+
+	@Test
+	public void testTwoStringColumns(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						assertThrows( IllegalArgumentException.class,
+								() -> session.createNativeQuery( "select name, isbn from Book", String.class )
+										.addScalar( "name", String.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select name, isbn from Book", Object[].class )
+										.addScalar( "name", String.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select name, isbn from Book", Tuple.class )
+										.addScalar( "name", String.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select name, isbn from Book", Map.class )
+										.addScalar( "name", String.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select name, isbn from Book", Object.class )
+										.addScalar( "name", String.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> session.createNativeQuery( "select name, isbn from Book" )
+										.addScalar( "name", String.class )
+										.addScalar( "isbn", String.class )
+										.getResultList()
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertThrows( IllegalArgumentException.class,
+								() -> session.createNativeQuery( "select name, isbn from Book", Book.class )
+										// this mapping doesn't have an appropriate constructor in Book, should throw error
+										.addScalar( "name", String.class )
 										.addScalar( "isbn", String.class )
 										.getResultList()
 						)
@@ -93,21 +196,7 @@ public class NativeQueryResultCheckingTests {
 	}
 
 	@Test
-	public void testNokMutateResultSetMappingWithBook(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						assertThrows( IllegalArgumentException.class,
-								() -> session.createNativeQuery( "select title, isbn from Book", Book.class )
-										// this mapping doesn't have an appropriate constructor in Book, should throw error
-										.addScalar( "title", String.class )
-										.addScalar( "isbn", String.class )
-										.getResultList()
-						)
-		);
-	}
-
-	@Test
-	public void testMutateResultSetMappingWithObjectArray(SessionFactoryScope scope) {
+	public void testAllColumns(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
 						assertDoesNotThrow(
@@ -119,10 +208,6 @@ public class NativeQueryResultCheckingTests {
 								}
 						)
 		);
-	}
-
-	@Test
-	public void testMutateResultSetMappingWithTuple(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
 						assertDoesNotThrow(
@@ -134,10 +219,6 @@ public class NativeQueryResultCheckingTests {
 								}
 						)
 		);
-	}
-
-	@Test
-	public void testMutateResultSetMappingWithMap(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
 						assertDoesNotThrow(
@@ -149,10 +230,28 @@ public class NativeQueryResultCheckingTests {
 								}
 						)
 		);
-	}
-
-	@Test
-	public void testMutateResultSetMappingWithList(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> {
+									session.createNativeQuery( "select * from Book", Object.class )
+											.addScalar( "id", Integer.class )
+											.addScalar( "name", String.class )
+											.getResultList();
+								}
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertDoesNotThrow(
+								() -> {
+									session.createNativeQuery( "select * from Book", Book.class )
+											.addScalar( "id", Integer.class )
+											.addScalar( "name", String.class )
+											.getResultList();
+								}
+						)
+		);
 		scope.inTransaction(
 				session ->
 						assertDoesNotThrow(
@@ -162,6 +261,15 @@ public class NativeQueryResultCheckingTests {
 											.addScalar( "name", String.class )
 											.getResultList();
 								}
+						)
+		);
+		scope.inTransaction(
+				session ->
+						assertThrows( IllegalArgumentException.class,
+								() -> session.createNativeQuery( "select * from Book", Book.class )
+										.addScalar( "isbn", String.class )
+										.addScalar( "name", String.class )
+										.getResultList()
 						)
 		);
 	}

@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.Locking;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
@@ -143,30 +144,51 @@ public class OracleLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
-		LockStrategy strategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
+		LockStrategy strategy = super.determineLockingStrategy( querySpec, followOnStrategy );
+
 		// Oracle also doesn't support locks with set operators
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
 		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		if ( strategy != LockStrategy.FOLLOW_ON && needsLockingWrapper( querySpec ) && !canApplyLockingWrapper( querySpec ) ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		return strategy;
 	}
 

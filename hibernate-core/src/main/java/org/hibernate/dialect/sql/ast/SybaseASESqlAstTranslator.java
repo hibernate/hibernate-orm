@@ -4,11 +4,8 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -50,6 +47,11 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -204,7 +206,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			case PESSIMISTIC_WRITE:
 			case WRITE: {
 				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
+					case SKIP_LOCKED_MILLI:
 						appendSql( " holdlock readpast" );
 						break;
 					default:
@@ -251,15 +253,9 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Sybase ASE does not really support the FOR UPDATE clause
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -715,13 +716,6 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		// No verifySelect call, because in Hibernate we support locking in subqueries
-		super.setLockMode( alias, lockMode );
-		return this;
-	}
-
-	@Override
 	public <T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
 		//noinspection unchecked
@@ -888,9 +882,9 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
+	protected void applyFollowOnStrategyHint(Locking.FollowOn followOnStrategy) {
 		if ( isSelect( sqm ) ) {
-			super.applyAliasSpecificLockModeHint( hintName, value );
+			super.applyFollowOnStrategyHint( followOnStrategy );
 		}
 	}
 

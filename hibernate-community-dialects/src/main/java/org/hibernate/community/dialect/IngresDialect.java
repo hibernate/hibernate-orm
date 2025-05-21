@@ -6,6 +6,7 @@ package org.hibernate.community.dialect;
 
 import java.sql.Types;
 
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.Ingres9IdentityColumnSupport;
@@ -44,10 +45,13 @@ import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
@@ -410,6 +414,12 @@ public class IngresDialect extends Dialect {
 	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Ingres does not support the FOR UPDATE clause
+		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+	}
 
 	/**
 	 * {@code FOR UPDATE} only supported for cursors

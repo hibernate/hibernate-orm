@@ -58,7 +58,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				null,
 				1,
 				influencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);

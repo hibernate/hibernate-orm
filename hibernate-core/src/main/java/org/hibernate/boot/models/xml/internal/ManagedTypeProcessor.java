@@ -126,8 +126,8 @@ public class ManagedTypeProcessor {
 			DynamicModelHelper.prepareDynamicClass( classDetails, jaxbEntity, xmlDocumentContext );
 		}
 		else {
-			memberAdjuster = ManagedTypeProcessor::adjustCompleteNonDynamicTypeMember;
 			final String className = XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity );
+			memberAdjuster = ManagedTypeProcessor::adjustCompleteNonDynamicTypeMember;
 			classDetails = (MutableClassDetails) classDetailsRegistry.resolveClassDetails( className );
 			classAccessType = coalesce(
 					jaxbEntity.getAccess(),
@@ -688,6 +688,8 @@ public class ManagedTypeProcessor {
 					xmlDocumentContext
 			);
 		}
+
+		renderClass( classDetails, xmlDocumentContext );
 	}
 
 	public static void processOverrideEmbeddable(List<XmlProcessingResult.OverrideTuple<JaxbEmbeddableImpl>> embeddableOverrides) {
@@ -712,6 +714,8 @@ public class ManagedTypeProcessor {
 						xmlDocumentContext
 				);
 			}
+
+			renderClass( classDetails, xmlDocumentContext );
 		} );
 	}
 }

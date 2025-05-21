@@ -14,18 +14,12 @@ import org.hibernate.testing.orm.junit.Setting;
 /**
  * @author Gail Badner
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.hbm.xml"
-		}
-)
+@ServiceRegistry(settings = {
+		@Setting(name = Environment.GENERATE_STATISTICS, value = "true"),
+		@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0"),
+		@Setting(name = Environment.CHECK_NULLABILITY, value = "false")
+})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.xml")
 @SessionFactory
-@ServiceRegistry(
-		settings = {
-				@Setting(name = Environment.GENERATE_STATISTICS, value = "true"),
-				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0"),
-				@Setting(name = Environment.CHECK_NULLABILITY, value = "false")
-		}
-)
 public class MultiPathCircleCascadeCheckNullFalseDelayedInsertTest extends AbstractMultiPathCircleCascadeTest {
 }

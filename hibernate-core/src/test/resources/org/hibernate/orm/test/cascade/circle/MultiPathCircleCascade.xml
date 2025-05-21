@@ -1,0 +1,109 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.cascade.circle</package>
+
+    <entity class="Route">
+        <attributes>
+            <id name="routeID">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name" optional="false"/>
+            <one-to-many name="nodes" mapped-by="route">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+            <transient name="version"/>
+            <transient name="transientField"/>
+            <transient name="vehicles"/>
+        </attributes>
+    </entity>
+
+    <entity class="Tour">
+        <attributes>
+            <id name="tourID">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name" optional="false"/>
+            <one-to-many name="nodes" mapped-by="tour">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+            <transient name="version"/>
+        </attributes>
+    </entity>
+
+    <entity class="Transport">
+        <attributes>
+            <id name="transportID">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name" optional="false"/>
+            <many-to-one name="pickupNode" optional="false">
+                <join-column name="pickup_node_fk" unique="true"/>
+                <cascade>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </many-to-one>
+            <many-to-one name="deliveryNode" optional="false">
+                <join-column name="delivery_node_fk" unique="true"/>
+                <cascade>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </many-to-one>
+            <transient name="version"/>
+            <transient name="vehicle"/>
+            <transient name="transientField"/>
+        </attributes>
+    </entity>
+
+    <entity class="Node">
+        <attributes>
+            <id name="nodeID">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name" optional="false"/>
+            <many-to-one name="route" optional="false">
+                <join-column name="route_fk"/>
+            </many-to-one>
+            <many-to-one name="tour">
+                <join-column name="tour_fk"/>
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </many-to-one>
+            <one-to-many name="deliveryTransports" mapped-by="deliveryNode">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+            <one-to-many name="pickupTransports" mapped-by="pickupNode">
+                <cascade>
+                    <cascade-persist/>
+                    <cascade-merge/>
+                    <cascade-refresh/>
+                </cascade>
+            </one-to-many>
+            <transient name="version"/>
+            <transient name="transientField"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

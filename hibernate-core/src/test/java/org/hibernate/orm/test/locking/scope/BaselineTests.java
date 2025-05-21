@@ -7,6 +7,7 @@ package org.hibernate.orm.test.locking.scope;
 import jakarta.persistence.LockModeType;
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -86,9 +87,11 @@ public class BaselineTests {
 			Helper.deleteFromTable( factoryScope, "book_authors", false );
 
 			// Whether the `book_tags` table should be locked or not depends on the capability of the db:
+			//		* if the database uses table hints, it will be locked
 			//		* if the database supports for-update-of, it will not be locked since `of` will only reference the root table (`books`)
 			//		* if the database supports for-update (no -of), it will be locked since it locks all returned rows
-			final boolean expectingToBlockTags = session.getDialect().getWriteRowLockStrategy() == RowLockStrategy.NONE;
+			final boolean expectingToBlockTags = session.getDialect().getWriteRowLockStrategy() == RowLockStrategy.NONE
+					|| session.getDialect().getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT;
 			Helper.deleteFromTable( factoryScope, "book_tags", expectingToBlockTags );
 
 			// The `books` table should be locked.

@@ -4,22 +4,21 @@
  */
 package org.hibernate.sql;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A SQL {@code SELECT} statement with no table joins.
@@ -29,7 +28,6 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 @Internal
 public class SimpleSelect implements RestrictionRenderingContext {
 	protected String tableName;
-	protected String tableAlias;
 	protected String orderBy;
 	protected String comment;
 
@@ -67,15 +65,7 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	 * Sets the name of the table we are selecting from
 	 */
 	public SimpleSelect setTableName(String tableName) {
-		return setTableName( tableName, null );
-	}
-
-	/**
-	 * Sets the name of the table we are selecting from
-	 */
-	public SimpleSelect setTableName(String tableName, String tableAlias) {
 		this.tableName = tableName;
-		this.tableAlias = tableAlias;
 		return this;
 	}
 
@@ -225,9 +215,6 @@ public class SimpleSelect implements RestrictionRenderingContext {
 
 	private void applyFromClause(StringBuilder buf) {
 		buf.append( " from " ).append( dialect.appendLockHint( lockOptions, tableName ) );
-		if ( StringHelper.isNotEmpty( tableAlias ) ) {
-			buf.append( " as " ).append( tableAlias );
-		}
 	}
 
 	private void applyWhereClause(StringBuilder buf) {

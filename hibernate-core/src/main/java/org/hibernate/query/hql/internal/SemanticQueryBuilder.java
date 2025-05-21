@@ -1175,30 +1175,40 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmQuerySpec<?> visitQuery(HqlParser.QueryContext ctx) {
 		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
 
+		final HqlParser.FromClauseContext fromClauseContext = ctx.fromClause();
+		final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
+		final HqlParser.GroupByClauseContext groupByClauseContext = ctx.groupByClause();
+		final HqlParser.HavingClauseContext havingClauseContext = ctx.havingClause();
+		final HqlParser.SelectClauseContext selectClauseContext = ctx.selectClause();
+
+		if ( havingClauseContext != null && groupByClauseContext == null ) {
+			throw new SemanticException( "Query has 'having' but no 'group by'", query );
+		}
+
 		// visit from clause first!!!
 		final SqmFromClause fromClause =
-				ctx.fromClause() == null
-						? buildInferredFromClause( ctx.selectClause() )
-						: visitFromClause( ctx.fromClause() );
+				fromClauseContext == null
+						? buildInferredFromClause( selectClauseContext )
+						: visitFromClause( fromClauseContext );
 		sqmQuerySpec.setFromClause( fromClause );
 
 		final SqmSelectClause selectClause =
-				ctx.selectClause() == null
+				selectClauseContext == null
 						? buildInferredSelectClause( fromClause )
-						: visitSelectClause( ctx.selectClause() );
+						: visitSelectClause( selectClauseContext );
 		sqmQuerySpec.setSelectClause( selectClause );
 
-		final SqmWhereClause whereClause = new SqmWhereClause( creationContext.getNodeBuilder() );
-		if ( ctx.whereClause() != null ) {
-			whereClause.setPredicate( (SqmPredicate) ctx.whereClause().accept( this ) );
+		final SqmWhereClause whereClause = new SqmWhereClause( nodeBuilder() );
+		if ( whereClauseContext != null ) {
+			whereClause.setPredicate( (SqmPredicate) whereClauseContext.accept( this ) );
 		}
 		sqmQuerySpec.setWhereClause( whereClause );
 
-		if ( ctx.groupByClause() != null ) {
-			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( ctx.groupByClause() ) );
+		if ( groupByClauseContext != null ) {
+			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( groupByClauseContext ) );
 		}
-		if ( ctx.havingClause() != null ) {
-			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( ctx.havingClause() ) );
+		if ( havingClauseContext != null ) {
+			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( havingClauseContext ) );
 		}
 
 		return sqmQuerySpec;

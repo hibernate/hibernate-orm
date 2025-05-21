@@ -25,7 +25,9 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.id.enhanced.LegacyNamingStrategy;
 import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -138,6 +140,7 @@ import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -441,6 +444,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
+import static org.hibernate.cfg.MappingSettings.ID_DB_STRUCTURE_NAMING_STRATEGY;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
@@ -1203,7 +1207,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			if ( hasJoins( rootTableGroup ) ) {
-				throw new SemanticException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
+				throw new HibernateException( "Not expecting multiple table references for an SQM INSERT-SELECT" );
 			}
 		}
 		finally {
@@ -1438,8 +1442,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( identifierGenerator != null ) {
 			// When we have an identifier generator, we somehow must list the identifier column in the insert statement.
 			final boolean addIdColumn;
-			if ( sqmStatement instanceof SqmInsertValuesStatement<?> ) {
-				// For an InsertValuesStatement, we can just list the column, as we can inject a parameter in the VALUES clause.
+			if ( sqmStatement instanceof SqmInsertValuesStatement<?>
+				|| sqmStatement instanceof SqmInsertSelectStatement<?> && this instanceof StandardSqmTranslator<?> ) {
+				// For an InsertValuesStatement or an InsertSelectStatement, we can just list the column, as we can inject a parameter in the VALUES clause.
 				addIdColumn = true;
 			}
 			else if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableGenerator ) ) {
@@ -1550,6 +1555,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( !( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableGenerator ) ) {
 						throw new SemanticException(
 								"SQM INSERT-SELECT without bulk insertion capable identifier generator: " + identifierGenerator );
+					}
+					if ( identifierGenerator instanceof SequenceStyleGenerator && identifierGeneratorParameter == null
+						&& LegacyNamingStrategy.STRATEGY_NAME.equals(
+							sessionFactory.getProperties().get( ID_DB_STRUCTURE_NAMING_STRATEGY ) ) ) {
+						identifierGeneratorParameter = new IdGeneratorParameter( identifierMapping,
+								(BeforeExecutionGenerator) identifierGenerator );
+						selectClause.addSqlSelection( new SqlSelectionImpl( identifierGeneratorParameter ) );
+						return false;
 					}
 					if ( identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
 						final Optimizer optimizer = optimizableGenerator.getOptimizer();

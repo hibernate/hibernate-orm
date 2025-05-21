@@ -84,6 +84,15 @@ public class Helper {
 			};
 		}
 
+		public String[] getKeyColumnNames() {
+			return switch ( this ) {
+				case BOOKS -> new String[] {"id"};
+				case BOOK_TAGS -> new String[] {"book_fk"};
+				case BOOK_AUTHORS -> new String[] {"book_fk"};
+				case PUBLISHER -> new String[] {"id"};
+			};
+		}
+
 		public String[] getKeyColumnAliases() {
 			return switch ( this ) {
 				case BOOKS -> new String[] {"b1_0.id"};
@@ -113,6 +122,20 @@ public class Helper {
 						buffer.append( "," );
 					}
 					buffer.append( table.getTableAlias() );
+				}
+				aliases = buffer.toString();
+			}
+			else if ( rowLockStrategy == RowLockStrategy.COLUMN_NAME ) {
+				final StringBuilder buffer = new StringBuilder();
+				boolean firstPass = true;
+				for ( Table table : tablesFetched ) {
+					if ( firstPass ) {
+						firstPass = false;
+					}
+					else {
+						buffer.append( "," );
+					}
+					buffer.append( StringHelper.join( ",", table.getKeyColumnNames() ) );
 				}
 				aliases = buffer.toString();
 			}

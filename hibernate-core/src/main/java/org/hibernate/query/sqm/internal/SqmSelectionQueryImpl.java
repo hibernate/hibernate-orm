@@ -584,15 +584,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	/**
-	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
-	 */
-	@Override
-	public SqmSelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
-		super.setLockMode( alias, lockMode );
-		return this;
-	}
-
-	/**
 	 * Specifies whether follow-on locking should be applied?
 	 */
 	@Override

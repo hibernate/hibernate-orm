@@ -70,7 +70,7 @@ class DatabaseSnapshotExecutor {
 				rootQuerySpec,
 				sqlAliasBaseManager,
 				new FromClauseIndex( null ),
-				LockOptions.NONE,
+				new LockOptions(),
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				new LoadQueryInfluencers( sessionFactory ),

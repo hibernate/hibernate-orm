@@ -4,9 +4,9 @@
  */
 package org.hibernate.event.spi;
 
-import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 
 /**
  * Event class for {@link org.hibernate.Session#lock}.
@@ -67,18 +67,6 @@ public class LockEvent extends AbstractEvent {
 		return lockOptions;
 	}
 
-	public LockMode getLockMode() {
-		return lockOptions.getLockMode();
-	}
-
-	public int getLockTimeout() {
-		return lockOptions.getTimeOut();
-	}
-
-	public boolean getLockScope() {
-		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
-	}
-
 	public String getEntityName() {
 		return entityName;
 	}
@@ -87,4 +75,28 @@ public class LockEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public LockMode getLockMode() {
+		return lockOptions.getLockMode();
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public int getLockTimeout() {
+		return lockOptions.getTimeOut();
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public boolean getLockScope() {
+		return lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
+	}
 }

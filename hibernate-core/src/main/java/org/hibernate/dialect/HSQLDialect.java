@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TrimFunction;
@@ -47,9 +48,12 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -400,6 +404,14 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
+	}
+
+	@Override
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		if ( getVersion().isBefore( 2 ) ) {
+			return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+		}
+		return super.getForUpdateClauseStrategy( querySpec, lockOptions );
 	}
 
 	@Override

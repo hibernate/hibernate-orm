@@ -20,6 +20,7 @@ import org.hibernate.query.TupleTransformer;
 import static java.util.Collections.emptyList;
 
 public abstract class QueryOptionsAdapter implements QueryOptions {
+	private final LockOptions lockOptions = new LockOptions();
 
 	@Override
 	public Limit getLimit() {
@@ -38,7 +39,7 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 
 	@Override
 	public LockOptions getLockOptions() {
-		return LockOptions.NONE;
+		return lockOptions;
 	}
 
 	@Override

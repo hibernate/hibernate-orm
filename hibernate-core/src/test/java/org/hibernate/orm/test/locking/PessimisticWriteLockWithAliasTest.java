@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.locking;
 
-import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.dialect.OracleDialect;
@@ -19,6 +18,7 @@ import org.junit.Test;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.MULTILINE;
 import static org.junit.Assert.assertTrue;
@@ -71,8 +71,7 @@ public class PessimisticWriteLockWithAliasTest
 		try {
 			session.createQuery(
 					"select b from B b left join fetch b.a", B.class )
-					.unwrap( org.hibernate.query.Query.class )
-					.setLockMode( "b", LockMode.PESSIMISTIC_WRITE )
+					.setLockMode( PESSIMISTIC_WRITE )
 					.list();
 
 			/*

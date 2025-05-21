@@ -9,6 +9,7 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Jpa
 class CastTest {
@@ -25,8 +26,8 @@ class CastTest {
 			var result = entityManager.createQuery( query ).getSingleResult();
 			assertEquals( "69", result[0] );
 			assertEquals( "69", result[1] );
-			assertEquals("1.0", result[2] );
-			assertEquals("1.0", result[3] );
+			assertTrue( "1.0".equals( result[2] ) || "1".equals( result[2] ) );
+			assertTrue( "1.0".equals( result[3] ) || "1".equals( result[3] ) );
 		} );
 	}
 

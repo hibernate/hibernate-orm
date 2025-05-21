@@ -4,19 +4,17 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.List;
-
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -46,6 +44,11 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+
+import static org.hibernate.Timeouts.NO_WAIT_MILLI;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
 /**
  * A SQL AST translator for SQL Server.
@@ -229,10 +232,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 			case PESSIMISTIC_WRITE:
 			case WRITE: {
 				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
+					case SKIP_LOCKED_MILLI:
 						appendSql( " with (updlock,rowlock,readpast)" );
 						break;
-					case LockOptions.NO_WAIT:
+					case NO_WAIT_MILLI:
 						appendSql( " with (updlock,holdlock,rowlock,nowait)" );
 						break;
 					default:
@@ -243,10 +246,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 			}
 			case PESSIMISTIC_READ: {
 				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
+					case SKIP_LOCKED_MILLI:
 						appendSql( " with (updlock,rowlock,readpast)" );
 						break;
-					case LockOptions.NO_WAIT:
+					case NO_WAIT_MILLI:
 						appendSql( " with (holdlock,rowlock,nowait)" );
 						break;
 					default:
@@ -256,7 +259,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 				break;
 			}
 			case UPGRADE_SKIPLOCKED: {
-				if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
+				if ( effectiveLockTimeout == NO_WAIT_MILLI ) {
 					appendSql( " with (updlock,rowlock,readpast,nowait)" );
 				}
 				else {
@@ -274,15 +277,9 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// SQL Server does not support the FOR UPDATE clause
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {

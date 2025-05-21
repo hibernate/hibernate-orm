@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
@@ -47,9 +48,12 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -388,6 +392,12 @@ public class SQLiteDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return LimitOffsetLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// SQLite does not support the FOR UPDATE clause
+		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -178,15 +179,9 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Sybase does not support the FOR UPDATE clause
 	}
 
 	@Override

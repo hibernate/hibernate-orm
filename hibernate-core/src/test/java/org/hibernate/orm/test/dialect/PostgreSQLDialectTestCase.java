@@ -91,13 +91,11 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 	@JiraKey( value = "HHH-5654" )
 	public void testGetForUpdateStringWithAliasesAndLockOptions() {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
-		LockOptions lockOptions = new LockOptions();
-		lockOptions.setAliasSpecificLockMode("tableAlias1", LockMode.PESSIMISTIC_WRITE);
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 
 		String forUpdateClause = dialect.getForUpdateString("tableAlias1", lockOptions);
 		assertEquals( "for update of tableAlias1", forUpdateClause );
 
-		lockOptions.setAliasSpecificLockMode("tableAlias2", LockMode.PESSIMISTIC_WRITE);
 		forUpdateClause = dialect.getForUpdateString("tableAlias1,tableAlias2", lockOptions);
 		assertEquals("for update of tableAlias1,tableAlias2", forUpdateClause);
 	}

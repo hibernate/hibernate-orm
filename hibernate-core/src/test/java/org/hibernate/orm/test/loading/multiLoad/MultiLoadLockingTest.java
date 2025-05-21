@@ -16,10 +16,6 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -250,14 +246,7 @@ public class MultiLoadLockingTest {
 		final Integer userInL2CId = userIds.get(0);
 		final Integer userInL1CId = userIds.get(1);
 		Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		String lockString;
-		if ( PostgreSQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
-			PgSqlAstTranslatorExt translator = new PgSqlAstTranslatorExt( scope.getSessionFactory(), null );
-			lockString = translator.getForUpdate();
-		}
-		else  {
-			lockString = dialect.getForUpdateString( LockMode.PESSIMISTIC_WRITE, -1 );
-		}
+		String lockString = dialect.getForUpdateString(LockMode.PESSIMISTIC_WRITE, -1 );
 
 		scope.inTransaction( session -> {
 			User userInL2C = session.find(User.class, userInL2CId);
@@ -374,18 +363,6 @@ public class MultiLoadLockingTest {
 			assertTrue( stmt.contains( lockString ) );
 		}
 		sqlStatementInspector.clear();
-	}
-
-	// Ugly-ish hack to be able to access the PostgreSQLSqlAstTranslator.getForUpdate() method needed for testing the PostgreSQL dialects
-	private static class PgSqlAstTranslatorExt extends PostgreSQLSqlAstTranslator {
-		public PgSqlAstTranslatorExt(SessionFactoryImplementor sessionFactory, Statement statement) {
-			super( sessionFactory, statement );
-		}
-
-		@Override
-		protected String getForUpdate() {
-			return super.getForUpdate();
-		}
 	}
 
 	@Entity(name = "Customer")

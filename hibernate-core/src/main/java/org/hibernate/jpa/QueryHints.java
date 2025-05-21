@@ -86,6 +86,13 @@ public final class QueryHints {
 	/**
 	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
 	 */
+	public static final String HINT_FOLLOW_ON_STRATEGY = HibernateHints.HINT_FOLLOW_ON_STRATEGY;
+
+	/**
+	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 * @deprecated Use {@linkplain #HINT_FOLLOW_ON_STRATEGY} instead.
+	 */
+	@Deprecated(since="7.1")
 	public static final String HINT_FOLLOW_ON_LOCKING = HibernateHints.HINT_FOLLOW_ON_LOCKING;
 
 	/**

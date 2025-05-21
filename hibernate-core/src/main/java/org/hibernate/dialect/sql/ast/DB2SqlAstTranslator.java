@@ -212,21 +212,6 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		}
 	}
 
-	@Override
-	protected String getForUpdate() {
-		return " for read only with rs use and keep update locks";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " for read only with rs use and keep share locks";
-	}
-
-	@Override
-	protected String getSkipLocked() {
-		return " skip locked data";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		if ( getQueryPartForRowNumbering() == queryPart ) {

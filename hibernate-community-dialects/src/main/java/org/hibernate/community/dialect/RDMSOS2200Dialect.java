@@ -8,6 +8,7 @@ import java.lang.invoke.MethodHandles;
 import java.sql.Types;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -36,9 +37,12 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -412,6 +416,12 @@ public class RDMSOS2200Dialect extends Dialect {
 		else {
 			return new SelectLockingStrategy( lockable, lockMode );
 		}
+	}
+
+	@Override
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Unisys 2200 does not support the FOR UPDATE clause
+		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
 	}
 
 	@Override

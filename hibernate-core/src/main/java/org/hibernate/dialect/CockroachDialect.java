@@ -56,9 +56,12 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
@@ -84,7 +87,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -897,6 +899,15 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getVersion().isBefore( 20, 1 ) ) {
+			return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+		}
+		return super.getForUpdateClauseStrategy( querySpec, lockOptions );
+	}
+
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
@@ -908,23 +919,10 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// Parent's implementation for (aliases, lockOptions) ignores aliases.
-		if ( aliases.isEmpty() ) {
-			final LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan( lockMode ) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
@@ -960,26 +958,6 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getReadLockString(String aliases, Timeout timeout) {
-		return withTimeout( " for share of " + aliases, timeout );
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return withTimeout( " for share", timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
 		return withTimeout( " for share of " + aliases, timeout );
 	}
 
@@ -1208,4 +1186,24 @@ public class CockroachDialect extends Dialect {
 		return false;
 	}
 
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return withTimeout( " for share", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return withTimeout( " for share of " + aliases, timeout );
+	}
 }

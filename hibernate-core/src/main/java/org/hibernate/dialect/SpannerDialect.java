@@ -39,9 +39,12 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
@@ -700,7 +703,14 @@ public class SpannerDialect extends Dialect {
 		throw new UnsupportedOperationException( "Cannot add primary key constraint in Cloud Spanner." );
 	}
 
-	/* Lock acquisition functions */
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Lock acquisition functions
+
+	@Override
+	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Spanner does not support the FOR UPDATE clause
+		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+	}
 
 	@Override
 	public boolean supportsLockTimeouts() {

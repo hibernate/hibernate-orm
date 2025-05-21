@@ -5,12 +5,14 @@
 package org.hibernate;
 
 import jakarta.persistence.FindOption;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.RefreshOption;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 
-import jakarta.persistence.LockModeType;
-
 import java.util.Locale;
+
+import static org.hibernate.Timeouts.NO_WAIT_MILLI;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
 /**
  * Instances represent a lock mode for a row of a relational
@@ -283,23 +285,32 @@ public enum LockMode implements FindOption, RefreshOption {
 	}
 
 	/**
-	 * @return an instance of {@link LockOptions} with this lock mode, and all other settings defaulted.
+	 * @return an instance of {@link LockOptions} with this lock mode, and
+	 *         all other settings defaulted.
 	 *
-	 * @deprecated As LockOptions will become an SPI, this method will be removed with no replacement
+	 * @deprecated With no replacement; {@linkplain LockOptions} is no longer considered an API.
 	 */
 	@Deprecated(since = "7", forRemoval = true)
 	public LockOptions toLockOptions() {
 		return switch (this) {
-			case NONE -> LockOptions.NONE;
-			case READ -> LockOptions.READ;
-			case OPTIMISTIC -> LockOptions.OPTIMISTIC;
-			case OPTIMISTIC_FORCE_INCREMENT -> LockOptions.OPTIMISTIC_FORCE_INCREMENT;
-			case UPGRADE_NOWAIT -> LockOptions.UPGRADE_NOWAIT;
-			case UPGRADE_SKIPLOCKED -> LockOptions.UPGRADE_SKIPLOCKED;
-			case PESSIMISTIC_READ -> LockOptions.PESSIMISTIC_READ;
-			case PESSIMISTIC_WRITE -> LockOptions.PESSIMISTIC_WRITE;
-			case PESSIMISTIC_FORCE_INCREMENT -> LockOptions.PESSIMISTIC_FORCE_INCREMENT;
+			case NONE -> new LockOptions();
+			case READ -> new LockOptions( READ );
+			case OPTIMISTIC -> new LockOptions( OPTIMISTIC );
+			case OPTIMISTIC_FORCE_INCREMENT -> new LockOptions( OPTIMISTIC_FORCE_INCREMENT );
+			case UPGRADE_NOWAIT -> new LockOptions( PESSIMISTIC_WRITE, NO_WAIT_MILLI, Locking.Scope.ROOT_ONLY, Locking.FollowOn.ALLOW );
+			case UPGRADE_SKIPLOCKED -> new LockOptions( PESSIMISTIC_WRITE, SKIP_LOCKED_MILLI, Locking.Scope.ROOT_ONLY, Locking.FollowOn.ALLOW );
+			case PESSIMISTIC_READ -> new LockOptions( PESSIMISTIC_READ );
+			case PESSIMISTIC_WRITE -> new LockOptions( PESSIMISTIC_WRITE );
+			case PESSIMISTIC_FORCE_INCREMENT -> new LockOptions( PESSIMISTIC_FORCE_INCREMENT );
 			case WRITE -> throw new UnsupportedOperationException( "WRITE is not a valid LockMode as an argument" );
 		};
+	}
+
+	public boolean isPessimistic() {
+		return this == PESSIMISTIC_READ
+			|| this == PESSIMISTIC_WRITE
+			|| this == PESSIMISTIC_FORCE_INCREMENT
+			|| this == UPGRADE_NOWAIT
+			|| this == UPGRADE_SKIPLOCKED;
 	}
 }

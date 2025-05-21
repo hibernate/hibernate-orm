@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.type.OracleArrayJdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -155,30 +157,51 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
-		LockStrategy strategy = super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
-		final boolean followOnLockingDisabled = Boolean.FALSE.equals( followOnLocking );
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
+		LockStrategy strategy = super.determineLockingStrategy( querySpec, followOnStrategy );
+
 		// Oracle also doesn't support locks with set operators
 		// See https://docs.oracle.com/cd/B19306_01/server.102/b14200/statements_10002.htm#i2066346
 		if ( strategy != LockStrategy.FOLLOW_ON && isPartOfQueryGroup() ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		if ( strategy != LockStrategy.FOLLOW_ON && hasSetOperations( querySpec ) ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		if ( strategy != LockStrategy.FOLLOW_ON && needsLockingWrapper( querySpec ) && !canApplyLockingWrapper( querySpec ) ) {
-			if ( followOnLockingDisabled ) {
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
-			strategy = LockStrategy.FOLLOW_ON;
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
+				strategy = LockStrategy.NONE;
+			}
+			else {
+				strategy = LockStrategy.FOLLOW_ON;
+			}
 		}
+
 		return strategy;
 	}
 
@@ -391,6 +414,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 		// Mark the query spec as non-root even if it might be the root, to avoid applying the pagination there
 		final QuerySpec lockingWrapper = new QuerySpec( false, 1 );
+		setLockingTarget( lockingWrapper );
 		lockingWrapper.getFromClause().addRoot( rootTableGroup );
 		for ( SqlSelection sqlSelection : querySpec.getSelectClause().getSqlSelections() ) {
 			lockingWrapper.getSelectClause().addSqlSelection( sqlSelection );
@@ -427,6 +451,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 	}
 
 	private boolean needsLockingWrapper(QuerySpec querySpec) {
+		final LockOptions lockOptions = getLockOptions();
+		if ( lockOptions.getFollowOnStrategy() == Locking.FollowOn.FORCE ) {
+			// user explicitly asked for follow-on locking
+			return false;
+		}
+
 		return querySpec.getFetchClauseType() != FetchClauseType.ROWS_ONLY
 				|| hasOffset( querySpec )
 				|| hasLimit( querySpec );

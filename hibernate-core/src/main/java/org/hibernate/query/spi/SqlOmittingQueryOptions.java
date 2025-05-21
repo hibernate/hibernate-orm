@@ -85,7 +85,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	@Override
 	public LockOptions getLockOptions() {
-		return omitLocks ? LockOptions.NONE : super.getLockOptions();
+		return omitLocks ? new LockOptions() : super.getLockOptions();
 	}
 
 	@Override

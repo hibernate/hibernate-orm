@@ -541,4 +541,7 @@ public final class ArrayHelper {
 		return (T[]) Array.newInstance( elementType, length );
 	}
 
+	public static <T> int size(T[] array) {
+		return array == null ? 0 : array.length;
+	}
 }

@@ -21,6 +21,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -96,6 +97,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
@@ -704,13 +706,6 @@ public class SqmQueryImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		// No verifySelect call, because in Hibernate we support locking in subqueries
-		super.setLockMode( alias, lockMode );
-		return this;
-	}
-
-	@Override
 	public <T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer) {
 		getQueryOptions().setTupleTransformer( transformer );
 		//noinspection unchecked
@@ -821,6 +816,7 @@ public class SqmQueryImpl<R>
 			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph );
 		}
 
+		putIfNotNull( hints, HINT_FOLLOW_ON_STRATEGY, getQueryOptions().getLockOptions().getFollowOnStrategy() );
 		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
 	}
 
@@ -877,9 +873,9 @@ public class SqmQueryImpl<R>
 	}
 
 	@Override
-	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
+	protected void applyFollowOnStrategyHint(Locking.FollowOn followOnStrategy) {
 		if ( isSelect( sqm ) ) {
-			super.applyAliasSpecificLockModeHint( hintName, value );
+			super.applyFollowOnStrategyHint( followOnStrategy );
 		}
 	}
 

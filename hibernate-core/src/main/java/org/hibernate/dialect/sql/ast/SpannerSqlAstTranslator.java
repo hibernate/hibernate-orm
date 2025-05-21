@@ -6,6 +6,7 @@ package org.hibernate.dialect.sql.ast;
 
 import java.util.List;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
@@ -39,14 +40,8 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		return LockStrategy.NONE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Spanner does not support the FOR UPDATE clause
 	}
 
 	@Override

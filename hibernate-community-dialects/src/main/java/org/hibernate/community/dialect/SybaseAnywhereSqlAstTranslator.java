@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -126,17 +127,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( LockMode.READ.lessThan( lockMode ) ) {
-			appendSql( " holdlock" );
-		}
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		if ( getDialect().getVersion().isBefore( 10 ) ) {
-			return;
-		}
-		super.renderForUpdateClause( querySpec, forUpdateClause );
+		append( SybaseSqlAstTranslator.determineLockHint( lockMode ) );
 	}
 
 	@Override

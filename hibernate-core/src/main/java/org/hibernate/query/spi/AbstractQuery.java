@@ -19,16 +19,16 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.Type;
-
 import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.Type;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Internal;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.jpa.AvailableHints;
@@ -36,19 +36,18 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
 
-import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
-import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.HibernateHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
@@ -283,15 +282,16 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		super.setLockMode( alias, lockMode );
+	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
+		getSession().checkOpen();
+		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<R> setLockMode(LockModeType lockModeType) {
+	public QueryImplementor<R> setLockScope(Locking.Scope lockScope) {
 		getSession().checkOpen();
-		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
+		super.setLockScope( lockScope );
 		return this;
 	}
 
@@ -344,7 +344,7 @@ public abstract class AbstractQuery<R>
 			hints.put( HINT_JAVAEE_QUERY_TIMEOUT, getQueryOptions().getTimeout() * 1000 );
 		}
 
-		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
+		if ( getLockOptions().getTimeout().milliseconds() != Timeouts.WAIT_FOREVER_MILLI ) {
 			hints.put( HINT_SPEC_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 			hints.put( HINT_JAVAEE_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
@@ -352,15 +352,6 @@ public abstract class AbstractQuery<R>
 		if ( getLockOptions().getLockScope() == PessimisticLockScope.EXTENDED ) {
 			hints.put( HINT_SPEC_LOCK_SCOPE, getLockOptions().getLockScope() );
 			hints.put( HINT_JAVAEE_LOCK_SCOPE, getLockOptions().getLockScope() );
-		}
-
-		if ( getLockOptions().hasAliasSpecificLockModes() ) {
-			for ( Map.Entry<String, LockMode> entry : getLockOptions().getAliasSpecificLocks() ) {
-				hints.put(
-						HINT_NATIVE_LOCK_MODE + '.' + entry.getKey(),
-						entry.getValue().name()
-				);
-			}
 		}
 
 		putIfNotNull( hints, HINT_COMMENT, getComment() );

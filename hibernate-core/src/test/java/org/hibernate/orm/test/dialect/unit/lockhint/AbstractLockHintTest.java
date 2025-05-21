@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.dialect.unit.lockhint;
 
-import java.util.Collections;
+import java.util.HashMap;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -46,7 +46,6 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 
 	protected LockOptions lockOptions(String aliasToLock) {
 		LockOptions lockOptions = new LockOptions(LockMode.PESSIMISTIC_WRITE);
-		lockOptions.setAliasSpecificLockMode( aliasToLock, LockMode.PESSIMISTIC_WRITE );
 		return lockOptions;
 	}
 
@@ -66,7 +65,9 @@ public abstract class AbstractLockHintTest extends BaseUnitTestCase {
 		}
 
 		public void verify() {
-			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions( aliasToLock ), Collections.EMPTY_MAP );
+			final HashMap<String, String[]> aliasMap = new HashMap<>();
+			aliasMap.put( aliasToLock, new String[] { "id" } );
+			String actualProcessedSql = dialect.applyLocksToSql( rawSql, lockOptions( aliasToLock ), aliasMap );
 			assertEquals( expectedProcessedSql, actualProcessedSql );
 		}
 	}

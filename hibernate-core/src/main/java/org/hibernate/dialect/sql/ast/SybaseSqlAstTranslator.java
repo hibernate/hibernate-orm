@@ -7,7 +7,9 @@ package org.hibernate.dialect.sql.ast;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -170,23 +172,26 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	private void renderLockHint(LockMode lockMode) {
+		append( determineLockHint( lockMode ) );
+	}
+
+	@Internal
+	public static String determineLockHint(LockMode lockMode) {
 		if ( LockMode.READ.lessThan( lockMode ) ) {
-			appendSql( " holdlock" );
+			return " holdlock";
 		}
+		return "";
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Sybase does not support the FOR UPDATE clause
 	}
 
 	@Override

@@ -7,6 +7,7 @@ package org.hibernate.testing.orm.junit;
 import jakarta.persistence.AttributeConverter;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
+import org.hibernate.Timeouts;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
@@ -63,6 +64,10 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
@@ -267,9 +272,56 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsRealQueryLockTimeouts implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			final LockTimeoutType lockTimeoutType = dialect
+					.getLockingSupport()
+					.getMetadata()
+					.getLockTimeoutType( Timeouts.ONE_SECOND );
+			return lockTimeoutType == LockTimeoutType.QUERY;
+		}
+	}
+
+	public static class SupportsConnectionLockTimeouts implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.getLockingSupport().getConnectionLockTimeoutStrategy().getSupportedLevel()
+				!= ConnectionLockTimeoutStrategy.Level.NONE;
+		}
+	}
+
+	public static class SupportsSelectLocking implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			final PessimisticLockStyle lockStyle = dialect
+					.getLockingSupport()
+					.getMetadata()
+					.getPessimisticLockStyle();
+			return lockStyle != PessimisticLockStyle.NONE;
+		}
+	}
+
 	public static class SupportsSkipLocked implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSkipLocked();
+		}
+	}
+
+	public static class SupportNoWait implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsNoWait();
+		}
+	}
+
+	public static class SupportsWait implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsWait();
+		}
+	}
+
+	public static class SupportsLockingJoins implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getLockingSupport().getMetadata().getOuterJoinLockingType() == OuterJoinLockingType.FULL
+				|| dialect.getLockingSupport().getMetadata().getOuterJoinLockingType() == OuterJoinLockingType.IDENTIFIED;
 		}
 	}
 
@@ -449,12 +501,6 @@ abstract public class DialectFeatureChecks {
 			return dialect.supportsOrderByInSubquery()
 				// HANA doesn't support 'order by' in correlated subqueries
 				&& !( dialect instanceof HANADialect );
-		}
-	}
-
-	public static class SupportNoWait implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsNoWait();
 		}
 	}
 

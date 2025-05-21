@@ -18,6 +18,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.graph.GraphSemantic;
@@ -28,6 +29,7 @@ import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.SqmSelectionQuery;
@@ -291,20 +293,32 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 	}
 
 	@Override
+	public SqmSelectionQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
+		getDelegate().setLockMode( alias, lockMode );
+		return this;
+	}
+
+	@Override
 	public SqmSelectionQueryImplementor<R> setTimeout(Timeout timeout) {
 		getDelegate().setTimeout( timeout );
 		return this;
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+	public SelectionQuery<R> setLockScope(Locking.Scope lockScope) {
 		getDelegate().setLockScope( lockScope );
 		return this;
 	}
 
 	@Override
-	public SqmSelectionQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		getDelegate().setLockMode( alias, lockMode );
+	public SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		getDelegate().setFollowOnStrategy( followOnStrategy );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getDelegate().setLockScope( lockScope );
 		return this;
 	}
 

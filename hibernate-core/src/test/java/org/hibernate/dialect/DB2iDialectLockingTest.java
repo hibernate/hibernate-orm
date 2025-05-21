@@ -5,12 +5,14 @@
 package org.hibernate.dialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class DB2iDialectTest {
+@RequiresDialect( DB2iDialect.class )
+class DB2iDialectLockingTest {
 
 	private static final String EXPECTED_FOR_UPDATE = " for update with rs";
 	private static final String EXPECTED_FOR_UPDATE_SKIP_LOCK = " for update with rs skip locked data";

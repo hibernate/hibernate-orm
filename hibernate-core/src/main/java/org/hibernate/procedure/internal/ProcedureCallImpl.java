@@ -19,7 +19,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -1019,12 +1018,6 @@ public class ProcedureCallImpl<R>
 		}
 
 		throw new PersistenceException( "Unrecognized unwrap type [" + type.getName() + "]" );
-	}
-
-	@Override
-	public QueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		// throw IllegalStateException here for consistency with JPA
-		throw new IllegalStateException( "Illegal attempt to set lock mode for a procedure calls" );
 	}
 
 	@Override

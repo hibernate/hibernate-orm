@@ -7,6 +7,8 @@ package org.hibernate.dialect;
 
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.DB2zSequenceSupport;
@@ -56,6 +58,11 @@ public class DB2zDialect extends DB2Dialect {
 
 	public DB2zDialect(DatabaseVersion version) {
 		super(version);
+	}
+
+	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2z();
 	}
 
 	@Override
@@ -117,11 +124,6 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override

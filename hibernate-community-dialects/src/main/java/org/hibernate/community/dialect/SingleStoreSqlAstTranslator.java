@@ -216,12 +216,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
-	//SingleStore doesn't support 'FOR UPDATE' clause with distributed joins
-	@Override
-	protected String getForUpdate() {
-		return dialect.getForUpdateString();
-	}
-
 	@Override
 	public void visitAny(Any any) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ANY clause" );

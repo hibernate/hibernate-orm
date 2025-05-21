@@ -189,17 +189,6 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		appendSql( "materialized " );
 	}
 
-	@Override
-	protected String getForUpdate() {
-		return getDialect().getForUpdateString();
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		// Note that `for key share` is inappropriate as that only means "prevent PK changes"
-		return " for share";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		if ( getQueryPartForRowNumbering() == queryPart || isRowsOnlyFetchClauseType( queryPart ) ) {

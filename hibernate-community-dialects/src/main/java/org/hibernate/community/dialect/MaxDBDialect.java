@@ -13,6 +13,8 @@ import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPD
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -252,6 +254,11 @@ public class MaxDBDialect extends Dialect {
 	@Override
 	public String getNullColumnString() {
 		return " null";
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.STANDARD_SUPPORT;
 	}
 
 	@Override

@@ -1462,8 +1462,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			this.lockOptions = null;
 		}
 
-		private MultiLoadOptions(LockMode lockOptions) {
-			this.lockOptions = new LockOptions( lockOptions );
+		private MultiLoadOptions(LockMode lockMode) {
+			this.lockOptions = new LockOptions( lockMode );
 		}
 
 		@Override

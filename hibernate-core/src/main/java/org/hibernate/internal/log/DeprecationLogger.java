@@ -212,4 +212,18 @@ public interface DeprecationLogger extends BasicLogger {
 					+ " (lifecycle callback methods should be declared by entity classes)"
 	)
 	void embeddableLifecycleCallback(String annotationType, String embeddable);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000036,
+			value = "Encountered deprecated hint [%s]"
+	)
+	void deprecatedHint(String deprecatedHint);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000037,
+			value = "Encountered deprecated hint [%s], use [%s] instead"
+	)
+	void deprecatedHint(String deprecatedHint, String replacementHint);
 }

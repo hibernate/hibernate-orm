@@ -23,6 +23,7 @@ import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Locking;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
@@ -80,6 +81,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -645,9 +647,9 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode) {
-		// throw IllegalStateException here for consistency with JPA
-		throw new IllegalStateException( "Illegal attempt to set lock mode for a native query" );
+	public QueryImplementor<R> setLockScope(Locking.Scope lockScope) {
+		super.setLockScope( lockScope );
+		return this;
 	}
 
 	@Override

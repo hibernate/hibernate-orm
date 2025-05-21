@@ -94,7 +94,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 				null,
 				1,
 				influencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);

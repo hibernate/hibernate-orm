@@ -216,7 +216,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public String applyLocksToSql(String sql, LockOptions lockOptions, Map<String, String[]> keyColumnNameMap) {
-		if ( lockOptions.getLockMode() == LockMode.NONE ) {
+		if ( lockOptions.getLockMode() == LockMode.NONE || keyColumnNameMap == null ) {
 			return sql;
 		}
 

@@ -138,7 +138,7 @@ public class Helper {
 			// Transact SQL (mssql, sybase) "table hint"-style locking
 			final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
 			for ( Table table : tablesFetched ) {
-				final String booksTableReference = dialect.appendLockHint( lockOptions, table.getTableName() );
+				final String booksTableReference = dialect.appendLockHint( lockOptions, table.getTableAlias() );
 				assertThat( sql ).contains( booksTableReference );
 			}
 		}

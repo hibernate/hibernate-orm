@@ -70,7 +70,6 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
-import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
@@ -503,11 +502,10 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 	protected String buildSelectQuery(String formattedPhysicalTableName, SqlStringGenerationContext context) {
 		final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		final String alias = "tbl";
 		final SimpleSelect select = new SimpleSelect( context.getDialect() )
-				.addColumn( qualify( alias, valueColumnName ) )
-				.setTableName( formattedPhysicalTableName, alias )
-				.addRestriction( qualify( alias, segmentColumnName ) )
+				.addColumn( valueColumnName )
+				.setTableName( formattedPhysicalTableName )
+				.addRestriction( segmentColumnName )
 				.setLockOptions( lockOptions );
 		return select.toStatementString();
 	}

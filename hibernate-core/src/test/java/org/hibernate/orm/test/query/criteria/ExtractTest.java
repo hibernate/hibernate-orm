@@ -18,7 +18,7 @@ import java.time.LocalTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-@Jpa()
+@Jpa
 class ExtractTest {
 	@Test void testLocalDate(EntityManagerFactoryScope scope) {
 		scope.inEntityManager( entityManager -> {

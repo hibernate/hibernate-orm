@@ -55,7 +55,7 @@ In Gradle, for example, you'll need to use `annotationProcessor`.
 
 [source,groovy]
 ----
-annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0'
+annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0.Final'
 ----
 
 === Excluding classes from processing

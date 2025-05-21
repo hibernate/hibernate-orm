@@ -5,7 +5,6 @@
 package org.hibernate.query.sql.internal;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -355,32 +354,43 @@ public class NativeQueryImpl<R>
 					}
 					break;
 				default:
-					// The return type has to be a class with an appropriate constructor, i.e. one whose parameter types match
-					// the types of the result builders. If none such constructor is found, throw an IAE
+					// The return type has to be a class with an appropriate constructor,
+					// i.e. one whose parameter types match the types of the result builders.
+					// If no such constructor is found, throw an IAE
 					if ( !validConstructorFoundForResultType( resultType, resultSetMapping ) ) {
-						throw new IllegalArgumentException( "The declared return type for a multi-valued result set mapping should be Object[], Map, List, or Tuple" );
+						throw new IllegalArgumentException(
+								"The return type for a multivalued result set mapping should be Object[], Map, List, or Tuple"
+								+ " or it must have an appropriate constructor"
+						);
 					}
 			}
 		}
 	}
 
 	private boolean validConstructorFoundForResultType(Class<R> resultType, ResultSetMapping resultSetMapping) {
-		// Only 1 constructor with the right number of parameters is allowed (see NativeQueryConstructorTransformer)
-		Constructor<?> constructor = resultType.getConstructors()[0];
-		if ( constructor.getParameterCount() != resultSetMapping.getNumberOfResultBuilders() ) {
-			return false;
-		}
-		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
-		Class<?>[] paramTypes = constructor.getParameterTypes();
-		for ( int i = 0; i < resultBuilders.size(); i++ ) {
-			if (
-					resultBuilders.get( i ).getJavaType() != ( paramTypes[i].isPrimitive() ?
-							getDescriptorByPrimitiveType(paramTypes[i] ).getWrapperClass() :
-							paramTypes[i]) ) {
-				return false;
+		// TODO: Only one constructor with the right number of parameters is allowed
+		//       (see NativeQueryConstructorTransformer) so we should validate that
+		outer: for ( var constructor : resultType.getConstructors() ) {
+			if ( constructor.getParameterCount() == resultSetMapping.getNumberOfResultBuilders() ) {
+				final var resultBuilders = resultSetMapping.getResultBuilders();
+				final var paramTypes = constructor.getParameterTypes();
+				for ( int i = 0; i < resultBuilders.size(); i++ ) {
+					if ( !constructorParameterMatches( resultBuilders.get( i ), paramTypes[i] ) ) {
+						continue outer;
+					}
+				}
+				return true;
 			}
 		}
-		return true;
+		return false;
+	}
+
+	private static boolean constructorParameterMatches(ResultBuilder resultBuilder, Class<?> paramType) {
+		final Class<?> parameterClass =
+				paramType.isPrimitive()
+						? getDescriptorByPrimitiveType( paramType ).getWrapperClass()
+						: paramType;
+		return resultBuilder.getJavaType() == parameterClass;
 	}
 
 	protected <T> void setTupleTransformerForResultType(Class<T> resultClass) {

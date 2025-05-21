@@ -15,7 +15,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -236,9 +235,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			return null;
 		}
 
-		Class<?> superClass = determineAccessOptimizerSuperClass( clazz, getters, setters );
-
 		final String[] propertyNames = propertyAccessMap.keySet().toArray( new String[0] );
+		final Class<?> superClass = determineAccessOptimizerSuperClass( clazz, propertyNames, getters, setters );
+
 		final Class<?> bulkAccessor = byteBuddyState.load( clazz, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom(
 						OPTIMIZER_PROXY_NAMING_SUFFIX,
@@ -265,106 +264,94 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	private static class ForeignPackageClassInfo {
+	private static class BridgeMembersClassInfo {
 		final Class<?> clazz;
+		final List<String> propertyNames = new ArrayList<>();
 		final List<Member> getters = new ArrayList<>();
 		final List<Member> setters = new ArrayList<>();
 
-		public ForeignPackageClassInfo(Class<?> clazz) {
+		public BridgeMembersClassInfo(Class<?> clazz) {
 			this.clazz = clazz;
 		}
 	}
 
-	private Class<?> determineAccessOptimizerSuperClass(Class<?> clazz, Member[] getters, Member[] setters) {
+	private Class<?> determineAccessOptimizerSuperClass(Class<?> clazz, String[] propertyNames, Member[] getters, Member[] setters) {
 		if ( clazz.isInterface() ) {
 			return Object.class;
 		}
-		// generate access optimizer super classes for foreign package super classes that declare fields
+		// generate access optimizer super classes for super classes that declare members requiring bridge methods
 		//  each should declare protected static methods get_FIELDNAME(OWNER)/set_FIELDNAME(OWNER, TYPE)
 		//  which should be called then from within GetPropertyValues/SetPropertyValues
 		//  Since these super classes will be in the correct package, the package-private entity field access is fine
-		final List<ForeignPackageClassInfo> foreignPackageClassInfos = createForeignPackageClassInfos( clazz );
-		for ( Iterator<ForeignPackageClassInfo> iterator = foreignPackageClassInfos.iterator(); iterator.hasNext(); ) {
-			final ForeignPackageClassInfo foreignPackageClassInfo = iterator.next();
-			for ( int i = 0; i < getters.length; i++ ) {
-				final Member getter = getters[i];
-				final Member setter = setters[i];
-				if ( getter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( getter.getModifiers() ) ) {
-					foreignPackageClassInfo.getters.add( getter );
-				}
-				if ( setter.getDeclaringClass() == foreignPackageClassInfo.clazz && !Modifier.isPublic( setter.getModifiers() ) ) {
-					foreignPackageClassInfo.setters.add( setter );
-				}
-			}
-			if ( foreignPackageClassInfo.getters.isEmpty() && foreignPackageClassInfo.setters.isEmpty() ) {
-				iterator.remove();
-			}
-		}
+		final List<BridgeMembersClassInfo> bridgeMembersClassInfos = createBridgeMembersClassInfos( clazz, getters, setters, propertyNames );
 
 		Class<?> superClass = Object.class;
-		for ( int i = foreignPackageClassInfos.size() - 1; i >= 0; i-- ) {
-			final ForeignPackageClassInfo foreignPackageClassInfo = foreignPackageClassInfos.get( i );
+		for ( int i = bridgeMembersClassInfos.size() - 1; i >= 0; i-- ) {
+			final BridgeMembersClassInfo bridgeMembersClassInfo = bridgeMembersClassInfos.get( i );
 			final Class<?> newSuperClass = superClass;
 
-			final String suffix = OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX + encodeName( foreignPackageClassInfo.propertyNames, foreignPackageClassInfo.getters, foreignPackageClassInfo.setters );
 			superClass = byteBuddyState.load(
-					foreignPackageClassInfo.clazz,
+					bridgeMembersClassInfo.clazz,
 					byteBuddy -> {
 						DynamicType.Builder<?> builder = byteBuddy.with(
 								new NamingStrategy.SuffixingRandom(
-										suffix,
+										OPTIMIZER_PROXY_BRIDGE_NAMING_SUFFIX,
 										new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue(
-												foreignPackageClassInfo.clazz.getName() )
+												bridgeMembersClassInfo.clazz.getName() )
 								)
 						).subclass( newSuperClass );
-						for ( Member getter : foreignPackageClassInfo.getters ) {
-							final Class<?> getterType;
-							if ( getter instanceof Field ) {
-								getterType = ( (Field) getter ).getType();
-							}
-							else {
-								getterType = ( (Method) getter ).getReturnType();
-							}
+						for ( Member getter : bridgeMembersClassInfo.getters ) {
+							if ( !Modifier.isPublic( getter.getModifiers() ) ) {
+								final Class<?> getterType;
+								if ( getter instanceof Field ) {
+									getterType = ( (Field) getter ).getType();
+								}
+								else {
+									getterType = ( (Method) getter ).getReturnType();
+								}
 
-							builder = builder.defineMethod(
-											"get_" + getter.getName(),
-											TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
-													getterType
-											),
-											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
-									)
-									.withParameter( foreignPackageClassInfo.clazz )
-									.intercept(
-											new Implementation.Simple(
-													new GetFieldOnArgument(
-															getter
-													)
-											)
-									);
+								builder = builder.defineMethod(
+												"get_" + getter.getName(),
+												TypeDescription.Generic.OfNonGenericType.ForLoadedType.of(
+														getterType
+												),
+												Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
+										)
+										.withParameter( bridgeMembersClassInfo.clazz )
+										.intercept(
+												new Implementation.Simple(
+														new GetFieldOnArgument(
+																getter
+														)
+												)
+										);
+							}
 						}
-						for ( Member setter : foreignPackageClassInfo.setters ) {
-							final Class<?> setterType;
-							if ( setter instanceof Field ) {
-								setterType = ( (Field) setter ).getType();
-							}
-							else {
-								setterType = ( (Method) setter ).getParameterTypes()[0];
-							}
+						for ( Member setter : bridgeMembersClassInfo.setters ) {
+							if ( !Modifier.isPublic( setter.getModifiers() ) ) {
+								final Class<?> setterType;
+								if ( setter instanceof Field ) {
+									setterType = ( (Field) setter ).getType();
+								}
+								else {
+									setterType = ( (Method) setter ).getParameterTypes()[0];
+								}
 
-							builder = builder.defineMethod(
-											"set_" + setter.getName(),
-											TypeDescription.Generic.VOID,
-											Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
-									)
-									.withParameter( foreignPackageClassInfo.clazz )
-									.withParameter( setterType )
-									.intercept(
-											new Implementation.Simple(
-													new SetFieldOnArgument(
-															setter
-													)
-											)
-									);
+								builder = builder.defineMethod(
+												"set_" + setter.getName(),
+												TypeDescription.Generic.VOID,
+												Opcodes.ACC_PROTECTED | Opcodes.ACC_STATIC
+										)
+										.withParameter( bridgeMembersClassInfo.clazz )
+										.withParameter( setterType )
+										.intercept(
+												new Implementation.Simple(
+														new SetFieldOnArgument(
+																setter
+														)
+												)
+										);
+							}
 						}
 
 						return builder;
@@ -374,10 +361,10 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			for ( int j = 0; j < getters.length; j++ ) {
 				final Member getter = getters[j];
 				final Member setter = setters[j];
-				if ( foreignPackageClassInfo.getters.contains( getter ) ) {
+				if ( bridgeMembersClassInfo.getters.contains( getter ) && !Modifier.isPublic( getter.getModifiers() ) ) {
 					getters[j] = new ForeignPackageMember( superClass, getter );
 				}
-				if ( foreignPackageClassInfo.setters.contains( setter ) ) {
+				if ( bridgeMembersClassInfo.setters.contains( setter ) && !Modifier.isPublic( setter.getModifiers() ) ) {
 					setters[j] = new ForeignPackageMember( superClass, setter );
 				}
 			}
@@ -565,16 +552,31 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	private List<ForeignPackageClassInfo> createForeignPackageClassInfos(Class<?> clazz) {
-		final List<ForeignPackageClassInfo> foreignPackageClassInfos = new ArrayList<>();
+	private List<BridgeMembersClassInfo> createBridgeMembersClassInfos(
+			Class<?> clazz,
+			Member[] getters,
+			Member[] setters,
+			String[] propertyNames) {
+		final List<BridgeMembersClassInfo> bridgeMembersClassInfos = new ArrayList<>();
 		Class<?> c = clazz.getSuperclass();
 		while (c != Object.class) {
-			if ( !c.getPackageName().equals( clazz.getPackageName() ) ) {
-				foreignPackageClassInfos.add( new ForeignPackageClassInfo( c ) );
+			final BridgeMembersClassInfo bridgeMemberClassInfo = new BridgeMembersClassInfo( c );
+			for ( int i = 0; i < getters.length; i++ ) {
+				final Member getter = getters[i];
+				final Member setter = setters[i];
+				if ( getter.getDeclaringClass() == c && !Modifier.isPublic( getter.getModifiers() )
+						|| setter.getDeclaringClass() == c && !Modifier.isPublic( setter.getModifiers() ) ) {
+					bridgeMemberClassInfo.getters.add( getter );
+					bridgeMemberClassInfo.setters.add( setter );
+					bridgeMemberClassInfo.propertyNames.add( propertyNames[i] );
+				}
+			}
+			if ( !bridgeMemberClassInfo.propertyNames.isEmpty() ) {
+				bridgeMembersClassInfos.add( bridgeMemberClassInfo );
 			}
 			c = c.getSuperclass();
 		}
-		return foreignPackageClassInfos;
+		return bridgeMembersClassInfos;
 	}
 
 	public ByteBuddyProxyHelper getByteBuddyProxyHelper() {

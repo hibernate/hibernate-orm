@@ -14,9 +14,11 @@ import org.hibernate.JDBCException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
+import org.hibernate.Timeouts;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -803,19 +805,34 @@ public abstract class AbstractEntityPersister
 			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
 		}
 		else {
-			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ), null );
 		}
 	}
 
-	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions) {
+		// whether we need this depends on whether EntityBatchLoader can handle locking properly
+		// todo (db-locking) : determine whether this ^^ is the case
+		if ( lockOptions != null && needsOneOffLoader( lockOptions ) ) {
+			return new SingleIdEntityLoaderStandardImpl<>( this, loadQueryInfluencers );
+		}
+
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry().requireService( BatchLoaderFactory.class )
 					.createEntityBatchLoader( batchSize, this, loadQueryInfluencers );
 		}
-		else {
-			return new SingleIdEntityLoaderStandardImpl<>( this, loadQueryInfluencers );
+
+		return new SingleIdEntityLoaderStandardImpl<>( this, loadQueryInfluencers );
+	}
+
+	private boolean needsOneOffLoader(LockOptions lockOptions) {
+		if ( !lockOptions.getLockMode().isPessimistic() ) {
+			return false;
 		}
+
+		return lockOptions.hasNonDefaultOptions();
 	}
 
 	public static Map<String, String> getEntityNameByTableNameMap(
@@ -1220,6 +1237,7 @@ public abstract class AbstractEntityPersister
 			return null;
 		}
 		else {
+			final LockOptions lockOptions = new LockOptions();
 			final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 			final SelectStatement select = LoaderSelectBuilder.createSelect(
 					this,
@@ -1228,7 +1246,7 @@ public abstract class AbstractEntityPersister
 					null,
 					1,
 					new LoadQueryInfluencers( factory ),
-					LockOptions.NONE,
+					lockOptions,
 					jdbcParametersBuilder::add,
 					factory
 			);
@@ -1237,7 +1255,7 @@ public abstract class AbstractEntityPersister
 					getIdentifierMapping(),
 					select,
 					jdbcParametersBuilder.build(),
-					LockOptions.NONE,
+					lockOptions,
 					factory
 			);
 		}
@@ -1611,7 +1629,7 @@ public abstract class AbstractEntityPersister
 					ex.getSQLException(),
 					"could not initialize lazy properties: "
 							+ infoString( this, id, getFactory() ),
-					lazySelect.getJdbcSelect().getSqlString()
+					ex.getSQL()
 			);
 		}
 	}
@@ -1638,7 +1656,7 @@ public abstract class AbstractEntityPersister
 					ex.getSQLException(),
 					"could not initialize lazy properties: "
 							+ infoString( this, id, getFactory() ),
-					lazyLoanPlan.getJdbcSelect().getSqlString()
+					ex.getSQL()
 			);
 		}
 	}
@@ -1819,7 +1837,7 @@ public abstract class AbstractEntityPersister
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
-				LockOptions.NONE,
+				new LockOptions(),
 				this::fetchProcessor,
 				true,
 				new LoadQueryInfluencers( factory ),
@@ -2125,12 +2143,16 @@ public abstract class AbstractEntityPersister
 		return getIdentifierMapping().getJdbcMapping( index );
 	}
 
-	protected LockingStrategy generateLocker(LockMode lockMode) {
-		return getDialect().getLockingStrategy( this, lockMode );
+	protected LockingStrategy generateLocker(LockMode lockMode, Locking.Scope lockScope) {
+		return getDialect().getLockingStrategy( this, lockMode, lockScope );
 	}
 
-	private LockingStrategy getLocker(LockMode lockMode) {
-		return lockers.computeIfAbsent( lockMode, this::generateLocker );
+	private LockingStrategy getLocker(LockMode lockMode, Locking.Scope lockScope) {
+		if ( lockScope != Locking.Scope.ROOT_ONLY ) {
+			// be sure to not use the cached form if any form of extended locking is requested
+			return generateLocker( lockMode, lockScope );
+		}
+		return lockers.computeIfAbsent( lockMode, (l) -> generateLocker( lockMode, lockScope ) );
 	}
 
 	@Override
@@ -2140,7 +2162,7 @@ public abstract class AbstractEntityPersister
 			Object object,
 			LockMode lockMode,
 			SharedSessionContractImplementor session) throws HibernateException {
-		getLocker( lockMode ).lock( id, version, object, LockOptions.WAIT_FOREVER, session );
+		getLocker( lockMode, Locking.Scope.ROOT_ONLY ).lock( id, version, object, Timeouts.WAIT_FOREVER, session );
 	}
 
 	@Override
@@ -2155,7 +2177,7 @@ public abstract class AbstractEntityPersister
 			Object object,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) throws HibernateException {
-		getLocker( lockOptions.getLockMode() ).lock( id, version, object, lockOptions.getTimeOut(), session );
+		getLocker( lockOptions.getLockMode(), lockOptions.getScope() ).lock( id, version, object, lockOptions.getTimeout(), session );
 	}
 
 	@Override
@@ -2470,7 +2492,7 @@ public abstract class AbstractEntityPersister
 			Object uniqueKey,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) throws HibernateException {
-		return getUniqueKeyLoader( propertyName, session ).load( uniqueKey, LockOptions.NONE, readOnly, session );
+		return getUniqueKeyLoader( propertyName, session ).load( uniqueKey, new LockOptions(), readOnly, session );
 	}
 
 	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
@@ -3464,23 +3486,37 @@ public abstract class AbstractEntityPersister
 			LOG.tracev( "Fetching entity: {0}", infoString( this, id, getFactory() ) );
 		}
 
-		final SingleIdEntityLoader<?> loader = determineLoaderToUse( session );
+		final SingleIdEntityLoader<?> loader = determineLoaderToUse( session, lockOptions );
 		return optionalObject == null
 				? loader.load( id, lockOptions, readOnly, session )
 				: loader.load( id, optionalObject, lockOptions, readOnly, session );
 	}
 
-	protected SingleIdEntityLoader<?> determineLoaderToUse(SharedSessionContractImplementor session) {
+	protected SingleIdEntityLoader<?> determineLoaderToUse(SharedSessionContractImplementor session, LockOptions lockOptions) {
 		if ( hasNamedQueryLoader() ) {
 			return getSingleIdLoader();
 		}
-		else {
-			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
-			// no subselect fetching for entities for now
-			return isAffectedByInfluencers( influencers, true )
-					? buildSingleIdEntityLoader( influencers )
-					: getSingleIdLoader();
+
+		final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+		if ( isAffectedByInfluencers( influencers, true ) ) {
+			return buildSingleIdEntityLoader( influencers, lockOptions );
 		}
+		return getSingleIdLoader();
+//		if ( hasNamedQueryLoader() ) {
+//			return getSingleIdLoader();
+//		}
+//		else {
+//			final boolean hasNonDefaultLockOptions = lockOptions != null
+//					&& lockOptions.getLockMode().isPessimistic()
+//					&& lockOptions.hasNonDefaultOptions();
+//			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+//
+//			final boolean needsUniqueLoader = hasNonDefaultLockOptions
+//					|| isAffectedByInfluencers( influencers, true );
+//			return needsUniqueLoader
+//					? buildSingleIdEntityLoader( influencers, lockOptions )
+//					: getSingleIdLoader();
+//		}
 	}
 
 	private boolean hasNamedQueryLoader() {
@@ -3509,7 +3545,8 @@ public abstract class AbstractEntityPersister
 				loaded = eventSource.loadFromSecondLevelCache( this, entityKey, entity, LockMode.NONE );
 			}
 			if ( loaded == null ) {
-				loaded = determineLoaderToUse( session ).load( identifier, entity, LockOptions.NONE, session );
+				final LockOptions lockOptions = new LockOptions();
+				loaded = determineLoaderToUse( session, lockOptions ).load( identifier, entity, lockOptions, session );
 			}
 
 			if ( loaded == null ) {

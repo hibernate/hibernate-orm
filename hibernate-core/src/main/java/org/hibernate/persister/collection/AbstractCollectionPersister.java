@@ -923,7 +923,7 @@ public abstract class AbstractCollectionPersister
 				rootQuerySpec,
 				new SqlAliasBaseManager(),
 				new SimpleFromClauseAccessImpl(),
-				LockOptions.NONE,
+				new LockOptions(),
 				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				true,
 				new LoadQueryInfluencers( factory ),

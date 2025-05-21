@@ -86,7 +86,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
 
-		final LockOptions lockOptions = options.getLockOptions() == null ? LockOptions.NONE : options.getLockOptions();
+		final LockOptions lockOptions = options.getLockOptions() == null
+				? new LockOptions()
+				: options.getLockOptions();
 
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
 				getLoadable(),
@@ -176,7 +178,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
 
-		final LockOptions lockOptions = options.getLockOptions() != null ? options.getLockOptions() : LockOptions.NONE;
+		final LockOptions lockOptions = options.getLockOptions() != null
+				? options.getLockOptions()
+				: new LockOptions();
 
 		final NavigablePath entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
@@ -333,7 +337,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				null,
 				1,
 				session.getLoadQueryInfluencers(),
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				factory
 		);

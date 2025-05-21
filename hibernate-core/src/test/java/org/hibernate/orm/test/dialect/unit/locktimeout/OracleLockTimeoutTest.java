@@ -13,6 +13,8 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.NO_WAIT;
+import static org.hibernate.Timeouts.SKIP_LOCKED;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -40,12 +42,12 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 		assertEquals(
 				" for update nowait",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.NO_WAIT ) )
+						.setTimeout( NO_WAIT ) )
 		);
 		assertEquals(
 				" for update nowait",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.NO_WAIT ) )
+						.setTimeout( NO_WAIT ) )
 		);
 	}
 
@@ -54,12 +56,12 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 		assertEquals(
 				" for update skip locked",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+						.setTimeout( SKIP_LOCKED ) )
 		);
 		assertEquals(
 				" for update skip locked",
 				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+						.setTimeout( SKIP_LOCKED ) )
 		);
 	}
 
@@ -70,20 +72,14 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 				" for update",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
+						new LockOptions( LockMode.PESSIMISTIC_READ )
 				)
 		);
 		assertEquals(
 				" for update",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
+						new LockOptions( LockMode.PESSIMISTIC_WRITE )
 				)
 		);
 	}
@@ -95,22 +91,16 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 				" for update nowait",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-								.setTimeOut( LockOptions.NO_WAIT )
+						new LockOptions( LockMode.PESSIMISTIC_READ )
+								.setTimeout( NO_WAIT )
 				)
 		);
 		assertEquals(
 				" for update nowait",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-								.setTimeOut( LockOptions.NO_WAIT )
+						new LockOptions( LockMode.PESSIMISTIC_WRITE )
+								.setTimeout( NO_WAIT )
 				)
 		);
 	}
@@ -122,22 +112,16 @@ public class OracleLockTimeoutTest extends BaseUnitTestCase {
 				" for update skip locked",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_READ ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_READ
-						)
-								.setTimeOut( LockOptions.SKIP_LOCKED )
+						new LockOptions( LockMode.PESSIMISTIC_READ )
+								.setTimeout( SKIP_LOCKED )
 				)
 		);
 		assertEquals(
 				" for update skip locked",
 				dialect.getForUpdateString(
 						alias,
-						new LockOptions( LockMode.PESSIMISTIC_WRITE ).setAliasSpecificLockMode(
-								alias,
-								LockMode.PESSIMISTIC_WRITE
-						)
-								.setTimeOut( LockOptions.SKIP_LOCKED )
+						new LockOptions( LockMode.PESSIMISTIC_WRITE )
+								.setTimeout( SKIP_LOCKED )
 				)
 		);
 	}

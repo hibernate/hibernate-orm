@@ -4,12 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.List;
-import java.util.function.Consumer;
-
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -47,6 +45,9 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
@@ -210,30 +211,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-		switch ( lockMode ) {
-			case PESSIMISTIC_READ:
-			case PESSIMISTIC_WRITE:
-			case WRITE: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
-						appendSql( " holdlock readpast" );
-						break;
-					default:
-						appendSql( " holdlock" );
-						break;
-				}
-				break;
-			}
-			case UPGRADE_SKIPLOCKED: {
-				appendSql( " holdlock readpast" );
-				break;
-			}
-			case UPGRADE_NOWAIT: {
-				appendSql( " holdlock" );
-				break;
-			}
-		}
+		append( SybaseASESqlAstTranslator.determineLockHint( lockMode, getEffectiveLockTimeout( lockMode ) ) );
 	}
 
 	@Override
@@ -253,25 +231,19 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 			predicate = tableGroupJoin.getPredicate();
 		}
 		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Sybase ASE does not really support the FOR UPDATE clause
 	}
 
 	@Override

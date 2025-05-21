@@ -4,19 +4,18 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.List;
-
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -46,6 +45,11 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+
+import static org.hibernate.Timeouts.NO_WAIT_MILLI;
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
 /**
  * A SQL AST translator for SQL Server.
@@ -163,15 +167,15 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 				// We have to inject the lateral predicate into the sub-query
 				final Predicate lateralPredicate = this.lateralPredicate;
 				this.lateralPredicate = predicate;
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 				this.lateralPredicate = lateralPredicate;
 			}
 			else {
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 			}
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 
@@ -224,49 +228,41 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
+		append( determineLockHint( lockMode, getEffectiveLockTimeout( lockMode ) ) );
+	}
+
+	@Internal
+	public static String determineLockHint(LockMode lockMode, int effectiveLockTimeout) {
+		// NOTE: exposed for tests
 		switch ( lockMode ) {
 			case PESSIMISTIC_WRITE:
 			case WRITE: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
-						appendSql( " with (updlock,rowlock,readpast)" );
-						break;
-					case LockOptions.NO_WAIT:
-						appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-						break;
-					default:
-						appendSql( " with (updlock,holdlock,rowlock)" );
-						break;
-				}
-				break;
+				return switch ( effectiveLockTimeout ) {
+					case SKIP_LOCKED_MILLI -> " with (updlock,rowlock,readpast)";
+					case NO_WAIT_MILLI -> " with (updlock,holdlock,rowlock,nowait)";
+					default -> " with (updlock,holdlock,rowlock)";
+				};
 			}
 			case PESSIMISTIC_READ: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
-						appendSql( " with (updlock,rowlock,readpast)" );
-						break;
-					case LockOptions.NO_WAIT:
-						appendSql( " with (holdlock,rowlock,nowait)" );
-						break;
-					default:
-						appendSql( " with (holdlock,rowlock)" );
-						break;
-				}
-				break;
+				return switch ( effectiveLockTimeout ) {
+					case SKIP_LOCKED_MILLI -> " with (updlock,rowlock,readpast)";
+					case NO_WAIT_MILLI -> " with (holdlock,rowlock,nowait)";
+					default -> " with (holdlock,rowlock)";
+				};
 			}
 			case UPGRADE_SKIPLOCKED: {
-				if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
-					appendSql( " with (updlock,rowlock,readpast,nowait)" );
+				if ( effectiveLockTimeout == NO_WAIT_MILLI ) {
+					return " with (updlock,rowlock,readpast,nowait)";
 				}
 				else {
-					appendSql( " with (updlock,rowlock,readpast)" );
+					return " with (updlock,rowlock,readpast)";
 				}
-				break;
 			}
 			case UPGRADE_NOWAIT: {
-				appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-				break;
+				return " with (updlock,holdlock,rowlock,nowait)";
+			}
+			default: {
+				return "";
 			}
 		}
 	}
@@ -274,15 +270,9 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// SQL Server does not support the FOR UPDATE clause
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {

@@ -21,13 +21,14 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.HANAServerConfiguration;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.HANAAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.HANALockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
@@ -178,6 +179,8 @@ public class HANALegacyDialect extends Dialect {
 
 	static final DatabaseVersion DEFAULT_VERSION = DatabaseVersion.make( 1, 0, 120 );
 
+	private final LockingSupport lockingSupport;
+
 	public HANALegacyDialect(DialectResolutionInfo info) {
 		this( HANAServerConfiguration.fromDialectResolutionInfo( info ), true );
 		registerKeywords( info );
@@ -200,7 +203,16 @@ public class HANALegacyDialect extends Dialect {
 		this.defaultTableTypeColumn = defaultTableTypeColumn;
 		this.maxLobPrefetchSize = configuration.getMaxLobPrefetchSize();
 		this.useUnicodeStringTypes = useUnicodeStringTypesDefault();
+
+		this.lockingSupport = buildLockingSupport();
 	}
+
+	private LockingSupport buildLockingSupport() {
+		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter(2, 0, 30);
+		return new HANALockingSupport( supportsSkipLocked );
+	}
+
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
@@ -638,8 +650,8 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return HANALockingSupport.HANA_LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -674,18 +686,15 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.findGreatestLockMode();
-		lockOptions.setLockMode( lockMode );
-
 		// not sure why this is sometimes empty
 		if ( aliases == null || aliases.isEmpty() ) {
 			return getForUpdateString( lockOptions );
 		}
 
-		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
+		return getForUpdateString( aliases, lockOptions.getLockMode(), lockOptions.getTimeout() );
 	}
 
-	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
+	private String getForUpdateString(String aliases, LockMode lockMode, Timeout timeout) {
 		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
@@ -1183,11 +1192,6 @@ public class HANALegacyDialect extends Dialect {
 	@Override
 	public boolean supportsLateral() {
 		return getVersion().isSameOrAfter( 2, 0, 40 );
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
 	}
 
 	@Override
@@ -2010,12 +2014,6 @@ public class HANALegacyDialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
-		return getVersion().isSameOrAfter(2, 0, 30);
 	}
 
 	@Override

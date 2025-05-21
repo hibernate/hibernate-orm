@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
@@ -146,7 +147,7 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 	}
 
 	protected void renderResultSetOptions(Dialect dialect, SqlAppender sqlAppender) {
-		// todo : hook for derby
+		// hook for Derby
 	}
 
 	protected void renderLockedRowHandling(int timeout, SqlAppender sqlAppender) {
@@ -175,10 +176,9 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 		else if ( rowLockStrategy == RowLockStrategy.COLUMN ) {
 			addColumnRefs( tableGroup, lockItems );
 		}
-	}
-
-	private void addColumnRefs(TableGroup tableGroup, List<String> lockItems) {
-		Collections.addAll( lockItems, determineKeyColumnRefs( tableGroup ) );
+		else if ( rowLockStrategy == RowLockStrategy.COLUMN_NAME ) {
+			addColumnNames( tableGroup, lockItems );
+		}
 	}
 
 	private void addTableAliases(TableGroup tableGroup, List<String> lockItems) {
@@ -191,6 +191,10 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 				lockItems.add( tableReferenceJoins.get(i).getJoinedTableReference().getIdentificationVariable() );
 			}
 		}
+	}
+
+	private void addColumnRefs(TableGroup tableGroup, List<String> lockItems) {
+		Collections.addAll( lockItems, determineKeyColumnRefs( tableGroup ) );
 	}
 
 	private String[] determineKeyColumnRefs(TableGroup tableGroup) {
@@ -207,10 +211,39 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 			return entityPersister.getIdentifierColumnNames();
 		}
 		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			// todo : seems like this ought to return the column name(s)
+			//  	to then be qualified with the table alias
 			return pluralAttributeMapping.getCollectionDescriptor().getKeyColumnAliases( null );
 		}
 		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
 			return determineKeyColumnNames( entityAssociationMapping.getAssociatedEntityMappingType() );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private void addColumnNames(TableGroup tableGroup, List<String> lockItems) {
+		final ModelPart keyColumnPart = determineKeyPart( tableGroup.getModelPart() );
+		if ( keyColumnPart == null ) {
+			throw new HibernateException( "Could not determine ModelPart defining key columns - " + tableGroup.getModelPart() );
+		}
+		keyColumnPart.forEachSelectable( (selectionIndex, selectableMapping) -> {
+			if ( !selectableMapping.isFormula() ) {
+				lockItems.add( selectableMapping.getSelectableName() );
+			}
+		} );
+	}
+
+	private ModelPart determineKeyPart(ModelPart modelPart) {
+		if ( modelPart instanceof EntityPersister entityPersister ) {
+			return entityPersister.getIdentifierMapping();
+		}
+		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
+			return pluralAttributeMapping.getKeyDescriptor();
+		}
+		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
+			return entityAssociationMapping.getForeignKeyDescriptor();
 		}
 		else {
 			return null;

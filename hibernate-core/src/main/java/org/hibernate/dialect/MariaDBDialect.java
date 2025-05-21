@@ -4,11 +4,6 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Set;
-
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -17,6 +12,8 @@ import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MariaDBIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.MariaDBLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.MariaDBSqlAstTranslator;
@@ -30,8 +27,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
-import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.LockTimeoutException;
+import org.hibernate.exception.SnapshotIsolationException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
@@ -54,6 +51,11 @@ import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Set;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
@@ -83,16 +85,20 @@ public class MariaDBDialect extends MySQLDialect {
 			"GEOMETRY"
 	);
 
+	private final LockingSupport lockingSupport;
+
 	public MariaDBDialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public MariaDBDialect(DatabaseVersion version) {
 		super(version);
+		lockingSupport = new MariaDBLockingSupport( version );
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
 		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		lockingSupport = new MariaDBLockingSupport( getVersion() );
 		registerKeywords( info );
 	}
 
@@ -275,28 +281,18 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		return true;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return true;
-	}
-
-	@Override
-	protected boolean supportsForShare() {
+	protected boolean supportsAliasLocks() {
 		//only supported on MySQL
 		return false;
 	}
 
 	@Override
-	protected boolean supportsAliasLocks() {
+	protected boolean supportsForShare() {
 		//only supported on MySQL
 		return false;
 	}

@@ -222,11 +222,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return getDialect().getVersion().isSameOrAfter( 8 ) ? " for share" : " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart

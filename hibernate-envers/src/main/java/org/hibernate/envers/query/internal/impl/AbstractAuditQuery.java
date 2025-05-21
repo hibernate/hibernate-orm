@@ -307,7 +307,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setTimeout( timeout );
 		}
 		if ( lockOptions != null && lockOptions.getLockMode() != LockMode.NONE ) {
-			query.setLockMode( REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode() );
+			query.setHibernateLockMode( lockOptions.getLockMode() );
 		}
 	}
 

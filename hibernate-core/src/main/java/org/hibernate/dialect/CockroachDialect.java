@@ -21,6 +21,8 @@ import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.CockroachLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
@@ -84,7 +86,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -901,6 +902,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return CockroachLockingSupport.COCKROACH_LOCKING_SUPPORT;
+	}
+
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
@@ -912,23 +918,10 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// Parent's implementation for (aliases, lockOptions) ignores aliases.
-		if ( aliases.isEmpty() ) {
-			final LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan( lockMode ) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
@@ -940,6 +933,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	private String withTimeout(String lockString, int timeout) {
+		// todo (db-locking) : see notes on `#supportsNoWait` and `#supportsSkipLocked`.
+		//  	not sure why we call those here.
 		return switch (timeout) {
 			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
 			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
@@ -964,26 +959,6 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getReadLockString(String aliases, Timeout timeout) {
-		return withTimeout( " for share of " + aliases, timeout );
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return withTimeout( " for share", timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
 		return withTimeout( " for share of " + aliases, timeout );
 	}
 
@@ -1016,11 +991,6 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean useInputStreamToInsertBlob() {
 		return false;
 	}
@@ -1046,29 +1016,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
-		return false;
-	}
-
-	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
 	}
 
 	@Override
@@ -1212,4 +1161,24 @@ public class CockroachDialect extends Dialect {
 		return false;
 	}
 
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return withTimeout( " for share", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return withTimeout( " for share of " + aliases, timeout );
+	}
 }

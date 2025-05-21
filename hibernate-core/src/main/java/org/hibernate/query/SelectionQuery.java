@@ -18,8 +18,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.NonUniqueResultException;
-import org.hibernate.Remove;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -600,24 +600,42 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
+	SelectionQuery<R> setLockScope(Locking.Scope lockScope);
+
+	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use {@linkplain #setLockScope(Locking.Scope)} instead.
+	 */
+	@Deprecated(since = "7.1")
 	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 *
-	 * @apiNote Support for alias-specific lock modes will be removed in a future version; they
-	 * were never really supported anyway, as Hibernate always used the most restrictive one it
-	 * found.  7.1 will introduce an extension to the JPA {@linkplain PessimisticLockScope}
-	 * which should be used instead, in conjunction with a {@linkplain #setHibernateLockMode lock mode}.
+	 * @see #setHibernateLockMode
+	 * @see #setLockScope(Locking.Scope)
 	 *
-	 * @see #setLockScope
+	 * @deprecated Use {@linkplain #setLockScope(Locking.Scope)} instead.
 	 */
-	@Remove
+	@Deprecated(since = "7")
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
 	 * Specifies whether follow-on locking should be applied
 	 */
+	SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy);
+
+	/**
+	 * Specifies whether follow-on locking should be applied
+	 *
+	 * @deprecated Use {@linkplain #setFollowOnStrategy(Locking.FollowOn)} instead
+	 */
+	@Deprecated(since = "7.1")
 	SelectionQuery<R> setFollowOnLocking(boolean enable);
 
 	/**

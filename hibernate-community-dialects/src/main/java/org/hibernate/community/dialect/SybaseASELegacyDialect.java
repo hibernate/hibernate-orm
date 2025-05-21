@@ -4,11 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
@@ -20,6 +16,8 @@ import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -30,8 +28,8 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -46,8 +44,12 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
@@ -552,11 +554,11 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	@Override
 	public int getMaxIdentifierLength() {
 		return 255;
-	}
+		}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SYBASE_LEGACY;
 	}
 
 	@Override
@@ -594,15 +596,9 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// It does support skipping locked rows only for READ locking
-		return false;
-	}
-
-	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		final String lockHint = super.appendLockHint( mode, tableName );
-		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeOut() == LockOptions.SKIP_LOCKED
+		return !mode.getLockMode().greaterThan( LockMode.READ ) && mode.getTimeout().milliseconds() == SKIP_LOCKED_MILLI
 				? lockHint + " readpast"
 				: lockHint;
 	}

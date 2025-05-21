@@ -22,13 +22,14 @@ import org.hibernate.dialect.MySQLServerConfiguration;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.MySQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
@@ -155,6 +156,8 @@ public class MySQLLegacyDialect extends Dialect {
 
 	private final boolean noBackslashEscapesEnabled;
 
+	private final LockingSupport lockingSupport;
+
 	public MySQLLegacyDialect() {
 		this( DEFAULT_VERSION );
 	}
@@ -176,6 +179,8 @@ public class MySQLLegacyDialect extends Dialect {
 		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
 		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
 		noBackslashEscapesEnabled = noBackslashEscapes;
+
+		lockingSupport = buildLockingSupport();
 	}
 
 	public MySQLLegacyDialect(DialectResolutionInfo info) {
@@ -198,6 +203,10 @@ public class MySQLLegacyDialect extends Dialect {
 			}
 		}
 		return info.makeCopyOrDefault( DEFAULT_VERSION );
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		return new MySQLLockingSupport( getMySQLVersion() );
 	}
 
 	@Override
@@ -1159,12 +1168,8 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		// yes, we do handle "lock timeout" conditions in the exception conversion delegate,
-		// but that's a hardcoded lock timeout period across the whole entire MySQL database.
-		// MySQL does not support specifying lock timeouts as part of the SQL statement, which is really
-		// what this meta method is asking.
-		return false;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -1463,27 +1468,6 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public boolean supportsRecursiveCTE() {
 		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return getMySQLVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return getMySQLVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	public boolean supportsWait() {
-		//only supported on MariaDB
-		return false;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override

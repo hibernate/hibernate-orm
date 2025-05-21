@@ -4,9 +4,9 @@
  */
 package org.hibernate.event.spi;
 
-import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 
 /**
  *  Defines an event class for the loading of an entity.
@@ -128,18 +128,6 @@ public class LoadEvent extends AbstractEvent {
 		this.lockOptions = lockOptions;
 	}
 
-	public LockMode getLockMode() {
-		return lockOptions.getLockMode();
-	}
-
-	public int getLockTimeout() {
-		return lockOptions.getTimeOut();
-	}
-
-	public boolean getLockScope() {
-		return lockOptions.getLockScope() == PessimisticLockScope.EXTENDED;
-	}
-
 	public Object getResult() {
 		return result;
 	}
@@ -154,5 +142,31 @@ public class LoadEvent extends AbstractEvent {
 
 	public void setReadOnly(Boolean readOnly) {
 		this.readOnly = readOnly;
+	}
+
+
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public LockMode getLockMode() {
+		return lockOptions.getLockMode();
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public int getLockTimeout() {
+		return lockOptions.getTimeout().milliseconds();
+	}
+
+	/**
+	 * @deprecated Use {@linkplain #getLockOptions()} instead.
+	 */
+	@Deprecated(since = "7.1")
+	public boolean getLockScope() {
+		return lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
 	}
 }

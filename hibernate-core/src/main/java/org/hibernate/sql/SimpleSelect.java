@@ -4,20 +4,21 @@
  */
 package org.hibernate.sql;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A SQL {@code SELECT} statement with no table joins.
@@ -44,6 +45,15 @@ public class SimpleSelect implements RestrictionRenderingContext {
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		this.dialect = jdbcServices.getDialect();
 		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
+	}
+
+	public SimpleSelect(Dialect dialect) {
+		this( dialect, ParameterMarkerStrategyStandard.INSTANCE );
+	}
+
+	public SimpleSelect(Dialect dialect, ParameterMarkerStrategy parameterMarkerStrategy) {
+		this.dialect = dialect;
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	@Override

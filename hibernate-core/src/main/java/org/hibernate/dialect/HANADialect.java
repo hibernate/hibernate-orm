@@ -21,6 +21,8 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.HANALockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
@@ -650,8 +652,8 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+	public LockingSupport getLockingSupport() {
+		return HANALockingSupport.HANA_LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -686,18 +688,17 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.findGreatestLockMode();
-		lockOptions.setLockMode( lockMode );
+		final LockMode lockMode = lockOptions.getLockMode();
 
 		// not sure why this is sometimes empty
 		if ( aliases == null || aliases.isEmpty() ) {
 			return getForUpdateString( lockOptions );
 		}
 
-		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
+		return getForUpdateString( aliases, lockMode, lockOptions.getTimeout() );
 	}
 
-	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
+	private String getForUpdateString(String aliases, LockMode lockMode, Timeout timeout) {
 		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );
@@ -1184,11 +1185,6 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
 		return true;
 	}
 
@@ -2016,12 +2012,6 @@ public class HANADialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		// HANA supports IGNORE LOCKED since HANA 2.0 SPS3 (2.0.030)
-		return true;
 	}
 
 	@Override

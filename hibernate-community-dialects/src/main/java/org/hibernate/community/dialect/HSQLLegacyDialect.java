@@ -4,29 +4,31 @@
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.*;
+import org.hibernate.community.dialect.pagination.LegacyHSQLLimitHandler;
+import org.hibernate.dialect.BooleanDecoder;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.community.dialect.pagination.LegacyHSQLLimitHandler;
+import org.hibernate.dialect.lock.internal.HSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -52,16 +54,15 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -74,10 +75,12 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.TemporalType;
+import java.lang.invoke.MethodHandles;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -449,8 +452,8 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return HSQLLockingSupport.LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -763,32 +766,11 @@ public class HSQLLegacyDialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * For HSQLDB 2.0, this is a copy of the base class implementation.
-	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteSelectLockingStrategy( lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadSelectLockingStrategy( lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		if ( getVersion().isBefore( 2 ) ) {
-			return new ReadUncommittedLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return getVersion().isBefore( 2 )
+				? new ReadUncommittedLockingStrategy( lockable, lockMode )
+				: new SelectLockingStrategy( lockable, lockMode );
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {

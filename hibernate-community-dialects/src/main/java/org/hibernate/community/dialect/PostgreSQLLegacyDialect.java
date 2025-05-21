@@ -4,19 +4,8 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Length;
@@ -28,7 +17,17 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.PostgreSQLLegacySequenceSupport;
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDriverKind;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -37,6 +36,8 @@ import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.PostgreSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -74,11 +75,11 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgreSQLCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -112,8 +113,17 @@ import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.common.TemporalUnit.DAY;
@@ -173,6 +183,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		}
 	};
 
+	private final LockingSupport lockingSupport;
+
 	public PostgreSQLLegacyDialect() {
 		this( DatabaseVersion.make( 8, 0 ) );
 	}
@@ -180,16 +192,30 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	public PostgreSQLLegacyDialect(DialectResolutionInfo info) {
 		super(info);
 		driverKind = PostgreSQLDriverKind.determineKind( info );
+		lockingSupport = buildLockingSupport();
 	}
 
 	public PostgreSQLLegacyDialect(DatabaseVersion version) {
 		super(version);
 		driverKind = PostgreSQLDriverKind.PG_JDBC;
+		lockingSupport = buildLockingSupport();
 	}
 
 	public PostgreSQLLegacyDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super(version);
 		this.driverKind = driverKind;
+		lockingSupport = buildLockingSupport();
+	}
+
+	private LockingSupport buildLockingSupport() {
+		final boolean supportsNoWait = getVersion().isSameOrAfter( 8, 1 );
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter( 9, 5 );
+		return new PostgreSQLLockingSupport( supportsNoWait, supportsSkipLocked );
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -884,23 +910,10 @@ public class PostgreSQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// parent's implementation for (aliases, lockOptions) ignores aliases
-		if ( aliases.isEmpty() ) {
-			LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan(lockMode) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch ( lockMode ) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
@@ -925,11 +938,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public GenerationType getNativeValueGenerationStrategy() {
 		return GenerationType.SEQUENCE;
-	}
-
-	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
 	}
 
 	@Override
@@ -1404,21 +1412,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNoWait() {
-		return getVersion().isSameOrAfter( 8, 1 );
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return getVersion().isSameOrAfter( 9, 5 );
-	}
-
-	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
 	}
@@ -1455,11 +1448,6 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.TABLE;
 	}
 
 	@Override

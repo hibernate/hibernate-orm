@@ -4,10 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.sequence.RDMSSequenceSupport;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -17,13 +17,10 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -31,23 +28,26 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.TemporalType;
+import java.lang.invoke.MethodHandles;
+import java.sql.Types;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -347,15 +347,9 @@ public class RDMSOS2200Dialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * Currently, RDMS-JDBC does not support ForUpdate.
-	 * Need to review this in the future when support is provided.
-	 * <p>
-	 * {@inheritDoc}
-	 */
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override
@@ -392,26 +386,21 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		// RDMS has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
-		}
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
-			return new UpdateLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
+		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
+	}
+
+	@Override
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		// RDMS has no known variation of "SELECT ... FOR UPDATE" syntax...
+		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
+	}
+
+	@Override
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Unisys 2200 does not support the FOR UPDATE clause
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override

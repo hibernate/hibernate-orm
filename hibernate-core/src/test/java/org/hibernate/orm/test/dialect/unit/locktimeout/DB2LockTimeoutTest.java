@@ -12,6 +12,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.SKIP_LOCKED;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -37,13 +38,11 @@ public class DB2LockTimeoutTest extends BaseUnitTestCase {
 	public void testLockTimeoutNoAliasSkipLocked() {
 		assertEquals(
 				" for read only with rs use and keep share locks skip locked data",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_READ ).setTimeout( SKIP_LOCKED ) )
 		);
 		assertEquals(
 				" for read only with rs use and keep update locks skip locked data",
-				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE )
-													.setTimeOut( LockOptions.SKIP_LOCKED ) )
+				dialect.getForUpdateString( new LockOptions( LockMode.PESSIMISTIC_WRITE ).setTimeout( SKIP_LOCKED ) )
 		);
 	}
 }

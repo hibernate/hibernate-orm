@@ -21,6 +21,7 @@ import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Internal;
+import org.hibernate.Locking;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.QueryFlushMode;
@@ -65,6 +66,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 
 /**
@@ -177,7 +179,7 @@ public abstract class AbstractSelectionQuery<R>
 		final SharedSessionContractImplementor session = getSession();
 		final MutableQueryOptions options = getQueryOptions();
 
-		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().findGreatestLockMode() ) );
+		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().getLockMode() ) );
 		prepareForExecution();
 
 		assert sessionFlushMode == null;
@@ -428,8 +430,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
-		getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, lockMode );
-		return this;
+		return setHibernateLockMode( lockMode );
 	}
 
 	/**
@@ -456,8 +457,20 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public SelectionQuery<R> setLockScope(Locking.Scope lockScope) {
+		getLockOptions().setScope( lockScope );
+		return this;
+	}
+
+	@Override
 	public SelectionQuery<R> setLockScope(PessimisticLockScope lockScope) {
 		getLockOptions().setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		getLockOptions().setFollowOnStrategy( followOnStrategy );
 		return this;
 	}
 
@@ -498,6 +511,7 @@ public abstract class AbstractSelectionQuery<R>
 		}
 
 		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
+		putIfNotNull( hints, HINT_FOLLOW_ON_STRATEGY, getQueryOptions().getLockOptions().getFollowOnStrategy() );
 	}
 
 	@Override

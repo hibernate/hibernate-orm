@@ -184,9 +184,6 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setLockMode(LockModeType lockMode);
 
 	@Override
-	NativeQueryImplementor<R> setLockMode(String alias, LockMode lockMode);
-
-	@Override
 	NativeQueryImplementor<R> setComment(String comment);
 
 	@Override

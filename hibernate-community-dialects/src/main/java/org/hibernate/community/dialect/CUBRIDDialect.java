@@ -17,6 +17,8 @@ import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -314,6 +316,11 @@ public class CUBRIDDialect extends Dialect {
 	@Override
 	public char closeQuote() {
 		return ']';
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return LockingSupportSimple.STANDARD_SUPPORT;
 	}
 
 	@Override

@@ -4,18 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.hibernate.Length;
 import org.hibernate.PessimisticLockException;
@@ -44,10 +33,16 @@ import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.internal.LockingSupportParameterized;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.temptable.TemporaryTable;
@@ -113,7 +108,17 @@ import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
@@ -176,6 +181,15 @@ public class SingleStoreDialect extends Dialect {
 
 	private final SingleStoreTableType explicitTableType;
 	private final boolean isForUpdateLockingEnabled;
+
+	private final LockingSupport lockingSupport = new LockingSupportParameterized(
+			PessimisticLockStyle.NONE,
+			RowLockStrategy.NONE,
+			LockTimeoutType.NONE,
+			LockTimeoutType.NONE,
+			LockTimeoutType.NONE,
+			OuterJoinLockingType.UNSUPPORTED
+	);
 
 	public SingleStoreDialect() {
 		this( MINIMUM_VERSION, null, false );
@@ -1178,8 +1192,8 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		return false;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
@@ -1286,11 +1300,6 @@ public class SingleStoreDialect extends Dialect {
 	@Override
 	public boolean supportsPartitionBy() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		return false;
 	}
 
 	@Override

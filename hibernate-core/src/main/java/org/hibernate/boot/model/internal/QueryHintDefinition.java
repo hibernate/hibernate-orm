@@ -11,7 +11,9 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.MappingException;
+import org.hibernate.Timeouts;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.LockModeConverter;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -152,9 +154,9 @@ public class QueryHintDefinition {
 	public LockOptions determineLockOptions(NamedQuery namedQueryAnnotation) {
 		final LockModeType lockModeType = namedQueryAnnotation.lockMode();
 		final Integer lockTimeoutHint = specLockTimeout();
-		final Boolean followOnLocking = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
+		final Locking.FollowOn followOnStrategy = followOnStrategy();
 
-		return determineLockOptions( lockModeType, lockTimeoutHint, followOnLocking );
+		return determineLockOptions( lockModeType, lockTimeoutHint, followOnStrategy );
 	}
 
 	private Integer specLockTimeout() {
@@ -166,12 +168,29 @@ public class QueryHintDefinition {
 		return getInteger( AvailableSettings.JPA_LOCK_TIMEOUT );
 	}
 
-	private LockOptions determineLockOptions(LockModeType lockModeType, Integer lockTimeoutHint, Boolean followOnLocking) {
+	private Locking.FollowOn followOnStrategy() {
+		final Object strategyValue = hintsMap.get( HibernateHints.HINT_FOLLOW_ON_STRATEGY );
+		if ( strategyValue != null ) {
+			if ( strategyValue instanceof Locking.FollowOn strategy ) {
+				return strategy;
+			}
+			// assume it is a FollowOn name
+			return Locking.FollowOn.valueOf( strategyValue.toString() );
+		}
 
-		LockOptions lockOptions = new LockOptions( LockModeConverter.convertToLockMode( lockModeType ) )
-				.setFollowOnLocking( followOnLocking );
+		final Boolean lockingValue = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
+		return Locking.FollowOn.fromLegacyValue( lockingValue );
+	}
+
+	private LockOptions determineLockOptions(
+			LockModeType lockModeType,
+			Integer lockTimeoutHint,
+			Locking.FollowOn followOnStrategy) {
+		LockOptions lockOptions = new LockOptions()
+				.setLockMode( LockModeConverter.convertToLockMode( lockModeType ) )
+				.setFollowOnStrategy( followOnStrategy );
 		if ( lockTimeoutHint != null ) {
-			lockOptions.setTimeOut( lockTimeoutHint );
+			lockOptions.setTimeout( Timeouts.interpretMilliSeconds( lockTimeoutHint ) );
 		}
 
 		return lockOptions;

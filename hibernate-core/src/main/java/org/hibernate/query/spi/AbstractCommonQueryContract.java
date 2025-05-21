@@ -4,24 +4,23 @@
  */
 package org.hibernate.query.spi;
 
-import java.time.Instant;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 import org.hibernate.FlushMode;
-import org.hibernate.Internal;
-import org.hibernate.engine.spi.ExceptionConverter;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.QueryArgumentException;
-import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.Timeouts;
+import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.GraphSemantic;
@@ -35,6 +34,8 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.CommonQueryContract;
+import org.hibernate.query.QueryArgumentException;
+import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.TypedParameterValue;
@@ -51,18 +52,16 @@ import org.hibernate.type.BindableType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.Type;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-import static java.lang.Boolean.TRUE;
 import static java.util.Arrays.asList;
 import static java.util.Locale.ROOT;
-import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -72,6 +71,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.HibernateHints.HINT_QUERY_DATABASE;
 import static org.hibernate.jpa.HibernateHints.HINT_QUERY_PLAN_CACHEABLE;
@@ -93,7 +93,6 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getCacheMode;
 import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
-import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMode;
 
 /**
  * Base implementation of {@link CommonQueryContract}.
@@ -226,20 +225,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				hints.put( HINT_NATIVE_LOCKMODE, lockMode );
 			}
 
-			if ( lockOptions.hasAliasSpecificLockModes() ) {
-				for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-					hints.put(
-							HINT_NATIVE_LOCKMODE + "." + entry.getKey(),
-							entry.getValue()
-					);
-				}
+			if ( lockOptions.getFollowOnStrategy() != null ) {
+				hints.put( HINT_FOLLOW_ON_STRATEGY, lockOptions.getFollowOnStrategy() );
 			}
 
-			if ( lockOptions.getFollowOnLocking() == TRUE ) {
-				hints.put( HINT_FOLLOW_ON_LOCKING, TRUE );
-			}
-
-			if ( lockOptions.getTimeOut() != WAIT_FOREVER ) {
+			if ( lockOptions.getTimeout().milliseconds() != Timeouts.WAIT_FOREVER_MILLI ) {
 				hints.put( HINT_SPEC_LOCK_TIMEOUT, lockOptions.getTimeOut() );
 				hints.put( HINT_JAVAEE_LOCK_TIMEOUT, lockOptions.getTimeOut() );
 			}
@@ -335,7 +325,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					queryOptions.setCacheMode( getCacheMode( value ) );
 					return true;
 				case HINT_JAVAEE_CACHE_RETRIEVE_MODE:
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
+					DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_CACHE_RETRIEVE_MODE, HINT_SPEC_CACHE_RETRIEVE_MODE );
 					//fall through to:
 				case HINT_SPEC_CACHE_RETRIEVE_MODE:
 					final CacheRetrieveMode retrieveMode =
@@ -343,7 +333,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					queryOptions.setCacheRetrieveMode( retrieveMode );
 					return true;
 				case HINT_JAVAEE_CACHE_STORE_MODE:
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
+					DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_CACHE_STORE_MODE, HINT_SPEC_CACHE_STORE_MODE );
 					//fall through to:
 				case HINT_SPEC_CACHE_STORE_MODE:
 					final CacheStoreMode storeMode =
@@ -351,13 +341,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					queryOptions.setCacheStoreMode( storeMode );
 					return true;
 				case HINT_JAVAEE_FETCH_GRAPH:
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
+					DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
 					//fall through to:
 				case HINT_SPEC_FETCH_GRAPH:
 					applyEntityGraphHint( GraphSemantic.FETCH, value, hintName );
 					return true;
 				case HINT_JAVAEE_LOAD_GRAPH:
-					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
+					DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
 					//fall through to:
 				case HINT_SPEC_LOAD_GRAPH:
 					applyEntityGraphHint( GraphSemantic.LOAD, value, hintName );
@@ -440,7 +430,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	private boolean applyLockingHint(String hintName, Object value) {
 		switch ( hintName ) {
 			case HINT_JAVAEE_LOCK_TIMEOUT:
-				DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
+				DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_LOCK_TIMEOUT, HINT_SPEC_LOCK_TIMEOUT );
 				//fall through to:
 			case HINT_SPEC_LOCK_TIMEOUT:
 				if ( value != null ) {
@@ -450,6 +440,17 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				else {
 					return false;
 				}
+			case HINT_FOLLOW_ON_STRATEGY:
+				if ( value == null ) {
+					applyFollowOnStrategyHint( Locking.FollowOn.ALLOW );
+				}
+				if ( value instanceof Locking.FollowOn strategyValue ) {
+					applyFollowOnStrategyHint( strategyValue );
+				}
+				else {
+					applyFollowOnStrategyHint( Locking.FollowOn.valueOf( value.toString() ) );
+				}
+				return true;
 			case HINT_FOLLOW_ON_LOCKING:
 				applyFollowOnLockingHint( getBoolean( value ) );
 				return true;
@@ -458,12 +459,10 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				return true;
 			default:
 				if ( hintName.startsWith( HINT_NATIVE_LOCKMODE ) ) {
-					applyAliasSpecificLockModeHint( hintName, value );
+					applyLockModeHint( value );
 					return true;
 				}
-				else {
-					return false;
-				}
+				return false;
 		}
 	}
 
@@ -512,13 +511,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
-		final String alias = hintName.substring( HINT_NATIVE_LOCKMODE.length() + 1 );
-		getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
+	protected void applyFollowOnStrategyHint(Locking.FollowOn followOnStrategy) {
+		getLockOptions().setFollowOnStrategy( followOnStrategy );
 	}
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
-		getLockOptions().setFollowOnLocking( followOnLocking );
+		DEPRECATION_LOGGER.deprecatedHint( HINT_FOLLOW_ON_LOCKING, HINT_FOLLOW_ON_STRATEGY );
+		applyFollowOnStrategyHint( Locking.FollowOn.fromLegacyValue( followOnLocking ) );
 	}
 
 

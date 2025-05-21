@@ -19,6 +19,8 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
@@ -164,6 +166,8 @@ public class DB2Dialect extends Dialect {
 		}
 	};
 
+	private final LockingSupport lockingSupport;
+
 	public DB2Dialect() {
 		this( MINIMUM_VERSION );
 	}
@@ -175,6 +179,13 @@ public class DB2Dialect extends Dialect {
 
 	public DB2Dialect(DatabaseVersion version) {
 		super( version );
+		lockingSupport = buildLockingSupport();
+	}
+
+	protected LockingSupport buildLockingSupport() {
+		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
+		final boolean supportsSkipLocked = getVersion().isSameOrAfter( 11, 5 );
+		return DB2LockingSupport.forDB2( supportsSkipLocked );
 	}
 
 	@Override
@@ -688,14 +699,13 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return FOR_UPDATE_SQL;
+	public LockingSupport getLockingSupport() {
+		return lockingSupport;
 	}
 
 	@Override
-	public boolean supportsSkipLocked() {
-		// Introduced in 11.5.4: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
-		return getDB2Version().isSameOrAfter( 11, 5 );
+	public String getForUpdateString() {
+		return FOR_UPDATE_SQL;
 	}
 
 	@Override
@@ -739,18 +749,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		//as far as I know, DB2 doesn't support this
 		return false;
 	}
 

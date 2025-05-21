@@ -191,11 +191,9 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				executionContext.getSession()
 		);
 		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
-		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( explicitDmlTargetAlias );
 		// Acquire a WRITE lock for the rows that are about to be modified
-		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, LockMode.WRITE );
+		lockOptions.setLockMode( LockMode.WRITE );
 		final JdbcOperationQuerySelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
-		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, lockMode );
 		executionContext.getSession().autoFlushIfRequired( select.getAffectedTableNames() );
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				select,

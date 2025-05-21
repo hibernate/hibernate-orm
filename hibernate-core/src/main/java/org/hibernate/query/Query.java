@@ -391,27 +391,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> setLockOptions(LockOptions lockOptions);
 
 	/**
-	 * Set the {@link LockMode} to use for particular alias defined in
-	 * the {@code FROM} clause of the query.
-	 * <p>
-	 * The alias-specific lock modes specified here are added to the
-	 * {@link #getLockOptions() LockOption}s.
-	 * <p>
-	 * The effect of alias-specific locking is quite dependent on the
-	 * driver and database. For maximum portability, the given lock
-	 * mode should be {@link LockMode#PESSIMISTIC_WRITE}.
-	 *
-	 * @param alias A query alias
-	 * @param lockMode The lock mode to apply
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see #getLockOptions()
-	 */
-	@Override
-	Query<R> setLockMode(String alias, LockMode lockMode);
-
-	/**
 	 * Apply a timeout to the corresponding database query.
 	 *
 	 * @param timeout The timeout to apply

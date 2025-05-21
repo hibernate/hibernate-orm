@@ -60,7 +60,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 
 	private static LockOptions lockOptions(MultiNaturalIdLoadOptions loadOptions) {
 		final LockOptions lockOptions = loadOptions.getLockOptions();
-		return lockOptions == null ? LockOptions.NONE : lockOptions;
+		return lockOptions == null ? new LockOptions() : lockOptions;
 	}
 
 	private <K> List<E> unorderedMultiLoad(

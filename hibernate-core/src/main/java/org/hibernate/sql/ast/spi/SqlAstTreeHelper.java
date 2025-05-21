@@ -6,6 +6,7 @@ package org.hibernate.sql.ast.spi;
 
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 /**
  * @author Steve Ebersole
@@ -55,5 +56,9 @@ public final class SqlAstTreeHelper {
 		}
 
 		return combinedPredicate;
+	}
+
+	public static boolean hasAggregateFunctions(QuerySpec querySpec) {
+		return AggregateFunctionChecker.hasAggregateFunctions( querySpec );
 	}
 }

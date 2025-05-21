@@ -15,6 +15,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,13 +58,13 @@ public class BaselineTests {
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
 
 			// The `book_authors` table should not be locked.
-			Helper.deleteFromTable( factoryScope, "book_authors", false );
+			TransactionUtil.deleteFromTable( factoryScope, "book_authors", false );
 
 			// The `book_tags` table should not be locked.
-			Helper.deleteFromTable( factoryScope, "book_tags", false );
+			TransactionUtil.deleteFromTable( factoryScope, "book_tags", false );
 
 			// The `books` table should be locked.
-			Helper.deleteFromTable( factoryScope, "books", true );
+			TransactionUtil.deleteFromTable( factoryScope, "books", true );
 		} );
 	}
 
@@ -84,7 +85,7 @@ public class BaselineTests {
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), Helper.Table.BOOKS );
 
 			// The `book_authors` table should not be locked.
-			Helper.deleteFromTable( factoryScope, "book_authors", false );
+			TransactionUtil.deleteFromTable( factoryScope, "book_authors", false );
 
 			// Whether the `book_tags` table should be locked or not depends on the capability of the db:
 			//		* if the database uses table hints, it will be locked
@@ -92,10 +93,10 @@ public class BaselineTests {
 			//		* if the database supports for-update (no -of), it will be locked since it locks all returned rows
 			final boolean expectingToBlockTags = session.getDialect().getWriteRowLockStrategy() == RowLockStrategy.NONE
 					|| session.getDialect().getPessimisticLockStyle() == PessimisticLockStyle.TABLE_HINT;
-			Helper.deleteFromTable( factoryScope, "book_tags", expectingToBlockTags );
+			TransactionUtil.deleteFromTable( factoryScope, "book_tags", expectingToBlockTags );
 
 			// The `books` table should be locked.
-			Helper.deleteFromTable( factoryScope, "books", true );
+			TransactionUtil.deleteFromTable( factoryScope, "books", true );
 		} );
 
 	}

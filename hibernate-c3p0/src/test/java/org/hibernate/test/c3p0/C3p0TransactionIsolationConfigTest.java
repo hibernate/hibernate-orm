@@ -24,7 +24,7 @@ import org.junit.Before;
 @SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
 @SkipForDialect(value = AltibaseDialect.class, comment = "Altibase cannot change isolation level in autocommit mode")
 @SkipForDialect(value = SybaseASEDialect.class, comment = "JtdsConnection.isValid not implemented")
-@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB query serialization level of SERIALIZABLE has some problem")
+@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB does not support SERIALIZABLE isolation")
 public class C3p0TransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	private StandardServiceRegistry ssr;
 

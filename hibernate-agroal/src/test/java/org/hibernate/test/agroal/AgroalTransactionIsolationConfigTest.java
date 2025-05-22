@@ -18,7 +18,7 @@ import org.hibernate.testing.common.connections.BaseTransactionIsolationConfigTe
  */
 @SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
 @SkipForDialect(value = AltibaseDialect.class, comment = "Altibase cannot change isolation level in autocommit mode")
-@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB query serialization level of SERIALIZABLE has some problem")
+@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB does not support SERIALIZABLE isolation")
 public class AgroalTransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	@Override
 	protected ConnectionProvider getConnectionProviderUnderTest() {

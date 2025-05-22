@@ -7,6 +7,7 @@ package org.hibernate.sql.ast.internal;
 import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 /**
  * ForUpdateClauseStrategy implementation for cases when a dialect
@@ -19,8 +20,18 @@ public class NoOpForUpdateClauseStrategy implements ForUpdateClauseStrategy {
 	public static final NoOpForUpdateClauseStrategy NO_OP_STRATEGY = new NoOpForUpdateClauseStrategy();
 
 	@Override
-	public void register(TableGroup tableGroup, boolean isRoot) {
+	public void registerRoot(TableGroup root) {
 		// nothing to do
+	}
+
+	@Override
+	public void registerJoin(TableGroupJoin join) {
+		// nothing to do
+	}
+
+	@Override
+	public boolean containsOuterJoins() {
+		return false;
 	}
 
 	@Override

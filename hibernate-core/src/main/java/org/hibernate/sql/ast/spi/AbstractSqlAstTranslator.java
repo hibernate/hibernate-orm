@@ -1735,17 +1735,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( !dialect.supportsOuterJoinForUpdate() ) {
-			// if we have any outer joins, we need to use follow-on locking if allowed
-			final Boolean hasOuterJoins = querySpec.getFromClause().queryTableGroupJoins( tableGroupJoin -> {
-				final TableGroup group = tableGroupJoin.getJoinedGroup();
-				if ( tableGroupJoin.isInitialized()
-					&& tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
-					&& !group.isVirtual() ) {
-					return true;
-				}
-				return null;
-			} );
-			if ( hasOuterJoins == Boolean.TRUE ) {
+			if ( forUpdateClauseStrategy != null && forUpdateClauseStrategy.containsOuterJoins() ) {
+				// we have any outer joins to lock, but the dialect does not support locking outer joins
+				// 		-we need to use follow-on locking if allowed
 				if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 					throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported" );
 				}
@@ -5684,10 +5676,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderRootTableGroup(TableGroup tableGroup, List<TableGroupJoin> tableGroupJoinCollector) {
 		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
-		final boolean usesLockHint = renderPrimaryTableReference( tableGroup, effectiveLockMode );
-		if ( !usesLockHint ) {
-			forUpdateClauseStrategy.register( tableGroup, true );
+		renderPrimaryTableReference( tableGroup, effectiveLockMode );
+
+		if ( forUpdateClauseStrategy != null ) {
+			forUpdateClauseStrategy.registerRoot( tableGroup );
 		}
+
 		if ( tableGroup.isLateral() && !dialect.supportsLateral() ) {
 			addAdditionalWherePredicate( determineLateralEmulationPredicate( tableGroup ) );
 		}
@@ -5830,10 +5824,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( int i = 0; i < querySpaces.length; i++ ) {
 				registerAffectedTable( querySpaces[i] );
 			}
-		}
-
-		if ( !usesLockHint ) {
-			forUpdateClauseStrategy.register( tableGroup, false );
 		}
 	}
 
@@ -6223,6 +6213,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+		}
+		if ( forUpdateClauseStrategy != null ) {
+			forUpdateClauseStrategy.registerJoin( tableGroupJoin );
 		}
 	}
 

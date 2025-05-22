@@ -5,6 +5,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 /**
  * Strategy for dealing with locking via a SQL {@code FOR UPDATE (OF)}
@@ -17,12 +18,26 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  * Some dialects support an additional {@code FOR SHARE (OF)} clause
  * as well to acquire non-exclusive locks.  That is also handled here,
  * varied by the requested {@linkplain org.hibernate.LockMode LockMode}.
+ * <p/>
+ * Operates in 2 "phases"-<ol>
+ *     <li>
+ *         collect tables which are to be locked (based on {@linkplain org.hibernate.Locking.Scope},
+ *         and other things)
+ *     </li>
+ *     <li>
+ *         render the appropriate locking fragment
+ *     </li>
+ * </ol>
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateClauseStrategy
  *
  * @author Steve Ebersole
  */
 public interface ForUpdateClauseStrategy {
-	void register(TableGroup tableGroup, boolean isRoot);
+	void registerRoot(TableGroup root);
+	void registerJoin(TableGroupJoin join);
+
+	boolean containsOuterJoins();
+
 	void render(SqlAppender sqlAppender);
 }

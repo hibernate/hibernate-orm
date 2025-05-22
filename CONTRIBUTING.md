@@ -108,3 +108,11 @@ It is important that this topic branch of your fork:
 
 # Notes
 <sup>(1)</sup> Gradle `eclipse` plugin is no longer supported, so the recommended way to import the project in your IDE is with the proper IDE tools/plugins. Don't try to run `./gradlew clean eclipse --refresh-dependencies` from the command line as you'll get an error because `eclipse` no longer exists
+
+## <a id="ci"></a> Continuous integration
+
+See [MAINTAINERS.md](MAINTAINERS.md#ci) for information about CI.
+
+## <a id="releasing"></a> Releasing
+
+See [MAINTAINERS.md](MAINTAINERS.md#ci) for information about releasing.

@@ -13,11 +13,7 @@ See https://hibernate.org/orm/[Hibernate.org] for more information.
 
 == Continuous Integration
 
-Hibernate uses both https://jenkins-ci.org[Jenkins] and https://github.com/features/actions[GitHub Actions]
-for its CI needs. See
-
-* https://ci.hibernate.org/view/ORM/[Jenkins Jobs]
-* https://github.com/hibernate/hibernate-orm/actions[GitHub Actions Jobs]
+See link:MAINTAINERS.md#ci[MAINTAINERS.md] for information about CI.
 
 == Building from sources
 

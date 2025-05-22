@@ -1634,6 +1634,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						castNonNull( discriminatorAssembler ),
 						entityDescriptor
 				);
+				if ( data.concreteDescriptor == null ) {
+					// this should imply the entity is missing
+					return;
+				}
 			}
 		}
 		resolveEntityState( data );

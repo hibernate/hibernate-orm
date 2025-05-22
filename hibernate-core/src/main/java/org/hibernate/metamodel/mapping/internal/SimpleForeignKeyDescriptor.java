@@ -497,7 +497,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		final LazyInitializer lazyInitializer = extractLazyInitializer( targetObject );
 		if ( lazyInitializer != null ) {
 			if ( refersToPrimaryKey ) {
-				return lazyInitializer.getIdentifier();
+				return lazyInitializer.getInternalIdentifier();
 			}
 			else {
 				targetObject = lazyInitializer.getImplementation();

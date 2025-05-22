@@ -21,7 +21,7 @@ public enum PessimisticLockKind {
 	public static PessimisticLockKind interpret(LockMode lockMode) {
 		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> SHARE;
-			case PESSIMISTIC_WRITE, PESSIMISTIC_FORCE_INCREMENT -> UPDATE;
+			case PESSIMISTIC_WRITE, PESSIMISTIC_FORCE_INCREMENT, UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED -> UPDATE;
 			default -> NONE;
 		};
 	}

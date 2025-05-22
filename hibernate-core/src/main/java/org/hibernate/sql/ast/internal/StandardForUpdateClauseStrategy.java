@@ -8,7 +8,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
-import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -17,14 +16,18 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +44,8 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 	private final Locking.Scope lockingScope;
 	private final int timeout;
 
-	private Set<TableGroup> tableGroupsToLock;
+	private Set<TableGroup> rootsToLock;
+	private Set<TableGroupJoin> joinsToLock;
 
 	public StandardForUpdateClauseStrategy(
 			Dialect dialect,
@@ -61,112 +65,134 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 	}
 
 	@Override
-	public void register(TableGroup tableGroup, boolean isRoot) {
+	public void registerRoot(TableGroup root) {
 		if ( rowLockStrategy == RowLockStrategy.NONE ) {
 			// no need to collect these
 			return;
 		}
 
-		if ( isRoot ) {
-			assert tableGroup.isRealTableGroup();
+		if ( rootsToLock == null ) {
+			rootsToLock = new HashSet<>();
+		}
+		rootsToLock.add( root );
+	}
 
-			// we always want to lock tables which are part of the roots
-			trackTableGroup( tableGroup );
+	@Override
+	public void registerJoin(TableGroupJoin join) {
+		if ( rowLockStrategy == RowLockStrategy.NONE ) {
+			// no need to collect these
+			return;
 		}
 		else if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
 			// if the TableGroup is an owned (aka, non-inverse) collection,
 			// and we are to lock collections, track it
-			if ( tableGroup.getModelPart() instanceof PluralAttributeMapping attrMapping ) {
+			if ( join.getJoinedGroup().getModelPart() instanceof PluralAttributeMapping attrMapping ) {
 				if ( !attrMapping.getCollectionDescriptor().isInverse() ) {
 					// owned collection
 					if ( attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart ) {
 						// an element-collection
-						trackTableGroup( tableGroup );
+						trackJoin( join );
 					}
 				}
 			}
 		}
 		else if ( lockingScope == Locking.Scope.INCLUDE_FETCHES ) {
-			if ( tableGroup.isFetched() ) {
-				trackTableGroup( tableGroup );
+			if ( join.getJoinedGroup().isFetched() ) {
+				trackJoin( join );
 			}
 		}
 	}
 
-	private void trackTableGroup(TableGroup tableGroup) {
-		if ( tableGroupsToLock == null ) {
-			tableGroupsToLock = new LinkedHashSet<>();
+	private void trackJoin(TableGroupJoin join) {
+		if ( joinsToLock == null ) {
+			joinsToLock = new LinkedHashSet<>();
 		}
-		tableGroupsToLock.add( tableGroup );
+		joinsToLock.add( join );
 	}
 
+	@Override
+	public boolean containsOuterJoins() {
+		for ( TableGroup tableGroup : rootsToLock ) {
+			if ( tableGroup.getModelPart() instanceof JoinedSubclassEntityPersister ) {
+				// inherently has outer joins
+				return true;
+			}
+		}
+
+		if ( joinsToLock == null ) {
+			return false;
+		}
+		for ( TableGroupJoin tableGroupJoin : joinsToLock ) {
+			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+			if ( tableGroupJoin.isInitialized()
+				&& tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
+				&& !joinedGroup.isVirtual() ) {
+				return true;
+			}
+			if ( joinedGroup.getModelPart() instanceof JoinedSubclassEntityPersister ) {
+				// inherently has outer joins
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	@Override
 	public void render(SqlAppender sqlAppender) {
-		renderLockTerm( dialect, lockKind, timeout, sqlAppender );
-		renderRowLocking( rowLockStrategy, tableGroupsToLock, sqlAppender );
+		renderLockFragment( dialect, lockKind, timeout, rowLockStrategy, sqlAppender );
 		renderResultSetOptions( dialect, sqlAppender );
-		renderLockedRowHandling( timeout, sqlAppender );
 	}
 
-	protected void renderLockTerm(
+	protected void renderLockFragment(
 			Dialect dialect,
 			PessimisticLockKind lockKind,
 			int timeout,
+			RowLockStrategy rowLockStrategy,
 			SqlAppender sqlAppender) {
-		final String term = lockKind == PessimisticLockKind.SHARE
-				? dialect.getReadLockString( timeout )
-				: dialect.getWriteLockString( timeout );
-		sqlAppender.append( term );
+		final String fragment;
+		if ( rowLockStrategy == RowLockStrategy.NONE ) {
+			fragment = lockKind == PessimisticLockKind.SHARE
+					? dialect.getReadLockString( timeout )
+					: dialect.getWriteLockString( timeout );
+		}
+		else {
+			final String lockItemsFragment = collectLockItems();
+			fragment = lockKind == PessimisticLockKind.SHARE
+					? dialect.getReadLockString( lockItemsFragment, timeout )
+					: dialect.getWriteLockString( lockItemsFragment, timeout );
+		}
+		sqlAppender.append( fragment );
 	}
 
-	protected void renderRowLocking(RowLockStrategy rowLockStrategy, Set<TableGroup> tableGroupsToLock, SqlAppender sqlAppender) {
-		if ( rowLockStrategy == RowLockStrategy.NONE ) {
-			return;
-		}
-
-		assert tableGroupsToLock != null && !tableGroupsToLock.isEmpty();
-
-		sqlAppender.append( " of " );
-
+	private String collectLockItems() {
 		final List<String> lockItems = new ArrayList<>();
-		for ( TableGroup tableGroup : tableGroupsToLock ) {
-			collectLockItems( tableGroup, lockItems );
+		for ( TableGroup root : rootsToLock ) {
+			collectLockItems( root, lockItems );
+		}
+		if ( joinsToLock != null ) {
+			for ( TableGroupJoin join : joinsToLock ) {
+				collectLockItems( join.getJoinedGroup(), lockItems );
+			}
 		}
 
+		final StringBuilder buffer = new StringBuilder();
 		boolean first = true;
 		for ( String lockItem : lockItems ) {
 			if ( first ) {
 				first = false;
 			}
 			else {
-				sqlAppender.appendSql( ',' );
+				buffer.append( ',' );
 			}
-			sqlAppender.appendSql( lockItem );
+			buffer.append( lockItem );
 		}
+
+		return buffer.toString();
 	}
 
 	protected void renderResultSetOptions(Dialect dialect, SqlAppender sqlAppender) {
 		// hook for Derby
-	}
-
-	protected void renderLockedRowHandling(int timeout, SqlAppender sqlAppender) {
-		if ( timeout == Timeouts.NO_WAIT_MILLI ) {
-			if ( dialect.supportsNoWait() ) {
-				sqlAppender.append( dialect.getForUpdateNowaitString() );
-			}
-		}
-		else if ( timeout == Timeouts.SKIP_LOCKED_MILLI ) {
-			if ( dialect.supportsSkipLocked() ) {
-				sqlAppender.append( dialect.getForUpdateSkipLockedString() );
-			}
-		}
-		else if ( timeout > 0 ) {
-			if ( dialect.supportsLockTimeouts() ) {
-				sqlAppender.append( " wait " );
-				sqlAppender.append( Integer.toString( Timeouts.getTimeoutInSeconds( timeout ) ) );
-			}
-		}
 	}
 
 	private void collectLockItems(TableGroup tableGroup, List<String> lockItems) {

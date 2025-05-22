@@ -4537,43 +4537,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void renderRowsToClause(QuerySpec querySpec) {
-		if ( querySpec.isRoot() && hasLimit() ) {
-			prepareLimitOffsetParameters();
-			renderRowsToClause( getOffsetParameter(), getLimitParameter() );
-		}
-		else {
-			assertRowsOnlyFetchClauseType( querySpec );
-			renderRowsToClause( querySpec.getOffsetClauseExpression(), querySpec.getFetchClauseExpression() );
-		}
-	}
-
-	protected void renderRowsToClause(Expression offsetClauseExpression, Expression fetchClauseExpression) {
-		if ( fetchClauseExpression != null ) {
-			appendSql( "rows " );
-			final Stack<Clause> clauseStack = getClauseStack();
-			clauseStack.push( Clause.FETCH );
-			try {
-				renderFetchExpression( fetchClauseExpression );
-			}
-			finally {
-				clauseStack.pop();
-			}
-			if ( offsetClauseExpression != null ) {
-				clauseStack.push( Clause.OFFSET );
-				try {
-					appendSql( " to " );
-					// According to RowsLimitHandler this is 1 based so we need to add 1 to the offset
-					renderFetchPlusOffsetExpression( fetchClauseExpression, offsetClauseExpression, 1 );
-				}
-				finally {
-					clauseStack.pop();
-				}
-			}
-			appendSql( WHITESPACE );
-		}
-	}
-
 	protected void renderFetchPlusOffsetExpression(
 			Expression fetchClauseExpression,
 			Expression offsetClauseExpression,

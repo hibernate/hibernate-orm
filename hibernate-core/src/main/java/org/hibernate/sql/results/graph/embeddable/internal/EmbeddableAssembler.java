@@ -4,14 +4,14 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.function.BiConsumer;
-
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.InitializerData;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.function.BiConsumer;
 
 /**
  * @author Steve Ebersole
@@ -31,8 +31,10 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	@Override
 	public Object assemble(RowProcessingState rowProcessingState) {
 		final InitializerData data = initializer.getData( rowProcessingState );
-		final Initializer.State state = data.getState();
-		if ( state == Initializer.State.KEY_RESOLVED ) {
+		if ( Initializer.State.UNINITIALIZED.equals( data.getState() ) ) {
+			initializer.resolveKey( data );
+		}
+		if ( Initializer.State.KEY_RESOLVED.equals( data.getState() ) ) {
 			initializer.resolveInstance( data );
 		}
 		return initializer.getResolvedInstance( data );

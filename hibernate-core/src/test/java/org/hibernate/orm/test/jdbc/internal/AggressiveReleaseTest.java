@@ -20,6 +20,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.hibernate.testing.boot.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.jupiter.api.AfterEach;
@@ -118,9 +119,9 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testBasicRelease() {
-		connectionProvider.clear();
 		ResourceRegistry registry = sessionFactoryScope().fromSession(
 				session -> {
+					connectionProvider.clear();
 					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 					try {
@@ -155,9 +156,9 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testReleaseCircumventedByHeldResources() {
-		connectionProvider.clear();
 		ResourceRegistry registry = sessionFactoryScope().fromSession(
 				session -> {
+					connectionProvider.clear();
 					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 
@@ -219,10 +220,9 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testReleaseCircumventedManually() {
-		connectionProvider.clear();
-		connectionProvider.clear();
 		ResourceRegistry registry = sessionFactoryScope().fromSession(
 				session -> {
+					connectionProvider.clear();
 					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 
@@ -274,5 +274,21 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 		assertFalse( registry.hasRegisteredResources() );
 		assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
 		assertEquals( 2, connectionProvider.getReleasedConnections().size() );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19477")
+	public void testHql() {
+		sessionFactoryScope().inTransaction( session -> {
+			connectionProvider.clear();
+			JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
+			ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
+
+			session.createSelectionQuery( "select 1" ).uniqueResult();
+
+			assertFalse( resourceRegistry.hasRegisteredResources() );
+			assertEquals( 0, connectionProvider.getAcquiredConnections().size() );
+			assertEquals( 1, connectionProvider.getReleasedConnections().size() );
+		} );
 	}
 }

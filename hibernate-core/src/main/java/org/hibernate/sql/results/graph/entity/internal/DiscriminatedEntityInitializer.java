@@ -226,14 +226,14 @@ public class DiscriminatedEntityInitializer
 					// Read the discriminator from the result set if necessary
 					final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
 					data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			else {
 				data.setState( State.INITIALIZED );
 				if ( keyIsEager ) {
 					data.concreteDescriptor = rowProcessingState.getSession().getEntityPersister( null, lazyInitializer.getImplementation() );
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			data.setInstance( instance );

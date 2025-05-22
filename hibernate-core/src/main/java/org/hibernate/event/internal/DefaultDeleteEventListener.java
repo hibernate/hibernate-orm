@@ -109,7 +109,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 				final EventSource source = event.getSession();
 				final EntityPersister persister = event.getFactory().getMappingMetamodel()
 						.findEntityDescriptor( lazyInitializer.getEntityName() );
-				final Object id = lazyInitializer.getIdentifier();
+				final Object id = lazyInitializer.getInternalIdentifier();
 				final EntityKey key = source.generateEntityKey( id, persister );
 				final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 				if ( !persistenceContext.containsEntity( key )

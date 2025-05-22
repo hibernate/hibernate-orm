@@ -703,7 +703,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		if ( initializer != null ) {
 			if ( initializer.isUninitialized() ) {
 				final String entityName = initializer.getEntityName();
-				final Object id = initializer.getIdentifier();
+				final Object id = initializer.getInternalIdentifier();
 				initializer.setSession( this );
 				persistenceContext.beforeLoad();
 				try {

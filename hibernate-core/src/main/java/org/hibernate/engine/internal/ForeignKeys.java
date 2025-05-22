@@ -226,7 +226,7 @@ public final class ForeignKeys {
 					// an unloaded proxy might be scheduled for deletion
 					return persistenceContext.containsDeletedUnloadedEntityKey(
 							session.generateEntityKey(
-									lazyInitializer.getIdentifier(),
+									lazyInitializer.getInternalIdentifier(),
 									session.getFactory().getMappingMetamodel()
 											.getEntityDescriptor( lazyInitializer.getEntityName() )
 							)

@@ -1788,7 +1788,7 @@ public class SessionImpl
 		checkOpen();
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
-			return (T) getReference( lazyInitializer.getPersistentClass(), lazyInitializer.getIdentifier() );
+			return (T) getReference( lazyInitializer.getPersistentClass(), lazyInitializer.getInternalIdentifier() );
 		}
 		else {
 			EntityPersister persister = getEntityPersister( null, object );

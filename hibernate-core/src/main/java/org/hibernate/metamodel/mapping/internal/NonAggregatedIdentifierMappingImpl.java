@@ -246,7 +246,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 		if ( hasContainingClass() ) {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 			if ( lazyInitializer != null ) {
-				return lazyInitializer.getIdentifier();
+				return lazyInitializer.getInternalIdentifier();
 			}
 			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];

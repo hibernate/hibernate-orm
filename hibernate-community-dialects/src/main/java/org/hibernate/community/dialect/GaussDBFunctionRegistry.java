@@ -45,24 +45,6 @@ public class GaussDBFunctionRegistry {
 	}
 
 	public void register() {
-		functionContributions.getFunctionRegistry().register( "min", new GaussDBMinMaxFunction( "min" ) );
-		functionContributions.getFunctionRegistry().register( "max", new GaussDBMinMaxFunction( "max" ) );
-
-		// uses # instead of ^ for XOR
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1 # ?2)" )
-				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-				.register();
-
-		functionContributions.getFunctionRegistry().register(
-				"round", new GaussDBTruncRoundFunction( "round", true )
-		);
-		functionContributions.getFunctionRegistry().register(
-				"trunc",
-				new GaussDBTruncFunction( true, functionContributions.getTypeConfiguration() )
-		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
-
 		CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions);
 		functionFactory.cot();
 		functionFactory.radians();
@@ -114,6 +96,24 @@ public class GaussDBFunctionRegistry {
 		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "sha256(?1)" );
 		functionFactory.md5( "decode(md5(?1), 'hex')" );
+
+		functionContributions.getFunctionRegistry().register( "min", new GaussDBMinMaxFunction( "min" ) );
+		functionContributions.getFunctionRegistry().register( "max", new GaussDBMinMaxFunction( "max" ) );
+
+		// uses # instead of ^ for XOR
+		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1 # ?2)" )
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		functionContributions.getFunctionRegistry().register(
+				"round", new GaussDBTruncRoundFunction( "round", true )
+		);
+		functionContributions.getFunctionRegistry().register(
+				"trunc",
+				new GaussDBTruncFunction( true, functionContributions.getTypeConfiguration() )
+		);
+		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 
 		format_toChar_gaussdb();
 		array_gaussdb();

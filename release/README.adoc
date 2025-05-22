@@ -1,47 +1,20 @@
 = ORM Releases
 :toc:
 
-This module performs the tasks needed as part of creating a release for Hibernate ORM.
-Releases are triggered as a link:../ci/release/Jenkinsfile[Jenkins pipeline].
+== Where is the information
 
+If you're looking for information about how to release Hibernate ORM, see link:/MAINTAINERS.md[MAINTAINERS.md]
+
+If you're looking for information about how releases are implemented technically, read on.
+
+== How it works
+
+Releases are triggered as a link:../ci/release/Jenkinsfile[Jenkins pipeline].
 Hibernate ORM also publishes SNAPSHOT releases using an automated link:../ci/snapshot-publish.Jenkinsfile[Jenkins pipeline],
 which is triggered on a merge to the main branch. This job requires no user interactions.
 
-== Preparation
-
-There are a few steps that need to be performed prior to starting the release job:
-
-. Pull all upstream changes and perform `./gradlew preVerifyRelease`.
-. Verify issues in the Jira version
-.. Remove fix version for anything rejected, etc.
-.. Move unresolved issues to another version
-. Mark version released in Jira
-. Bulk close all issues in the Jira version
-
-=== New Series
-
-If this is a new series, some additional steps are required to prepare the website:
-
-. Create the series descriptor
-.. create the directory `_data/projects/orm/releases/${family_name}`
-.. create the file `series.yml`
-.. add the appropriate content (_generally this can be copied from previous series_)
-. Create the series listing
-.. create the directory `orm/releases/${family_name}`
-.. create the file `index.adoc`
-.. add listing of all new features in the series
-. Create the documentation listing
-.. create the directory `orm/documentation/${family_name}`
-.. create the file `index.adoc`
-.. add links to all documentation (_generally this can be copied from previous series_)
-. If this new series is to support a new JPA release, also be sure to update `orm/releases/index.adoc`
-
-
-== Perform the Release
-
-Start the appropriate Jenkins https://ci.hibernate.org/view/Release/job/hibernate-orm-release[job].
-
-NOTE: When a release is started, the job coordinates with the unified Hibernate https://github.com/hibernate/hibernate-release-scripts[release scripts] in a number of stages and steps,
+When a release job is started,
+the job coordinates with the unified Hibernate https://github.com/hibernate/hibernate-release-scripts[release scripts] in a number of stages and steps,
 calling tasks on this module's link:./release.gradle[Gradle script] and leveraging link:../jreleaser.yml[JReleaser configuration].
 
 NOTE: Snapshot releases are not relying on JReleaser but on built-in Gradle publish plugin. See the link:../ci/snapshot-publish.Jenkinsfile[Jenkinsfile].
@@ -75,18 +48,4 @@ See https://plugins.gradle.org/plugin/org.hibernate.orm
 === Documentation
 
 All documentation for the release is generated, assembled and then published to the https://docs.jboss.org/hibernate/orm/[documentation server].
-
-
-== Announce
-
-If the release is a maintenance release, there is nothing more to do.
-
-However, for Alpha, Beta, CR and first Final releases some announcements are in order:
-
-. Write a release announcement blog post.
-. Announce the release, with link to the blob post:
-.. on the hibernate-dev and hibernate-announce mailing lists
-.. on the https://discourse.hibernate.org/[forums]
-.. on Twitter
-.. anywhere else you wish (BlueSky, etc).
 

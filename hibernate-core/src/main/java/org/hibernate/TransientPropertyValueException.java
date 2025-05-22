@@ -77,8 +77,8 @@ public class TransientPropertyValueException extends TransientObjectException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " for entity "
+		return super.getMessage() + " ["
 				+ qualify( propertyOwnerEntityName, propertyName )
-				+ " -> " + transientEntityName;
+				+ " -> " + transientEntityName + "]";
 	}
 }

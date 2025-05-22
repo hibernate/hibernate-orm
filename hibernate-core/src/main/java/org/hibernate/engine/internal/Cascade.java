@@ -162,6 +162,7 @@ public final class Cascade {
 							action,
 							cascadePoint,
 							eventSource,
+							persister.getEntityName(),
 							null,
 							parent,
 							child,
@@ -203,6 +204,7 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
+			final String entityName,
 			List<String> componentPath,
 			final Object parent,
 			final Object child,
@@ -219,6 +221,8 @@ public final class Cascade {
 							action,
 							cascadePoint,
 							eventSource,
+							entityName,
+							propertyName,
 							componentPath,
 							parent,
 							child,
@@ -240,6 +244,7 @@ public final class Cascade {
 						action,
 						cascadePoint,
 						eventSource,
+						entityName,
 						componentPath,
 						parent,
 						child,
@@ -385,6 +390,7 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
+			final String entityName,
 			final List<String> componentPath,
 			final Object parent,
 			final Object child,
@@ -398,7 +404,7 @@ public final class Cascade {
 			final String subPropertyName = propertyNames[i];
 			final Type subPropertyType = types[i];
 			if ( action.appliesTo( subPropertyType, componentPropertyStyle )
-				|| componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
+					|| componentPropertyStyle.hasOrphanDelete() && action.deleteOrphans() ) {
 				if ( children == null ) {
 					// Get children on demand.
 					children = componentType.getPropertyValues( child, eventSource );
@@ -407,6 +413,7 @@ public final class Cascade {
 						action,
 						cascadePoint,
 						eventSource,
+						entityName,
 						componentPath,
 						parent,
 						children[i],
@@ -424,6 +431,8 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
+			final String entityName,
+			final String propertyName,
 			final List<String> componentPath,
 			final Object parent,
 			final Object child,
@@ -432,13 +441,27 @@ public final class Cascade {
 			final T anything,
 			final boolean isCascadeDeleteEnabled) {
 		if ( type instanceof EntityType || type instanceof AnyType ) {
-			cascadeToOne( action, eventSource, parent, child, type, style, anything, isCascadeDeleteEnabled );
+			cascadeToOne(
+					action,
+					eventSource,
+					parent,
+					child,
+					type,
+					style,
+					anything,
+					isCascadeDeleteEnabled,
+					entityName,
+					propertyName,
+					componentPath
+			);
 		}
 		else if ( type instanceof CollectionType collectionType ) {
 			cascadeCollection(
 					action,
 					cascadePoint,
 					eventSource,
+					entityName,
+					propertyName,
 					componentPath,
 					parent,
 					child,
@@ -456,6 +479,8 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
+			final String entityName,
+			final String propertyName,
 			final List<String> componentPath,
 			final Object parent,
 			final Object child,
@@ -474,6 +499,8 @@ public final class Cascade {
 						? CascadePoint.AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION
 						: cascadePoint,
 				eventSource,
+				entityName,
+				propertyName,
 				componentPath,
 				parent,
 				child,
@@ -497,17 +524,27 @@ public final class Cascade {
 			final Type type,
 			final CascadeStyle style,
 			final T anything,
-			final boolean isCascadeDeleteEnabled) {
-		final String entityName =
-				type instanceof EntityType entityType
-						? entityType.getAssociatedEntityName()
-						: null;
+			final boolean isCascadeDeleteEnabled,
+			final String parentEntityName,
+			final String propertyName,
+			final List<String> componentPath) {
 		if ( style.reallyDoCascade( action ) ) {
 			//not really necessary, but good for consistency...
 			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
 			persistenceContext.addChildParent( child, parent );
 			try {
-				action.cascade( eventSource, child, entityName, anything, isCascadeDeleteEnabled );
+				action.cascade(
+						eventSource,
+						child,
+						type instanceof EntityType entityType
+								? entityType.getAssociatedEntityName()
+								: null,
+						parentEntityName,
+						propertyName,
+						componentPath,
+						anything,
+						isCascadeDeleteEnabled
+				);
 			}
 			finally {
 				persistenceContext.removeChildParent( child );
@@ -522,6 +559,8 @@ public final class Cascade {
 			final CascadingAction<T> action,
 			final CascadePoint cascadePoint,
 			final EventSource eventSource,
+			final String entityName,
+			final String propertyName,
 			final List<String> componentPath,
 			final Object parent,
 			final Object child,
@@ -546,12 +585,14 @@ public final class Cascade {
 						action,
 						cascadePoint,
 						eventSource,
+						entityName,
 						componentPath,
 						parent,
 						iterator.next(),
 						elemType,
 						style,
-						collectionType.getRole().substring( collectionType.getRole().lastIndexOf('.') + 1 ),
+						propertyName,
+//						collectionType.getRole().substring( collectionType.getRole().lastIndexOf('.') + 1 ),
 						anything,
 						isCascadeDeleteEnabled
 				);
@@ -583,8 +624,8 @@ public final class Cascade {
 			// we can do the cast since orphan-delete does not apply to:
 			// 1. newly instantiated collections
 			// 2. arrays (we can't track orphans for detached arrays)
-			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
-			deleteOrphans( eventSource, entityName, persistentCollection );
+			final String elementEntityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
+			deleteOrphans( eventSource, elementEntityName, persistentCollection );
 
 			if ( traceEnabled ) {
 				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );

@@ -115,7 +115,7 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 				// TODO should be a TransientPropertyValueException
 				throw new TransientObjectException( "object references an unsaved transient instance of '"
 						+ (entityName == null ? session.guessEntityName( entity ) : entityName)
-						+ "' save the transient instance before flushing" );
+						+ "' (persist the transient instance before flushing)" );
 			}
 			return getIdentifier( entity );
 		}

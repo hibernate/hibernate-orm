@@ -5,8 +5,9 @@
 package org.hibernate.engine.spi;
 
 import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.HibernateException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
@@ -27,17 +28,38 @@ public interface CascadingAction<T> {
 	 *
 	 * @param session The session within which the cascade is occurring.
 	 * @param child The child to which cascading should be performed.
-	 * @param entityName The child's entity name
-	 * @param anything Anything ;)  Typically some form of cascade-local cache
-	 * which is specific to each CascadingAction type
+	 * @param childEntityName The name of the child entity
+	 * @param parentEntityName The name of the parent entity
+	 * @param propertyName The name of the attribute of the parent entity being cascaded
+	 * @param attributePath The full path of the attribute of the parent entity being cascaded
+	 * @param anything Anything ;) Typically some form of cascade-local cache
+	 *                 which is specific to each {@link CascadingAction} type
 	 * @param isCascadeDeleteEnabled Are cascading deletes enabled.
 	 */
 	void cascade(
 			EventSource session,
 			Object child,
-			String entityName,
+			String childEntityName,
+			String parentEntityName,
+			String propertyName,
+			@Nullable List<String> attributePath,
 			T anything,
-			boolean isCascadeDeleteEnabled) throws HibernateException;
+			boolean isCascadeDeleteEnabled);
+
+	/**
+	 * @deprecated No longer called. Will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	default void cascade(
+			EventSource session,
+			Object child,
+			String childEntityName,
+			T anything,
+			boolean isCascadeDeleteEnabled) {
+		cascade( session, child, childEntityName,
+				"", "", null,
+				anything, isCascadeDeleteEnabled );
+	}
 
 	/**
 	 * Given a collection, get an iterator of the children upon which the

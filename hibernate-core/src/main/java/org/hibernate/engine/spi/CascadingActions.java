@@ -9,7 +9,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.TransientObjectException;
+import org.hibernate.TransientPropertyValueException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.event.spi.DeleteContext;
@@ -28,10 +28,12 @@ import org.jboss.logging.Logger;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
+import java.util.List;
 
 import static java.util.Collections.emptyIterator;
 import static org.hibernate.engine.internal.ForeignKeys.isTransient;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.internal.util.StringHelper.join;
 
 /**
  * @author Steve Ebersole
@@ -57,11 +59,14 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
 				DeleteContext context,
 				boolean isCascadeDeleteEnabled) {
-			LOG.tracev( "Cascading to delete: {0}", entityName );
-			session.delete( entityName, child, isCascadeDeleteEnabled, context );
+			LOG.tracev( "Cascading to delete: {0}", childEntityName );
+			session.delete( childEntityName, child, isCascadeDeleteEnabled, context );
 		}
 
 		@Override
@@ -110,11 +115,14 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
 				LockOptions lockOptions,
 				boolean isCascadeDeleteEnabled) {
-			LOG.tracev( "Cascading to lock: {0}", entityName );
-			session.lock( entityName, child, lockOptions );
+			LOG.tracev( "Cascading to lock: {0}", childEntityName );
+			session.lock( childEntityName, child, lockOptions );
 		}
 
 		@Override
@@ -146,12 +154,15 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
 				RefreshContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to refresh: {0}", entityName );
-			session.refresh( entityName, child, context );
+			LOG.tracev( "Cascading to refresh: {0}", childEntityName );
+			session.refresh( childEntityName, child, context );
 		}
 
 		@Override
@@ -182,11 +193,14 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
 				Void nothing,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to evict: {0}", entityName );
+			LOG.tracev( "Cascading to evict: {0}", childEntityName );
 			session.evict( child );
 		}
 
@@ -223,12 +237,15 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
 				MergeContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to merge: {0}", entityName );
-			session.merge( entityName, child, context );
+			LOG.tracev( "Cascading to merge: {0}", childEntityName );
+			session.merge( childEntityName, child, context );
 		}
 
 		@Override
@@ -260,12 +277,15 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
 				PersistContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to persist: {0}", entityName );
-			session.persist( entityName, child, context );
+			LOG.tracev( "Cascading to persist: {0}", childEntityName );
+			session.persist( childEntityName, child, context );
 		}
 
 		@Override
@@ -308,12 +328,15 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
-				PersistContext anything,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
+				PersistContext context,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to persist on flush: {0}", entityName );
-			session.persistOnFlush( entityName, child, anything );
+			LOG.tracev( "Cascading to persist on flush: {0}", childEntityName );
+			session.persistOnFlush( childEntityName, child, context );
 		}
 
 		@Override
@@ -357,20 +380,24 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
-				Void context,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
+				Void nothing,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			if ( child != null && isChildTransient( session, child, entityName ) ) {
-				throw new TransientObjectException( "Persistent instance references an unsaved transient instance of '"
-						+ entityName + "' (save the transient instance before flushing)" );
-				//TODO: should be TransientPropertyValueException
-//				throw new TransientPropertyValueException(
-//						"object references an unsaved transient instance - save the transient instance before flushing",
-//						entityName,
-//						persister.getEntityName(),
-//						persister.getPropertyNames()[propertyIndex]
-//				);
+			if ( child != null && isChildTransient( session, child, childEntityName ) ) {
+				throw new TransientPropertyValueException(
+						"Persistent instance of '" + parentEntityName
+							+ "' references an unsaved transient instance of '" + childEntityName
+							+ "' (persist the transient instance before flushing)",
+						childEntityName,
+						parentEntityName,
+						attributePath == null
+								? propertyName
+								: join( ".", attributePath ) + '.' + propertyName
+				);
 			}
 		}
 
@@ -497,12 +524,15 @@ public class CascadingActions {
 		public void cascade(
 				EventSource session,
 				Object child,
-				String entityName,
-				ReplicationMode anything,
+				String childEntityName,
+				String parentEntityName,
+				String propertyName,
+				List<String> attributePath,
+				ReplicationMode mode,
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
-			LOG.tracev( "Cascading to replicate: {0}", entityName );
-			session.replicate( entityName, child, anything );
+			LOG.tracev( "Cascading to replicate: {0}", childEntityName );
+			session.replicate( childEntityName, child, mode );
 		}
 
 		@Override

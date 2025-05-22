@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
-import org.hibernate.TransientObjectException;
+import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -497,11 +497,15 @@ public class ActionQueue {
 			final NonNullableTransientDependencies transientEntities = insertAction.findNonNullableTransientEntities();
 			final Object transientEntity = transientEntities.getNonNullableTransientEntities().iterator().next();
 			final String path = transientEntities.getNonNullableTransientPropertyPaths(transientEntity).iterator().next();
-			//TODO: should be TransientPropertyValueException
-			throw new TransientObjectException( "Persistent instance of '" + insertAction.getEntityName()
-					+ "' with id [" + insertAction.getId()
-					+ "] references an unsaved transient instance via attribute '" + path
-					+ "' (save the transient instance before flushing)" );
+			final String transientEntityName = session.bestGuessEntityName( transientEntity );
+			final String entityName = insertAction.getEntityName();
+			throw new TransientPropertyValueException(
+					"Persistent instance of '" + entityName + "' with id [" + insertAction.getId()
+					+ "] references an unsaved transient instance of '" + transientEntityName
+					+ "' (persist the transient instance before flushing)",
+					entityName,
+					transientEntityName,
+					path );
 		}
 
 		for ( OrderedActions action : ORDERED_OPERATIONS ) {

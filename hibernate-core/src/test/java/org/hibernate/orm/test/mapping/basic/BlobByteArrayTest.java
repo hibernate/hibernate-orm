@@ -13,8 +13,6 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.community.dialect.GaussDBDialect;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -30,7 +28,6 @@ public class BlobByteArrayTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support byte array operations through lob type")
 	public void test() {
 		Integer productId = doInJPA(this::entityManagerFactory, entityManager -> {
 			final Product product = new Product();

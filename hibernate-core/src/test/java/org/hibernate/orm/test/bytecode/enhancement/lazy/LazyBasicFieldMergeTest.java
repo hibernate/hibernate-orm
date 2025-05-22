@@ -20,8 +20,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.community.dialect.GaussDBDialect;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,7 +41,6 @@ import org.junit.jupiter.api.Test;
 public class LazyBasicFieldMergeTest {
 
 	@Test
-	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support byte array operations through lob type")
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Manager manager = new Manager();

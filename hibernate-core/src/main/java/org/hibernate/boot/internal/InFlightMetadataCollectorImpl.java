@@ -104,6 +104,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -145,7 +146,7 @@ public class InFlightMetadataCollectorImpl
 
 	private final UUID uuid;
 
-	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
+	private final Map<String,PersistentClass> entityBindingMap = new LinkedHashMap<>();
 	private final List<Component> composites = new ArrayList<>();
 	private final Map<Class<?>, Component> genericComponentsMap = new HashMap<>();
 	private final Map<ClassDetails, List<ClassDetails>> embeddableSubtypes = new HashMap<>();

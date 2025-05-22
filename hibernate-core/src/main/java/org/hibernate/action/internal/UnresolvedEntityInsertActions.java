@@ -115,12 +115,17 @@ public class UnresolvedEntityInsertActions {
 			final Object firstTransientDependency =
 					nonNullableTransientDependencies.getNonNullableTransientEntities().iterator().next();
 			final String firstPropertyPath =
-					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency ).iterator().next();
-
+					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency )
+							.iterator().next();
+			final String entityName = firstDependentAction.getEntityName();
+			final String transientEntityName =
+					firstDependentAction.getSession().guessEntityName( firstTransientDependency );
 			throw new TransientPropertyValueException(
-					"Not-null property references a transient value - transient instance must be saved before current operation",
-					firstDependentAction.getSession().guessEntityName( firstTransientDependency ),
-					firstDependentAction.getEntityName(),
+					"Instance of '" + entityName
+						+ "' references an unsaved transient instance of '" + transientEntityName
+						+ "' (persist the transient instance)",
+					transientEntityName,
+					entityName,
 					firstPropertyPath
 			);
 		}

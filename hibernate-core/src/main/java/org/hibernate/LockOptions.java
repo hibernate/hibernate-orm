@@ -195,6 +195,12 @@ public class LockOptions implements Serializable {
 		if ( immutable ) {
 			throw new UnsupportedOperationException("immutable global instance of LockOptions");
 		}
+		if ( lockMode == LockMode.UPGRADE_NOWAIT ) {
+			timeout = Timeouts.NO_WAIT_MILLI;
+		}
+		else if ( lockMode == LockMode.UPGRADE_SKIPLOCKED ) {
+			timeout = Timeouts.SKIP_LOCKED_MILLI;
+		}
 		this.lockMode = lockMode;
 		return this;
 	}

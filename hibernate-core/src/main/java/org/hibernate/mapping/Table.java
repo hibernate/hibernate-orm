@@ -297,7 +297,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	@Internal
 	public void columnRenamed(Column column) {
-		for ( Map.Entry<String, Column> entry : columns.entrySet() ) {
+		for ( var entry : columns.entrySet() ) {
 			if ( entry.getValue() == column ) {
 				columns.remove( entry.getKey() );
 				columns.put( column.getCanonicalName(), column );
@@ -330,12 +330,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	private int sizeOfUniqueKeyMapOnLastCleanse;
 
 	private void cleanseUniqueKeyMapIfNeeded() {
-		if ( uniqueKeys.size() == sizeOfUniqueKeyMapOnLastCleanse ) {
-			// nothing to do
-			return;
+		if ( uniqueKeys.size() != sizeOfUniqueKeyMapOnLastCleanse ) {
+			cleanseUniqueKeyMap();
+			sizeOfUniqueKeyMapOnLastCleanse = uniqueKeys.size();
 		}
-		cleanseUniqueKeyMap();
-		sizeOfUniqueKeyMapOnLastCleanse = uniqueKeys.size();
 	}
 
 	private void cleanseUniqueKeyMap() {
@@ -351,57 +349,47 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		if ( !uniqueKeys.isEmpty() ) {
 			if ( uniqueKeys.size() == 1 ) {
 				// we have to worry about condition 2 above, but not condition 1
-				final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
+				final var uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
 				if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
 					uniqueKeys.remove( uniqueKeyEntry.getKey() );
 				}
 			}
 			else {
 				// we have to check both conditions 1 and 2
-				final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
-				while ( uniqueKeyEntries.hasNext() ) {
-					final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
-					final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
-					boolean removeIt = false;
-
-					// Never remove explicit unique keys based on column matching
-					if ( !uniqueKey.isExplicit() ) {
-						// condition 1 : check against other unique keys
-						for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
-							// make sure it's not the same unique key
-							if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
-								continue;
-							}
-							if ( otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
-									&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
-								removeIt = true;
-								break;
-							}
-						}
-					}
-
-					// condition 2 : check against pk
-					if ( !removeIt && isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
-						primaryKey.setOrderingUniqueKey(uniqueKeyEntry.getValue());
-						removeIt = true;
-					}
-
-					if ( removeIt ) {
-						//uniqueKeys.remove( uniqueKeyEntry.getKey() );
-						uniqueKeyEntries.remove();
-					}
-				}
+				//uniqueKeys.remove( uniqueKeyEntry.getKey() );
+				uniqueKeys.entrySet().removeIf( entry -> isRedundantUniqueKey( entry.getValue() ) );
 			}
 		}
 	}
 
-	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
-		if ( primaryKey == null || primaryKey.getColumns().isEmpty() ) {
-			// happens for many-to-many tables
-			return false;
+	public boolean isRedundantUniqueKey(UniqueKey uniqueKey) {
+
+		// Never remove explicit unique keys based on column matching
+		if ( !uniqueKey.isExplicit() ) {
+			// condition 1 : check against other unique keys
+			for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
+				// make sure it's not the same unique key
+				if ( uniqueKey != otherUniqueKey
+						&& otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
+						&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
+					return true;
+				}
+			}
 		}
-		return primaryKey.getColumns().containsAll( uniqueKey.getColumns() )
-			&& primaryKey.getColumns().size() == uniqueKey.getColumns().size();
+
+		// condition 2 : check against pk
+		if ( isSameAsPrimaryKeyColumns( uniqueKey ) ) {
+			primaryKey.setOrderingUniqueKey( uniqueKey );
+			return true;
+		}
+
+		return false;
+	}
+
+	private boolean isSameAsPrimaryKeyColumns(UniqueKey uniqueKey) {
+		return primaryKey != null && !primaryKey.getColumns().isEmpty() // happens for many-to-many tables
+			&& primaryKey.getColumns().size() == uniqueKey.getColumns().size()
+			&& primaryKey.getColumns().containsAll( uniqueKey.getColumns() );
 	}
 
 	@Override

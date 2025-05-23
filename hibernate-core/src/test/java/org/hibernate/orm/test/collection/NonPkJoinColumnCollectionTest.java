@@ -108,8 +108,8 @@ public class NonPkJoinColumnCollectionTest {
 					Order order = new Order( "some_ref" );
 					Item item = new Item( "Abc" );
 					order.addItem( item );
-					session.persist( item );
 					session.persist( order );
+					session.persist( item );
 					session.flush();
 					session.clear();
 

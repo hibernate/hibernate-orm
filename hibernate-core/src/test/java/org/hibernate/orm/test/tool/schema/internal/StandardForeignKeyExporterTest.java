@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.tool.schema.internal;
 
-import java.util.Collection;
 import java.util.Optional;
 
 import org.hibernate.boot.MetadataSources;

@@ -51,8 +51,8 @@ public class StandardForeignKeyExporterTest {
 			SqlStringGenerationContext sqlStringGenerationContext =
 					SqlStringGenerationContextImpl.forTests( database.getJdbcEnvironment() );
 
-			Collection<ForeignKey>  fks = database.getDefaultNamespace().locateTable( Identifier.toIdentifier( "PERSON" ) ).getForeignKeys().values();
-			assertEquals( fks.size(), 1 );
+			var fks = database.getDefaultNamespace().locateTable( Identifier.toIdentifier( "PERSON" ) ).getForeignKeyCollection();
+			assertEquals( 1, fks.size() );
 			final Optional<ForeignKey> foreignKey = fks.stream().findFirst();
 
 			final String[] sqlCreateStrings = new H2Dialect().getForeignKeyExporter().getSqlCreateStrings(
@@ -60,8 +60,10 @@ public class StandardForeignKeyExporterTest {
 					bootModel,
 					sqlStringGenerationContext
 			);
-			assertEquals( sqlCreateStrings.length, 1 );
-			assertEquals( sqlCreateStrings[0], "alter table if exists PERSON add constraint fk_firstLastName foreign key (pkFirstName, pkLastName) references PERSON" );
+			assertEquals( 1, sqlCreateStrings.length );
+			assertEquals(
+					"alter table if exists PERSON add constraint fk_firstLastName foreign key (pkFirstName, pkLastName) references PERSON",
+					sqlCreateStrings[0] );
 		}
 	}
 

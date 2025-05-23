@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -32,6 +33,7 @@ import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
@@ -318,6 +320,15 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return unmodifiableMap( indexes );
 	}
 
+	@Incubating
+	public Collection<ForeignKey> getForeignKeyCollection() {
+		return unmodifiableCollection( foreignKeys.values() );
+	}
+
+	/**
+	 * @deprecated because {@link ForeignKeyKey} should be private.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public Map<ForeignKeyKey, ForeignKey> getForeignKeys() {
 		return unmodifiableMap( foreignKeys );
 	}
@@ -592,6 +603,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			for ( Column keyColumn : keyColumns ) {
 				foreignKey.addColumn( keyColumn );
 			}
+
+			// null referencedColumns means a reference to primary key
 			if ( referencedColumns != null ) {
 				foreignKey.addReferencedColumns( referencedColumns );
 			}
@@ -611,16 +624,16 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	}
 
 	/**
-	 * Checks for uniqueKey containing only whole primary key and sets
-	 * 	order of the columns accordingly
+	 * Checks for unique key containing only whole primary key and sets
+	 * order of the columns accordingly
 	 */
 	private void checkPrimaryKeyUniqueKey() {
-		final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
+		final var uniqueKeyEntries = uniqueKeys.entrySet().iterator();
 		while ( uniqueKeyEntries.hasNext() ) {
-			final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
-
-			if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
-				primaryKey.setOrderingUniqueKey(uniqueKeyEntry.getValue());
+			final var uniqueKeyEntry = uniqueKeyEntries.next();
+			final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
+			if ( isSameAsPrimaryKeyColumns( uniqueKey ) ) {
+				primaryKey.setOrderingUniqueKey( uniqueKey );
 				uniqueKeyEntries.remove();
 			}
 		}
@@ -749,6 +762,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.viewQuery = viewQuery;
 	}
 
+	@Deprecated(since = "7") // this class should be private!
 	public static class ForeignKeyKey implements Serializable {
 		private final String referencedClassName;
 		private final Column[] columns;
@@ -769,10 +783,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 
 		public boolean equals(Object other) {
-			if ( !(other instanceof ForeignKeyKey foreignKeyKey) ) {
-				return false;
-			}
-			return Arrays.equals( foreignKeyKey.columns, columns )
+			return other instanceof ForeignKeyKey foreignKeyKey
+				&& Arrays.equals( foreignKeyKey.columns, columns )
 				&& Arrays.equals( foreignKeyKey.referencedColumns, referencedColumns );
 		}
 

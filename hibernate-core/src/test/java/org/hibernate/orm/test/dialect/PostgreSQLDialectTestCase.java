@@ -143,9 +143,8 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		AlterTableUniqueDelegate alterTable = new AlterTableUniqueDelegate( dialect );
 		final Table table = new Table( "orm", "table_name" );
-		final UniqueKey uniqueKey = new UniqueKey();
+		final UniqueKey uniqueKey = new UniqueKey( table );
 		uniqueKey.setName( "unique_something" );
-		uniqueKey.setTable( table );
 		final String sql = alterTable.getAlterTableToDropUniqueKeyCommand(
 				uniqueKey,
 				null,

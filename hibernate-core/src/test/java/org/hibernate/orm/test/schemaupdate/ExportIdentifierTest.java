@@ -88,9 +88,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			final Table table = new Table( "orm", namespace, Identifier.toIdentifier( name ), false );
 			addExportIdentifier( table, exportIdentifierList, exportIdentifierSet );
 
-			final ForeignKey foreignKey = new ForeignKey();
+			final ForeignKey foreignKey = new ForeignKey( table );
 			foreignKey.setName( name );
-			foreignKey.setTable( table );
 			addExportIdentifier( foreignKey, exportIdentifierList, exportIdentifierSet );
 
 			final Index index = new Index();
@@ -102,9 +101,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 			primaryKey.setName( name );
 			addExportIdentifier( primaryKey, exportIdentifierList, exportIdentifierSet );
 
-			final UniqueKey uniqueKey = new UniqueKey();
+			final UniqueKey uniqueKey = new UniqueKey( table );
 			uniqueKey.setName( name );
-			uniqueKey.setTable( table );
 			addExportIdentifier( uniqueKey, exportIdentifierList, exportIdentifierSet );
 		}
 	}

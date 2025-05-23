@@ -29,10 +29,11 @@ public class ForeignKey extends Constraint {
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
 
-	public ForeignKey(Table table){
-		setTable( table );
+	public ForeignKey(Table table) {
+		super( table );
 	}
 
+	@Deprecated(since = "7")
 	public ForeignKey() {
 	}
 

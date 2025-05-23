@@ -47,8 +47,8 @@ public class OneToManyBidirectionalForeignKeyTest {
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( PlainTreeEntity.class ).addAnnotatedClass( TreeEntityWithOnDelete.class )
 					.buildMetadata();
-			assertTrue( findTable( metadata, TABLE_NAME_PLAIN ).getForeignKeys().isEmpty() );
-			assertFalse( findTable( metadata, TABLE_NAME_WITH_ON_DELETE ).getForeignKeys().isEmpty() );
+			assertTrue( findTable( metadata, TABLE_NAME_PLAIN ).getForeignKeyCollection().isEmpty() );
+			assertFalse( findTable( metadata, TABLE_NAME_WITH_ON_DELETE ).getForeignKeyCollection().isEmpty() );
 		}
 	}
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.constraint;
 
-import java.util.Iterator;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -69,9 +68,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 		int foundCount = 0;
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator fkItr = table.getForeignKeys().values().iterator();
-				while (fkItr.hasNext()) {
-					ForeignKey fk = (ForeignKey) fkItr.next();
+				for ( ForeignKey fk : table.getForeignKeyCollection() ) {
 					assertTrue( fk.getName().length() <= MAX_NAME_LENGTH );
 
 					// ensure the randomly generated constraint name doesn't
@@ -79,17 +76,15 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 					Column column = fk.getColumn( 0 );
 					if ( column.getName().equals( "explicit_native" ) ) {
 						foundCount++;
-						assertEquals( fk.getName(), EXPLICIT_FK_NAME_NATIVE );
+						assertEquals( EXPLICIT_FK_NAME_NATIVE, fk.getName() );
 					}
 					else if ( column.getName().equals( "explicit_jpa" ) ) {
 						foundCount++;
-						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA );
+						assertEquals( EXPLICIT_FK_NAME_JPA, fk.getName() );
 					}
 				}
 
-				Iterator ukItr = table.getUniqueKeys().values().iterator();
-				while (ukItr.hasNext()) {
-					UniqueKey uk = (UniqueKey) ukItr.next();
+				for ( UniqueKey uk : table.getUniqueKeys().values() ) {
 					assertTrue( uk.getName().length() <= MAX_NAME_LENGTH );
 
 					// ensure the randomly generated constraint name doesn't
@@ -97,7 +92,7 @@ public class ConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
 					Column column = uk.getColumn( 0 );
 					if ( column.getName().equals( "explicit" ) ) {
 						foundCount++;
-						assertEquals( uk.getName(), EXPLICIT_UK_NAME );
+						assertEquals( EXPLICIT_UK_NAME, uk.getName() );
 					}
 				}
 			}

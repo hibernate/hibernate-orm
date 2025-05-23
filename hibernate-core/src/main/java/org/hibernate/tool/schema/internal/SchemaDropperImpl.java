@@ -475,7 +475,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 				if ( table.isPhysicalTable()
 						&& schemaFilter.includeTable( table )
 						&& inclusionFilter.matches( table ) ) {
-					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+					for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 						applySqlStrings(
 								dialect.getForeignKeyExporter().getSqlDropStrings( foreignKey, metadata, context ),
 								formatter,

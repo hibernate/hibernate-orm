@@ -435,7 +435,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			GenerationTarget... targets) {
 		if ( dialect.hasAlterTable() ) {
 			final Exporter<ForeignKey> exporter = dialect.getForeignKeyExporter();
-			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+			for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 				if ( foreignKey.isPhysicalConstraint()
 						&& foreignKey.isCreationEnabled()
 						&& ( tableInformation == null || !checkForExistingForeignKey( foreignKey, tableInformation ) ) ) {

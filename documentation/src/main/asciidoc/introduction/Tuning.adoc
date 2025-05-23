@@ -1175,7 +1175,7 @@ It's much more typesafe to use one of the first two options.
 === Reactive programming with Hibernate
 
 :hr: https://hibernate.org/reactive/
-:hr-guide: https://hibernate.org/reactive/documentation/2.0/reference/html_single/
+:hr-guide: https://hibernate.org/reactive/documentation/3.0/reference/html_single/
 
 Finally, many systems which require high scalability now make use of reactive programming and reactive streams.
 {hr}[Hibernate Reactive] brings O/R mapping to the world of reactive programming.

@@ -65,8 +65,8 @@ public class NonPkCompositeJoinColumnCollectionTest {
 					Order order = new Order( "O1" );
 					Item item = new Item( "Item 1" );
 					order.addItem( item );
-					session.persist( item );
 					session.persist( order );
+					session.persist( item );
 				}
 		);
 	}

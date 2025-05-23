@@ -8,6 +8,8 @@ import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 
+import java.util.List;
+
 /**
  * A mapping model {@link Value} which may be treated as an identifying key of a
  * relational database table. A {@code KeyValue} might represent the primary key
@@ -17,6 +19,8 @@ import org.hibernate.generator.Generator;
  * @author Gavin King
  */
 public interface KeyValue extends Value {
+
+	ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns);
 
 	ForeignKey createForeignKeyOfEntity(String entityName);
 

@@ -140,16 +140,11 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 
 	@Override
 	public void render(SqlAppender sqlAppender) {
-		renderLockFragment( dialect, lockKind, timeout, rowLockStrategy, sqlAppender );
-		renderResultSetOptions( dialect, sqlAppender );
+		renderLockFragment( sqlAppender );
+		renderResultSetOptions( sqlAppender );
 	}
 
-	protected void renderLockFragment(
-			Dialect dialect,
-			PessimisticLockKind lockKind,
-			int timeout,
-			RowLockStrategy rowLockStrategy,
-			SqlAppender sqlAppender) {
+	protected void renderLockFragment(SqlAppender sqlAppender) {
 		final String fragment;
 		if ( rowLockStrategy == RowLockStrategy.NONE ) {
 			fragment = lockKind == PessimisticLockKind.SHARE
@@ -191,7 +186,7 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 		return buffer.toString();
 	}
 
-	protected void renderResultSetOptions(Dialect dialect, SqlAppender sqlAppender) {
+	protected void renderResultSetOptions(SqlAppender sqlAppender) {
 		// hook for Derby
 	}
 
@@ -281,7 +276,7 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 				dialect,
 				querySpec,
 				lockOptions,
-				(dialect1, rowLockStrategy, lockMode, lockKind, lockScope, timeout) -> new StandardForUpdateClauseStrategy(
+				(dialect1, spec, rowLockStrategy, lockMode, lockKind, lockScope, timeout) -> new StandardForUpdateClauseStrategy(
 						dialect,
 						rowLockStrategy,
 						lockMode,
@@ -296,6 +291,7 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 	public interface ForUpdateClauseStrategyProducer {
 		ForUpdateClauseStrategy produceStrategy(
 				Dialect dialect,
+				QuerySpec querySpec,
 				RowLockStrategy rowLockStrategy,
 				LockMode lockMode,
 				PessimisticLockKind lockKind,
@@ -327,6 +323,7 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 
 		return producer.produceStrategy(
 				dialect,
+				querySpec,
 				rowLockStrategy,
 				lockMode,
 				lockKind,

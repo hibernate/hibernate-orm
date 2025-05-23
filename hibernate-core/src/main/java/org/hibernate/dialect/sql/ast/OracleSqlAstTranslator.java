@@ -169,7 +169,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
 				strategy = LockStrategy.NONE;
 			}
 			else {
@@ -181,7 +181,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with set operators is not supported" );
 			}
-			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
 				strategy = LockStrategy.NONE;
 			}
 			else {
@@ -193,7 +193,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
 				throw new IllegalQueryOperationException( "Locking with OFFSET/FETCH is not supported" );
 			}
-			else if ( followOnStrategy != Locking.FollowOn.IGNORE ) {
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
 				strategy = LockStrategy.NONE;
 			}
 			else {

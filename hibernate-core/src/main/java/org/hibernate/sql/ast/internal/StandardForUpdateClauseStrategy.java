@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -113,9 +112,11 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 	@Override
 	public boolean containsOuterJoins() {
 		for ( TableGroup tableGroup : rootsToLock ) {
-			if ( tableGroup.getModelPart() instanceof JoinedSubclassEntityPersister ) {
-				// inherently has outer joins
-				return true;
+			if ( tableGroup.getModelPart() instanceof EntityPersister entityMapping ) {
+				if ( entityMapping.hasMultipleTables() ) {
+					// joined inheritance and/or secondary tables - inherently has outer joins
+					return true;
+				}
 			}
 		}
 
@@ -129,9 +130,11 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 				&& !joinedGroup.isVirtual() ) {
 				return true;
 			}
-			if ( joinedGroup.getModelPart() instanceof JoinedSubclassEntityPersister ) {
-				// inherently has outer joins
-				return true;
+			if ( joinedGroup.getModelPart() instanceof EntityPersister entityMapping ) {
+				if ( entityMapping.hasMultipleTables() ) {
+					// joined inheritance and/or secondary tables - inherently has outer joins
+					return true;
+				}
 			}
 		}
 

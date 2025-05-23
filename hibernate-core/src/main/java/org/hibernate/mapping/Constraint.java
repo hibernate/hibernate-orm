@@ -24,6 +24,12 @@ public abstract class Constraint implements Exportable, Serializable {
 	private Table table;
 	private String options = "";
 
+	Constraint() {}
+
+	Constraint(Table table) {
+		this.table = table;
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -76,6 +82,7 @@ public abstract class Constraint implements Exportable, Serializable {
 		return table;
 	}
 
+	@Deprecated(since = "7")
 	public void setTable(Table table) {
 		this.table = table;
 	}

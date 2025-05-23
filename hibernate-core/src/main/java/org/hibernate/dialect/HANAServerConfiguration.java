@@ -50,20 +50,33 @@ public class HANAServerConfiguration {
 		Integer maxLobPrefetchSize = null;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try (final Statement statement = databaseMetaData.getConnection().createStatement()) {
-				try ( ResultSet rs = statement.executeQuery(
-						"SELECT TOP 1 VALUE,MAP(LAYER_NAME,'DEFAULT',1,'SYSTEM',2,'DATABASE',3,4) AS LAYER FROM SYS.M_INIFILE_CONTENTS WHERE FILE_NAME='indexserver.ini' AND SECTION='session' AND KEY='max_lob_prefetch_size' ORDER BY LAYER DESC" ) ) {
-					// This only works if the current user has the privilege INIFILE ADMIN
-					if ( rs.next() ) {
-						maxLobPrefetchSize = rs.getInt( 1 );
-					}
-				}
+			int databaseMajorVersion = -1;
+			try {
+				databaseMajorVersion = databaseMetaData.getDatabaseMajorVersion();
 			}
 			catch (SQLException e) {
 				// Ignore
 				LOG.debug(
-						"An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size.",
+						"An error occurred while trying to determine the database version.",
 						e );
+			}
+
+			if (databaseMajorVersion > 0 && databaseMajorVersion < 4) {
+				try (final Statement statement = databaseMetaData.getConnection().createStatement()) {
+					try ( ResultSet rs = statement.executeQuery(
+							"SELECT TOP 1 VALUE,MAP(LAYER_NAME,'DEFAULT',1,'SYSTEM',2,'DATABASE',3,4) AS LAYER FROM SYS.M_CONFIGURATION_PARAMETER_VALUES WHERE FILE_NAME='indexserver.ini' AND SECTION='session' AND KEY='max_lob_prefetch_size' ORDER BY LAYER DESC" ) ) {
+						// This only works if the current user has the privilege INIFILE ADMIN
+						if ( rs.next() ) {
+							maxLobPrefetchSize = rs.getInt( 1 );
+						}
+					}
+				}
+				catch (SQLException e) {
+					// Ignore
+					LOG.debug(
+							"An error occurred while trying to determine the value of the HANA parameter indexserver.ini / session / max_lob_prefetch_size.",
+							e );
+				}
 			}
 		}
 		// default to the dialect-specific configuration settings

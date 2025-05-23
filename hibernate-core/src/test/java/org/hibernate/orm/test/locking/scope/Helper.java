@@ -136,6 +136,7 @@ public class Helper {
 				aliases = buffer.toString();
 			}
 			else {
+				assert rowLockStrategy == RowLockStrategy.COLUMN;
 				final StringBuilder buffer = new StringBuilder();
 				boolean firstPass = true;
 				for ( Table table : tablesFetched ) {

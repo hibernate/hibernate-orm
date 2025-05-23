@@ -8,6 +8,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.Hibernate;
 import org.hibernate.Locking;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -15,6 +16,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +78,7 @@ public class ExtendedLockingTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	void testQueryJoiningTagsWithExtendedLocking(SessionFactoryScope factoryScope) {
 		// NOTE: roughly the same expectations as #testFindWithExtendedLocking,
 		//		but here the `book_tags` table should also get locked

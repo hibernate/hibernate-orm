@@ -417,10 +417,14 @@ public class LockOptions implements Serializable {
 	 */
 	@Deprecated(since = "7.1")
 	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
-		if ( followOnLocking != null ) {
-			this.followOnStrategy = followOnLocking == Boolean.FALSE
-					? Locking.FollowOn.DISALLOW
-					: Locking.FollowOn.FORCE;
+		if ( followOnLocking == null ) {
+			this.followOnStrategy = Locking.FollowOn.ALLOW;
+		}
+		else {
+			this.followOnStrategy = followOnLocking
+					? Locking.FollowOn.FORCE
+					// todo : DISALLOW or IGNORE?
+					: Locking.FollowOn.IGNORE;
 		}
 		return this;
 	}

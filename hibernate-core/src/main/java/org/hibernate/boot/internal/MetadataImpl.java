@@ -408,7 +408,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private void handleForeignKeys(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
-		for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+		for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 			final List<Column> columns = foreignKey.getColumns();
 			if ( columns.size() > 1 ) {
 				if ( foreignKey.getReferencedColumns().isEmpty() ) {

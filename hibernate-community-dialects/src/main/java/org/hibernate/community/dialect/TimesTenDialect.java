@@ -91,14 +91,14 @@ public class TimesTenDialect extends Dialect {
 		super( info );
 	}
 
-  /*
-   * Copyright (c) 2025, Oracle and/or its affiliates.
-   * Licensed under the Universal Permissive License v 1.0 as shown
-   * at http://oss.oracle.com/licenses/upl
-   *
-   * - Added more datatypes support. ( TIMESTAMP, BLOB, CLOB, NCLOB)
-   *
-  */
+	/*
+	 * Copyright (c) 2025, Oracle and/or its affiliates.
+	 * Licensed under the Universal Permissive License v 1.0 as shown
+	 * at http://oss.oracle.com/licenses/upl
+	 *
+	 * - Added more datatypes support. ( TIMESTAMP, BLOB, CLOB, NCLOB)
+	 *
+	*/
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
@@ -106,7 +106,7 @@ public class TimesTenDialect extends Dialect {
 			//      for the default Oracle type mode
 			//      TypeMode=0
 			case SqlTypes.BOOLEAN:
-      case SqlTypes.BIT:
+			case SqlTypes.BIT:
 			case SqlTypes.TINYINT:
 				return "TT_TINYINT";
 			case SqlTypes.SMALLINT:
@@ -118,43 +118,43 @@ public class TimesTenDialect extends Dialect {
 			//note that 'binary_float'/'binary_double' might
 			//be better mappings for Java Float/Double
 
-      case SqlTypes.CHAR:
-        return "CHAR(1)";
-      case SqlTypes.VARCHAR:
-      case SqlTypes.LONGVARCHAR:
-        return "VARCHAR2($l)";
+			case SqlTypes.CHAR:
+				return "CHAR(1)";
+			case SqlTypes.VARCHAR:
+			case SqlTypes.LONGVARCHAR:
+				return "VARCHAR2($l)";
 
-      case SqlTypes.BINARY:
-        return "BINARY($l)";
-      case SqlTypes.VARBINARY:
-      case SqlTypes.LONGVARBINARY:
-        return "VARBINARY($l)";
+			case SqlTypes.BINARY:
+				return "BINARY($l)";
+			case SqlTypes.VARBINARY:
+			case SqlTypes.LONGVARBINARY:
+				return "VARBINARY($l)";
 
 			//'numeric'/'decimal' are synonyms for 'number'
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
 				return "NUMBER($p,$s)";
-      case SqlTypes.FLOAT:
-        return "BINARY_FLOAT";
-      case SqlTypes.DOUBLE:
-        return "BINARY_DOUBLE";
+			case SqlTypes.FLOAT:
+				return "BINARY_FLOAT";
+			case SqlTypes.DOUBLE:
+				return "BINARY_DOUBLE";
 
 			case SqlTypes.DATE:
 				return "TT_DATE";
 			case SqlTypes.TIME:
 				return "TT_TIME";
-      case SqlTypes.TIMESTAMP:
-        return "TIMESTAMP";
+			case SqlTypes.TIMESTAMP:
+				return "TIMESTAMP";
 			//`timestamp` has more precision than `tt_timestamp`
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
 
-      case SqlTypes.BLOB:
-        return "BLOB";
-      case SqlTypes.CLOB:
-        return "CLOB";
-      case SqlTypes.NCLOB:
-        return "NCLOB";
+			case SqlTypes.BLOB:
+				return "BLOB";
+			case SqlTypes.CLOB:
+				return "CLOB";
+			case SqlTypes.NCLOB:
+				return "NCLOB";
 
 			default:
 				return super.columnType( sqlTypeCode );
@@ -196,227 +196,227 @@ public class TimesTenDialect extends Dialect {
 		return 40;
 	}
 
-  /*
-   * Copyright (c) 2025, Oracle and/or its affiliates.
-   * Licensed under the Universal Permissive License v 1.0 as shown
-   * at http://oss.oracle.com/licenses/upl
-   *
-   * - Added more SQL functions support.
-   *
-  */
+	/*
+	 * Copyright (c) 2025, Oracle and/or its affiliates.
+	 * Licensed under the Universal Permissive License v 1.0 as shown
+	 * at http://oss.oracle.com/licenses/upl
+	 *
+	 * - Added more SQL functions support.
+	 *
+	*/
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 		CommonFunctionFactory functionFactory     = new CommonFunctionFactory(functionContributions);
-    final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-    final BasicType<Date>   timestampType     = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
-    final BasicType<Date>   dateType          = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
-    final BasicType<Date>   timeType          = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
-    final BasicType<String> stringType        = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
-    final BasicType<Long>   longType          = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
-    final BasicType<Integer>intType           = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
+		final BasicType<Date>   timestampType     = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		final BasicType<Date>   dateType          = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		final BasicType<Date>   timeType          = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		final BasicType<String> stringType        = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<Long>   longType          = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+		final BasicType<Integer>intType           = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
 
-    // String Functions
-    functionContributions.getFunctionRegistry().register( 
-      "lower", new StandardSQLFunction("lower") 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "upper", new StandardSQLFunction("upper") 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "rtrim", new StandardSQLFunction("rtrim") 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "ltrim", new StandardSQLFunction("ltrim") 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "length", new StandardSQLFunction("length", StandardBasicTypes.LONG)
-    );
-    functionFactory.concat_pipeOperator();
-    functionContributions.getFunctionRegistry().register( 
-      "to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "instr", new StandardSQLFunction("instr", StandardBasicTypes.INTEGER) 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "instrb", new StandardSQLFunction("instrb", StandardBasicTypes.INTEGER)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "lpad", new StandardSQLFunction("lpad", StandardBasicTypes.STRING)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "rpad", new StandardSQLFunction("rpad", StandardBasicTypes.STRING)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "substrb", new StandardSQLFunction("substrb", StandardBasicTypes.STRING) 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING )
-    );
-    functionFactory.locate();
-    functionContributions.getFunctionRegistry().register( 
-      "str", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "soundex", new StandardSQLFunction("soundex") 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "replace", new StandardSQLFunction("replace", StandardBasicTypes.STRING)
-    );
+		// String Functions
+		functionContributions.getFunctionRegistry().register( 
+				"lower", new StandardSQLFunction("lower") 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"upper", new StandardSQLFunction("upper") 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"rtrim", new StandardSQLFunction("rtrim") 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"ltrim", new StandardSQLFunction("ltrim") 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"length", new StandardSQLFunction("length", StandardBasicTypes.LONG)
+		);
+		functionFactory.concat_pipeOperator();
+		functionContributions.getFunctionRegistry().register( 
+				"to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"instr", new StandardSQLFunction("instr", StandardBasicTypes.INTEGER) 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"instrb", new StandardSQLFunction("instrb", StandardBasicTypes.INTEGER)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"lpad", new StandardSQLFunction("lpad", StandardBasicTypes.STRING)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"rpad", new StandardSQLFunction("rpad", StandardBasicTypes.STRING)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"substrb", new StandardSQLFunction("substrb", StandardBasicTypes.STRING) 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING )
+		);
+		functionFactory.locate();
+		functionContributions.getFunctionRegistry().register( 
+				"str", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"soundex", new StandardSQLFunction("soundex") 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"replace", new StandardSQLFunction("replace", StandardBasicTypes.STRING)
+		);
 
-    // Date/Time Functions
-    functionContributions.getFunctionRegistry().register( 
-      "to_date", new StandardSQLFunction("to_date", StandardBasicTypes.TIMESTAMP)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "sysdate", new CurrentFunction("sysdate", "sysdate", timestampType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "getdate", new StandardSQLFunction("getdate", StandardBasicTypes.TIMESTAMP)
-    );
+		// Date/Time Functions
+		functionContributions.getFunctionRegistry().register( 
+				"to_date", new StandardSQLFunction("to_date", StandardBasicTypes.TIMESTAMP)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"sysdate", new CurrentFunction("sysdate", "sysdate", timestampType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"getdate", new StandardSQLFunction("getdate", StandardBasicTypes.TIMESTAMP)
+		);
 
-    functionContributions.getFunctionRegistry().register( 
-      "current_date",      new CurrentFunction("sysdate", "sysdate", dateType) 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "current_time",      new CurrentFunction("sysdate", "sysdate", timeType) 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "current_timestamp", new CurrentFunction("sysdate", "sysdate", timestampType) 
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP)
-    );
+		functionContributions.getFunctionRegistry().register( 
+				"current_date",      new CurrentFunction("sysdate", "sysdate", dateType) 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"current_time",      new CurrentFunction("sysdate", "sysdate", timeType) 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"current_timestamp", new CurrentFunction("sysdate", "sysdate", timestampType) 
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"to_timestamp", new StandardSQLFunction("to_timestamp", StandardBasicTypes.TIMESTAMP)
+		);
 
-    // Multi-param date dialect functions
-    functionContributions.getFunctionRegistry().register( 
-      "add_months",     new StandardSQLFunction("add_months", StandardBasicTypes.DATE)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "months_between", new StandardSQLFunction("months_between", StandardBasicTypes.FLOAT)
-    );
+		// Multi-param date dialect functions
+		functionContributions.getFunctionRegistry().register( 
+				"add_months",     new StandardSQLFunction("add_months", StandardBasicTypes.DATE)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"months_between", new StandardSQLFunction("months_between", StandardBasicTypes.FLOAT)
+		);
 
-    // Math functions
-    functionContributions.getFunctionRegistry().register( 
-      "abs", new StandardSQLFunction("abs")
-    );
-     functionContributions.getFunctionRegistry().register( 
-      "acos", new StandardSQLFunction("acos")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "asin", new StandardSQLFunction("asin")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "atan", new StandardSQLFunction("atan")
-    );
-     functionContributions.getFunctionRegistry().register( 
-      "atan2", new StandardSQLFunction("atan2")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "ceil", new StandardSQLFunction("ceil")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "cos", new StandardSQLFunction("cos")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "cosh", new StandardSQLFunction("cosh")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "exp", new StandardSQLFunction("exp")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "ln", new StandardSQLFunction("ln")
-    );
-    functionFactory.log();
-    functionContributions.getFunctionRegistry().register( 
-      "sin", new StandardSQLFunction("sin")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "sinh", new StandardSQLFunction("sinh")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "mod", new StandardSQLFunction("mod")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "round", new StandardSQLFunction("round")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "trunc", new StandardSQLFunction("trunc")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "tan", new StandardSQLFunction("tan")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "tanh", new StandardSQLFunction("tanh")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "floor", new StandardSQLFunction("floor")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "power", new StandardSQLFunction("power", StandardBasicTypes.FLOAT)
-    );
+		// Math functions
+		functionContributions.getFunctionRegistry().register( 
+				"abs", new StandardSQLFunction("abs")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"acos", new StandardSQLFunction("acos")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"asin", new StandardSQLFunction("asin")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"atan", new StandardSQLFunction("atan")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"atan2", new StandardSQLFunction("atan2")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"ceil", new StandardSQLFunction("ceil")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"cos", new StandardSQLFunction("cos")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"cosh", new StandardSQLFunction("cosh")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"exp", new StandardSQLFunction("exp")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"ln", new StandardSQLFunction("ln")
+		);
+		functionFactory.log();
+		functionContributions.getFunctionRegistry().register( 
+				"sin", new StandardSQLFunction("sin")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"sinh", new StandardSQLFunction("sinh")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"mod", new StandardSQLFunction("mod")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"round", new StandardSQLFunction("round")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"trunc", new StandardSQLFunction("trunc")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"tan", new StandardSQLFunction("tan")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"tanh", new StandardSQLFunction("tanh")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"floor", new StandardSQLFunction("floor")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"power", new StandardSQLFunction("power", StandardBasicTypes.FLOAT)
+		);
 
-    // Bitwise functions
-    functionFactory.bitand();
-    functionContributions.getFunctionRegistry().register( 
-      "bitnot", new StandardSQLFunction("bitnot")
-    );
-
-		functionContributions.getFunctionRegistry()
-		  .patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
-			.setExactArgumentCount( 2 )
-			.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers
-        .ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-			.register();
+		// Bitwise functions
+		functionFactory.bitand();
+		functionContributions.getFunctionRegistry().register( 
+				"bitnot", new StandardSQLFunction("bitnot")
+		);
 
 		functionContributions.getFunctionRegistry()
-		  .patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
-			.setExactArgumentCount( 2 )
-			.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers
-        .ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-			.register();
+				.patternDescriptorBuilder( "bitor", "(?1+?2-bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers
+				.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 
-    // Misc. functions
-    functionContributions.getFunctionRegistry().register( 
-      "nvl", new StandardSQLFunction("nvl")
-    );
-    functionFactory.coalesce();
-    functionContributions.getFunctionRegistry().register( 
-      "user",  new CurrentFunction("user", "user", stringType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "rowid", new CurrentFunction("rowid", "rowid", stringType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "uid", new CurrentFunction("uid", "uid", intType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "rownum", new CurrentFunction("rownum", "rownum", longType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "vsize", new StandardSQLFunction("vsize")
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "SESSION_USER", new CurrentFunction("SESSION_USER","SESSION_USER", stringType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "SYSTEM_USER",  new CurrentFunction("SYSTEM_USER", "SYSTEM_USER",  stringType)
-    );
-    functionContributions.getFunctionRegistry().register( 
-      "CURRENT_USER", new CurrentFunction("CURRENT_USER","CURRENT_USER", stringType)
-    );
+		functionContributions.getFunctionRegistry()
+				.patternDescriptorBuilder( "bitxor", "(?1+?2-2*bitand(?1,?2))")
+				.setExactArgumentCount( 2 )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers
+				.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
+
+		// Misc. functions
+		functionContributions.getFunctionRegistry().register( 
+				"nvl", new StandardSQLFunction("nvl")
+		);
+		functionFactory.coalesce();
+		functionContributions.getFunctionRegistry().register( 
+				"user",  new CurrentFunction("user", "user", stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"rowid", new CurrentFunction("rowid", "rowid", stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"uid", new CurrentFunction("uid", "uid", intType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"rownum", new CurrentFunction("rownum", "rownum", longType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"vsize", new StandardSQLFunction("vsize")
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"SESSION_USER", new CurrentFunction("SESSION_USER","SESSION_USER", stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"SYSTEM_USER",  new CurrentFunction("SYSTEM_USER", "SYSTEM_USER",  stringType)
+		);
+		functionContributions.getFunctionRegistry().register( 
+				"CURRENT_USER", new CurrentFunction("CURRENT_USER","CURRENT_USER", stringType)
+		);
 
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
@@ -497,14 +497,14 @@ public class TimesTenDialect extends Dialect {
 	}
 
   
-  /*
-   * Copyright (c) 2025, Oracle and/or its affiliates.
-   * Licensed under the Universal Permissive License v 1.0 as shown
-   * at http://oss.oracle.com/licenses/upl
-   *
-   * - Updated the custom definition for 'getForUpdateString()'
-   *
-  */
+	/*
+	* Copyright (c) 2025, Oracle and/or its affiliates.
+	* Licensed under the Universal Permissive License v 1.0 as shown
+	* at http://oss.oracle.com/licenses/upl
+	*
+	* - Updated the custom definition for 'getForUpdateString()'
+	*
+	*/
 	@Override
 	public String getForUpdateString() {
 		return " for update";
@@ -680,72 +680,72 @@ public class TimesTenDialect extends Dialect {
 		}
 	}
 
-  /*
-   * Copyright (c) 2025, Oracle and/or its affiliates.
-   * Licensed under the Universal Permissive License v 1.0 as shown
-   * at http://oss.oracle.com/licenses/upl
-   *
-   *  - Added a custom definition for 'getNativeIdentifierGeneratorStrategy()'
-   *  - Added a custom definition for 'currentDate()'
-   *  - Added a custom definition for 'currentTime()'
-   *  - Added a custom definition for 'getMaxVarcharLength()'
-   *  - Added a custom definition for 'getMaxVarbinaryLength()'
-   *  - Added a custom definition for 'isEmptyStringTreatedAsNull()'
-   *  - Added a custom definition for 'canCreateSchema()'
-   *  - Added a custom definition for 'supportsTupleDistinctCounts()'
-   *  - Added a custom definition for 'getDual()'
-   *  - Added a custom definition for 'getFromDualForSelectOnly()'
-   *
-  */
+	/*
+	 * Copyright (c) 2025, Oracle and/or its affiliates.
+	 * Licensed under the Universal Permissive License v 1.0 as shown
+	 * at http://oss.oracle.com/licenses/upl
+	 *
+	 *  - Added a custom definition for 'getNativeIdentifierGeneratorStrategy()'
+	 *  - Added a custom definition for 'currentDate()'
+	 *  - Added a custom definition for 'currentTime()'
+	 *  - Added a custom definition for 'getMaxVarcharLength()'
+	 *  - Added a custom definition for 'getMaxVarbinaryLength()'
+	 *  - Added a custom definition for 'isEmptyStringTreatedAsNull()'
+	 *  - Added a custom definition for 'canCreateSchema()'
+	 *  - Added a custom definition for 'supportsTupleDistinctCounts()'
+	 *  - Added a custom definition for 'getDual()'
+	 *  - Added a custom definition for 'getFromDualForSelectOnly()'
+	 *
+	*/
 
-  @Override 
-  public String getNativeIdentifierGeneratorStrategy() {
-    return "sequence";
-  }
+	@Override 
+	public String getNativeIdentifierGeneratorStrategy() {
+		return "sequence";
+	}
 
-  @Override
-  public String currentDate() {
-    return "sysdate";
-  }
+	@Override
+	public String currentDate() {
+		return "sysdate";
+	}
 
 	@Override
 	public String currentTime() {
-	  return "sysdate";
+		return "sysdate";
 	}
 
-  @Override
-  public int getMaxVarcharLength() {
-    // 1 to 4,194,304 bytes according to TimesTen Doc
-    return 4194304;
-  }
+	@Override
+	public int getMaxVarcharLength() {
+		// 1 to 4,194,304 bytes according to TimesTen Doc
+		return 4194304;
+	}
 
-  @Override
-  public int getMaxVarbinaryLength() {
-    // 1 to 4,194,304 bytes according to TimesTen Doc
-    return 4194304;
-  }
+	@Override
+	public int getMaxVarbinaryLength() {
+		// 1 to 4,194,304 bytes according to TimesTen Doc
+		return 4194304;
+	}
 
-  @Override
-  public boolean isEmptyStringTreatedAsNull() {
-    return true;
-  }
+	@Override
+	public boolean isEmptyStringTreatedAsNull() {
+		return true;
+	}
 
-  @Override
-  public boolean canCreateSchema() {
-    return false;
-  }
+	@Override
+	public boolean canCreateSchema() {
+		return false;
+	}
 
-  @Override
-  public boolean supportsTupleDistinctCounts() {
-    return false;
-  }
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
 
-  public String getDual() {
-    return "dual"; 
-  }
+	public String getDual() {
+		return "dual"; 
+	}
 
-  public String getFromDualForSelectOnly() {
-    return " from dual";
-  }
+	public String getFromDualForSelectOnly() {
+		return " from dual";
+	}
 
 }

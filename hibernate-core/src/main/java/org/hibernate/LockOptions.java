@@ -423,8 +423,7 @@ public class LockOptions implements Serializable {
 		else {
 			this.followOnStrategy = followOnLocking
 					? Locking.FollowOn.FORCE
-					// todo : DISALLOW or IGNORE?
-					: Locking.FollowOn.IGNORE;
+					: Locking.FollowOn.DISALLOW;
 		}
 		return this;
 	}

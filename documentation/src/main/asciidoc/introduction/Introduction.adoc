@@ -531,7 +531,7 @@ You don't have to use stateful sessions, and you're not doing anything wrong if 
 As of Hibernate 7, a key decision for any new project is which of these programming models to take as a baseline.
 Fortunately, the two models aren't mutually exclusive.
 This is a friendly competition, where the two APIs are designed to complement each other.
-Even if we decide to use `StatefulSession` most of the time, we can still use a `StatelessSession` wherever it's more convenient.
+Even if we decide to use stateful ``Session``s most of the time, we can still use a `StatelessSession` wherever it's more convenient.
 
 NOTE: On the other hand, if you decide to adopt Jakarta Data, the decision is made for you: repositories in Jakarta Data 1.0 are always stateless, and in https://hibernate.org/repositories/[Hibernate Data Repositories] a repository is backed by a `StatelessSession`.
 

@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -175,7 +176,12 @@ class IndexBinder {
 			uniqueKey.setNameExplicit( nameExplicit );
 			uniqueKey.setOptions( options );
 			for ( int i = 0; i < columns.length; i++ ) {
-				uniqueKey.addColumn( (Column) columns[i], orderings != null ? orderings[i] : null );
+				if ( columns[i] instanceof Column column) {
+					uniqueKey.addColumn( column, orderings != null ? orderings[i] : null );
+				}
+				else {
+					throw new AssertionFailure( "Not a column" );
+				}
 			}
 		}
 		else {

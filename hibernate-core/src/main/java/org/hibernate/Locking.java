@@ -44,6 +44,23 @@ public interface Locking {
 		 * rows for collection tables ({@linkplain jakarta.persistence.ElementCollection},
 		 * {@linkplain jakarta.persistence.OneToMany} and {@linkplain jakarta.persistence.ManyToMany})
 		 * will also be locked.
+		 * <p/>
+		 * Hibernate will only lock these collection rows when they are joined.  The alternatives
+		 * would be to either:<ul>
+		 *     <li>
+		 *         Add joins for the collection tables, which is problematic because
+		 *         <ul>
+		 *             <li>if {@code inner joins} are added, the results will be unexpectedly affected</li>
+		 *             <li>if {@code outer joins} are added, many databases do not allow locking outer joins</li>
+		 *         </ul>
+		 *     </li>
+		 *     <li>
+		 *         Perform {@linkplain FollowOn follow-on} locking which can lead to deadlocks.
+		 *     </li>
+		 * </ul>
+		 *
+		 * @apiNote Locking only joined rows is arguably not fully compliant with the specification.
+		 * However, we believe it is the best implementation.
 		 *
 		 * @see PessimisticLockScope#EXTENDED
 		 */
@@ -58,7 +75,7 @@ public interface Locking {
 		INCLUDE_FETCHES;
 
 		/**
-		 * The JPA PessimisticLockScope which corresponds to this LockScope.
+		 * The JPA {@linkplain PessimisticLockScope} which corresponds to this Scope.
 		 *
 		 * @return The corresponding PessimisticLockScope, or {@code null}.
 		 */
@@ -81,35 +98,39 @@ public interface Locking {
 
 	/**
 	 * In certain circumstances, Hibernate may need to acquire locks
-	 * through the use of subsequent queries.  For example, some
-	 * databases may not like attempting to lock rows in a join or
-	 * queries with paging.  In such cases, Hibernate will fall back
-	 * to issuing additional lock queries to lock some of the rows.
+	 * through the use of additional queries.  For example, some
+	 * databases may not allow locking rows for queries with a join or
+	 * with pagination.  In such cases, Hibernate will fall back
+	 * to issuing additional queries to lock the matching rows.
 	 * This option controls whether Hibernate is allowed to use
 	 * this approach.
 	 */
 	enum FollowOn implements FindOption, LockOption, RefreshOption {
 		/**
-		 * Allow performing follow-on locking when it needs to.
+		 * Allow follow-on locking when necessary.
 		 */
 		ALLOW,
 
 		/**
-		 * Disallow performing follow-on locking when it needs to, throwing
-		 * an exception instead.
+		 * Disallow follow-on locking, throwing an exception instead.
 		 */
 		DISALLOW,
 
 		/**
-		 * Do not perform follow-on locking when it needs to, but ignore
-		 * the situation rather than throw an exception.
+		 * Disallow follow-on locking, but ignoring the situation
+		 * rather than throw an exception.
 		 *
-		 * @apiNote This can lead to rows not being locked when they are expected to be.
+		 * @apiNote This can lead to rows not being locked
+		 * when they are expected to be.
+		 *
+		 * @see #DISALLOW
 		 */
 		IGNORE,
 
 		/**
 		 * Force the use of follow-on locking.
+		 *
+		 * @apiNote This may lead to exceptions from the database.
 		 */
 		FORCE
 	}

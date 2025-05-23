@@ -1655,10 +1655,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( lockOptions != null && lockOptions.getLockMode().isPessimistic() ) {
 			final LockStrategy lockStrategy = determineLockingStrategy( querySpec, lockOptions.getFollowOnStrategy() );
 			switch ( lockStrategy ) {
-				case CLAUSE:
+				case CLAUSE: {
 					forUpdateClauseStrategy.render( getSqlAppender() );
 					break;
-				case FOLLOW_ON:
+				}
+				case FOLLOW_ON: {
 					if ( querySpec.isRoot() ) {
 						lockOptions = null;
 					}
@@ -1666,8 +1667,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						throw new UnsupportedOperationException( "Follow-on locking for subqueries is not supported" );
 					}
 					break;
+				}
+				case NONE: {
+					// nothing to do
+					break;
+				}
 			}
 		}
+	}
+
+	protected LockMode getEffectiveLockMode() {
+		if ( getLockOptions() == null ) {
+			return LockMode.NONE;
+		}
+		else {
+			final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
+			if ( currentQueryPart == null || !currentQueryPart.isRoot() ) {
+				return LockMode.NONE;
+			}
+		}
+		return getLockOptions().getLockMode();
 	}
 
 	protected LockMode getEffectiveLockMode(String alias) {

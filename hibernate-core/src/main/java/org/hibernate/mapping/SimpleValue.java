@@ -354,7 +354,7 @@ public abstract class SimpleValue implements KeyValue {
 	@Override
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( hasFormula() ) {
-			throw new MappingException( "unique key constraint involves formulas" );
+			throw new MappingException( "Unique key constraint involves formulas" );
 		}
 		getTable().createUniqueKey( getConstraintColumns(), context );
 	}

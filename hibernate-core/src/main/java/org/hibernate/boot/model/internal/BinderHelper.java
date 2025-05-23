@@ -224,6 +224,12 @@ public class BinderHelper {
 	 * considered the target of the association. This method adds
 	 * the property holding the synthetic component to the target
 	 * entity {@link PersistentClass} by side effect.
+	 * <p>
+	 * This method automatically marks the reference column unique,
+	 * or creates a unique key on the referenced columns. It's not
+	 * really clear that we should do this. Perhaps we should just
+	 * validate that they are unique and error if not, like in
+	 * {@code TableBinder.checkReferenceToUniqueKey()}.
 	 */
 	private static Property referencedProperty(
 			PersistentClass ownerEntity,
@@ -238,7 +244,10 @@ public class BinderHelper {
 				&& ownerEntity == columnOwner
 				&& !( properties.get(0).getValue() instanceof ToOne ) ) {
 			// no need to make a synthetic property
-			return properties.get(0);
+			final Property property = properties.get( 0 );
+			// mark it unique
+			property.getValue().createUniqueKey( context );
+			return property;
 		}
 		else {
 			// Create a synthetic Property whose Value is a synthetic

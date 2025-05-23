@@ -107,7 +107,9 @@ public class ArrayGetTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionGet( root.get( "theCollection" ), cb.literal( 1 ) ),
-					cb.collectionGet( root.get( "theCollection" ), 1 )
+					cb.collectionGet( root.get( "theCollection" ), 1 ),
+					cb.collectionGet( root.get( "theLabels" ), cb.literal( 1 ) ),
+					cb.collectionGet( root.get( "theLabels" ), 1 )
 			);
 			em.createQuery( cq ).getResultList();
 		} );

@@ -115,7 +115,9 @@ public class ArrayAppendTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionAppend( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
-					cb.collectionAppend( root.get( "theCollection" ), "xyz" )
+					cb.collectionAppend( root.get( "theCollection" ), "xyz" ),
+					cb.collectionAppend( root.<Collection<Label>>get( "theLabels" ), cb.literal( Label.A ) ),
+					cb.collectionAppend( root.get( "theLabels" ), Label.A )
 			);
 			em.createQuery( cq ).getResultList();
 

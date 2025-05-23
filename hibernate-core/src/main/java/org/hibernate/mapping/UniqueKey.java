@@ -22,10 +22,11 @@ public class UniqueKey extends Constraint {
 	private boolean nameExplicit; // true when the constraint name was explicitly specified by @UniqueConstraint annotation
 	private boolean explicit; // true when the constraint was explicitly specified by @UniqueConstraint annotation
 
-	public UniqueKey(Table table){
-		setTable( table );
+	public UniqueKey(Table table) {
+		super( table );
 	}
 
+	@Deprecated(since = "7")
 	public UniqueKey() {
 	}
 

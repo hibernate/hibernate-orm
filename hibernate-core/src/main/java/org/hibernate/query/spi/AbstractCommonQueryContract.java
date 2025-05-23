@@ -413,6 +413,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					return false;
 				}
 			case HINT_FOLLOW_ON_STRATEGY:
+				if ( value == null ) {
+					applyFollowOnStrategyHint( Locking.FollowOn.ALLOW );
+				}
 				if ( value instanceof Locking.FollowOn strategyValue ) {
 					applyFollowOnStrategyHint( strategyValue );
 				}

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.namingstrategy;
 
-import java.util.Iterator;
-
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
@@ -92,8 +90,8 @@ public class FullyQualifiedEntityNameNamingStrategyTest {
 
 		boolean ownerFKFound = false;
 		boolean inverseFKFound = false;
-		for (Iterator it = ownerCollectionMapping.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
-			final String fkColumnName = ( (ForeignKey) it.next() ).getColumn( 0 ).getName();
+		for ( ForeignKey foreignKey : ownerCollectionMapping.getCollectionTable().getForeignKeyCollection() ) {
+			final String fkColumnName = foreignKey.getColumn( 0 ).getName();
 			if ( expectedOwnerFK.equals( fkColumnName ) ) {
 				ownerFKFound = true;
 			}

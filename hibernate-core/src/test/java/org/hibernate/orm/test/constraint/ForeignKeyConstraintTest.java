@@ -12,7 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.Column;
@@ -54,10 +53,10 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SecondaryTable;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Christian Beikov
@@ -178,17 +177,16 @@ public class ForeignKeyConstraintTest {
 		Set<String> columnSet = new LinkedHashSet<>( Arrays.asList( columns ) );
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
 			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
+				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeyCollection().iterator();
 				while ( fkItr.hasNext() ) {
 					org.hibernate.mapping.ForeignKey fk = fkItr.next();
 
 					if ( foreignKeyName.equals( fk.getName() ) ) {
-						assertEquals( "ForeignKey column count not like expected", columnSet.size(), fk.getColumnSpan() );
-						List<String> columnNames = fk.getColumns().stream().map(Column::getName).collect(Collectors.toList());
-						assertTrue(
-								"ForeignKey columns [" + columnNames + "] do not match expected columns [" + columnSet + "]",
-								columnSet.containsAll( columnNames )
-						);
+						assertEquals( columnSet.size(), fk.getColumnSpan(),
+								"ForeignKey column count not like expected" );
+						List<String> columnNames = fk.getColumns().stream().map(Column::getName).toList();
+						assertTrue( columnSet.containsAll( columnNames ),
+								"ForeignKey columns [" + columnNames + "] do not match expected columns [" + columnSet + "]" );
 						return;
 					}
 				}
@@ -199,14 +197,10 @@ public class ForeignKeyConstraintTest {
 
 	private void assertNoForeignKey(DomainModelScope scope, String foreignKeyName, String... columns) {
 		for ( Namespace namespace : scope.getDomainModel().getDatabase().getNamespaces() ) {
-			for ( org.hibernate.mapping.Table table : namespace.getTables() ) {
-				Iterator<org.hibernate.mapping.ForeignKey> fkItr = table.getForeignKeys().values().iterator();
-				while ( fkItr.hasNext() ) {
-					org.hibernate.mapping.ForeignKey fk = fkItr.next();
-					assertFalse(
-							"ForeignKey [" + foreignKeyName + "] defined and shouldn't have been.",
-							foreignKeyName.equals( fk.getName() )
-					);
+			for ( var table : namespace.getTables() ) {
+				for ( var fk : table.getForeignKeyCollection() ) {
+					assertNotEquals( foreignKeyName, fk.getName(),
+							"ForeignKey [" + foreignKeyName + "] defined and shouldn't have been." );
 				}
 			}
 		}
@@ -345,8 +339,8 @@ public class ForeignKeyConstraintTest {
 
 		@Override
 		public int hashCode() {
-			int result = (int) ( vehicleVendorNumber ^ ( vehicleVendorNumber >>> 32 ) );
-			result = 31 * result + (int) ( vehicleNumber ^ ( vehicleNumber >>> 32 ) );
+			int result = Long.hashCode( vehicleVendorNumber );
+			result = 31 * result + Long.hashCode( vehicleNumber );
 			return result;
 		}
 	}

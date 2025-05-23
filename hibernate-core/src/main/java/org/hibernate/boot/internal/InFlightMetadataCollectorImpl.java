@@ -1941,7 +1941,7 @@ public class InFlightMetadataCollectorImpl
 		table.createForeignKeys( buildingContext );
 
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
-		for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+		for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 			if ( !done.contains( foreignKey ) ) {
 				done.add( foreignKey );
 				final PersistentClass referencedClass = foreignKey.resolveReferencedClass(this);

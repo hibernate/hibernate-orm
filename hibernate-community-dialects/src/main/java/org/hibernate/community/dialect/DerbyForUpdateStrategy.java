@@ -29,7 +29,7 @@ public class DerbyForUpdateStrategy extends StandardForUpdateClauseStrategy {
 	}
 
 	@Override
-	protected void renderResultSetOptions(Dialect dialect, SqlAppender sqlAppender) {
+	protected void renderResultSetOptions(SqlAppender sqlAppender) {
 		sqlAppender.append( " with rs" );
 	}
 
@@ -41,7 +41,7 @@ public class DerbyForUpdateStrategy extends StandardForUpdateClauseStrategy {
 				dialect,
 				querySpec,
 				lockOptions,
-				(dialect1, rowLockStrategy, lockMode, lockKind, lockScope, timeout) -> new StandardForUpdateClauseStrategy(
+				(dialect1, spec, rowLockStrategy, lockMode, lockKind, lockScope, timeout) -> new StandardForUpdateClauseStrategy(
 						dialect,
 						rowLockStrategy,
 						lockMode,

@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.spi;
 
-import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -14,7 +13,6 @@ import org.hibernate.Locking;
 import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -31,14 +29,11 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.persister.entity.EntityPersister;
@@ -1649,14 +1644,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private ForUpdateClauseStrategy forUpdateClauseStrategy;
+	private LockingClauseStrategy lockingClauseStrategy;
 
 	protected void visitForUpdateClause(QuerySpec querySpec) {
 		if ( lockOptions != null && lockOptions.getLockMode().isPessimistic() ) {
 			final LockStrategy lockStrategy = determineLockingStrategy( querySpec, lockOptions.getFollowOnStrategy() );
 			switch ( lockStrategy ) {
 				case CLAUSE: {
-					forUpdateClauseStrategy.render( getSqlAppender() );
+					lockingClauseStrategy.render( getSqlAppender() );
 					break;
 				}
 				case FOLLOW_ON: {
@@ -1754,7 +1749,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( !dialect.supportsOuterJoinForUpdate() ) {
-			if ( forUpdateClauseStrategy != null && forUpdateClauseStrategy.containsOuterJoins() ) {
+			if ( lockingClauseStrategy != null && lockingClauseStrategy.containsOuterJoins() ) {
 				// we have any outer joins to lock, but the dialect does not support locking outer joins
 				// 		-we need to use follow-on locking if allowed
 				if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
@@ -3413,8 +3408,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( forUpdateClauseStrategy == null ) {
-			forUpdateClauseStrategy = dialect.getForUpdateClauseStrategy( querySpec, getLockOptions() );
+		if ( lockingClauseStrategy == null ) {
+			lockingClauseStrategy = dialect.getLockingClauseStrategy( querySpec, getLockOptions() );
 		}
 
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
@@ -3487,13 +3482,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.needsSelectAliases = needsSelectAliases;
 			this.additionalWherePredicate = additionalWherePredicate;
 		}
-	}
-
-	private RowLockStrategy determineRowLockStrategy(LockMode lockMode) {
-		assert lockMode.isPessimistic();
-		return lockMode == LockMode.PESSIMISTIC_READ
-				? dialect.getReadRowLockStrategy()
-				: dialect.getWriteRowLockStrategy();
 	}
 
 	private boolean hasDuplicateSelectItems(QuerySpec querySpec) {
@@ -5697,8 +5685,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
 		renderPrimaryTableReference( tableGroup, effectiveLockMode );
 
-		if ( forUpdateClauseStrategy != null ) {
-			forUpdateClauseStrategy.registerRoot( tableGroup );
+		if ( lockingClauseStrategy != null ) {
+			lockingClauseStrategy.registerRoot( tableGroup );
 		}
 
 		if ( tableGroup.isLateral() && !dialect.supportsLateral() ) {
@@ -6233,8 +6221,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
-		if ( forUpdateClauseStrategy != null ) {
-			forUpdateClauseStrategy.registerJoin( tableGroupJoin );
+		if ( lockingClauseStrategy != null ) {
+			lockingClauseStrategy.registerJoin( tableGroupJoin );
 		}
 	}
 
@@ -8243,119 +8231,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		CLAUSE,
 		FOLLOW_ON,
 		NONE
-	}
-
-	protected static class ForUpdateClause {
-		private final LockMode lockMode;
-		private final Timeout timeout;
-
-		private List<String> lockItems;
-
-		public ForUpdateClause(LockOptions lockOptions) {
-			final LockMode optionsLockMode = lockOptions.getLockMode();
-
-			if ( optionsLockMode == LockMode.UPGRADE_NOWAIT ) {
-				lockMode = LockMode.PESSIMISTIC_WRITE;
-				timeout = Timeouts.NO_WAIT;
-			}
-			else if ( optionsLockMode == LockMode.UPGRADE_SKIPLOCKED ) {
-				lockMode = LockMode.PESSIMISTIC_WRITE;
-				timeout = Timeouts.SKIP_LOCKED;
-			}
-			else {
-				lockMode = optionsLockMode;
-				timeout = lockOptions.getTimeout();
-			}
-		}
-
-		public LockMode getLockMode() {
-			return lockMode;
-		}
-
-		public Timeout getTimeout() {
-			return timeout;
-		}
-
-		public int getTimeoutMillis() {
-			return timeout.milliseconds();
-		}
-
-		public void applyAliases(RowLockStrategy rowLockStrategy, TableGroup tableGroup) {
-			if ( rowLockStrategy == RowLockStrategy.TABLE ) {
-				addTableAliases( tableGroup );
-			}
-			else if ( rowLockStrategy == RowLockStrategy.COLUMN ) {
-				addColumnRefs( determineKeyColumnRefs( tableGroup ) );
-			}
-		}
-
-		private void addTableAliases(TableGroup tableGroup) {
-			if ( lockItems == null ) {
-				lockItems = new ArrayList<>();
-			}
-
-			final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-			lockItems.add( tableAlias );
-
-			if ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() ) ) {
-				tableGroup.getTableReferenceJoins().forEach( (tableRefJoin) -> {
-					lockItems.add( tableRefJoin.getJoinedTableReference().getIdentificationVariable() );
-				} );
-			}
-		}
-
-		private void addColumnRefs(String[] columnRefs) {
-			if ( lockItems == null ) {
-				lockItems = new ArrayList<>();
-			}
-
-			Collections.addAll( lockItems, columnRefs );
-		}
-
-		private String[] determineKeyColumnRefs(TableGroup tableGroup) {
-			final String[] result = determineKeyColumnNames( tableGroup.getModelPart() );
-			final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-			for ( int i = 0; i < result.length; i++ ) {
-				result[i] = tableAlias + "." + result[i];
-			}
-			return result;
-		}
-
-		private String[] determineKeyColumnNames(ModelPart modelPart) {
-			if ( modelPart instanceof EntityPersister entityPersister ) {
-				return entityPersister.getIdentifierColumnNames();
-			}
-			else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-				return pluralAttributeMapping.getCollectionDescriptor().getKeyColumnAliases( null );
-			}
-			else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
-				return determineKeyColumnNames( entityAssociationMapping.getAssociatedEntityMappingType() );
-			}
-			else {
-				return null;
-			}
-		}
-
-		public boolean hasAliases() {
-			return lockItems != null;
-		}
-
-		public void appendAliases(SqlAppender appender) {
-			if ( lockItems == null ) {
-				return;
-			}
-
-			boolean first = true;
-			for ( String lockItem : lockItems ) {
-				if ( first ) {
-					first = false;
-				}
-				else {
-					appender.appendSql( ',' );
-				}
-				appender.appendSql( lockItem );
-			}
-		}
 	}
 
 	private T translateTableMutation(TableMutation<?> mutation) {

@@ -40,7 +40,7 @@ public final class ImmutableEntityEntryFactory implements EntityEntryFactory {
 			EntityPersister persister,
 			boolean disableVersionIncrement,
 			PersistenceContext persistenceContext) {
-		return new ImmutableEntityEntry(
+		return new EntityEntryImpl(
 				status,
 				loadedState,
 				rowId,
@@ -49,7 +49,8 @@ public final class ImmutableEntityEntryFactory implements EntityEntryFactory {
 				lockMode,
 				existsInDatabase,
 				persister,
-				disableVersionIncrement
+				disableVersionIncrement,
+				persistenceContext
 		);
 	}
 }

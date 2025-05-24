@@ -656,30 +656,18 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final boolean disableVersionIncrement) {
 		assert lockMode != null;
 		final EntityEntry entityEntry =
-				persister.isMutable()
-						? new MutableEntityEntry(
-								status,
-								loadedState,
-								rowId,
-								id,
-								version,
-								lockMode,
-								existsInDatabase,
-								persister,
-								disableVersionIncrement,
-								this
-						)
-						: new ImmutableEntityEntry(
-								status,
-								loadedState,
-								rowId,
-								id,
-								version,
-								lockMode,
-								existsInDatabase,
-								persister,
-								disableVersionIncrement
-						);
+				new EntityEntryImpl(
+						status,
+						loadedState,
+						rowId,
+						id,
+						version,
+						lockMode,
+						existsInDatabase,
+						persister,
+						disableVersionIncrement,
+						this
+				);
 		entityEntryContext.addEntityEntry( entity, entityEntry );
 		setHasNonReadOnlyEnties( status );
 		return entityEntry;
@@ -758,15 +746,14 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 * @param proxy The proxy to reassociate.
 	 */
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
-		if ( li.getSession() != this.getSession() ) {
+		if ( li.getSession() != session ) {
 			final EntityPersister persister =
 					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getInternalIdentifier(), persister );
-			// any earlier proxy takes precedence
-			final Map<EntityKey, EntityHolderImpl> entityHolderMap = getOrInitializeEntitiesByKey();
 			final EntityHolderImpl holder = getOrInitializeNewHolder().withProxy( key, persister, proxy );
-			final EntityHolderImpl oldHolder = entityHolderMap.putIfAbsent( key, holder );
+			// any earlier proxy takes precedence
+			final EntityHolderImpl oldHolder = getOrInitializeEntitiesByKey().putIfAbsent( key, holder );
 			if ( oldHolder != null ) {
 				if ( oldHolder.proxy == null ) {
 					oldHolder.proxy = proxy;
@@ -977,7 +964,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 			//					probably changes to how the sql for collection initializers are generated
 			//
 			//			We could also possibly see if the referenced property is a natural id since we already have caching
-			//			in place of natural id snapshots.  BUt really its better to just do it the right way ^^ if we start
+			//			in place of natural id snapshots.  But really it's better to just do it the right way ^^ if we start
 			// 			going that route
 			final Object ownerId = ownerPersister.getIdByUniqueKey( key, collectionType.getLHSPropertyName(), session );
 			return getEntity( session.generateEntityKey( ownerId, ownerPersister ) );

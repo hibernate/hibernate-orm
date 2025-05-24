@@ -49,7 +49,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testUseOfDirectReferencesInCache() throws Exception {
+	public void testUseOfDirectReferencesInCache() {
 		EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor( MyEnhancedReferenceData.class );
 		assertFalse( persister.isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
@@ -75,17 +75,20 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s.close();
 
 		// the 2 instances should be the same (==)
-		assertTrue( "The two instances were different references", myReferenceData == loaded );
+		assertSame( "The two instances were different references", myReferenceData, loaded );
 
 		// now try query caching
 		s = openSession();
 		s.beginTransaction();
-		MyEnhancedReferenceData queried = (MyEnhancedReferenceData) s.createQuery( "from MyEnhancedReferenceData" ).setCacheable( true ).list().get( 0 );
+		MyEnhancedReferenceData queried = (MyEnhancedReferenceData)
+				s.createQuery( "from MyEnhancedReferenceData" )
+						.setCacheable( true )
+						.list().get( 0 );
 		s.getTransaction().commit();
 		s.close();
 
 		// the 2 instances should be the same (==)
-		assertTrue( "The two instances were different references", myReferenceData == queried );
+		assertSame( "The two instances were different references", myReferenceData, queried );
 
 		// cleanup
 		s = openSession();

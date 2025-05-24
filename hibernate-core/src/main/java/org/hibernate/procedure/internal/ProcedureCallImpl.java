@@ -87,7 +87,6 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Boolean.parseBoolean;
@@ -823,10 +822,6 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	protected int doExecuteUpdate() {
-		if ( !getSession().isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "jakarta.persistence.Query.executeUpdate requires active transaction" );
-		}
-
 		// the expectation is that there is just one Output, of type UpdateCountOutput
 		try {
 			execute();

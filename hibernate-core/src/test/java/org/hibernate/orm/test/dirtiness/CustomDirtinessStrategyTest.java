@@ -60,7 +60,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 
 		assertEquals( 1, Strategy.INSTANCE.canDirtyCheckCount );
 		assertEquals( 1, Strategy.INSTANCE.isDirtyCount );
-		assertEquals( 1, Strategy.INSTANCE.resetDirtyCount );
+		assertEquals( 2, Strategy.INSTANCE.resetDirtyCount );
 		assertEquals( 1, Strategy.INSTANCE.findDirtyCount );
 
 		session = openSession();
@@ -94,7 +94,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 		// As we used an interceptor, the custom strategy should have been called twice to find dirty properties
 		assertEquals( 1, Strategy.INSTANCE.canDirtyCheckCount );
 		assertEquals( 1, Strategy.INSTANCE.isDirtyCount );
-		assertEquals( 1, Strategy.INSTANCE.resetDirtyCount );
+		assertEquals( 2, Strategy.INSTANCE.resetDirtyCount );
 		assertEquals( 2, Strategy.INSTANCE.findDirtyCount );
 
 		session = openSession();

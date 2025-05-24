@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.tooling.gradle.misc;
 
-import java.io.Serializable;
-import javax.inject.Inject;
-
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
@@ -20,16 +16,9 @@ import org.gradle.api.tasks.Optional;
  * 		specified, this would mean replacing the original rather than making a
  * 		copy (effectively, {@link TransformHbmXmlTask#getDeleteHbmFiles `deleteHbmFiles=true`})
  */
-public class TransformationNaming implements Serializable {
-	private final Property<String> prefix;
-	private final Property<String> suffix;
-	private final Property<String> extension;
+abstract public class TransformationNaming {
 
-	@Inject
-	public TransformationNaming(ObjectFactory objectFactory) {
-		prefix = objectFactory.property( String.class );
-		suffix = objectFactory.property( String.class );
-		extension = objectFactory.property( String.class );
+	public TransformationNaming() {
 	}
 
 	/**
@@ -43,9 +32,7 @@ public class TransformationNaming implements Serializable {
 	 */
 	@Input
 	@Optional
-	public Property<String> getPrefix() {
-		return prefix;
-	}
+	abstract public Property<String> getPrefix();
 
 	/**
 	 * A suffix to apply to the file name.
@@ -58,21 +45,13 @@ public class TransformationNaming implements Serializable {
 	 */
 	@Input
 	@Optional
-	public Property<String> getSuffix() {
-		return suffix;
-	}
+	abstract public Property<String> getSuffix();
 
 	@Input
 	@Optional
-	public Property<String> getExtension() {
-		return extension;
-	}
-
-	public boolean areAnyDefined() {
-		return prefix.isPresent() || suffix.isPresent() || extension.isPresent();
-	}
+	abstract public Property<String> getExtension();
 
 	public boolean areNoneDefined() {
-		return !prefix.isPresent() && !suffix.isPresent() && !extension.isPresent();
+		return !getPrefix().isPresent() && !getSuffix().isPresent() && !getExtension().isPresent();
 	}
 }

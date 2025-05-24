@@ -7,28 +7,27 @@ package org.hibernate.dialect;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.function.CastingConcatFunction;
-import org.hibernate.dialect.function.TransactSQLStrFunction;
-import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
+import org.hibernate.dialect.function.CastingConcatFunction;
+import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.dialect.temptable.TemporaryTable;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -41,7 +40,18 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.BOOLEAN;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
 
 /**
  * An abstract base class for Sybase and MS SQL Server dialects.
@@ -194,9 +204,9 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// T-SQL uses table-based lock hints and thus does not support FOR UPDATE clause
-		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override

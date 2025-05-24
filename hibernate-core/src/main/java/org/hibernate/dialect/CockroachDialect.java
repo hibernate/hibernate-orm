@@ -56,8 +56,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -98,6 +97,7 @@ import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.query.common.TemporalUnit.NATIVE;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -899,12 +899,12 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
 		if ( getVersion().isBefore( 20, 1 ) ) {
-			return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+			return NON_CLAUSE_STRATEGY;
 		}
-		return super.getForUpdateClauseStrategy( querySpec, lockOptions );
+		return super.getLockingClauseStrategy( querySpec, lockOptions );
 	}
 
 	@Override

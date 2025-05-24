@@ -5,8 +5,6 @@
 package org.hibernate.sql.ast.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
@@ -17,12 +15,11 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,11 +29,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * ForUpdateClauseStrategy implementation largely following the SQL standard.
+ * LockingClauseStrategy implementation for dialects with support for
+ * {@code for share (of)} and {@code for update (of)} clauses.
  *
  * @author Steve Ebersole
  */
-public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy {
+public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	private final Dialect dialect;
 	private final RowLockStrategy rowLockStrategy;
 	private final PessimisticLockKind lockKind;
@@ -46,15 +44,13 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 	private Set<TableGroup> rootsToLock;
 	private Set<TableGroupJoin> joinsToLock;
 
-	public StandardForUpdateClauseStrategy(
+	public StandardLockingClauseStrategy(
 			Dialect dialect,
-			RowLockStrategy rowLockStrategy,
-			LockMode lockMode,
 			PessimisticLockKind lockKind,
+			RowLockStrategy rowLockStrategy,
 			Locking.Scope lockingScope,
 			int timeout) {
 		assert lockKind != PessimisticLockKind.NONE;
-		assert lockMode.isPessimistic();
 
 		this.dialect = dialect;
 		this.rowLockStrategy = rowLockStrategy;
@@ -65,11 +61,6 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 
 	@Override
 	public void registerRoot(TableGroup root) {
-		if ( rowLockStrategy == RowLockStrategy.NONE ) {
-			// no need to collect these
-			return;
-		}
-
 		if ( rootsToLock == null ) {
 			rootsToLock = new HashSet<>();
 		}
@@ -78,11 +69,7 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 
 	@Override
 	public void registerJoin(TableGroupJoin join) {
-		if ( rowLockStrategy == RowLockStrategy.NONE ) {
-			// no need to collect these
-			return;
-		}
-		else if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+		if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
 			// if the TableGroup is an owned (aka, non-inverse) collection,
 			// and we are to lock collections, track it
 			if ( join.getJoinedGroup().getModelPart() instanceof PluralAttributeMapping attrMapping ) {
@@ -120,20 +107,19 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 			}
 		}
 
-		if ( joinsToLock == null ) {
-			return false;
-		}
-		for ( TableGroupJoin tableGroupJoin : joinsToLock ) {
-			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-			if ( tableGroupJoin.isInitialized()
-				&& tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
-				&& !joinedGroup.isVirtual() ) {
-				return true;
-			}
-			if ( joinedGroup.getModelPart() instanceof EntityPersister entityMapping ) {
-				if ( entityMapping.hasMultipleTables() ) {
-					// joined inheritance and/or secondary tables - inherently has outer joins
+		if ( joinsToLock != null ) {
+			for ( TableGroupJoin tableGroupJoin : joinsToLock ) {
+				final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
+				if ( tableGroupJoin.isInitialized()
+					&& tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
+					&& !joinedGroup.isVirtual() ) {
 					return true;
+				}
+				if ( joinedGroup.getModelPart() instanceof EntityPersister entityMapping ) {
+					if ( entityMapping.hasMultipleTables() ) {
+						// joined inheritance and/or secondary tables - inherently has outer joins
+						return true;
+					}
 				}
 			}
 		}
@@ -272,66 +258,5 @@ public class StandardForUpdateClauseStrategy implements ForUpdateClauseStrategy 
 		else {
 			return null;
 		}
-	}
-
-	public static ForUpdateClauseStrategy strategy(Dialect dialect, QuerySpec querySpec, LockOptions lockOptions) {
-		return strategy(
-				dialect,
-				querySpec,
-				lockOptions,
-				(dialect1, spec, rowLockStrategy, lockMode, lockKind, lockScope, timeout) -> new StandardForUpdateClauseStrategy(
-						dialect,
-						rowLockStrategy,
-						lockMode,
-						lockKind,
-						lockScope,
-						timeout
-				)
-		);
-	}
-
-	@FunctionalInterface
-	public interface ForUpdateClauseStrategyProducer {
-		ForUpdateClauseStrategy produceStrategy(
-				Dialect dialect,
-				QuerySpec querySpec,
-				RowLockStrategy rowLockStrategy,
-				LockMode lockMode,
-				PessimisticLockKind lockKind,
-				Locking.Scope lockScope,
-				int timeout);
-	}
-
-	public static ForUpdateClauseStrategy strategy(
-			Dialect dialect,
-			QuerySpec querySpec,
-			LockOptions lockOptions,
-			ForUpdateClauseStrategyProducer producer) {
-		if ( lockOptions == null ) {
-			return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
-		}
-
-		final LockMode lockMode = lockOptions.getLockMode();
-		final PessimisticLockKind lockKind = PessimisticLockKind.interpret( lockMode );
-		if ( lockKind == PessimisticLockKind.NONE ) {
-			return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
-		}
-
-		final RowLockStrategy rowLockStrategy;
-		switch ( lockKind ) {
-			case SHARE -> rowLockStrategy = dialect.getReadRowLockStrategy();
-			case UPDATE -> rowLockStrategy = dialect.getWriteRowLockStrategy();
-			default -> throw new IllegalStateException( "Should never happen due to checks above" );
-		}
-
-		return producer.produceStrategy(
-				dialect,
-				querySpec,
-				rowLockStrategy,
-				lockMode,
-				lockKind,
-				lockOptions.getScope(),
-				lockOptions.getTimeOut()
-		);
 	}
 }

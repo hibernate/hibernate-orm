@@ -29,11 +29,11 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
  *     </li>
  * </ol>
  *
- * @see org.hibernate.dialect.Dialect#getForUpdateClauseStrategy
+ * @see org.hibernate.dialect.Dialect#getLockingClauseStrategy
  *
  * @author Steve Ebersole
  */
-public interface ForUpdateClauseStrategy {
+public interface LockingClauseStrategy {
 	void registerRoot(TableGroup root);
 	void registerJoin(TableGroupJoin join);
 

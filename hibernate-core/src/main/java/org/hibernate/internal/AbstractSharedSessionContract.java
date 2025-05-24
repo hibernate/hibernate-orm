@@ -150,7 +150,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private transient Transaction currentHibernateTransaction;
 	private transient TransactionCoordinator transactionCoordinator;
-	private transient CacheTransactionSynchronization cacheTransactionSync;
+	private transient CacheTransactionSynchronization cacheTransactionSynchronization;
 
 	private final boolean autoJoinTransactions;
 	private final boolean isTransactionCoordinatorShared;
@@ -185,7 +185,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		this.factoryOptions = factory.getSessionFactoryOptions();
 		this.jdbcServices = factory.getJdbcServices();
 
-		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
+		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
 		tenantIdentifier = getTenantId( factoryOptions, options );
 		interceptor = interpret( options.getInterceptor() );
 		jdbcTimeZone = options.getJdbcTimeZone();
@@ -310,7 +310,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public Integer getConfiguredJdbcBatchSize() {
 		final Integer sessionJdbcBatchSize = jdbcBatchSize;
 		return sessionJdbcBatchSize == null
-				? getSessionFactoryOptions().getJdbcBatchSize()
+				? factoryOptions.getJdbcBatchSize()
 				: sessionJdbcBatchSize;
 	}
 
@@ -380,41 +380,41 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public SessionFactoryImplementor getFactory() {
+	public final SessionFactoryImplementor getFactory() {
 		return factory;
 	}
 
 	@Override
-	public Interceptor getInterceptor() {
+	public final Interceptor getInterceptor() {
 		return interceptor;
 	}
 
 	@Override
-	public JdbcCoordinator getJdbcCoordinator() {
+	public final JdbcCoordinator getJdbcCoordinator() {
 		return jdbcCoordinator;
 	}
 
 	@Override
-	public TransactionCoordinator getTransactionCoordinator() {
+	public final TransactionCoordinator getTransactionCoordinator() {
 		return transactionCoordinator;
 	}
 
 	@Override
-	public JdbcSessionContext getJdbcSessionContext() {
+	public final JdbcSessionContext getJdbcSessionContext() {
 		return jdbcSessionContext;
 	}
 
-	public EntityNameResolver getEntityNameResolver() {
+	public final EntityNameResolver getEntityNameResolver() {
 		return entityNameResolver;
 	}
 
 	@Override
-	public SessionEventListenerManager getEventListenerManager() {
+	public final SessionEventListenerManager getEventListenerManager() {
 		return sessionEventsManager;
 	}
 
 	@Override
-	public UUID getSessionIdentifier() {
+	public final UUID getSessionIdentifier() {
 		if ( sessionIdentifier == null ) {
 			//Lazily initialized: otherwise all the UUID generations will cause significant amount of contention.
 			sessionIdentifier = StandardRandomStrategy.INSTANCE.generateUUID( null );
@@ -423,7 +423,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public Object getSessionToken() {
+	public final Object getSessionToken() {
 		if ( sessionToken == null ) {
 			sessionToken = new Object();
 		}
@@ -439,7 +439,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public Object getTenantIdentifierValue() {
+	public final Object getTenantIdentifierValue() {
 		return tenantIdentifier;
 	}
 
@@ -460,7 +460,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				delayedAfterCompletion();
 			}
 			catch ( HibernateException e ) {
-				if ( getSessionFactoryOptions().isJpaBootstrap() ) {
+				if ( factoryOptions.isJpaBootstrap() ) {
 					throw getExceptionConverter().convert( e );
 				}
 				else {
@@ -503,7 +503,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isOpenOrWaitingForAutoClose() {
-		return !isClosed() || waitingForAutoClose;
+		return !closed && factory.isOpen()
+			|| waitingForAutoClose;
 	}
 
 	@Override
@@ -540,14 +541,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public boolean isTransactionInProgress() {
-		return waitingForAutoClose
-				? factory.isOpen() && transactionCoordinator.isTransactionActive()
-				: !isClosed() && transactionCoordinator.isTransactionActive();
+		return isOpenOrWaitingForAutoClose()
+			&& transactionCoordinator.isTransactionActive();
 	}
 
 	@Override
 	public void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
-		if ( !getSessionFactoryOptions().isAllowOutOfTransactionUpdateOperations()
+		if ( !factoryOptions.isAllowOutOfTransactionUpdateOperations()
 				&& !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( exceptionMessage );
 		}
@@ -556,9 +556,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private boolean isTransactionAccessible() {
 		// JPA requires that access not be provided to the transaction when using JTA.
 		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.
-		final SessionFactoryOptions sessionFactoryOptions = getSessionFactoryOptions();
-		return sessionFactoryOptions.isJtaTransactionAccessEnabled() // defaults to false in JPA bootstrap
-			|| !sessionFactoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled()
+		return factoryOptions.isJtaTransactionAccessEnabled() // defaults to false in JPA bootstrap
+			|| !factoryOptions.getJpaCompliance().isJpaTransactionComplianceEnabled()
 			|| !factory.transactionCoordinatorBuilder.isJta();
 	}
 
@@ -577,30 +576,30 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( currentHibernateTransaction == null ) {
 			currentHibernateTransaction = new TransactionImpl( getTransactionCoordinator(), this );
 		}
-		if ( !isClosed() || waitingForAutoClose && factory.isOpen() ) {
-			getTransactionCoordinator().pulse();
+		if ( isOpenOrWaitingForAutoClose() ) {
+			transactionCoordinator.pulse();
 		}
 		return currentHibernateTransaction;
 	}
 
 	@Override
 	public void startTransactionBoundary() {
-		getCacheTransactionSynchronization().transactionJoined();
+		cacheTransactionSynchronization.transactionJoined();
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
-		getCacheTransactionSynchronization().transactionCompleting();
+		cacheTransactionSynchronization.transactionCompleting();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		getCacheTransactionSynchronization().transactionCompleted( successful );
+		cacheTransactionSynchronization.transactionCompleted( successful );
 	}
 
 	@Override
-	public CacheTransactionSynchronization getCacheTransactionSynchronization() {
-		return cacheTransactionSync;
+	public final CacheTransactionSynchronization getCacheTransactionSynchronization() {
+		return cacheTransactionSynchronization;
 	}
 
 	@Override
@@ -637,26 +636,26 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public void joinTransaction() {
 		checkOpen();
-		if ( !getTransactionCoordinator().getTransactionCoordinatorBuilder().isJta() ) {
+		if ( !transactionCoordinator.getTransactionCoordinatorBuilder().isJta() ) {
 			log.callingJoinTransactionOnNonJtaEntityManager();
-			return;
 		}
-
-		try {
-			getTransactionCoordinator().explicitJoin();
-		}
-		catch ( TransactionRequiredForJoinException e ) {
-			throw new TransactionRequiredException( e.getMessage() );
-		}
-		catch ( HibernateException he ) {
-			throw getExceptionConverter().convert( he );
+		else {
+			try {
+				transactionCoordinator.explicitJoin();
+			}
+			catch ( TransactionRequiredForJoinException e ) {
+				throw new TransactionRequiredException( e.getMessage() );
+			}
+			catch ( HibernateException he ) {
+				throw getExceptionConverter().convert( he );
+			}
 		}
 	}
 
 	@Override
 	public boolean isJoinedToTransaction() {
 		checkOpen();
-		return getTransactionCoordinator().isJoined();
+		return transactionCoordinator.isJoined();
 	}
 
 	protected void delayedAfterCompletion() {
@@ -679,17 +678,17 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
 		// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
-			if ( !getSessionFactoryOptions().isMultiTenancyEnabled() ) {
+			if ( !factoryOptions.isMultiTenancyEnabled() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
-						getEventListenerManager(),
+						sessionEventsManager,
 						factory.connectionProvider,
 						this
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
-						getTenantIdentifierValue(),
-						getEventListenerManager(),
+						tenantIdentifier,
+						sessionEventsManager,
 						factory.multiTenantConnectionProvider,
 						this
 				);
@@ -704,28 +703,28 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public SessionFactoryImplementor getSessionFactory() {
+	public final SessionFactoryImplementor getSessionFactory() {
 		return factory;
 	}
 
 	@Override
 	public boolean useStreamForLobBinding() {
-		return getJdbcServices().getJdbcEnvironment().getDialect().useInputStreamToInsertBlob();
+		return getDialect().useInputStreamToInsertBlob();
 	}
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+		return factoryOptions.getPreferredSqlTypeCodeForBoolean();
 	}
 
 	@Override
 	public LobCreator getLobCreator() {
-		return getJdbcServices().getLobCreator( this );
+		return jdbcServices.getLobCreator( this );
 	}
 
 	@Override
 	public Dialect getDialect() {
-		return getJdbcServices().getJdbcEnvironment().getDialect();
+		return jdbcServices.getJdbcEnvironment().getDialect();
 	}
 
 	@Override
@@ -756,7 +755,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public JdbcServices getJdbcServices() {
+	public final JdbcServices getJdbcServices() {
 		return jdbcServices;
 	}
 
@@ -1579,12 +1578,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public FormatMapper getXmlFormatMapper() {
-		return getSessionFactoryOptions().getXmlFormatMapper();
+		return factoryOptions.getXmlFormatMapper();
 	}
 
 	@Override
 	public FormatMapper getJsonFormatMapper() {
-		return getSessionFactoryOptions().getJsonFormatMapper();
+		return factoryOptions.getJsonFormatMapper();
 	}
 
 	@Serial
@@ -1647,7 +1646,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		jdbcSessionContext = createJdbcSessionContext( (StatementInspector) ois.readObject() );
 		jdbcCoordinator = JdbcCoordinatorImpl.deserialize( ois, this );
 
-		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
+		cacheTransactionSynchronization = factory.getCache().getRegionFactory().createTransactionContext( this );
 		transactionCoordinator =
 				factory.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 

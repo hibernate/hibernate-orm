@@ -4,9 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.lang.invoke.MethodHandles;
-import java.sql.Types;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
@@ -32,13 +30,12 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -46,12 +43,13 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.TemporalType;
+import java.lang.invoke.MethodHandles;
+import java.sql.Types;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -419,9 +417,9 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// Unisys 2200 does not support the FOR UPDATE clause
-		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override

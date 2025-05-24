@@ -4,12 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.Metadata;
@@ -20,6 +15,7 @@ import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -39,17 +35,15 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -63,7 +57,11 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.common.TemporalUnit.DAY;
@@ -75,6 +73,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.DECIMAL;
@@ -88,7 +87,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * An SQL dialect for SQLite.
@@ -395,9 +393,9 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// SQLite does not support the FOR UPDATE clause
-		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override

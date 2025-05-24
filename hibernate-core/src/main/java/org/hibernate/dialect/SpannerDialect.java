@@ -4,9 +4,7 @@
  */
 package org.hibernate.dialect;
 
-import java.util.Date;
-import java.util.Map;
-
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -35,12 +33,11 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -51,10 +48,12 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
-import jakarta.persistence.TemporalType;
+import java.util.Date;
+import java.util.Map;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -708,9 +707,9 @@ public class SpannerDialect extends Dialect {
 	// Lock acquisition functions
 
 	@Override
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
 		// Spanner does not support the FOR UPDATE clause
-		return NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+		return NON_CLAUSE_STRATEGY;
 	}
 
 	@Override

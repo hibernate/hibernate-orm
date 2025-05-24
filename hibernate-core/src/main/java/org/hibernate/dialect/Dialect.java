@@ -13,6 +13,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -112,10 +113,11 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.internal.NoOpForUpdateClauseStrategy;
+import org.hibernate.sql.ast.internal.NonLockingClauseStrategy;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
-import org.hibernate.sql.ast.internal.StandardForUpdateClauseStrategy;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.sql.ast.internal.StandardLockingClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
@@ -222,6 +224,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
@@ -2164,10 +2167,56 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return PessimisticLockStyle.CLAUSE;
 	}
 
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		return getPessimisticLockStyle() == PessimisticLockStyle.CLAUSE
-				? StandardForUpdateClauseStrategy.strategy( this, querySpec, lockOptions )
-				: NoOpForUpdateClauseStrategy.NO_OP_STRATEGY;
+	/**
+	 * The {@linkplain RowLockStrategy strategy} for indicating which rows
+	 * to lock as part of a {@code for update of} style clause.
+	 */
+	public RowLockStrategy getWriteRowLockStrategy() {
+		// by default, we report no support
+		return RowLockStrategy.NONE;
+	}
+
+	/**
+	 * The {@linkplain RowLockStrategy strategy} for indicating which rows
+	 * to lock as part of a {@code for share of} style clause.
+	 * <p/>
+	 * By default, simply uses {@linkplain #getWriteRowLockStrategy()}.
+	 */
+	public RowLockStrategy getReadRowLockStrategy() {
+		return getWriteRowLockStrategy();
+	}
+
+	/**
+	 * Strategy for handling {@linkplain PessimisticLockStyle#CLAUSE locking clause}
+	 * as part of {@linkplain org.hibernate.sql.ast.SqlAstTranslator}.
+	 */
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		if ( getPessimisticLockStyle() != PessimisticLockStyle.CLAUSE || lockOptions == null ) {
+			return NON_CLAUSE_STRATEGY;
+		}
+
+		final LockMode lockMode = lockOptions.getLockMode();
+		final PessimisticLockKind lockKind = PessimisticLockKind.interpret( lockMode );
+		if ( lockKind == PessimisticLockKind.NONE ) {
+			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+		}
+
+		final RowLockStrategy rowLockStrategy;
+		switch ( lockKind ) {
+			case SHARE -> rowLockStrategy = getReadRowLockStrategy();
+			case UPDATE -> rowLockStrategy = getWriteRowLockStrategy();
+			default -> throw new IllegalStateException( "Should never happen due to checks above" );
+		}
+
+		return buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions.getScope(), lockOptions.getTimeOut() );
+	}
+
+	protected LockingClauseStrategy buildLockingClauseStrategy(
+			PessimisticLockKind lockKind,
+			RowLockStrategy rowLockStrategy,
+			Locking.Scope lockScope,
+			int timeout) {
+		return new StandardLockingClauseStrategy( this, lockKind, rowLockStrategy, lockScope, timeout );
 	}
 
 	/**
@@ -2445,21 +2494,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		// by default we simply return the getReadLockString(timeout) result since
 		// the default is to say no support for "FOR UPDATE OF ..."
 		return getReadLockString( timeout );
-	}
-
-	/**
-	 * The {@linkplain RowLockStrategy row lock strategy} to use for write locks.
-	 */
-	public RowLockStrategy getWriteRowLockStrategy() {
-		// by default we report no support
-		return RowLockStrategy.NONE;
-	}
-
-	/**
-	 * The {@linkplain RowLockStrategy row lock strategy} to use for read locks.
-	 */
-	public RowLockStrategy getReadRowLockStrategy() {
-		return getWriteRowLockStrategy();
 	}
 
 	/**

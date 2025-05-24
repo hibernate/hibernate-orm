@@ -15,4 +15,11 @@ public interface ImplicitConstraintNameSource extends ImplicitNameSource {
 	Identifier getTableName();
 	List<Identifier> getColumnNames();
 	Identifier getUserProvidedIdentifier();
+	Kind kind();
+
+	enum Kind {
+		FOREIGN_KEY,
+		UNIQUE_KEY,
+		INDEX
+	}
 }

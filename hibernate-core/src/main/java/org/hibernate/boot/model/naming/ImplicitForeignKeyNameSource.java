@@ -12,4 +12,9 @@ import java.util.List;
 public interface ImplicitForeignKeyNameSource extends ImplicitConstraintNameSource {
 	Identifier getReferencedTableName();
 	List<Identifier> getReferencedColumnNames();
+
+	@Override
+	default Kind kind() {
+		return Kind.FOREIGN_KEY;
+	}
 }

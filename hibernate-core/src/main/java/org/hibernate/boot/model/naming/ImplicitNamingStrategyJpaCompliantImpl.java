@@ -9,6 +9,7 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 
 import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -191,34 +192,27 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	public Identifier determineForeignKeyName(ImplicitForeignKeyNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		final MetadataBuildingContext buildingContext = source.getBuildingContext();
-		return userProvidedIdentifier != null ? userProvidedIdentifier : toIdentifier(
-				NamingHelper.withCharset( buildingContext.getBuildingOptions().getSchemaCharset() )
-						.generateHashedFkName( "FK", source.getTableName(),
-								source.getReferencedTableName(), source.getColumnNames() ),
-				buildingContext
-		);
+		return userProvidedIdentifier != null
+				? userProvidedIdentifier
+				: generateConstraintName( source, buildingContext );
 	}
 
 	@Override
 	public Identifier determineUniqueKeyName(ImplicitUniqueKeyNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		final MetadataBuildingContext buildingContext = source.getBuildingContext();
-		return userProvidedIdentifier != null ? userProvidedIdentifier : toIdentifier(
-				NamingHelper.withCharset( buildingContext.getBuildingOptions().getSchemaCharset() )
-						.generateHashedConstraintName( "UK", source.getTableName(), source.getColumnNames() ),
-				buildingContext
-		);
+		return userProvidedIdentifier != null
+				? userProvidedIdentifier
+				: generateConstraintName( source, buildingContext );
 	}
 
 	@Override
 	public Identifier determineIndexName(ImplicitIndexNameSource source) {
 		final Identifier userProvidedIdentifier = source.getUserProvidedIdentifier();
 		final MetadataBuildingContext buildingContext = source.getBuildingContext();
-		return userProvidedIdentifier != null ? userProvidedIdentifier : toIdentifier(
-				NamingHelper.withCharset( buildingContext.getBuildingOptions().getSchemaCharset() )
-						.generateHashedConstraintName( "IDX", source.getTableName(), source.getColumnNames() ),
-				buildingContext
-		);
+		return userProvidedIdentifier != null
+				? userProvidedIdentifier
+				: generateConstraintName( source, buildingContext );
 	}
 
 	/**
@@ -235,18 +229,54 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 	}
 
 	/**
-	 * Easy hook to build an Identifier using the keyword safe IdentifierHelper.
+	 * Easy hook to build an {@link Identifier} using the keyword safe
+	 * {@link org.hibernate.engine.jdbc.env.spi.IdentifierHelper}.
 	 *
 	 * @param stringForm The String form of the name
-	 * @param buildingContext Access to the IdentifierHelper
+	 * @param buildingContext Access to the {@code IdentifierHelper}
 	 *
 	 * @return The identifier
 	 */
 	protected Identifier toIdentifier(String stringForm, MetadataBuildingContext buildingContext) {
-		return buildingContext.getMetadataCollector()
-				.getDatabase()
-				.getJdbcEnvironment()
-				.getIdentifierHelper()
-				.toIdentifier( stringForm );
+		return toIdentifier( stringForm,
+				buildingContext.getMetadataCollector()
+						.getDatabase()
+						.getJdbcEnvironment()
+						.getIdentifierHelper() );
+	}
+
+	/**
+	 * Easy hook to build an {@link Identifier} using the keyword safe
+	 * {@link org.hibernate.engine.jdbc.env.spi.IdentifierHelper}.
+	 *
+	 * @param stringForm The String form of the name
+	 * @param identifierHelper The {@code IdentifierHelper}
+	 *
+	 * @return The identifier
+	 */
+	protected Identifier toIdentifier(String stringForm, IdentifierHelper identifierHelper) {
+		return identifierHelper.toIdentifier( stringForm );
+	}
+
+	protected Identifier generateConstraintName(ImplicitForeignKeyNameSource source, MetadataBuildingContext context) {
+		return toIdentifier(
+				NamingHelper.withCharset( context.getBuildingOptions().getSchemaCharset() )
+						.generateHashedFkName( "FK", source.getTableName(),
+								source.getReferencedTableName(), source.getColumnNames() ),
+				context
+		);
+	}
+
+	protected Identifier generateConstraintName(ImplicitConstraintNameSource source, MetadataBuildingContext context) {
+		final String prefix = switch (source.kind()) {
+			case INDEX -> "IDX";
+			case UNIQUE_KEY -> "UK";
+			case FOREIGN_KEY -> throw new IllegalArgumentException();
+		};
+		return toIdentifier(
+				NamingHelper.withCharset( context.getBuildingOptions().getSchemaCharset() )
+						.generateHashedConstraintName( prefix, source.getTableName(), source.getColumnNames() ),
+				context
+		);
 	}
 }

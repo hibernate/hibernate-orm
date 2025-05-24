@@ -127,10 +127,8 @@ public class ConnectionProviderDelegate implements
 
 	@Override
 	public boolean supportsAggressiveRelease() {
-		if ( forceSupportsAggressiveRelease ) {
-			return true;
-		}
-		return connectionProvider.supportsAggressiveRelease();
+		return forceSupportsAggressiveRelease
+			|| connectionProvider.supportsAggressiveRelease();
 	}
 
 	@Override

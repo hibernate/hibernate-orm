@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -634,8 +633,9 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public int executeUpdate() throws HibernateException {
-		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
+		//TODO: refactor copy/paste of QuerySqmImpl.executeUpdate()
+		getSession().checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();

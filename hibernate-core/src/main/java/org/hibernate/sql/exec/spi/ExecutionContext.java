@@ -25,6 +25,10 @@ public interface ExecutionContext {
 
 	SharedSessionContractImplementor getSession();
 
+	default boolean isTransactionActive() {
+		return getSession().isTransactionInProgress();
+	}
+
 	QueryOptions getQueryOptions();
 
 	LoadQueryInfluencers getLoadQueryInfluencers();

@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jakarta.persistence.Timeout;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
@@ -61,11 +61,11 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -583,18 +583,8 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public ForUpdateClauseStrategy getForUpdateClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		return DerbyForUpdateStrategy.strategy( this, querySpec, lockOptions );
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.NONE;
-	}
-
-	@Override
-	public RowLockStrategy getReadRowLockStrategy() {
-		return RowLockStrategy.NONE;
+	protected LockingClauseStrategy buildLockingClauseStrategy(PessimisticLockKind lockKind, RowLockStrategy rowLockStrategy, Locking.Scope lockScope, int timeout) {
+		return new DerbyLockingClauseStrategy( this, lockKind, rowLockStrategy, lockScope, timeout );
 	}
 
 	@Override

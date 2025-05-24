@@ -4,7 +4,7 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.sql.ast.spi.ForUpdateClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
@@ -16,8 +16,8 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
  *
  * @author Steve Ebersole
  */
-public class NoOpForUpdateClauseStrategy implements ForUpdateClauseStrategy {
-	public static final NoOpForUpdateClauseStrategy NO_OP_STRATEGY = new NoOpForUpdateClauseStrategy();
+public class NonLockingClauseStrategy implements LockingClauseStrategy {
+	public static final NonLockingClauseStrategy NON_CLAUSE_STRATEGY = new NonLockingClauseStrategy();
 
 	@Override
 	public void registerRoot(TableGroup root) {

@@ -4,7 +4,29 @@
  */
 package org.hibernate.persister.entity;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -135,7 +157,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -158,6 +179,7 @@ import org.hibernate.metamodel.mapping.internal.ImmutableAttributeMappingList;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.mapping.internal.MappingModelHelper;
 import org.hibernate.metamodel.mapping.internal.SimpleAttributeMetadata;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter;
@@ -253,28 +275,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -4066,6 +4067,11 @@ public abstract class AbstractEntityPersister
 		// clear the fields that are marked as dirty in the dirtiness tracker
 		processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
 		processIfManagedEntity( entity, AbstractEntityPersister::useTracker );
+
+		if ( session instanceof SessionImplementor sessionImplementor ) {
+			session.getFactory().getCustomEntityDirtinessStrategy()
+					.resetDirty( entity, this, sessionImplementor );
+		}
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {

@@ -83,9 +83,10 @@ public final class MutableEntityEntry extends AbstractEntityEntry {
 				(String) ois.readObject(),
 				ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
-				( previousStatusString = (String) ois.readObject() ).length() == 0
-						? null
-						: Status.valueOf( previousStatusString ),
+				( previousStatusString = (String) ois.readObject() )
+						.isEmpty()
+							? null
+							: Status.valueOf( previousStatusString ),
 				(Object[]) ois.readObject(),
 				(Object[]) ois.readObject(),
 				ois.readObject(),

@@ -654,58 +654,34 @@ class StatefulPersistenceContext implements PersistenceContext {
 			final EntityPersister persister,
 			final boolean disableVersionIncrement) {
 		assert lockMode != null;
-
-		final EntityEntry e;
-
-		/*
-			IMPORTANT!!!
-
-			The following instanceof checks and castings are intentional.
-
-			DO NOT REFACTOR to make calls through the EntityEntryFactory interface, which would result
-			in polymorphic call sites which will severely impact performance.
-
-			When a virtual method is called via an interface the JVM needs to resolve which concrete
-			implementation to call.  This takes CPU cycles and is a performance penalty.  It also prevents method
-			inlining which further degrades performance.  Casting to an implementation and making a direct method call
-			removes the virtual call, and allows the methods to be inlined.  In this critical code path, it has a very
-			large impact on performance to make virtual method calls.
-		*/
-		if ( persister.getEntityEntryFactory() instanceof MutableEntityEntryFactory ) {
-			//noinspection RedundantCast
-			e = ( (MutableEntityEntryFactory) persister.getEntityEntryFactory() ).createEntityEntry(
-					status,
-					loadedState,
-					rowId,
-					id,
-					version,
-					lockMode,
-					existsInDatabase,
-					persister,
-					disableVersionIncrement,
-					this
-			);
-		}
-		else {
-			//noinspection RedundantCast
-			e = ( (ImmutableEntityEntryFactory) persister.getEntityEntryFactory() ).createEntityEntry(
-					status,
-					loadedState,
-					rowId,
-					id,
-					version,
-					lockMode,
-					existsInDatabase,
-					persister,
-					disableVersionIncrement,
-					this
-			);
-		}
-
-		entityEntryContext.addEntityEntry( entity, e );
-
+		final EntityEntry entityEntry =
+				persister.isMutable()
+						? new MutableEntityEntry(
+								status,
+								loadedState,
+								rowId,
+								id,
+								version,
+								lockMode,
+								existsInDatabase,
+								persister,
+								disableVersionIncrement,
+								this
+						)
+						: new ImmutableEntityEntry(
+								status,
+								loadedState,
+								rowId,
+								id,
+								version,
+								lockMode,
+								existsInDatabase,
+								persister,
+								disableVersionIncrement
+						);
+		entityEntryContext.addEntityEntry( entity, entityEntry );
 		setHasNonReadOnlyEnties( status );
-		return e;
+		return entityEntry;
 	}
 
 	@Override
@@ -715,7 +691,6 @@ class StatefulPersistenceContext implements PersistenceContext {
 		final EntityEntry entityEntry = asManagedEntity( entity ).$$_hibernate_getEntityEntry();
 		entityEntry.setStatus( status );
 		entityEntryContext.addEntityEntry( entity, entityEntry );
-
 		setHasNonReadOnlyEnties( status );
 		return entityEntry;
 	}

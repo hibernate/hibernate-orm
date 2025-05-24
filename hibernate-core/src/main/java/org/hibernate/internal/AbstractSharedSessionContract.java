@@ -525,9 +525,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public void prepareForQueryExecution(boolean requiresTxn) {
 		checksBeforeQueryCreation();
 		if ( requiresTxn && !isTransactionInProgress() ) {
-			throw new TransactionRequiredException(
-					"Query requires transaction be in progress, but no transaction is known to be in progress"
-			);
+			throw new TransactionRequiredException( "No active transaction" );
 		}
 	}
 

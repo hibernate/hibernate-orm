@@ -554,13 +554,13 @@ public class SessionImpl
 		if ( e == null ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
-
-		if ( e.getStatus().isDeletedOrGone() ) {
-			throw new ObjectDeletedException( "The given object was deleted", e.getId(),
+		else if ( e.getStatus().isDeletedOrGone() ) {
+			throw new ObjectDeletedException( "Given entity was removed", e.getId(),
 					e.getPersister().getEntityName() );
 		}
-
-		return e.getLockMode();
+		else {
+			return e.getLockMode();
+		}
 	}
 
 	@Override
@@ -2611,7 +2611,7 @@ public class SessionImpl
 	}
 
 	private void checkTransactionNeededForUpdateOperation() {
-		checkTransactionNeededForUpdateOperation( "no transaction is in progress" );
+		checkTransactionNeededForUpdateOperation( "No active transaction" );
 	}
 
 	@Override
@@ -2772,11 +2772,11 @@ public class SessionImpl
 		checkOpen();
 
 		if ( !isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "Call to EntityManager#getLockMode should occur within transaction according to spec" );
+			throw new TransactionRequiredException( "No active transaction" );
 		}
 
 		if ( !contains( entity ) ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( "entity not in the persistence context" ) );
+			throw getExceptionConverter().convert( new IllegalArgumentException( "Entity not associated with the persistence context" ) );
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );

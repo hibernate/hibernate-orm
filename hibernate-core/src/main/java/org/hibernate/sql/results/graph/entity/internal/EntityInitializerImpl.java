@@ -1321,14 +1321,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 	@Override
 	public void initializeInstance(EntityInitializerData data) {
-		if ( data.getState() != State.RESOLVED ) {
-			return;
+		if ( data.getState() == State.RESOLVED ) {
+			if ( !skipInitialization( data ) ) {
+				assert consistentInstance( data );
+				initializeEntityInstance( data );
+			}
+			data.setState( State.INITIALIZED );
 		}
-		if ( !skipInitialization( data ) ) {
-			assert consistentInstance( data );
-			initializeEntityInstance( data );
-		}
-		data.setState( State.INITIALIZED );
 	}
 
 	protected boolean consistentInstance(EntityInitializerData data) {
@@ -1375,7 +1374,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 		// from the perspective of Hibernate, an entity is read locked as soon as it is read
 		// so regardless of the requested lock mode, we upgrade to at least the read level
-		final LockMode lockModeToAcquire = data.lockMode == LockMode.NONE ? LockMode.READ : data.lockMode;
+		final LockMode lockModeToAcquire;
+		if ( data.getRowProcessingState().isTransactionActive() ) {
+			lockModeToAcquire = data.lockMode == LockMode.NONE ? LockMode.READ : data.lockMode;
+		}
+		else {
+			// data read outside transaction is marked as unlocked
+			lockModeToAcquire = LockMode.NONE;
+		}
 
 		final EntityEntry entityEntry = persistenceContext.addEntry(
 				entityInstanceForNotify,

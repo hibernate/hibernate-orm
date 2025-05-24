@@ -32,6 +32,7 @@ import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -308,6 +309,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	@Test @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.date multi overflows")
 	public void testDateTimeOperations() {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(

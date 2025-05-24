@@ -310,6 +310,11 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	public void postLoad(Object entity) {
 		processIfSelfDirtinessTracker( entity, EntityEntryImpl::clearDirtyAttributes );
 		processIfManagedEntity( entity, EntityEntryImpl::useTracker );
+
+		if ( persister.isMutable() && persistenceContext.getSession() instanceof SessionImplementor session ) {
+			session.getFactory().getCustomEntityDirtinessStrategy()
+					.resetDirty( entity, persister, session );
+		}
 	}
 
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {

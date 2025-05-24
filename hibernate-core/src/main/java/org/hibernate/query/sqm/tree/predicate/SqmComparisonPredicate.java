@@ -13,6 +13,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import java.util.Objects;
+
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
@@ -115,5 +117,19 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		hql.append( operator.sqlText() );
 		hql.append( ' ' );
 		rightHandExpression.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmComparisonPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.operator == that.operator
+			&& Objects.equals( this.leftHandExpression, that.leftHandExpression )
+			&& Objects.equals( this.rightHandExpression, that.rightHandExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), operator, leftHandExpression, rightHandExpression );
 	}
 }

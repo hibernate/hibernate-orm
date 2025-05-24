@@ -10,6 +10,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import java.util.Objects;
+
 /**
  * @author Steve Ebersole
  */
@@ -61,6 +63,18 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 		else {
 			hql.append( " is null" );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmNullnessPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.expression, that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), expression );
 	}
 
 	@Override

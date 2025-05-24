@@ -92,23 +92,24 @@ public abstract class AbstractSqmDmlStatement<E>
 		return (JpaCteCriteria<X>) cteStatements.get( cteName );
 	}
 
-	@Override
+	@Override @Deprecated
 	public <X> JpaCteCriteria<X> with(AbstractQuery<X> criteria) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), criteria );
+		// Use of acquireUniqueAlias() results in interpretation cache miss
+		return withInternal( "_" + SqmCreationHelper.acquireUniqueAlias(), criteria );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionAll(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, false, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, false, recursiveCriteriaProducer );
 	}
 
 	@Override
 	public <X> JpaCteCriteria<X> withRecursiveUnionDistinct(
 			AbstractQuery<X> baseCriteria,
 			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
-		return withInternal( SqmCreationHelper.acquireUniqueAlias(), baseCriteria, true, recursiveCriteriaProducer );
+		return withInternal( generateAlias(), baseCriteria, true, recursiveCriteriaProducer );
 	}
 
 	@Override

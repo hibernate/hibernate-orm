@@ -25,6 +25,7 @@ import org.hibernate.spi.NavigablePath;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
 
+
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 /**
@@ -210,5 +211,17 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	@Override
 	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatAsType) {
 		return treatAs( treatAsType, null );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCrossJoin<?>
+			&& super.equals( object );
+	}
+
+	@Override
+	// needed to make static code analyzer happy
+	public int hashCode() {
+		return super.hashCode();
 	}
 }

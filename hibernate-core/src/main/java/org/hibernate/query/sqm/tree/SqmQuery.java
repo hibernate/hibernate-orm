@@ -14,4 +14,6 @@ import org.hibernate.query.criteria.JpaCriteriaBase;
 public interface SqmQuery<T> extends JpaCriteriaBase, SqmNode {
 	@Override
 	SqmQuery<T> copy(SqmCopyContext context);
+
+	String generateAlias();
 }

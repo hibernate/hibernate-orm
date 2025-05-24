@@ -134,24 +134,21 @@ public class SqmTreeCreationHelper {
 	 */
 	public static <E> void handleRootAsCrossJoin(
 			HqlParser.EntityWithJoinsContext entityWithJoinsContext,
-			SqmRoot<?> sqmPrimaryRoot,
+			SqmRoot<E> sqmPrimaryRoot,
 			SemanticQueryBuilder<?> sqmBuilder) {
-		final HqlParser.RootEntityContext fromRootContext = (HqlParser.RootEntityContext) entityWithJoinsContext.fromRoot();
+		final HqlParser.RootEntityContext fromRootContext =
+				(HqlParser.RootEntityContext) entityWithJoinsContext.fromRoot();
 
 		//noinspection unchecked
 		final SqmRoot<E> sqmRoot = (SqmRoot<E>) fromRootContext.accept( sqmBuilder );
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
-
-		final String alias = extractAlias( fromRootContext.variable(), sqmBuilder );
-		final SqmEntityJoin<?,E> pseudoCrossJoin = new SqmEntityJoin<>(
+		final SqmEntityJoin<E,E> pseudoCrossJoin = new SqmEntityJoin<>(
 				sqmRoot.getManagedType(),
-				alias,
+				extractAlias( fromRootContext.variable(), sqmBuilder ),
 				SqmJoinType.CROSS,
 				sqmPrimaryRoot
 		);
-
-		//noinspection unchecked,rawtypes
-		sqmPrimaryRoot.addSqmJoin( (SqmEntityJoin) pseudoCrossJoin );
+		sqmPrimaryRoot.addSqmJoin( pseudoCrossJoin );
 
 		final SqmCreationProcessingState processingState = sqmBuilder.getProcessingStateStack().getCurrent();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();

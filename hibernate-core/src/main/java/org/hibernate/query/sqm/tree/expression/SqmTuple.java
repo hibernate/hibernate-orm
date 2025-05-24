@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -92,6 +93,17 @@ public class SqmTuple<T>
 			groupedExpressions.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmTuple<?> that
+			&& Objects.equals( this.groupedExpressions, that.groupedExpressions );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( groupedExpressions );
 	}
 
 	@Override

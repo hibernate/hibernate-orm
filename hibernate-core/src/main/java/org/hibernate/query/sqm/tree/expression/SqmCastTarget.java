@@ -15,6 +15,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
+import java.util.Objects;
+
 
 /**
  * @author Gavin King
@@ -110,5 +112,19 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 			hql.append( length );
 			hql.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCastTarget<?> that
+			&& Objects.equals( type, that.type )
+			&& Objects.equals( length, that.length )
+			&& Objects.equals( precision, that.precision )
+			&& Objects.equals( scale, that.scale );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( type, length, precision, scale );
 	}
 }

@@ -63,7 +63,6 @@ public class H2UnnestFunction extends UnnestFunction {
 	protected <T> SelfRenderingSqmSetReturningFunction<T> generateSqmSetReturningFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			QueryEngine queryEngine) {
-		//noinspection unchecked
 		return new SelfRenderingSqmSetReturningFunction<>(
 				this,
 				this,

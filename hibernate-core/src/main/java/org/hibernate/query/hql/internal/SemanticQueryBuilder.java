@@ -1223,7 +1223,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final EntityDomainType<R> entityDescriptor = getResultEntity();
 			if ( entityDescriptor != null ) {
 				final SqmRoot<R> sqmRoot =
-						new SqmRoot<>( entityDescriptor, null, false, nodeBuilder() );
+						new SqmRoot<>( entityDescriptor, "_0", false, nodeBuilder() );
 				processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
 				fromClause.addRoot( sqmRoot );
 			}

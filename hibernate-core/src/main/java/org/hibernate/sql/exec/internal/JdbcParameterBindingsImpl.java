@@ -5,13 +5,11 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -27,6 +25,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Standard implementation of JdbcParameterBindings
@@ -50,9 +50,8 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		if ( !parameterOccurrences.isEmpty() ) {
 			bindingMap = new IdentityHashMap<>( parameterOccurrences.size() );
 
-			final Dialect dialect = factory.getJdbcServices().getDialect();
 			final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
-			final int inExprLimit = dialect.getParameterCountLimit();
+			final int inExprLimit = factory.getJdbcServices().getDialect().getParameterCountLimit();
 
 			for ( ParameterOccurrence occurrence : parameterOccurrences ) {
 				final QueryParameterImplementor<?> param = occurrence.parameter();
@@ -139,11 +138,8 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 	}
 
 	private BindableType<?> determineParamType(QueryParameterImplementor<?> param, QueryParameterBinding<?> binding) {
-		BindableType<?> type = binding.getBindType();
-		if ( type == null ) {
-			type = param.getHibernateType();
-		}
-		return type;
+		final BindableType<?> type = binding.getBindType();
+		return type == null ? param.getHibernateType() : type;
 	}
 
 	@Override
@@ -151,30 +147,25 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		if ( bindingMap == null ) {
 			bindingMap = new IdentityHashMap<>();
 		}
-
 		bindingMap.put( parameter, binding );
 	}
 
 	@Override
 	public Collection<JdbcParameterBinding> getBindings() {
-		return bindingMap == null ? Collections.emptyList() : bindingMap.values();
+		return bindingMap == null ? emptyList() : bindingMap.values();
 	}
 
 	@Override
 	public JdbcParameterBinding getBinding(JdbcParameter parameter) {
-		if ( bindingMap == null ) {
-			return null;
-		}
-		return bindingMap.get( parameter );
+		return bindingMap == null ? null : bindingMap.get( parameter );
 	}
 
 	@Override
 	public void visitBindings(BiConsumer<JdbcParameter, JdbcParameterBinding> action) {
-		if ( bindingMap == null ) {
-			return;
-		}
-		for ( Map.Entry<JdbcParameter, JdbcParameterBinding> entry : bindingMap.entrySet() ) {
-			action.accept( entry.getKey(), entry.getValue() );
+		if ( bindingMap != null ) {
+			for ( var entry : bindingMap.entrySet() ) {
+				action.accept( entry.getKey(), entry.getValue() );
+			}
 		}
 	}
 

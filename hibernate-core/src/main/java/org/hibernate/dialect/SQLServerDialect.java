@@ -19,6 +19,7 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -646,14 +647,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
-		final LockMode lockMode = lockModeForAlias( lockOptions, tableName );
-		final int timeOut = lockOptions.getTimeOut();
+		final LockMode lockMode = lockOptions.getLockMode();
+		final int timeOut = lockOptions.getTimeout().milliseconds();
 
-		final String writeLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
-		final String readLockStr = timeOut == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+		final String writeLockStr = timeOut == Timeouts.SKIP_LOCKED_MILLI ? "updlock" : "updlock,holdlock";
+		final String readLockStr = timeOut == Timeouts.SKIP_LOCKED_MILLI ? "updlock" : "holdlock";
 
-		final String noWaitStr = timeOut == LockOptions.NO_WAIT ? ",nowait" : "";
-		final String skipLockStr = timeOut == LockOptions.SKIP_LOCKED ? ",readpast" : "";
+		final String noWaitStr = timeOut == Timeouts.NO_WAIT_MILLI ? ",nowait" : "";
+		final String skipLockStr = timeOut == Timeouts.SKIP_LOCKED_MILLI ? ",readpast" : "";
 
 		return tableName + switch (lockMode) {
 			case PESSIMISTIC_WRITE, WRITE -> " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
@@ -662,11 +663,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			case UPGRADE_NOWAIT -> " with (updlock,holdlock,rowlock,nowait)";
 			default -> "";
 		};
-	}
-
-	private static LockMode lockModeForAlias(LockOptions lockOptions, String tableName) {
-		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( tableName );
-		return lockMode == null ? lockOptions.getLockMode() : lockMode;
 	}
 
 

@@ -4,12 +4,10 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.CacheIdentityColumnSupport;
@@ -39,24 +37,29 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CLOB;
@@ -308,6 +311,11 @@ public class CacheDialect extends Dialect {
 	}
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		return NON_CLAUSE_STRATEGY;
+	}
 
 	@Override
 	public boolean supportsOuterJoinForUpdate() {

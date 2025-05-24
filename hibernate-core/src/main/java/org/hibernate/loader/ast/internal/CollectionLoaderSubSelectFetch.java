@@ -58,7 +58,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				subselect,
 				cachedDomainResult,
 				session.getLoadQueryInfluencers(),
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParameter -> {},
 				session.getFactory()
 		);

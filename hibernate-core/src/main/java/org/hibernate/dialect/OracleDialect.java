@@ -1437,7 +1437,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN;
+		return RowLockStrategy.COLUMN_NAME;
 	}
 
 	@Override

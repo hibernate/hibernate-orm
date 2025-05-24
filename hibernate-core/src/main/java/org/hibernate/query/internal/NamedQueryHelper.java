@@ -213,12 +213,7 @@ public class NamedQueryHelper {
 			lockMode = LockMode.fromExternalForm( lockModeSetting.toString() );
 		}
 
-		if ( lockMode == LockMode.NONE ) {
-			return LockOptions.NONE;
-		}
-		else {
-			return new LockOptions( lockMode );
-		}
+		return new LockOptions( lockMode );
 	}
 
 	private static Integer determineTimeout(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {

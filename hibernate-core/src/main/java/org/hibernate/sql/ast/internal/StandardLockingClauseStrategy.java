@@ -41,6 +41,16 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	private final Locking.Scope lockingScope;
 	private final int timeout;
 
+	/**
+	 * @implNote Tracked separately from {@linkplain #rootsToLock} and
+	 * {@linkplain #joinsToLock} to help answer {@linkplain #containsOuterJoins()}
+	 * for {@linkplain RowLockStrategy#NONE cases} where we otherwise don't need to
+	 * track the tables, allowing to avoid the overhead of the Sets.  There is a
+	 * slight trade-off in that we need to inspect the from-elements to make that
+	 * determination when we might otherwise not need to - memory versus cpu.
+	 */
+	private boolean queryHasOuterJoins = false;
+
 	private Set<TableGroup> rootsToLock;
 	private Set<TableGroupJoin> joinsToLock;
 
@@ -61,10 +71,21 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 
 	@Override
 	public void registerRoot(TableGroup root) {
-		if ( rootsToLock == null ) {
-			rootsToLock = new HashSet<>();
+		if ( !queryHasOuterJoins && !dialect.supportsOuterJoinForUpdate() ) {
+			if ( root.getModelPart() instanceof EntityPersister entityMapping ) {
+				if ( entityMapping.hasMultipleTables() ) {
+					// joined inheritance and/or secondary tables - inherently has outer joins
+					queryHasOuterJoins = true;
+				}
+			}
 		}
-		rootsToLock.add( root );
+
+		if ( rowLockStrategy != RowLockStrategy.NONE ) {
+			if ( rootsToLock == null ) {
+				rootsToLock = new HashSet<>();
+			}
+			rootsToLock.add( root );
+		}
 	}
 
 	@Override
@@ -90,41 +111,32 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	private void trackJoin(TableGroupJoin join) {
-		if ( joinsToLock == null ) {
-			joinsToLock = new LinkedHashSet<>();
+		if ( !queryHasOuterJoins && !dialect.supportsOuterJoinForUpdate() ) {
+			final TableGroup joinedGroup = join.getJoinedGroup();
+			if ( join.isInitialized()
+				&& join.getJoinType() != SqlAstJoinType.INNER
+				&& !joinedGroup.isVirtual() ) {
+				queryHasOuterJoins = true;
+			}
+			else if ( joinedGroup.getModelPart() instanceof EntityPersister entityMapping ) {
+				if ( entityMapping.hasMultipleTables() ) {
+					// joined inheritance and/or secondary tables - inherently has outer joins
+					queryHasOuterJoins = true;
+				}
+			}
 		}
-		joinsToLock.add( join );
+
+		if ( rowLockStrategy != RowLockStrategy.NONE ) {
+			if ( joinsToLock == null ) {
+				joinsToLock = new LinkedHashSet<>();
+			}
+			joinsToLock.add( join );
+		}
 	}
 
 	@Override
 	public boolean containsOuterJoins() {
-		for ( TableGroup tableGroup : rootsToLock ) {
-			if ( tableGroup.getModelPart() instanceof EntityPersister entityMapping ) {
-				if ( entityMapping.hasMultipleTables() ) {
-					// joined inheritance and/or secondary tables - inherently has outer joins
-					return true;
-				}
-			}
-		}
-
-		if ( joinsToLock != null ) {
-			for ( TableGroupJoin tableGroupJoin : joinsToLock ) {
-				final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-				if ( tableGroupJoin.isInitialized()
-					&& tableGroupJoin.getJoinType() != SqlAstJoinType.INNER
-					&& !joinedGroup.isVirtual() ) {
-					return true;
-				}
-				if ( joinedGroup.getModelPart() instanceof EntityPersister entityMapping ) {
-					if ( entityMapping.hasMultipleTables() ) {
-						// joined inheritance and/or secondary tables - inherently has outer joins
-						return true;
-					}
-				}
-			}
-		}
-
-		return false;
+		return queryHasOuterJoins;
 	}
 
 	@Override

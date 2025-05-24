@@ -40,7 +40,7 @@ public final class MutableEntityEntryFactory implements EntityEntryFactory {
 			EntityPersister persister,
 			boolean disableVersionIncrement,
 			PersistenceContext persistenceContext) {
-		return new MutableEntityEntry(
+		return new EntityEntryImpl(
 				status,
 				loadedState,
 				rowId,

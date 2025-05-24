@@ -85,13 +85,11 @@ public class EntityEntryContext {
 		// any addition (even the double one described above) should invalidate the cross-ref array
 		dirty = true;
 
-		assert entityEntry instanceof AbstractEntityEntry;
-
 		// We only need to check a mutable EntityEntry is associated with the same PersistenceContext.
 		// Immutable EntityEntry can be associated with multiple PersistenceContexts, so no need to check.
 		// ImmutableEntityEntry#getPersistenceContext() throws an exception (HHH-10251).
 		assert !entityEntry.getPersister().isMutable()
-			|| ( (AbstractEntityEntry) entityEntry ).getPersistenceContext() == persistenceContext;
+			|| ( (EntityEntryImpl) entityEntry ).getPersistenceContext() == persistenceContext;
 
 		// Determine the appropriate ManagedEntity instance to use based on whether the entity is enhanced or not.
 		// Throw an exception if entity is a mutable ManagedEntity that is associated with a different
@@ -171,8 +169,8 @@ public class EntityEntryContext {
 				// it is not associated
 				return null;
 			}
-			final AbstractEntityEntry entityEntry =
-					(AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
+			final EntityEntryImpl entityEntry =
+					(EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
 
 			if ( entityEntry.getPersister().isMutable() ) {
 				return entityEntry.getPersistenceContext() == persistenceContext
@@ -212,7 +210,7 @@ public class EntityEntryContext {
 
 	private void checkNotAssociatedWithOtherPersistenceContextIfMutable(ManagedEntity managedEntity) {
 		// we only have to check mutable managedEntity
-		final AbstractEntityEntry entityEntry = (AbstractEntityEntry) managedEntity.$$_hibernate_getEntityEntry();
+		final EntityEntryImpl entityEntry = (EntityEntryImpl) managedEntity.$$_hibernate_getEntityEntry();
 		if ( entityEntry == null ||
 				!entityEntry.getPersister().isMutable() ||
 				entityEntry.getPersistenceContext() == null ||
@@ -729,8 +727,8 @@ public class EntityEntryContext {
 		// Check instance type of EntityEntry and if type is ImmutableEntityEntry,
 		// check to see if entity is referenced cached in the second level cache
 		private static boolean canClearEntityEntryReference(EntityEntry entityEntry) {
-			return !(entityEntry instanceof ImmutableEntityEntry)
-				|| !isReferenceCachingEnabled( entityEntry.getPersister() );
+			final EntityPersister persister = entityEntry.getPersister();
+			return persister.isMutable() || !isReferenceCachingEnabled( persister );
 		}
 
 		@Override

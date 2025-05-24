@@ -422,14 +422,8 @@ public class SessionImpl
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {
-		if ( waitingForAutoClose ) {
-			return getSessionFactory().isOpen()
-				&& isTransactionActiveAndNotMarkedForRollback();
-		}
-		else {
-			return !isClosed()
-				&& isTransactionActiveAndNotMarkedForRollback();
-		}
+		return isOpenOrWaitingForAutoClose()
+			&& isTransactionActiveAndNotMarkedForRollback();
 	}
 
 	private boolean isTransactionActiveAndNotMarkedForRollback() {
@@ -482,7 +476,7 @@ public class SessionImpl
 	}
 
 	private void managedFlush() {
-		if ( isClosed() && !waitingForAutoClose ) {
+		if ( !isOpenOrWaitingForAutoClose() ) {
 			log.trace( "Skipping auto-flush since the session is closed" );
 		}
 		else {
@@ -2029,7 +2023,7 @@ public class SessionImpl
 			log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 		}
 
-		final boolean notClosed = !isClosed() || waitingForAutoClose;
+		final boolean notClosed = isOpenOrWaitingForAutoClose();
 
 		if ( notClosed && (!successful || autoClear) ) {
 			internalClear();

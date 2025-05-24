@@ -18,7 +18,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Emmanuel Bernard
  */
-public class MutableEntityEntryFactory implements EntityEntryFactory {
+@Deprecated(since = "7", forRemoval = true)
+public final class MutableEntityEntryFactory implements EntityEntryFactory {
 	/**
 	 * Singleton access
 	 */

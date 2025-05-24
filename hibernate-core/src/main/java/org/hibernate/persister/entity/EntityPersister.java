@@ -163,10 +163,11 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Get the EntityEntryFactory indicated for the entity mapped by this persister.
+	 * Get the {@link EntityEntryFactory} indicated for the entity mapped by this persister.
 	 *
-	 * @return The proper EntityEntryFactory.
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	EntityEntryFactory getEntityEntryFactory();
 
 	/**

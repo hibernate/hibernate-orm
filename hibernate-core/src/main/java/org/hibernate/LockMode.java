@@ -52,7 +52,7 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * rather than pull it from a cache.
 	 * <p>
 	 * This is the "default" lock mode, the mode requested by calling
-	 * {@link Session#get(Class, Object)} without passing an explicit
+	 * {@link Session#find(Class, Object)} without passing an explicit
 	 * mode. It permits the state of an object to be retrieved from
 	 * the cache without the cost of database access.
 	 *

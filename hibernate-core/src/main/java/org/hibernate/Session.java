@@ -825,19 +825,32 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void remove(Object object);
 
 	/**
-	 * Determine the current {@link LockMode} of the given managed instance associated
-	 * with this session.
+	 * Determine the current {@linkplain LockMode lock mode} held on the given
+	 * managed instance associated with this session.
+	 * <p>
+	 * Unlike the JPA-standard {@link #getLockMode}, this operation may be
+	 * called when no transaction is active, in which case it should return
+	 * {@link LockMode#NONE}, indicating that no pessimistic lock is held on
+	 * the given entity.
 	 *
 	 * @param object a persistent instance associated with this session
 	 *
-	 * @return the current lock mode
+	 * @return the lock mode currently held on the given entity
+	 *
+	 * @throws IllegalStateException if the given instance is not associated
+	 *                               with this persistence context
+	 * @throws ObjectDeletedException if the given instance was already
+	 *                                {@linkplain #remove removed}
 	 */
 	LockMode getCurrentLockMode(Object object);
 
 	/**
-	 * Completely clear the session. Evict all loaded instances and cancel all pending
-	 * saves, updates and deletions. Do not close open iterators or instances of
-	 * {@link ScrollableResults}.
+	 * Completely clear the persistence context. Evict all loaded instances,
+	 * causing every managed entity currently associated with this session to
+	 * transition to the detached state, and cancel all pending insertions,
+	 * updates, and deletions.
+	 * <p>
+	 * Does not close open iterators or instances of {@link ScrollableResults}.
 	 */
 	@Override
 	void clear();

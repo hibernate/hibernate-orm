@@ -4585,7 +4585,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
-		return this.entityEntryFactory;
+		return entityEntryFactory;
 	}
 
 	/**

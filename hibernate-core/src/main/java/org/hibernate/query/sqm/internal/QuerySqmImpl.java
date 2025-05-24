@@ -86,7 +86,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -507,9 +506,10 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public int executeUpdate() {
+		//TODO: refactor copy/paste of AbstractQuery.executeUpdate()
 		verifyUpdate();
-		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
+		getSession().checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();

@@ -3,6 +3,22 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.16.Final (May 25, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33606
+
+** Bug
+    * [HHH-19477] - ConnectionReleaseMode.AFTER_STATEMENT ineffective due to missing connection release
+    * [HHH-19473] - Bytecode enhancement incorrectly generates code for Bidirectional Generic Entities
+    * [HHH-19472] - Native query "SELECT 1" with result type Object[] return singular object
+    * [HHH-19387] - AssertionError in EntityInitializerImpl data.concreteDescriptor is null
+    * [HHH-19372] - AccessOptimizer.setPropertyValues() and getPropertyValues() error with entity hierarchy.
+    * [HHH-19369] - Entity hierarchy ordering error within metamodel building with enhancement
+    * [HHH-19207] - JPA OrderBy annotated relation not ordered when using entity graph with criteria api
+    * [HHH-18813] - DML update of secondary table column fails
+
+
 Changes in 6.6.15.Final (May 13, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

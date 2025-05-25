@@ -395,11 +395,16 @@ public class SessionImpl
 				checkSessionFactoryOpen();
 				checkOpenOrWaitingForAutoClose();
 				if ( getSessionFactoryOptions().isReleaseResourcesOnCloseEnabled()
-					|| !isTransactionInProgressAndNotMarkedForRollback() ) {
+						|| !isTransactionInProgressAndNotMarkedForRollback() ) {
 					super.close();
 				}
 				else {
-					//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
+					// In the JPA bootstrap, if the session is closed
+					// before the transaction commits, we just mark the
+					// session as closed, and set waitingForAutoClose.
+					// This method will be called a second time from
+					// afterTransactionCompletion when the transaction
+					// commits, and the session will be closed for real.
 					prepareForAutoClose();
 				}
 			}

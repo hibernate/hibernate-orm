@@ -1716,6 +1716,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return LockStrategy.FOLLOW_ON;
 		}
 
+		if ( !querySpec.isRoot() ) {
+			followOnStrategy = Locking.FollowOn.ALLOW;
+		}
+
 		LockStrategy strategy = LockStrategy.CLAUSE;
 
 		if ( !querySpec.getGroupByClauseExpressions().isEmpty() ) {

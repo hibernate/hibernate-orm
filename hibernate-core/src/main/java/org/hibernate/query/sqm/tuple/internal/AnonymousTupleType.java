@@ -60,6 +60,10 @@ public class AnonymousTupleType<T>
 	}
 
 	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
+		this(components, null);
+	}
+
+	public AnonymousTupleType(SqmSelectableNode<?>[] components, List<String> aliases) {
 		expressibles = new SqmBindableType<?>[components.length];
 		componentSourcePaths = new NavigablePath[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
@@ -74,7 +78,10 @@ public class AnonymousTupleType<T>
 		componentIndexMap = linkedMapOfSize( components.length );
 		for ( int i = 0; i < components.length; i++ ) {
 			final SqmSelectableNode<?> component = components[i];
-			final String alias = component.getAlias();
+			String alias = aliases == null ? null : aliases.get( i );
+			if ( alias == null ) {
+				alias = component.getAlias();
+			}
 			if ( alias == null ) {
 				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
 						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );

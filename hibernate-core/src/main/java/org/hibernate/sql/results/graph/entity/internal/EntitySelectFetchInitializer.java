@@ -170,13 +170,13 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
 				if ( keyIsEager ) {
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			else {
 				data.setState( State.INITIALIZED );
 				if ( keyIsEager ) {
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			data.setInstance( instance );

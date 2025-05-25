@@ -170,13 +170,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
 			data.setState( State.RESOLVED );
-			data.entityIdentifier = lazyInitializer.getIdentifier();
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			// Entity is initialized
 			data.setState( State.INITIALIZED );
 			if ( keyIsEager ) {
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 			data.setInstance( lazyInitializer.getImplementation() );
 		}
@@ -240,7 +240,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				data.entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
+				data.entityKey = new EntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
 				registerToBatchFetchQueue( data );
 			}
 			data.setState( State.INITIALIZED );

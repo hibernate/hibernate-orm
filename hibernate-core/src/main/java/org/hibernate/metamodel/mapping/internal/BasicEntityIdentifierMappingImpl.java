@@ -150,7 +150,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	public Object getIdentifier(Object entity) {
 		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
-			return lazyInitializer.getIdentifier();
+			return lazyInitializer.getInternalIdentifier();
 		}
 		return propertyAccess.getGetter().get( entity );
 	}

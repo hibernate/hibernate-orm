@@ -32,6 +32,7 @@ import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -75,7 +76,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement<?> sqm;
 	private final DomainParameterXref domainParameterXref;
 	private final RowTransformer<R> rowTransformer;
-	private final SqmInterpreter<Object, ResultsConsumer<?, R>> executeQueryInterpreter;
+	private final SqmInterpreter<?, ? extends ResultsConsumer<?, R>> executeQueryInterpreter;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
 
@@ -356,33 +357,31 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private static <T> RowTransformer<T> makeRowTransformerTupleTransformerAdapter(
 			SqmSelectStatement<?> sqm,
 			QueryOptions queryOptions) {
+		@SuppressWarnings("unchecked")
+		final TupleTransformer<T> tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
+		return new RowTransformerTupleTransformerAdapter<>( adapterAliases( sqm ), tupleTransformer );
+	}
+
+	private static String[] adapterAliases(SqmSelectStatement<?> sqm) {
 		final List<String> aliases = new ArrayList<>();
 		for ( SqmSelection<?> sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 			// The row a tuple transformer gets to see only contains 1 element for a dynamic instantiation
-			if ( sqmSelection.getSelectableNode() instanceof SqmDynamicInstantiation<?> ) {
+			final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
+			if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
 				aliases.add( sqmSelection.getAlias() );
 			}
 			else {
-				sqmSelection.getSelectableNode().visitSubSelectableNodes(
-						subSelection -> aliases.add( subSelection.getAlias() )
-				);
+				selectableNode.visitSubSelectableNodes( subSelection -> aliases.add( subSelection.getAlias() ) );
 			}
 		}
-
-
-		@SuppressWarnings("unchecked")
-		TupleTransformer<T> tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
-		return new RowTransformerTupleTransformerAdapter<>( toStringArray( aliases ), tupleTransformer );
+		return toStringArray( aliases );
 	}
 
 	@Override
 	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
-		//noinspection unchecked,rawtypes
-		return withCacheableSqmInterpretation(
-				executionContext,
-				resultsConsumer,
-				(SqmInterpreter<T, ResultsConsumer<T, R>>) (SqmInterpreter) executeQueryInterpreter
-		);
+		@SuppressWarnings("unchecked") //TODO: check the return type
+		var interpreter = (SqmInterpreter<T, ResultsConsumer<T, R>>) executeQueryInterpreter;
+		return withCacheableSqmInterpretation( executionContext, resultsConsumer, interpreter );
 	}
 
 	@Override

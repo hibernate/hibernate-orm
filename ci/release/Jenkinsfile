@@ -98,7 +98,7 @@ pipeline {
 		)
 	}
 	stages {
-		stage('Release check') {
+		stage('Check') {
 			steps {
 				script {
 					print "INFO: params.RELEASE_VERSION = ${params.RELEASE_VERSION}"
@@ -177,7 +177,7 @@ pipeline {
 				}
 			}
 		}
-		stage('Release prepare') {
+		stage('Prepare') {
 			steps {
 				script {
 					checkoutReleaseScripts()
@@ -203,7 +203,7 @@ pipeline {
 				}
 			}
 		}
-		stage('Publish release') {
+		stage('Publish') {
 			steps {
 				script {
 					checkoutReleaseScripts()
@@ -243,7 +243,7 @@ pipeline {
 				}
 			}
 		}
-		stage('Website release') {
+		stage('Update website') {
 			steps {
 				script {
 					checkoutReleaseScripts()
@@ -270,7 +270,7 @@ pipeline {
 				}
 			}
 		}
-		stage('GitHub release') {
+		stage('Create GitHub release') {
 			steps {
 				script {
 					checkoutReleaseScripts()

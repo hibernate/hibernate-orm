@@ -181,7 +181,7 @@ Also, a key subgraph now always refers to a `Map` key, and never to an entity id
 We encourage migration to the use of the new JPA-standard operations.
 
 Or, alternatively, when building graphs, consider Hibernate's support for
-textual link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing[graph parsing].  See also <<NamedEntityGraph>>.
+textual link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-parsing[graph parsing].
 
 
 [[removal-annotations]]

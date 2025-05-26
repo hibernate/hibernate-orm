@@ -70,11 +70,11 @@ public class SqmUnaryOperation<T> extends AbstractSqmExpression<T> implements Sq
 
 	@Override
 	public String asLoggableText() {
-		return ( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' ) + operand.asLoggableText();
+		return operation.getOperatorChar() + operand.asLoggableText();
 	}
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append( operation == UnaryArithmeticOperator.UNARY_MINUS ? '-' : '+' );
+		hql.append( operation.getOperatorChar() );
 		operand.appendHqlString( hql, context );
 	}
 }

@@ -17,6 +17,8 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 
+import java.util.Objects;
+
 /**
  * @author Christian Beikov
  */
@@ -122,5 +124,17 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	@Override
 	public <S extends T> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmDerivedRoot<?> that
+			&& super.equals( object )
+			&& Objects.equals( this.subQuery, that.subQuery );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), subQuery );
 	}
 }

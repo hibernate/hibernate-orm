@@ -30,6 +30,8 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.EntityType;
 
+import java.util.Objects;
+
 /**
  * @author Steve Ebersole
  */
@@ -228,5 +230,15 @@ public class SqmEntityJoin<L,R>
 		);
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmEntityJoin<?, ?> that
+			&& Objects.equals( this.getEntityName(), that.getEntityName() )
+			&& super.equals( other );
+	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), getEntityName() );
+	}
 }

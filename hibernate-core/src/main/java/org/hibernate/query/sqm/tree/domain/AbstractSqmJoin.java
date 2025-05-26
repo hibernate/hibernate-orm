@@ -21,6 +21,8 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
+import java.util.Objects;
+
 /**
  * @author Steve Ebersole
  */
@@ -150,5 +152,18 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	@Override
 	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
 		return super.join( targetEntityClass, joinType );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmJoin<?, ?> that
+			&& super.equals( object )
+			&& this.joinType == that.joinType; // unnecessary, but harmless
+//			&& Objects.equals( onClausePredicate, that.onClausePredicate ); // including this causes problems
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), joinType );
 	}
 }

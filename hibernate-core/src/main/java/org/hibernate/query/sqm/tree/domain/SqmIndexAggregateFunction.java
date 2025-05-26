@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -122,8 +123,23 @@ public class SqmIndexAggregateFunction<T> extends AbstractSqmSpecificPluralPartP
 
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
-		hql.append(functionName).append( "(" );
+		hql.append( functionName ).append( "(" );
 		getLhs().appendHqlString( hql, context );
 		hql.append( ')' );
+	}
+
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmIndexAggregateFunction<?> that
+			&& Objects.equals( this.functionName, that.functionName )
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
+			&& Objects.equals( this.getLhs(), that.getLhs() );
+
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( getLhs(), functionName );
 	}
 }

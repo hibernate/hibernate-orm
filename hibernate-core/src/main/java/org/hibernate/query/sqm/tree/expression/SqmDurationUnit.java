@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 
+
 /**
  * @author Gavin King
  */
@@ -53,5 +54,16 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	@Override
 	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		hql.append( unit );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmDurationUnit<?> that
+			&& this.unit == that.unit;
+	}
+
+	@Override
+	public int hashCode() {
+		return unit.hashCode();
 	}
 }

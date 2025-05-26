@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.common.FetchClauseType;
@@ -242,5 +243,18 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		if ( needsParenthesis ) {
 			sb.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmQueryGroup<?> that
+			&& super.equals( that )
+			&& this.setOperator == that.setOperator
+			&& Objects.equals( this.queryParts, that.queryParts );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), queryParts, setOperator );
 	}
 }

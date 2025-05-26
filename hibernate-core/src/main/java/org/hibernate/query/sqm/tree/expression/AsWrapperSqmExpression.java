@@ -10,6 +10,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.BasicType;
 
+import java.util.Objects;
+
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> expression;
 
@@ -49,5 +51,16 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	@Override
 	public BasicType<T> getNodeType() {
 		return (BasicType<T>) super.getNodeType();
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AsWrapperSqmExpression<?> that
+			&& Objects.equals( this.expression, that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( expression );
 	}
 }

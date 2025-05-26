@@ -57,12 +57,10 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -283,9 +281,7 @@ import static java.util.Collections.unmodifiableList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
@@ -4042,38 +4038,36 @@ public abstract class AbstractEntityPersister
 			&& ( isVersionGeneratedOnExecution() || isVersionGeneratedBeforeExecution() );
 	}
 
+	private Generator versionPropertyGenerator() {
+		return getEntityMetamodel().getGenerators()[ getVersionProperty() ];
+	}
+
 	public boolean isVersionGeneratedOnExecution() {
-		final Generator strategy = getEntityMetamodel().getGenerators()[ getVersionProperty() ];
-		return strategy != null && strategy.generatesSometimes() && strategy.generatedOnExecution();
+		final Generator strategy = versionPropertyGenerator();
+		return strategy != null
+			&& strategy.generatesSometimes()
+			&& strategy.generatedOnExecution();
 	}
 
 	public boolean isVersionGeneratedBeforeExecution() {
-		final Generator strategy = getEntityMetamodel().getGenerators()[ getVersionProperty() ];
-		return strategy != null && strategy.generatesSometimes() && !strategy.generatedOnExecution();
+		final Generator strategy = versionPropertyGenerator();
+		return strategy != null
+			&& strategy.generatesSometimes()
+			&& !strategy.generatedOnExecution();
 	}
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == POJO ) {
-			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
-					.extractLazyInterceptor( entity );
+		if ( isPersistentAttributeInterceptable( entity )
+				&& getRepresentationStrategy().getMode() == POJO ) {
+			final BytecodeLazyAttributeInterceptor interceptor =
+					getEntityMetamodel().getBytecodeEnhancementMetadata()
+							.extractLazyInterceptor( entity );
 			assert interceptor != null;
 			if ( interceptor.getLinkedSession() == null ) {
 				interceptor.setSession( session );
 			}
 		}
-
-		// clear the fields that are marked as dirty in the dirtiness tracker
-		processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
-		processIfManagedEntity( entity, AbstractEntityPersister::useTracker );
-	}
-
-	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
-		entity.$$_hibernate_clearDirtyAttributes();
-	}
-
-	private static void useTracker(final ManagedEntity entity) {
-		entity.$$_hibernate_setUseTracker( true );
 	}
 
 	@Override

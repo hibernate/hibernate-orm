@@ -1403,6 +1403,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		takeSnapshot( data, session, persistenceContext, entityEntry, resolvedEntityState );
 
 		data.concreteDescriptor.afterInitialize( entityInstanceForNotify, session );
+		entityEntry.postLoad( entityInstanceForNotify );
 
 		assert data.concreteDescriptor.getIdentifier( entityInstanceForNotify, session ) != null;
 

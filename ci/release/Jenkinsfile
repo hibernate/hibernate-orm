@@ -243,6 +243,17 @@ pipeline {
 				}
 			}
 		}
+		stage('Release on Jira') {
+			steps {
+				script {
+					checkoutReleaseScripts()
+
+					withCredentials([string(credentialsId: 'release-webhook.hibernate.atlassian.net', variable: 'JIRA_WEBHOOK_SECRET')]) {
+						sh ".release/scripts/jira-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+					}
+				}
+			}
+		}
 		stage('Update website') {
 			steps {
 				script {

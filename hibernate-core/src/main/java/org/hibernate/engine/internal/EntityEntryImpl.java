@@ -204,7 +204,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			loadedState = null;
 		}
 
-		final Status currentStatus = this.getStatus();
+		final Status currentStatus = getStatus();
 		if ( currentStatus != status ) {
 			setCompressedValue( PREVIOUS_STATUS, currentStatus );
 			setCompressedValue( STATUS, status );
@@ -264,10 +264,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	@Override
 	public EntityKey getEntityKey() {
 		if ( cachedEntityKey == null ) {
-			if ( getId() == null ) {
+			if ( id == null ) {
 				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
 			}
-			cachedEntityKey = new EntityKey( getId(), getPersister() );
+			cachedEntityKey = new EntityKey( id, persister );
 		}
 		return cachedEntityKey;
 	}
@@ -341,7 +341,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 			return !isExistsInDatabase();
 		}
 		else {
-			return session.getPersistenceContextInternal().containsNullifiableEntityKey( this::getEntityKey );
+			return session.getPersistenceContextInternal()
+					.containsNullifiableEntityKey( this::getEntityKey );
 		}
 	}
 
@@ -350,8 +351,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		if ( loadedState == null || propertyName == null ) {
 			return null;
 		}
-		final int index = propertyIndex( propertyName );
-		return index < 0 ? null : loadedState[index];
+		else {
+			final int index = propertyIndex( propertyName );
+			return index < 0 ? null : loadedState[index];
+		}
 	}
 
 	private int propertyIndex(String propertyName) {
@@ -365,7 +368,6 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		if ( getStatus() != READ_ONLY ) {
 			assert propertyName != null;
 			assert loadedState != null;
-
 			loadedState[ propertyIndex( propertyName ) ] = collection;
 		}
 	}
@@ -395,8 +397,8 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		final SessionImplementor session = (SessionImplementor) getPersistenceContext().getSession();
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				session.getFactory().getCustomEntityDirtinessStrategy();
-		return customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), session )
-			&& !customEntityDirtinessStrategy.isDirty( entity, getPersister(), session );
+		return customEntityDirtinessStrategy.canDirtyCheck( entity, persister, session )
+			&& !customEntityDirtinessStrategy.isDirty( entity, persister, session );
 	}
 
 	private boolean isNonDirtyViaTracker(Object entity) {
@@ -437,9 +439,10 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	@Override
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
-		loadedState[ persister.getVersionProperty() ] = version;
+		final int versionProperty = persister.getVersionProperty();
+		loadedState[versionProperty] = version;
 		setLockMode( PESSIMISTIC_FORCE_INCREMENT );
-		persister.setValue( entity, getPersister().getVersionProperty(), nextVersion );
+		persister.setValue( entity, versionProperty, nextVersion );
 	}
 
 	@Override
@@ -497,7 +500,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 	@Override
 	public String toString() {
 		return "EntityEntry"
-			+ infoString( getPersister().getEntityName(), id )
+			+ infoString( persister.getEntityName(), id )
 			+ '(' + getStatus() + ')';
 	}
 
@@ -565,7 +568,7 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 		if ( next == null ) {
 			return null;
 		}
-		if ( extraStateType.isAssignableFrom( next.getClass() ) ) {
+		else if ( extraStateType.isAssignableFrom( next.getClass() ) ) {
 			return (T) next;
 		}
 		else {

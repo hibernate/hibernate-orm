@@ -27,6 +27,13 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 
 /**
+ * Retrieves JDK versions exposed by {@link JdkVersionPlugin}
+ * and injects them in build tasks.
+ *
+ * @see JdkVersionConfig
+ * @see JdkVersionSettingsPlugin
+ * @see JdkVersionPlugin
+ *
  * @author Steve Ebersole
  */
 public class JavaModulePlugin implements Plugin<Project> {
@@ -57,11 +64,11 @@ public class JavaModulePlugin implements Plugin<Project> {
 			mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
 			mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
 
-			testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
-			testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
+			testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompilerVersion().toString() );
+			testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompilerVersion().toString() );
 		}
 		else {
-			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompileVersion() );
+			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompilerVersion() );
 
 			configureCompileTasks( project );
 			configureTestTasks( project );
@@ -72,7 +79,7 @@ public class JavaModulePlugin implements Plugin<Project> {
 
 			testCompileTask.getJavaCompiler().set(
 					toolchainService.compilerFor( javaToolchainSpec -> {
-						javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompileVersion() );
+						javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompilerVersion() );
 					} )
 			);
 			if ( testTask != null ) {

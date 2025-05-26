@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.gradle.StartParameter;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.initialization.Settings;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -19,6 +20,10 @@ import static java.util.Objects.requireNonNullElse;
 /**
  * Describes the JDK versions of interest to the Hibernate build
  *
+ * @see JdkVersionSettingsPlugin
+ * @see JdkVersionPlugin
+ * @see JavaModulePlugin
+ *
  * @author Steve Ebersole
  */
 public class JdkVersionConfig {
@@ -28,6 +33,7 @@ public class JdkVersionConfig {
 
 	private final boolean explicit;
 	private final JavaLanguageVersion baseline;
+	private final JavaLanguageVersion min;
 	private final JavaLanguageVersion max;
 	private final MainJdks main;
 	private final TestJdks test;
@@ -35,16 +41,18 @@ public class JdkVersionConfig {
 	public JdkVersionConfig(
 			boolean explicit,
 			JavaLanguageVersion baseline,
+			JavaLanguageVersion min,
 			JavaLanguageVersion max,
-			JavaLanguageVersion mainCompileVersion,
+			JavaLanguageVersion mainCompilerVersion,
 			JavaLanguageVersion mainReleaseVersion,
 			JavaLanguageVersion testCompileVersion,
 			JavaLanguageVersion testReleaseVersion,
 			JavaLanguageVersion testLauncherVersion) {
 		this.explicit = explicit;
 		this.baseline = baseline;
+		this.min = min;
 		this.max = max;
-		this.main = new MainJdks( mainCompileVersion, mainReleaseVersion );
+		this.main = new MainJdks( mainCompilerVersion, mainReleaseVersion );
 		this.test = new TestJdks( testCompileVersion, testReleaseVersion, testLauncherVersion );
 	}
 
@@ -68,6 +76,18 @@ public class JdkVersionConfig {
 		return getBaseline();
 	}
 
+	public JavaLanguageVersion getMin() {
+		return min;
+	}
+
+	public String getMinStr() {
+		return getMin().toString();
+	}
+
+	public JavaLanguageVersion getMinVersion() {
+		return getMin();
+	}
+
 	public JavaLanguageVersion getMax() {
 		return max;
 	}
@@ -88,16 +108,16 @@ public class JdkVersionConfig {
 		return test;
 	}
 
-	public JavaLanguageVersion getMainCompileVersion() {
-		return main.getCompile();
+	public JavaLanguageVersion getMainCompilerVersion() {
+		return main.getCompiler();
 	}
 
 	public JavaLanguageVersion getMainReleaseVersion() {
 		return main.getRelease();
 	}
 
-	public JavaLanguageVersion getTestCompileVersion() {
-		return test.getCompile();
+	public JavaLanguageVersion getTestCompilerVersion() {
+		return test.getCompiler();
 	}
 
 	public JavaLanguageVersion getTestReleaseVersion() {
@@ -110,9 +130,9 @@ public class JdkVersionConfig {
 
 	public Set<JavaLanguageVersion> getAllVersions() {
 		final HashSet<JavaLanguageVersion> versions = new HashSet<>();
-		versions.add( getMainCompileVersion() );
+		versions.add( getMainCompilerVersion() );
 		versions.add( getMainReleaseVersion() );
-		versions.add( getTestCompileVersion() );
+		versions.add( getTestCompilerVersion() );
 		versions.add( getTestReleaseVersion() );
 		versions.add( getTestLauncherVersion() );
 		return versions;
@@ -124,40 +144,40 @@ public class JdkVersionConfig {
 			JavaLanguageVersion explicitTestVersion,
 			JavaLanguageVersion gradleJdkVersion,
 			JavaLanguageVersion baselineJdkVersion,
+			JavaLanguageVersion minSupportedJdkVersion,
 			JavaLanguageVersion maxSupportedJdkVersion) {
 		final boolean explicitlyConfigured = explicitMainVersion != null || explicitTestVersion != null;
 
-		final JavaLanguageVersion mainCompileVersion;
+		final JavaLanguageVersion mainCompilerVersion;
 		final JavaLanguageVersion mainReleaseVersion;
-		final JavaLanguageVersion testCompileVersion;
-		final JavaLanguageVersion testReleaseVersion;
+		final JavaLanguageVersion testCompilerVersion;
+		JavaLanguageVersion testReleaseVersion;
 		final JavaLanguageVersion testLauncherVersion;
 
 		if ( explicitlyConfigured ) {
-			mainCompileVersion = requireNonNullElse( explicitMainVersion, baselineJdkVersion );
-			testCompileVersion = requireNonNullElse( explicitTestVersion, baselineJdkVersion );
+			mainCompilerVersion = requireNonNullElse( explicitMainVersion, minSupportedJdkVersion );
+			testCompilerVersion = requireNonNullElse( explicitTestVersion, minSupportedJdkVersion );
 			mainReleaseVersion = baselineJdkVersion;
 
-			if ( testCompileVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
+			testReleaseVersion = requireNonNullElse( explicitTestVersion, mainReleaseVersion );
+			if ( testReleaseVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
 				System.out.println(
-						"[WARN] Gradle does not support bytecode version '" + testCompileVersion + "'."
+						"[WARN] Gradle does not support bytecode version '" + testReleaseVersion + "'."
 								+ " Forcing test bytecode to version " + maxSupportedJdkVersion + "."
 				);
 				testReleaseVersion = maxSupportedJdkVersion;
 			}
-			else {
-				testReleaseVersion = testCompileVersion;
-			}
 
-			testLauncherVersion = testCompileVersion;
+			testLauncherVersion = testReleaseVersion;
 
 			return new JdkVersionConfig(
 					true,
 					baselineJdkVersion,
+					minSupportedJdkVersion,
 					maxSupportedJdkVersion,
-					mainCompileVersion,
+					mainCompilerVersion,
 					mainReleaseVersion,
-					testCompileVersion,
+					testCompilerVersion,
 					testReleaseVersion,
 					testLauncherVersion
 			);
@@ -166,6 +186,11 @@ public class JdkVersionConfig {
 			// Not testing a particular JDK version: we will use the same JDK used to run Gradle.
 			// We disable toolchains for convenience, so that anyone can just run the build with their own JDK
 			// without any additional options and without downloading the whole JDK.
+
+			if ( gradleJdkVersion.asInt() > minSupportedJdkVersion.asInt() ) {
+				throw new GradleException("This build requires at least JDK " + minSupportedJdkVersion + ", but you are using JDK " + gradleJdkVersion.asInt());
+			}
+
 			if ( gradleJdkVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
 				System.out.println(
 						"[WARN] Gradle does not support this JDK, because it is too recent; build is likely to fail."
@@ -180,6 +205,7 @@ public class JdkVersionConfig {
 			return new JdkVersionConfig(
 					false,
 					baselineJdkVersion,
+					minSupportedJdkVersion,
 					maxSupportedJdkVersion,
 					gradleJdkVersion,
 					baselineJdkVersion,
@@ -219,25 +245,17 @@ public class JdkVersionConfig {
 		return null;
 	}
 
-
-
-
 	public static class MainJdks implements JdkVersionCombo {
-		private final JavaLanguageVersion compileVersion;
+		private final JavaLanguageVersion compilerVersion;
 		private final JavaLanguageVersion releaseVersion;
 
-		public MainJdks(JavaLanguageVersion compileVersion, JavaLanguageVersion releaseVersion) {
-			this.compileVersion = compileVersion;
+		public MainJdks(JavaLanguageVersion compilerVersion, JavaLanguageVersion releaseVersion) {
+			this.compilerVersion = compilerVersion;
 			this.releaseVersion = releaseVersion;
 		}
 
-		@Override
-		public JavaLanguageVersion getCompile() {
-			return compileVersion;
-		}
-
 		public JavaLanguageVersion getCompiler() {
-			return compileVersion;
+			return compilerVersion;
 		}
 
 		@Override
@@ -247,31 +265,27 @@ public class JdkVersionConfig {
 
 		@Override
 		public String toString() {
-			return "[compile: " + compileVersion + ", release:" + releaseVersion + "]";
+			return "[compiler: " + compilerVersion + ", release:" + releaseVersion + "]";
 		}
 	}
 
 	public static class TestJdks implements JdkVersionCombo {
-		private final JavaLanguageVersion compileVersion;
+		private final JavaLanguageVersion compilerVersion;
 		private final JavaLanguageVersion releaseVersion;
 		private final JavaLanguageVersion launcherVersion;
 
 		public TestJdks(
-				JavaLanguageVersion compileVersion,
+				JavaLanguageVersion compilerVersion,
 				JavaLanguageVersion releaseVersion,
 				JavaLanguageVersion launcherVersion) {
-			this.compileVersion = compileVersion;
+			this.compilerVersion = compilerVersion;
 			this.releaseVersion = releaseVersion;
 			this.launcherVersion = launcherVersion;
 		}
 
-		public JavaLanguageVersion getCompiler() {
-			return compileVersion;
-		}
-
 		@Override
-		public JavaLanguageVersion getCompile() {
-			return compileVersion;
+		public JavaLanguageVersion getCompiler() {
+			return compilerVersion;
 		}
 
 		@Override
@@ -285,12 +299,12 @@ public class JdkVersionConfig {
 
 		@Override
 		public String toString() {
-			return "[compile: " + compileVersion + ", release:" + releaseVersion + ", launcher: " + launcherVersion + "]";
+			return "[compiler: " + compilerVersion + ", release:" + releaseVersion + ", launcher: " + launcherVersion + "]";
 		}
 	}
 
 	public interface  JdkVersionCombo {
-		JavaLanguageVersion getCompile();
+		JavaLanguageVersion getCompiler();
 		JavaLanguageVersion getRelease();
 	}
 }

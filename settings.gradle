@@ -59,12 +59,15 @@ dependencyResolutionManagement {
         jdks {
             // see gradle.properties (or set with -D/-P)
             var String baseJdk = jdkVersions.baseline
+            var String minJdk = jdkVersions.min
             var String maxJdk = jdkVersions.max
 
             version "baseline", baseJdk
             version "compatible", "17 or 21"
             version "jdbc", "4.2" // Bundled with JDK 11
 
+            // We may require a minimum JDK version, for consistency across builds
+            version "minSupportedJdk", minJdk
             // Gradle does bytecode transformation on tests.
             // You can't use bytecode higher than what Gradle supports, even with toolchains.
             version "maxSupportedBytecode", maxJdk

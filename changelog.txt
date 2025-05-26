@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.38.Final (May 26, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33637
+
+** Bug
+    * [HHH-19477] - ConnectionReleaseMode.AFTER_STATEMENT ineffective due to missing connection release
+
+
 Changes in 6.2.37.Final (May 18, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

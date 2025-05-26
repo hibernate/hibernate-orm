@@ -70,6 +70,8 @@ public interface EntityEntry {
 
 	Object getRowId();
 
+	void postLoad(Object entity);
+
 	/**
 	 * Handle updating the internal state of the entry after actually performing
 	 * the database update. Specifically, we update the snapshot information and

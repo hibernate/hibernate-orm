@@ -306,6 +306,12 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 				.resetDirty( entity, persister, (SessionImplementor) session );
 	}
 
+	@Override
+	public void postLoad(Object entity) {
+		processIfSelfDirtinessTracker( entity, EntityEntryImpl::clearDirtyAttributes );
+		processIfManagedEntity( entity, EntityEntryImpl::useTracker );
+	}
+
 	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
 		entity.$$_hibernate_clearDirtyAttributes();
 	}

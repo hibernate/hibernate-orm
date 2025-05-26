@@ -233,6 +233,27 @@ entityManager.getTransaction().setRollbackOnly();
 
 A transaction in rollback-only mode will be rolled back when it completes.
 
+[[outside-transaction]]
+.💀 Using the session with no transaction 💀
+****
+Over the years, we've run into a surprisingly large number of people who insist that they need to access the database with "no transaction" -- which we understand to mean running queries with https://docs.oracle.com/javase/8/docs/api/java/sql/Connection.html#setAutoCommit--[JDBC autocommit mode] enabled.
+We're _pretty sure_ that this is almost always a terrible idea, and that most of the people doing this are simply mistaken about some aspect of transaction isolation or of what the use of autocommit implies for the management of pooled JDBC connections.
+
+With that said, Hibernate grudgingly allows it.
+
+If you decide to do this weird thing:
+
+- first, satisfy yourself that you're completely comfortable with the fact that _the database will not help you enforce transaction isolation_,
+- then set link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#AUTOCOMMIT[`hibernate.connection.autocommit=true`], and
+- make damn sure that your connection pool is returning connections with autocommit enabled by default.
+
+In fact, simply don't do this unless you have set up tools to snoop the protocol-level interaction between the JDBC driver and the database server, so that you can verify your understanding of what "no transaction" actually implies.
+
+If you think you want to actually _write_ to the database️ with autocommit enabled 🏴‍☠️🏴‍☠️🏴‍☠️,️ that's possible too, but you'll need to either <<flush,`flush()`>> the session explicitly or, even better, use a <<stateless-sessions,stateless session>>.
+And don't come complaining to us when your database starts filling up with inconsistent garbage.
+// Because you've now been thoroughly warned, and we're going to enjoy laughing at you.
+****
+
 [[persistence-operations]]
 === Operations on the persistence context
 

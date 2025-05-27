@@ -1052,12 +1052,32 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * is for repositories
 	 */
 	private String setupQuarkusDaoConstructor(@Nullable ExecutableElement getter, @Nullable TypeElement element) {
-		if ( context.usesQuarkusOrm()
-				|| (context.usesQuarkusPanache2()
-					&& element != null
-					&& (implementsInterface(element, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE)
-						|| implementsInterface(element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE)))
+		boolean favorBlocking = context.usesQuarkusOrm()
+								|| (context.usesQuarkusPanache2()
+									&& element != null
+									&& (implementsInterface(element, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE)
+										|| implementsInterface(element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE)));
+		if ( context.usesQuarkusPanache2()
+			&& element != null
+			&& !implementsInterface(element, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE)
+			&& !implementsInterface(element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE)
+			&& !implementsInterface(element, PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE)
+			&& !implementsInterface(element, PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE)
+			// FIXME: add other default for JD repos?
 			) {
+			// look for any annotated method, see if they return a Uni
+			final List<ExecutableElement> methodsOfClass =
+					methodsIn( context.getAllMembers( element ) );
+			for ( ExecutableElement method : methodsOfClass ) {
+				// trust the first method, no need to look for them all
+				if ( containsAnnotation( method, HQL, SQL, JD_QUERY, FIND, JD_FIND ) ) {
+					favorBlocking = !isUni( method.getReturnType() );
+					break;
+				}
+			}
+		}
+		// FIXME: probably go in this branch if we have a getter too?
+		if ( favorBlocking ) {
 			String name;
 			String sessionType;
 			if ( getter != null ) {
@@ -1625,6 +1645,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		return returnType;
+	}
+
+	private static boolean isUni (TypeMirror returnType){
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			return typeElement.getQualifiedName().contentEquals( Constants.UNI );
+		}
+		return false;
 	}
 
 	private static boolean isLegalRawResultType(String containerTypeName) {

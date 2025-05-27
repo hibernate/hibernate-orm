@@ -256,9 +256,9 @@ public class ToOneAttributeMapping
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = bootValue.isNullable();
 		this.isLazy = navigableRole.getParent().getParent() == null
-				&& declaringEntityPersister.getBytecodeEnhancementMetadata()
-				.getLazyAttributesMetadata()
-				.isLazyAttribute( name );
+					&& declaringEntityPersister.getBytecodeEnhancementMetadata()
+							.getLazyAttributesMetadata()
+							.isLazyAttribute( name );
 		this.referencedPropertyName = bootValue.getReferencedPropertyName();
 		this.unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;

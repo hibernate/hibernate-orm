@@ -1184,7 +1184,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected Map<String, SingleIdArrayLoadPlan> getLazyLoadPlanByFetchGroup() {
-		final BytecodeEnhancementMetadata metadata = entityMetamodel.getBytecodeEnhancementMetadata();
+		final var metadata = getBytecodeEnhancementMetadata();
 		return metadata.isEnhancedForLazyLoading() && metadata.getLazyAttributesMetadata().hasLazyAttributes()
 				? createLazyLoadPlanByFetchGroup( metadata )
 				: emptyMap();
@@ -1585,7 +1585,7 @@ public abstract class AbstractEntityPersister
 			LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
 
 			final LazyAttributesMetadata lazyAttributesMetadata =
-					getEntityMetamodel().getBytecodeEnhancementMetadata().getLazyAttributesMetadata();
+					getBytecodeEnhancementMetadata().getLazyAttributesMetadata();
 			final String fetchGroup = lazyAttributesMetadata.getFetchGroupName( fieldName );
 			final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors =
 					lazyAttributesMetadata.getFetchGroupAttributeDescriptors( fetchGroup );
@@ -3491,9 +3491,9 @@ public abstract class AbstractEntityPersister
 			Object entity,
 			String nameOfAttributeBeingAccessed,
 			SharedSessionContractImplementor session) {
-		final BytecodeEnhancementMetadata enhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
-		final BytecodeLazyAttributeInterceptor currentInterceptor = enhancementMetadata.extractLazyInterceptor( entity );
-		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
+		final var enhancementMetadata = getBytecodeEnhancementMetadata();
+		if ( enhancementMetadata.extractLazyInterceptor( entity )
+				instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Object identifier = entityKey.getIdentifier();
@@ -3795,7 +3795,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
-		final BytecodeEnhancementMetadata metadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		final var metadata = getBytecodeEnhancementMetadata();
 		if ( metadata.isEnhancedForLazyLoading() ) {
 			final BytecodeLazyAttributeInterceptor interceptor = metadata.extractLazyInterceptor( entity );
 			if ( interceptor == null ) {
@@ -3928,7 +3928,7 @@ public abstract class AbstractEntityPersister
 	public boolean hasProxy() {
 		// skip proxy instantiation if entity is bytecode enhanced
 		return entityMetamodel.isLazy()
-			&& !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+			&& !getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	@Override @Deprecated
@@ -4019,7 +4019,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isInstrumented() {
-		return entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		return getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	@Override
@@ -4060,8 +4060,8 @@ public abstract class AbstractEntityPersister
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
 		if ( isPersistentAttributeInterceptable( entity )
 				&& getRepresentationStrategy().getMode() == POJO ) {
-			final BytecodeLazyAttributeInterceptor interceptor =
-					getEntityMetamodel().getBytecodeEnhancementMetadata()
+			final var interceptor =
+					getBytecodeEnhancementMetadata()
 							.extractLazyInterceptor( entity );
 			assert interceptor != null;
 			if ( interceptor.getLinkedSession() == null ) {
@@ -4142,9 +4142,8 @@ public abstract class AbstractEntityPersister
 			accessOptimizer.setPropertyValues( object, values );
 		}
 		else {
-			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			final AttributeMappingsList attributeMappings = getAttributeMappings();
-			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+			if ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				for ( int i = 0; i < attributeMappings.size(); i++ ) {
 					final Object value = values[i];
 					if ( value != UNFETCHED_PROPERTY ) {
@@ -4171,11 +4170,11 @@ public abstract class AbstractEntityPersister
 			return accessOptimizer.getPropertyValues( object );
 		}
 		else {
-			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final var enhancementMetadata = getBytecodeEnhancementMetadata();
 			final AttributeMappingsList attributeMappings = getAttributeMappings();
 			final Object[] values = new Object[attributeMappings.size()];
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-				final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+				final var lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 				for ( int i = 0; i < attributeMappings.size(); i++ ) {
 					final AttributeMapping attributeMapping = attributeMappings.get( i );
 					if ( !lazyAttributesMetadata.isLazyAttribute( attributeMapping.getAttributeName() )
@@ -4288,8 +4287,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {
-		final BytecodeLazyAttributeInterceptor interceptor =
-				entityMetamodel.getBytecodeEnhancementMetadata()
+		final var interceptor =
+				getBytecodeEnhancementMetadata()
 						.extractLazyInterceptor( entity );
 		if ( interceptor != null ) {
 			interceptor.setSession( session );
@@ -4303,7 +4302,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean hasUninitializedLazyProperties(Object object) {
-		return entityMetamodel.getBytecodeEnhancementMetadata().hasUnFetchedAttributes( object );
+		return getBytecodeEnhancementMetadata().hasUnFetchedAttributes( object );
 	}
 
 	@Override
@@ -4369,7 +4368,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected boolean shouldGetAllProperties(Object entity) {
-		final BytecodeEnhancementMetadata metadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		final var metadata = getBytecodeEnhancementMetadata();
 		return !metadata.isEnhancedForLazyLoading()
 			|| !metadata.hasUnFetchedAttributes( entity );
 	}
@@ -4542,13 +4541,13 @@ public abstract class AbstractEntityPersister
 		return representationStrategy;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 		return getBytecodeEnhancementMetadata();
 	}
 
 	@Override
-	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
+	public final BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 

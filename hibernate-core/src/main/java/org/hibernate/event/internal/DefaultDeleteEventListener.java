@@ -13,7 +13,6 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
@@ -36,7 +35,6 @@ import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.CallbackType;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -461,8 +459,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 		}
 
 		final String[] propertyNames = persister.getPropertyNames();
-		final BytecodeEnhancementMetadata enhancementMetadata = persister.getBytecodeEnhancementMetadata();
-		final MappingMetamodelImplementor metamodel = persister.getFactory().getMappingMetamodel();
+		final var enhancementMetadata = persister.getBytecodeEnhancementMetadata();
+		final var metamodel = persister.getFactory().getMappingMetamodel();
 		for ( int i = 0; i < types.length; i++) {
 			if ( types[i] instanceof CollectionType collectionType
 					&& !enhancementMetadata.isAttributeLoaded( parent, propertyNames[i] ) ) {

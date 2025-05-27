@@ -528,6 +528,12 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		protected final K getIndex() {
 			return index;
 		}
+		
+		@Override
+		public E getAddedEntry() {
+			// The (E) cast is very hacky because E is not Map.Entry but we need it to conform to PersistentCollection.queuedAdditionIterator()
+			return (E) Map.entry( getIndex(), getAddedInstance() );
+		}
 	}
 
 	final class Put extends AbstractMapValueDelayedOperation {

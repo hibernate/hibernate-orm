@@ -119,7 +119,7 @@ public class TimesTenDialect extends Dialect {
 			//be better mappings for Java Float/Double
 
 			case SqlTypes.CHAR:
-				return "CHAR(1)";
+				return "CHAR($l)";
 			case SqlTypes.VARCHAR:
 			case SqlTypes.LONGVARCHAR:
 				return "VARCHAR2($l)";
@@ -691,7 +691,6 @@ public class TimesTenDialect extends Dialect {
 	 *  - Added a custom definition for 'getMaxVarcharLength()'
 	 *  - Added a custom definition for 'getMaxVarbinaryLength()'
 	 *  - Added a custom definition for 'isEmptyStringTreatedAsNull()'
-	 *  - Added a custom definition for 'canCreateSchema()'
 	 *  - Added a custom definition for 'supportsTupleDistinctCounts()'
 	 *  - Added a custom definition for 'getDual()'
 	 *  - Added a custom definition for 'getFromDualForSelectOnly()'
@@ -728,11 +727,6 @@ public class TimesTenDialect extends Dialect {
 	@Override
 	public boolean isEmptyStringTreatedAsNull() {
 		return true;
-	}
-
-	@Override
-	public boolean canCreateSchema() {
-		return false;
 	}
 
 	@Override

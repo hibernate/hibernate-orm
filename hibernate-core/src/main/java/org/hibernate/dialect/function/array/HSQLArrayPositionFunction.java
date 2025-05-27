@@ -9,6 +9,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -37,7 +38,7 @@ public class HSQLArrayPositionFunction extends AbstractArrayPositionFunction {
 		sqlAppender.append( " is not null then coalesce((select t.idx from unnest(");
 		arrayExpression.accept( walker );
 		sqlAppender.append(") with ordinality t(val,idx) where t.val is not distinct from " );
-		elementExpression.accept( walker );
+		walker.render( elementExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		if ( sqlAstArguments.size() > 2 ) {
 			sqlAppender.append( " and t.idx>=" );
 			sqlAstArguments.get( 2 ).accept( walker );

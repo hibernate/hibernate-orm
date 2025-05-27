@@ -17,6 +17,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -90,6 +91,20 @@ public class ArrayPositionsTest {
 			assertEquals( 3, results.size() );
 			assertArrayEquals( new int[0], results.get( 0 ) );
 			assertArrayEquals( new int[]{ 2 }, results.get( 1 ) );
+			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19490")
+	public void testPositionsParam(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<int[]> results = em.createQuery( "select array_positions(e.theArray, ?1) from EntityWithArrays e order by e.id", int[].class )
+					.setParameter( 1, "abc" )
+					.getResultList();
+			assertEquals( 3, results.size() );
+			assertArrayEquals( new int[0], results.get( 0 ) );
+			assertArrayEquals( new int[]{ 1, 4 }, results.get( 1 ) );
 			assertNull( results.get( 2 ) );
 		} );
 	}

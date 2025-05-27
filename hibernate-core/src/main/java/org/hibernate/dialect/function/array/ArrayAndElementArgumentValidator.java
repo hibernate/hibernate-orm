@@ -6,6 +6,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -36,7 +37,8 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 		for ( int elementIndex : elementIndexes ) {
 			if ( elementIndex < arguments.size() ) {
 				final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
-				final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
+				final SqmBindableType<?> expressible = elementArgument.getExpressible();
+				final SqmExpressible<?> elementType = expressible != null ? expressible.getSqmType() : null;
 				if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
 					throw new FunctionArgumentException(
 							String.format(

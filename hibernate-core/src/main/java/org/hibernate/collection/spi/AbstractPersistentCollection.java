@@ -849,7 +849,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 				@Override
 				public E next() {
-					return operationQueue.get( index++ ).getAddedEntry();
+					//noinspection unchecked
+					return (E) operationQueue.get( index++ ).getAddedEntry();
 				}
 
 				@Override
@@ -1205,7 +1206,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 		E getAddedInstance();
 		
-		default E getAddedEntry() {
+		default Object getAddedEntry() {
 			return getAddedInstance();
 		}
 

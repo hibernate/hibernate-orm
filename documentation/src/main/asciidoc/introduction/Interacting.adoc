@@ -395,7 +395,7 @@ _Orphan removal_ indicates that an `Item` should be automatically deleted if it 
 Our data model is a set of interconnected entities, and in Java our whole dataset would be represented as an enormous interconnected graph of objects.
 It's possible that this graph is disconnected, but more likely it's connected, or composed of a relatively small number of connected subgraphs.
 
-Therefore, when we retrieve on object belonging to this graph from the database and instantiate it in memory, we simply can't recursively retrieve and instantiate all its associated entities.
+Therefore, when we retrieve an object belonging to this graph from the database and instantiate it in memory, we simply can't recursively retrieve and instantiate all its associated entities.
 Quite aside from the waste of memory on the VM side, this process would involve a huge number of round trips to the database server, or a massive multidimensional cartesian product of tables, or both.
 Instead, we're forced to cut the graph somewhere.
 

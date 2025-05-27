@@ -7,7 +7,7 @@ package org.hibernate.boot.model;
 import org.hibernate.service.JavaServiceLoadable;
 
 /**
- * On object that contributes custom HQL functions, eventually to a
+ * An object that contributes custom HQL functions, eventually to a
  * {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}, via an
  * instance of {@link FunctionContributions}.
  * <ul>

@@ -88,6 +88,18 @@ public class ArrayPositionTest {
 	}
 
 	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-19490")
+	public void testPositionParam(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, ?1) = 1", EntityWithArrays.class )
+					.setParameter( 1, "abc" )
+					.getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
 	@Jira("https://hibernate.atlassian.net/browse/HHH-17801")
 	public void testEnumPosition(SessionFactoryScope scope) {
 		scope.inSession( em -> {

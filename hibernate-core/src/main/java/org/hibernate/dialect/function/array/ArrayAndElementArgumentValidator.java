@@ -38,7 +38,8 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 		for ( int elementIndex : elementIndexes ) {
 			if ( elementIndex < arguments.size() ) {
 				final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
-				final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
+				final SqmExpressible<?> expressible = elementArgument.getExpressible();
+				final SqmExpressible<?> elementType = expressible != null ? expressible.getSqmType() : null;
 				if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
 					throw new FunctionArgumentException(
 							String.format(

@@ -519,10 +519,9 @@ public class FetchGraphTest {
 		final StatisticsImplementor stats = scope.getSessionFactory().getStatistics();
 		stats.clear();
 
-		assert scope.getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
+		assert scope.getSessionFactory().getMappingMetamodel()
 				.getEntityDescriptor( RoleEntity.class )
-				.getInstrumentationMetadata()
+				.getBytecodeEnhancementMetadata()
 				.isEnhancedForLazyLoading();
 
 		scope.inTransaction(

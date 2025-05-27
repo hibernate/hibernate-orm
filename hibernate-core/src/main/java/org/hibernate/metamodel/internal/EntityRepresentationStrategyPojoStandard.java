@@ -154,7 +154,9 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 		final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
-		final boolean enhancedForLazyLoading = entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		final boolean enhancedForLazyLoading =
+				entityPersister.getBytecodeEnhancementMetadata()
+						.isEnhancedForLazyLoading();
 
 		// todo : `@ConcreteProxy` handling
 		if ( enhancedForLazyLoading

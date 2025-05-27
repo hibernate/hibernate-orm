@@ -75,7 +75,7 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversUpdateEventList
 		if ( event.getOldState() != null ) {
 			final EntityPersister entityPersister = event.getPersister();
 			final Object entity = event.getEntity();
-			final BytecodeEnhancementMetadata instrumentationMetadata = entityPersister.getInstrumentationMetadata();
+			final BytecodeEnhancementMetadata instrumentationMetadata = entityPersister.getBytecodeEnhancementMetadata();
 			final LazyAttributeLoadingInterceptor lazyAttributeLoadingInterceptor;
 			if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
 				lazyAttributeLoadingInterceptor = instrumentationMetadata.extractInterceptor( entity );

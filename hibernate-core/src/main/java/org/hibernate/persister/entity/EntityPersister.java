@@ -1297,7 +1297,13 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 		getIdentifierMapping().addToCacheKey( cacheKey, getIdentifier( value, session ), session );
 	}
 
-	BytecodeEnhancementMetadata getInstrumentationMetadata();
+	/**
+	 * @deprecated Use {@link #getBytecodeEnhancementMetadata()}
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	default BytecodeEnhancementMetadata getInstrumentationMetadata() {
+		throw new UnsupportedOperationException();
+	}
 
 	default BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return getInstrumentationMetadata();

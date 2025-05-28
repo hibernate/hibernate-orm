@@ -7664,19 +7664,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( CLOSE_PARENTHESIS );
 				}
 				else {
+					if (inListPredicate.isNegated()) {
+					    appendSql("not ");
+					}					
+					appendSql("(");
 					String separator = NO_SEPARATOR;
-					appendSql( OPEN_PARENTHESIS );
-					for ( Expression expression : listExpressions ) {
-						appendSql( separator );
-						emulateTupleComparison(
-								lhsTuple.getExpressions(),
-								getSqlTuple( expression ).getExpressions(),
-								comparisonOperator,
-								true
-						);
-						separator = " or ";
+					for (Expression expression : listExpressions) {
+					    appendSql(separator);
+					    emulateTupleComparison(
+					        lhsTuple.getExpressions(),
+					        SqlTupleContainer.getSqlTuple(expression).getExpressions(),
+					        ComparisonOperator.EQUAL, // Always use EQUAL for base condition
+					        true
+					    );
+					    separator = " or ";
 					}
-					appendSql( CLOSE_PARENTHESIS );
+					appendSql(")");
 				}
 				return;
 			}

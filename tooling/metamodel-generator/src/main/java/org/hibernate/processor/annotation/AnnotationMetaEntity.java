@@ -77,6 +77,7 @@ import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isRangeParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isRestrictionParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
@@ -2271,7 +2272,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable FieldType validateFinderParameter(TypeElement entityType, VariableElement param) {
-		final Element member = memberMatchingPath( entityType, parameterName( param ) );
+		final String path = parameterName( param );
+		final boolean idClassRef = isIdRef( path ) && hasAnnotation( entityType, ID_CLASS );
+		final Element member = idClassRef ? null : memberMatchingPath( entityType, path );
 		if ( member != null ) {
 			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
 				message( param,
@@ -2302,23 +2305,45 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return FieldType.BASIC;
 			}
 		}
-		else {
+		else if ( idClassRef ) {
 			final AnnotationMirror idClass = getAnnotationMirror( entityType, ID_CLASS );
-			if ( idClass != null ) {
+			if ( idClass == null ) {
+				return null; // cannot happen!
+			}
+			else {
 				final AnnotationValue value = getAnnotationValue( idClass );
-				if ( value != null ) {
-					if ( isSameType( param.asType(), (TypeMirror) value.getValue() ) ) {
-						return FieldType.ID;
-					}
+				if ( value != null
+					&& isSameType( actualParameterType( param ),
+						(TypeMirror) value.getValue() ) ) {
+					return FieldType.ID;
+				}
+				else {
+					message( param,
+							"does not match id class of entity class '" + entityType + "'",
+							Diagnostic.Kind.ERROR );
+					return null;
 				}
 			}
-
+		}
+		else {
 			message( param,
-					"no matching field named '" + parameterName( param )
-							+ "' in entity class '" + entityType + "'",
+					"no matching field named '" + path
+						+ "' in entity class '" + entityType + "'",
 					Diagnostic.Kind.ERROR );
 			return null;
 		}
+	}
+
+	private TypeMirror actualParameterType(VariableElement param) {
+		final ExecutableElement method =
+				(ExecutableElement)
+						param.getEnclosingElement();
+		final ExecutableType methodType =
+				(ExecutableType)
+						context.getTypeUtils()
+								.asMemberOf( (DeclaredType) element.asType(), method );
+		return methodType.getParameterTypes()
+				.get( method.getParameters().indexOf( param ) );
 	}
 
 	/**
@@ -2447,8 +2472,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isIdRef(String token) {
-		return "#id".equals(token) // for Jakarta Data M4 release
-			|| "id(this)".equalsIgnoreCase(token); // post M4
+		return "id(this)".equalsIgnoreCase(token); // post M4
 	}
 
 	private @Nullable Element memberMatchingPath(
@@ -3165,27 +3189,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static List<Boolean> parameterPatterns(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(param -> hasAnnotation(param, PATTERN))
-				.collect(toList());
+				.toList();
 	}
 
 	private List<String> parameterNames(ExecutableElement method, TypeElement entity) {
 		final String idName =
-				// account for special @By("#id") hack in Jakarta Data
-				entity.getEnclosedElements().stream()
-						.filter(member -> hasAnnotation(member, ID))
-						.map(TypeUtils::propertyName)
-						.findFirst()
-						.orElse("id");
+				hasAnnotation( entity, ID_CLASS )
+					? ID_ROLE_NAME
+					// account for special @By("id(this)") hack in Jakarta Data
+					: entity.getEnclosedElements().stream()
+							.filter(member -> hasAnnotation(member, ID))
+							.map(TypeUtils::propertyName)
+							.findFirst()
+							.orElse(ID_ROLE_NAME);
 		return method.getParameters().stream()
 				.map(AnnotationMetaEntity::parameterName)
 				.map(name -> isIdRef(name) ? idName : name)
-				.collect(toList());
+				.toList();
 	}
 
 	private static List<String> parameterNames(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(AnnotationMetaEntity::parameterName)
-				.collect(toList());
+				.toList();
 	}
 
 	private static String parameterName(VariableElement parameter) {

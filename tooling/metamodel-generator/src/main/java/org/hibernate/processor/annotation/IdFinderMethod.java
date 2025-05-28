@@ -138,11 +138,11 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append( "(\"No '" )
 				.append( annotationMetaEntity.importType( entity ) )
 				.append( "' for given id [\" + " )
-				.append( paramName )
+				.append( parameterName(paramName) )
 				.append( " + \"]\",\n\t\t\t\t\tnew " )
 				.append( annotationMetaEntity.importType( "org.hibernate.ObjectNotFoundException" ) )
 				.append( "((Object) " )
-				.append( paramName )
+				.append( parameterName(paramName) )
 				.append( ", \"" )
 				.append( entity )
 				.append( "\"))");
@@ -207,7 +207,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 				.append(isUsingStatelessSession() ? ".get(" : ".find(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
-				.append(paramName);
+				.append(parameterName(paramName));
 		if ( isReactiveSessionAccess() ) {
 			declaration
 					.append(')');

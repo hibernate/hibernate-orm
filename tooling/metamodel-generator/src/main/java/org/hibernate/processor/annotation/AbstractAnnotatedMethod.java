@@ -13,6 +13,7 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER;
 import static org.hibernate.processor.util.Constants.OBJECTS;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
@@ -80,10 +81,16 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 				.append('\t')
 				.append(annotationMetaEntity.staticImport(OBJECTS, "requireNonNull"))
 				.append('(')
-				.append(paramName.replace('.', '$'))
+				.append(parameterName(paramName))
 				.append(", \"Null ")
-				.append(paramName)
+				.append(ID_ROLE_NAME.equals(paramName) ? "id" : paramName)
 				.append("\");\n");
+	}
+
+	static String parameterName(String name) {
+		return name.equals(ID_ROLE_NAME)
+				? "id"
+				: name.replace('.', '$');
 	}
 
 	protected void handle(StringBuilder declaration, String handled, String rethrown) {

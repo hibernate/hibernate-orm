@@ -170,7 +170,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
-					.append(paramNames.get(i).replace('.', '$'));
+					.append(parameterName(paramNames.get(i)));
 		}
 		declaration
 				.append(")");
@@ -317,8 +317,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				}
 			}
 			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
-				final TypeElement entityElement = annotationMetaEntity.getContext().getElementUtils()
-						.getTypeElement( returnTypeName );
+				final TypeElement entityElement =
+						annotationMetaEntity.getContext().getElementUtils()
+								.getTypeElement( returnTypeName );
 				declaration
 						.append("\t_spec.restrict(")
 						.append(annotationMetaEntity.importType(HIB_RESTRICTION))

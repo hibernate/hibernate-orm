@@ -7665,9 +7665,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					if (inListPredicate.isNegated()) {
-					    appendSql("not ");
+					    appendSql(" not ");
 					}					
-					appendSql("(");
+					appendSql( OPEN_PARENTHESIS );
 					String separator = NO_SEPARATOR;
 					for (Expression expression : listExpressions) {
 					    appendSql(separator);
@@ -7679,7 +7679,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					    );
 					    separator = " or ";
 					}
-					appendSql(")");
+					appendSql( CLOSE_PARENTHESIS );
 				}
 				return;
 			}

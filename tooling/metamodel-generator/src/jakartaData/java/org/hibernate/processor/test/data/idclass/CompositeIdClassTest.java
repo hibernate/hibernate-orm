@@ -17,15 +17,18 @@ public class CompositeIdClassTest extends CompilationTest {
 	@Test
 	@WithClasses({
 			MyRepository.class,
+			YourRepository.class,
 			MyEntity.class,
 	})
 	public void test() {
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
 		System.out.println( getMetaModelSourceAsString( MyEntity.class, true ) );
 		System.out.println( getMetaModelSourceAsString( MyRepository.class ) );
+		System.out.println( getMetaModelSourceAsString( YourRepository.class ) );
 		assertMetamodelClassGeneratedFor( MyEntity.class );
 		assertMetamodelClassGeneratedFor( MyEntity.class, true );
 		assertMetamodelClassGeneratedFor( MyRepository.class );
+		assertMetamodelClassGeneratedFor( YourRepository.class );
 		assertPresenceOfMethodInMetamodelFor(
 				MyRepository.class,
 				"findById",

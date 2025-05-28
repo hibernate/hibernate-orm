@@ -4,6 +4,7 @@
  */
 package org.hibernate.type.format.jaxb;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Array;
@@ -495,6 +496,27 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		catch (JAXBException e) {
 			throw new IllegalArgumentException( "Could not serialize object of java type: " + javaType, e );
 		}
+	}
+
+	@Override
+	public boolean supportsSourceType(Class<?> sourceType) {
+		return false;
+	}
+
+	@Override
+	public boolean supportsTargetType(Class<?> targetType) {
+		return false;
+	}
+
+	@Override
+	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
+			throws IOException {
+
+	}
+
+	@Override
+	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
+		return null;
 	}
 
 	private JAXBElementTransformer createTransformer(

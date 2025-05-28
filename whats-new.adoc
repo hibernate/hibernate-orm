@@ -374,3 +374,19 @@ Support for `hbm.xml` mappings will be removed in 8.0.
 
 We offer a transformation of `hbm.xml` files into `mapping.xml` files, which is available both at build-time (Gradle plugin) and at run-time (using `hibernate.transform_hbm_xml.enabled=true`).
 
+
+[[OSON-support]]
+== OSON support
+
+
+Starting in 21c, link:https://docs.oracle.com/en/database/oracle/oracle-database/23/adjsn/json-oracle-database.html[Oracle JSON binary format] (also known as OSON) can now be used in Hibernate to store `JSON` data. It brings a performance boost by replacing the actual to/from String conversion.
+To enable the OSON support, the link:https://github.com/oracle/ojdbc-extensions/blob/main/ojdbc-provider-jackson-oson/README.md[Oracle JDBC extension] must be added to the application classpath.
+Here is an example using Gradle build system
+```
+runtimeOnly ('com.oracle.database.jdbc:ojdbc-provider-jackson-oson:1.0.4')
+{
+  exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+}
+```
+
+The use of OSON can be disabled by setting the following hibernate property `hibernate.dialect.oracle.oson_format_disabled=true`

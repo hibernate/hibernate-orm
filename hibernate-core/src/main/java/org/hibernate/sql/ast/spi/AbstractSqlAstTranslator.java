@@ -7665,7 +7665,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					if (inListPredicate.isNegated()) {
-						appendSql("not ");
+					    appendSql("not ");
 					}
 					String separator = NO_SEPARATOR;
 					appendSql( OPEN_PARENTHESIS );

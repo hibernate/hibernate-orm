@@ -17,7 +17,6 @@ import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.BasicType;
@@ -34,14 +33,13 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private SqmCteTable(
 			String name,
 			SqmCteStatement<T> cteStatement,
-			SqmSelectableNode<?>[] sqmSelectableNodes,
-			List<String> aliases) {
-		super( sqmSelectableNodes, aliases );
+			SqmSelectQuery<T> selectStatement) {
+		super(selectStatement);
 		this.name = name;
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
 		for ( int i = 0; i < componentCount(); i++ ) {
-			columns.add( new SqmCteTableColumn( this, aliases.get(i), get(i) ) );
+			columns.add( new SqmCteTableColumn( this, getComponentName(i), get(i) ) );
 		}
 		this.columns = columns;
 	}
@@ -50,12 +48,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String name,
 			SqmCteStatement<X> cteStatement,
 			SqmSelectQuery<X> selectStatement) {
-		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQueryPart()
-				.getFirstQuerySpec()
-				.getSelectClause()
-				.getSelectionItems()
-				.toArray( SqmSelectableNode[]::new );
-		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes, extractAliases(selectStatement) );
+		return new SqmCteTable<>( name, cteStatement, selectStatement );
 	}
 
 	@Override

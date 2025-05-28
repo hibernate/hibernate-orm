@@ -7669,10 +7669,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					for (Expression expression : listExpressions) {
 						appendSql(separator);
 						emulateTupleComparison(
-							lhsTuple.getExpressions(),
-							SqlTupleContainer.getSqlTuple(expression).getExpressions(),
+								lhsTuple.getExpressions(),
+								SqlTupleContainer.getSqlTuple(expression).getExpressions(),
 								ComparisonOperator.EQUAL,
-							true
+								true
 						);
 						separator = " or ";
 					}

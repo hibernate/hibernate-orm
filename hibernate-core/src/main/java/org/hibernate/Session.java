@@ -147,6 +147,9 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  *     cannot be expected to be consistent with the database after the exception occurs.
  * <li>At the end of a logical transaction, the session must be explicitly {@linkplain
  *     #close() destroyed}, so that all JDBC resources may be released.
+ * <li>If a transaction is rolled back, the state of the persistence context and of its
+ *     associated entities must be assumed inconsistent with the database, and the
+ *     session must be discarded.
  * <li>A {@code Session} is never thread-safe. It contains various different sorts of
  *     fragile mutable state. Each thread or transaction must obtain its own dedicated
  *     instance from the {@link SessionFactory}.

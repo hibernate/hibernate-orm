@@ -233,6 +233,14 @@ entityManager.getTransaction().setRollbackOnly();
 
 A transaction in rollback-only mode will be rolled back when it completes.
 
+[[after-tx-rollback]]
+[IMPORTANT]
+====
+Hibernate is not a software transactional memory.
+When a transaction rolls back, Hibernate makes no attempt to roll back the state of objects held in memory to their state at the beginning of the transaction.
+After a transaction rollback, the persistence context must be discarded, and the state of its entities must be assumed inconsistent with the state held by the database.
+====
+
 [[persistence-operations]]
 === Operations on the persistence context
 
@@ -294,6 +302,7 @@ Now, if an exception occurs while interacting with the database, there's no good
 
 Therefore, a session is considered to be unusable after any of its methods throws an exception.
 
+[[fragile-persistence-context]]
 [IMPORTANT]
 // .The persistence context is fragile
 ====

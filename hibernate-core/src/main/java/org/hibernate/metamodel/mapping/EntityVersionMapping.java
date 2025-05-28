@@ -14,6 +14,9 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @see jakarta.persistence.Version
  */
 public interface EntityVersionMapping extends BasicValuedModelPart {
+
+	String VERSION_ROLE_NAME = "{version}";
+
 	/**
 	 * The attribute marked as the version
 	 */

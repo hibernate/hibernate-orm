@@ -10,6 +10,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.boot.internal.MetadataImpl;
@@ -953,7 +954,7 @@ public abstract class MockSessionFactory
 			else {
 				return new SingularAttributeImpl<>(
 						MockEntityDomainType.this,
-						"{version}",
+						EntityVersionMapping.VERSION_ROLE_NAME,
 						AttributeClassification.BASIC,
 						type,
 						type.getRelationalJavaType(),
@@ -1004,7 +1005,7 @@ public abstract class MockSessionFactory
 			switch (name) {
 				case EntityIdentifierMapping.ID_ROLE_NAME:
 					return getIdentifierDescriptor();
-				case "{version}":
+				case EntityVersionMapping.VERSION_ROLE_NAME:
 					return findVersionAttribute();
 			}
 			final SqmPathSource<?> source = super.findSubPathSource(name, includeSubtypes);

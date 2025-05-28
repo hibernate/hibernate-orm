@@ -7630,9 +7630,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( ( lhsTuple = getSqlTuple( inListPredicate.getTestExpression() ) ) != null ) {
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
-				itemAccessor = listExpression ->
-						getSqlTuple( listExpression )
-								.getExpressions().get( 0 );
+				if ( getSqlTuple( listExpressions.get( 0 ) ) != null ) {
+					itemAccessor = listExpression ->
+							getSqlTuple( listExpression )
+									.getExpressions().get( 0 );
+				}
 			}
 			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
@@ -8253,12 +8255,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final ComparisonOperator operator = comparisonPredicate.getOperator();
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
-				if ( subquery == null ) {
+				if ( subquery == null && (rhsTuple = getSqlTuple(
+						comparisonPredicate.getRightHandExpression() )) != null ) {
 					renderComparison(
 							lhsTuple.getExpressions().get( 0 ),
 							operator,
-							getSqlTuple( comparisonPredicate.getRightHandExpression() )
-									.getExpressions().get( 0 )
+							rhsTuple.getExpressions().get( 0 )
 					);
 				}
 				else {

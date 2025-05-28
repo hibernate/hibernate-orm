@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.17.Final (May 28, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33638
+
+** Bug
+    * [HHH-19490] - NPE when using array_position function
+    * [HHH-19476] - claimEntityHolderIfPossible Assertion Error
+    * [HHH-19387] - AssertionError in EntityInitializerImpl data.concreteDescriptor is null
+    * [HHH-18946] - Startup issues with HANA in failover situations
+
+
 Changes in 6.6.16.Final (May 25, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -16,10 +16,6 @@ public enum RowLockStrategy {
 	 */
 	COLUMN,
 	/**
-	 * Use the column name.
-	 */
-	COLUMN_NAME,
-	/**
 	 * Use the table alias.
 	 */
 	TABLE,

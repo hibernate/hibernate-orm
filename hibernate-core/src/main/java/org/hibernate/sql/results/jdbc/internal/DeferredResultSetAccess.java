@@ -160,18 +160,24 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			QueryOptions queryOptions,
 			LockOptions lockOptions,
 			Dialect dialect) {
+		assert lockOptions != null;
 		return switch ( jdbcLockStrategy ) {
 			case FOLLOW_ON -> true;
-			case AUTO -> followOnAllowed( lockOptions )
-					? dialect.useFollowOnLocking( sql, queryOptions )
-					: lockOptions.getFollowOnLocking();
-			default -> false;
+			case AUTO -> interpretAutoLockStrategy( sql, queryOptions, lockOptions, dialect);
+			case NONE -> false;
 		};
 	}
 
-	private static boolean followOnAllowed(LockOptions lockOptions) {
-		return  lockOptions.getFollowOnStrategy() == null
-		|| lockOptions.getFollowOnStrategy() == Locking.FollowOn.ALLOW;
+	private static boolean interpretAutoLockStrategy(
+			String sql,
+			QueryOptions queryOptions,
+			LockOptions lockOptions,
+			Dialect dialect) {
+		return switch ( lockOptions.getFollowOnStrategy() ) {
+			case ALLOW -> dialect.useFollowOnLocking( sql, queryOptions );
+			case FORCE -> true;
+			case DISALLOW, IGNORE -> false;
+		};
 	}
 
 	public LimitHandler getLimitHandler() {

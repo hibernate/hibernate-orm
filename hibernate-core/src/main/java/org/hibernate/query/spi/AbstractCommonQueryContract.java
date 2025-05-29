@@ -60,7 +60,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static java.lang.Boolean.FALSE;
 import static java.util.Arrays.asList;
 import static java.util.Locale.ROOT;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -424,7 +423,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				}
 				return true;
 			case HINT_FOLLOW_ON_LOCKING:
-				DEPRECATION_LOGGER.deprecatedHint( HINT_FOLLOW_ON_LOCKING, HINT_FOLLOW_ON_STRATEGY );
 				applyFollowOnLockingHint( getBoolean( value ) );
 				return true;
 			case HINT_NATIVE_LOCKMODE:
@@ -489,12 +487,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
-		if ( followOnLocking == FALSE ) {
-			applyFollowOnStrategyHint( Locking.FollowOn.DISALLOW );
-		}
-		else {
-			applyFollowOnStrategyHint( Locking.FollowOn.ALLOW );
-		}
+		DEPRECATION_LOGGER.deprecatedHint( HINT_FOLLOW_ON_LOCKING, HINT_FOLLOW_ON_STRATEGY );
+		applyFollowOnStrategyHint( Locking.FollowOn.fromLegacyValue( followOnLocking ) );
 	}
 
 

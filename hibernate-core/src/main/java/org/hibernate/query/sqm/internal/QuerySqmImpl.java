@@ -97,6 +97,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
@@ -826,6 +827,7 @@ public class QuerySqmImpl<R>
 			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph );
 		}
 
+		putIfNotNull( hints, HINT_FOLLOW_ON_STRATEGY, getQueryOptions().getLockOptions().getFollowOnStrategy() );
 		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
 	}
 

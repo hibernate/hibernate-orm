@@ -179,12 +179,7 @@ public class QueryHintDefinition {
 		}
 
 		final Boolean lockingValue = getBooleanWrapper( HibernateHints.HINT_FOLLOW_ON_LOCKING );
-		if ( lockingValue == null || lockingValue == Boolean.TRUE ) {
-			return Locking.FollowOn.ALLOW;
-		}
-		else {
-			return Locking.FollowOn.DISALLOW;
-		}
+		return Locking.FollowOn.fromLegacyValue( lockingValue );
 	}
 
 	private LockOptions determineLockOptions(

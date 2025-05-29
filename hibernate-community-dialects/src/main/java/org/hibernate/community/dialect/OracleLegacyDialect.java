@@ -1383,7 +1383,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return RowLockStrategy.COLUMN_NAME;
+		return RowLockStrategy.COLUMN;
 	}
 
 	@Override

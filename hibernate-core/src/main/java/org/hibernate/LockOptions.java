@@ -88,6 +88,8 @@ public class LockOptions implements Serializable {
 	 *
 	 * @see LockMode#NONE
 	 * @see Timeouts#WAIT_FOREVER
+	 * @see Locking.Scope#ROOT_ONLY
+	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions() {
 		immutable = false;
@@ -104,6 +106,8 @@ public class LockOptions implements Serializable {
 	 * @param lockMode The initial lock mode
 	 *
 	 * @see Timeouts#WAIT_FOREVER
+	 * @see Locking.Scope#ROOT_ONLY
+	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions(LockMode lockMode) {
 		immutable = false;
@@ -119,6 +123,9 @@ public class LockOptions implements Serializable {
 	 *
 	 * @param lockMode The initial lock mode
 	 * @param timeout  The initial timeout, in milliseconds
+	 *
+	 * @see Locking.Scope#ROOT_ONLY
+	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions(LockMode lockMode, Timeout timeout) {
 		immutable = false;
@@ -135,6 +142,8 @@ public class LockOptions implements Serializable {
 	 * @param lockMode The initial lock mode
 	 * @param timeout The initial timeout
 	 * @param jpaScope The initial lock scope
+	 *
+	 * @see Locking.FollowOn#ALLOW
 	 */
 	public LockOptions(LockMode lockMode, Timeout timeout, PessimisticLockScope jpaScope) {
 		immutable = false;
@@ -146,6 +155,10 @@ public class LockOptions implements Serializable {
 
 	/**
 	 * Internal operation used to create immutable global instances.
+	 *
+	 * @see Timeouts#WAIT_FOREVER
+	 * @see Locking.Scope#ROOT_ONLY
+	 * @see Locking.FollowOn#ALLOW
 	 */
 	protected LockOptions(boolean immutable, LockMode lockMode) {
 		this.immutable = immutable;
@@ -288,6 +301,7 @@ public class LockOptions implements Serializable {
 	 * @see #getFollowOnStrategy()
 	 */
 	public LockOptions setFollowOnStrategy(Locking.FollowOn followOnStrategy) {
+		assert followOnStrategy != null;
 		this.followOnStrategy = followOnStrategy;
 		return this;
 	}
@@ -393,6 +407,7 @@ public class LockOptions implements Serializable {
 	 * cases where Hibernate determines it would need to use follow-on
 	 * locking.
 	 *
+	 * @see Locking.FollowOn#asLegacyValue()
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
 	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
 	 *
@@ -400,7 +415,8 @@ public class LockOptions implements Serializable {
 	 */
 	@Deprecated(since = "7.1")
 	public Boolean getFollowOnLocking() {
-		return followOnStrategy == Locking.FollowOn.ALLOW;
+		assert followOnStrategy != null;
+		return followOnStrategy.asLegacyValue();
 	}
 
 	/**
@@ -410,6 +426,7 @@ public class LockOptions implements Serializable {
 	 * @param followOnLocking The new follow-on locking setting
 	 * @return {@code this} for method chaining
 	 *
+	 * @see org.hibernate.Locking.FollowOn#fromLegacyValue
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FOLLOW_ON_LOCKING
 	 * @see org.hibernate.dialect.Dialect#useFollowOnLocking(String, org.hibernate.query.spi.QueryOptions)
 	 *
@@ -417,14 +434,7 @@ public class LockOptions implements Serializable {
 	 */
 	@Deprecated(since = "7.1")
 	public LockOptions setFollowOnLocking(Boolean followOnLocking) {
-		if ( followOnLocking == null ) {
-			this.followOnStrategy = Locking.FollowOn.ALLOW;
-		}
-		else {
-			this.followOnStrategy = followOnLocking
-					? Locking.FollowOn.FORCE
-					: Locking.FollowOn.DISALLOW;
-		}
+		followOnStrategy = Locking.FollowOn.fromLegacyValue( followOnLocking );
 		return this;
 	}
 

@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast.internal;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
@@ -198,9 +197,6 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		else if ( rowLockStrategy == RowLockStrategy.COLUMN ) {
 			addColumnRefs( tableGroup, lockItems );
 		}
-		else if ( rowLockStrategy == RowLockStrategy.COLUMN_NAME ) {
-			addColumnNames( tableGroup, lockItems );
-		}
 	}
 
 	private void addTableAliases(TableGroup tableGroup, List<String> lockItems) {
@@ -223,6 +219,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 		final String[] result = determineKeyColumnNames( tableGroup.getModelPart() );
 		final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
 		for ( int i = 0; i < result.length; i++ ) {
+			// NOTE: in some tests with Oracle, the qualifiers are being applied twice;
+			//		still need to track that down.  possibly, unexpected calls to
+			//		`Dialect#applyLocksToSql`?
+			assert !result[i].contains( "." );
 			result[i] = tableAlias + "." + result[i];
 		}
 		return result;
@@ -233,39 +233,10 @@ public class StandardLockingClauseStrategy implements LockingClauseStrategy {
 			return entityPersister.getIdentifierColumnNames();
 		}
 		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-			// todo : seems like this ought to return the column name(s)
-			//  	to then be qualified with the table alias
 			return pluralAttributeMapping.getCollectionDescriptor().getKeyColumnAliases( null );
 		}
 		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
 			return determineKeyColumnNames( entityAssociationMapping.getAssociatedEntityMappingType() );
-		}
-		else {
-			return null;
-		}
-	}
-
-	private void addColumnNames(TableGroup tableGroup, List<String> lockItems) {
-		final ModelPart keyColumnPart = determineKeyPart( tableGroup.getModelPart() );
-		if ( keyColumnPart == null ) {
-			throw new HibernateException( "Could not determine ModelPart defining key columns - " + tableGroup.getModelPart() );
-		}
-		keyColumnPart.forEachSelectable( (selectionIndex, selectableMapping) -> {
-			if ( !selectableMapping.isFormula() ) {
-				lockItems.add( selectableMapping.getSelectableName() );
-			}
-		} );
-	}
-
-	private ModelPart determineKeyPart(ModelPart modelPart) {
-		if ( modelPart instanceof EntityPersister entityPersister ) {
-			return entityPersister.getIdentifierMapping();
-		}
-		else if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping ) {
-			return pluralAttributeMapping.getKeyDescriptor();
-		}
-		else if ( modelPart instanceof EntityAssociationMapping entityAssociationMapping ) {
-			return entityAssociationMapping.getForeignKeyDescriptor();
 		}
 		else {
 			return null;

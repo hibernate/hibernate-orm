@@ -132,6 +132,41 @@ public interface Locking {
 		 *
 		 * @apiNote This may lead to exceptions from the database.
 		 */
-		FORCE
+		FORCE;
+
+		/**
+		 * Interprets the follow-on strategy into the legacy boolean values.
+		 *
+		 * @return {@code true} if {@linkplain #FORCE}; {@code false} if {@linkplain #DISALLOW};
+		 * {@code null} otherwise.
+		 *
+		 * @see #fromLegacyValue
+		 */
+		public Boolean asLegacyValue() {
+			return switch ( this ) {
+				case FORCE -> true;
+				case DISALLOW -> false;
+				default -> null;
+			};
+		}
+
+		/**
+		 * Given a legacy boolean value, interpret the follow-on strategy.
+		 *
+		 * @return {@linkplain #FORCE} if {@code true};
+		 * {@linkplain #DISALLOW} if {@code false};
+		 * {@linkplain #ALLOW} otherwise.
+		 *
+		 * @see #asLegacyValue()
+		 */
+		public static FollowOn fromLegacyValue(Boolean value) {
+			if ( value == Boolean.TRUE ) {
+				return FORCE;
+			}
+			if ( value == Boolean.FALSE ) {
+				return DISALLOW;
+			}
+			return ALLOW;
+		}
 	}
 }

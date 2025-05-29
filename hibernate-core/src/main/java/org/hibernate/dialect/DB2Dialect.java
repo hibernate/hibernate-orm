@@ -26,6 +26,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -45,6 +46,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.common.TemporalUnit;
@@ -63,6 +65,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
@@ -153,19 +157,18 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final LimitHandler limitHandler = getDB2Version().isBefore( 11, 1 )
-			? LegacyDB2LimitHandler.INSTANCE
-			: DB2LimitHandler.INSTANCE;
+	private final LimitHandler limitHandler =
+			getDB2Version().isBefore( 11, 1 )
+					? LegacyDB2LimitHandler.INSTANCE
+					: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
 	private final StandardTableExporter db2TableExporter = new StandardTableExporter( this ) {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
 			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
-			if ( jdbcType.isLob() || jdbcType.isXml() ) {
-				// LOB or XML columns can't have check constraints
-				return;
+			if ( !jdbcType.isLob() && !jdbcType.isXml() ) { // LOB or XML columns can't have check constraints
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
 		}
 	};
 
@@ -174,7 +177,8 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public DB2Dialect(DialectResolutionInfo info) {
-		super( info );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
+		registerKeywords( info );
 	}
 
 	public DB2Dialect(DatabaseVersion version) {
@@ -253,6 +257,14 @@ public class DB2Dialect extends Dialect {
 		);
 	}
 
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+				.createMergeOperation( optionalTableUpdate );
+	}
 	protected UniqueDelegate createUniqueDelegate() {
 		return new AlterTableUniqueIndexDelegate( this );
 	}

@@ -1200,9 +1200,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		final SQLServerSqlAstTranslator<JdbcOperation> translator =
-				new SQLServerSqlAstTranslator<>( factory, optionalTableUpdate );
-		return translator.createMergeOperation( optionalTableUpdate );
+		return new SQLServerSqlAstTranslator<>( factory, optionalTableUpdate )
+				.createMergeOperation( optionalTableUpdate );
 	}
 
 	@Override

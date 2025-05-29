@@ -121,20 +121,6 @@ public class Helper {
 				}
 				aliases = buffer.toString();
 			}
-			else if ( rowLockStrategy == RowLockStrategy.COLUMN_NAME ) {
-				final StringBuilder buffer = new StringBuilder();
-				boolean firstPass = true;
-				for ( Table table : tablesFetched ) {
-					if ( firstPass ) {
-						firstPass = false;
-					}
-					else {
-						buffer.append( "," );
-					}
-					buffer.append( StringHelper.join( ",", table.getKeyColumnNames() ) );
-				}
-				aliases = buffer.toString();
-			}
 			else {
 				assert rowLockStrategy == RowLockStrategy.COLUMN;
 				final StringBuilder buffer = new StringBuilder();

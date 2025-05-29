@@ -412,7 +412,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			EventSource source) {
 		final WrapVisitor visitor = new WrapVisitor( entity, id, source );
 		// substitutes into values by side effect
-		visitor.processEntityPropertyValues( values, types );
+		visitor.processEntityPropertyValues( entity, values, types );
 		return visitor.isSubstitutionRequired();
 	}
 

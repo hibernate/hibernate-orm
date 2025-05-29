@@ -22,7 +22,7 @@ public abstract class ProxyVisitor extends AbstractVisitor {
 		super(session);
 	}
 
-	Object processEntity(Object value, EntityType entityType) {
+	Object processEntity(Object entity, Object value, EntityType entityType) {
 		if ( value != null ) {
 			getSession().getPersistenceContext().reassociateIfUninitializedProxy( value );
 			// if it is an initialized proxy, let cascade

@@ -51,7 +51,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	protected Object processCollection(Object collection, CollectionType collectionType)
+	protected Object processCollection(Object entity, Object collection, CollectionType collectionType)
 			throws HibernateException {
 		if ( collection == null || collection == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			return null;
@@ -133,8 +133,8 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	protected void processValue(int i, Object[] values, Type[] types) {
-		final Object result = processValue( values[i], types[i] );
+	protected void processValue(Object entity, int i, Object[] values, Type[] types) {
+		final Object result = processValue( values[i], values[i], types[i], i);
 		if ( result != null ) {
 			substitute = true;
 			values[i] = result;
@@ -142,13 +142,13 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-	protected Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	protected Object processComponent(Object entity, Object component, CompositeType componentType) throws HibernateException {
 		if ( component != null ) {
 			final Object[] values = componentType.getPropertyValues( component, getSession() );
 			final Type[] types = componentType.getSubtypes();
 			boolean substituteComponent = false;
 			for ( int i = 0; i < types.length; i++ ) {
-				Object result = processValue( values[i], types[i] );
+				Object result = processValue( values[i], values[i], types[i], i );
 				if ( result != null ) {
 					values[i] = result;
 					substituteComponent = true;
@@ -166,7 +166,7 @@ public class WrapVisitor extends ProxyVisitor {
 	public void process(Object object, EntityPersister persister) throws HibernateException {
 		final Object[] values = persister.getValues( object );
 		final Type[] types = persister.getPropertyTypes();
-		processEntityPropertyValues( values, types );
+		processEntityPropertyValues( object, values, types );
 		if ( isSubstitutionRequired() ) {
 			persister.setValues( object, values );
 		}

@@ -7,6 +7,8 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
@@ -25,6 +27,8 @@ import org.hibernate.type.Type;
  */
 public abstract class AbstractVisitor {
 
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractVisitor.class );
+
 	private final EventSource session;
 
 	AbstractVisitor(EventSource session) {
@@ -35,10 +39,10 @@ public abstract class AbstractVisitor {
 	 * Dispatch each property value to processValue().
 	 *
 	 */
-	void processValues(Object[] values, Type[] types) throws HibernateException {
+	void processValues(Object entity, Object[] values, Type[] types) throws HibernateException {
 		for ( int i=0; i<types.length; i++ ) {
 			if ( includeProperty(values, i) ) {
-				processValue( i, values, types );
+				processValue( entity, i, values, types );
 			}
 		}
 	}
@@ -47,16 +51,20 @@ public abstract class AbstractVisitor {
 	 * Dispatch each property value to processValue().
 	 *
 	 */
-	public void processEntityPropertyValues(Object[] values, Type[] types) throws HibernateException {
+	public void processEntityPropertyValues(Object entity, Object[] values, Type[] types) throws HibernateException {
 		for ( int i=0; i<types.length; i++ ) {
-			if ( includeEntityProperty(values, i) ) {
-				processValue( i, values, types );
+			boolean includeEntityProperty = includeEntityProperty(values, i);
+			if (LOG.isTraceEnabled()) {
+				LOG.trace( "processEntityPropertyValues: type=" + types[i] + ", includeEntityProperty=" + includeEntityProperty );
+			}
+			if ( includeEntityProperty ) {
+				processValue( entity, i, values, types );
 			}
 		}
 	}
 
-	void processValue(int i, Object[] values, Type[] types) {
-		processValue( values[i], types[i] );
+	void processValue(Object entity, int i, Object[] values, Type[] types) {
+		processValue( entity, values[i], types[i], i );
 	}
 
 	boolean includeEntityProperty(Object[] values, int i) {
@@ -71,9 +79,9 @@ public abstract class AbstractVisitor {
 	 * Visit a component. Dispatch each property
 	 * to processValue().
 	 */
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	Object processComponent(Object entity, Object component, CompositeType componentType) throws HibernateException {
 		if ( component != null ) {
-			processValues( componentType.getPropertyValues(component, session), componentType.getSubtypes() );
+			processValues( entity, componentType.getPropertyValues(component, session), componentType.getSubtypes() );
 		}
 		return null;
 	}
@@ -82,23 +90,25 @@ public abstract class AbstractVisitor {
 	 * Visit a property value. Dispatch to the
 	 * correct handler for the property type.
 	 */
-	final Object processValue(Object value, Type type) throws HibernateException {
+	final Object processValue(Object entity, Object value, Type type, int index) throws HibernateException {
+		Object rValue = null;
 		if ( type instanceof CollectionType collectionType ) {
 			//even process null collections
-			return processCollection( value, collectionType );
+			rValue = processCollection( entity, value, collectionType );
 		}
 		else if ( type instanceof EntityType entityType ) {
-			return processEntity( value, entityType );
+			rValue = processEntity( entity, value, entityType );
 		}
 		else if ( type instanceof ComponentType componentType ) {
-			return processComponent( value, componentType );
+			rValue = processComponent( entity, value, componentType );
 		}
 		else if ( type instanceof AnyType anyType ) {
-			return processComponent( value, anyType );
+			rValue = processComponent( entity, value, anyType );
 		}
-		else {
-			return null;
+		if (LOG.isTraceEnabled()) {
+			LOG.trace( "processValue: rValue=" + rValue + ", index=" + index + ", entity=" + entity + ", value=" + value + ", type=" + type );
 		}
+		return rValue;
 	}
 
 	/**
@@ -106,14 +116,14 @@ public abstract class AbstractVisitor {
 	 *
 	 */
 	public void process(Object object, EntityPersister persister) throws HibernateException {
-		processEntityPropertyValues( persister.getValues( object ), persister.getPropertyTypes() );
+		processEntityPropertyValues( object, persister.getValues( object ), persister.getPropertyTypes() );
 	}
 
 	/**
 	 * Visit a collection. Default superclass
 	 * implementation is a no-op.
 	 */
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	Object processCollection(Object entity, Object collection, CollectionType type) throws HibernateException {
 		return null;
 	}
 
@@ -122,7 +132,7 @@ public abstract class AbstractVisitor {
 	 * entity. Default superclass implementation is
 	 * a no-op.
 	 */
-	Object processEntity(Object value, EntityType entityType) throws HibernateException {
+	Object processEntity(Object entity, Object value, EntityType entityType) throws HibernateException {
 		return null;
 	}
 

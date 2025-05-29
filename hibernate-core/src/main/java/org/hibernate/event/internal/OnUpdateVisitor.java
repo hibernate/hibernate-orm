@@ -27,7 +27,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	Object processCollection(Object entity, Object collection, CollectionType type) throws HibernateException {
 		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
 			return null;
 		}

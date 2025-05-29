@@ -129,7 +129,7 @@ public class DefaultReplicateEventListener
 			EventSource source) {
 		//TODO: we use two visitors here, inefficient!
 		OnReplicateVisitor visitor = new OnReplicateVisitor( source, id, entity, false );
-		visitor.processEntityPropertyValues( values, types );
+		visitor.processEntityPropertyValues( entity, values, types );
 		return super.visitCollectionsBeforeSave( entity, id, values, types, source );
 	}
 

@@ -10,6 +10,8 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.CollectionType;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -26,6 +28,8 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttrib
  * @author Gavin King
  */
 public class DirtyCollectionSearchVisitor extends AbstractVisitor {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DirtyCollectionSearchVisitor.class );
 
 	private final EnhancementAsProxyLazinessInterceptor interceptor;
 	private final boolean[] propertyVersionability;
@@ -49,7 +53,8 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	@Override
+	Object processCollection(Object entity, Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
 			if ( type.isArrayType() ) {
@@ -58,6 +63,9 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 				// we need to check even if it was not initialized, because of delayed adds!
 				if ( session.getPersistenceContextInternal().getCollectionHolder( collection ).isDirty() ) {
+					if (LOG.isTraceEnabled()) {
+						LOG.trace( "collection is dirty. type.isArrayType() -> entity=" + entity + ", collection=" + collection + ", type=" + type);
+					}
 					dirty = true;
 				}
 			}
@@ -67,6 +75,9 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 				// we need to check even if it was not initialized, because of delayed adds!
 				if ( ((PersistentCollection<?>) collection).isDirty() ) {
+					if (LOG.isTraceEnabled()) {
+						LOG.trace( "collection is dirty. interceptor == null -> entity=" + entity + ", collection=" + collection + ", type=" + type);
+					}
 					dirty = true;
 				}
 			}
@@ -76,6 +87,10 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
-		return propertyVersionability[i] && super.includeEntityProperty( values, i );
+		boolean includeEntityProperty = super.includeEntityProperty( values, i );
+		if (LOG.isTraceEnabled()) {
+			LOG.trace( "includeEntityProperty: i=" + i + ", propertyVersionability=" + propertyVersionability[i] + ", includeEntityProperty=" + includeEntityProperty );
+		}
+		return propertyVersionability[i] && includeEntityProperty;
 	}
 }

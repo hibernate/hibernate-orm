@@ -55,13 +55,13 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * {@inheritDoc}
 	 */
 	@Override
-	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	Object processComponent(Object entity, Object component, CompositeType componentType) throws HibernateException {
 		final Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
-			processValues( new Object[types.length], types );
+			processValues( entity, new Object[types.length], types );
 		}
 		else {
-			super.processComponent( component, componentType );
+			super.processComponent( entity, component, componentType );
 		}
 
 		return null;

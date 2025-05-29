@@ -141,7 +141,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		boolean substitute = wrapCollections( event, values );
 
-		if ( isUpdateNecessary( event, mightBeDirty ) ) {
+		if (LOG.isTraceEnabled()) {
+			// identity_hash_code is required because you can see the same entity multiple time and can cause confusion
+			LOG.trace( "Before scheduleUpdate: " + event.getEntity() + ", identity_hash_code=" + System.identityHashCode(event.getEntity()) );
+		}
+		boolean isUpdateNecessary = isUpdateNecessary( event, mightBeDirty );
+		if ( isUpdateNecessary ) {
+			if (LOG.isTraceEnabled()) {
+				LOG.trace( "Update is Necessary: " + event.getEntity() );
+			}
 			substitute = scheduleUpdate( event ) || substitute;
 		}
 
@@ -156,7 +164,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// We don't want to touch collections reachable from a deleted object
 			if ( persister.hasCollections() ) {
 				new FlushVisitor( session, entity )
-						.processEntityPropertyValues( values, persister.getPropertyTypes() );
+						.processEntityPropertyValues( event.getEntity(), values, persister.getPropertyTypes() );
 			}
 		}
 
@@ -199,7 +207,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			// need to wrap before calling searchForDirtyCollections
 			final WrapVisitor visitor = new WrapVisitor( event.getEntity(), entry.getId(), event.getSession() );
 			// substitutes into values by side effect
-			visitor.processEntityPropertyValues( values, persister.getPropertyTypes() );
+			visitor.processEntityPropertyValues( event.getEntity(), values, persister.getPropertyTypes() );
 			return visitor.isSubstitutionRequired();
 		}
 		else {
@@ -241,8 +249,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final EntityPersister persister = entry.getPersister();
 		final Object[] values = event.getPropertyValues();
 
-		logScheduleUpdate( entry, event.getFactory(), status, persister );
-
 		final boolean intercepted = !entry.isBeingReplicated() && handleInterception( event );
 
 		// increment the version number (if necessary)
@@ -273,6 +279,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 						session
 				)
 		);
+
+		logScheduleUpdate( entry, event.getFactory(), status, persister );
 
 		return intercepted;
 	}
@@ -414,9 +422,15 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	 * Note: this method is quite slow, avoid calling if possible!
 	 */
 	protected final boolean isUpdateNecessary(FlushEntityEvent event) throws HibernateException {
-		return !event.isDirtyCheckPossible()
+		boolean hasDirtyCollections = hasDirtyCollections( event );
+		boolean returnValue = !event.isDirtyCheckPossible()
 			|| event.hasDirtyProperties()
-			|| hasDirtyCollections( event );
+			|| hasDirtyCollections;
+		if (LOG.isTraceEnabled()) {
+			String formattedString = String.format("isUpdateNecessary: !isDirtyCheckPossible=%b, hasDirtyProperties=%b, hasDirtyCollections=%b", !event.isDirtyCheckPossible(), event.hasDirtyProperties(), hasDirtyCollections);
+			LOG.trace( formattedString );
+		}
+		return returnValue;
 	}
 
 	private boolean hasDirtyCollections(FlushEntityEvent event) {
@@ -436,14 +450,20 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		final DirtyCollectionSearchVisitor visitor =
 				new DirtyCollectionSearchVisitor( event.getEntity(), event.getSession(),
 						persister.getPropertyVersionability() );
-		visitor.processEntityPropertyValues( event.getPropertyValues(), persister.getPropertyTypes() );
+		visitor.processEntityPropertyValues( event.getEntity(), event.getPropertyValues(), persister.getPropertyTypes() );
 		return visitor.wasDirtyCollectionFound();
 	}
 
 	private boolean isCollectionDirtyCheckNecessary(EntityPersister persister, Status status) {
-		return ( status == Status.MANAGED || status == Status.READ_ONLY )
-			&& persister.isVersioned()
-			&& persister.hasCollections();
+		boolean statusCheck = ( status == Status.MANAGED || status == Status.READ_ONLY );
+		boolean isVersioned = persister.isVersioned();
+		boolean hasCollections = persister.hasCollections();
+		if (LOG.isTraceEnabled()) {
+			LOG.trace( "isCollectionDirtyCheckNecessary: statusCheck=" + statusCheck + ", isVersioned=" + isVersioned + ", hasCollections=" + hasCollections );
+		}
+		return statusCheck
+			&& isVersioned
+			&& hasCollections;
 	}
 
 	/**

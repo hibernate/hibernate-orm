@@ -29,7 +29,7 @@ public class OnLockVisitor extends ReattachVisitor {
 	}
 
 	@Override
-	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	public Object processCollection(Object entity, Object collection, CollectionType type) throws HibernateException {
 		if ( collection == null ) {
 			return null;
 		}

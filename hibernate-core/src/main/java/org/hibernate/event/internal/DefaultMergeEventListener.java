@@ -308,7 +308,7 @@ public class DefaultMergeEventListener
 		// with the final copy
 		new CollectionVisitor( copy, id, session )
 				.processEntityPropertyValues(
-						persister.getPropertyValuesToInsert( copy, getMergeMap( copyCache ), session ),
+						event.getEntity(), persister.getPropertyValuesToInsert( copy, getMergeMap( copyCache ), session ),
 						persister.getPropertyTypes()
 				);
 
@@ -343,7 +343,7 @@ public class DefaultMergeEventListener
 			super( entity, id, session );
 		}
 		@Override
-		protected Object processCollection(Object collection, CollectionType collectionType) {
+		protected Object processCollection(Object entity, Object collection, CollectionType collectionType) {
 			if ( collection instanceof PersistentCollection<?> persistentCollection ) {
 				final CollectionPersister persister =
 						getSession().getFactory().getMappingMetamodel()
@@ -357,7 +357,7 @@ public class DefaultMergeEventListener
 			return null;
 		}
 		@Override
-		Object processEntity(Object value, EntityType entityType) {
+		Object processEntity(Object entity, Object value, EntityType entityType) {
 			return null;
 		}
 	}

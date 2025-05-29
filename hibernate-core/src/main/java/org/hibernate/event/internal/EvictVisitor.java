@@ -36,7 +36,7 @@ public class EvictVisitor extends AbstractVisitor {
 	}
 
 	@Override
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+	Object processCollection(Object entity, Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			evictCollection( collection, type );
 		}

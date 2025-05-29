@@ -976,7 +976,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	SqmPredicate wrap(Expression<Boolean>... expressions);
 
 	@Override
-	<P, F> SqmExpression<F> fk(Path<P> path);
+	SqmExpression<?> fk(Path<?> path);
+
+	@Override
+	SqmExpression<?> id(Path<?> path);
+
+	@Override
+	SqmExpression<?> version(Path<?> path);
 
 	@Override
 	<X, T extends X> SqmPath<T> treat(Path<X> path, Class<T> type);

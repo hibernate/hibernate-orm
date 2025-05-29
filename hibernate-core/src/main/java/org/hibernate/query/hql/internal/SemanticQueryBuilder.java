@@ -3472,7 +3472,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath.get( identifierDescriptor.getPathName(), true );
 		}
 		else if ( sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
-			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true, processingStateStack.getCurrent().getCreationState() );
+			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true,
+					processingStateStack.getCurrent().getCreationState() );
 		}
 		else {
 			throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()

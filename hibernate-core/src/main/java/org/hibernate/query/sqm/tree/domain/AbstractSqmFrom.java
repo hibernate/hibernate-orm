@@ -25,6 +25,7 @@ import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
@@ -948,5 +949,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 			setExplicitAlias( name );
 		}
 		return super.alias( name );
+	}
+
+	@Override
+	public JpaExpression<?> id() {
+		return nodeBuilder().id( this );
 	}
 }

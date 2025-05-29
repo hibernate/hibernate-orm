@@ -17,6 +17,7 @@ import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -27,7 +28,6 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmManagedDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
-import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -156,17 +156,15 @@ public class EntityTypeImpl<J>
 		else if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
 			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
+		else if ( EntityVersionMapping.matchesRoleName( name ) ) {
+			return hasVersionAttribute() ? findVersionAttribute() : null;
+		}
 		else if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorPathSource;
 		}
 		else {
 			return null;
 		}
-	}
-
-	@Override
-	public SqmSingularPersistentAttribute<? super J, ?> findIdAttribute() {
-		return super.findIdAttribute();
 	}
 
 	@Override

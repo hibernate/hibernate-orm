@@ -335,7 +335,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <P, F> JpaExpression<F> fk(Path<P> path) {
+	public JpaExpression<?> fk(Path<?> path) {
 		return criteriaBuilder.fk( path );
 	}
 
@@ -797,6 +797,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaFunction<Instant> currentInstant() {
 		return criteriaBuilder.currentInstant();
+	}
+
+	@Override
+	public JpaExpression<?> id(Path<?> path) {
+		return criteriaBuilder.id( path );
+	}
+
+	@Override
+	public JpaExpression<?> version(Path<?> path) {
+		return criteriaBuilder.version( path );
 	}
 
 	@Override

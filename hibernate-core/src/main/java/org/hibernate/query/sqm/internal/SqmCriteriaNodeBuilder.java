@@ -43,6 +43,8 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -602,8 +604,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <P, F> SqmExpression<F> fk(Path<P> path) {
-		final SqmPath<P> sqmPath = (SqmPath<P>) path;
+	public SqmPath<?> fk(Path<?> path) {
+		final SqmPath<?> sqmPath = (SqmPath<?>) path;
 		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
 		final boolean validToOneRef =
 				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
@@ -617,7 +619,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 					)
 			);
 		}
-
 		return new SqmFkExpression<>( sqmPath );
 	}
 
@@ -2014,6 +2015,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 						null,
 						queryEngine
 				);
+	}
+
+	@Override
+	public SqmPath<?> id(Path<?> path) {
+		return ((SqmPath<?>) path).get( EntityIdentifierMapping.ID_ROLE_NAME );
+	}
+
+	@Override
+	public SqmPath<?> version(Path<?> path) {
+		return ((SqmPath<?>) path).get( EntityVersionMapping.VERSION_ROLE_NAME );
 	}
 
 	@Override

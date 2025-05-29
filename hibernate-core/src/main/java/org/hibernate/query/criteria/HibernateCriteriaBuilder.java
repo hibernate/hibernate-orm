@@ -352,7 +352,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Paths
 
-	<P, F> JpaExpression<F> fk(Path<P> path);
+	JpaExpression<?> id(Path<?> path);
+
+	JpaExpression<?> version(Path<?> path);
+
+	JpaExpression<?> fk(Path<?> path);
 
 	@Override
 	<X, T extends X> JpaPath<T> treat(Path<X> path, Class<T> type);

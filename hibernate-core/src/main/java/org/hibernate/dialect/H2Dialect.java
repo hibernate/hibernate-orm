@@ -134,8 +134,6 @@ public class H2Dialect extends Dialect {
 	private final String querySequenceString;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
-	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
-
 	public H2Dialect(DialectResolutionInfo info) {
 		this( staticDetermineDatabaseVersion( info ) );
 		registerKeywords( info );
@@ -159,7 +157,6 @@ public class H2Dialect extends Dialect {
 
 		this.sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
-		this.optionalTableUpdateStrategy = H2Dialect::usingMerge;
 	}
 
 	@Override
@@ -169,11 +166,10 @@ public class H2Dialect extends Dialect {
 
 	// Static version necessary to call from constructor
 	private static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
-		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
-		if ( info.getDatabaseVersion() != null ) {
-			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
-		}
-		return version;
+		final DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
+		return info.getDatabaseVersion() != null
+				? DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) )
+				: version;
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -1012,28 +1008,13 @@ public class H2Dialect extends Dialect {
 		return BIGINT;
 	}
 
-	@FunctionalInterface
-	private interface OptionalTableUpdateStrategy {
-		MutationOperation buildMutationOperation(
-				EntityMutationTarget mutationTarget,
-				OptionalTableUpdate optionalTableUpdate,
-				SessionFactoryImplementor factory);
-	}
-
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
-	}
-
-	private static MutationOperation usingMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
-		return translator.createMergeOperation( optionalTableUpdate );
+		return new H2SqlAstTranslator<>( factory, optionalTableUpdate )
+				.createMergeOperation( optionalTableUpdate );
 	}
 
 //	private static MutationOperation withoutMerge(

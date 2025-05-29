@@ -81,7 +81,6 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
-import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.spi.Exporter;
@@ -180,8 +179,8 @@ public class PostgreSQLDialect extends Dialect {
 	};
 
 	protected final PostgreSQLDriverKind driverKind;
-	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
 	private final ParameterMarkerStrategy parameterRenderer;
+	private final boolean supportsMerge;
 
 	public PostgreSQLDialect() {
 		this( MINIMUM_VERSION );
@@ -200,16 +199,11 @@ public class PostgreSQLDialect extends Dialect {
 		super( version );
 
 		this.driverKind = driverKind;
-		this.optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
-		this.parameterRenderer = driverKind == PostgreSQLDriverKind.VERT_X
-				? NativeParameterMarkers.INSTANCE
-				: super.getNativeParameterMarkerStrategy();
-	}
-
-	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
-		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
-				? PostgreSQLDialect::usingMerge
-				: PostgreSQLDialect::withoutMerge;
+		this.parameterRenderer =
+				driverKind == PostgreSQLDriverKind.VERT_X
+						? NativeParameterMarkers.INSTANCE
+						: super.getNativeParameterMarkerStrategy();
+		this.supportsMerge = version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) );
 	}
 
 	@Override
@@ -1582,35 +1576,18 @@ public class PostgreSQLDialect extends Dialect {
 		return sql;
 	}
 
-	@FunctionalInterface
-	private interface OptionalTableUpdateStrategy {
-		MutationOperation buildMutationOperation(
-				EntityMutationTarget mutationTarget,
-				OptionalTableUpdate optionalTableUpdate,
-				SessionFactoryImplementor factory);
-	}
-
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
-	}
-
-	private static MutationOperation usingMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		final PostgreSQLSqlAstTranslator<?> translator = new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate );
-		return translator.createMergeOperation( optionalTableUpdate );
-	}
-
-	private static MutationOperation withoutMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		return new OptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		if ( supportsMerge ) {
+			return new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+					.createMergeOperation( optionalTableUpdate );
+		}
+		else {
+			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		}
 	}
 
 	@Override

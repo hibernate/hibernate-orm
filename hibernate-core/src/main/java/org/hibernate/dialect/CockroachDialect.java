@@ -179,11 +179,12 @@ public class CockroachDialect extends Dialect {
 
 	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
-		if ( info.getDatabaseMetadata() != null ) {
-			try ( java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT version()" );
-				if ( rs.next() ) {
-					versionString = rs.getString( 1 );
+		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		if ( databaseMetadata != null ) {
+			try ( var statement = databaseMetadata.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT version()" );
+				if ( resultSet.next() ) {
+					versionString = resultSet.getString( 1 );
 				}
 			}
 			catch (SQLException ex) {

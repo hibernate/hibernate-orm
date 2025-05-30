@@ -251,7 +251,9 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private MySQLStorageEngine createStorageEngine() {
-		final String storageEngine = Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE );
+		final String storageEngine =
+				Environment.getProperties()
+						.getProperty( AvailableSettings.STORAGE_ENGINE );
 		return storageEngine == null
 				? getDefaultMySQLStorageEngine()
 				: switch ( storageEngine ) {
@@ -577,7 +579,8 @@ public class MySQLDialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final CommonFunctionFactory functionFactory =
+				new CommonFunctionFactory( functionContributions );
 
 		functionFactory.soundex();
 		functionFactory.radians();
@@ -629,9 +632,10 @@ public class MySQLDialect extends Dialect {
 		functionFactory.makedateMaketime();
 		functionFactory.localtimeLocaltimestamp();
 
-		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry =
+				functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
-		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 
 		// pi() produces a value with 7 digits unless we're explicit
 		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
@@ -756,7 +760,8 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private void time(FunctionContributions queryEngine) {
-		queryEngine.getFunctionRegistry().namedDescriptorBuilder( "time" )
+		queryEngine.getFunctionRegistry()
+				.namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.STRING ) )

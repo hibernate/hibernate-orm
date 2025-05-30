@@ -36,4 +36,10 @@ public interface CacheableDataStatistics extends Serializable {
 	 * configured cache region since the last Statistics clearing
 	 */
 	long getCacheMissCount();
+
+	/**
+	 * The number of evictions from the configured cache region since
+	 * the last Statistics clearing
+	 */
+	long getCacheRemoveCount();
 }

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.ondeletecascade;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -15,6 +16,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -54,7 +56,9 @@ class OnDeleteCascadeRemoveTest {
 			// note: ideally we would skip the initialization here
 			assertTrue( Hibernate.isInitialized( parent.children ) );
 		});
-		assertEquals( 1L,statistics.getEntityStatistics(Child.class.getName()).getDeleteCount() );
+		EntityStatistics entityStatistics = statistics.getEntityStatistics( Child.class.getName() );
+		assertEquals( 1L, entityStatistics.getDeleteCount() );
+		assertEquals( 1L, entityStatistics.getCacheRemoveCount() );
 		assertEquals( 5, scope.getCollectingStatementInspector().getSqlQueries().size() );
 		long children =
 				scope.fromTransaction( em -> em.createQuery( "select count(*) from CascadeChild", Long.class )
@@ -86,7 +90,9 @@ class OnDeleteCascadeRemoveTest {
 					.getEntry( parent.children.iterator().next() )
 					.getStatus().isDeletedOrGone() );
 		});
-		assertEquals( 1L, statistics.getEntityStatistics(Child.class.getName()).getDeleteCount() );
+		EntityStatistics entityStatistics = statistics.getEntityStatistics( Child.class.getName() );
+		assertEquals( 1L, entityStatistics.getDeleteCount() );
+		assertEquals( 1L, entityStatistics.getCacheRemoveCount() );
 		assertEquals( 5, scope.getCollectingStatementInspector().getSqlQueries().size() );
 		long children =
 				scope.fromTransaction( em -> em.createQuery( "select count(*) from CascadeChild", Long.class )
@@ -104,6 +110,7 @@ class OnDeleteCascadeRemoveTest {
 		Set<Child> children = new HashSet<>();
 	}
 	@Entity(name="CascadeChild")
+	@Cacheable
 	@SQLDelete( sql = "should never happen" )
 	static class Child {
 		@Id

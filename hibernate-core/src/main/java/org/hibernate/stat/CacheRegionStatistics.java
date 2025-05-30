@@ -40,6 +40,11 @@ public interface CacheRegionStatistics extends Serializable {
 	long getMissCount();
 
 	/**
+	 * The number of removals since the last Statistics clearing
+	 */
+	long getRemoveCount();
+
+	/**
 	 * The number of elements currently in memory within the cache provider.
 	 * <p>
 	 * This is an optional value contingent upon the underlying cache provider

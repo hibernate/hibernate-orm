@@ -9,7 +9,7 @@ package org.hibernate.dialect;
  *
  * @author Vlad Mihalcea
  */
-public class MyISAMStorageEngine implements MySQLStorageEngine{
+public class MyISAMStorageEngine implements MySQLStorageEngine {
 
 	public static final MySQLStorageEngine INSTANCE = new MyISAMStorageEngine();
 

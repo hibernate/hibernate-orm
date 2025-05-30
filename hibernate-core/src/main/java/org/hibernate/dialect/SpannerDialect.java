@@ -193,7 +193,8 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
+
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<byte[]> byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
 		final BasicType<Long> longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
@@ -226,7 +227,7 @@ public class SpannerDialect extends Dialect {
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		// Mathematical Functions
 		functionFactory.log();

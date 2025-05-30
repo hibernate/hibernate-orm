@@ -91,6 +91,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
+import static org.hibernate.dialect.MySQLServerConfiguration.getBytesPerCharacter;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -251,7 +252,9 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private MySQLStorageEngine createStorageEngine() {
-		final String storageEngine = Environment.getProperties().getProperty( AvailableSettings.STORAGE_ENGINE );
+		final String storageEngine =
+				Environment.getProperties()
+						.getProperty( AvailableSettings.STORAGE_ENGINE );
 		return storageEngine == null
 				? getDefaultMySQLStorageEngine()
 				: switch ( storageEngine ) {
@@ -445,21 +448,17 @@ public class MySQLDialect extends Dialect {
 		return MySQLAggregateSupport.forMySQL( this );
 	}
 
-	@Deprecated(since="6.4")
+	/**
+	 * @deprecated No longer called; will be removed.
+	 */
+	@Deprecated(since="6.4", forRemoval = true)
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT @@character_set_database" );
+			try (var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = statement.executeQuery( "SELECT @@character_set_database" );
 				if ( rs.next() ) {
 					final String characterSet = rs.getString( 1 );
-					final int collationIndex = characterSet.indexOf( '_' );
-					// According to https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html
-					return switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
-						case "utf16", "utf16le", "utf32", "utf8mb4", "gb18030" -> 4;
-						case "utf8", "utf8mb3", "eucjpms", "ujis" -> 3;
-						case "ucs2", "cp932", "big5", "euckr", "gb2312", "gbk", "sjis" -> 2;
-						default -> 1;
-					};
+					return getBytesPerCharacter( characterSet );
 				}
 			}
 			catch (SQLException ex) {
@@ -577,7 +576,7 @@ public class MySQLDialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.soundex();
 		functionFactory.radians();
@@ -629,9 +628,10 @@ public class MySQLDialect extends Dialect {
 		functionFactory.makedateMaketime();
 		functionFactory.localtimeLocaltimestamp();
 
-		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry =
+				functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
-		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 
 		// pi() produces a value with 7 digits unless we're explicit
 		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
@@ -756,7 +756,8 @@ public class MySQLDialect extends Dialect {
 	}
 
 	private void time(FunctionContributions queryEngine) {
-		queryEngine.getFunctionRegistry().namedDescriptorBuilder( "time" )
+		queryEngine.getFunctionRegistry()
+				.namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( queryEngine.getTypeConfiguration().getBasicTypeRegistry()
 						.resolve( StandardBasicTypes.STRING ) )
@@ -1293,15 +1294,13 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
-
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
-
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

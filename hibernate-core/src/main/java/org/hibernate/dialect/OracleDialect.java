@@ -234,13 +234,13 @@ public class OracleDialect extends Dialect {
 		this( info, OracleServerConfiguration.fromDialectResolutionInfo( info ) );
 	}
 
-	public OracleDialect(DialectResolutionInfo info, OracleServerConfiguration serverConfiguration) {
+	public OracleDialect(DialectResolutionInfo info, OracleServerConfiguration configuration) {
 		super( info );
-		autonomous = serverConfiguration.isAutonomous();
-		extended = serverConfiguration.isExtended();
-		applicationContinuity = serverConfiguration.isApplicationContinuity();
-		this.driverMinorVersion = serverConfiguration.getDriverMinorVersion();
-		this.driverMajorVersion = serverConfiguration.getDriverMajorVersion();
+		autonomous = configuration.isAutonomous();
+		extended = configuration.isExtended();
+		applicationContinuity = configuration.isApplicationContinuity();
+		driverMinorVersion = configuration.getDriverMinorVersion();
+		driverMajorVersion = configuration.getDriverMajorVersion();
 	}
 
 	public boolean isAutonomous() {
@@ -278,10 +278,11 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.cosh();
@@ -1670,10 +1671,10 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

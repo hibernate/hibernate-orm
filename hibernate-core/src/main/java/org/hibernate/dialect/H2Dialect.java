@@ -45,7 +45,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -87,6 +86,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -144,7 +144,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	public H2Dialect(DatabaseVersion version) {
-		super(version);
+		super( version );
 
 		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
 		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
@@ -155,13 +155,13 @@ public class H2Dialect extends Dialect {
 		// 1.4.200 introduced changes in current_time and current_timestamp
 		useLocalTime = true;
 
-		this.sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
-		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+		sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
+		querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 	}
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return staticDetermineDatabaseVersion(info);
+		return staticDetermineDatabaseVersion( info );
 	}
 
 	// Static version necessary to call from constructor
@@ -177,9 +177,10 @@ public class H2Dialect extends Dialect {
 		if ( databaseVersion == null ) {
 			return 0;
 		}
-
-		final String[] bits = StringHelper.split( ". -", databaseVersion );
-		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+		else {
+			final String[] bits = split( ". -", databaseVersion );
+			return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+		}
 	}
 
 	@Override
@@ -231,7 +232,6 @@ public class H2Dialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
@@ -243,10 +243,9 @@ public class H2Dialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeRegistry();
-
+		final JdbcTypeRegistry jdbcTypeRegistry =
+				typeContributions.getTypeConfiguration()
+						.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
@@ -275,9 +274,9 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );

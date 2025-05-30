@@ -182,8 +182,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory( functionContributions);
-
+		final var functionFactory = new CommonFunctionFactory( functionContributions);
 		functionFactory.unnest_sybasease();
 		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
 		functionFactory.xmltable_sybasease();
@@ -207,10 +206,10 @@ public class SybaseASEDialect extends SybaseDialect {
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT @@options" );
-				if ( rs.next() ) {
-					final byte[] optionBytes = rs.getBytes( 1 );
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT @@options" );
+				if ( resultSet.next() ) {
+					final byte[] optionBytes = resultSet.getBytes( 1 );
 					// By trial and error, enabling and disabling ansinull revealed that this bit is the indicator
 					return ( optionBytes[4] & 2 ) == 2;
 				}
@@ -226,10 +225,10 @@ public class SybaseASEDialect extends SybaseDialect {
 	private int pageSize(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT @@maxpagesize" );
-				if ( rs.next() ) {
-					return rs.getInt( 1 );
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
+				if ( resultSet.next() ) {
+					return resultSet.getInt( 1 );
 				}
 			}
 			catch (SQLException ex) {

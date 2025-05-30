@@ -534,7 +534,7 @@ public class FirebirdDialect extends Dialect {
 
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
-			DatabaseMetaData dbMetaData) throws SQLException {
+			DatabaseMetaData metadata) throws SQLException {
 		// Any use of keywords as identifiers will result in token unknown error, so enable auto quote always
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteInitialUnderscore( true );
@@ -556,7 +556,7 @@ public class FirebirdDialect extends Dialect {
 					"POSITION", "SUM", "TRIM", "UPPER" );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

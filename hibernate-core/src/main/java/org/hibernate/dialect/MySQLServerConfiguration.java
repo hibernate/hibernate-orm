@@ -8,11 +8,13 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_BYTES_PER_CHARACTER;
 import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_NO_BACKSLASH_ESCAPES;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 
 /**
  * Utility class that extract some initial configuration from the database
@@ -20,6 +22,7 @@ import static org.hibernate.cfg.DialectSpecificSettings.MYSQL_NO_BACKSLASH_ESCAP
  *
  * @author Marco Belladelli
  */
+@Internal
 public class MySQLServerConfiguration {
 	private final int bytesPerCharacter;
 	private final boolean noBackslashEscapesEnabled;
@@ -37,44 +40,30 @@ public class MySQLServerConfiguration {
 		return noBackslashEscapesEnabled;
 	}
 
+	static Integer getBytesPerCharacter(String characterSet) {
+		final int collationIndex = characterSet.indexOf( '_' );
+		// According to https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html
+		return switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
+			case "utf16", "utf16le", "utf32", "utf8mb4", "gb18030" -> 4;
+			case "utf8", "utf8mb3", "eucjpms", "ujis" -> 3;
+			case "ucs2", "cp932", "big5", "euckr", "gb2312", "gbk", "sjis" -> 2;
+			default -> 1;
+		};
+	}
+
 	public static MySQLServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
 		Integer bytesPerCharacter = null;
 		Boolean noBackslashEscapes = null;
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement()) {
-				final ResultSet rs = s.executeQuery( "SELECT @@character_set_database, @@sql_mode" );
-				if ( rs.next() ) {
-					final String characterSet = rs.getString( 1 );
-					final int collationIndex = characterSet.indexOf( '_' );
-					// According to https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html
-					switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
-						case "utf16":
-						case "utf16le":
-						case "utf32":
-						case "utf8mb4":
-						case "gb18030":
-							bytesPerCharacter = 4;
-						case "utf8":
-						case "utf8mb3":
-						case "eucjpms":
-						case "ujis":
-							bytesPerCharacter = 3;
-							break;
-						case "ucs2":
-						case "cp932":
-						case "big5":
-						case "euckr":
-						case "gb2312":
-						case "gbk":
-						case "sjis":
-							bytesPerCharacter = 2;
-							break;
-						default:
-							bytesPerCharacter = 1;
-					}
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet =
+						statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" );
+				if ( resultSet.next() ) {
+					final String characterSet = resultSet.getString( 1 );
+					bytesPerCharacter = getBytesPerCharacter( characterSet );
 					// NO_BACKSLASH_ESCAPES
-					final String sqlMode = rs.getString( 2 );
+					final String sqlMode = resultSet.getString( 2 );
 					noBackslashEscapes = sqlMode.toLowerCase().contains( "no_backslash_escapes" );
 				}
 			}
@@ -84,14 +73,10 @@ public class MySQLServerConfiguration {
 		}
 		// default to the dialect-specific configuration settings
 		if ( bytesPerCharacter == null ) {
-			bytesPerCharacter = ConfigurationHelper.getInt( MYSQL_BYTES_PER_CHARACTER, info.getConfigurationValues(), 4 );
+			bytesPerCharacter = getInt( MYSQL_BYTES_PER_CHARACTER, info.getConfigurationValues(), 4 );
 		}
 		if ( noBackslashEscapes == null ) {
-			noBackslashEscapes = ConfigurationHelper.getBoolean(
-					MYSQL_NO_BACKSLASH_ESCAPES,
-					info.getConfigurationValues(),
-					false
-			);
+			noBackslashEscapes = getBoolean( MYSQL_NO_BACKSLASH_ESCAPES, info.getConfigurationValues(), false );
 		}
 		return new MySQLServerConfiguration( bytesPerCharacter, noBackslashEscapes );
 	}
@@ -99,44 +84,19 @@ public class MySQLServerConfiguration {
 	/**
 	 * @deprecated Use {@link #fromDialectResolutionInfo} instead.
 	 */
-	@Deprecated( since = "6.4" )
+	@Deprecated( since = "6.4", forRemoval = true )
 	public static MySQLServerConfiguration fromDatabaseMetadata(DatabaseMetaData databaseMetaData) {
 		int bytesPerCharacter = 4;
 		boolean noBackslashEscapes = false;
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement()) {
-				final ResultSet rs = s.executeQuery( "SELECT @@character_set_database, @@sql_mode" );
-				if ( rs.next() ) {
-					final String characterSet = rs.getString( 1 );
-					final int collationIndex = characterSet.indexOf( '_' );
-					// According to https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html
-					switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
-						case "utf16":
-						case "utf16le":
-						case "utf32":
-						case "utf8mb4":
-						case "gb18030":
-							break;
-						case "utf8":
-						case "utf8mb3":
-						case "eucjpms":
-						case "ujis":
-							bytesPerCharacter = 3;
-							break;
-						case "ucs2":
-						case "cp932":
-						case "big5":
-						case "euckr":
-						case "gb2312":
-						case "gbk":
-						case "sjis":
-							bytesPerCharacter = 2;
-							break;
-						default:
-							bytesPerCharacter = 1;
-					}
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet =
+						statement.executeQuery( "SELECT @@character_set_database, @@sql_mode" );
+				if ( resultSet.next() ) {
+					final String characterSet = resultSet.getString( 1 );
+					bytesPerCharacter = getBytesPerCharacter( characterSet );
 					// NO_BACKSLASH_ESCAPES
-					final String sqlMode = rs.getString( 2 );
+					final String sqlMode = resultSet.getString( 2 );
 					if ( sqlMode.toLowerCase().contains( "no_backslash_escapes" ) ) {
 						noBackslashEscapes = true;
 					}

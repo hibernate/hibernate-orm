@@ -282,7 +282,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.stddev();
 		functionFactory.variance();
@@ -498,15 +498,15 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		// Default to MIXED because the jconnect driver doesn't seem to report anything useful
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

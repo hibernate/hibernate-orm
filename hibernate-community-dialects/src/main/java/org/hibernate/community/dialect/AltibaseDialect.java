@@ -515,13 +515,13 @@ public class AltibaseDialect extends Dialect {
 	@Override
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
-			DatabaseMetaData dbMetaData) throws SQLException {
+			DatabaseMetaData metadata) throws SQLException {
 		// Any use of keywords as identifiers will result in syntax error, so enable auto quote always
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteInitialUnderscore( false );
-		builder.applyReservedWords( dbMetaData );
+		builder.applyReservedWords( metadata );
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

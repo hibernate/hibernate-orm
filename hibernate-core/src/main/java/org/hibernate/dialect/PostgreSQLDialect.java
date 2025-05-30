@@ -187,7 +187,8 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this( info.makeCopyOrDefault( MINIMUM_VERSION ), PostgreSQLDriverKind.determineKind( info ) );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ),
+				PostgreSQLDriverKind.determineKind( info ) );
 		registerKeywords( info );
 	}
 
@@ -197,13 +198,12 @@ public class PostgreSQLDialect extends Dialect {
 
 	public PostgreSQLDialect(DatabaseVersion version, PostgreSQLDriverKind driverKind) {
 		super( version );
-
 		this.driverKind = driverKind;
-		this.parameterRenderer =
+		parameterRenderer =
 				driverKind == PostgreSQLDriverKind.VERT_X
 						? NativeParameterMarkers.INSTANCE
 						: super.getNativeParameterMarkerStrategy();
-		this.supportsMerge = version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) );
+		supportsMerge = version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) );
 	}
 
 	@Override
@@ -545,9 +545,9 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.cot();
 		functionFactory.radians();
@@ -979,15 +979,15 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

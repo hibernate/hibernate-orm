@@ -1197,11 +1197,11 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

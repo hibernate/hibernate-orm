@@ -25,6 +25,11 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof URL;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getJdbcType( SqlTypes.VARCHAR );
 	}

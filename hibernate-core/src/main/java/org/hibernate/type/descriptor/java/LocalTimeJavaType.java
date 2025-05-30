@@ -45,6 +45,11 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof LocalTime;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}

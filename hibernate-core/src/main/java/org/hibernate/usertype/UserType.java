@@ -10,13 +10,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
@@ -556,10 +556,10 @@ public interface UserType<J> {
 	 * domain type representations works by converting objects of that type
 	 * to the domain type.
 	 *
-	 * @since 6.0
+	 * @since 7.0
 	 */
 	@Incubating
-	default BasicValueConverter<J, Object> getValueConverter() {
+	default AttributeConverter<J, ?> getValueConverter() {
 		return null;
 	}
 

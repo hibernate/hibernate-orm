@@ -44,6 +44,11 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof OffsetTime;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIME;
 	}

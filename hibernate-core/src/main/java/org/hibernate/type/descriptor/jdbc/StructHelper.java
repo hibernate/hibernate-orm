@@ -284,27 +284,47 @@ public class StructHelper {
 			final JdbcMapping jdbcMapping = attributeMapping.getSingleJdbcMapping();
 			final Object relationalValue = jdbcMapping.convertToRelationalValue( attributeValues[attributeIndex] );
 			if ( relationalValue != null ) {
-				//noinspection rawtypes
-				final JavaType javaType = jdbcMapping.getJdbcJavaType();
-				// Regardless how LOBs are bound by default, through structs we must use the native types
-				jdbcValues[jdbcIndex] = switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
-					case SqlTypes.BLOB, SqlTypes.MATERIALIZED_BLOB ->
-						//noinspection unchecked
-						javaType.unwrap( relationalValue, Blob.class, options );
-					case SqlTypes.CLOB, SqlTypes.MATERIALIZED_CLOB ->
-						//noinspection unchecked
-						javaType.unwrap( relationalValue, Clob.class, options );
-					case SqlTypes.NCLOB, SqlTypes.MATERIALIZED_NCLOB ->
-						//noinspection unchecked
-						javaType.unwrap( relationalValue, NClob.class, options );
-					default ->
-						//noinspection unchecked
-						jdbcValues[jdbcIndex] =
-								jdbcMapping.getJdbcValueBinder().getBindValue( relationalValue, options );
-				};
+				final JavaType<?> javaType = jdbcMapping.getJdbcJavaType();
+				injectCastJdbcValue( jdbcValues, jdbcIndex, options, jdbcMapping, javaType, relationalValue );
 			}
 		}
 		return jdbcValueCount;
+	}
+
+	private static <T> void injectCastJdbcValue(
+			Object[] jdbcValues,
+			int jdbcIndex,
+			WrapperOptions options,
+			JdbcMapping jdbcMapping,
+			JavaType<T> javaType,
+			Object relationalValue)
+			throws SQLException {
+		assert javaType.isInstance( relationalValue );
+		//noinspection unchecked
+		injectJdbcValue( jdbcValues, jdbcIndex, options, jdbcMapping, javaType, (T) relationalValue );
+	}
+
+	private static <T> void injectJdbcValue(
+			Object[] jdbcValues,
+			int jdbcIndex,
+			WrapperOptions options,
+			JdbcMapping jdbcMapping,
+			JavaType<T> javaType,
+			T relationalValue)
+			throws SQLException {
+		// Regardless how LOBs are bound by default, through structs we must use the native types
+		jdbcValues[jdbcIndex] = switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+			case SqlTypes.BLOB, SqlTypes.MATERIALIZED_BLOB ->
+				javaType.unwrap( relationalValue, Blob.class, options );
+			case SqlTypes.CLOB, SqlTypes.MATERIALIZED_CLOB ->
+				javaType.unwrap( relationalValue, Clob.class, options );
+			case SqlTypes.NCLOB, SqlTypes.MATERIALIZED_NCLOB ->
+				javaType.unwrap( relationalValue, NClob.class, options );
+			default ->
+				//noinspection unchecked
+				jdbcValues[jdbcIndex] =
+						jdbcMapping.getJdbcValueBinder().getBindValue( relationalValue, options );
+		};
 	}
 
 	/**

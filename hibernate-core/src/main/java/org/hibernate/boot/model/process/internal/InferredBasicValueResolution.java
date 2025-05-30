@@ -70,7 +70,7 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 	@Override @SuppressWarnings("unchecked")
 	public BasicValueConverter<J,T> getValueConverter() {
 		return updatedType == null
-				? jdbcMapping.getValueConverter()
+				? (BasicValueConverter<J, T>) jdbcMapping.getValueConverter()
 				: (BasicValueConverter<J, T>) updatedType.getValueConverter();
 	}
 

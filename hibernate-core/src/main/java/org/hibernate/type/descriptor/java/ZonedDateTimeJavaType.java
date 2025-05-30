@@ -43,6 +43,11 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof ZonedDateTime;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}

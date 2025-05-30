@@ -60,6 +60,11 @@ public class SerializableJavaType<T extends Serializable> extends AbstractClassJ
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Serializable;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		final int typeCode = indicators.isLob()
 				? Types.BLOB

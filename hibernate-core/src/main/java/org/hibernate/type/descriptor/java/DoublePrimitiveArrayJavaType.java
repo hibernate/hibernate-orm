@@ -37,6 +37,11 @@ public class DoublePrimitiveArrayJavaType extends AbstractArrayJavaType<double[]
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof double[];
+	}
+
+	@Override
 	public String extractLoggableRepresentation(double[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}

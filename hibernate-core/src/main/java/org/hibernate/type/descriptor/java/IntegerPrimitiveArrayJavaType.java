@@ -37,6 +37,11 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof int[];
+	}
+
+	@Override
 	public String extractLoggableRepresentation(int[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}

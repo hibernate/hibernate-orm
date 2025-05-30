@@ -48,6 +48,11 @@ public class ClobJavaType extends AbstractClassJavaType<Clob> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Clob;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(Clob value) {
 		return value == null ? "null" : "{clob}";
 	}

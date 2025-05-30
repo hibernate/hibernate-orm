@@ -40,6 +40,11 @@ public class LocalDateJavaType extends AbstractTemporalJavaType<LocalDate> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof LocalDate;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
 	}

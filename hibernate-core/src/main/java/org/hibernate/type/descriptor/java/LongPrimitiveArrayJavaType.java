@@ -37,6 +37,11 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof long[];
+	}
+
+	@Override
 	public String extractLoggableRepresentation(long[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}

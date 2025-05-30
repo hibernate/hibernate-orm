@@ -28,6 +28,11 @@ public class UUIDJavaType extends AbstractClassJavaType<UUID> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof UUID;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getJdbcType( context.getPreferredSqlTypeCodeForUuid() );
 	}

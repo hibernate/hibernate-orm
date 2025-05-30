@@ -25,6 +25,11 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof ZoneId;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		return indicators.getJdbcType( Types.VARCHAR );
 	}

@@ -33,6 +33,11 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Character[];
+	}
+
+	@Override
 	public String toString(Character[] value) {
 		return new String( unwrapChars( value ) );
 	}

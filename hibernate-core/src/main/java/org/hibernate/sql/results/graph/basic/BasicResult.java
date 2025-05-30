@@ -54,9 +54,8 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 		this(
 				jdbcValuesArrayPosition,
 				resultVariable,
-				jdbcMapping.getJavaTypeDescriptor(),
-				(BasicValueConverter<T,?>)
-						jdbcMapping.getValueConverter(),
+				(JavaType<T>) jdbcMapping.getJavaTypeDescriptor(),
+				(BasicValueConverter<T,?>) jdbcMapping.getValueConverter(),
 				navigablePath,
 				coerceResultType,
 				unwrapRowProcessingState
@@ -67,20 +66,25 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			int valuesArrayPosition,
 			String resultVariable,
 			JavaType<T> javaType,
-			BasicValueConverter<T,?> valueConverter,
+			BasicValueConverter<T,?> converter,
 			NavigablePath navigablePath,
 			boolean coerceResultType,
 			boolean unwrapRowProcessingState) {
 		this.resultVariable = resultVariable;
 		this.javaType = javaType;
 		this.navigablePath = navigablePath;
+		this.assembler = assembler( valuesArrayPosition, javaType, converter, coerceResultType, unwrapRowProcessingState );
+	}
 
-		if ( coerceResultType ) {
-			this.assembler = new CoercingResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
-		}
-		else {
-			this.assembler = new BasicResultAssembler<>( valuesArrayPosition, javaType, valueConverter, unwrapRowProcessingState );
-		}
+	private static <T> BasicResultAssembler<T> assembler(
+			int valuesArrayPosition,
+			JavaType<T> javaType,
+			BasicValueConverter<T, ?> converter,
+			boolean coerceResultType,
+			boolean unwrapRowProcessingState) {
+		return coerceResultType
+				? new CoercingResultAssembler<>( valuesArrayPosition, javaType, converter, unwrapRowProcessingState )
+				: new BasicResultAssembler<>( valuesArrayPosition, javaType, converter, unwrapRowProcessingState );
 	}
 
 	@Override

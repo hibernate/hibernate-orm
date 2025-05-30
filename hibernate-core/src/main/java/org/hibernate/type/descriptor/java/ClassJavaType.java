@@ -22,6 +22,11 @@ public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Class;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}

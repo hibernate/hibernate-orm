@@ -48,6 +48,11 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		return Double.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Double;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Double value, Class<X> type, WrapperOptions options) {

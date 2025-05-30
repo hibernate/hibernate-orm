@@ -44,6 +44,11 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Duration;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getTypeConfiguration()
 				.getJdbcTypeRegistry()

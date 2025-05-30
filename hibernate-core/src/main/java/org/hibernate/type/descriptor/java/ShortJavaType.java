@@ -44,6 +44,11 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Short;
+	}
+
+	@Override
 	public boolean isWider(JavaType<?> javaType) {
 		return switch ( javaType.getTypeName() ) {
 			case "byte", "java.lang.Byte" -> true;

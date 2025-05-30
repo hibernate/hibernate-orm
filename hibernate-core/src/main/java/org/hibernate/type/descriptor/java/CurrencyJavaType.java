@@ -23,6 +23,11 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Currency;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}

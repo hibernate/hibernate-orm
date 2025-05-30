@@ -25,6 +25,11 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Object[];
+	}
+
+	@Override
 	public String toString(Object[] value) {
 		final StringBuilder sb = new StringBuilder();
 		sb.append( '(' );

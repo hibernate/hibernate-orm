@@ -118,29 +118,31 @@ public class JsonHelper {
 				appender.append( "\":" );
 				toString( attributeMapping.getMappedType(), values[i], options, appender );
 			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
+			else if ( attributeMapping instanceof EmbeddedAttributeMapping embeddedAttributeMapping ) {
 				if ( values[i] == null ) {
-					// Skipping the update of the separator is on purpose
+					// Skipping the update of the separator on purpose
 					continue;
 				}
-				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
-				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if ( aggregateMapping == null ) {
-					toString(
-							mappingType,
-							options,
-							appender,
-							values[i],
-							separator
-					);
-				}
 				else {
-					final String name = aggregateMapping.getSelectableName();
-					appender.append( separator );
-					appender.append( '"' );
-					appender.append( name );
-					appender.append( "\":" );
-					toString( mappingType, values[i], options, appender );
+					final EmbeddableMappingType mappingType = embeddedAttributeMapping.getMappedType();
+					final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
+					if ( aggregateMapping == null ) {
+						toString(
+								mappingType,
+								options,
+								appender,
+								values[i],
+								separator
+						);
+					}
+					else {
+						final String name = aggregateMapping.getSelectableName();
+						appender.append( separator );
+						appender.append( '"' );
+						appender.append( name );
+						appender.append( "\":" );
+						toString( mappingType, values[i], options, appender );
+					}
 				}
 			}
 			else {
@@ -157,9 +159,7 @@ public class JsonHelper {
 		else if ( mappedType instanceof EmbeddableMappingType embeddableMappingType ) {
 			toString( embeddableMappingType, value, options, appender );
 		}
-		else if ( mappedType instanceof BasicType<?> ) {
-			//noinspection unchecked
-			final BasicType<Object> basicType = (BasicType<Object>) mappedType;
+		else if ( mappedType instanceof BasicType<?> basicType ) {
 			convertedBasicValueToString( basicType.convertToRelationalValue( value ), options, appender, basicType );
 		}
 		else {
@@ -167,8 +167,8 @@ public class JsonHelper {
 		}
 	}
 
-	private static void convertedValueToString(
-			JavaType<Object> javaType,
+	private static <T> void convertedValueToString(
+			JavaType<T> javaType,
 			JdbcType jdbcType,
 			Object value,
 			WrapperOptions options,
@@ -180,31 +180,41 @@ public class JsonHelper {
 			toString( aggregateJdbcType.getEmbeddableMappingType(), value, options, appender );
 		}
 		else {
-			convertedBasicValueToString( value, options, appender, javaType, jdbcType );
+			convertedCastBasicValueToString( value, options, appender, javaType, jdbcType );
 		}
 	}
 
 
-	private static void convertedBasicValueToString(
+	private static <T> void convertedBasicValueToString(
 			Object value,
 			WrapperOptions options,
 			JsonAppender appender,
-			BasicType<Object> basicType) {
-		//noinspection unchecked
-		convertedBasicValueToString(
+			BasicType<T> basicType) {
+		convertedCastBasicValueToString(
 				value,
 				options,
 				appender,
-				(JavaType<Object>) basicType.getJdbcJavaType(),
+				basicType.getJdbcJavaType(),
 				basicType.getJdbcType()
 		);
 	}
 
-	private static void convertedBasicValueToString(
+	private static <T> void convertedCastBasicValueToString(
 			Object value,
 			WrapperOptions options,
 			JsonAppender appender,
-			JavaType<Object> javaType,
+			JavaType<T> javaType,
+			JdbcType jdbcType) {
+		assert javaType.isInstance( value );
+		//noinspection unchecked
+		convertedBasicValueToString( (T) value, options, appender, javaType, jdbcType );
+	}
+
+	private static <T> void convertedBasicValueToString(
+			T value,
+			WrapperOptions options,
+			JsonAppender appender,
+			JavaType<T> javaType,
 			JdbcType jdbcType) {
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
@@ -316,13 +326,12 @@ public class JsonHelper {
 				final int length = Array.getLength( value );
 				appender.append( '[' );
 				if ( length != 0 ) {
-					//noinspection unchecked
-					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) javaType ).getElementJavaType();
+					final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) javaType ).getElementJavaType();
 					final JdbcType elementJdbcType = ( (ArrayJdbcType) jdbcType ).getElementJdbcType();
-					Object arrayElement = Array.get( value, 0 );
-					convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
+					final Object firstArrayElement = Array.get( value, 0 );
+					convertedValueToString( elementJavaType, elementJdbcType, firstArrayElement, options, appender );
 					for ( int i = 1; i < length; i++ ) {
-						arrayElement = Array.get( value, i );
+						final Object arrayElement = Array.get( value, i );
 						appender.append( ',' );
 						convertedValueToString( elementJavaType, elementJdbcType, arrayElement, options, appender );
 					}

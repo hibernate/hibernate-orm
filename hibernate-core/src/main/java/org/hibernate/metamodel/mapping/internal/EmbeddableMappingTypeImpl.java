@@ -871,7 +871,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						? getValue( compositeInstance, i )
 						: null;
 			}
-			results[i] = compositeInstance.getClass().getName();
+			results[i] = compositeInstance.getClass();
 			return results;
 		}
 	}

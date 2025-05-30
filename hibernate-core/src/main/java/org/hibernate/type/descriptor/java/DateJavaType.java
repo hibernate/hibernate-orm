@@ -44,6 +44,11 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Date;
+	}
+
+	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.TIMESTAMP;
 	}

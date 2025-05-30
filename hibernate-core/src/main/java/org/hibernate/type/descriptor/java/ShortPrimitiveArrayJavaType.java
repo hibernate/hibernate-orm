@@ -37,6 +37,11 @@ public class ShortPrimitiveArrayJavaType extends AbstractArrayJavaType<short[], 
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof short[];
+	}
+
+	@Override
 	public String extractLoggableRepresentation(short[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}

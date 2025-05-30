@@ -9,12 +9,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.usertype.UserType;
@@ -22,7 +20,7 @@ import org.hibernate.usertype.UserType;
 /**
  * @author Vlad Mihalcea
  */
-public class ArrayType implements UserType<Array>, BasicValueConverter<Array, String> {
+public class ArrayType implements UserType<Array>, AttributeConverter<Array, String> {
 
 	public static final ArrayType INSTANCE = new ArrayType();
 
@@ -62,28 +60,18 @@ public class ArrayType implements UserType<Array>, BasicValueConverter<Array, St
 	}
 
 	@Override
-	public BasicValueConverter<Array, Object> getValueConverter() {
-		return (BasicValueConverter) this;
+	public AttributeConverter<Array, String> getValueConverter() {
+		return this;
 	}
 
 	@Override
-	public Array toDomainValue(String relationalForm) {
-		return assemble( relationalForm, null );
-	}
-
-	@Override
-	public String toRelationalValue(Array domainForm) {
+	public String convertToDatabaseColumn(Array domainForm) {
 		return (String) disassemble( domainForm );
 	}
 
 	@Override
-	public JavaType<Array> getDomainJavaType() {
-		return javaType;
-	}
-
-	@Override
-	public JavaType<String> getRelationalJavaType() {
-		return StringJavaType.INSTANCE;
+	public Array convertToEntityAttribute(String relationalForm) {
+		return assemble( relationalForm, null );
 	}
 
 	@Override

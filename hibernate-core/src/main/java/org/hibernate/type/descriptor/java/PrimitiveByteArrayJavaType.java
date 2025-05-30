@@ -33,6 +33,11 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof byte[];
+	}
+
+	@Override
 	public boolean areEqual(byte[] one, byte[] another) {
 		return one == another
 			|| one != null && another != null && Arrays.equals( one, another );

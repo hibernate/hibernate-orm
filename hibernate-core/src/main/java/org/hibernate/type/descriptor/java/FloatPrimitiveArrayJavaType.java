@@ -37,6 +37,11 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof float[];
+	}
+
+	@Override
 	public String extractLoggableRepresentation(float[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}

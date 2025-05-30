@@ -40,6 +40,11 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		return string.charAt( 0 );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Character;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Character value, Class<X> type, WrapperOptions options) {

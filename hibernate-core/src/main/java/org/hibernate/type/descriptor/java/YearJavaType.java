@@ -24,6 +24,11 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Year;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return context.getJdbcType( Types.INTEGER );
 	}

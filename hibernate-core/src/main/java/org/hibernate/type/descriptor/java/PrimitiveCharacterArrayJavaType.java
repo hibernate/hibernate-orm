@@ -36,6 +36,11 @@ public class PrimitiveCharacterArrayJavaType extends AbstractClassJavaType<char[
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof char[];
+	}
+
+	@Override
 	public boolean areEqual(char[] one, char[] another) {
 		return one == another
 			|| one != null && another != null && Arrays.equals( one, another );

@@ -126,7 +126,9 @@ public class ArrayRemoveIndexTest {
 			cq.multiselect(
 					root.get( "id" ),
 					cb.collectionRemoveIndex( root.<Collection<String>>get( "theCollection" ), cb.literal( 1 ) ),
-					cb.collectionRemoveIndex( root.get( "theCollection" ), 1 )
+					cb.collectionRemoveIndex( root.get( "theCollection" ), 1 ),
+					cb.collectionRemoveIndex( root.<Collection<Label>>get( "theLabels" ), cb.literal( 1 ) ),
+					cb.collectionRemoveIndex( root.get( "theLabels" ), 1 )
 			);
 			em.createQuery( cq ).getResultList();
 		} );

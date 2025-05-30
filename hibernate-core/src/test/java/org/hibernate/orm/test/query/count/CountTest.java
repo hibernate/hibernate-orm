@@ -14,9 +14,13 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -28,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class CountTest {
 
 	@Test void testCount(SessionFactoryScope scope) {
-		scope.inTransaction(session -> session.createMutationQuery("delete Book").executeUpdate());
 		scope.inTransaction(session -> {
 			session.persist(new Book("9781932394153", "Hibernate in Action"));
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate"));
@@ -64,7 +67,6 @@ public class CountTest {
 	}
 
 	@Test void testCountNative(SessionFactoryScope scope) {
-		scope.inTransaction(session -> session.createMutationQuery("delete Book").executeUpdate());
 		scope.inTransaction(session -> {
 			session.persist(new Book("9781932394153", "Hibernate in Action"));
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate"));
@@ -86,7 +88,6 @@ public class CountTest {
 	}
 
 	@Test void testCountCriteria(SessionFactoryScope scope) {
-		scope.inTransaction(session -> session.createMutationQuery("delete Book").executeUpdate());
 		scope.inTransaction(session -> {
 			session.persist(new Book("9781932394153", "Hibernate in Action"));
 			session.persist(new Book("9781617290459", "Java Persistence with Hibernate"));
@@ -120,6 +121,50 @@ public class CountTest {
 		});
 	}
 
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-19065" )
+	public void testJoins(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			Publisher p = new Publisher( 1L, "Manning" );
+			session.persist( p );
+			final Book book = new Book( "9781932394153", "Hibernate in Action" );
+			book.publisher = p;
+			session.persist( book );
+			session.persist( new Book( "9781617290459", "Java Persistence with Hibernate" ) );
+		} );
+		scope.inSession( session -> {
+			// explicit inner join
+			assertCount( 1, "select p from Book b join b.publisher p", Publisher.class, session );
+			assertCount( 1, "select p.name from Book b join b.publisher p", String.class, session );
+			// explicit left join
+			assertCount( 2, "select p from Book b left join b.publisher p", Publisher.class, session );
+			assertCount( 2, "select p.name from Book b left join b.publisher p", String.class, session );
+			// implicit join
+			assertCount( 1, "select b.publisher from Book b", Publisher.class, session );
+			assertCount( 1, "select b.publisher from Book b join b.publisher", Publisher.class, session );
+			assertCount( 1, "select b.publisher.name from Book b", String.class, session );
+			assertCount( 1, "select publisher.name from Book b left join b.publisher", String.class, session );
+			assertCount( 1,
+					"select publisher.name from Book b left join b.publisher where publisher.name is null or length(publisher.name) > 0",
+					String.class, session );
+			// selecting only the id does not create an explicit join
+			assertCount( 2, "select b.publisher.id from Book b", Long.class, session );
+		} );
+	}
+
+	private <T> void assertCount(int expected, String hql, Class<T> resultClass, SessionImplementor session) {
+		final QueryImplementor<T> query = session.createQuery( hql, resultClass );
+		final List<T> resultList = query.getResultList();
+		final long resultCount = query.getResultCount();
+		assertEquals( expected, resultList.size() );
+		assertEquals( expected, resultCount );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+	}
+
 	@Entity(name="Book")
 	@Table(name = "books")
 	static class Book {
@@ -151,6 +196,15 @@ public class CountTest {
 	@Entity(name="Publisher")
 	@Table(name = "pubs")
 	static class Publisher {
-		@Id String name;
+		@Id Long id;
+		String name;
+
+		Publisher() {
+		}
+
+		Publisher(Long id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 	}
 }

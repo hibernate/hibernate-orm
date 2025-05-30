@@ -22,13 +22,14 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -55,11 +56,8 @@ public class AnonymousTupleType<T>
 	private final String[] componentNames;
 	private final Map<String, Integer> componentIndexMap;
 
-	public AnonymousTupleType(SqmSubQuery<T> subQuery) {
-		this( extractSqmExpressibles( subQuery ) );
-	}
-
-	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
+	public AnonymousTupleType(SqmSelectQuery<T> selectQuery) {
+		final SqmSelectableNode<?>[] components = extractSqmExpressibles( selectQuery );
 		expressibles = new SqmBindableType<?>[components.length];
 		componentSourcePaths = new NavigablePath[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
@@ -72,9 +70,13 @@ public class AnonymousTupleType<T>
 		//noinspection unchecked
 		javaTypeDescriptor = (JavaType<T>) new ObjectArrayJavaType( getTypeDescriptors( components ) );
 		componentIndexMap = linkedMapOfSize( components.length );
+		final String[] aliases = extractAliases( selectQuery );
 		for ( int i = 0; i < components.length; i++ ) {
 			final SqmSelectableNode<?> component = components[i];
-			final String alias = component.getAlias();
+			String alias = aliases[i];
+			if ( alias == null ) {
+				alias = component.getAlias();
+			}
 			if ( alias == null ) {
 				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
 						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
@@ -110,15 +112,31 @@ public class AnonymousTupleType<T>
 		return SqmDomainType.super.getTypeName();
 	}
 
-	private static SqmSelectableNode<?>[] extractSqmExpressibles(SqmSubQuery<?> subQuery) {
-		final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
+	private static SqmSelectableNode<?>[] extractSqmExpressibles(SqmSelectQuery<?> selectQuery) {
+		final SqmSelectClause selectClause = selectQuery.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause();
 		if ( selectClause == null || selectClause.getSelectionItems().isEmpty() ) {
-			throw new IllegalArgumentException( "subquery has no selection items" );
+			throw new IllegalArgumentException( "selectQuery has no selection items" );
 		}
-		// todo: right now, we "snapshot" the state of the subquery when creating this type, but maybe we shouldn't?
-		//  i.e. what if the subquery changes later on? Or should we somehow mark the subquery to signal,
+		// todo: right now, we "snapshot" the state of the selectQuery when creating this type, but maybe we shouldn't?
+		//  i.e. what if the selectQuery changes later on? Or should we somehow mark the selectQuery to signal,
 		//  that changes to the select clause are invalid after a certain point?
 		return selectClause.getSelectionItems().toArray( SqmSelectableNode[]::new );
+	}
+
+	private static String[] extractAliases(SqmSelectQuery<?> selectQuery) {
+		final SqmSelectClause selectClause = selectQuery.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause();
+		final List<String> aliases = new ArrayList<>();
+		for (final SqmSelection<?> selection : selectClause.getSelections()) {
+			final String alias = selection.getAlias();
+			selection.getSelectableNode().visitSubSelectableNodes( node ->
+					aliases.add( alias == null ? node.getAlias() : alias )
+			);
+		}
+		return aliases.toArray(String[]::new);
 	}
 
 	private static JavaType<?>[] getTypeDescriptors(SqmSelectableNode<?>[] components) {

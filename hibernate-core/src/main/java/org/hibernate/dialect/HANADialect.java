@@ -432,7 +432,7 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
 
 		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
@@ -444,7 +444,7 @@ public class HANADialect extends Dialect {
 				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		functionFactory.ceiling_ceil();
 		functionFactory.concat_pipeOperator();
@@ -927,7 +927,7 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		/*
 		 * HANA-specific extensions
@@ -935,7 +935,7 @@ public class HANADialect extends Dialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.UPPER );
 
-		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, dbMetaData );
+		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, metadata );
 
 		return new IdentifierHelper() {
 

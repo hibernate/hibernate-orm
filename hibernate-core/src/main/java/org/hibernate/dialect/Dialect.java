@@ -1057,7 +1057,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
 		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		//standard aggregate functions count(), sum(), max(), min(), avg(),
 		//supported on every database
@@ -3445,8 +3445,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * </ul>
 	 *
 	 * @param builder A partially-configured {@link IdentifierHelperBuilder}.
-	 * @param dbMetaData Access to the metadata returned from the driver if needed and if available.
-	 *                   <em>WARNING:</em> it may be {@code null}.
+	 * @param metadata Access to the metadata returned from the driver if needed and if available.
+	 *                 <em>WARNING:</em> it may be {@code null}.
 	 *
 	 * @return The {@link IdentifierHelper} instance to use,
 	 *         or {@code null} to indicate Hibernate should use its fallback path
@@ -3458,8 +3458,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
-			@Nullable DatabaseMetaData dbMetaData) throws SQLException {
-		builder.applyIdentifierCasing( dbMetaData );
+			@Nullable DatabaseMetaData metadata) throws SQLException {
+		builder.applyIdentifierCasing( metadata );
 		builder.applyReservedWords( sqlKeywords );
 		builder.setNameQualifierSupport( getNameQualifierSupport() );
 		return builder.build();

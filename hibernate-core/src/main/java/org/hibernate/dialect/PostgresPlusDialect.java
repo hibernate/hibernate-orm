@@ -53,9 +53,10 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+
 		functionFactory.soundex();
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();

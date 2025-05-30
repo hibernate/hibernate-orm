@@ -916,7 +916,7 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		/*
 		 * HANA-specific extensions
@@ -924,7 +924,7 @@ public class HANALegacyDialect extends Dialect {
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.UPPER );
 
-		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, dbMetaData );
+		final IdentifierHelper identifierHelper = super.buildIdentifierHelper( builder, metadata );
 
 		return new IdentifierHelper() {
 

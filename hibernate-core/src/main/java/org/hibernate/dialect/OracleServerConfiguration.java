@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_APPLICATION_CONTINUITY;
@@ -27,6 +28,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
  * @author Marco Belladelli
  * @author Loïc Lefèvre
  */
+@Internal
 public class OracleServerConfiguration {
 	private final boolean autonomous;
 	private final boolean extended;

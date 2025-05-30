@@ -110,9 +110,10 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+
 		functionFactory.cot();
 		functionFactory.ln_log();
 		functionFactory.log_loglog();

@@ -156,7 +156,9 @@ public class CockroachDialect extends Dialect {
 
 	public CockroachDialect(DialectResolutionInfo info, String versionString) {
 		this(
-				versionString != null ? parseVersion( versionString ) : info.makeCopyOrDefault( MINIMUM_VERSION ),
+				versionString == null
+						? info.makeCopyOrDefault( MINIMUM_VERSION )
+						: parseVersion( versionString ),
 				PostgreSQLDriverKind.determineKind( info )
 		);
 		registerKeywords( info );
@@ -179,11 +181,12 @@ public class CockroachDialect extends Dialect {
 
 	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
-		if ( info.getDatabaseMetadata() != null ) {
-			try ( java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT version()" );
-				if ( rs.next() ) {
-					versionString = rs.getString( 1 );
+		final DatabaseMetaData databaseMetadata = info.getDatabaseMetadata();
+		if ( databaseMetadata != null ) {
+			try ( var statement = databaseMetadata.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT version()" );
+				if ( resultSet.next() ) {
+					versionString = resultSet.getString( 1 );
 				}
 			}
 			catch (SQLException ex) {
@@ -400,9 +403,10 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
+
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.overlay();
@@ -1075,15 +1079,15 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData databaseMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( databaseMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, databaseMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

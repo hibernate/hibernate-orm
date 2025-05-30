@@ -57,7 +57,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -103,6 +102,7 @@ import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -176,11 +176,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		@Override
 		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
 			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
-			if ( jdbcType.isXml() ) {
-				// XML columns can't have check constraints
-				return;
+			if ( !jdbcType.isXml() ) { // XML columns can't have check constraints
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
 			}
-			super.applyAggregateColumnCheck( buf, aggregateColumn );
 		}
 	};
 
@@ -190,7 +188,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	public SQLServerDialect(DatabaseVersion version) {
 		super(version);
-		exporter = createSequenceExporter(version);
+		exporter = new SqlServerSequenceExporter( this );
 	}
 
 	public SQLServerDialect(DialectResolutionInfo info) {
@@ -217,10 +215,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static Integer getCompatibilityLevel(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = statement.executeQuery( "SELECT compatibility_level FROM sys.databases where name = db_name();" );
-				if ( rs.next() ) {
-					return rs.getInt( 1 );
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet =
+						statement.executeQuery( "SELECT compatibility_level FROM sys.databases where name = db_name();" );
+				if ( resultSet.next() ) {
+					return resultSet.getInt( 1 );
 				}
 			}
 			catch (SQLException e) {
@@ -229,11 +228,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getInteger( SQL_SERVER_COMPATIBILITY_LEVEL, info.getConfigurationValues() );
-	}
-
-	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
-		return new SqlServerSequenceExporter(this);
+		return getInteger( SQL_SERVER_COMPATIBILITY_LEVEL, info.getConfigurationValues() );
 	}
 
 	@Override
@@ -350,14 +345,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-
 		// Need to bind as java.sql.Timestamp because reading OffsetDateTime from a "datetime2" column fails
 		typeContributions.contributeJdbcType( TimestampUtcAsJdbcTimestampJdbcType.INSTANCE );
-
-		typeContributions.getTypeConfiguration().getJdbcTypeRegistry().addDescriptor(
-				Types.TINYINT,
-				TinyIntAsSmallIntJdbcType.INSTANCE
-		);
+		typeContributions.getTypeConfiguration().getJdbcTypeRegistry()
+				.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( SQLServerCastingXmlJdbcType.INSTANCE );
 		typeContributions.contributeJdbcType( UUIDJdbcType.INSTANCE );
 		typeContributions.contributeJdbcTypeConstructor( SQLServerCastingXmlArrayJdbcTypeConstructor.INSTANCE );
@@ -365,14 +356,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
-		BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
-		BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
-		BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		final BasicTypeRegistry basicTypeRegistry =
+				functionContributions.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		final BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
 		functionContributions.getFunctionRegistry().register(
@@ -571,17 +563,17 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
 			//       Check to see if this setting is correct.
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

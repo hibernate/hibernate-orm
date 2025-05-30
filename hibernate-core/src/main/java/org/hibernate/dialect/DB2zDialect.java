@@ -67,9 +67,9 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 		if ( getVersion().isSameOrAfter( 12 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+			final var functionFactory = new CommonFunctionFactory( functionContributions );
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();

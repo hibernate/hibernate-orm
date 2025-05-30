@@ -553,16 +553,16 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
+			IdentifierHelperBuilder builder, DatabaseMetaData metadata) throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
 			//       Check to see if this setting is correct.
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

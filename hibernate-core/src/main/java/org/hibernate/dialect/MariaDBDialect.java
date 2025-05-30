@@ -110,9 +110,10 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory commonFunctionFactory = new CommonFunctionFactory(functionContributions);
+		final var commonFunctionFactory = new CommonFunctionFactory( functionContributions );
+
 		commonFunctionFactory.windowFunctions();
 		commonFunctionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		functionContributions.getFunctionRegistry().registerNamed(
@@ -326,14 +327,14 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
 		// some MariaDB drivers does not return case strategy info
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override

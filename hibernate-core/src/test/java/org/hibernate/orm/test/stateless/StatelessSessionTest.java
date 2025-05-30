@@ -8,8 +8,8 @@ import java.util.Date;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Transaction;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gavin King
@@ -33,10 +34,7 @@ public class StatelessSessionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Document" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -73,7 +71,7 @@ public class StatelessSessionTest {
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						try (ScrollableResults sr = statelessSession.createQuery( "from Document where text is not null" )
+						try (var sr = statelessSession.createQuery( "from Document where text is not null" )
 								.scroll( ScrollMode.FORWARD_ONLY )) {
 							sr.next();
 							doc2 = (Document) sr.get();
@@ -98,9 +96,9 @@ public class StatelessSessionTest {
 						criteria = criteriaBuilder.createQuery( Document.class );
 						criteria.from( Document.class );
 
-						try (ScrollableResults sr = statelessSession.createQuery( criteria ).scroll( ScrollMode.FORWARD_ONLY )) {
+						try (var sr = statelessSession.createQuery( criteria ).scroll( ScrollMode.FORWARD_ONLY )) {
 							sr.next();
-							doc2 = (Document) sr.get();
+							doc2 = sr.get();
 						}
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
@@ -116,6 +114,20 @@ public class StatelessSessionTest {
 						throw e;
 					}
 				} );
+	}
+
+	@Test
+	public void testGetNull(SessionFactoryScope scope) {
+		scope.inStatelessSession(
+				statelessSession -> {
+					assertNull( statelessSession.get( Document.class, "Blank" ) );
+				}
+		);
+		scope.inStatelessTransaction(
+				statelessSession -> {
+					assertNull( statelessSession.get( Document.class, "Blank", LockMode.PESSIMISTIC_WRITE ) );
+				}
+		);
 	}
 
 	@Test

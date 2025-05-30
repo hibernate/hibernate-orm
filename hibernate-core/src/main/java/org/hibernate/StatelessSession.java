@@ -240,7 +240,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param entityName The name of the entity to retrieve
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	Object get(String entityName, Object id);
 
@@ -250,7 +251,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param entityClass The class of the entity to retrieve
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	<T> T get(Class<T> entityClass, Object id);
 
@@ -261,7 +263,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	Object get(String entityName, Object id, LockMode lockMode);
 
@@ -272,7 +275,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 */
 	<T> T get(Class<T> entityClass, Object id, LockMode lockMode);
 
@@ -285,7 +289,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 *
 	 * @since 7.0
 	 */
@@ -302,7 +307,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 *
 	 * @since 7.0
 	 */
@@ -317,7 +323,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 *                      how the graph should be interpreted
 	 * @param id The id of the entity to retrieve
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 *
 	 * @since 6.3
 	 */
@@ -334,7 +341,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param id The id of the entity to retrieve
 	 * @param lockMode The lock mode to apply to the entity
 	 *
-	 * @return a detached entity instance
+	 * @return a detached entity instance, or null if there
+	 *         is no instance with the given id
 	 *
 	 * @since 6.3
 	 */

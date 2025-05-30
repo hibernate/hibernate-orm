@@ -12,7 +12,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = UpsertVersionedTest.Record.class)
@@ -23,22 +23,22 @@ public class UpsertVersionedTest {
 			s.upsert(new Record(456L,2L,"hello mars"));
 		});
 		scope.inStatelessTransaction(s-> {
-			assertEquals("hello earth",s.get(Record.class,123L).message);
-			assertEquals("hello mars",s.get(Record.class,456L).message);
+			assertEquals( "hello earth", s.get( Record.class,123L).message );
+			assertEquals( "hello mars", s.get( Record.class,456L).message );
 		});
 		scope.inStatelessTransaction(s-> {
 			s.upsert(new Record(123L,0L,"goodbye earth"));
 		});
 		scope.inStatelessTransaction(s-> {
-			assertEquals("goodbye earth",s.get(Record.class,123L).message);
-			assertEquals("hello mars",s.get(Record.class,456L).message);
+			assertEquals( "goodbye earth", s.get( Record.class,123L).message );
+			assertEquals( "hello mars", s.get( Record.class,456L).message );
 		});
 		scope.inStatelessTransaction(s-> {
 			s.upsert(new Record(456L,3L,"goodbye mars"));
 		});
 		scope.inStatelessTransaction(s-> {
-			assertEquals("goodbye earth",s.get(Record.class,123L).message);
-			assertEquals("goodbye mars",s.get(Record.class,456L).message);
+			assertEquals( "goodbye earth", s.get( Record.class,123L).message );
+			assertEquals( "goodbye mars", s.get( Record.class,456L).message );
 		});
 	}
 	@Entity(name = "Record")

@@ -73,7 +73,7 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatelessTest {
 				session -> {
 					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
 					assertFalse( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -102,7 +102,7 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatelessTest {
 		scope.inStatelessSession(
 				session -> {
 
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					/*
 						The original test used
@@ -161,7 +161,7 @@ public class LazyToOnesNoProxyFactoryWithSubclassesStatelessTest {
 					final Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.clear();
 
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertNull( otherEntity.animal );
 					assertNull( otherEntity.primate );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );

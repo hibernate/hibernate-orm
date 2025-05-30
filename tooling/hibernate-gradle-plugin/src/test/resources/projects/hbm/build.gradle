@@ -13,8 +13,8 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'jboss-snapshots-repository'
-        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+        name = 'ossrh-snapshots-repository'
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 

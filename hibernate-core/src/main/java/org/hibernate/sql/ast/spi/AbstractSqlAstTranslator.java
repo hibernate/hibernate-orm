@@ -5667,7 +5667,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( expression instanceof SqlTypedMappingJdbcParameter parameter ) {
 			final SqlTypedMapping sqlTypedMapping = parameter.getSqlTypedMapping();
 			castTarget = new CastTarget(
-					parameter.getJdbcMapping(),
+					sqlTypedMapping.getJdbcMapping(),
 					sqlTypedMapping.getColumnDefinition(),
 					sqlTypedMapping.getLength(),
 					sqlTypedMapping.getTemporalPrecision() != null
@@ -5680,6 +5680,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			castTarget = new CastTarget( expression.getExpressionType().getSingleJdbcMapping() );
 		}
 		arguments.add( castTarget );
+		if ( expression instanceof JdbcParameter ) {
+			// the value itself is not important, but its type,
+			// to improve performances, we could store that information
+			// and use it in JdbcOperationQuery.isCompatibleWith instead
+			addAppliedParameterBinding( (JdbcParameter) expression, null );
+		}
 		castFunction().render( this, arguments, (ReturnableType<?>) castTarget.getJdbcMapping(), this );
 	}
 

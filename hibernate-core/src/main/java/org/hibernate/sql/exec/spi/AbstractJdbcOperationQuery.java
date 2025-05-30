@@ -78,15 +78,36 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 				return false;
 			}
 			for ( Map.Entry<JdbcParameter, JdbcParameterBinding> entry : appliedParameters.entrySet() ) {
-				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( entry.getKey() );
+				final JdbcParameter parameter = entry.getKey();
+				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( parameter );
 				final JdbcParameterBinding appliedBinding = entry.getValue();
-				//noinspection unchecked
-				if ( binding == null || !appliedBinding.getBindType()
-						.getJavaTypeDescriptor()
-						.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
+				if ( !isCompatible( parameter, appliedBinding, binding, queryOptions ) ) {
 					return false;
 				}
 			}
+		}
+		return true;
+	}
+
+	protected boolean isCompatible(
+			JdbcParameter parameter,
+			JdbcParameterBinding appliedBinding,
+			JdbcParameterBinding binding,
+			QueryOptions queryOptions) {
+		// This is a special case where the rendered SQL depends on the presence of the parameter,
+		// but not specifically on the value. Some example of such situation are when generating
+		// SQL that depends on the type of the parameter (e.g., cast). See also HHH-19331
+		// and QueryPlanCachingTest, as well as subclass overrides of this method.
+		if ( appliedBinding == null ) {
+			// We could optionally optimize this by identifying only the type and checking it in the same
+			// way we check the value below.
+			return false;
+		}
+		//noinspection unchecked
+		if ( binding == null || !appliedBinding.getBindType()
+				.getJavaTypeDescriptor()
+				.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
+			return false;
 		}
 		return true;
 	}

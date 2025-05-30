@@ -67,11 +67,6 @@ public class EnumType<T extends Enum<T>>
 		return enumClass;
 	}
 
-	@Override
-	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
-		return jdbcType;
-	}
-
 	/**
 	 * <p>
 	 * An instance of this class is "configured" by a call to {@link #setParameterValues},

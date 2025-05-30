@@ -79,7 +79,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		return userType.getJdbcType( context.getTypeConfiguration() );
+		return context.getJdbcType( userType.getSqlType() );
 	}
 
 	@Override

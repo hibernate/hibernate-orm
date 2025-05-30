@@ -18,7 +18,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * This interface should be implemented by user-defined custom types
@@ -310,6 +309,8 @@ public interface UserType<J> {
 	 *           {@link ResultSet#getObject(int, Class)} with the
 	 *           given {@code position} and with the
 	 *           {@linkplain #returnedClass returned class}.
+	 *
+	 * @since 7.0
 	 */
 	default J nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
@@ -346,6 +347,8 @@ public interface UserType<J> {
 	 *           {@link PreparedStatement#setObject(int, Object, int)}
 	 *           with the given {@code position} and {@code value} and
 	 *           with the {@linkplain #getSqlType SQL type}.
+	 *
+	 * @since 7.0
 	 */
 	default void nullSafeSet(PreparedStatement st, J value, int position, WrapperOptions options)
 			throws SQLException {
@@ -480,32 +483,65 @@ public interface UserType<J> {
 
 	/**
 	 * The default column length, for use in DDL generation.
+	 *
+	 * @since 7.0
 	 */
-	default long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
+	default long getDefaultSqlLength() {
 		return Size.DEFAULT_LENGTH;
 	}
 
 	/**
 	 * The default column precision, for use in DDL generation.
+	 *
+	 * @since 7.0
 	 */
-	default int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+	default int getDefaultSqlPrecision() {
 		return Size.DEFAULT_PRECISION;
 	}
 
 	/**
 	 * The default column scale, for use in DDL generation.
+	 *
+	 * @since 7.0
 	 */
-	default int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
+	default int getDefaultSqlScale() {
 		return Size.DEFAULT_SCALE;
 	}
 
 	/**
-	 * A mapped {@link JdbcType}. By default, the {@code JdbcType}
-	 * registered under our {@linkplain #getSqlType type code}.
+	 * The default column length, for use in DDL generation.
+	 *
+	 * @since 6.0
+	 * @deprecated This operation is a layer-breaker.
+	 *             Use {@link #getDefaultSqlLength()}
 	 */
-	@Incubating
-	default JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
-		return typeConfiguration.getJdbcTypeRegistry().getDescriptor( getSqlType() );
+	@Deprecated(since = "7.0", forRemoval = true)
+	default long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
+		return getDefaultSqlLength();
+	}
+
+	/**
+	 * The default column precision, for use in DDL generation.
+	 *
+	 * @since 6.0
+	 * @deprecated This operation is a layer-breaker.
+	 *             Use {@link #getDefaultSqlPrecision()}
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		return getDefaultSqlPrecision();
+	}
+
+	/**
+	 * The default column scale, for use in DDL generation.
+	 *
+	 * @since 6.0
+	 * @deprecated This operation is a layer-breaker.
+	 *             Use {@link #getDefaultSqlScale()}
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
+		return getDefaultSqlScale();
 	}
 
 	/**
@@ -519,6 +555,8 @@ public interface UserType<J> {
 	 * given by {@link JdbcMapping#getJdbcJavaType()}. Support for multiple
 	 * domain type representations works by converting objects of that type
 	 * to the domain type.
+	 *
+	 * @since 6.0
 	 */
 	@Incubating
 	default BasicValueConverter<J, Object> getValueConverter() {

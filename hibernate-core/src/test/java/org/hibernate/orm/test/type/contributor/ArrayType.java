@@ -17,7 +17,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -33,11 +32,6 @@ public class ArrayType implements UserType<Array>, BasicValueConverter<Array, St
 	@Override
 	public int getSqlType() {
 		return jdbcType.getJdbcTypeCode();
-	}
-
-	@Override
-	public JdbcType getJdbcType(TypeConfiguration typeConfiguration) {
-		return jdbcType;
 	}
 
 	@Override

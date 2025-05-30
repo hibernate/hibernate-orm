@@ -46,7 +46,7 @@ public interface BasicType<T>
 
 	@Override
 	default JavaType<T> getJavaTypeDescriptor() {
-		return this.getMappedJavaType();
+		return getMappedJavaType();
 	}
 
 	@Override

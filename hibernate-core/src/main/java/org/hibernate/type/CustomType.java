@@ -77,7 +77,7 @@ public class CustomType<J>
 			// When an explicit value converter is given,
 			// we configure the custom type to use that instead of adapters that delegate to UserType.
 			// This is necessary to support selecting a column with multiple domain type representations.
-			jdbcType = userType.getJdbcType( typeConfiguration );
+			jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( userType.getSqlType() );
 			jdbcJavaType = converter.getRelationalJavaType();
 			//noinspection unchecked
 			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );

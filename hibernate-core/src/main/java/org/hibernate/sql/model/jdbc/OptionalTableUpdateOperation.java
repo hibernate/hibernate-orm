@@ -214,31 +214,29 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			final JdbcValueDescriptor valueDescriptor = jdbcValueDescriptors.get( binding.getPosition() - 1 );
 
 			// key bindings would have a usage of RESTRICT relative to the UPDATE
-			if ( valueDescriptor.getUsage() != ParameterUsage.RESTRICT ) {
-				continue;
-			}
-
-			while ( keyBindingsItr.hasNext() ) {
-				final ColumnValueBinding valueBinding = keyBindingsItr.next();
-
-				if ( Objects.equals( valueBinding.getColumnReference().getColumnExpression(), binding.getColumnName() ) ) {
-					// `binding` is for a key column
-					foundKeyBindings = true;
-					bindKeyValue(
-							jdbcBindingPosition++,
-							binding,
-							valueDescriptor,
-							statement,
-							jdbcDelete.getSqlString(),
-							tableMapping,
-							session
-					);
-					break;
-				}
-				else {
-					if ( foundKeyBindings ) {
-						// we are now "beyond" the key bindings
-						break bindings;
+			if ( valueDescriptor.getUsage() == ParameterUsage.RESTRICT ) {
+				while ( keyBindingsItr.hasNext() ) {
+					final ColumnValueBinding valueBinding = keyBindingsItr.next();
+					if ( Objects.equals( valueBinding.getColumnReference().getColumnExpression(),
+							binding.getColumnName() ) ) {
+						// `binding` is for a key column
+						foundKeyBindings = true;
+						bindKeyValue(
+								jdbcBindingPosition++,
+								binding,
+								valueDescriptor,
+								statement,
+								jdbcDelete.getSqlString(),
+								tableMapping,
+								session
+						);
+						break;
+					}
+					else {
+						if ( foundKeyBindings ) {
+							// we are now "beyond" the key bindings
+							break bindings;
+						}
 					}
 				}
 			}
@@ -327,8 +325,9 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 			jdbcValueBindings.beforeStatement( statementDetails );
 
-			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
-					.executeUpdate( updateStatement, statementDetails.getSqlString() );
+			final int rowCount =
+					session.getJdbcCoordinator().getResultSetReturn()
+							.executeUpdate( updateStatement, statementDetails.getSqlString() );
 
 			if ( rowCount == 0 ) {
 				return false;

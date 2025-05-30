@@ -2,13 +2,16 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test;
+package org.hibernate.orm.test.ondeletecascade;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.RollbackException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
@@ -18,16 +21,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.EAGER;
-import static org.hibernate.annotations.OnDeleteAction.CASCADE;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-@Jpa(annotatedClasses = {OnDeleteTest.Parent.class, OnDeleteTest.Child.class})
-public class OnDeleteTest {
+@Jpa(annotatedClasses = {OnDeleteTest2.Parent.class, OnDeleteTest2.Child.class})
+public class OnDeleteTest2 {
 	@Test
-	public void testOnDelete(EntityManagerFactoryScope scope) {
+	public void testOnDeleteParent(EntityManagerFactoryScope scope) {
 		Parent parent = new Parent();
 		Child child = new Child();
-		child.parent = parent;
 		parent.children.add( child );
 		scope.inTransaction( em -> {
 			em.persist( parent );
@@ -38,41 +41,32 @@ public class OnDeleteTest {
 			em.remove( p );
 		} );
 		scope.inTransaction( em -> {
-			assertNull( em.find( Child.class, child.id ) );
+			// since it's an owned collection, the FK gets set to null
+			assertNotNull( em.find( Child.class, child.id ) );
 		} );
 	}
 
 	@Test
-	public void testOnDeleteReference(EntityManagerFactoryScope scope) {
+	public void testOnDeleteChildrenFails(EntityManagerFactoryScope scope) {
 		Parent parent = new Parent();
 		Child child = new Child();
-		child.parent = parent;
 		parent.children.add( child );
 		scope.inTransaction( em -> {
 			em.persist( parent );
 			em.persist( child );
 		} );
-		scope.inTransaction( em -> em.remove( em.getReference( parent ) ) );
-		scope.inTransaction( em -> assertNull( em.find( Child.class, child.id ) ) );
-	}
-
-	@Test
-	public void testOnDeleteInReverse(EntityManagerFactoryScope scope) {
-		Parent parent = new Parent();
-		Child child = new Child();
-		child.parent = parent;
-		parent.children.add( child );
-		scope.inTransaction( em -> {
-			em.persist( parent );
-			em.persist( child );
-		} );
-		scope.inTransaction( em -> {
-			Child c = em.find( Child.class, child.id );
-			em.remove( c );
-		} );
-		scope.inTransaction( em -> {
-			assertNull( em.find( Child.class, child.id ) );
-		} );
+		try {
+			scope.inTransaction( em -> {
+				Parent p = em.find( Parent.class, parent.id );
+				for ( Child c : p.children ) {
+					em.remove( c );
+				}
+			} );
+			fail();
+		}
+		catch (RollbackException re) {
+			assertTrue(re.getCause().getCause() instanceof TransientObjectException);
+		}
 	}
 
 	@AfterEach
@@ -84,7 +78,9 @@ public class OnDeleteTest {
 	static class Parent {
 		@Id
 		long id;
-		@OneToMany(mappedBy = "parent", fetch = EAGER)
+		@OneToMany(fetch = EAGER)
+		@JoinColumn(name = "parent_id")
+		@OnDelete(action = OnDeleteAction.CASCADE)
 		Set<Child> children = new HashSet<>();
 	}
 
@@ -92,8 +88,5 @@ public class OnDeleteTest {
 	static class Child {
 		@Id
 		long id;
-		@ManyToOne
-		@OnDelete(action = CASCADE)
-		Parent parent;
 	}
 }

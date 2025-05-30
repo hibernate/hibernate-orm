@@ -54,7 +54,8 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 		this(
 				jdbcValuesArrayPosition,
 				resultVariable,
-				jdbcMapping.getJavaTypeDescriptor(),
+				(JavaType<T>)
+						jdbcMapping.getJavaTypeDescriptor(),
 				(BasicValueConverter<T,?>)
 						jdbcMapping.getValueConverter(),
 				navigablePath,

@@ -13,7 +13,6 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Executable JDBC command
@@ -128,7 +127,8 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				if ( parameter != offsetParameter && parameter != limitParameter ) {
 					final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( parameter );
 					// TODO: appliedBinding can be null here, resulting in NPE
-					if ( binding == null || !areEqualBindings( appliedBinding, binding ) ) {
+					if ( binding == null
+							|| !equal( appliedBinding, binding, appliedBinding.getBindType().getJavaTypeDescriptor() ) ) {
 						return false;
 					}
 				}
@@ -138,11 +138,6 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 		return ( offsetParameter != null || limitParameter != null || limit == null || limit.isEmpty() )
 			&& isCompatible( offsetParameter, limit == null ? null : limit.getFirstRow(), 0 )
 			&& isCompatible( limitParameter, limit == null ? null : limit.getMaxRows(), Integer.MAX_VALUE );
-	}
-
-	private static boolean areEqualBindings(JdbcParameterBinding appliedBinding, JdbcParameterBinding binding) {
-		final JavaType<Object> javaTypeDescriptor = appliedBinding.getBindType().getJavaTypeDescriptor();
-		return javaTypeDescriptor.areEqual( binding.getBindValue(), appliedBinding.getBindValue() );
 	}
 
 	private boolean isCompatible(JdbcParameter parameter, Integer requestedValue, int defaultValue) {

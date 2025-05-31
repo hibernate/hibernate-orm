@@ -40,11 +40,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterMutabilityPlanImpl<T,S> extends MutableMutabilityPlan<T> {
+public final class AttributeConverterMutabilityPlan<T,S> extends MutableMutabilityPlan<T> {
 	private final JpaAttributeConverter<T,S> converter;
 	private final boolean mutable;
 
-	public AttributeConverterMutabilityPlanImpl(JpaAttributeConverter<T,S> converter, boolean mutable) {
+	public AttributeConverterMutabilityPlan(JpaAttributeConverter<T,S> converter, boolean mutable) {
 		this.converter = converter;
 		this.mutable = mutable;
 	}

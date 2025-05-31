@@ -9,25 +9,30 @@ import jakarta.persistence.PersistenceException;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import java.util.Objects;
+
 /**
+ * Implementation of {@link BasicValueConverter} backed by an instance of
+ * the JPA-standard {@link AttributeConverter}.
+ * <p>
+ * This is used as an adaptor for the {@code AttributeConverter} returned
+ * by {@link org.hibernate.usertype.UserType#getValueConverter()}
+ *
  * @author Gavin King
  * @since 7.0
  */
-public class AttributeConverterWrapper<O,R> implements BasicValueConverter<O,R> {
+public final class AttributeConverterInstance<O,R> implements BasicValueConverter<O,R> {
 	private final AttributeConverter<O,R> converter;
-	private final JavaType<? extends AttributeConverter<O, R>> converterJtd;
-	private final JavaType<O> domainJtd;
-	private final JavaType<R> jdbcJtd;
+	private final JavaType<O> domainJavaType;
+	private final JavaType<R> jdbcJavaType;
 
-	public AttributeConverterWrapper(
+	public AttributeConverterInstance(
 			AttributeConverter<O, R> converter,
-			JavaType<? extends AttributeConverter<O,R>> converterJtd,
-			JavaType<O> domainJtd,
-			JavaType<R> jdbcJtd) {
+			JavaType<O> domainJavaType,
+			JavaType<R> jdbcJavaType) {
 		this.converter = converter;
-		this.converterJtd = converterJtd;
-		this.domainJtd = domainJtd;
-		this.jdbcJtd = jdbcJtd;
+		this.domainJavaType = domainJavaType;
+		this.jdbcJavaType = jdbcJavaType;
 	}
 
 	@Override
@@ -58,43 +63,29 @@ public class AttributeConverterWrapper<O,R> implements BasicValueConverter<O,R> 
 
 	@Override
 	public JavaType<O> getDomainJavaType() {
-		return domainJtd;
+		return domainJavaType;
 	}
 
 	@Override
 	public JavaType<R> getRelationalJavaType() {
-		return jdbcJtd;
+		return jdbcJavaType;
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
+		else {
+			return object instanceof AttributeConverterInstance<?, ?> that
+				&& Objects.equals( this.converter, that.converter )
+				&& Objects.equals( this.domainJavaType, that.domainJavaType )
+				&& Objects.equals( this.jdbcJavaType, that.jdbcJavaType );
 		}
-
-		AttributeConverterWrapper<?, ?> that = (AttributeConverterWrapper<?, ?>) o;
-
-		if ( !converter.equals( that.converter ) ) {
-			return false;
-		}
-		if ( !converterJtd.equals( that.converterJtd ) ) {
-			return false;
-		}
-		if ( !domainJtd.equals( that.domainJtd ) ) {
-			return false;
-		}
-		return jdbcJtd.equals( that.jdbcJtd );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = converter.hashCode();
-		result = 31 * result + converterJtd.hashCode();
-		result = 31 * result + domainJtd.hashCode();
-		result = 31 * result + jdbcJtd.hashCode();
-		return result;
+		return Objects.hash( converter, domainJavaType, jdbcJavaType );
 	}
 }

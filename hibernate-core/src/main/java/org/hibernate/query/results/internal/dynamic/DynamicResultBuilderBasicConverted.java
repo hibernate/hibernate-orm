@@ -18,7 +18,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -42,7 +42,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 			SessionFactoryImplementor sessionFactory) {
 		this.columnAlias = columnAlias;
 		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
-		this.basicValueConverter = new JpaAttributeConverterImpl<>(
+		this.basicValueConverter = new AttributeConverterBean<>(
 				new ProvidedInstanceManagedBeanImpl<>( converter ),
 				javaTypeRegistry.getDescriptor( converter.getClass() ),
 				javaTypeRegistry.getDescriptor( domainJavaType ),
@@ -59,7 +59,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		this.columnAlias = columnAlias;
 		final ManagedBeanRegistry beans = sessionFactory.getManagedBeanRegistry();
 		final JavaTypeRegistry javaTypeRegistry = sessionFactory.getTypeConfiguration().getJavaTypeRegistry();
-		this.basicValueConverter = new JpaAttributeConverterImpl<>(
+		this.basicValueConverter = new AttributeConverterBean<>(
 				beans.getBean( converterJavaType ),
 				javaTypeRegistry.getDescriptor( converterJavaType ),
 				javaTypeRegistry.getDescriptor( domainJavaType ),

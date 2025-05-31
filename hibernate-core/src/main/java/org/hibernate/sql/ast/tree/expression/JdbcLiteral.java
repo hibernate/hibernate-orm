@@ -79,7 +79,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	// MappingModelExpressible
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<T> getExpressionType() {
 		return this;
 	}
 
@@ -114,14 +114,20 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return;
+		if ( value != null ) {
+			cacheKey.addValue( disassemble( value, jdbcMapping.getJdbcJavaType().getMutabilityPlan(), session ) );
+			cacheKey.addHashCode( hashCode( value, jdbcMapping.getJavaTypeDescriptor() ) );
 		}
-		final Serializable disassemble = ( (MutabilityPlan<Object>) jdbcMapping.getJdbcJavaType().getMutabilityPlan() )
-				.disassemble( value, session );
-		final int hashCode = jdbcMapping.getJavaTypeDescriptor().extractHashCode( value );
-		cacheKey.addValue( disassemble );
-		cacheKey.addHashCode( hashCode );
+	}
+
+	private static <T> int hashCode(Object value, JavaType<T> javaTypeDescriptor) {
+		return javaTypeDescriptor.extractHashCode( (T) value );
+	}
+
+	private static <T> Serializable disassemble(
+			Object value, MutabilityPlan<T> mutabilityPlan,
+			SharedSessionContractImplementor session) {
+		return mutabilityPlan.disassemble( (T) value, session );
 	}
 
 	@Override
@@ -182,6 +188,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Override
 	public JavaType<T> getExpressibleJavaType() {
-		return jdbcMapping.getJavaTypeDescriptor();
+		return (JavaType<T>)
+				jdbcMapping.getJavaTypeDescriptor();
 	}
 }

@@ -18,8 +18,10 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -34,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		OnDeleteCascadeRemoveTest.Child.class},
 		generateStatistics = true,
 		useCollectingStatementInspector = true)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 class OnDeleteCascadeRemoveTest {
 	@Test
 	void testOnDeleteCascadeRemove1(EntityManagerFactoryScope scope) {

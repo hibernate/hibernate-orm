@@ -12,8 +12,10 @@ import jakarta.persistence.RollbackException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(annotatedClasses = {OnDeleteTest2.Parent.class, OnDeleteTest2.Child.class})
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 public class OnDeleteTest2 {
 	@Test
 	public void testOnDeleteParent(EntityManagerFactoryScope scope) {

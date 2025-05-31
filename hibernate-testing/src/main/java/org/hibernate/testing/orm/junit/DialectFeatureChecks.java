@@ -445,6 +445,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsWait implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsWait();
+		}
+	}
+
 	public static class CurrentTimestampHasMicrosecondPrecision implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !dialect.currentTimestamp().contains( "6" );

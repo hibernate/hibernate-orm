@@ -7,6 +7,7 @@ package org.hibernate.event.spi;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
+import org.hibernate.Timeouts;
 
 /**
  * Event class for {@link org.hibernate.Session#lock}.
@@ -16,31 +17,32 @@ import org.hibernate.Locking;
  * @see org.hibernate.Session#lock
  */
 public class LockEvent extends AbstractEvent {
+	public static final String ILLEGAL_SKIP_LOCKED = "Skip-locked is not valid option for #lock";
 
 	private Object object;
 	private final LockOptions lockOptions;
 	private String entityName;
 
-	public LockEvent(String entityName, Object original, LockMode lockMode, EventSource source) {
-		this(original, lockMode, source);
-		this.entityName = entityName;
+	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
+		this( entityName, object, lockMode.toLockOptions(), source );
 	}
 
-	public LockEvent(String entityName, Object original, LockOptions lockOptions, EventSource source) {
-		this(original, lockOptions, source);
-		this.entityName = entityName;
-	}
-
-	public LockEvent(Object object, LockMode lockMode, EventSource source) {
-		super(source);
-		this.object = object;
-		this.lockOptions = lockMode.toLockOptions();
-	}
-
-	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
+	public LockEvent(String entityName, Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
 		this.object = object;
 		this.lockOptions = lockOptions;
+		if ( lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED
+			|| lockOptions.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+			throw new IllegalArgumentException( ILLEGAL_SKIP_LOCKED );
+		}
+	}
+
+	public LockEvent(Object object, LockMode lockMode, EventSource source) {
+		this( object, lockMode.toLockOptions(), source );
+	}
+
+	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
+		this( null, object, lockOptions, source );
 	}
 
 	public Object getObject() {

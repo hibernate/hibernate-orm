@@ -48,6 +48,7 @@ import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.lock.internal.SqlAstBasedLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -2236,26 +2237,69 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param lockMode The type of lock to be acquired.
 	 * @return The appropriate locking strategy.
 	 *
-	 * @since 3.2
+	 * @since 7
 	 */
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
 		return switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT ->
-					new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE ->
-					new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
-			case PESSIMISTIC_READ ->
-					new PessimisticReadSelectLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC_FORCE_INCREMENT ->
-					new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC ->
-					new OptimisticLockingStrategy( lockable, lockMode );
-			case READ ->
-					new SelectLockingStrategy( lockable, lockMode );
-			default ->
-				// WRITE, NONE are not allowed here
-					throw new IllegalArgumentException( "Unsupported lock mode" );
+			case PESSIMISTIC_FORCE_INCREMENT -> buildPessimisticForceIncrementStrategy( lockable, lockMode, lockScope );
+			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE -> buildPessimisticWriteStrategy( lockable, lockMode, lockScope );
+			case PESSIMISTIC_READ -> buildPessimisticReadStrategy( lockable, lockMode, lockScope );
+			case OPTIMISTIC_FORCE_INCREMENT -> buildOptimisticForceIncrementStrategy( lockable, lockMode );
+			case OPTIMISTIC -> buildOptimisticStrategy( lockable, lockMode );
+			case READ -> buildReadStrategy( lockable, lockMode, lockScope );
+			default -> throw new IllegalArgumentException( "Unsupported lock mode : " + lockMode );
 		};
+	}
+
+	/**
+	 * A {@link LockingStrategy} which is able to acquire a database-level
+	 * lock with the specified {@linkplain LockMode level}.
+	 *
+	 * @param lockable The persister for the entity to be locked.
+	 * @param lockMode The type of lock to be acquired.
+	 * @return The appropriate locking strategy.
+	 *
+	 * @since 3.2
+	 *
+	 * @deprecated Use {@linkplain #getLockingStrategy(EntityPersister, LockMode, Locking.Scope)} instead.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+		return getLockingStrategy( lockable, lockMode, Locking.Scope.ROOT_ONLY );
+	}
+
+	protected LockingStrategy buildPessimisticForceIncrementStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		if ( lockScope == Locking.Scope.ROOT_ONLY && !lockable.hasMultipleTables() ) {
+			return new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
+		}
+		else {
+			return new SqlAstBasedLockingStrategy( lockable, lockMode, lockScope );
+		}
+	}
+
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		if ( lockScope == Locking.Scope.ROOT_ONLY && !lockable.hasMultipleTables() ) {
+			return new PessimisticReadSelectLockingStrategy( lockable, lockMode );
+		}
+		else {
+			return new SqlAstBasedLockingStrategy( lockable, lockMode, lockScope );
+		}
+	}
+
+	protected LockingStrategy buildOptimisticForceIncrementStrategy(EntityPersister lockable, LockMode lockMode) {
+		return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildOptimisticStrategy(EntityPersister lockable, LockMode lockMode) {
+		return new OptimisticLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return new SelectLockingStrategy( lockable, lockMode );
 	}
 
 	/**

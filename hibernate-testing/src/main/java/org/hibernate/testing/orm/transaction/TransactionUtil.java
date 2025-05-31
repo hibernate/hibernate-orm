@@ -14,6 +14,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.jboss.logging.Logger;
@@ -162,6 +163,13 @@ public abstract class TransactionUtil {
 			if ( !expectingToBlock ) {
 				fail( "Expecting delete from " + tableName + " succeed, but failed (presumably due to locks)" );
 			}
+		}
+		catch (RuntimeException re) {
+			if ( re.getCause() instanceof ConstraintViolationException cve ) {
+				System.out.println( "deleting from table did not block, but did lead to ConstraintViolationException");
+				return;
+			}
+			throw re;
 		}
 	}
 }

@@ -2537,7 +2537,7 @@ public class SessionImpl
 				lockOptions.setScope( Locking.Scope.fromJpaScope( pessimisticLockScope ) );
 			}
 			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeOut( timeout.milliseconds() );
+				lockOptions.setTimeout( timeout );
 			}
 			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
 				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.locking.scope;
+package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

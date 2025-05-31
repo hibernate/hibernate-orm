@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.locking.scope;
+package org.hibernate.orm.test.locking.options;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -10,8 +10,11 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +22,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Steve Ebersole
  */
 public class Helper {
-	static void createTestData(SessionFactoryScope factoryScope) {
+	public static void createTestData(SessionFactoryScope factoryScope) {
+		// create book data
 		factoryScope.inTransaction( (session) -> {
 			final Person milton = new Person( 1, "John Milton" );
 			session.persist( milton );
@@ -54,51 +58,92 @@ public class Helper {
 			theDarkTower.addAuthor( king );
 			session.persist( theDarkTower );
 		} );
+
+		// create report data
+		factoryScope.inTransaction( (session) -> {
+			final Person steve = new Person( 6, "Steve" );
+			final Person andrea = new Person( 7, "Andrea" );
+			final Person gavin = new Person( 8, "Gavin" );
+			session.persist( steve );
+			session.persist( andrea );
+			session.persist( gavin );
+
+			final Report report1 = new Report( 1, steve );
+			final Report report2 = new Report( 2, steve, "locking" );
+			final Report report3 = new Report( 3, steve, "locking", "pessimistic" );
+			final Report report4 = new Report( 4, andrea );
+			final Report report5 = new Report( 5, andrea, "locking", "find", "hql" );
+			final Report report6 = new Report( 6, gavin, "locking" );
+			session.persist( report1 );
+			session.persist( report2 );
+			session.persist( report3 );
+			session.persist( report4 );
+			session.persist( report5 );
+			session.persist( report6 );
+		} );
 	}
 
-	enum Table {
+	public static <T> Set<T> toSet(T[] labels) {
+		final HashSet<T> result = new HashSet<>();
+		Collections.addAll( result, labels );
+		return result;
+	}
+
+	public interface TableInformation {
+		String getTableName();
+		String getTableAlias();
+		String getKeyColumnName();
+
+		default String getKeyColumnReference() {
+			return getTableAlias() + "." + getKeyColumnName();
+		}
+	}
+
+	public enum Table implements TableInformation {
 		BOOKS,
-		BOOK_TAGS,
+		PERSONS,
+		PUBLISHER,
+		REPORTS,
+		BOOK_GENRES,
 		BOOK_AUTHORS,
-		PUBLISHER;
+		REPORT_LABELS,
+		JOINED_REPORTER;
 
 		public String getTableName() {
 			return switch ( this ) {
 				case BOOKS -> "books";
-				case BOOK_TAGS -> "book_tags";
-				case BOOK_AUTHORS -> "book_authors";
+				case PERSONS -> "the_persons";
 				case PUBLISHER -> "publishers";
+				case REPORTS, JOINED_REPORTER -> "reports";
+				case BOOK_GENRES -> "book_genres";
+				case BOOK_AUTHORS -> "book_authors";
+				case REPORT_LABELS -> "report_labels";
 			};
 		}
 
 		public String getTableAlias() {
 			return switch ( this ) {
 				case BOOKS -> "b1_0";
-				case BOOK_TAGS -> "t1_0";
-				case BOOK_AUTHORS -> "a1_0";
+				case PERSONS -> "t1_0";
 				case PUBLISHER -> "p1_0";
+				case REPORTS -> "r1_0";
+				case BOOK_GENRES -> "g1_0";
+				case BOOK_AUTHORS -> "a1_0";
+				case REPORT_LABELS -> "l1_0";
+				case JOINED_REPORTER -> "r2_0";
 			};
 		}
 
-		public String[] getKeyColumnNames() {
+		public String getKeyColumnName() {
 			return switch ( this ) {
-				case BOOKS -> new String[] {"id"};
-				case BOOK_TAGS -> new String[] {"book_fk"};
-				case BOOK_AUTHORS -> new String[] {"book_fk"};
-				case PUBLISHER -> new String[] {"id"};
-			};
-		}
-
-		public String[] getKeyColumnAliases() {
-			return switch ( this ) {
-				case BOOKS -> new String[] {"b1_0.id"};
-				case BOOK_TAGS -> new String[] {"t1_0.book_fk"};
-				case BOOK_AUTHORS -> new String[] {"a1_0.book_fk"};
-				case PUBLISHER -> new String[] {"p1_0.id"};
+				case BOOKS, PERSONS, PUBLISHER, REPORTS, JOINED_REPORTER -> "id";
+				case BOOK_GENRES, BOOK_AUTHORS -> "book_fk";
+				case REPORT_LABELS -> "report_fk";
 			};
 		}
 	}
-	static void checkSql(String sql, Dialect dialect, Table... tablesFetched) {
+
+	public static void checkSql(String sql, Dialect dialect, Table... tablesFetched) {
 		// note: assume `tables` is in order
 		final PessimisticLockStyle pessimisticLockStyle = dialect.getPessimisticLockStyle();
 		if ( pessimisticLockStyle == PessimisticLockStyle.CLAUSE ) {
@@ -132,7 +177,7 @@ public class Helper {
 					else {
 						buffer.append( "," );
 					}
-					buffer.append( StringHelper.join( ",", table.getKeyColumnAliases() ) );
+					buffer.append( table.getKeyColumnReference() );
 				}
 				aliases = buffer.toString();
 			}

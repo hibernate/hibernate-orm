@@ -29,6 +29,7 @@ public class LockEvent extends AbstractEvent {
 
 	public LockEvent(String entityName, Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
+		this.entityName = entityName;
 		this.object = object;
 		this.lockOptions = lockOptions;
 		if ( lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED

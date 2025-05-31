@@ -19,6 +19,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -346,14 +347,13 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	/**
-	 * Currently, RDMS-JDBC does not support ForUpdate.
-	 * Need to review this in the future when support is provided.
-	 * <p>
-	 * {@inheritDoc}
+	 * Currently, RDMS-JDBC does not support {@code for update}.
+	 *
+	 * @todo Need to review this in the future when support is provided.
 	 */
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

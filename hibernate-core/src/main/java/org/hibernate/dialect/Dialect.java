@@ -49,6 +49,7 @@ import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.dialect.lock.internal.SqlAstBasedLockingStrategy;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -2547,7 +2548,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return True if outer-joined rows can be locked via {@code FOR UPDATE}.
 	 */
 	public boolean supportsOuterJoinForUpdate() {
-		return true;
+		return getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL;
+	}
+
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.FULL;
 	}
 
 	/**

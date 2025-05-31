@@ -36,6 +36,7 @@ import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncRoundFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.PostgreSQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -914,8 +915,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

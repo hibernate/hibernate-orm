@@ -21,6 +21,7 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -314,8 +315,9 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax at all
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

@@ -18,6 +18,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
@@ -793,8 +794,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

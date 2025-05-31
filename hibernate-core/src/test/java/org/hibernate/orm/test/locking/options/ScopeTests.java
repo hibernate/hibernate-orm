@@ -12,6 +12,7 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -159,7 +160,7 @@ public class ScopeTests {
 			}
 			else {
 				final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-				final String booksTableReference = session.getDialect().appendLockHint( lockOptions, BOOKS.getTableAlias() );
+				final String booksTableReference = session.getDialect().appendLockHint( lockOptions, BOOKS.getTableName() );
 				assertThat( sql ).contains( booksTableReference );
 			}
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -231,12 +232,12 @@ public class ScopeTests {
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
-			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE );
+			session.find( Report.class, 2, PESSIMISTIC_WRITE );
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), REPORTS );
 			TransactionUtil.deleteFromTable( factoryScope, REPORTS.getTableName(), true );
-			TransactionUtil.deleteFromTable( factoryScope, PERSONS.getTableName(), false );
-			TransactionUtil.deleteFromTable( factoryScope, REPORT_LABELS.getTableName(), false );
+			TransactionUtil.deleteFromTable( factoryScope, PERSONS.getTableName(), session.getDialect().getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL );
+			TransactionUtil.deleteFromTable( factoryScope, REPORT_LABELS.getTableName(), session.getDialect().getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL );
 		} );
 	}
 

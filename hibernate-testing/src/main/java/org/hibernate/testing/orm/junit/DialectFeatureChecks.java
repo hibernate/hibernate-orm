@@ -62,6 +62,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
@@ -448,6 +449,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsWait();
+		}
+	}
+
+	public static class SupportsLockingJoins implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL;
 		}
 	}
 

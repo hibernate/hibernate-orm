@@ -6,6 +6,7 @@ package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -86,7 +87,7 @@ public class LockedRowsTests {
 					session2.lock( book, PESSIMISTIC_WRITE, NO_WAIT );
 					fail("Expecting a failure due to locked rows and no-wait");
 				}
-				catch (PessimisticLockException expected) {
+				catch (PessimisticLockException | PessimisticEntityLockException expected) {
 				}
 			} );
 		} );

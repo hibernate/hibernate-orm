@@ -25,6 +25,7 @@ import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -585,9 +586,9 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
 		// "SELECT FOR UPDATE can only be used with a single-table SELECT statement"
-		return false;
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

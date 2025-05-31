@@ -28,6 +28,7 @@ import org.hibernate.community.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -613,9 +614,9 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
 		//TODO: check this!
-		return false;
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

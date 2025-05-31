@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author Steve Ebersole
@@ -39,7 +38,7 @@ public class AsyncExecutor {
 			throw new TimeoutException( "Thread timeout exceeded", e );
 		}
 		catch (ExecutionException e) {
-			throw new RuntimeException( "Async execution error", e );
+			throw new RuntimeException( "Async execution error", e.getCause() );
 		}
 	}
 

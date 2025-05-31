@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.community.dialect.identity.CacheIdentityColumnSupport;
@@ -18,13 +19,8 @@ import org.hibernate.dialect.SimpleDatabaseVersion;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -323,27 +319,16 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
 		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
 		// Set your transaction mode to READ_COMMITTED before using
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteUpdateLockingStrategy(lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadUpdateLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy(lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy(lockable, lockMode);
-		}
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
-			return new UpdateLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		// InterSystems Cache' does not current support "SELECT ... FOR UPDATE" syntax...
+		// Set your transaction mode to READ_COMMITTED before using
+		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
 	}
 
 	@Override

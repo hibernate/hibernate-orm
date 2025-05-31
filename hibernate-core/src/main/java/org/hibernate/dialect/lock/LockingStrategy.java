@@ -75,11 +75,6 @@ public interface LockingStrategy {
 
 	default void lock(Object id, Object version, Object object, Timeout timeout, SharedSessionContractImplementor session)
 			throws StaleObjectStateException, LockingStrategyException {
-		if ( session instanceof EventSource eventSource ) {
-			lock( id, version, object, timeout.milliseconds(), eventSource );
-		}
-		else {
-			throw new UnsupportedOperationException( "Optimistic locking strategies not supported in stateless session" );
-		}
+		lock( id, version, object, timeout.milliseconds(), session );
 	}
 }

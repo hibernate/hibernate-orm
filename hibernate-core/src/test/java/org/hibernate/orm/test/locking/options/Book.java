@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.locking.scope;
+package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -15,6 +15,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import org.hibernate.annotations.FetchProfile;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -24,9 +26,15 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "books")
+@FetchProfile(
+		name = "book-genres",
+		fetchOverrides = @FetchProfile.FetchOverride(entity = Book.class, association = "genres")
+)
 public class Book {
 	@Id
 	private Integer id;
+	@Version
+	private int revision;
 	private String title;
 	private String synopsis;
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -38,9 +46,9 @@ public class Book {
 			inverseJoinColumns = @JoinColumn(name = "author_fk"))
 	private Set<Person> authors;
 	@ElementCollection
-	@CollectionTable(name = "book_tags", joinColumns = @JoinColumn(name = "book_fk"))
-	@Column(name = "tag")
-	private Set<String> tags;
+	@CollectionTable(name = "book_genres", joinColumns = @JoinColumn(name = "book_fk"))
+	@Column(name = "genre")
+	private Set<String> genres;
 
 	protected Book() {
 		// for Hibernate use
@@ -59,6 +67,10 @@ public class Book {
 
 	public Integer getId() {
 		return id;
+	}
+
+	public int getRevision() {
+		return revision;
 	}
 
 	public String getTitle() {
@@ -100,18 +112,18 @@ public class Book {
 		authors.add( author );
 	}
 
-	public Set<String> getTags() {
-		return tags;
+	public Set<String> getGenres() {
+		return genres;
 	}
 
-	public void setTags(Set<String> tags) {
-		this.tags = tags;
+	public void setGenres(Set<String> genres) {
+		this.genres = genres;
 	}
 
 	public void addTag(String tag) {
-		if ( tags == null ) {
-			tags = new HashSet<>();
+		if ( genres == null ) {
+			genres = new HashSet<>();
 		}
-		tags.add( tag );
+		genres.add( tag );
 	}
 }

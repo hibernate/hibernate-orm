@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.locking.scope;
+package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
  * @author Steve Ebersole
  */
 @Entity
-@Table(name = "persons")
+@Table(name = "the_persons")
 public class Person {
 	@Id
 	private Integer id;

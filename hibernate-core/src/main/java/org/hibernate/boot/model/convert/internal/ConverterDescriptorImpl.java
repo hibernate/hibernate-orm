@@ -9,7 +9,7 @@ import jakarta.persistence.AttributeConverter;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
@@ -56,7 +56,7 @@ class ConverterDescriptorImpl<X, Y> implements ConverterDescriptor<X, Y> {
 	public JpaAttributeConverter<X, Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
 		final JavaTypeRegistry javaTypeRegistry = context.getTypeConfiguration().getJavaTypeRegistry();
 		final var converterBean = context.getManagedBeanRegistry().getBean( converterType );
-		return new JpaAttributeConverterImpl<>(
+		return new AttributeConverterBean<>(
 				converterBean,
 				javaTypeRegistry.getDescriptor( converterBean.getBeanClass() ),
 				javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() ),

@@ -17,7 +17,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -36,7 +36,7 @@ import static org.hibernate.query.results.internal.ResultsHelper.impl;
 public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteResultBuilderBasicValued {
 	private final String explicitColumnName;
 	private final BasicValuedMapping underlyingMapping;
-	private final JpaAttributeConverterImpl<O, R> valueConverter;
+	private final AttributeConverterBean<O, R> valueConverter;
 
 	public CompleteResultBuilderBasicValuedConverted(
 			String explicitColumnName,
@@ -49,7 +49,7 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 		@SuppressWarnings("unchecked")
 		final JavaType<R> relationalType =
 				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor();
-		this.valueConverter = new JpaAttributeConverterImpl<>(
+		this.valueConverter = new AttributeConverterBean<>(
 				converterBean,
 				converterJtd,
 				domainJavaType,

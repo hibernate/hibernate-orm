@@ -8,7 +8,7 @@ import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.internal.AttributeConverterBean;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 
@@ -82,7 +82,7 @@ abstract class AbstractConverterDescriptor<X,Y> implements ConverterDescriptor<X
 
 	@Override
 	public JpaAttributeConverter<X,Y> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-		return new JpaAttributeConverterImpl<>(
+		return new AttributeConverterBean<>(
 				createManagedBean( context ),
 				context.getJavaTypeRegistry().getDescriptor( converterClass ),
 				getDomainClass(),

@@ -11,11 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.persistence.AttributeConverter;
-
 public class GenericsHelper {
 
-	public static ParameterizedType extractParameterizedType(Type base) {
+	public static ParameterizedType extractParameterizedType(Type base, Class<?> genericType) {
 		if ( base == null ) {
 			return null;
 		}
@@ -32,12 +30,12 @@ public class GenericsHelper {
 		for ( Type type : types ) {
 			type = resolveType( type, base );
 			if ( type instanceof ParameterizedType parameterizedType ) {
-				if ( AttributeConverter.class.equals( parameterizedType.getRawType() ) ) {
+				if ( genericType.equals( parameterizedType.getRawType() ) ) {
 					return parameterizedType;
 				}
 			}
 
-			final ParameterizedType parameterizedType = extractParameterizedType( type );
+			final ParameterizedType parameterizedType = extractParameterizedType( type, genericType );
 			if ( parameterizedType != null ) {
 				return parameterizedType;
 			}

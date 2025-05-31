@@ -15,42 +15,48 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
 
+import java.util.Objects;
+
 /**
- * Standard implementation of {@link JpaAttributeConverter}.
+ * Standard implementation of {@link JpaAttributeConverter} backed by
+ * a {@link ManagedBean}.
+ * <p>
+ * JPA requires support for injection into {@link AttributeConverter}
+ * instances via CDI.
  *
- * @see AttributeConverterMutabilityPlanImpl
+ * @see AttributeConverterMutabilityPlan
  *
  * @author Steve Ebersole
  */
-public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R> {
+public final class AttributeConverterBean<O,R> implements JpaAttributeConverter<O,R> {
 	private final ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean;
-	private final JavaType<? extends AttributeConverter<O, R>> converterJtd;
-	private final JavaType<O> domainJtd;
-	private final JavaType<R> jdbcJtd;
+	private final JavaType<? extends AttributeConverter<O, R>> converterJavaType;
+	private final JavaType<O> domainJavaType;
+	private final JavaType<R> jdbcJavaType;
 
-	public JpaAttributeConverterImpl(
+	public AttributeConverterBean(
 			ManagedBean<? extends AttributeConverter<O, R>> attributeConverterBean,
-			JavaType<? extends AttributeConverter<O,R>> converterJtd,
-			JavaType<O> domainJtd,
-			JavaType<R> jdbcJtd) {
+			JavaType<? extends AttributeConverter<O,R>> converterJavaType,
+			JavaType<O> domainJavaType,
+			JavaType<R> jdbcJavaType) {
 		this.attributeConverterBean = attributeConverterBean;
-		this.converterJtd = converterJtd;
-		this.domainJtd = domainJtd;
-		this.jdbcJtd = jdbcJtd;
+		this.converterJavaType = converterJavaType;
+		this.domainJavaType = domainJavaType;
+		this.jdbcJavaType = jdbcJavaType;
 	}
 
-	public JpaAttributeConverterImpl(
+	public AttributeConverterBean(
 			ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean,
-			JavaType<? extends AttributeConverter<O,R>> converterJtd,
+			JavaType<? extends AttributeConverter<O,R>> converterJavaType,
 			Class<O> domainJavaType,
 			Class<R> jdbcJavaType,
 			JpaAttributeConverterCreationContext context) {
 		this.attributeConverterBean = attributeConverterBean;
-		this.converterJtd = converterJtd;
+		this.converterJavaType = converterJavaType;
 
 		final JavaTypeRegistry jtdRegistry = context.getJavaTypeRegistry();
-		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
-		domainJtd = jtdRegistry.resolveDescriptor( domainJavaType,
+		this.jdbcJavaType = jtdRegistry.getDescriptor( jdbcJavaType );
+		this.domainJavaType = jtdRegistry.resolveDescriptor( domainJavaType,
 				() -> getTypeDescriptor( attributeConverterBean, domainJavaType, context ) );
 	}
 
@@ -74,7 +80,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 						context.getTypeConfiguration()
 				);
 		return mutabilityPlan == null
-				? new AttributeConverterMutabilityPlanImpl<>( this, true )
+				? new AttributeConverterMutabilityPlan<>( this, true )
 				: mutabilityPlan;
 	}
 
@@ -111,48 +117,35 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 
 	@Override
 	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaType() {
-		return converterJtd;
+		return converterJavaType;
 	}
 
 	@Override
 	public JavaType<O> getDomainJavaType() {
-		return domainJtd;
+		return domainJavaType;
 	}
 
 	@Override
 	public JavaType<R> getRelationalJavaType() {
-		return jdbcJtd;
+		return jdbcJavaType;
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
+		else {
+			return object instanceof AttributeConverterBean<?, ?> that
+				&& Objects.equals( this.attributeConverterBean, that.attributeConverterBean )
+				&& Objects.equals( this.converterJavaType, that.converterJavaType )
+				&& Objects.equals( this.domainJavaType, that.domainJavaType )
+				&& Objects.equals( this.jdbcJavaType, that.jdbcJavaType );
 		}
-
-		JpaAttributeConverterImpl<?, ?> that = (JpaAttributeConverterImpl<?, ?>) o;
-
-		if ( !attributeConverterBean.equals( that.attributeConverterBean ) ) {
-			return false;
-		}
-		if ( !converterJtd.equals( that.converterJtd ) ) {
-			return false;
-		}
-		if ( !domainJtd.equals( that.domainJtd ) ) {
-			return false;
-		}
-		return jdbcJtd.equals( that.jdbcJtd );
 	}
 
 	@Override
 	public int hashCode() {
-		int result = attributeConverterBean.hashCode();
-		result = 31 * result + converterJtd.hashCode();
-		result = 31 * result + domainJtd.hashCode();
-		result = 31 * result + jdbcJtd.hashCode();
-		return result;
+		return Objects.hash( attributeConverterBean, converterJavaType, domainJavaType, jdbcJavaType );
 	}
 }

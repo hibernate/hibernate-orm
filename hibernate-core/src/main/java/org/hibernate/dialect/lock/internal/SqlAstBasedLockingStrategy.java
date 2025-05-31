@@ -61,14 +61,14 @@ public class SqlAstBasedLockingStrategy implements LockingStrategy {
 			int timeout,
 			SharedSessionContractImplementor session) throws StaleObjectStateException, LockingStrategyException {
 		if ( session instanceof EventSource eventSource ) {
-			doLock( id, version, object, timeout, eventSource );
+			doLock( id, version, timeout, eventSource );
 		}
 		else {
 			throw new UnsupportedOperationException( "Optimistic locking strategies not supported in stateless session" );
 		}
 	}
 
-	private void doLock(Object id, Object version, Object object, int timeout, EventSource eventSource) {
+	private void doLock(Object id, Object version, int timeout, EventSource eventSource) {
 		final SessionFactoryImplementor factory = eventSource.getFactory();
 
 		final LockOptions lockOptions = new LockOptions( lockMode );

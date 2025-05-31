@@ -23,24 +23,27 @@ public class LockEvent extends AbstractEvent {
 	private final LockOptions lockOptions;
 	private String entityName;
 
-	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
-		this( entityName, object, lockMode.toLockOptions(), source );
-	}
-
 	public LockEvent(String entityName, Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
+
 		if (object == null) {
 			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		if (lockOptions == null) {
 			throw new IllegalArgumentException( "LockOptions may not be null" );
 		}
-		this.object = object;
-		this.lockOptions = lockOptions;
 		if ( lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED
-			|| lockOptions.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+			 || lockOptions.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
 			throw new IllegalArgumentException( ILLEGAL_SKIP_LOCKED );
 		}
+
+		this.entityName = entityName;
+		this.object = object;
+		this.lockOptions = lockOptions;
+	}
+
+	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
+		this( entityName, object, lockMode.toLockOptions(), source );
 	}
 
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {

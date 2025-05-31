@@ -166,7 +166,7 @@ public abstract class TransactionUtil {
 		}
 		catch (RuntimeException re) {
 			if ( re.getCause() instanceof ConstraintViolationException cve ) {
-				System.out.println( "deleting from table did not block, but did lead to ConstraintViolationException");
+				log.debug( "deleting from table did not block, but did lead to ConstraintViolationException", cve );
 				return;
 			}
 			throw re;

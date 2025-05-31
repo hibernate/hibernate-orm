@@ -23,10 +23,6 @@ public class LockEvent extends AbstractEvent {
 	private final LockOptions lockOptions;
 	private String entityName;
 
-	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
-		this( entityName, object, lockMode.toLockOptions(), source );
-	}
-
 	public LockEvent(String entityName, Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
 		this.entityName = entityName;
@@ -38,12 +34,24 @@ public class LockEvent extends AbstractEvent {
 		}
 	}
 
+	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
+		this( null, object, lockOptions, source );
+	}
+
+	/**
+	 * @deprecated Use {@linkplain LockEvent#LockEvent(Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {
 		this( object, lockMode.toLockOptions(), source );
 	}
 
-	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
-		this( null, object, lockOptions, source );
+	/**
+	 * @deprecated Use {@linkplain LockEvent#LockEvent(String, Object, LockOptions, EventSource)} instead.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
+		this( entityName, object, lockMode.toLockOptions(), source );
 	}
 
 	public Object getObject() {

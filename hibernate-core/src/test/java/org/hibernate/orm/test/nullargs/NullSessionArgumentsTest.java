@@ -33,7 +33,9 @@ class NullSessionArgumentsTest {
 					session::getLockMode,
 					session::getEntityName,
 					session::getIdentifier,
-					session::contains
+					session::contains,
+					session::isReadOnly,
+					e -> session.setReadOnly( e, true )
 			);
 			operations.forEach( c -> {
 						try {

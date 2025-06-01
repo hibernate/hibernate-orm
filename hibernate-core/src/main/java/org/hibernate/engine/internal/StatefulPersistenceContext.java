@@ -1707,27 +1707,26 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public boolean isReadOnly(Object entityOrProxy) {
 		if ( entityOrProxy == null ) {
-			throw new IllegalArgumentException( "Null entity instance" );
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
-		boolean isReadOnly;
+
 		final LazyInitializer lazyInitializer = extractLazyInitializer( entityOrProxy );
 		if ( lazyInitializer != null ) {
-			isReadOnly = lazyInitializer.isReadOnly();
+			return lazyInitializer.isReadOnly();
 		}
 		else {
-			final EntityEntry ee =  getEntry( entityOrProxy );
+			final EntityEntry ee = getEntry( entityOrProxy );
 			if ( ee == null ) {
-				throw new IllegalArgumentException( "Instance is not associated with this persistence context" );
+				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 			}
-			isReadOnly = ee.isReadOnly();
+			return ee.isReadOnly();
 		}
-		return isReadOnly;
 	}
 
 	@Override
 	public void setReadOnly(Object object, boolean readOnly) {
 		if ( object == null ) {
-			throw new IllegalArgumentException( "Null entity instance" );
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		if ( isReadOnly( object ) == readOnly ) {
 			return;
@@ -1765,7 +1764,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	private void setEntityReadOnly(Object entity, boolean readOnly) {
 		final EntityEntry entry = getEntry( entity );
 		if ( entry == null ) {
-			throw new IllegalArgumentException( "Instance was not associated with this persistence context" );
+			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
 		entry.setReadOnly( readOnly, entity );
 		hasNonReadOnlyEntities = hasNonReadOnlyEntities || ! readOnly;

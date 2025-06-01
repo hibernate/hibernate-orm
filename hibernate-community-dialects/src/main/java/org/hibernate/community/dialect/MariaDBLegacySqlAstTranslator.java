@@ -210,11 +210,6 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		}
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );

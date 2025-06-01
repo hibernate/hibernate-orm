@@ -97,7 +97,7 @@ public class HANADialectTestCase {
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, new HashMap<>() );
 		assertEquals( sql + " for update wait 2", sqlWithLock );
 
-		lockOptions.setAliasSpecificLockMode( "dummy", LockMode.PESSIMISTIC_READ );
+		lockOptions.setLockMode( LockMode.PESSIMISTIC_READ );
 		keyColumns.put( "dummy", new String[]{ "dummy" } );
 		sqlWithLock = dialect.applyLocksToSql( sql, lockOptions, keyColumns );
 		assertEquals( sql + " for update of dummy.dummy wait 2", sqlWithLock );

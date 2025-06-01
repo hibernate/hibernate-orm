@@ -87,7 +87,7 @@ public class EntityBatchLoaderArrayParam<T>
 				getLoadable(),
 				identifierMapping,
 				loadQueryInfluencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParameter,
 				sessionFactory
 		);

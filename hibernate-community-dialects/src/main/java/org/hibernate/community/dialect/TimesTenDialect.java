@@ -8,6 +8,7 @@ import java.sql.Types;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.community.dialect.pagination.TimesTenLimitHandler;
@@ -17,13 +18,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticReadUpdateLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteUpdateLockingStrategy;
-import org.hibernate.dialect.lock.SelectLockingStrategy;
-import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
@@ -394,26 +390,14 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
 		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
-		switch ( lockMode ) {
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case PESSIMISTIC_READ:
-				return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
-		}
-		if ( lockMode.greaterThan( LockMode.READ ) ) {
-			return new UpdateLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+		return new PessimisticWriteUpdateLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		// TimesTen has no known variation of a "SELECT ... FOR UPDATE" syntax...
+		return new PessimisticReadUpdateLockingStrategy( lockable, lockMode );
 	}
 
 	@Override

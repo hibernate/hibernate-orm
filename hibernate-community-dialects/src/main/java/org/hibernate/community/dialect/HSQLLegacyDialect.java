@@ -12,6 +12,7 @@ import java.sql.Types;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.Locking;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.*;
@@ -20,11 +21,6 @@ import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.HSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.OptimisticLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
-import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
 import org.hibernate.community.dialect.pagination.LegacyHSQLLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -763,32 +759,10 @@ public class HSQLLegacyDialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * For HSQLDB 2.0, this is a copy of the base class implementation.
-	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.
-	 * <p>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT:
-				return new PessimisticForceIncrementLockingStrategy( lockable, lockMode);
-			case PESSIMISTIC_WRITE:
-				return new PessimisticWriteSelectLockingStrategy( lockable, lockMode);
-			case PESSIMISTIC_READ:
-				return new PessimisticReadSelectLockingStrategy( lockable, lockMode);
-			case OPTIMISTIC:
-				return new OptimisticLockingStrategy( lockable, lockMode);
-			case OPTIMISTIC_FORCE_INCREMENT:
-				return new OptimisticForceIncrementLockingStrategy( lockable, lockMode);
-		}
-		if ( getVersion().isBefore( 2 ) ) {
-			return new ReadUncommittedLockingStrategy( lockable, lockMode );
-		}
-		else {
-			return new SelectLockingStrategy( lockable, lockMode );
-		}
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return getVersion().isBefore( 2 )
+				? new ReadUncommittedLockingStrategy( lockable, lockMode )
+				: new SelectLockingStrategy( lockable, lockMode );
 	}
 
 	private static class ReadUncommittedLockingStrategy extends SelectLockingStrategy {

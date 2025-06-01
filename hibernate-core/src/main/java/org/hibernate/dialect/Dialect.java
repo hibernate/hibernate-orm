@@ -13,6 +13,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -43,9 +44,12 @@ import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.OptimisticForceIncrementLockingStrategy;
 import org.hibernate.dialect.lock.OptimisticLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticForceIncrementLockingStrategy;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.PessimisticReadSelectLockingStrategy;
 import org.hibernate.dialect.lock.PessimisticWriteSelectLockingStrategy;
 import org.hibernate.dialect.lock.SelectLockingStrategy;
+import org.hibernate.dialect.lock.internal.SqlAstBasedLockingStrategy;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -111,10 +115,15 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.NonLockingClauseStrategy;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.sql.ast.internal.StandardLockingClauseStrategy;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
@@ -217,6 +226,7 @@ import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
@@ -2154,10 +2164,67 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	// lock acquisition support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	public PessimisticLockStyle getPessimisticLockStyle() {
+		// most dialects support pessimistic locking via locking-clause
+		return PessimisticLockStyle.CLAUSE;
+	}
+
 	/**
-	 * Does this dialect support specifying timeouts when requesting locks.
+	 * The {@linkplain RowLockStrategy strategy} for indicating which rows
+	 * to lock as part of a {@code for update of} style clause.
+	 */
+	public RowLockStrategy getWriteRowLockStrategy() {
+		// by default, we report no support
+		return RowLockStrategy.NONE;
+	}
+
+	/**
+	 * The {@linkplain RowLockStrategy strategy} for indicating which rows
+	 * to lock as part of a {@code for share of} style clause.
+	 * <p/>
+	 * By default, simply uses {@linkplain #getWriteRowLockStrategy()}.
+	 */
+	public RowLockStrategy getReadRowLockStrategy() {
+		return getWriteRowLockStrategy();
+	}
+
+	/**
+	 * Strategy for handling {@linkplain PessimisticLockStyle#CLAUSE locking clause}
+	 * as part of {@linkplain org.hibernate.sql.ast.SqlAstTranslator}.
+	 */
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		if ( getPessimisticLockStyle() != PessimisticLockStyle.CLAUSE || lockOptions == null ) {
+			return NON_CLAUSE_STRATEGY;
+		}
+
+		final LockMode lockMode = lockOptions.getLockMode();
+		final PessimisticLockKind lockKind = PessimisticLockKind.interpret( lockMode );
+		if ( lockKind == PessimisticLockKind.NONE ) {
+			return NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+		}
+
+		final RowLockStrategy rowLockStrategy;
+		switch ( lockKind ) {
+			case SHARE -> rowLockStrategy = getReadRowLockStrategy();
+			case UPDATE -> rowLockStrategy = getWriteRowLockStrategy();
+			default -> throw new IllegalStateException( "Should never happen due to checks above" );
+		}
+
+		return buildLockingClauseStrategy( lockKind, rowLockStrategy, lockOptions.getScope(), lockOptions.getTimeOut() );
+	}
+
+	protected LockingClauseStrategy buildLockingClauseStrategy(
+			PessimisticLockKind lockKind,
+			RowLockStrategy rowLockStrategy,
+			Locking.Scope lockScope,
+			int timeout) {
+		return new StandardLockingClauseStrategy( this, lockKind, rowLockStrategy, lockScope, timeout );
+	}
+
+	/**
+	 * Whether this dialect supports specifying timeouts when requesting locks.
 	 *
-	 * @return True is this dialect supports specifying lock timeouts.
+	 * @return True if this dialect supports specifying lock timeouts.
 	 */
 	public boolean supportsLockTimeouts() {
 		return true;
@@ -2171,26 +2238,69 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param lockMode The type of lock to be acquired.
 	 * @return The appropriate locking strategy.
 	 *
-	 * @since 3.2
+	 * @since 7
 	 */
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
 		return switch (lockMode) {
-			case PESSIMISTIC_FORCE_INCREMENT ->
-					new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE ->
-					new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
-			case PESSIMISTIC_READ ->
-					new PessimisticReadSelectLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC_FORCE_INCREMENT ->
-					new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
-			case OPTIMISTIC ->
-					new OptimisticLockingStrategy( lockable, lockMode );
-			case READ ->
-					new SelectLockingStrategy( lockable, lockMode );
-			default ->
-				// WRITE, NONE are not allowed here
-					throw new IllegalArgumentException( "Unsupported lock mode" );
+			case PESSIMISTIC_FORCE_INCREMENT -> buildPessimisticForceIncrementStrategy( lockable, lockMode, lockScope );
+			case UPGRADE_NOWAIT, UPGRADE_SKIPLOCKED, PESSIMISTIC_WRITE -> buildPessimisticWriteStrategy( lockable, lockMode, lockScope );
+			case PESSIMISTIC_READ -> buildPessimisticReadStrategy( lockable, lockMode, lockScope );
+			case OPTIMISTIC_FORCE_INCREMENT -> buildOptimisticForceIncrementStrategy( lockable, lockMode );
+			case OPTIMISTIC -> buildOptimisticStrategy( lockable, lockMode );
+			case READ -> buildReadStrategy( lockable, lockMode, lockScope );
+			default -> throw new IllegalArgumentException( "Unsupported lock mode : " + lockMode );
 		};
+	}
+
+	/**
+	 * A {@link LockingStrategy} which is able to acquire a database-level
+	 * lock with the specified {@linkplain LockMode level}.
+	 *
+	 * @param lockable The persister for the entity to be locked.
+	 * @param lockMode The type of lock to be acquired.
+	 * @return The appropriate locking strategy.
+	 *
+	 * @since 3.2
+	 *
+	 * @deprecated Use {@linkplain #getLockingStrategy(EntityPersister, LockMode, Locking.Scope)} instead.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
+		return getLockingStrategy( lockable, lockMode, Locking.Scope.ROOT_ONLY );
+	}
+
+	protected LockingStrategy buildPessimisticForceIncrementStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return new PessimisticForceIncrementLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildPessimisticWriteStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		if ( lockScope == Locking.Scope.ROOT_ONLY && !lockable.hasMultipleTables() ) {
+			return new PessimisticWriteSelectLockingStrategy( lockable, lockMode );
+		}
+		else {
+			return new SqlAstBasedLockingStrategy( lockable, lockMode, lockScope );
+		}
+	}
+
+	protected LockingStrategy buildPessimisticReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		if ( lockScope == Locking.Scope.ROOT_ONLY && !lockable.hasMultipleTables() ) {
+			return new PessimisticReadSelectLockingStrategy( lockable, lockMode );
+		}
+		else {
+			return new SqlAstBasedLockingStrategy( lockable, lockMode, lockScope );
+		}
+	}
+
+	protected LockingStrategy buildOptimisticForceIncrementStrategy(EntityPersister lockable, LockMode lockMode) {
+		return new OptimisticForceIncrementLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildOptimisticStrategy(EntityPersister lockable, LockMode lockMode) {
+		return new OptimisticLockingStrategy( lockable, lockMode );
+	}
+
+	protected LockingStrategy buildReadStrategy(EntityPersister lockable, LockMode lockMode, Locking.Scope lockScope) {
+		return new SelectLockingStrategy( lockable, lockMode );
 	}
 
 	/**
@@ -2432,28 +2542,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * The {@linkplain RowLockStrategy row lock strategy} to use for write locks.
-	 */
-	public RowLockStrategy getWriteRowLockStrategy() {
-		// by default we report no support
-		return RowLockStrategy.NONE;
-	}
-
-	/**
-	 * The {@linkplain RowLockStrategy row lock strategy} to use for read locks.
-	 */
-	public RowLockStrategy getReadRowLockStrategy() {
-		return getWriteRowLockStrategy();
-	}
-
-	/**
 	 * Does this dialect support {@code FOR UPDATE} in conjunction with
 	 * outer-joined rows?
 	 *
 	 * @return True if outer-joined rows can be locked via {@code FOR UPDATE}.
 	 */
 	public boolean supportsOuterJoinForUpdate() {
-		return true;
+		return getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL;
+	}
+
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.FULL;
 	}
 
 	/**
@@ -2481,13 +2580,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
-		for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-			// seek the highest lock mode
-			final LockMode lm = entry.getValue();
-			if ( lm.greaterThan(lockMode) ) {
-				lockMode = lm;
-			}
-		}
 		lockOptions.setLockMode( lockMode );
 		return getForUpdateString( lockOptions );
 	}
@@ -4283,23 +4375,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Some dialects have trouble applying pessimistic locking depending
-	 * upon what other query options are specified (paging, ordering, etc).
-	 * This method allows these dialects to request that locking be applied
-	 * by subsequent selects.
-	 *
-	 * @return {@code true} indicates that the dialect requests that locking
-	 *                      be applied by subsequent select;
-	 *         {@code false} (the default) indicates that locking
-	 *                      should be applied to the main SQL statement.
-	 *
-	 * @since 6.0
-	 */
-	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
-		return false;
-	}
-
-	/**
 	 * Get the {@link UniqueDelegate} supported by this dialect
 	 *
 	 * @return The UniqueDelegate
@@ -4823,6 +4898,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsFromClauseInUpdate() {
 		return false;
+	}
+
+	/**
+	 * Whether this dialect supports {@code for update (of)}
+	 */
+	public boolean supportsForUpdate() {
+		return true;
 	}
 
 	/**
@@ -6208,4 +6290,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsRowValueConstructorSyntaxInInList();
 	}
 
+
+	/**
+	 * Some dialects have trouble applying pessimistic locking depending
+	 * upon what other query options are specified (paging, ordering, etc).
+	 * This method allows these dialects to request that locking be applied
+	 * by subsequent selects.
+	 *
+	 * @return {@code true} indicates that the dialect requests that locking
+	 *                      be applied by subsequent select;
+	 *         {@code false} (the default) indicates that locking
+	 *                      should be applied to the main SQL statement.
+	 *
+	 * @since 6.0
+	 */
+	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
+		return false;
+	}
 }

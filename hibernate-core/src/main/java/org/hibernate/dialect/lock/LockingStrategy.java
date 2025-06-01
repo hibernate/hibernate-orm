@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.lock;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -58,7 +59,10 @@ public interface LockingStrategy {
 	 * @throws StaleObjectStateException Indicates an inability to locate the database row as part of acquiring
 	 * the requested lock.
 	 * @throws LockingStrategyException Indicates a failure in the lock attempt
+
+	 * @deprecated Use {@link #lock(Object, Object, Object, Timeout, SharedSessionContractImplementor)}
 	 */
+	@Deprecated(since = "7.1")
 	default void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 			throws StaleObjectStateException, LockingStrategyException {
 		if ( session instanceof EventSource eventSource ) {
@@ -67,5 +71,10 @@ public interface LockingStrategy {
 		else {
 			throw new UnsupportedOperationException( "Optimistic locking strategies not supported in stateless session" );
 		}
+	}
+
+	default void lock(Object id, Object version, Object object, Timeout timeout, SharedSessionContractImplementor session)
+			throws StaleObjectStateException, LockingStrategyException {
+		lock( id, version, object, timeout.milliseconds(), session );
 	}
 }

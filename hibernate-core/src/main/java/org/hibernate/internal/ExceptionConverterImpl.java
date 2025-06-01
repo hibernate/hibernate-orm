@@ -207,7 +207,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		}
 		else if ( exception instanceof PessimisticEntityLockException lockException ) {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
+			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
 					? new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() )
 					: new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
 		}
@@ -222,7 +222,7 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		}
 		else {
 			// assume lock timeout occurred if a timeout or NO WAIT was specified
-			return lockOptions != null && lockOptions.getTimeOut() > -1
+			return lockOptions != null && lockOptions.getTimeout().milliseconds() > -1
 					? new LockTimeoutException( exception.getMessage(), exception )
 					: new PessimisticLockException( exception.getMessage(), exception );
 		}

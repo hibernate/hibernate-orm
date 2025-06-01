@@ -21,6 +21,7 @@ import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
 import org.hibernate.dialect.identity.CockroachDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
@@ -56,9 +57,11 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeReso
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
@@ -84,7 +87,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -96,6 +98,7 @@ import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.query.common.TemporalUnit.NATIVE;
+import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -897,6 +900,15 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getVersion().isBefore( 20, 1 ) ) {
+			return NON_CLAUSE_STRATEGY;
+		}
+		return super.getLockingClauseStrategy( querySpec, lockOptions );
+	}
+
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
@@ -908,23 +920,10 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		// Parent's implementation for (aliases, lockOptions) ignores aliases.
-		if ( aliases.isEmpty() ) {
-			final LockMode lockMode = lockOptions.getLockMode();
-			for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
-				// seek the highest lock mode
-				if ( entry.getValue().greaterThan( lockMode ) ) {
-					aliases = entry.getKey();
-				}
-			}
-		}
-		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
-		if (lockMode == null ) {
-			lockMode = lockOptions.getLockMode();
-		}
+		final LockMode lockMode = lockOptions.getLockMode();
 		return switch (lockMode) {
-			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeOut() );
-			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_READ -> getReadLockString( aliases, lockOptions.getTimeout() );
+			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, lockOptions.getTimeout() );
 			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString( aliases );
 			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString( aliases );
 			default -> "";
@@ -964,26 +963,6 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public String getWriteLockString(int timeout) {
-		return withTimeout( getForUpdateString(), timeout );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return withTimeout( getForUpdateString( aliases ), timeout );
-	}
-
-	@Override
-	public String getReadLockString(int timeout) {
-		return withTimeout( " for share", timeout );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		return withTimeout( " for share of " + aliases, timeout );
-	}
-
-	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
 				? getForUpdateString() + " nowait"
@@ -1012,8 +991,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override
@@ -1208,4 +1187,24 @@ public class CockroachDialect extends Dialect {
 		return false;
 	}
 
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return withTimeout( " for share", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return withTimeout( " for share of " + aliases, timeout );
+	}
 }

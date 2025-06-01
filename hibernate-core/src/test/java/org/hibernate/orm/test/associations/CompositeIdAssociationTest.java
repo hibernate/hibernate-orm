@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -22,6 +23,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
+@Exclude
 public class CompositeIdAssociationTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

@@ -5,7 +5,6 @@
 
 plugins {
     id "maven-publish"
-    id "signing"
 }
 
 // Disable Gradle module metadata publishing until we know what we want.
@@ -63,6 +62,20 @@ publishingExtension.publications.configureEach {
     }
 }
 
+publishingExtension.repositories {
+    maven {
+        name = "staging"
+        url = rootProject.layout.buildDirectory.dir("staging-deploy${File.separator}maven")
+    }
+    maven {
+        name = 'snapshots'
+        url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        // So that Gradle uses the `ORG_GRADLE_PROJECT_snapshotsPassword` / `ORG_GRADLE_PROJECT_snapshotsUsername`
+        //  env variables to read the username/password for the `snapshots` repository publishing:
+        credentials(PasswordCredentials)
+    }
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // register the "main" publication named `publishedArtifacts`
 publishingExtension.publications.register("publishedArtifacts", MavenPublication) {
@@ -71,76 +84,6 @@ publishingExtension.publications.register("publishedArtifacts", MavenPublication
         description = project.provider { project.description }
     }
 }
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Create a special local repository used for local testing of PublishToMavenRepository
-
-if ( project.hasProperty("local_pub_repo") ) {
-    // to use -
-    //      1. run `gradlew -Plocal_pub_repo publishAllPublicationsToLocalRepoRepository`
-    //      2. check ${rootProject}/target/maven-repo
-    publishingExtension.repositories {
-        maven {
-            name = "localRepo"
-            url = rootProject.layout.buildDirectory.dir("maven-repo").get().asFile.toURI()
-        }
-    }
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Signing
-
-def signingKey = resolveSigningKey()
-def signingPassphrase = resolveSigningPassphrase()
-
-var signingExtension = project.getExtensions().getByType(SigningExtension) as SigningExtension
-signingExtension.sign publishingExtension.publications.publishedArtifacts
-signingExtension.useInMemoryPgpKeys(signingKey, signingPassphrase)
-
-gradle.taskGraph.whenReady { TaskExecutionGraph graph ->
-    // are we publishing to OSSRH?
-    boolean wasPublishingRequested = false
-
-    graph.allTasks.each {task ->
-        if ( task instanceof PublishToMavenRepository ) {
-            if ( "sonatype" == task.repository.name ) {
-                wasPublishingRequested = true
-            }
-        }
-    }
-
-    if ( wasPublishingRequested ) {
-        def ossrhUser = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypeUsername" )
-        def ossrhPass = System.getenv().get( "ORG_GRADLE_PROJECT_sonatypePassword" )
-        if ( ossrhUser == null || ossrhPass == null ) {
-            throw new RuntimeException( "Cannot perform publishing to OSSRH without credentials." )
-        }
-        logger.lifecycle "Publishing {} : {} : {}", project.group, project.name, project.version
-        signingExtension.required = true
-    }
-    else if ( signingKey == null || signingPassphrase == null ) {
-        tasks.withType( Sign ).each { t-> t.enabled = false }
-    }
-}
-
-static String resolveSigningKey() {
-    var key = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY" )
-    if ( key != null ) {
-        return key
-    }
-
-    var keyFile = System.getenv().get( "SIGNING_GPG_PRIVATE_KEY_PATH" )
-    if ( keyFile != null ) {
-        return new File( keyFile ).text
-    }
-
-    return null
-}
-
-static String resolveSigningPassphrase() {
-    return System.getenv().get( "SIGNING_GPG_PASSPHRASE" )
-}
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Ancillary tasks

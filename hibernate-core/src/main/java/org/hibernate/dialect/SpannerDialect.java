@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
@@ -729,6 +730,30 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
 		throw new UnsupportedOperationException(
 				"Cloud Spanner does not support selecting for lock acquisition." );
 	}

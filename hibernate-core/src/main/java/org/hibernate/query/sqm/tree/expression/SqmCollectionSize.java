@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -24,7 +24,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 		this( pluralPath, nodeBuilder.getIntegerType(), nodeBuilder );
 	}
 
-	public SqmCollectionSize(SqmPath<?> pluralPath, SqmExpressible<Integer> sizeType, NodeBuilder nodeBuilder) {
+	public SqmCollectionSize(SqmPath<?> pluralPath, SqmBindableType<Integer> sizeType, NodeBuilder nodeBuilder) {
 		super( sizeType, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}

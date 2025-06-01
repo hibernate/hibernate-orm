@@ -5,8 +5,10 @@
 package org.hibernate.boot.model.internal;
 
 import jakarta.persistence.Access;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.boot.models.internal.ModelsHelper;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -18,7 +20,10 @@ import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.models.spi.TypeDetails.Kind;
 import org.hibernate.models.spi.TypeVariableScope;
+
+import java.util.Locale;
 
 /**
  * Retrieve all inferred data from an annotated element
@@ -88,23 +93,53 @@ public class PropertyInferredData implements PropertyData {
 					sourceModelContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails( targetName, sourceModelContext )
 			);
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
+			return new ClassTypeDetailsImpl( classDetails, Kind.CLASS );
 		}
 
-		final Target legacyTargetAnnotation = propertyMember.getDirectAnnotationUsage( Target.class );
-		if ( legacyTargetAnnotation != null ) {
-			return resolveLegacyTargetAnnotation( legacyTargetAnnotation, sourceModelContext );
+		final TargetEmbeddable targetEmbeddable = getTargetEmbeddableAnnotation( propertyMember );
+		if ( targetEmbeddable != null ) {
+			return resolveTargetEmbeddableAnnotation( targetEmbeddable, sourceModelContext );
 		}
 
 		return propertyMember.resolveRelativeType( ownerType );
 	}
 
-	private static ClassTypeDetailsImpl resolveLegacyTargetAnnotation(
-			Target legacyTargetAnnotation,
+	private static TargetEmbeddable getTargetEmbeddableAnnotation(MemberDetails memberDetails) {
+		// first we look for the annotation on the member itself
+		final TargetEmbeddable memberAnnotation = memberDetails.getDirectAnnotationUsage( TargetEmbeddable.class );
+		if ( memberAnnotation != null ) {
+			// this should only be allowed for embedded or collections-of-embeddables.
+			// 		NOTE: this is tricky to check for collections-of-embeddables as it
+			// 		would require a deep check of the collection's component type, so
+			// 		for now just assume the mapping is correct if we find @ElementCollection
+			final boolean allowed = memberDetails.hasDirectAnnotationUsage( Embedded.class )
+					|| memberDetails.hasDirectAnnotationUsage( ElementCollection.class );
+			if ( !allowed ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"@TargetEmbeddable can only be specified on properties marked with @Embedded or @ElementCollection [%s$%s]",
+								memberDetails.getDeclaringType().getName(),
+								memberDetails.getName()
+						)
+				);
+			}
+
+			return memberAnnotation;
+		}
+
+		// then, look on the member's type
+		// 		NOTE: this is not supported for collections-of-embeddables
+		// 		for the same reason stated above
+		return memberDetails.getAssociatedType().determineRawClass().getDirectAnnotationUsage( TargetEmbeddable.class );
+	}
+
+	private static ClassTypeDetailsImpl resolveTargetEmbeddableAnnotation(
+			TargetEmbeddable targetEmbeddable,
 			ModelsContext sourceModelContext) {
 		final ClassDetailsRegistry classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
-		final ClassDetails targetClassDetails = classDetailsRegistry.resolveClassDetails( legacyTargetAnnotation.value().getName() );
-		return new ClassTypeDetailsImpl( targetClassDetails, TypeDetails.Kind.CLASS );
+		final ClassDetails targetClassDetails = classDetailsRegistry.resolveClassDetails( targetEmbeddable.value().getName() );
+		return new ClassTypeDetailsImpl( targetClassDetails, Kind.CLASS );
 	}
 
 	@Override
@@ -118,12 +153,12 @@ public class PropertyInferredData implements PropertyData {
 					modelsContext.getClassDetailsRegistry(),
 					() -> new DynamicClassDetails( targetName, modelsContext )
 			);
-			return new ClassTypeDetailsImpl( classDetails, TypeDetails.Kind.CLASS );
+			return new ClassTypeDetailsImpl( classDetails, Kind.CLASS );
 		}
 
-		final Target legacyTargetAnnotation = propertyMember.getDirectAnnotationUsage( Target.class );
-		if ( legacyTargetAnnotation != null ) {
-			return resolveLegacyTargetAnnotation( legacyTargetAnnotation, modelsContext );
+		final TargetEmbeddable targetEmbeddable = getTargetEmbeddableAnnotation(propertyMember);
+		if ( targetEmbeddable != null ) {
+			return resolveTargetEmbeddableAnnotation( targetEmbeddable, modelsContext );
 		}
 
 		return propertyMember.resolveRelativeAssociatedType( ownerType );
@@ -136,9 +171,9 @@ public class PropertyInferredData implements PropertyData {
 			return buildingContext.getMetadataCollector().getClassDetailsRegistry().getClassDetails( xmlTarget.value() );
 		}
 
-		final Target legacyTarget = propertyMember.getDirectAnnotationUsage( Target.class );
-		if ( legacyTarget != null ) {
-			final String targetName = legacyTarget.value().getName();
+		final TargetEmbeddable targetEmbeddable = getTargetEmbeddableAnnotation(propertyMember);
+		if ( targetEmbeddable != null ) {
+			final String targetName = targetEmbeddable.value().getName();
 			return buildingContext.getMetadataCollector().getClassDetailsRegistry().getClassDetails( targetName );
 		}
 

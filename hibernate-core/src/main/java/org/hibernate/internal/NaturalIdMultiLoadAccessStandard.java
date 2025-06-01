@@ -6,14 +6,18 @@ package org.hibernate.internal;
 
 import java.util.List;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdMultiLoadAccess;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.persister.entity.EntityPersister;
@@ -43,6 +47,25 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	}
 
 	@Override
+	public NaturalIdMultiLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+	@Override
+	public NaturalIdMultiLoadAccess<T> with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
+	}
+
+	@Override
 	public NaturalIdMultiLoadAccess<T> with(LockOptions lockOptions) {
 		this.lockOptions = lockOptions;
 		return this;
@@ -55,7 +78,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 	}
 
 	@Override
-	public NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public NaturalIdMultiLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;

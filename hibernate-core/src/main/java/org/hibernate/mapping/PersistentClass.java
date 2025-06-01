@@ -158,14 +158,17 @@ public abstract sealed class PersistentClass
 		this.proxyInterface = null;
 	}
 
+	private Class<?> getClassForName(String className) {
+		return classForName( className, metadataBuildingContext.getBootstrapContext() );
+	}
+
 	public Class<?> getMappedClass() throws MappingException {
 		if ( className == null ) {
 			return null;
 		}
-
 		try {
 			if ( mappedClass == null ) {
-				mappedClass = classForName( className, metadataBuildingContext.getBootstrapContext() );
+				mappedClass = getClassForName( className );
 			}
 			return mappedClass;
 		}
@@ -180,7 +183,7 @@ public abstract sealed class PersistentClass
 		}
 		try {
 			if ( proxyInterface == null ) {
-				proxyInterface = classForName( proxyInterfaceName, metadataBuildingContext.getBootstrapContext() );
+				proxyInterface = getClassForName( proxyInterfaceName );
 			}
 			return proxyInterface;
 		}
@@ -538,26 +541,26 @@ public abstract sealed class PersistentClass
 	}
 
 	private Property getProperty(String propertyName, List<Property> properties) throws MappingException {
-		String root = root( propertyName );
-		for ( Property prop : properties ) {
-			if ( prop.getName().equals( root )
-					|| ( prop instanceof Backref || prop instanceof IndexBackref )
-							&& prop.getName().equals( propertyName ) ) {
-				return prop;
+		final String root = root( propertyName );
+		for ( Property property : properties ) {
+			if ( property.getName().equals( root )
+					|| ( property instanceof Backref || property instanceof IndexBackref )
+							&& property.getName().equals( propertyName ) ) {
+				return property;
 			}
 		}
 		throw new MappingException( "property [" + propertyName + "] not found on entity [" + getEntityName() + "]" );
 	}
 
 	public Property getProperty(String propertyName) throws MappingException {
-		Property identifierProperty = getIdentifierProperty();
+		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null
 				&& identifierProperty.getName().equals( root( propertyName ) ) ) {
 			return identifierProperty;
 		}
 		else {
 			List<Property> closure = getPropertyClosure();
-			Component identifierMapper = getIdentifierMapper();
+			final Component identifierMapper = getIdentifierMapper();
 			if ( identifierMapper != null ) {
 				closure = new JoinedList<>( identifierMapper.getProperties(), closure );
 			}
@@ -577,14 +580,14 @@ public abstract sealed class PersistentClass
 		if ( identifierProperty != null && identifierProperty.getName().equals( name ) ) {
 			return true;
 		}
-
-		for ( Property property : getPropertyClosure() ) {
-			if ( property.getName().equals(name) ) {
-				return true;
+		else {
+			for ( Property property : getPropertyClosure() ) {
+				if ( property.getName().equals( name ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-
-		return false;
 	}
 
 	/**
@@ -644,9 +647,9 @@ public abstract sealed class PersistentClass
 
 	private void checkPropertyDuplication() throws MappingException {
 		final HashSet<String> names = new HashSet<>();
-		for ( Property prop : getProperties() ) {
-			if ( !names.add( prop.getName() ) ) {
-				throw new MappingException( "Duplicate property mapping of " + prop.getName() + " found in " + getEntityName() );
+		for ( Property property : getProperties() ) {
+			if ( !names.add( property.getName() ) ) {
+				throw new MappingException( "Duplicate property mapping of " + property.getName() + " found in " + getEntityName() );
 			}
 		}
 	}

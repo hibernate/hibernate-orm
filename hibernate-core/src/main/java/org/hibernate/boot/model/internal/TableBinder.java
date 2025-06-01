@@ -34,6 +34,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 
 import jakarta.persistence.Index;
@@ -752,19 +753,48 @@ public class TableBinder {
 					+ referencedEntity.getEntityName() + "." + referencedPropertyName );
 		}
 		linkJoinColumnWithValueOverridingNameIfImplicit( referencedEntity, synthProp.getValue(), joinColumns, value );
-		( (SortableValue) value).sortProperties();
+		checkReferenceToUniqueKey( value, synthProp );
+		( (SortableValue) value ).sortProperties();
+	}
+
+	// This code is good but unnecessary, because BinderHelper.referencedProperty()
+	// automatically marks the referenced property unique (but is this actually good?)
+	private static void checkReferenceToUniqueKey(SimpleValue value, Property synthProp) {
+		final Table table = synthProp.getValue().getTable();
+		final List<Column> columns = synthProp.getValue().getConstraintColumns();
+		if ( columns.size() == 1 ) {
+			final Column column = columns.get( 0 );
+			assert column.isUnique();
+//			if ( !column.isUnique() ) {
+//				throw new MappingException( "Referenced column '" + column.getName()
+//											+ "' in table '" + table.getName() + "' is not unique"
+//											+ " ('@JoinColumn' must reference a unique key)" );
+//			}
+		}
+		else {
+			final UniqueKey uniqueKey = new UniqueKey( table );
+			for ( Column column : columns ) {
+				uniqueKey.addColumn( column );
+			}
+			assert table.isRedundantUniqueKey( uniqueKey );
+//			if ( !table.isRedundantUniqueKey( uniqueKey ) ) {
+//				throw new MappingException( "Referenced columns in table '" + table.getName() + "' are not unique"
+//						+ " ('@JoinColumn's must reference a unique key" );
+//			}
+		}
 	}
 
 	private static void bindImplicitColumns(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
-		final KeyValue keyValue = referencedEntity instanceof JoinedSubclass
-				? referencedEntity.getKey()
-				: referencedEntity.getIdentifier();
-		final List<Column> idColumns = keyValue.getColumns();
-		for ( int i = 0; i < idColumns.size(); i++ ) {
-			final Column column = idColumns.get(i);
+		final KeyValue keyValue =
+				referencedEntity instanceof JoinedSubclass
+						? referencedEntity.getKey()  // a joined subclass is referenced via the key of the subclass table
+						: referencedEntity.getIdentifier();
+		final List<Column> referencedKeyColumns = keyValue.getColumns();
+		for ( int i = 0; i < referencedKeyColumns.size(); i++ ) {
+			final Column column = referencedKeyColumns.get(i);
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );

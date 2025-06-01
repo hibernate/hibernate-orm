@@ -33,12 +33,24 @@ public class LockEvent extends AbstractEvent {
 
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {
 		super(source);
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+		if (lockMode == null) {
+			throw new IllegalArgumentException( "LockMode may not be null" );
+		}
 		this.object = object;
 		this.lockOptions = lockMode.toLockOptions();
 	}
 
 	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+		if (lockOptions == null) {
+			throw new IllegalArgumentException( "LockOptions may not be null" );
+		}
 		this.object = object;
 		this.lockOptions = lockOptions;
 	}

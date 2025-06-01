@@ -18,7 +18,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Emmanuel Bernard
  */
-public class ImmutableEntityEntryFactory implements EntityEntryFactory {
+@Deprecated(since = "7", forRemoval = true)
+public final class ImmutableEntityEntryFactory implements EntityEntryFactory {
 	/**
 	 * Singleton access
 	 */
@@ -39,7 +40,7 @@ public class ImmutableEntityEntryFactory implements EntityEntryFactory {
 			EntityPersister persister,
 			boolean disableVersionIncrement,
 			PersistenceContext persistenceContext) {
-		return new ImmutableEntityEntry(
+		return new EntityEntryImpl(
 				status,
 				loadedState,
 				rowId,
@@ -48,7 +49,8 @@ public class ImmutableEntityEntryFactory implements EntityEntryFactory {
 				lockMode,
 				existsInDatabase,
 				persister,
-				disableVersionIncrement
+				disableVersionIncrement,
+				persistenceContext
 		);
 	}
 }

@@ -4,11 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Represents an individual selection within a select clause.
@@ -49,6 +51,11 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	@Override
 	public SqmSelectableNode<T> getSelectableNode() {
 		return selectableNode;
+	}
+
+	@Override
+	public @Nullable JavaType<T> getNodeJavaType() {
+		return selectableNode.getNodeJavaType();
 	}
 
 	@Override

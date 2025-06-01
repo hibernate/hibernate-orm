@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.profile;
 
-import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -27,9 +27,9 @@ public class DefaultFetchProfile extends FetchProfile {
 	 * The name of an implicit fetch profile which includes all eager to-one associations.
 	 */
 	public static final String HIBERNATE_DEFAULT_PROFILE = "org.hibernate.defaultProfile";
-	private final RuntimeMetamodels metamodels;
+	private final MappingMetamodel metamodels;
 
-	public DefaultFetchProfile(RuntimeMetamodels metamodels) {
+	public DefaultFetchProfile(MappingMetamodel metamodels) {
 		super(HIBERNATE_DEFAULT_PROFILE);
 		this.metamodels = metamodels;
 	}
@@ -39,7 +39,7 @@ public class DefaultFetchProfile extends FetchProfile {
 		final int last = role.lastIndexOf('.');
 		final String entityName = role.substring( 0, last );
 		final String property = role.substring( last + 1 );
-		final EntityMappingType entity = metamodels.getEntityMappingType( entityName );
+		final EntityMappingType entity = metamodels.getEntityDescriptor( entityName );
 		if ( entity != null ) {
 			final AttributeMapping attributeMapping = entity.findAttributeMapping( property );
 			if ( attributeMapping != null && !attributeMapping.isPluralAttributeMapping() ) {
@@ -54,8 +54,7 @@ public class DefaultFetchProfile extends FetchProfile {
 
 	@Override
 	public boolean hasSubselectLoadableCollectionsEnabled(EntityPersister persister) {
-		final EntityMappingType entity = metamodels.getEntityMappingType( persister.getEntityName() );
-		final AttributeMappingsList attributeMappings = entity.getAttributeMappings();
+		final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
 		for ( int i = 0; i < attributeMappings.size(); i++ ) {
 			AttributeMapping attributeMapping = attributeMappings.get( i );
 			if ( attributeMapping.getMappedFetchOptions().getStyle() == SUBSELECT ) {

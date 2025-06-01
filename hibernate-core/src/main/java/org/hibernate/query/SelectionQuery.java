@@ -4,6 +4,29 @@
  */
 package org.hibernate.query;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
+import org.hibernate.CacheMode;
+import org.hibernate.FlushMode;
+import org.hibernate.Incubating;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.NonUniqueResultException;
+import org.hibernate.Remove;
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.UnknownProfileException;
+import org.hibernate.graph.GraphSemantic;
+
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
@@ -12,30 +35,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import org.hibernate.CacheMode;
-import org.hibernate.FlushMode;
-import org.hibernate.Incubating;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.NonUniqueResultException;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.UnknownProfileException;
-import org.hibernate.dialect.Dialect;
-
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.TemporalType;
-import org.hibernate.engine.profile.DefaultFetchProfile;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.query.restriction.Restriction;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -96,23 +95,21 @@ import org.hibernate.query.restriction.Restriction;
  * </ul>
  * <p>
  * The special built-in fetch profile named
- * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds a fetch join for
- * every {@link jakarta.persistence.FetchType#EAGER eager} {@code @ManyToOne} or
- * {@code @OneToOne} association belonging to an entity returned by the query.
+ * {@value org.hibernate.engine.profile.DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE}
+ * adds a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
+ * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
+ * returned by the query.
  * <p>
- * Finally, two alternative approaches to pagination are available:
+ * Finally, three alternative approaches to pagination are available:
  * <ol>
  * <li>
- * The operations and {@link #setOrder(List)} and {@link #setPage(Page)}, together
- * with {@link Order} and {@link Page}, provide a streamlined API for offset-based
- * pagination, at a slightly higher semantic level than the ancient but dependable
- * {@link #setFirstResult(int)} and {@link #setMaxResults(int)}.
- * <pre>
- * session.createSelectionQuery("from Book", Book.class)
- *         .setOrder(Order.desc(Book_.title))
- *         .setPage(Page.first(50))
- *         .getResultList();
- * </pre>
+ * The ancient but dependable operations {@link #setFirstResult(int)} and
+ * {@link #setMaxResults(int)} are the standard approach blessed by the JPA
+ * specification.
+ * <li>
+ * {@link org.hibernate.query.specification.SelectionSpecification SelectionSpecification}
+ * and {@link #setPage(Page)}, together with {@link Order} and {@link Page}, provide
+ * a streamlined API for offset-based pagination, at a slightly higher semantic level.
  * <li>
  * On the other hand, {@link KeyedPage} and {@link KeyedResultList}, along with
  * {@link #getKeyedResultList(KeyedPage)}, provide for <em>key-based pagination</em>,
@@ -150,8 +147,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * Returns scrollable access to the query results, using the
-	 * {@linkplain Dialect#defaultScrollMode() default scroll mode
-	 * of the SQL dialect.}
+	 * {@linkplain org.hibernate.dialect.Dialect#defaultScrollMode
+	 * default scroll mode of the SQL dialect.}
 	 *
 	 * @see #scroll(ScrollMode)
 	 */
@@ -561,7 +558,11 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * The {@link LockOptions} currently in effect for the query
+	 *
+	 * @deprecated Since {@link LockOptions} is transitioning to
+	 *             a new role as an SPI.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	LockOptions getLockOptions();
 
 	/**
@@ -593,48 +594,26 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setHibernateLockMode(LockMode lockMode);
 
 	/**
+	 * Apply a scope to any pessimistic locking applied to the query.
+	 *
+	 * @param lockScope The lock scope to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	SelectionQuery<R> setLockScope(PessimisticLockScope lockScope);
+
+	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
+	 *
+	 * @apiNote Support for alias-specific lock modes will be removed in a future version; they
+	 * were never really supported anyway, as Hibernate always used the most restrictive one it
+	 * found.  7.1 will introduce an extension to the JPA {@linkplain PessimisticLockScope}
+	 * which should be used instead, in conjunction with a {@linkplain #setHibernateLockMode lock mode}.
+	 *
+	 * @see #setLockScope
 	 */
+	@Remove
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
-
-	/**
-	 * If the result type of this query is an entity class, add one or more
-	 * {@linkplain Order rules} for ordering the query results.
-	 *
-	 * @param orderList one or more instances of {@link Order}
-	 *
-	 * @see Order
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> setOrder(List<? extends Order<? super R>> orderList);
-
-	/**
-	 * If the result type of this query is an entity class, add a
-	 * {@linkplain Order rule} for ordering the query results.
-	 *
-	 * @param order an instance of {@link Order}
-	 *
-	 * @see Order
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> setOrder(Order<? super R> order);
-
-	/**
-	 * If the result type of this query is an entity class, add a
-	 * {@linkplain Restriction rule} for restricting the query results.
-	 *
-	 * @param restriction an instance of {@link Restriction}
-	 *
-	 * @see Restriction
-	 *
-	 * @since 7.0
-	 */
-	@Incubating
-	SelectionQuery<R> addRestriction(Restriction<? super R> restriction);
 
 	/**
 	 * Specifies whether follow-on locking should be applied
@@ -658,7 +637,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
+	<P> SelectionQuery<R> setParameter(String name, P value, Type<P> type);
 
 	@Override @Deprecated
 	SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
@@ -676,7 +655,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
+	<P> SelectionQuery<R> setParameter(int position, P value, Type<P> type);
 
 	@Override @Deprecated
 	SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
@@ -694,7 +673,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<T> SelectionQuery<R> setParameter(Parameter<T> param, T value);
@@ -712,7 +691,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	SelectionQuery<R> setParameterList(String name, Object[] values);
@@ -721,7 +700,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	SelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -730,7 +709,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	SelectionQuery<R> setParameterList(int position, Object[] values);
@@ -739,7 +718,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(int position, P[] values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(int position, P[] values, Type<P> type);
 
 	@Override
 	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -748,7 +727,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -757,7 +736,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	SelectionQuery<R> setProperties(Object bean);

@@ -71,16 +71,9 @@ public class MapAttributeImpl<X, K, V>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
-		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
-		if ( nature != null ) {
-			switch ( nature ) {
-				case INDEX:
-					return keyPathSource;
-				case ELEMENT:
-					return getElementPathSource();
-			}
-		}
-		return getElementPathSource().findSubPathSource( name, includeSubtypes );
+		return CollectionPart.Nature.INDEX.getName().equals( name )
+				? keyPathSource
+				: super.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override

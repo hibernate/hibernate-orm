@@ -391,6 +391,11 @@ ul.summary-list {
     padding: 0;
 }
 
+div.block > ul {
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+}
+
 ul.block-list > li,
 ul.details-list > li,
 ul.member-list > li,

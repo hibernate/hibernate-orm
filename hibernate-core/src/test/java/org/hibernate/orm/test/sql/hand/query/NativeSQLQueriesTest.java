@@ -10,7 +10,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -37,7 +36,6 @@ import org.hibernate.orm.test.sql.hand.Speech;
 import org.hibernate.orm.test.sql.hand.TextHolder;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
-import org.hibernate.query.ResultListTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.StandardBasicTypes;
@@ -56,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.PersistenceException;
 
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertClassAssignability;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -218,18 +217,15 @@ public class NativeSQLQueriesTest {
 																"     left outer join EMPLOYMENT emp on org.orgid = emp.employer, ORGANIZATION org2" )
 							.addEntity("org", Organization.class)
 							.addJoin("emp", "org.employments")
-							.setResultListTransformer( new ResultListTransformer() {
-								@Override
-								public List transformList(List list) {
-									List<Object> result = new ArrayList<>( list.size() );
-									Map<Object, Object> distinct = new IdentityHashMap<>();
-									for ( Object entity : list ) {
-										if ( distinct.put( entity, entity ) == null ) {
-											result.add( entity );
-										}
+							.setResultListTransformer( list -> {
+								List<Object> result = new ArrayList<>( list.size() );
+								Map<Object, Object> distinct = new IdentityHashMap<>();
+								for ( Object entity : list ) {
+									if ( distinct.put( entity, entity ) == null ) {
+										result.add( entity );
 									}
-									return result;
 								}
+								return result;
 							} )
 							.list();
 					assertEquals( 2, l.size() );
@@ -305,7 +301,7 @@ public class NativeSQLQueriesTest {
 	}
 
 	@Test
-	public void testScalarValues(SessionFactoryScope scope) throws Exception {
+	public void testScalarValues(SessionFactoryScope scope) {
 		Organization ifa = new Organization( "IFA" );
 		Organization jboss = new Organization( "JBoss" );
 
@@ -338,11 +334,11 @@ public class NativeSQLQueriesTest {
 					Iterator iter = session.getNamedQuery( "orgNamesAndOrgs" ).list().iterator();
 					Object[] o = ( Object[] ) iter.next();
 					assertEquals( 2, o.length, "expecting 2 values" );
-					assertEquals( o[0], "IFA" );
-					assertEquals( ( ( Organization ) o[1] ).getName(), "IFA" );
+					assertEquals( "IFA", o[0] );
+					assertEquals( "IFA", ( ( Organization ) o[1] ).getName() );
 					o = ( Object[] ) iter.next();
-					assertEquals( o[0], "JBoss" );
-					assertEquals( ( ( Organization ) o[1] ).getName(), "JBoss" );
+					assertEquals( "JBoss", o[0] );
+					assertEquals( "JBoss", ( ( Organization ) o[1] ).getName() );
 				}
 		);
 
@@ -354,13 +350,13 @@ public class NativeSQLQueriesTest {
 					assertEquals( 2, row.length, "expecting 2 values" );
 					assertEquals( Organization.class, row[0].getClass(), "expecting non-scalar result first" );
 					assertEquals( String.class, row[1].getClass(), "expecting scalar result second" );
-					assertEquals( ( ( Organization ) row[0] ).getName(), "IFA" );
-					assertEquals( row[1], "IFA" );
+					assertEquals( "IFA", ( ( Organization ) row[0] ).getName() );
+					assertEquals( "IFA", row[1] );
 					row = ( Object[] ) iter.next();
 					assertEquals( Organization.class, row[0].getClass(), "expecting non-scalar result first" );
 					assertEquals(  String.class, row[1].getClass(), "expecting scalar result second" );
-					assertEquals( ( ( Organization ) row[0] ).getName(), "JBoss" );
-					assertEquals( row[1], "JBoss" );
+					assertEquals( "JBoss", ( ( Organization ) row[0] ).getName() );
+					assertEquals( "JBoss", row[1] );
 					assertFalse( iter.hasNext() );
 				}
 		);
@@ -369,10 +365,10 @@ public class NativeSQLQueriesTest {
 				session -> {
 					Iterator iter = session.getNamedQuery( "orgIdsAndOrgNames" ).list().iterator();
 					Object[] o = ( Object[] ) iter.next();
-					assertEquals( o[1], "IFA" );
+					assertEquals( "IFA", o[1] );
 					assertEquals( o[0], idIfa );
 					o = ( Object[] ) iter.next();
-					assertEquals( o[1], "JBoss" );
+					assertEquals( "JBoss", o[1] );
 					assertEquals( o[0], idJBoss );
 
 					session.remove( ifa );
@@ -598,7 +594,7 @@ public class NativeSQLQueriesTest {
 					Query queryWithCollection = session.getNamedQuery("organizationEmploymentsExplicitAliases");
 					queryWithCollection.setParameter("id",  jboss.getId() );
 					list = queryWithCollection.list();
-					assertEquals(list.size(),1);
+					assertEquals( 1, list.size() );
 
 					session.clear();
 
@@ -662,9 +658,9 @@ public class NativeSQLQueriesTest {
 					Object[] result = (Object[]) session.getNamedQuery( "spaceship" ).uniqueResult();
 					assertEquals( 3, result.length, "expecting 3 result values" );
 					enterprise = ( SpaceShip ) result[0];
-					assertTrue(50d == enterprise.getSpeed() );
-					assertTrue( 450d == extractDoubleValue( result[1] ) );
-					assertTrue( 4500d == extractDoubleValue( result[2] ) );
+					assertEquals( 50d, enterprise.getSpeed() );
+					assertEquals( 450d, extractDoubleValue( result[1] ) );
+					assertEquals( 4500d, extractDoubleValue( result[2] ) );
 					session.remove( enterprise );
 				}
 		);
@@ -754,14 +750,14 @@ public class NativeSQLQueriesTest {
 				session -> {
 					Transaction t = session.beginTransaction();
 					Speech speech = new Speech();
-					speech.setLength( new Double( 23d ) );
+					speech.setLength( 23d );
 					speech.setName( "Mine" );
 					session.persist( speech );
 					session.flush();
 					session.clear();
 
 					List l = session.createNativeQuery( "select name, id, flength, name as scalar_name from Speech", "speech" ).list();
-					assertEquals( l.size(), 1 );
+					assertEquals( 1, l.size() );
 
 					t.rollback();
 				}
@@ -776,7 +772,7 @@ public class NativeSQLQueriesTest {
 			return ( ( BigDecimal ) value ).doubleValue();
 		}
 		else {
-			return Double.valueOf( value.toString() ).doubleValue();
+			return Double.parseDouble( value.toString() );
 		}
 	}
 
@@ -900,7 +896,7 @@ public class NativeSQLQueriesTest {
 							throw new RuntimeException( e );
 						}
 					}
-					assertTrue( Arrays.equals( photo, photoRead ) );
+					assertArrayEquals( photo, photoRead );
 					session.remove( holder );
 				}
 		);
@@ -913,7 +909,7 @@ public class NativeSQLQueriesTest {
 				session -> {
 					NativeQuery query = session.createNativeQuery( "SELECT @row \\:= 1" );
 					List list = query.list();
-					assertTrue( list.get( 0 ).toString().equals( "1" ) );
+					assertEquals( "1", list.get( 0 ).toString() );
 				}
 		);
 	}

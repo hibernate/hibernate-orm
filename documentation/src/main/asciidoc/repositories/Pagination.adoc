@@ -65,8 +65,8 @@ But since Hibernate Data Repositories already validates the content of the `@Ord
 
 Dynamic sorting criteria are expressed using the types `Sort` and `Order`:
 
-- an instance of `Sort` represents a single criterion for sorting query results, and
-- an instance of `Order` packages multiple ``Sort``s together.
+- an instance of https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/sort[`Sort`] represents a single criterion for sorting query results, and
+- an instance of https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/order[`Order`] packages multiple ``Sort``ing criteria together.
 
 A query method may accept an instance of `Sort`.
 
@@ -107,6 +107,18 @@ var books =
 
 Dynamic sorting criteria may be combined with static criteria.
 
+[TIP]
+====
+If the entity has entity supertypes, use a lower bounded wildcard in the repository method declaration, for example:
+[source,java]
+----
+@Find
+List<Book> books(@Pattern String title, Year yearPublished,
+                 Order<? super Book> order);
+----
+This lets the caller sort by fields of the supertype.
+====
+
 [source,java]
 ----
 @Find
@@ -120,13 +132,13 @@ We're not convinced this is very useful in practice.
 [[limits]]
 === Limits
 
-A `Limit` is the simplest way to express a subrange of query results.
+A https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/limit[`Limit`] is the simplest way to express a subrange of query results.
 It specifies:
 
 - `maxResults`, the maximum number of results to be returned from the database server to the client, and,
-- optionally, `startAt`, an offset from the very first result.
+- optionally, `startAt`, the position of the first result to be returned to the client.
 
-These values map directly the familiar `setMaxResults()` and `setFirstResults()` of the Jakarta Persistence `Query` interface.
+These values map directly to the familiar `setMaxResults()` and `setFirstResult()` of the Jakarta Persistence `Query` interface.
 
 [source,java]
 ----
@@ -142,12 +154,15 @@ var books =
                       Limit.of(MAX_RESULTS));
 ----
 
+[CAUTION]
+Whereas `Query.setFirstResult()` is an _offset_ of the first result to be returned, with `setFirstResult(0)` meaning "no offset", `Limit.startAt` numbers results from one, with `Limit.range(1, n)` meaning "at most _n_ results, starting from the first result".
+
 A more sophisticated approach is provided by `PageRequest`.
 
 [[offset-based-pagination]]
 === Offset-based pagination
 
-A `PageRequest` is superficially similar to a `Limit`, except that it's specified in terms of:
+A https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/page/pagerequest[`PageRequest`] is superficially similar to a `Limit`, except that it's specified in terms of:
 
 - a page `size`, and
 - a numbered `page`.
@@ -176,7 +191,7 @@ The easiest way to be sure that you have a well-defined total order is to specif
 For this reason, we specified `@OrderBy("isbn")` in the previous example.
 ====
 
-However, a repository method which accepts a `PageRequest` may return a `Page` instead of a `List`, making it easier to implement pagination.
+However, a repository method which accepts a `PageRequest` may return a https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/page/page[`Page`] of results instead of a `List`, making it easier to implement pagination.
 
 [source,java]
 ----
@@ -238,7 +253,7 @@ For key-based pagination, it's _essential_ that the query has a total order.
 ====
 
 From our point of view as users of Jakarta Data, key-based pagination works almost exactly like offset-based pagination.
-The difference is that we must declare our repository method to return `CursoredPage`.
+The difference is that we must declare our repository method to return https://jakarta.ee/specifications/data/1.0/apidocs/jakarta.data/jakarta/data/page/cursoredpage[`CursoredPage`].
 
 [source,java]
 ----

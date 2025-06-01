@@ -13,7 +13,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * Contract to build {@link EntityEntry}
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated No longer used
  */
+@Deprecated(since = "7", forRemoval = true)
 public interface EntityEntryFactory extends Serializable {
 
 	/**

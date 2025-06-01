@@ -41,7 +41,7 @@ public class HHH14230 {
 					.flatMap( namespace -> namespace.getTables().stream() )
 					.filter( t -> t.getName().equals( TABLE_NAME ) ).findFirst().orElse( null );
 			assertNotNull( table );
-			assertEquals( 1, table.getForeignKeys().size() );
+			assertEquals( 1, table.getForeignKeyCollection().size() );
 
 			// ClassCastException before HHH-14230
 			assertTrue( table.getForeignKeys().keySet().iterator().next().toString().contains( JOIN_COLUMN_NAME ) );

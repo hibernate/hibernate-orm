@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.model.naming;
 
+import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature;
+
 /**
  * Implementation of the ImplicitNamingStrategy contract which conforms to the
  * naming rules initially implemented by Hibernate for JPA 1.0, prior to many
@@ -23,27 +25,22 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 
 	@Override
 	public Identifier determineCollectionTableName(ImplicitCollectionTableNameSource source) {
-		Identifier identifier = toIdentifier(
-				source.getOwningPhysicalTableName().getText() + "_" + transformAttributePath( source.getOwningAttributePath() ),
+		final Identifier owningPhysicalTableName = source.getOwningPhysicalTableName();
+		final Identifier identifier = toIdentifier(
+				owningPhysicalTableName.getText()
+				+ "_" + transformAttributePath( source.getOwningAttributePath() ),
 				source.getBuildingContext()
 		);
-		if ( source.getOwningPhysicalTableName().isQuoted() ) {
-			identifier = Identifier.quote( identifier );
-		}
-		return identifier;
+		return owningPhysicalTableName.isQuoted() ? Identifier.quote( identifier ) : identifier;
 	}
 
 	@Override
 	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
 		final String ownerPortion = source.getOwningPhysicalTableName();
-		final String ownedPortion;
-		if ( source.getNonOwningPhysicalTableName() != null ) {
-			ownedPortion = source.getNonOwningPhysicalTableName();
-		}
-		else {
-			ownedPortion = transformAttributePath( source.getAssociationOwningAttributePath() );
-		}
-
+		final String ownedPortion =
+				source.getNonOwningPhysicalTableName() == null
+						? transformAttributePath( source.getAssociationOwningAttributePath() )
+						: source.getNonOwningPhysicalTableName();
 		return toIdentifier( ownerPortion + "_" + ownedPortion, source.getBuildingContext() );
 	}
 
@@ -54,10 +51,8 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 		//
 		// The spec-compliant one implements the clarified {EntityName}_{ReferencedColumnName}
 		// naming.  Here we implement the older {TableName}_{ReferencedColumnName} naming
-		final String name;
-
-//		if ( source.getNature() == ImplicitJoinColumnNameSource.Nature.ENTITY
-//				&& source.getAttributePath() != null ) {
+//		final String name;
+//		if ( source.getNature() == Nature.ENTITY && source.getAttributePath() != null ) {
 //			// many-to-one /  one-to-one
 //			//
 //			// legacy naming used the attribute name here, following suit with legacy hbm naming
@@ -65,19 +60,12 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 //			// NOTE : attribute path being null here would be an error, so for now don't bother checking
 //			name = transformAttributePath( source.getAttributePath() );
 //		}
-//		else if ( source.getNature() == ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION
-		if ( source.getNature() == ImplicitJoinColumnNameSource.Nature.ELEMENT_COLLECTION
-				|| source.getAttributePath() == null ) {
-			name = source.getReferencedTableName().getText()
-					+ '_'
-					+ source.getReferencedColumnName().getText();
-		}
-		else {
-			name = transformAttributePath( source.getAttributePath() )
-					+ '_'
-					+ source.getReferencedColumnName().getText();
-		}
-
+//		else if ( source.getNature() == Nature.ELEMENT_COLLECTION
+		final String qualifier =
+				source.getNature() == Nature.ELEMENT_COLLECTION || source.getAttributePath() == null
+						? source.getReferencedTableName().getText()
+						: transformAttributePath( source.getAttributePath() );
+		final String name = qualifier + '_' + source.getReferencedColumnName().getText();
 		return toIdentifier( name, source.getBuildingContext() );
 	}
 }

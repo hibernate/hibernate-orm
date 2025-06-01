@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.HibernateException;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 

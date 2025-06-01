@@ -299,62 +299,46 @@ This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifier
 Embeddable types that are used as collection entries, map keys or entity type identifiers cannot include their own collection mappings.
 ====
 
+
 [[embeddable-Target]]
-==== `@Target` mapping
+==== `@TargetEmbeddable` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
-The
-{jpaJavadocUrlPrefix}ManyToOne.html[`@ManyToOne`],
-{jpaJavadocUrlPrefix}OneToOne.html[`@OneToOne`],
-{jpaJavadocUrlPrefix}OneToMany.html[`@OneToMany`], and
-{jpaJavadocUrlPrefix}ManyToMany.html[`@ManyToMany`]
-feature a {jpaJavadocUrlPrefix}ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TargetEmbeddable.html[`@TargetEmbeddable`] annotation is used to specify the implementation class of an embeddable-valued mapping when the declared type is a non-concrete type (interface, etc).
 
-The {jpaJavadocUrlPrefix}ElementCollection.html[`@ElementCollection`] association has a {jpaJavadocUrlPrefix}ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
-
-However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
+As an example, consider an `@Embedded` attribute (`City.coordinates`) whose declared type (`Coordinates`) is an interface.  However, Hibernate needs to know about the concrete type to use, which is `GPS` in this case.  The `@TargetEmbeddable` annotation is used to provide this information.
 
 [[embeddable-Target-example]]
-.`@Target` mapping usage
+.Embedded mapping example
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-example]
+include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embeddable-Target-example]
 ----
 ====
 
-The `coordinates` embeddable type is mapped as the `Coordinates` interface.
-However, Hibernate needs to know the actual implementation type, which is `GPS` in this case,
-hence the `@Target` annotation is used to provide this information.
+The mapping works just like any embeddable-valued mapping at this point, with Hibernate using `GPS` "under the covers":
 
-Assuming we have persisted the following `City` entity:
-
-[[embeddable-Target-persist-example]]
-.`@Target` persist example
-====
-[source, java, indent=0]
-----
-include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-persist-example]
-----
-====
-
-When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
 
 [[embeddable-Target-fetching-example]]
-.`@Target` fetching example
+.Usage example
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-fetching-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/embeddable/embeddable-Target-fetching-example.sql[]
+include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embeddable-Target-fetching-example]
 ----
 ====
 
-Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.
+For `@Embedded` and `@EmbeddedId` cases, `@TargetEmbeddable` may be specified on the member's declared type instead of the member itself:
+
+[[embeddable-Target-example2]]
+.Interface mapping example
+====
+[source, java, indent=0]
+----
+include::{example-dir-emeddable}/TargetEmbeddableOnInterfaceTest.java[tags=embeddable-Target-example2]
+----
+====
+
 
 [[embeddable-Parent]]
 ==== `@Parent` mapping

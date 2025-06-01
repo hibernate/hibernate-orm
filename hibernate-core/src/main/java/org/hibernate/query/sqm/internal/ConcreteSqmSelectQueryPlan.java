@@ -19,7 +19,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -33,6 +32,7 @@ import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -66,9 +66,9 @@ import static org.hibernate.query.sqm.internal.SqmUtil.generateJdbcParamsXref;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 
 /**
- * Standard Hibernate implementation of SelectQueryPlan for SQM-backed
- * {@link Query} implementations, which means
- * HQL/JPQL or {@link jakarta.persistence.criteria.CriteriaQuery}
+ * Standard implementation of {@link SelectQueryPlan} for SQM-backed
+ * implementations of {@link org.hibernate.query.Query}, that is, for
+ * HQL/JPQL or for {@link jakarta.persistence.criteria.CriteriaQuery}.
  *
  * @author Steve Ebersole
  */
@@ -76,7 +76,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement<?> sqm;
 	private final DomainParameterXref domainParameterXref;
 	private final RowTransformer<R> rowTransformer;
-	private final SqmInterpreter<Object, ResultsConsumer<?, R>> executeQueryInterpreter;
+	private final SqmInterpreter<?, ? extends ResultsConsumer<?, R>> executeQueryInterpreter;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
 
@@ -247,7 +247,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					char.class, Character.class
 			);
 
-	@SuppressWarnings("unchecked")
+	/**
+	 * If the result type of the query is {@link Tuple}, {@link Map}, {@link List},
+	 * or any record or class type with an appropriate constructor, then we attempt
+	 * to repackage the result tuple as an instance of the result type using an
+	 * appropriate {@link RowTransformer}.
+	 *
+	 * @param resultClass The requested result type of the query
+	 * @return A {@link RowTransformer} responsible for repackaging the result type
+	 */
 	protected static <T> RowTransformer<T> determineRowTransformer(
 			SqmSelectStatement<?> sqm,
 			Class<T> resultClass,
@@ -260,105 +268,120 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			return RowTransformerStandardImpl.instance();
 		}
 		else {
-			final Class<T> resultType = (Class<T>)
-					WRAPPERS.getOrDefault( resultClass, resultClass );
-			final List<SqmSelection<?>> selections = selections( sqm );
+			final var selections = selections( sqm );
 			if ( selections == null ) {
-				throw new AssertionFailure("No selections");
+				throw new AssertionFailure( "No selections" );
 			}
-			switch ( selections.size() ) {
-				case 0:
-					throw new AssertionFailure("No selections");
-				case 1:
-					final SqmSelection<?> selection = selections.get(0);
-					if ( isSelectionAssignableToResultType( selection, resultType ) ) {
-						return RowTransformerSingularReturnImpl.instance();
-					}
-					else if ( resultType.isArray() ) {
-						return (RowTransformer<T>) RowTransformerArrayImpl.instance();
-					}
-					else if ( List.class.equals( resultType ) ) {
-						return (RowTransformer<T>) RowTransformerListImpl.instance();
-					}
-					else if ( Tuple.class.equals( resultType ) ) {
-						return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-					}
-					else if ( Map.class.equals( resultType ) ) {
-						return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
-					}
-					else if ( isClass( resultType ) ) {
-						try {
-							return new RowTransformerConstructorImpl<>(
-									resultType,
-									tupleMetadata,
-									sqm.nodeBuilder().getTypeConfiguration()
-							);
-						}
-						catch (InstantiationException ie) {
-							return new RowTransformerCheckingImpl<>( resultType );
-						}
-					}
-					else {
-						return new RowTransformerCheckingImpl<>( resultType );
-					}
-				default:
-					if ( resultType.isArray() ) {
-						return (RowTransformer<T>) RowTransformerArrayImpl.instance();
-					}
-					else if ( List.class.equals( resultType ) ) {
-						return (RowTransformer<T>) RowTransformerListImpl.instance();
-					}
-					else if ( Tuple.class.equals( resultType ) ) {
-						return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-					}
-					else if ( Map.class.equals( resultType ) ) {
-						return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
-					}
-					else if ( isClass( resultType ) ) {
-						return new RowTransformerConstructorImpl<>(
-								resultType,
-								tupleMetadata,
-								sqm.nodeBuilder().getTypeConfiguration()
-						);
-					}
-					else {
-						throw new QueryTypeMismatchException( "Result type '" + resultType.getSimpleName()
-								+ "' cannot be used to package the selected expressions" );
-					}
+			else {
+				final Class<T> resultType = primitiveToWrapper( resultClass );
+				return switch ( selections.size() ) {
+					case 0 -> throw new AssertionFailure( "No selections" );
+					case 1 -> singleItemRowTransformer( sqm, tupleMetadata, selections.get( 0 ), resultType );
+					default -> multipleItemRowTransformer( sqm, tupleMetadata, resultType );
+				};
 			}
+		}
+	}
+
+	/**
+	 * We tolerate the use of primitive query result types, for example,
+	 * {@code long.class} instead of {@code Long.class}. Note that this
+	 * has no semantics: we don't attempt to enforce that the query
+	 * result is non-null if it is primitive.
+	 */
+	@SuppressWarnings("unchecked")
+	private static <T> Class<T> primitiveToWrapper(Class<T> resultClass) {
+		// this cast, which looks like complete nonsense, is perfectly correct,
+		// since Java assigns the type Class<Long> to te expression long.class
+		// even though the resulting class object is distinct from Long.class
+		return (Class<T>) WRAPPERS.getOrDefault( resultClass, resultClass );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> RowTransformer<T> multipleItemRowTransformer
+			(SqmSelectStatement<?> sqm, TupleMetadata tupleMetadata, Class<T> resultType) {
+		if ( resultType.isArray() ) {
+			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
+		}
+		else if ( List.class.equals( resultType ) ) {
+			return (RowTransformer<T>) RowTransformerListImpl.instance();
+		}
+		else if ( Tuple.class.equals( resultType ) ) {
+			return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+		}
+		else if ( Map.class.equals( resultType ) ) {
+			return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+		}
+		else if ( isClass( resultType ) ) {
+			return new RowTransformerConstructorImpl<>( resultType, tupleMetadata,
+					sqm.nodeBuilder().getTypeConfiguration() );
+		}
+		else {
+			throw new QueryTypeMismatchException( "Result type '" + resultType.getSimpleName()
+												+ "' cannot be used to package the selected expressions" );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> RowTransformer<T> singleItemRowTransformer
+			(SqmSelectStatement<?> sqm, TupleMetadata tupleMetadata, SqmSelection<?> selection, Class<T> resultType) {
+		if ( isSelectionAssignableToResultType( selection, resultType ) ) {
+			return RowTransformerSingularReturnImpl.instance();
+		}
+		else if ( resultType.isArray() ) {
+			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
+		}
+		else if ( List.class.equals( resultType ) ) {
+			return (RowTransformer<T>) RowTransformerListImpl.instance();
+		}
+		else if ( Tuple.class.equals( resultType ) ) {
+			return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+		}
+		else if ( Map.class.equals( resultType ) ) {
+			return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+		}
+		else if ( isClass( resultType ) ) {
+			try {
+				return new RowTransformerConstructorImpl<>( resultType, tupleMetadata,
+						sqm.nodeBuilder().getTypeConfiguration() );
+			}
+			catch (InstantiationException ie) {
+				return new RowTransformerCheckingImpl<>( resultType );
+			}
+		}
+		else {
+			return new RowTransformerCheckingImpl<>( resultType );
 		}
 	}
 
 	private static <T> RowTransformer<T> makeRowTransformerTupleTransformerAdapter(
 			SqmSelectStatement<?> sqm,
 			QueryOptions queryOptions) {
+		@SuppressWarnings("unchecked")
+		final TupleTransformer<T> tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
+		return new RowTransformerTupleTransformerAdapter<>( adapterAliases( sqm ), tupleTransformer );
+	}
+
+	private static String[] adapterAliases(SqmSelectStatement<?> sqm) {
 		final List<String> aliases = new ArrayList<>();
 		for ( SqmSelection<?> sqmSelection : sqm.getQuerySpec().getSelectClause().getSelections() ) {
 			// The row a tuple transformer gets to see only contains 1 element for a dynamic instantiation
-			if ( sqmSelection.getSelectableNode() instanceof SqmDynamicInstantiation<?> ) {
+			final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
+			if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
 				aliases.add( sqmSelection.getAlias() );
 			}
 			else {
-				sqmSelection.getSelectableNode().visitSubSelectableNodes(
-						subSelection -> aliases.add( subSelection.getAlias() )
-				);
+				selectableNode.visitSubSelectableNodes( subSelection -> aliases.add( subSelection.getAlias() ) );
 			}
 		}
-
-
-		@SuppressWarnings("unchecked")
-		TupleTransformer<T> tupleTransformer = (TupleTransformer<T>) queryOptions.getTupleTransformer();
-		return new RowTransformerTupleTransformerAdapter<>( toStringArray( aliases ), tupleTransformer );
+		return toStringArray( aliases );
 	}
 
 	@Override
 	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
-		//noinspection unchecked,rawtypes
-		return withCacheableSqmInterpretation(
-				executionContext,
-				resultsConsumer,
-				(SqmInterpreter<T, ResultsConsumer<T, R>>) (SqmInterpreter) executeQueryInterpreter
-		);
+		@SuppressWarnings("unchecked") //TODO: check the return type
+		var interpreter = (SqmInterpreter<T, ResultsConsumer<T, R>>) executeQueryInterpreter;
+		return withCacheableSqmInterpretation( executionContext, resultsConsumer, interpreter );
 	}
 
 	@Override

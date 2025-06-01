@@ -8,11 +8,12 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.boot.models.annotations.spi.AttributeMarker;
 import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class ManyToAnyAnnotation implements ManyToAny {
+public class ManyToAnyAnnotation implements ManyToAny, AttributeMarker, AttributeMarker.Fetchable {
 	private jakarta.persistence.FetchType fetch;
 
 	/**

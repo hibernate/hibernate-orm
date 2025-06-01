@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+  <package>org.hibernate.orm.test.mapping.fetch.subselect</package>
+  <access>FIELD</access>
+
+  <entity class="Name" metadata-complete="true">
+    <table name="t_names"/>
+    <attributes>
+      <id name="id"/>
+      <basic name="name"/>
+      <basic name="nameLength">
+        <formula>(select len(c_name) from t_names where id = t_names.id)</formula>
+      </basic>
+      <one-to-many name="values" target-entity="Value" mapped-by="name" fetch="LAZY" fetch-mode="SUBSELECT"/>
+    </attributes>
+  </entity>
+
+</entity-mappings>

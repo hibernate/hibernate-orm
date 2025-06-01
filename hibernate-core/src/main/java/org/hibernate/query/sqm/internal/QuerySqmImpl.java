@@ -11,7 +11,11 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import jakarta.persistence.metamodel.Type;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -32,9 +36,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryFlushMode;
@@ -47,7 +49,6 @@ import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
-import org.hibernate.query.restriction.Restriction;
 import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -59,8 +60,8 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -85,7 +86,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -107,6 +107,7 @@ import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionF
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
+import static org.hibernate.query.sqm.internal.SqmUtil.validateCriteriaQuery;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
 
 /**
@@ -245,6 +246,14 @@ public class QuerySqmImpl<R>
 				bindCriteriaParameter( wrapper );
 			}
 		}
+
+		validateQuery( expectedResultType, sqm, hql );
+
+		resultType = expectedResultType;
+		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
+	}
+
+	private static <R> void validateQuery(Class<R> expectedResultType, SqmStatement<R> sqm, String hql) {
 		if ( sqm instanceof SqmSelectStatement<R> selectStatement ) {
 			final SqmQueryPart<R> queryPart = selectStatement.getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
@@ -258,9 +267,6 @@ public class QuerySqmImpl<R>
 			}
 			update.validate( hql );
 		}
-
-		resultType = expectedResultType;
-		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
 	}
 
 	@Override
@@ -500,9 +506,10 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public int executeUpdate() {
+		//TODO: refactor copy/paste of AbstractQuery.executeUpdate()
 		verifyUpdate();
-		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
+		getSession().checkTransactionNeededForUpdateOperation( "No active transaction for update or delete query" );
+		final var fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -513,7 +520,7 @@ public class QuerySqmImpl<R>
 			throw new IllegalStateException( e );
 		}
 		catch (HibernateException e) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 		finally {
 			afterQueryHandlingFetchProfiles( success, fetchProfiles );
@@ -700,7 +707,7 @@ public class QuerySqmImpl<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().overlay( lockOptions );
@@ -776,20 +783,16 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Query<R> setOrder(Order<? super R> order) {
-		super.setOrder(order);
+	public SqmQueryImplementor<R> setLockScope(PessimisticLockScope lockScope) {
+		getSession().checkOpen( false );
+		getQueryOptions().getLockOptions().setLockScope( lockScope );
 		return this;
 	}
 
 	@Override
-	public Query<R> addRestriction(Restriction<? super R> restriction) {
-		super.addRestriction( restriction );
-		return this;
-	}
-
-	@Override
-	public Query<R> setOrder(List<? extends Order<? super R>> orders) {
-		super.setOrder(orders);
+	public SqmQueryImplementor<R> setTimeout(Timeout timeout) {
+		getSession().checkOpen( false );
+		getQueryOptions().getLockOptions().setTimeOut( timeout.milliseconds() );
 		return this;
 	}
 
@@ -1089,7 +1092,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
@@ -1113,7 +1116,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
@@ -1137,7 +1140,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -1197,7 +1200,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -1215,7 +1218,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -1233,7 +1236,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -1251,7 +1254,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -1269,7 +1272,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -1287,7 +1290,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+	public <P> SqmQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}

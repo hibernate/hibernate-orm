@@ -31,6 +31,8 @@ public class GetMultipleFromCacheTest {
 			assertEquals("hello earth",all.get(1).message);
 			assertNull(all.get(2));
 		});
+		assertEquals( 0,
+				scope.getSessionFactory().getStatistics().getSecondLevelCacheHitCount() );
 		scope.getSessionFactory().getStatistics().clear();
 		scope.inStatelessTransaction(s-> {
 			List<Record> all = s.getMultiple(Record.class, List.of(123L, 2L, 456L));

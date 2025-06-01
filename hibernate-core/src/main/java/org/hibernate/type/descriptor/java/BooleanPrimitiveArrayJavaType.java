@@ -37,6 +37,11 @@ public class BooleanPrimitiveArrayJavaType extends AbstractArrayJavaType<boolean
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof boolean[];
+	}
+
+	@Override
 	public String extractLoggableRepresentation(boolean[] value) {
 		return value == null ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}

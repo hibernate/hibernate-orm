@@ -4,14 +4,15 @@
  */
 package org.hibernate.orm.test.mapping.fetch.subselect;
 
-import java.util.List;
-
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
-
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,10 +21,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,16 +31,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
 		settings = {
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" )
 		}
 )
-@DomainModel(
-		xmlMappings = "/mappings/subselectfetch/ParentChild.hbm.xml"
-)
+@DomainModel(xmlMappings = "/mappings/subselectfetch/parent-child.xml")
 @SessionFactory( useCollectingStatementInspector = true )
+@NotImplementedYet(reason = "SUBSELECT fetch defined in mapping.xml not working - https://hibernate.atlassian.net/browse/HHH-19316")
 public class SubselectFetchTest {
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
@@ -281,24 +279,48 @@ public class SubselectFetchTest {
 	}
 
 	@Test
-	public void testManyToManyCriteriaJoin(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
-					CriteriaQuery<Parent> criteria = criteriaBuilder.createQuery( Parent.class );
-					Root<Parent> root = criteria.from( Parent.class );
-					root.join( "moreChildren", JoinType.INNER )
-							.join( "friends", JoinType.INNER );
-					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
+	void testCriteria(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlCollector = scope.getCollectingStatementInspector();
+		sqlCollector.clear();
+		scope.inTransaction( (session) -> {
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			CriteriaQuery<Parent> criteria = criteriaBuilder.createQuery( Parent.class );
+			Root<Parent> root = criteria.from( Parent.class );
+			criteria.where( criteriaBuilder.isNotNull( root.get( "name" ) ) );
+			criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
 
-					s.createQuery( criteria ).list();
+			final List<Parent> results = session.createQuery( criteria ).list();
+			assertThat( results ).hasSize( 2 );
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 
-					criteria = criteriaBuilder.createQuery( Parent.class );
-					root = criteria.from( Parent.class );
-					root.fetch( "moreChildren", JoinType.LEFT ).fetch( "friends", JoinType.LEFT );
-					criteria.orderBy( criteriaBuilder.desc( root.get( "name" ) ) );
+			sqlCollector.clear();
+			boolean firstPass = true;
+			for ( Parent result : results ) {
+				if ( firstPass ) {
+					firstPass = false;
+
+					assertThat( Hibernate.isInitialized( result.getChildren() ) ).isFalse();
+					assertThat( Hibernate.isInitialized( result.getMoreChildren() ) ).isFalse();
+
+					// trigger initialization
+					result.getChildren().size();
+					result.getMoreChildren().size();
+
+					assertThat( Hibernate.isInitialized( result.getChildren() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( result.getMoreChildren() ) ).isTrue();
+
+					// make sure the fetch happened by subselect
+					assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
+					assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( ".name is not null" );
+					assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( ".name is not null" );
 				}
-		);
+				else {
+					// the subselect fetch triggered from first-pass should have initialized all
+					assertThat( Hibernate.isInitialized( result.getChildren() ) ).isTrue();
+					assertThat( Hibernate.isInitialized( result.getMoreChildren() ) ).isTrue();
+				}
+			}
+		} );
 	}
 
 	@Test

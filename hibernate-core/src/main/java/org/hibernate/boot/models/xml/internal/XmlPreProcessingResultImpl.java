@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.models.xml.spi.XmlDocument;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.internal.util.StringHelper;
 
@@ -17,7 +19,7 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 	private final PersistenceUnitMetadataImpl persistenceUnitMetadata;
-	private final List<JaxbEntityMappingsImpl> documents = new ArrayList<>();
+	private final List<XmlDocument> documents = new ArrayList<>();
 	private final List<String> managedClasses = new ArrayList<>();
 	private final List<String> managedNames = new ArrayList<>();
 
@@ -36,13 +38,12 @@ public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 		this( new PersistenceUnitMetadataImpl() );
 	}
 
-	@Override
 	public PersistenceUnitMetadataImpl getPersistenceUnitMetadata() {
 		return persistenceUnitMetadata;
 	}
 
 	@Override
-	public List<JaxbEntityMappingsImpl> getDocuments() {
+	public List<XmlDocument> getDocuments() {
 		return documents;
 	}
 
@@ -56,23 +57,26 @@ public class XmlPreProcessingResultImpl implements XmlPreProcessingResult {
 		return managedNames;
 	}
 
-	public void addDocument(JaxbEntityMappingsImpl document) {
-		persistenceUnitMetadata.apply( document.getPersistenceUnitMetadata() );
-		documents.add( document );
-		document.getEmbeddables().forEach( (jaxbEmbeddable) -> {
+	public void addDocument(Binding<JaxbEntityMappingsImpl> binding) {
+		final XmlDocumentImpl xmlDocument = XmlDocumentImpl.consume( binding, persistenceUnitMetadata );
+		documents.add( xmlDocument );
+
+		final JaxbEntityMappingsImpl jaxbRoot = binding.getRoot();
+		persistenceUnitMetadata.apply( jaxbRoot.getPersistenceUnitMetadata() );
+		jaxbRoot.getEmbeddables().forEach( (jaxbEmbeddable) -> {
 			if ( StringHelper.isNotEmpty( jaxbEmbeddable.getClazz() ) ) {
-				managedClasses.add( XmlProcessingHelper.determineClassName( document, jaxbEmbeddable ) );
+				managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEmbeddable ) );
 			}
 			else if ( StringHelper.isNotEmpty( jaxbEmbeddable.getName() ) ) {
 				managedNames.add( jaxbEmbeddable.getName() );
 			}
 		} );
-		document.getMappedSuperclasses().forEach( (jaxbMappedSuperclass) -> {
-			managedClasses.add( XmlProcessingHelper.determineClassName( document, jaxbMappedSuperclass ) );
+		jaxbRoot.getMappedSuperclasses().forEach( (jaxbMappedSuperclass) -> {
+			managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbMappedSuperclass ) );
 		} );
-		document.getEntities().forEach( (jaxbEntity) -> {
+		jaxbRoot.getEntities().forEach( (jaxbEntity) -> {
 			if ( StringHelper.isNotEmpty( jaxbEntity.getClazz() ) ) {
-				managedClasses.add( XmlProcessingHelper.determineClassName( document, jaxbEntity ) );
+				managedClasses.add( XmlProcessingHelper.determineClassName( jaxbRoot, jaxbEntity ) );
 			}
 			else if ( StringHelper.isNotEmpty( jaxbEntity.getName() ) ) {
 				managedNames.add( jaxbEntity.getName() );

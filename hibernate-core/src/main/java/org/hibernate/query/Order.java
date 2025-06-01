@@ -9,31 +9,34 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.Incubating;
 
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.SortDirection.ASCENDING;
 import static org.hibernate.query.SortDirection.DESCENDING;
 
 /**
- * A rule for sorting a query result set.
- * <p>
- * This is a convenience class which allows query result ordering
- * rules to be passed around the system before being applied to
- * a {@link Query} by calling {@link SelectionQuery#setOrder(Order)}.
+ * A rule for sorting a query result set. This allows query result ordering
+ * rules to be passed around the system before being applied to a
+ * {@link org.hibernate.query.specification.QuerySpecification} by calling
+ * {@link org.hibernate.query.specification.SelectionSpecification#sort(Order)
+ * sort()}.
  * <pre>
- * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ * SelectionSpecification.create(Book.class,
+ *             "from Book b join b.authors a where a.name = :name")
+ *         .sort(asc(Book_.publicationDate))
+ *         .createQuery(session)
  *         .setParameter("name", authorName)
- *         .setOrder(asc(Book_.publicationDate))
  *         .getResultList();
  * </pre>
  * <p>
  * {@code Order}s may be stacked using {@link List#of} and
- * {@link SelectionQuery#setOrder(List)}.
+ * {@link org.hibernate.query.specification.SelectionSpecification#resort(List)
+ * resort()}.
  * <pre>
- * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ * SelectionSpecification.create(Book.class,
+ *             "from Book b join b.authors a where a.name = :name")
+ *         .sort(List.of(asc(Book_.publicationDate), desc(Book_.ssn)))
  *         .setParameter("name", authorName)
- *         .setOrder(List.of(asc(Book_.publicationDate), desc(Book_.ssn)))
  *         .getResultList();
  * </pre>
  * <p>
@@ -49,8 +52,8 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  *          used by Hibernate Data Repositories to implement Jakarta Data
  *          query methods.
  *
- * @see SelectionQuery#setOrder(Order)
- * @see SelectionQuery#setOrder(java.util.List)
+ * @see org.hibernate.query.specification.SelectionSpecification#sort(Order)
+ * @see org.hibernate.query.specification.SelectionSpecification#resort(List)
  * @see org.hibernate.query.restriction.Restriction
  *
  * @author Gavin King
@@ -58,112 +61,15 @@ import static org.hibernate.query.SortDirection.DESCENDING;
  * @since 6.3
  */
 @Incubating
-public class Order<X> {
-	private final SortDirection order;
-	private final SingularAttribute<X,?> attribute;
-	private final Class<X> entityClass;
-	private final String attributeName;
-	private final Nulls nullPrecedence;
-	private final int element;
-	private final boolean ignoreCase;
-
-	private Order(SortDirection order, Nulls nullPrecedence, SingularAttribute<X, ?> attribute) {
-		this.order = order;
-		this.attribute = attribute;
-		this.attributeName = attribute.getName();
-		this.entityClass = attribute.getDeclaringType().getJavaType();
-		this.nullPrecedence = nullPrecedence;
-		this.element = 1;
-		this.ignoreCase = false;
-	}
-
-	private Order(SortDirection order, Nulls nullPrecedence, SingularAttribute<X, ?> attribute, boolean ignoreCase) {
-		this.order = order;
-		this.attribute = attribute;
-		this.attributeName = attribute.getName();
-		this.entityClass = attribute.getDeclaringType().getJavaType();
-		this.nullPrecedence = nullPrecedence;
-		this.element = 1;
-		this.ignoreCase = ignoreCase;
-	}
-
-	private Order(SortDirection order, Nulls nullPrecedence, Class<X> entityClass, String attributeName) {
-		this.order = order;
-		this.entityClass = entityClass;
-		this.attributeName = attributeName;
-		this.attribute = null;
-		this.nullPrecedence = nullPrecedence;
-		this.element = 1;
-		this.ignoreCase = false;
-	}
-
-	private Order(SortDirection order, Nulls nullPrecedence, int element) {
-		this.order = order;
-		this.entityClass = null;
-		this.attributeName = null;
-		this.attribute = null;
-		this.nullPrecedence = nullPrecedence;
-		this.element = element;
-		this.ignoreCase = false;
-	}
-
-	private Order(SortDirection order, Nulls nullPrecedence, Class<X> entityClass, String attributeName, boolean ignoreCase) {
-		this.order = order;
-		this.entityClass = entityClass;
-		this.attributeName = attributeName;
-		this.attribute = null;
-		this.nullPrecedence = nullPrecedence;
-		this.element = 1;
-		this.ignoreCase = ignoreCase;
-	}
-
-	private Order(SortDirection order, Nulls nullPrecedence, int element, boolean ignoreCase) {
-		this.order = order;
-		this.entityClass = null;
-		this.attributeName = null;
-		this.attribute = null;
-		this.nullPrecedence = nullPrecedence;
-		this.element = element;
-		this.ignoreCase = ignoreCase;
-	}
-
-	private Order(Order<X> other, SortDirection order) {
-		this.order = order;
-		this.attribute = other.attribute;
-		this.entityClass = other.entityClass;
-		this.attributeName = other.attributeName;
-		this.nullPrecedence = other.nullPrecedence;
-		this.element = other.element;
-		this.ignoreCase = other.ignoreCase;
-	}
-
-	private Order(Order<X> other, boolean ignoreCase) {
-		this.order = other.order;
-		this.attribute = other.attribute;
-		this.entityClass = other.entityClass;
-		this.attributeName = other.attributeName;
-		this.nullPrecedence = other.nullPrecedence;
-		this.element = other.element;
-		this.ignoreCase = ignoreCase;
-	}
-
-	private Order(Order<X> other, Nulls nullPrecedence) {
-		this.order = other.order;
-		this.attribute = other.attribute;
-		this.entityClass = other.entityClass;
-		this.attributeName = other.attributeName;
-		this.nullPrecedence = nullPrecedence;
-		this.element = other.element;
-		this.ignoreCase = other.ignoreCase;
-	}
+public interface Order<X> {
 
 	/**
 	 * An order where an entity is sorted by the given attribute,
 	 * with smaller values first. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
-	public static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
-		return new Order<>(ASCENDING, Nulls.NONE, attribute);
+	static <T> Order<T> asc(SingularAttribute<T,?> attribute) {
+		return new AttributeOrder<>(ASCENDING, Nulls.NONE, attribute);
 	}
 
 	/**
@@ -171,8 +77,8 @@ public class Order<X> {
 	 * with larger values first. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
-	public static <T> Order<T> desc(SingularAttribute<T,?> attribute) {
-		return new Order<>(DESCENDING, Nulls.NONE, attribute);
+	static <T> Order<T> desc(SingularAttribute<T,?> attribute) {
+		return new AttributeOrder<>(DESCENDING, Nulls.NONE, attribute);
 	}
 
 	/**
@@ -180,16 +86,16 @@ public class Order<X> {
 	 * in the given direction. If the given attribute is of textual
 	 * type, the ordering is case-sensitive.
 	 */
-	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction) {
-		return new Order<>(direction, Nulls.NONE, attribute);
+	static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction) {
+		return new AttributeOrder<>(direction, Nulls.NONE, attribute);
 	}
 
 	/**
 	 * An order where an entity is sorted by the given attribute,
 	 * in the given direction, with the specified case-sensitivity.
 	 */
-	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, boolean ignoreCase) {
-		return new Order<>(direction, Nulls.NONE, attribute, ignoreCase);
+	static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, boolean ignoreCase) {
+		return new AttributeOrder<>(direction, Nulls.NONE, attribute, !ignoreCase);
 	}
 
 	/**
@@ -198,8 +104,8 @@ public class Order<X> {
 	 * null values. If the given attribute is of textual type, the
 	 * ordering is case-sensitive.
 	 */
-	public static <T> Order<T> by(SingularAttribute<T,?> attribute, SortDirection direction, Nulls nullPrecedence) {
-		return new Order<>(direction, nullPrecedence, attribute);
+	static <T> Order<T> by(SingularAttribute<T, ?> attribute, SortDirection direction, Nulls nullPrecedence) {
+		return new AttributeOrder<>(direction, nullPrecedence, attribute);
 	}
 
 	/**
@@ -208,8 +114,8 @@ public class Order<X> {
 	 * the named attribute is of textual type, the ordering is
 	 * case-sensitive.
 	 */
-	public static <T> Order<T> asc(Class<T> entityClass, String attributeName) {
-		return new Order<>( ASCENDING, Nulls.NONE, entityClass, attributeName );
+	static <T> Order<T> asc(Class<T> entityClass, String attributeName) {
+		return new NamedAttributeOrder<>( ASCENDING, Nulls.NONE, entityClass, attributeName );
 	}
 
 	/**
@@ -218,8 +124,8 @@ public class Order<X> {
 	 * the named attribute is of textual type, the ordering is
 	 * case-sensitive.
 	 */
-	public static <T> Order<T> desc(Class<T> entityClass, String attributeName) {
-		return new Order<>( DESCENDING, Nulls.NONE, entityClass, attributeName );
+	static <T> Order<T> desc(Class<T> entityClass, String attributeName) {
+		return new NamedAttributeOrder<>( DESCENDING, Nulls.NONE, entityClass, attributeName );
 	}
 
 	/**
@@ -228,8 +134,8 @@ public class Order<X> {
 	 * named attribute is of textual type, the ordering is
 	 * case-sensitive.
 	 */
-	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction) {
-		return new Order<>( direction, Nulls.NONE, entityClass, attributeName );
+	static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction) {
+		return new NamedAttributeOrder<>( direction, Nulls.NONE, entityClass, attributeName );
 	}
 
 	/**
@@ -237,8 +143,8 @@ public class Order<X> {
 	 * attribute with the given name, in the given direction, with
 	 * the specified case-sensitivity.
 	 */
-	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, boolean ignoreCase) {
-		return new Order<>( direction, Nulls.NONE, entityClass, attributeName, ignoreCase );
+	static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, boolean ignoreCase) {
+		return new NamedAttributeOrder<>( direction, Nulls.NONE, entityClass, attributeName, !ignoreCase );
 	}
 
 	/**
@@ -248,8 +154,8 @@ public class Order<X> {
 	 * precedence for null values. If the named attribute is of
 	 * textual type, the ordering is case-sensitive.
 	 */
-	public static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, Nulls nullPrecedence) {
-		return new Order<>( direction, nullPrecedence, entityClass, attributeName );
+	static <T> Order<T> by(Class<T> entityClass, String attributeName, SortDirection direction, Nulls nullPrecedence) {
+		return new NamedAttributeOrder<>( direction, nullPrecedence, entityClass, attributeName );
 	}
 
 	/**
@@ -257,8 +163,8 @@ public class Order<X> {
 	 * in the given position with smaller values first. If the
 	 * item is of textual type, the ordering is case-sensitive.
 	 */
-	public static Order<Object[]> asc(int element) {
-		return new Order<>( ASCENDING, Nulls.NONE, element );
+	static Order<Object[]> asc(int element) {
+		return new ElementOrder<>( ASCENDING, Nulls.NONE, element );
 	}
 
 	/**
@@ -266,8 +172,8 @@ public class Order<X> {
 	 * in the given position with larger values first. If the
 	 * item is of textual type, the ordering is case-sensitive.
 	 */
-	public static Order<Object[]> desc(int element) {
-		return new Order<>( DESCENDING, Nulls.NONE, element );
+	static Order<Object[]> desc(int element) {
+		return new ElementOrder<>( DESCENDING, Nulls.NONE, element );
 	}
 
 	/**
@@ -275,8 +181,8 @@ public class Order<X> {
 	 * in the given position, in the given direction. If the item
 	 * is of textual type, the ordering is case-sensitive.
 	 */
-	public static Order<Object[]> by(int element, SortDirection direction) {
-		return new Order<>( direction, Nulls.NONE, element );
+	static Order<Object[]> by(int element, SortDirection direction) {
+		return new ElementOrder<>( direction, Nulls.NONE, element );
 	}
 
 	/**
@@ -284,8 +190,8 @@ public class Order<X> {
 	 * in the given position in the given direction, with the specified
 	 * case-sensitivity.
 	 */
-	public static Order<Object[]> by(int element, SortDirection direction, boolean ignoreCase) {
-		return new Order<>( direction, Nulls.NONE, element, ignoreCase );
+	static Order<Object[]> by(int element, SortDirection direction, boolean ignoreCase) {
+		return new ElementOrder<>( direction, Nulls.NONE, element, !ignoreCase );
 	}
 
 	/**
@@ -294,69 +200,102 @@ public class Order<X> {
 	 * precedence for null values. If the named attribute is of
 	 * textual type, the ordering is case-sensitive.
 	 */
-	public static Order<Object[]> by(int element, SortDirection direction, Nulls nullPrecedence) {
-		return new Order<>( direction, nullPrecedence, element );
+	static Order<Object[]> by(int element, SortDirection direction, Nulls nullPrecedence) {
+		return new ElementOrder<>( direction, nullPrecedence, element );
 	}
 
-	public SortDirection getDirection() {
-		return order;
-	}
+	/**
+	 * The direction, {@linkplain SortDirection#ASCENDING ascending} or
+	 * {@linkplain SortDirection#DESCENDING descending}, in which results
+	 * are sorted.
+	 *
+	 * @since 7
+	 */
+	SortDirection direction();
 
-	public Nulls getNullPrecedence() {
-		return nullPrecedence;
-	}
+	/**
+	 * The {@linkplain Nulls ordering of null values}.
+	 *
+	 * @since 7
+	 */
+	Nulls nullPrecedence();
 
-	public boolean isCaseInsensitive() {
-		return ignoreCase;
-	}
+	/**
+	 * For a lexicographic order based on textual values, whether case
+	 * is significant.
+	 *
+	 * @since 7
+	 */
+	boolean caseSensitive();
 
-	public SingularAttribute<X, ?> getAttribute() {
-		return attribute;
-	}
+	/**
+	 * For an order based on an entity attribute, the entity class which
+	 * declares the {@linkplain #attribute attribute}.
+	 *
+	 * @return the Java class which declares the attribute, or {@code null}
+	 *         if this order is not based on an attribute
+	 *
+	 * @since 7
+	 */
+	Class<X> entityClass();
 
-	public Class<X> getEntityClass() {
-		return entityClass;
-	}
+	/**
+	 * For an order based on an entity attribute, the name of the
+	 * {@linkplain #attribute attribute}.
+	 *
+	 * @return the name of the attribute, or {@code null} if this order is
+	 *         not based on an attribute
+	 *
+	 * @since 7
+	 */
+	String attributeName();
 
-	public String getAttributeName() {
-		return attributeName;
-	}
+	/**
+	 * For an order based on an entity attribute, the metamodel object
+	 * representing the attribute.
+	 *
+	 * @return the attribute, or {@code null} if this order is not based
+	 *         on an attribute, or if only the name of the attribute was
+	 *         specified
+	 *
+	 * @since 7
+	 */
+	SingularAttribute<X, ?> attribute();
 
-	public int getElement() {
-		return element;
-	}
+	/**
+	 * For an order based on an indexed element of the select clause,
+	 * the index of the element.
+	 *
+	 * @return the index, or {@code 1} is this order is based on an
+	 *         entity attribute
+	 *
+	 * @since 7
+	 */
+	int element();
 
 	/**
 	 * @return this order, but with the sorting direction reversed.
 	 * @since 6.5
 	 */
-	public Order<X> reverse() {
-		return new Order<>( this, order.reverse() );
-	}
+	Order<X> reverse();
 
 	/**
 	 * @return this order, but without case-sensitivity.
 	 * @since 6.5
 	 */
-	public Order<X> ignoringCase() {
-		return new Order<>( this, true );
-	}
+	Order<X> ignoringCase();
 
 	/**
 	 * @return this order, but with nulls sorted first.
 	 * @since 6.5
 	 */
-	public Order<X> withNullsFirst() {
-		return new Order<>( this, Nulls.FIRST );
-	}
+	Order<X> withNullsFirst();
 
 	/**
 	 * @return this order, but with nulls sorted last.
 	 * @since 6.5
 	 */
-	public Order<X> withNullsLast() {
-		return new Order<>( this, Nulls.LAST );
-	}
+	Order<X> withNullsLast();
 
 	/**
 	 * An order based on this order, possibly reversed.
@@ -369,14 +308,14 @@ public class Order<X> {
 	 *
 	 * @since 7.0
 	 */
-	public Order<X> reversedIf(boolean reverse) {
+	default Order<X> reversedIf(boolean reverse) {
 		return reverse ? reverse() : this;
 	}
 
 	/**
 	 * An order based on this order, possibly without case-sensitivity.
 	 *
-	 * @param ignoreCase {@code true} if this order should be
+	 * @param ignoreCase {@code true} if this order should
 	 *                   {@linkplain #ignoringCase ignore case}
 	 * @return this order, but ignoring case if the argument is {@code true}
 	 *
@@ -384,33 +323,8 @@ public class Order<X> {
 	 *
 	 * @since 7.0
 	 */
-	public Order<X> ignoringCaseIf(boolean ignoreCase) {
+	default Order<X> ignoringCaseIf(boolean ignoreCase) {
 		return ignoreCase ? ignoringCase() : this;
-	}
-
-	@Override
-	public String toString() {
-		return attributeName + " " + order;
-	}
-
-	@Override
-	public boolean equals(Object object) {
-		if ( object instanceof Order<?> that) {
-			return that.order == this.order
-				&& that.nullPrecedence == this.nullPrecedence
-				&& that.ignoreCase == this.ignoreCase
-				&& that.element == this.element
-				&& Objects.equals( that.attributeName, this.attributeName )
-				&& Objects.equals( that.entityClass, this.entityClass );
-		}
-		else {
-			return false;
-		}
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( order, element, attributeName, entityClass );
 	}
 
 	/**
@@ -423,7 +337,42 @@ public class Order<X> {
 	 *
 	 * @since 6.5
 	 */
-	public static <T> List<Order<? super T>> reverse(List<Order<? super T>> ordering) {
+	static <T> List<Order<? super T>> reverse(List<Order<? super T>> ordering) {
 		return ordering.stream().map(Order::reverse).collect(toList());
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default SortDirection getDirection() {
+		return direction();
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default Nulls getNullPrecedence() {
+		return nullPrecedence();
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default boolean isCaseInsensitive() {
+		return !caseSensitive();
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default SingularAttribute<X, ?> getAttribute() {
+		return attribute();
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default Class<X> getEntityClass() {
+		return entityClass();
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default String getAttributeName() {
+		return attributeName();
+	}
+
+	@Deprecated(since = "7", forRemoval = true)
+	default int getElement() {
+		return element();
 	}
 }

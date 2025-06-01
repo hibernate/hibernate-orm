@@ -61,6 +61,11 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Boolean;
+	}
+
+	@Override
 	public Boolean fromEncodedString(CharSequence charSequence, int start, int end) {
 		switch ( charSequence.charAt( start ) ) {
 			case 't':

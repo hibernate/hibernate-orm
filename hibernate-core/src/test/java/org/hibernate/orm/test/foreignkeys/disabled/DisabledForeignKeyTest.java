@@ -5,15 +5,12 @@
 package org.hibernate.orm.test.foreignkeys.disabled;
 
 import java.util.EnumSet;
-import java.util.Map;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.Table.ForeignKeyKey;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
@@ -53,7 +50,7 @@ public class DisabledForeignKeyTest extends BaseUnitTestCase {
 
 			int fkCount = 0;
 			for ( Table table : metadata.collectTableMappings() ) {
-				for ( Map.Entry<ForeignKeyKey, ForeignKey> entry : table.getForeignKeys().entrySet() ) {
+				for ( var entry : table.getForeignKeys().entrySet() ) {
 					assertFalse(
 							"Creation for ForeignKey [" + entry.getKey() + "] was not disabled",
 							entry.getValue().isCreationEnabled()

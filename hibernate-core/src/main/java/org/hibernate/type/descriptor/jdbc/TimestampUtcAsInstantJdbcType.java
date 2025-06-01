@@ -85,7 +85,7 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 					WrapperOptions wrapperOptions) throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, wrapperOptions );
 				try {
-					// supposed to be supported in JDBC 4.2
+					// supported by some databases (not required by JDBC)
 					st.setObject( index, instant, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
 				catch (SQLException|AbstractMethodError e) {
@@ -103,7 +103,7 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 					throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, wrapperOptions );
 				try {
-					// supposed to be supported in JDBC 4.2
+					// supported by some databases (not required by JDBC)
 					st.setObject( name, instant, Types.TIMESTAMP_WITH_TIMEZONE );
 				}
 				catch (SQLException|AbstractMethodError e) {
@@ -120,7 +120,7 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {
-					// supposed to be supported in JDBC 4.2
+					// supported by some databases (not required by JDBC)
 					return javaType.wrap( rs.getObject( position, Instant.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
@@ -132,7 +132,7 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
 				try {
-					// supposed to be supported in JDBC 4.2
+					// supported by some databases (not required by JDBC)
 					return javaType.wrap( statement.getObject( position, Instant.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {
@@ -144,7 +144,7 @@ public class TimestampUtcAsInstantJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
 				try {
-					// supposed to be supported in JDBC 4.2
+					// supported by some databases (not required by JDBC)
 					return javaType.wrap( statement.getObject( name, Instant.class ), wrapperOptions );
 				}
 				catch (SQLException|AbstractMethodError e) {

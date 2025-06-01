@@ -103,11 +103,6 @@ public abstract class AbstractManagedType<J>
 	}
 
 	@Override
-	public Class<J> getBindableJavaType() {
-		return super.getBindableJavaType();
-	}
-
-	@Override
 	public SqmManagedDomainType<? super J> getSuperType() {
 		return supertype;
 	}
@@ -336,13 +331,13 @@ public abstract class AbstractManagedType<J>
 
 	private <T, Y> boolean hasMatchingReturnType(SingularAttribute<T, ?> attribute, Class<Y> javaType) {
 		return javaType == null
-			|| attribute.getBindableJavaType().equals( javaType )
+			|| attribute.getJavaType().equals( javaType )
 			|| isPrimitiveVariant( attribute, javaType );
 	}
 
 	protected <Y> boolean isPrimitiveVariant(SingularAttribute<?,?> attribute, Class<Y> javaType) {
 		if ( attribute != null ) {
-			final Class<?> declaredType = attribute.getBindableJavaType();
+			final Class<?> declaredType = attribute.getJavaType();
 			if ( declaredType.isPrimitive() ) {
 				return ( Boolean.class.equals( javaType ) && Boolean.TYPE.equals( declaredType ) )
 					|| ( Character.class.equals( javaType ) && Character.TYPE.equals( declaredType ) )
@@ -418,7 +413,7 @@ public abstract class AbstractManagedType<J>
 			Class<E> elementType,
 			PluralAttribute.CollectionType collectionType) {
 		if ( attribute == null
-				|| ( elementType != null && !attribute.getBindableJavaType().equals( elementType ) )
+				|| elementType != null && !attribute.getBindableJavaType().equals( elementType )
 				|| attribute.getCollectionType() != collectionType ) {
 			throw new IllegalArgumentException(
 					attributeType + " named " + name

@@ -66,6 +66,11 @@ public class BlobJavaType extends AbstractClassJavaType<Blob> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Blob;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(Blob value) {
 		return value == null ? "null" : "{blob}";
 	}

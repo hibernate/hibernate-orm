@@ -13,7 +13,7 @@ import java.util.Set;
  */
 public class Parent {
 	private String name;
-	private Set children = new HashSet();
+	private Set<Child> children = new HashSet<>();
 
 	public Parent() {
 	}
@@ -30,11 +30,11 @@ public class Parent {
 		this.name = name;
 	}
 
-	public Set getChildren() {
+	public Set<Child> getChildren() {
 		return children;
 	}
 
-	public void setChildren(Set children) {
+	public void setChildren(Set<Child> children) {
 		this.children = children;
 	}
 }

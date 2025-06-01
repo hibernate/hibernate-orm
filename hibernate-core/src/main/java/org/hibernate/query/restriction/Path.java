@@ -19,8 +19,9 @@ import java.util.List;
  * the root entity type of the query.
  * <pre>
  * SelectionSpecification.create(Book.class)
- *         .addRestriction(from(Book.class).to(Book_.publisher).to(Publisher_.name)
+ *         .restrict(from(Book.class).to(Book_.publisher).to(Publisher_.name)
  *                         .equalTo("Manning"))
+ *         .fetch(from(Book.class).to(Book_.publisher))
  *         .createQuery(session)
  *         .getResultList()
  * </pre>

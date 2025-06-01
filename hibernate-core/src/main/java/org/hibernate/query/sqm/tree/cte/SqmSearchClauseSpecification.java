@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -16,9 +16,9 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 public class SqmSearchClauseSpecification implements JpaSearchOrder {
 	private final SqmCteTableColumn cteColumn;
 	private final SortDirection sortOrder;
-	private NullPrecedence nullPrecedence;
+	private Nulls nullPrecedence;
 
-	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortDirection sortOrder, Nulls nullPrecedence) {
 		if ( cteColumn == null ) {
 			throw new IllegalArgumentException( "Null cte column" );
 		}
@@ -40,7 +40,7 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder {
 	}
 
 	@Override
-	public JpaSearchOrder nullPrecedence(NullPrecedence precedence) {
+	public JpaSearchOrder nullPrecedence(Nulls precedence) {
 		this.nullPrecedence = precedence;
 		return this;
 	}
@@ -67,7 +67,7 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder {
 	}
 
 	@Override
-	public NullPrecedence getNullPrecedence() {
+	public Nulls getNullPrecedence() {
 		return nullPrecedence;
 	}
 }

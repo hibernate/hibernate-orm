@@ -43,15 +43,16 @@ import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
@@ -79,6 +80,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -106,7 +108,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
-import org.hibernate.query.sqm.tree.domain.SqmSingularPersistentAttribute;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedSingularJoin;
 import org.hibernate.query.sqm.tree.expression.*;
@@ -167,6 +168,7 @@ import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static java.util.Arrays.asList;
 import static org.hibernate.internal.util.collections.CollectionHelper.determineProperSizing;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
@@ -602,8 +604,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <P, F> SqmExpression<F> fk(Path<P> path) {
-		final SqmPath<P> sqmPath = (SqmPath<P>) path;
+	public SqmPath<?> fk(Path<?> path) {
+		final SqmPath<?> sqmPath = (SqmPath<?>) path;
 		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
 		final boolean validToOneRef =
 				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
@@ -617,7 +619,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 					)
 			);
 		}
-
 		return new SqmFkExpression<>( sqmPath );
 	}
 
@@ -826,12 +827,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	@Override
 	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
-		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.ASCENDING, NullPrecedence.fromJpaValue( nullPrecedence ) );
+		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.ASCENDING, nullPrecedence );
 	}
 
 	@Override
 	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
-		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.DESCENDING, NullPrecedence.fromJpaValue( nullPrecedence ) );
+		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.DESCENDING, nullPrecedence );
 	}
 
 	@Override
@@ -839,7 +840,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
 				SortDirection.ASCENDING,
-				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+				nullsFirst ? Nulls.FIRST : Nulls.LAST
 		);
 	}
 
@@ -848,33 +849,33 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
 				SortDirection.DESCENDING,
-				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+				nullsFirst ? Nulls.FIRST : Nulls.LAST
 		);
 	}
 
 	@Override
-	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
 		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
 	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, Nulls.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortDirection.ASCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortDirection.ASCENDING, Nulls.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.ASCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.ASCENDING, Nulls.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.DESCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.DESCENDING, Nulls.NONE );
 	}
 
 	@Override
@@ -882,7 +883,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmSearchClauseSpecification(
 				(SqmCteTableColumn) x,
 				SortDirection.ASCENDING,
-				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+				nullsFirst ? Nulls.FIRST : Nulls.LAST
 		);
 	}
 
@@ -891,7 +892,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmSearchClauseSpecification(
 				(SqmCteTableColumn) x,
 				SortDirection.DESCENDING,
-				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
+				nullsFirst ? Nulls.FIRST : Nulls.LAST
 		);
 	}
 
@@ -936,7 +937,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			//noinspection unchecked
 			tupleType = (SqmDomainType<R>) getTypeConfiguration().resolveTupleType( sqmExpressions );
 		}
-		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), tupleType, this );
+		return new SqmTuple<>( new ArrayList<>( sqmExpressions ), (SqmBindableType<R>) tupleType, this );
 	}
 
 	@Override
@@ -1351,9 +1352,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 								rightHandExpression.getNodeType(),
 								operator
 						);
-		//noinspection unchecked
-		final SqmExpressible<N> castType =
-				(SqmExpressible<N>) arithmeticType;
+		@SuppressWarnings("unchecked")
+		final var castType = (SqmBindableType<N>) arithmeticType;
 		return new SqmBinaryArithmetic<>(
 				operator,
 				leftHandExpression,
@@ -1535,11 +1535,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 
 	public <T> SqmLiteral<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
 		return value == null
-				? new SqmLiteralNull<T>( this )
+				? new SqmLiteralNull<>( this )
 				: createLiteral( value, resolveInferredType( value, typeInferenceSource ) );
 	}
 
-	private <T> SqmLiteral<T> createLiteral(T value, SqmExpressible<T> expressible) {
+	private <T> SqmLiteral<T> createLiteral(T value, SqmBindableType<T> expressible) {
 		if ( expressible.getExpressibleJavaType().isInstance( value ) ) {
 			return new SqmLiteral<>( value, expressible, this );
 		}
@@ -1555,7 +1555,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private <T> SqmExpressible<? extends T> resolveInferredType(
+	private <T> SqmBindableType<? extends T> resolveInferredType(
 			T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( typeInferenceSource != null ) {
 			return typeInferenceSource.getNodeType();
@@ -1595,10 +1595,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			return new SqmLiteralNull<>( this );
 		}
 		else {
-			final BindableType<? super T> valueParamType = getParameterBindType( value );
-			final SqmExpressible<? super T> sqmExpressible =
-					valueParamType == null ? null : valueParamType.resolveExpressible( this );
-			return new SqmLiteral<>( value, sqmExpressible, this );
+			return new SqmLiteral<>( value, resolveExpressible( getParameterBindType( value ) ), this );
 		}
 	}
 
@@ -1642,19 +1639,24 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		else {
 			final BasicType<T> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType( resultClass );
 			// if there's no basic type, it might be an entity type
-			final SqmExpressible<T> sqmExpressible =
+			final SqmBindableType<T> sqmExpressible =
 					basicTypeForJavaType == null
-							? getDomainModel().managedType( resultClass ).resolveExpressible( this )
+							? resolveExpressible( getDomainModel().managedType( resultClass ) )
 							: basicTypeForJavaType;
 			return new SqmLiteralNull<>( sqmExpressible, this );
 		}
 	}
 
-	class MultiValueParameterType<T> implements SqmExpressible<T> {
+	class MultiValueParameterType<T> implements SqmBindableType<T> {
 		private final JavaType<T> javaType;
 
 		public MultiValueParameterType(Class<T> type) {
 			this.javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( type );
+		}
+
+		@Override
+		public PersistenceType getPersistenceType() {
+			return BASIC;
 		}
 
 		@Override
@@ -1663,7 +1665,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 
 		@Override
-		public Class<T> getBindableJavaType() {
+		public Class<T> getJavaType() {
 			return javaType.getJavaTypeClass();
 		}
 
@@ -2016,6 +2018,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public SqmPath<?> id(Path<?> path) {
+		return ((SqmPath<?>) path).get( EntityIdentifierMapping.ID_ROLE_NAME );
+	}
+
+	@Override
+	public SqmPath<?> version(Path<?> path) {
+		return ((SqmPath<?>) path).get( EntityVersionMapping.VERSION_ROLE_NAME );
+	}
+
+	@Override
 	public <T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args) {
 		final BasicType<T> resultType = getTypeConfiguration().standardBasicTypeForJavaType( type );
 		return getFunctionTemplate( name, resultType ).generateSqmExpression(
@@ -2098,7 +2110,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			//noinspection unchecked
 			return (SqmExpression<T>) value;
 		}
-		return inlineValue( value ) ? literal( value, typeInferenceSource ) : valueParameter( value, typeInferenceSource );
+		else {
+			return inlineValue( value )
+					? literal( value, typeInferenceSource )
+					: valueParameter( value, typeInferenceSource );
+		}
 	}
 
 	private <E> SqmExpression<? extends Collection<?>> collectionValue(Collection<E> value, SqmExpression<E> typeInferenceSource) {
@@ -2123,62 +2139,59 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		}
 	}
 
-	private <T> boolean isInstance(BindableType<T> bindableType, T value) {
+	private <T> boolean isInstance(BindableType<? extends T> bindableType, T value) {
 		if ( bindableType instanceof SqmExpressible<?> expressible ) {
 			return expressible.getExpressibleJavaType().isInstance( value );
 		}
 		else {
-			return bindableType.getBindableJavaType().isInstance( value )
-				|| bindableType.resolveExpressible( this ).getExpressibleJavaType().isInstance( value );
+			return bindableType.getJavaType().isInstance( value )
+				|| resolveExpressible( bindableType ).getExpressibleJavaType().isInstance( value );
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <T> BindableType<T> resolveInferredParameterType(
-			T value,
-			SqmExpression<? extends T> typeInferenceSource,
+	private static <X, T extends X> BindableType<? extends X> resolveInferredParameterType(
+			X value,
+			SqmExpression<T> typeInferenceSource,
 			TypeConfiguration typeConfiguration) {
 
 		if ( typeInferenceSource != null ) {
 			if ( typeInferenceSource instanceof BindableType ) {
+				//noinspection unchecked
 				return (BindableType<T>) typeInferenceSource;
 			}
-			final SqmExpressible<?> nodeType = getNodeType( typeInferenceSource );
+			final SqmBindableType<T> nodeType = typeInferenceSource.getExpressible();
 			if ( nodeType != null ) {
-				return (BindableType<T>) nodeType;
+				return nodeType;
 			}
 		}
 
-		return value == null ? null : (BasicType<T>) typeConfiguration.getBasicTypeForJavaType( value.getClass() );
-	}
-
-	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
-		if ( expression instanceof SqmPath<?> sqmPath ) {
-			return sqmPath.getResolvedModel() instanceof SqmSingularPersistentAttribute<?,?> attribute
-					? attribute.getSqmPathSource()
-					: sqmPath.getResolvedModel();
+		if ( value == null ) {
+			return null;
 		}
 		else {
-			return expression.getNodeType();
+			@SuppressWarnings("unchecked") // this is completely safe
+			final Class<? extends X> valueClass = (Class<? extends X>) value.getClass();
+			return typeConfiguration.getBasicTypeForJavaType( valueClass );
 		}
 	}
 
 	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value, SqmExpression<? extends T> typeInferenceSource) {
-		final BindableType<T> bindableType =
-				resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
+		final var bindableType = resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
 		if ( bindableType == null || isInstance( bindableType, value) ) {
-			return new ValueBindJpaCriteriaParameter<>( bindableType, value, this );
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var widerType = (BindableType<? super T>) bindableType;
+			return new ValueBindJpaCriteriaParameter<>( widerType, value, this );
 		}
 		final T coercedValue =
-				bindableType.resolveExpressible( this ).getExpressibleJavaType()
-						.coerce(value, this::getTypeConfiguration );
+				resolveExpressible( bindableType ).getExpressibleJavaType()
+						.coerce( value, this::getTypeConfiguration );
+		// ignore typeInferenceSource and fall back the value type
 		if ( isInstance( bindableType, coercedValue ) ) {
-			return new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this );
+			@SuppressWarnings("unchecked") // safe, we just checked
+			final var widerType = (BindableType<? super T>) bindableType;
+			return new ValueBindJpaCriteriaParameter<>( widerType, coercedValue, this );
 		}
-		else {
-			// ignore typeInferenceSource and fall back the value type
-			return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
-		}
+		return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
 	}
 
 	private <E> ValueBindJpaCriteriaParameter<? extends Collection<E>> collectionValueParameter(Collection<E> value, SqmExpression<E> elementTypeInferenceSource) {
@@ -2192,11 +2205,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				bindableType = elementTypeInferenceSource.getNodeType();
 			}
 		}
-		DomainType<E> elementType = null;
-		if ( bindableType != null ) {
-			final SqmExpressible<E> sqmExpressible = bindableType.resolveExpressible( this );
-			elementType = sqmExpressible.getSqmType();
-		}
+		final DomainType<E> elementType = resolveExpressible( bindableType ).getSqmType();
 		if ( elementType == null ) {
 			throw new UnsupportedOperationException( "Can't infer collection type based on element expression: " + elementTypeInferenceSource );
 		}
@@ -2241,7 +2250,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	@Override
 	public <Y> JpaCoalesce<Y> coalesce(Expression<? extends Y> x, Expression<? extends Y> y) {
 		@SuppressWarnings("unchecked")
-		final SqmExpressible<Y> sqmExpressible = (SqmExpressible<Y>) highestPrecedenceType(
+		final var sqmExpressible = (SqmBindableType<Y>) highestPrecedenceType(
 				( (SqmExpression<? extends Y>) x ).getExpressible(),
 				( (SqmExpression<? extends Y>) y ).getExpressible()
 		);
@@ -3889,7 +3898,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
 		return mode( null, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3898,7 +3907,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return mode( filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3907,7 +3916,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return mode( null, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3918,7 +3927,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"mode",
 				sortExpression.getJavaType(),
@@ -3933,7 +3942,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return percentileCont( argument, null, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3943,7 +3952,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return percentileCont( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3953,7 +3962,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return percentileCont( argument, null, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3965,7 +3974,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_cont",
 				sortExpression.getJavaType(),
@@ -3981,7 +3990,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return percentileDisc( argument, null, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3991,7 +4000,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaPredicate filter,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return percentileDisc( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -4001,7 +4010,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return percentileDisc( argument, null, window, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -4013,7 +4022,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 			JpaWindow window,
 			Expression<T> sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_disc",
 				sortExpression.getJavaType(),

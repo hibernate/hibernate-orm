@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
@@ -30,7 +31,7 @@ public abstract class AbstractDiscriminatorSqmPathSource<D> extends AbstractSqmP
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
 	@Override

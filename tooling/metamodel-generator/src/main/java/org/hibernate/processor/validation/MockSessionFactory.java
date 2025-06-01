@@ -10,6 +10,7 @@ import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.internal.DefaultCustomEntityDirtinessStrategy;
 import org.hibernate.boot.internal.MetadataImpl;
@@ -21,11 +22,12 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.boot.spi.MappingDefaults;
@@ -45,14 +47,12 @@ import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.internal.JpaMetamodelPopulationSetting;
 import org.hibernate.metamodel.internal.JpaStaticMetamodelPopulationSetting;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -186,7 +186,13 @@ public abstract class MockSessionFactory
 			}
 		};
 		serviceRegistry = StandardServiceRegistryImpl.create(
-				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
+				new BootstrapServiceRegistryImpl(
+						true,
+						classLoaderService,
+						new StrategySelectorImpl( classLoaderService ),
+						() -> emptyList()
+				),
+//				new BootstrapServiceRegistryBuilder().applyClassLoaderService( classLoaderService ).build(),
 				singletonList(MockJdbcServicesInitiator.INSTANCE),
 				emptyList(),
 				emptyMap()
@@ -376,7 +382,7 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public MappingMetamodel getMetamodel() {
+	public MappingMetamodelImplementor getMetamodel() {
 		return metamodel;
 	}
 
@@ -907,11 +913,6 @@ public abstract class MockSessionFactory
 		public @Nullable Set<String> getEnumTypesForValue(String enumValue) {
 			return MockSessionFactory.this.getEnumTypesForValue(enumValue);
 		}
-
-		@Override
-		public JpaCompliance getJpaCompliance() {
-			return jpaCompliance;
-		}
 	}
 
 	@Nullable Set<String> getEnumTypesForValue(String value) {
@@ -953,7 +954,7 @@ public abstract class MockSessionFactory
 			else {
 				return new SingularAttributeImpl<>(
 						MockEntityDomainType.this,
-						"{version}",
+						EntityVersionMapping.VERSION_ROLE_NAME,
 						AttributeClassification.BASIC,
 						type,
 						type.getRelationalJavaType(),
@@ -1004,7 +1005,7 @@ public abstract class MockSessionFactory
 			switch (name) {
 				case EntityIdentifierMapping.ID_ROLE_NAME:
 					return getIdentifierDescriptor();
-				case "{version}":
+				case EntityVersionMapping.VERSION_ROLE_NAME:
 					return findVersionAttribute();
 			}
 			final SqmPathSource<?> source = super.findSubPathSource(name, includeSubtypes);

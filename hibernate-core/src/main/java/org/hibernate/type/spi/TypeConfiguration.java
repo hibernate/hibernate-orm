@@ -37,6 +37,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -251,7 +252,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	/**
 	 * Obtain the {@link JpaCompliance} setting.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	public JpaCompliance getJpaCompliance() {
 		return scope.getJpaCompliance();
 	}
@@ -638,11 +642,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
-	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
+	public SqmBindableType<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
+		final SqmBindableType<?>[] components = new SqmBindableType<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
 			final SqmTypedNode<?> tupleElement = typedNodes.get(i);
-			final SqmExpressible<?> sqmExpressible = tupleElement.getNodeType();
+			final SqmBindableType<?> sqmExpressible = tupleElement.getNodeType();
 			// keep null value for Named Parameters
 			if ( tupleElement instanceof SqmParameter<?> && sqmExpressible == null ) {
 				components[i] = QueryParameterJavaObjectType.INSTANCE;
@@ -658,9 +662,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	private static class ArrayCacheKey {
-		final SqmExpressible<?>[] components;
+		final SqmBindableType<?>[] components;
 
-		public ArrayCacheKey(SqmExpressible<?>[] components) {
+		public ArrayCacheKey(SqmBindableType<?>[] components) {
 			this.components = components;
 		}
 

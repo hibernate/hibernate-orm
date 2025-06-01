@@ -39,11 +39,12 @@ public interface DomainType<J> {
 	Class<J> getJavaType();
 
 	/**
-	 * The name of the type.
+	 * The name of the type. Usually, but not always, the name of a Java class.
 	 *
-	 * @apiNote This is the Hibernate notion of the type name. For most
-	 *          types this is just the Java type ({@link Class}) name.
-	 *          However, using the string allows for dynamic models.
+	 * @see ManagedDomainType#getTypeName()
+	 * @see org.hibernate.query.sqm.SqmExpressible#getTypeName()
 	 */
-	String getTypeName();
+	default String getTypeName() {
+		return getExpressibleJavaType().getTypeName();
+	}
 }

@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -47,7 +47,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public SqmExpressible<Void> getNodeType() {
+	public SqmBindableType<Void> getNodeType() {
 		return null;
 	}
 

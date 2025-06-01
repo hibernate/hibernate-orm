@@ -5,7 +5,7 @@
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.BasicType;
@@ -13,7 +13,7 @@ import org.hibernate.type.BasicType;
 public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmExpression<?> expression;
 
-	AsWrapperSqmExpression(SqmExpressible<T> type, SqmExpression<?> expression) {
+	AsWrapperSqmExpression(SqmBindableType<T> type, SqmExpression<?> expression) {
 		super( type, expression.nodeBuilder() );
 		this.expression = expression;
 	}

@@ -4,8 +4,13 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
 public interface JaxbEmbeddable extends JaxbManagedType {
+	@Nullable
+	String getName();
+	void setName(@Nullable String name);
 }

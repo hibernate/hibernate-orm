@@ -3,6 +3,7 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.original;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,43 +16,54 @@ import java.util.Set;
  */
 public class User {
 	private String userName;
-	private List permissions = new ArrayList();
-	private List emailAddresses = new ArrayList();
-	private Map sessionData = new HashMap();
-	private Set sessionAttributeNames = new HashSet();
+	private List<Permission> permissions = new ArrayList<>();
+	private List<Email> emailAddresses = new ArrayList<>();
+	private Map<String, Serializable> sessionData = new HashMap<>();
+	private Set<String> sessionAttributeNames = new HashSet<>();
 
 	User() {}
+
 	public User(String name) {
 		userName = name;
 	}
-	public List getPermissions() {
-		return permissions;
-	}
-	public void setPermissions(List permissions) {
-		this.permissions = permissions;
-	}
+
 	public String getUserName() {
 		return userName;
 	}
+
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	public List getEmailAddresses() {
+
+	public List<Permission> getPermissions() {
+		return permissions;
+	}
+
+	public void setPermissions(List<Permission> permissions) {
+		this.permissions = permissions;
+	}
+
+	public List<Email> getEmailAddresses() {
 		return emailAddresses;
 	}
-	public void setEmailAddresses(List emailAddresses) {
+
+	public void setEmailAddresses(List<Email> emailAddresses) {
 		this.emailAddresses = emailAddresses;
 	}
-	public Map getSessionData() {
+
+	public Map<String, Serializable> getSessionData() {
 		return sessionData;
 	}
-	public void setSessionData(Map sessionData) {
+
+	public void setSessionData(Map<String, Serializable> sessionData) {
 		this.sessionData = sessionData;
 	}
-	public Set getSessionAttributeNames() {
+
+	public Set<String> getSessionAttributeNames() {
 		return sessionAttributeNames;
 	}
-	public void setSessionAttributeNames(Set sessionAttributeNames) {
+
+	public void setSessionAttributeNames(Set<String> sessionAttributeNames) {
 		this.sessionAttributeNames = sessionAttributeNames;
 	}
 }

@@ -41,6 +41,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import static java.util.Collections.addAll;
 import static org.hibernate.boot.model.naming.DatabaseIdentifier.toIdentifier;
+import static org.hibernate.engine.jdbc.spi.SQLExceptionLogging.ERROR_LOG;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.splitTrimmingTokens;
@@ -398,7 +399,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						.toIdentifier( extractionContext.getJdbcConnection().getSchema() );
 			}
 			catch (SQLException sqle) {
-				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
+				ERROR_LOG.logErrorCodes( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 			catch (AbstractMethodError ignore) {
 				// jConnect and jTDS report that they "support" schemas, but they don't really
@@ -424,7 +425,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 						.toIdentifier( extractionContext.getJdbcConnection().getCatalog() );
 			}
 			catch (SQLException sqle) {
-				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
+				ERROR_LOG.logErrorCodes( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 		}
 		return currentCatalog;
@@ -443,7 +444,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				currentCatalogFilter = extractionContext.getJdbcConnection().getCatalog();
 			}
 			catch (SQLException sqle) {
-				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
+				ERROR_LOG.logErrorCodes( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 		}
 		return currentCatalogFilter;
@@ -463,7 +464,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 				currentSchemaFilter = extractionContext.getJdbcConnection().getSchema();
 			}
 			catch (SQLException sqle) {
-				LOG.sqlWarning( sqle.getErrorCode(), sqle.getSQLState() );
+				ERROR_LOG.logErrorCodes( sqle.getErrorCode(), sqle.getSQLState() );
 			}
 			catch (AbstractMethodError ignore) {
 				// jConnect and jTDS report that they "support" schemas, but they don't really

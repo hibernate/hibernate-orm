@@ -6,7 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
@@ -25,7 +25,7 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	public SqmNamedParameter(
 			String name,
 			boolean canBeMultiValued,
-			SqmExpressible<T> inherentType,
+			SqmBindableType<T> inherentType,
 			NodeBuilder nodeBuilder) {
 		super( canBeMultiValued, inherentType, nodeBuilder );
 		this.name = name;

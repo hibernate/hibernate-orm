@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi;
 
+import jakarta.persistence.DiscriminatorType;
+
 import java.util.List;
 
 /**
@@ -29,6 +31,8 @@ public interface JaxbAnyMapping extends JaxbPersistentAttribute {
 	 */
 	interface Key {
 		List<JaxbColumnImpl> getColumns();
+		String getType();
+		String getJavaClass();
 	}
 
 	/**
@@ -41,6 +45,11 @@ public interface JaxbAnyMapping extends JaxbPersistentAttribute {
 		 * The column holding the discriminator value
 		 */
 		JaxbColumnImpl getColumn();
+
+		/**
+		 * The type of discriminator
+		 */
+		DiscriminatorType getType();
 
 		/**
 		 * Mapping of discriminator-values to the corresponding entity names

@@ -10,8 +10,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
-import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -185,12 +183,14 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			EntityEntry entry,
 			Object id,
 			PersistenceContext persistenceContext) {
-		final BytecodeEnhancementMetadata instrumentationMetadata = persister.getInstrumentationMetadata();
-		if ( object != null && instrumentationMetadata.isEnhancedForLazyLoading() ) {
-			final LazyAttributeLoadingInterceptor interceptor = instrumentationMetadata.extractInterceptor( object );
-			if ( interceptor != null ) {
-				// The list of initialized lazy fields have to be cleared in order to refresh them from the database.
-				interceptor.clearInitializedLazyFields();
+		if ( object != null ) {
+			final var instrumentationMetadata = persister.getBytecodeEnhancementMetadata();
+			if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
+				final var interceptor = instrumentationMetadata.extractInterceptor( object );
+				if ( interceptor != null ) {
+					// The list of initialized lazy fields have to be cleared in order to refresh them from the database.
+					interceptor.clearInitializedLazyFields();
+				}
 			}
 		}
 

@@ -934,12 +934,34 @@ NOTE: There's no `flush()` operation, and so `update()` is always explicit.
 
 In certain circumstances, this makes stateless sessions easier to work with and simpler to reason about, but with the caveat that a stateless session is much more vulnerable to data aliasing effects, since it's easy to get two non-identical Java objects which both represent the same row of a database table.
 
+Consider the following fragments:
+
+[source,java]
+----
+var b1 = statelessSession.get(Book.class, isbn);
+var b2 = statelessSession.get(Book.class, isbn);
+assert b1 == b2;  // fails
+----
+[source,java]
+----
+var b1 = statelessSession.get(Book.class, isbn);
+var b2 = statelessSession.get(Book.class, isbn);
+statelessSession.fetch(b1.publisher);
+statelessSession.fetch(b2.publisher);
+assert b1.publisher == b2.publisher;  // fails
+----
+
+In a stateful session, entity instances are canonicalized by primary key, and so we don't usually have two different objects representing a single row.
+No such canonicalization exists across invocations of a stateless session.
+In a stateless session, both the assertions fail.
+
 [%unbreakable]
 [CAUTION]
 ====
 If we use `fetch()` in a stateless session, we can very easily obtain two objects representing the same database row!
 ====
 
+But there are also some advantages to this model.
 In particular, the absence of a persistence context means that we can safely perform bulk-processing tasks without allocating huge quantities of memory.
 Use of a `StatelessSession` alleviates the need to call:
 
@@ -1153,7 +1175,7 @@ It's much more typesafe to use one of the first two options.
 === Reactive programming with Hibernate
 
 :hr: https://hibernate.org/reactive/
-:hr-guide: https://hibernate.org/reactive/documentation/2.0/reference/html_single/
+:hr-guide: https://hibernate.org/reactive/documentation/3.0/reference/html_single/
 
 Finally, many systems which require high scalability now make use of reactive programming and reactive streams.
 {hr}[Hibernate Reactive] brings O/R mapping to the world of reactive programming.

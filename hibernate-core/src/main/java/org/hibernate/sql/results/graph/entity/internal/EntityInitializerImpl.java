@@ -974,7 +974,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 					? entityDescriptor
 					: determineConcreteEntityDescriptor( rowProcessingState, discriminatorAssembler, entityDescriptor );
 			assert data.concreteDescriptor != null;
-			resolveEntityKey( data, lazyInitializer.getIdentifier() );
+			resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
 			data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
 					data.entityKey,
 					null,
@@ -989,7 +989,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		else {
 			data.entityInstanceForNotify = lazyInitializer.getImplementation();
 			data.concreteDescriptor = session.getEntityPersister( null, data.entityInstanceForNotify );
-			resolveEntityKey( data, lazyInitializer.getIdentifier() );
+			resolveEntityKey( data, lazyInitializer.getInternalIdentifier() );
 			data.entityHolder = persistenceContext.getEntityHolder( data.entityKey );
 			// Even though the lazyInitializer reports it is initialized, check if the entity holder reports initialized,
 			// because in a nested initialization scenario, this nested initializer must initialize the entity
@@ -1321,14 +1321,13 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 	@Override
 	public void initializeInstance(EntityInitializerData data) {
-		if ( data.getState() != State.RESOLVED ) {
-			return;
+		if ( data.getState() == State.RESOLVED ) {
+			if ( !skipInitialization( data ) ) {
+				assert consistentInstance( data );
+				initializeEntityInstance( data );
+			}
+			data.setState( State.INITIALIZED );
 		}
-		if ( !skipInitialization( data ) ) {
-			assert consistentInstance( data );
-			initializeEntityInstance( data );
-		}
-		data.setState( State.INITIALIZED );
 	}
 
 	protected boolean consistentInstance(EntityInitializerData data) {
@@ -1375,7 +1374,14 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 
 		// from the perspective of Hibernate, an entity is read locked as soon as it is read
 		// so regardless of the requested lock mode, we upgrade to at least the read level
-		final LockMode lockModeToAcquire = data.lockMode == LockMode.NONE ? LockMode.READ : data.lockMode;
+		final LockMode lockModeToAcquire;
+		if ( data.getRowProcessingState().isTransactionActive() ) {
+			lockModeToAcquire = data.lockMode == LockMode.NONE ? LockMode.READ : data.lockMode;
+		}
+		else {
+			// data read outside transaction is marked as unlocked
+			lockModeToAcquire = LockMode.NONE;
+		}
 
 		final EntityEntry entityEntry = persistenceContext.addEntry(
 				entityInstanceForNotify,
@@ -1397,6 +1403,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		takeSnapshot( data, session, persistenceContext, entityEntry, resolvedEntityState );
 
 		data.concreteDescriptor.afterInitialize( entityInstanceForNotify, session );
+		entityEntry.postLoad( entityInstanceForNotify );
 
 		assert data.concreteDescriptor.getIdentifier( entityInstanceForNotify, session ) != null;
 
@@ -1651,6 +1658,10 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 						castNonNull( discriminatorAssembler ),
 						entityDescriptor
 				);
+				if ( data.concreteDescriptor == null ) {
+					// this should imply the entity is missing
+					return;
+				}
 			}
 		}
 		resolveEntityState( data );

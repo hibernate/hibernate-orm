@@ -16,6 +16,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -34,12 +35,12 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.BindingContext;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.EMBEDDABLE;
 import static org.hibernate.internal.util.ReflectHelper.isRecord;
 import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
@@ -49,7 +50,8 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
  *
  * @author Gavin King
  */
-public class ComponentType extends AbstractType implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
+public class ComponentType extends AbstractType
+		implements CompositeTypeImplementor, ProcedureParameterExtractionAware {
 	private final Class<?> componentClass;
 	private final boolean mutable;
 
@@ -59,6 +61,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final int[] originalPropertyOrder;
 	protected final int propertySpan;
 	private final CascadeStyle[] cascade;
+	private final OnDeleteAction[] onDeleteAction;
 	private final FetchMode[] joinedFetch;
 	private final int discriminatorColumnSpan;
 
@@ -83,11 +86,18 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		this.propertySpan = component.getPropertySpan();
 		this.originalPropertyOrder = originalPropertyOrder;
 		final Value discriminator = component.getDiscriminator();
-		this.propertyNames = new String[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.propertyTypes = new Type[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.propertyNullability = new boolean[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.cascade = new CascadeStyle[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
-		this.joinedFetch = new FetchMode[propertySpan + ( component.isPolymorphic() ? 1 : 0 )];
+		final int length = propertySpan + (component.isPolymorphic() ? 1 : 0);
+		this.propertyNames = new String[length];
+		this.propertyTypes = new Type[length];
+		this.propertyNullability = new boolean[length];
+		this.cascade = new CascadeStyle[length];
+		this.onDeleteAction = new OnDeleteAction[length];
+		this.joinedFetch = new FetchMode[length];
+
+		final boolean supportsCascadeDelete =
+				component.getBuildingContext().getMetadataCollector()
+						.getDatabase().getDialect()
+						.supportsCascadeDelete();
 
 		int i = 0;
 		for ( Property property : component.getProperties() ) {
@@ -96,6 +106,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			this.propertyNullability[i] = property.isOptional();
 			this.cascade[i] = property.getCascadeStyle();
 			this.joinedFetch[i] = property.getValue().getFetchMode();
+			onDeleteAction[i] = supportsCascadeDelete ? property.getOnDeleteAction() : null;
 			if ( !property.isOptional() ) {
 				hasNotNullProperty = true;
 			}
@@ -153,6 +164,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public final boolean isComponentType() {
 		return true;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return EMBEDDABLE;
 	}
 
 	public Class<?> getReturnedClass() {
@@ -578,6 +594,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
+	public OnDeleteAction getOnDeleteAction(int i) {
+		return onDeleteAction[i];
+	}
+
+	@Override
 	public boolean isMutable() {
 		return mutable;
 	}
@@ -832,7 +853,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	@Override
-	public Class<?> getBindableJavaType() {
+	public Class<?> getJavaType() {
 		return getReturnedClass();
 	}
 

@@ -4,6 +4,7 @@
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/7.0
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:whatsNewBase: {versionDocBase}/whats-new/whats-new.html
 :javadocsBase: {versionDocBase}/javadocs
 :releaseSeriesBase: https://hibernate.org/orm/releases/7.0/
 :fn-cascase-type: footnote:cascade-type[`org.hibernate.annotations.Cascade` and `org.hibernate.annotations.CascadeType` are both fully deprecated as of 7.0]
@@ -203,6 +204,7 @@ textual link:{user-guide-url}#fetching-strategies-dynamic-fetching-entity-graph-
 * Replaced uses of `CacheModeType` with `CacheMode`
 * Removed `@Cache#include` -> use `@Cache#includeLazy`
 * Removed `@TestForIssue` (for testing purposes) -> use `org.hibernate.testing.orm.junit.JiraKey` or `org.hibernate.testing.orm.junit.JiraKeyGroup`
+* Removed `@Target` - see <<targetembeddable-annotation>>
 
 
 [[proxy-annotation]]
@@ -225,6 +227,16 @@ All such cases though are already controllable by the application.
 
 The effect can also often be mitigated using Hibernate's bytecode-based laziness (possibly combined with `@ConcreteProxy`).
 
+[[targetembeddable-annotation]]
+=== Replace @Target
+
+The `@Target` annotation has been replaced with the new `@TargetEmbeddable`, which is intended to indicate the `@Embeddable` class that is the implementation target of the embedded instance.
+This new annotation is only allowed on members which are embedded (`@Embedded`) or are a collection-of-embeddables (`@ElementCollection`).
+For `@Embedded` cases, the annotation may be placed on the member or the member's declared type.
+For `@ElementCollection` cases, however, it must be placed on the member.
+See the link:{user-guide-url}#embeddable-Target[User Guide] for details.
+
+
 [[domain-metamodel-layering]]
 === Metamodel API layering
 
@@ -241,6 +253,11 @@ In particular, interpretation of integrity constraint violations was improved si
 
 Also, `LockAcquisitionException` now extends `PessimisticLockException`.
 
+[[Query-setOrder]]
+=== Removed Query#setOrder
+
+`Query#setOrder` was an incubating API added in support of Hibernate's Jakarta Data and Repositories implementations.
+It was never a great solution and has been replaced with a better alternative - link:{whatsNewBase}#QuerySpecification[QuerySpecification].
 
 [[misc-api]]
 === Miscellaneous
@@ -251,7 +268,7 @@ Also, `LockAcquisitionException` now extends `PessimisticLockException`.
 * Removed `Session.LockRequest` - use `LockOptions` instead
 * `SessionFactory.createEntityManager()` now returns `Session` for convenience
 * `CommonQueryContract.setFlushMode()` was deprecated in favor of `setQueryFlushMode` accepting a `QueryFlushMode`
-
+* Incubating interfaces `BindableType`, `OutputableType`, and `BindingContext` were moved to `org.hibernate.type`
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -312,6 +329,10 @@ Hibernate now reports many more kinds of `DiagnosticEvent` to JFR.
 was removed in favor of `org.hibernate.metamodel.MappingMetmodel` or `org.hibernate.metamodel.model.domain.JpaMetamodel`
 * Removed `AdditionalJaxbMappingProducer` in favor of `AdditionalMappingContributor`.
 * Removed `MetadataContributor` in favor of `AdditionalMappingContributor`
+* Removed incubating `setOrder()` from `SelectionQuery()` in favor of `SelectionSpecification.sort()`
+* Various JDBC types were moved to an internal package -- use `@JdbcTypeCode` instead of `@JdbcType` to map your attributes to these types.
+  For example use `@JdbcTypeCode(SqlTypes.INTERVAL_SECOND)` instead of `@JdbcType(PostgreSQLIntervalSecondJdbcType.class)`.
+  Other moved types include `PostgreSQLEnumJdbcType`, `PostgreSQLOrdinalEnumJdbcType`, `PostgreSQLUUIDJdbcType`, `DB2StructJdbcType`, `H2DurationIntervalSecondJdbcType`, `H2JsonJdbcType`, `OracleBooleanJdbcType`, `OracleEnumJdbcType`, `OracleJsonJdbcType`, `OracleOrdinalEnumJdbcType`, `OracleReflectionStructJdbcType`, `OracleXmlJdbcType`.
 
 
 
@@ -707,11 +728,49 @@ Now, `varchar(1)` is used by default.
 
 
 [[settings]]
-=== Changes Related to Settings
+== Changes Related to Settings
 
 * Removed `hibernate.mapping.precedence` and friends
 * Removed `hibernate.allow_refresh_detached_entity`
 
+[[lock-options]]
+== LockOptions
+
+`LockOptions` has been marked deprecated.
+Since JPA 3.2 and Hibernate 7, a `LockMode` (or `LockModeType`), `Timeout`, or `PessimisticLockScope` may be passed directly as an option to `find()`, `refresh()`, or `lock()`.
+Therefore, this class is obsolete as an API and will be moved to an SPI package.
+
+Use this
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    LockMode.PESSIMISTIC_WRITE,
+    Timeouts.NO_WAIT
+);
+----
+====
+
+instead of this
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    new LockOptions(
+        LockMode.PESSIMISTIC_WRITE,
+        0
+    )
+);
+----
+====
+
+See the link:{whatsNewBase}#operation-options[What's New] guide for more details.
 
 
 [[pools]]

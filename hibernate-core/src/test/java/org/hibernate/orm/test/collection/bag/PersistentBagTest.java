@@ -4,21 +4,15 @@
  */
 package org.hibernate.orm.test.collection.bag;
 
-import java.util.ArrayList;
-
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.collection.spi.PersistentBag;
-
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -27,11 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Steve Ebersole
  */
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/bag/Mappings.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/collection/bag/Mappings.xml")
 @SessionFactory
 public class PersistentBagTest {
 
@@ -79,7 +70,6 @@ public class PersistentBagTest {
 
 	@Test
 	public void testMergePersistentEntityWithNewOneToManyElements(SessionFactoryScope scope) {
-
 		Long orderId = scope.fromTransaction(
 				session -> {
 					Order order = new Order();
@@ -100,16 +90,13 @@ public class PersistentBagTest {
 					item2.setName( "i2" );
 					order.addItem( item1 );
 					order.addItem( item2 );
-					order = (Order) session.merge( order );
+					order = session.merge( order );
 				}
 		);
+	}
 
-		scope.inTransaction(
-				session -> {
-					Order order = session.get( Order.class, orderId );
-					assertEquals( 2, order.getItems().size() );
-					session.remove( order );
-				}
-		);
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 }

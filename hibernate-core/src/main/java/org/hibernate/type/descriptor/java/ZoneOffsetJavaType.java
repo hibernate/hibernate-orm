@@ -33,6 +33,11 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof ZoneOffset;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}

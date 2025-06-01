@@ -4,7 +4,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 
 import org.hibernate.annotations.Parameter;
@@ -17,7 +16,7 @@ import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -28,9 +27,8 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 
-import static org.hibernate.internal.util.GenericsHelper.extractClass;
-import static org.hibernate.internal.util.GenericsHelper.extractParameterizedType;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
+import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createJpaAttributeConverter;
 
 /**
  * @author Steve Ebersole
@@ -38,8 +36,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
 public class AnnotationHelper {
 	public static HashMap<String, String> extractParameterMap(Parameter[] parameters) {
 		final HashMap<String,String> paramMap = mapOfSize( parameters.length );
-		for ( int i = 0; i < parameters.length; i++ ) {
-			paramMap.put( parameters[i].name(), parameters[i].value() );
+		for ( Parameter parameter : parameters ) {
+			paramMap.put( parameter.name(), parameter.value() );
 		}
 		return paramMap;
 	}
@@ -58,33 +56,21 @@ public class AnnotationHelper {
 			MetadataBuildingContext context) {
 		final BootstrapContext bootstrapContext = context.getBootstrapContext();
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
-
 		final var bean = bootstrapContext.getManagedBeanRegistry().getBean( type );
-
-		final ParameterizedType converterParameterizedType = extractParameterizedType( bean.getBeanClass() );
-		final Class<?> domainJavaClass = extractClass( converterParameterizedType.getActualTypeArguments()[0] );
-		final Class<?> relationalJavaClass = extractClass( converterParameterizedType.getActualTypeArguments()[1] );
-
+		@SuppressWarnings("unchecked")
+		final var castBean = (ManagedBean<? extends AttributeConverter<X,Y>>) bean;
 		final JavaTypeRegistry registry = typeConfiguration.getJavaTypeRegistry();
-		final JavaType<X> domainJtd = registry.resolveDescriptor( domainJavaClass );
-		final JavaType<Y> relationalJtd = registry.resolveDescriptor( relationalJavaClass );
-
-		final JpaAttributeConverterImpl<X,Y> valueConverter =
-				new JpaAttributeConverterImpl<>(
-						(ManagedBean<? extends AttributeConverter<X,Y>>) bean,
-						registry.resolveDescriptor( bean.getBeanClass() ),
-						domainJtd,
-						relationalJtd
-				);
+		final JpaAttributeConverter<X, Y> valueConverter = createJpaAttributeConverter( castBean, registry );
 		return new ConvertedBasicTypeImpl<>(
 				ConverterDescriptor.TYPE_NAME_PREFIX
 						+ valueConverter.getConverterJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
-						domainJtd.getTypeName(),
-						relationalJtd.getTypeName()
+						valueConverter.getDomainJavaType().getTypeName(),
+						valueConverter.getRelationalJavaType().getTypeName()
 				),
-				relationalJtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
+				registry.<Y>resolveDescriptor( valueConverter.getRelationalJavaType().getJavaType() )
+						.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() ),
 				valueConverter
 		);
 	}

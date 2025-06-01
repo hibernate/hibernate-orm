@@ -577,7 +577,7 @@ public final class TypeUtils {
 					|| isAnnotationMirrorOfType( mirror, ONE_TO_ONE ) ) {
 				return getFullyQualifiedClassNameOfTargetEntity( mirror, "targetEntity" );
 			}
-			else if ( isAnnotationMirrorOfType( mirror, "org.hibernate.annotations.Target") ) {
+			else if ( isAnnotationMirrorOfType( mirror, "org.hibernate.annotations.TargetEmbeddable") ) {
 				return getFullyQualifiedClassNameOfTargetEntity( mirror, "value" );
 			}
 		}

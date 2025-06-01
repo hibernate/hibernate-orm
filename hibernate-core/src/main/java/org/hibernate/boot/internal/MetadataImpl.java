@@ -6,7 +6,6 @@ package org.hibernate.boot.internal;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,10 +61,11 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.Action;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.lang.String.join;
+import static java.util.Collections.emptySet;
 import static org.hibernate.cfg.AvailableSettings.EVENT_LISTENER_PREFIX;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
@@ -164,10 +164,10 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	@Override
 	public SessionFactoryBuilder getSessionFactoryBuilder() {
-		final SessionFactoryBuilderImplementor defaultBuilder = getFactoryBuilder();
+		final var defaultBuilder = getFactoryBuilder();
 		SessionFactoryBuilder builder = null;
 		List<String> activeFactoryNames = null;
-		for ( SessionFactoryBuilderFactory discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
+		for ( var discoveredBuilderFactory : getSessionFactoryBuilderFactories() ) {
 			final SessionFactoryBuilder returnedBuilder =
 					discoveredBuilderFactory.getSessionFactoryBuilder( this, defaultBuilder );
 			if ( returnedBuilder != null ) {
@@ -371,85 +371,90 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public void orderColumns(boolean forceOrdering) {
 		final ColumnOrderingStrategy columnOrderingStrategy = metadataBuildingOptions.getColumnOrderingStrategy();
-		if ( columnOrderingStrategy == ColumnOrderingStrategyLegacy.INSTANCE ) {
-			// No need to order columns when using the no-op strategy
-			return;
-		}
-
-		final boolean shouldOrderTableColumns = forceOrdering || shouldOrderTableColumns();
-
-		for ( Namespace namespace : database.getNamespaces() ) {
-			if ( shouldOrderTableColumns ) {
-				for ( Table table : namespace.getTables() ) {
-					final List<Column> tableColumns = columnOrderingStrategy.orderTableColumns( table, this );
-					if ( tableColumns != null ) {
-						table.reorderColumns( tableColumns );
-					}
-					final PrimaryKey primaryKey = table.getPrimaryKey();
-					if ( primaryKey != null && primaryKey.getColumns()
-							.size() > 1 && primaryKey.getOriginalOrder() == null ) {
-						final List<Column> primaryKeyColumns = columnOrderingStrategy.orderConstraintColumns(
-								primaryKey,
-								this
-						);
-						if ( primaryKeyColumns != null ) {
-							primaryKey.reorderColumns( primaryKeyColumns );
-						}
-					}
-					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
-						final List<Column> columns = foreignKey.getColumns();
-						if ( columns.size() > 1 ) {
-							if ( foreignKey.getReferencedColumns().isEmpty() ) {
-								final PrimaryKey foreignKeyTargetPrimaryKey = foreignKey.getReferencedTable()
-										.getPrimaryKey();
-								// Make sure we order the columns of the primary key first,
-								// so that foreign key ordering can rely on this
-								if ( foreignKeyTargetPrimaryKey.getOriginalOrder() == null ) {
-									final List<Column> primaryKeyColumns = columnOrderingStrategy.orderConstraintColumns(
-											foreignKeyTargetPrimaryKey,
-											this
-									);
-									if ( primaryKeyColumns != null ) {
-										foreignKeyTargetPrimaryKey.reorderColumns( primaryKeyColumns );
-									}
-								}
-
-								// Patch up the order of foreign keys based on new order of the target primary key
-								final int[] originalPrimaryKeyOrder = foreignKeyTargetPrimaryKey.getOriginalOrder();
-								if ( originalPrimaryKeyOrder != null ) {
-									final ArrayList<Column> foreignKeyColumnsCopy = new ArrayList<>( columns );
-									for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
-										columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
-									}
-								}
-							}
-						}
+		// No need to order columns when using the no-op strategy
+		if ( columnOrderingStrategy != ColumnOrderingStrategyLegacy.INSTANCE ) {
+			final boolean shouldOrderTableColumns = forceOrdering || shouldOrderTableColumns();
+			for ( Namespace namespace : database.getNamespaces() ) {
+				if ( shouldOrderTableColumns ) {
+					for ( Table table : namespace.getTables() ) {
+						handleTable( table, columnOrderingStrategy );
+						handlePrimaryKey( table, columnOrderingStrategy );
+						handleForeignKeys( table, columnOrderingStrategy );
 					}
 				}
+				for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
+					handleUDT( userDefinedType, columnOrderingStrategy );
+				}
 			}
-			for ( UserDefinedType userDefinedType : namespace.getUserDefinedTypes() ) {
-				if ( userDefinedType instanceof UserDefinedObjectType objectType
-						&& objectType.getColumns().size() > 1 ) {
-					final List<Column> objectTypeColumns =
-							columnOrderingStrategy.orderUserDefinedTypeColumns( objectType, this );
-					if ( objectTypeColumns != null ) {
-						objectType.reorderColumns( objectTypeColumns );
+		}
+	}
+
+	private void handleTable(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
+		final List<Column> tableColumns = columnOrderingStrategy.orderTableColumns( table, this );
+		if ( tableColumns != null ) {
+			table.reorderColumns( tableColumns );
+		}
+	}
+
+	private void handleUDT(UserDefinedType userDefinedType, ColumnOrderingStrategy columnOrderingStrategy) {
+		if ( userDefinedType instanceof UserDefinedObjectType objectType
+				&& objectType.getColumns().size() > 1 ) {
+			final List<Column> objectTypeColumns =
+					columnOrderingStrategy.orderUserDefinedTypeColumns( objectType, this );
+			if ( objectTypeColumns != null ) {
+				objectType.reorderColumns( objectTypeColumns );
+			}
+		}
+	}
+
+	private void handleForeignKeys(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
+		for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
+			final List<Column> columns = foreignKey.getColumns();
+			if ( columns.size() > 1 ) {
+				if ( foreignKey.getReferencedColumns().isEmpty() ) {
+					final PrimaryKey targetPrimaryKey =
+							foreignKey.getReferencedTable().getPrimaryKey();
+					// Make sure we order the columns of the primary key first,
+					// so that foreign key ordering can rely on this
+					if ( targetPrimaryKey.getOriginalOrder() == null ) {
+						final List<Column> primaryKeyColumns =
+								columnOrderingStrategy.orderConstraintColumns( targetPrimaryKey, this );
+						if ( primaryKeyColumns != null ) {
+							targetPrimaryKey.reorderColumns( primaryKeyColumns );
+						}
+					}
+
+					// Patch up the order of foreign keys based on new order of the target primary key
+					final int[] originalPrimaryKeyOrder = targetPrimaryKey.getOriginalOrder();
+					if ( originalPrimaryKeyOrder != null ) {
+						final ArrayList<Column> foreignKeyColumnsCopy = new ArrayList<>( columns );
+						for ( int i = 0; i < foreignKeyColumnsCopy.size(); i++ ) {
+							columns.set( i, foreignKeyColumnsCopy.get( originalPrimaryKeyOrder[i] ) );
+						}
 					}
 				}
 			}
 		}
 	}
 
-	private boolean shouldOrderTableColumns() {
-		final ConfigurationService configurationService =
-				metadataBuildingOptions.getServiceRegistry().requireService( ConfigurationService.class );
-		final Set<SchemaManagementToolCoordinator.ActionGrouping> groupings =
-				SchemaManagementToolCoordinator.ActionGrouping.interpret( this,
-						configurationService.getSettings() );
-		if ( groupings.isEmpty() ) {
-			return false;
+	private void handlePrimaryKey(Table table, ColumnOrderingStrategy columnOrderingStrategy) {
+		final PrimaryKey primaryKey = table.getPrimaryKey();
+		if ( primaryKey != null && primaryKey.getColumns()
+				.size() > 1 && primaryKey.getOriginalOrder() == null ) {
+			final List<Column> primaryKeyColumns =
+					columnOrderingStrategy.orderConstraintColumns( primaryKey, this );
+			if ( primaryKeyColumns != null ) {
+				primaryKey.reorderColumns( primaryKeyColumns );
+			}
 		}
-		for ( SchemaManagementToolCoordinator.ActionGrouping grouping : groupings ) {
+	}
+
+	private boolean shouldOrderTableColumns() {
+		final var settings =
+				metadataBuildingOptions.getServiceRegistry()
+						.requireService( ConfigurationService.class )
+						.getSettings();
+		for ( ActionGrouping grouping : ActionGrouping.interpret( this, settings ) ) {
 			if ( isColumnOrderingRelevant( grouping.getScriptAction() )
 				|| isColumnOrderingRelevant( grouping.getDatabaseAction() ) ) {
 				return true;
@@ -479,30 +484,29 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
 		return mappedSuperclassMap == null
-				? Collections.emptySet()
+				? emptySet()
 				: new HashSet<>( mappedSuperclassMap.values() );
 	}
 
 	@Override
 	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
 		// must not use BootstrapContext services here
-		final ServiceRegistryImplementor sessionFactoryServiceRegistry = sessionFactory.getServiceRegistry();
-		assert sessionFactoryServiceRegistry != null;
+		final ServiceRegistryImplementor registry = sessionFactory.getServiceRegistry();
+		assert registry != null;
 		final ConfigurationService configurationService =
-				sessionFactoryServiceRegistry.requireService( ConfigurationService.class );
+				registry.requireService( ConfigurationService.class );
 		final ClassLoaderService classLoaderService =
-				sessionFactoryServiceRegistry.requireService( ClassLoaderService.class );
+				registry.requireService( ClassLoaderService.class );
 		final EventListenerRegistry eventListenerRegistry =
-				sessionFactoryServiceRegistry.requireService( EventListenerRegistry.class );
-		for ( Map.Entry<String,Object> entry : configurationService.getSettings().entrySet() ) {
-			final String propertyName = entry.getKey();
+				registry.requireService( EventListenerRegistry.class );
+		configurationService.getSettings().forEach( (propertyName, value) -> {
 			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {
 				final String eventTypeName = propertyName.substring( EVENT_LISTENER_PREFIX.length() + 1 );
 				final EventType<?> eventType = EventType.resolveEventTypeByName( eventTypeName );
-				final String listeners = (String) entry.getValue();
+				final String listeners = (String) value;
 				appendListeners( eventListenerRegistry, classLoaderService, listeners, eventType );
 			}
-		}
+		} );
 	}
 
 	private <T> void appendListeners(

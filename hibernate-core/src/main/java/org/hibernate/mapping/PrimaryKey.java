@@ -22,10 +22,11 @@ public class PrimaryKey extends Constraint {
 	private UniqueKey orderingUniqueKey = null;
 	private int[] originalOrder;
 
-	public PrimaryKey(Table table){
-		setTable( table );
+	public PrimaryKey(Table table) {
+		super( table );
 	}
 
+	@Deprecated(since = "7")
 	public PrimaryKey() {
 	}
 

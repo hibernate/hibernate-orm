@@ -224,6 +224,12 @@ public class BinderHelper {
 	 * considered the target of the association. This method adds
 	 * the property holding the synthetic component to the target
 	 * entity {@link PersistentClass} by side effect.
+	 * <p>
+	 * This method automatically marks the reference column unique,
+	 * or creates a unique key on the referenced columns. It's not
+	 * really clear that we should do this. Perhaps we should just
+	 * validate that they are unique and error if not, like in
+	 * {@code TableBinder.checkReferenceToUniqueKey()}.
 	 */
 	private static Property referencedProperty(
 			PersistentClass ownerEntity,
@@ -238,7 +244,10 @@ public class BinderHelper {
 				&& ownerEntity == columnOwner
 				&& !( properties.get(0).getValue() instanceof ToOne ) ) {
 			// no need to make a synthetic property
-			return properties.get(0);
+			final Property property = properties.get( 0 );
+			// mark it unique
+			property.getValue().createUniqueKey( context );
+			return property;
 		}
 		else {
 			// Create a synthetic Property whose Value is a synthetic
@@ -713,10 +722,11 @@ public class BinderHelper {
 			PersistentClass persistentClass,
 			String columnName,
 			MetadataBuildingContext context) {
+		final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
 		PersistentClass current = persistentClass;
 		while ( current != null ) {
 			try {
-				context.getMetadataCollector().getPhysicalColumnName( current.getTable(), columnName );
+				metadataCollector.getPhysicalColumnName( current.getTable(), columnName );
 				return current;
 			}
 			catch (MappingException me) {
@@ -724,7 +734,7 @@ public class BinderHelper {
 			}
 			for ( Join join : current.getJoins() ) {
 				try {
-					context.getMetadataCollector().getPhysicalColumnName( join.getTable(), columnName );
+					metadataCollector.getPhysicalColumnName( join.getTable(), columnName );
 					return join;
 				}
 				catch (MappingException me) {
@@ -785,9 +795,8 @@ public class BinderHelper {
 		final AnnotatedColumn firstDiscriminatorColumn = discriminatorColumns.getColumns().get(0);
 		firstDiscriminatorColumn.linkWithValue( discriminatorDescriptor );
 
-		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
-				.resolve()
-				.getRelationalJavaType();
+		final JavaType<?> discriminatorJavaType =
+				discriminatorDescriptor.resolve().getRelationalJavaType();
 
 		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
 		processAnyDiscriminatorValues(
@@ -801,7 +810,8 @@ public class BinderHelper {
 		value.setDiscriminatorValueMappings( discriminatorValueMappings );
 
 
-		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues =
+				property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
 		if ( anyDiscriminatorImplicitValues != null ) {
 			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
 		}
@@ -848,7 +858,6 @@ public class BinderHelper {
 			ClassDetails declaringClass,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
 			MetadataBuildingContext context) {
-		boolean retrieve = false;
 		if ( declaringClass != null ) {
 			final InheritanceState inheritanceState = inheritanceStatePerClass.get( declaringClass );
 			if ( inheritanceState == null ) {
@@ -857,16 +866,10 @@ public class BinderHelper {
 				);
 			}
 			if ( inheritanceState.isEmbeddableSuperclass() ) {
-				retrieve = true;
+				return context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
 			}
 		}
-
-		if ( retrieve ) {
-			return context.getMetadataCollector().getMappedSuperclass( declaringClass.toJavaClass() );
-		}
-		else {
-			return null;
-		}
+		return null;
 	}
 
 	public static String getPath(PropertyHolder holder, PropertyData property) {
@@ -874,14 +877,14 @@ public class BinderHelper {
 	}
 
 	public static Map<String,String> toAliasTableMap(SqlFragmentAlias[] aliases){
-		final Map<String,String> ret = new HashMap<>();
+		final Map<String,String> result = new HashMap<>();
 		for ( SqlFragmentAlias aliasAnnotation : aliases ) {
 			final String table = aliasAnnotation.table();
 			if ( isNotBlank( table ) ) {
-				ret.put( aliasAnnotation.alias(), table );
+				result.put( aliasAnnotation.alias(), table );
 			}
 		}
-		return ret;
+		return result;
 	}
 
 	public static Map<String,String> toAliasEntityMap(SqlFragmentAlias[] aliases){
@@ -908,26 +911,29 @@ public class BinderHelper {
 		};
 	}
 
-	public static String getCascadeStrategy(
-			jakarta.persistence.CascadeType[] ejbCascades,
-			Cascade hibernateCascadeAnnotation,
+	public static EnumSet<CascadeType> aggregateCascadeTypes(
+			jakarta.persistence.CascadeType[] cascadeTypes,
+			Cascade cascadeAnnotation,
 			boolean orphanRemoval,
 			MetadataBuildingContext context) {
-		final EnumSet<CascadeType> cascadeTypes = convertToHibernateCascadeType( ejbCascades );
+		final EnumSet<CascadeType> cascades =
+				convertToHibernateCascadeType( cascadeTypes );
 		final CascadeType[] hibernateCascades =
-				hibernateCascadeAnnotation == null ? null : hibernateCascadeAnnotation.value();
+				cascadeAnnotation == null
+						? null
+						: cascadeAnnotation.value();
 		if ( !isEmpty( hibernateCascades ) ) {
-			addAll( cascadeTypes, hibernateCascades );
+			addAll( cascades, hibernateCascades );
 		}
 		if ( orphanRemoval ) {
-			cascadeTypes.add( CascadeType.DELETE_ORPHAN );
-			cascadeTypes.add( CascadeType.REMOVE );
+			cascades.add( CascadeType.DELETE_ORPHAN );
+			cascades.add( CascadeType.REMOVE );
 		}
-		if ( cascadeTypes.contains( CascadeType.REPLICATE ) ) {
+		if ( cascades.contains( CascadeType.REPLICATE ) ) {
 			warnAboutDeprecatedCascadeType( CascadeType.REPLICATE );
 		}
-		cascadeTypes.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
-		return renderCascadeTypeList( cascadeTypes );
+		cascades.addAll( context.getEffectiveDefaults().getDefaultCascadeTypes() );
+		return cascades;
 	}
 
 	private static EnumSet<CascadeType> convertToHibernateCascadeType(jakarta.persistence.CascadeType[] cascades) {
@@ -951,7 +957,7 @@ public class BinderHelper {
 		};
 	}
 
-	private static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
+	public static String renderCascadeTypeList(EnumSet<CascadeType> cascadeTypes) {
 		final StringBuilder cascade = new StringBuilder();
 		for ( CascadeType cascadeType : cascadeTypes ) {
 			cascade.append( "," );

@@ -24,11 +24,12 @@ public class EmbeddedDiscriminatorSqmPathSource<D> extends AbstractDiscriminator
 
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		//noinspection unchecked
 		return new EmbeddedDiscriminatorSqmPath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,
-				embeddableDomainType,
+				(EmbeddableDomainType<D>) embeddableDomainType,
 				lhs.nodeBuilder()
 		);
 	}

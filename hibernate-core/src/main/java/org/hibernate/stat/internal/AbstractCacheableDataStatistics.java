@@ -21,6 +21,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 	private final @Nullable LongAdder cacheHitCount;
 	private final @Nullable LongAdder cacheMissCount;
 	private final @Nullable LongAdder cachePutCount;
+	private final @Nullable LongAdder cacheRemoveCount;
 
 	public AbstractCacheableDataStatistics(Supplier<@Nullable Region> regionSupplier) {
 		final Region region = regionSupplier.get();
@@ -29,12 +30,14 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 			this.cacheHitCount = null;
 			this.cacheMissCount = null;
 			this.cachePutCount = null;
+			this.cacheRemoveCount = null;
 		}
 		else {
 			this.cacheRegionName = region.getName();
 			this.cacheHitCount = new LongAdder();
 			this.cacheMissCount = new LongAdder();
 			this.cachePutCount = new LongAdder();
+			this.cacheRemoveCount = new LongAdder();
 		}
 	}
 
@@ -43,6 +46,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		return cacheRegionName;
 	}
 
+	@Override
 	public long getCacheHitCount() {
 		if ( cacheRegionName == null ) {
 			return NOT_CACHED_COUNT;
@@ -51,6 +55,7 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		return NullnessUtil.castNonNull( cacheHitCount ).sum();
 	}
 
+	@Override
 	public long getCachePutCount() {
 		if ( cacheRegionName == null ) {
 			return NOT_CACHED_COUNT;
@@ -59,12 +64,22 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		return NullnessUtil.castNonNull( cachePutCount ).sum();
 	}
 
+	@Override
 	public long getCacheMissCount() {
 		if ( cacheRegionName == null ) {
 			return NOT_CACHED_COUNT;
 		}
 
 		return NullnessUtil.castNonNull( cacheMissCount ).sum();
+	}
+
+	@Override
+	public long getCacheRemoveCount() {
+		if ( cacheRegionName == null ) {
+			return NOT_CACHED_COUNT;
+		}
+
+		return NullnessUtil.castNonNull( cacheRemoveCount ).sum();
 	}
 
 	public void incrementCacheHitCount() {
@@ -91,6 +106,14 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 		NullnessUtil.castNonNull( cachePutCount ).increment();
 	}
 
+	public void incrementCacheRemoveCount() {
+		if ( cacheRegionName == null ) {
+			throw new IllegalStateException( "Illegal attempt to increment cache put count for non-cached data" );
+		}
+
+		NullnessUtil.castNonNull( cacheRemoveCount ).increment();
+	}
+
 	protected void appendCacheStats(StringBuilder buf) {
 		buf.append( ",cacheRegion=" ).append( cacheRegionName );
 
@@ -100,7 +123,8 @@ public abstract class AbstractCacheableDataStatistics implements CacheableDataSt
 
 		buf.append( ",cacheHitCount=" ).append( getCacheHitCount() )
 				.append( ",cacheMissCount=" ).append( getCacheMissCount() )
-				.append( ",cachePutCount=" ).append( getCachePutCount() );
+				.append( ",cachePutCount=" ).append( getCachePutCount() )
+				.append( ",cacheRemoveCount=" ).append( getCacheRemoveCount() );
 
 	}
 }

@@ -8,12 +8,12 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
@@ -82,7 +82,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			throw new AnnotationException( "Property '" + path
 					+ "' overrides mapping specified using '@JoinColumnOrFormula'" );
 		}
-		return buildJoinColumn( joinColumn, /*null,*/ mappedBy, parent, propertyHolder, inferredData, "" );
+		return buildJoinColumn( joinColumn, mappedBy, parent, propertyHolder, inferredData, "" );
 	}
 
 	public static AnnotatedJoinColumn buildJoinFormula(
@@ -102,7 +102,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	static AnnotatedJoinColumn buildJoinColumn(
 			JoinColumn joinColumn,
-//			Comment comment,
 			String mappedBy,
 			AnnotatedJoinColumns parent,
 			PropertyHolder propertyHolder,
@@ -114,7 +113,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 						+ getRelativePath( propertyHolder, inferredData.getPropertyName() )
 						+ "' is 'mappedBy' a different entity and may not explicitly specify the '@JoinColumn'" );
 			}
-			return explicitJoinColumn( joinColumn, /*comment,*/ parent, inferredData, defaultColumnSuffix );
+			return explicitJoinColumn( joinColumn, parent, inferredData, defaultColumnSuffix );
 		}
 		else {
 			return implicitJoinColumn( parent, inferredData, defaultColumnSuffix );
@@ -123,12 +122,10 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	private static AnnotatedJoinColumn explicitJoinColumn(
 			JoinColumn joinColumn,
-//			Comment comment,
 			AnnotatedJoinColumns parent,
 			PropertyData inferredData,
 			String defaultColumnSuffix) {
 		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
-//		column.setComment( comment != null ? comment.value() : null );
 //		column.setContext( context );
 //		column.setJoins( joins );
 //		column.setPropertyHolder( propertyHolder );
@@ -290,15 +287,6 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		return column;
 	}
 
-	public static void checkIfJoinColumn(Object columns, PropertyHolder holder, PropertyData property) {
-		if ( !( columns instanceof AnnotatedJoinColumn[] ) ) {
-			throw new AnnotationException(
-					"Property '" + getRelativePath( holder, property.getPropertyName() )
-							+ "' is an association and may not use '@Column' to specify column mappings (use '@JoinColumn' instead)"
-			);
-		}
-	}
-
 	public void copyReferencedStructureAndCreateDefaultJoinColumns(
 			PersistentClass referencedEntity,
 			SimpleValue referencedValue,
@@ -313,6 +301,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		setMappingColumn( null );
 	}
 
+	/**
+	 * The JPA-specified rules implemented in
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl#determineJoinColumnName}
+	 * prevent us from assigning defaulted names to {@link JoinColumn} until the second pass.
+	 */
 	public void linkValueUsingDefaultColumnNaming(
 			Column referencedColumn,
 			PersistentClass referencedEntity,
@@ -326,11 +319,15 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
+		// In the case of a reference to a composite primary key,
+		// this instance of AnnotatedJoinColumn actually represents
+		// multiple foreign key columns, and this method will be
+		// called multiple times on the same instance
 		final String logicalReferencedColumn =
 				getBuildingContext().getMetadataCollector()
 						.getLogicalColumnName( referencedEntity.getTable(), referencedColumn.getQuotedName() );
 		final String columnName = defaultColumnName( columnIndex, referencedEntity, logicalReferencedColumn );
-		//yuk side effect on an implicit column
+		// awful side effect on an implicit column
 		setLogicalColumnName( columnName );
 		setImplicit( true );
 		setReferencedColumn( logicalReferencedColumn );
@@ -377,14 +374,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 //		}
 	}
 
-	public void addDefaultJoinColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
-		final String columnName = getParent().buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
-		getMappingColumn().setName( columnName );
-		setLogicalColumnName( columnName );
-	}
-
 	/**
-	 * used for mappedBy cases
+	 * Used for {@code mappedBy} cases.
 	 */
 	public void linkValueUsingAColumnCopy(Column column, SimpleValue value) {
 		initMappingColumn(
@@ -451,10 +442,23 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		}
 	}
 
+	/**
+	 * Assign the column name from the explicit {@code name} given by the annotation, if any. In cases where the column
+	 * name cannot be inferred, the {@link Column} is not assigned a name, and this method returns {@code false}. The
+	 * "dummy" {@code Column} will later be replaced with a {@code Column} with name determined by the rules implemented
+	 * in {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl#determineJoinColumnName},
+	 * as required by the JPA specification, or by any other custom {@link ImplicitNamingStrategy} when
+	 * {@link #linkValueUsingDefaultColumnNaming} is called during a {@link org.hibernate.boot.spi.SecondPass}.
+	 * @return {@code true} if a name could be inferred
+	 */
 	@Override
-	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( StringHelper.isNotEmpty( columnName ) ) {
+	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
+		if ( isNotEmpty( columnName ) ) {
 			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 

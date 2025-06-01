@@ -148,23 +148,30 @@ public interface StatisticsImplementor extends Statistics, Service {
 	/**
 	 * Callback indicating a put into second level cache.
 	 *
-	 * @apiNote `entityName` should be the root entity name
+	 * @apiNote {@code entityName} should be the root entity name
 	 */
 	void entityCachePut(NavigableRole entityName, String regionName);
 
 	/**
 	 * Callback indicating a get from second level cache resulted in a hit.
 	 *
-	 * @apiNote `entityName` should be the root entity name
+	 * @apiNote {@code entityName} should be the root entity name
 	 */
 	void entityCacheHit(NavigableRole entityName, String regionName);
 
 	/**
 	 * Callback indicating a get from second level cache resulted in a miss.
 	 *
-	 * @apiNote `entityName` should be the root entity name
+	 * @apiNote {@code entityName} should be the root entity name
 	 */
 	void entityCacheMiss(NavigableRole entityName, String regionName);
+
+	/**
+	 * Callback indicating a removal from second level cache.
+	 *
+	 * @apiNote {@code entityName} should be the root entity name
+	 */
+	void entityCacheRemove(NavigableRole rootEntityRole, String name);
 
 	/**
 	 * Callback indicating a put into second level cache.

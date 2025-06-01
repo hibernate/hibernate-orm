@@ -273,7 +273,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	public void testLeftRight(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
 
@@ -293,7 +293,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplace(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
 

@@ -92,38 +92,81 @@ public class QueryMethod extends AbstractQueryMethod {
 		comment( declaration );
 		modifiers( paramTypes, declaration );
 		preamble( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes );
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes, containerType );
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
-		handleRestrictionParameters( declaration, paramTypes );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
-		execute( declaration, unwrapped );
+		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
 	}
 
+	String specificationType() {
+		return isUpdate
+				? "org.hibernate.query.specification.MutationSpecification"
+				: "org.hibernate.query.specification.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append('.')
-				.append(createQueryMethod())
-				.append("(")
-				.append(getConstantName());
-		if ( returnTypeClass != null && !isUpdate ) {
-			declaration
-					.append(", ")
-					.append(annotationMetaEntity.importType(returnTypeClass))
-					.append(".class");
+		final boolean specification = isUsingSpecification();
+		if ( specification ) {
+			if ( isReactive() ) {
+				declaration
+						.append(localSessionName())
+						.append(".createQuery(_spec.buildCriteria(")
+						.append(localSessionName())
+						.append(".getFactory().getCriteriaBuilder()))\n");
+			}
+			else {
+				declaration
+						.append("_spec.createQuery(")
+						.append(localSessionName())
+						.append(")\n");
+			}
 		}
-		declaration.append(")\n");
+		else {
+			declaration
+					.append(localSessionName())
+					.append('.')
+					.append(createQueryMethod())
+					.append("(")
+					.append(getConstantName());
+			if ( returnTypeClass != null && !isUpdate ) {
+				declaration
+						.append(", ")
+						.append(annotationMetaEntity.importType(returnTypeClass))
+						.append(".class");
+			}
+			declaration.append(")\n");
+		}
+	}
+
+	@Override
+	void createSpecification(StringBuilder declaration) {
+		if ( returnTypeClass != null && isUsingSpecification() ) {
+			declaration
+					.append( "\tvar _spec = " )
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(" )
+					.append( annotationMetaEntity.importType( returnTypeClass ) )
+					.append( ".class, " )
+					.append( getConstantName() )
+					.append( ");\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return returnTypeClass != null
+			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	private String createQueryMethod() {

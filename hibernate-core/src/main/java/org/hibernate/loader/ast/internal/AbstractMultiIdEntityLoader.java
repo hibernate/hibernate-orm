@@ -335,7 +335,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 	protected abstract Object[] toIdArray(List<Object> ids);
 
 	private boolean isIdCoercionEnabled() {
-		return !getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
+		return !getSessionFactory().getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
 	public interface ResolutionConsumer<T> {

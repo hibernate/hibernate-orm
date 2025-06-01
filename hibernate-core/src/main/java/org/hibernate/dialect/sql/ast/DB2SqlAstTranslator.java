@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -60,7 +60,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  *
  * @author Christian Beikov
  */
-public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	// We have to track whether we are in a later query for applying lateral during window emulation
 	private boolean inLateral;

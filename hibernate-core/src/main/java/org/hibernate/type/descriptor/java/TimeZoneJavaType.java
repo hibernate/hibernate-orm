@@ -30,6 +30,11 @@ public class TimeZoneJavaType extends AbstractClassJavaType<TimeZone> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof TimeZone;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}

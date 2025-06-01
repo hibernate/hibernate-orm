@@ -6,6 +6,7 @@ package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -17,10 +18,7 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IndexBackref;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
@@ -29,11 +27,7 @@ import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
-import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -44,7 +38,7 @@ import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptableType;
 import static org.hibernate.internal.util.ReflectHelper.getMethod;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAccessStrategy;
 import static org.hibernate.proxy.pojo.ProxyFactoryHelper.validateGetterSetterMethodProxyability;
 
 /**
@@ -88,33 +82,19 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			identifierPropertyName = null;
 			identifierPropertyAccess = null;
 
-			final KeyValue bootDescriptorIdentifier = bootDescriptor.getIdentifier();
-
-			if ( bootDescriptorIdentifier instanceof Component descriptorIdentifierComponent ) {
+			if ( bootDescriptor.getIdentifier() instanceof Component descriptorIdentifierComponent ) {
 				final Component identifierMapper = bootDescriptor.getIdentifierMapper();
-				if ( identifierMapper != null ) {
-					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
-							identifierMapper,
-							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
-									.getMappingModelPart().getEmbeddableTypeDescriptor(),
-							// we currently do not support custom instantiators for identifiers
-							null,
-							null,
-							creationContext
-					);
-				}
-				else {
-					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
-							descriptorIdentifierComponent,
-							// TODO: something wrong here: bootDescriptor.getIdentifierMapper() was null!
-							() -> ( ( CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType() )
-									.getMappingModelPart().getEmbeddableTypeDescriptor(),
-							// we currently do not support custom instantiators for identifiers
-							null,
-							null,
-							creationContext
-					);
-				}
+				mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
+						identifierMapper == null ? descriptorIdentifierComponent : identifierMapper,
+						() -> {
+							final var type = (CompositeTypeImplementor) bootDescriptor.getIdentifierMapper().getType();
+							return type.getMappingModelPart().getEmbeddableTypeDescriptor();
+						},
+						// we currently do not support custom instantiators for identifiers
+						null,
+						null,
+						creationContext
+				);
 			}
 			else {
 				mapsIdRepresentationStrategy = null;
@@ -146,34 +126,35 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		this.instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor.getEntityMetamodel() );
 	}
 
-	@SuppressWarnings("removal")
 	private ProxyFactory resolveProxyFactory(
 			PersistentClass bootDescriptor,
 			EntityPersister entityPersister,
-			JavaType<?> proxyJtd,
+			JavaType<?> proxyJavaType,
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
-		final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
-		final boolean enhancedForLazyLoading = entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
-
 		// todo : `@ConcreteProxy` handling
-		if ( enhancedForLazyLoading
+		if ( entityPersister.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
 				&& bootDescriptor.getRootClass() == bootDescriptor
 				&& !bootDescriptor.hasSubclasses() ) {
-			// the entity is bytecode enhanced for lazy loading and is not part of an inheritance hierarchy,
+			// the entity is bytecode enhanced for lazy loading
+			// and is not part of an inheritance hierarchy,
 			// so no need for a ProxyFactory
 			return null;
 		}
-
-		if ( proxyJtd != null && entityMetamodel.isLazy() ) {
-			final ProxyFactory proxyFactory = createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
-			if ( proxyFactory == null ) {
-				entityMetamodel.setLazy( false );
+		else {
+			final EntityMetamodel entityMetamodel = entityPersister.getEntityMetamodel();
+			if ( proxyJavaType != null && entityMetamodel.isLazy() ) {
+				final ProxyFactory proxyFactory =
+						createProxyFactory( bootDescriptor, bytecodeProvider, creationContext );
+				if ( proxyFactory == null ) {
+					entityMetamodel.setLazy( false );
+				}
+				return proxyFactory;
 			}
-			return proxyFactory;
+			else {
+				return null;
+			}
 		}
-
-		return null;
 	}
 
 	private Map<String, PropertyAccess> buildPropertyAccessMap(PersistentClass bootDescriptor) {
@@ -207,7 +188,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		// that the most general @Proxy declared interface at the top of a class
 		// hierarchy will be used first when a HibernateProxy decides what it
 		// should implement.
-		final Set<Class<?>> proxyInterfaces = new java.util.LinkedHashSet<>();
+		final Set<Class<?>> proxyInterfaces = new LinkedHashSet<>();
 
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
 		final Class<?> proxyInterface = proxyJtd != null ? proxyJtd.getJavaTypeClass() : null;
@@ -304,32 +285,8 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor) {
-		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedJtd.getJavaTypeClass() );
-
-		if ( strategy == null ) {
-			final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
-			if ( isNotEmpty( propertyAccessorName ) ) {
-				// handle explicitly specified attribute accessor
-				strategy = strategySelector.resolveStrategy( PropertyAccessStrategy.class, propertyAccessorName );
-			}
-			else {
-				if ( bootAttributeDescriptor instanceof Backref backref ) {
-					strategy = new PropertyAccessStrategyBackRefImpl( backref.getCollectionRole(), backref
-							.getEntityName() );
-				}
-				else if ( bootAttributeDescriptor instanceof IndexBackref indexBackref ) {
-					strategy = new PropertyAccessStrategyIndexBackRefImpl(
-							indexBackref.getCollectionRole(),
-							indexBackref.getEntityName()
-					);
-				}
-				else {
-					// for now...
-					strategy = BuiltInPropertyAccessStrategies.MIXED.getStrategy();
-				}
-			}
-		}
-
+		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
+		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, mappedClass, strategySelector );
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(
@@ -340,8 +297,7 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 					)
 			);
 		}
-
-		return strategy.buildPropertyAccess( mappedJtd.getJavaTypeClass(), bootAttributeDescriptor.getName(), true );
+		return strategy.buildPropertyAccess( mappedClass, bootAttributeDescriptor.getName(), true );
 	}
 
 	@Override
@@ -384,16 +340,17 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		if ( bootAttributeDescriptor.getName().equals( identifierPropertyName ) ) {
 			return identifierPropertyAccess;
 		}
-
-		final PropertyAccess propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
-		if ( propertyAccess != null ) {
-			return propertyAccess;
+		else {
+			final PropertyAccess propertyAccess = propertyAccessMap.get( bootAttributeDescriptor.getName() );
+			if ( propertyAccess != null ) {
+				return propertyAccess;
+			}
+			else if ( mapsIdRepresentationStrategy != null ) {
+				return mapsIdRepresentationStrategy.resolvePropertyAccess( bootAttributeDescriptor );
+			}
+			else {
+				return null;
+			}
 		}
-
-		if ( mapsIdRepresentationStrategy != null ) {
-			return mapsIdRepresentationStrategy.resolvePropertyAccess( bootAttributeDescriptor );
-		}
-
-		return null;
 	}
 }

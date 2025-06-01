@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.any.xml</package>
+    <entity class="PropertySet">
+        <table name="t_prop_set"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name"/>
+            <any name="someSpecificProperty">
+                <discriminator>
+                    <type>STRING</type>
+                    <column name="ss_prop_type"/>
+                    <mapping value="I">IntegerPropertyValue</mapping>
+                    <mapping value="S">StringPropertyValue</mapping>
+                    <mapping value="C">ComplexPropertyValue</mapping>
+                </discriminator>
+                <key>
+                    <java-class>long</java-class>
+                    <column name="ss_prop_fk"/>
+                </key>
+                <cascade>
+                    <cascade-persist/>
+                </cascade>
+            </any>
+            <many-to-any name="generalProperties">
+                <map-key-class class="String"/>
+                <map-key-column name="gen_prop_name"/>
+                <discriminator>
+                    <type>STRING</type>
+                    <column name="gen_prop_type"/>
+                    <mapping value="I">IntegerPropertyValue</mapping>
+                    <mapping value="S">StringPropertyValue</mapping>
+                </discriminator>
+                <key>
+                    <java-class>Long</java-class>
+                    <column name="gen_prop_fk"/>
+                </key>
+                <cascade>
+                    <cascade-persist/>
+                </cascade>
+                <join-table name="t_gen_props">
+                    <join-column name="gen_container_fk"/>
+                    <inverse-join-column name="gen_assoc_fk"/>
+                </join-table>
+            </many-to-any>
+        </attributes>
+    </entity>
+
+    <entity class="StringPropertyValue">
+        <table name="t_char_prop"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="value">
+                <column name="val" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="IntegerPropertyValue">
+        <table name="t_num_prop"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="value">
+                <column name="val" nullable="false"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="ComplexPropertyValue">
+        <table name="t_complex_prop"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <element-collection name="subProperties" target-class="String">
+                <map-key-class class="String"/>
+                <map-key-column name="sub_prop_name"/>
+                <column name="sub_prop_val"/>
+                <collection-table name="t_complex_sub_props">
+                    <join-column name="complex_prop_fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+
+</entity-mappings>

@@ -7,8 +7,13 @@ package org.hibernate.loader.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
@@ -18,7 +23,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
@@ -63,7 +67,25 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return lockOptions;
 	}
 
-	public Object with(RootGraph<T> graph, GraphSemantic semantic) {
+	protected Object with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+
+	protected Object with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
+	}
+
+	public Object with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;

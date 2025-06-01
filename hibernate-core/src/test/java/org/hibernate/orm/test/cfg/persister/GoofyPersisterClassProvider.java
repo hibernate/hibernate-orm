@@ -45,6 +45,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -59,7 +60,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -301,6 +301,26 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public boolean hasCascades() {
+			return false;
+		}
+
+		@Override
+		public boolean hasCascadeDelete() {
+			return false;
+		}
+
+		@Override
+		public boolean hasToOnes() {
+			return false;
+		}
+
+		@Override
+		public boolean hasCascadePersist() {
+			return false;
+		}
+
+		@Override
+		public boolean hasOwnedCollections() {
 			return false;
 		}
 
@@ -929,7 +949,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		public DiscriminatorType<?> getDiscriminatorDomainType() {
 			return null;
 		}
 

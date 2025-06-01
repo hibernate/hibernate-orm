@@ -9,11 +9,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
@@ -49,6 +53,18 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	@Override
 	public boolean isSynchronizationEnabled() {
 		return super.isSynchronizationEnabled();
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		//noinspection unchecked
+		return (SimpleNaturalIdLoadAccess<T>) super.with( lockMode, lockScope );
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> with(Timeout timeout) {
+		//noinspection unchecked
+		return (SimpleNaturalIdLoadAccess<T>) super.with( timeout );
 	}
 
 	@Override
@@ -105,13 +121,13 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public SimpleNaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		super.with( graph, semantic );
 		return this;
 	}
 
 	@Override
-	public SimpleNaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	public SimpleNaturalIdLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return SimpleNaturalIdLoadAccess.super.withLoadGraph(graph);
 	}
 

@@ -183,7 +183,7 @@ public class LoaderHelper {
 		}
 
 		final K[] typedArray = createTypedArray( keyClass, keys.length );
-		final boolean coerce = !sessionFactory.getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
+		final boolean coerce = !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 		if ( !coerce ) {
 			System.arraycopy( keys, 0, typedArray, 0, keys.length );
 		}

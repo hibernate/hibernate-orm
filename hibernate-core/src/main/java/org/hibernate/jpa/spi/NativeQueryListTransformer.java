@@ -11,6 +11,8 @@ import java.util.List;
 /**
  * A {@link TupleTransformer} for handling {@link List} results from native queries.
  *
+ * @since 6.3
+ *
  * @author Gavin King
  */
 public class NativeQueryListTransformer implements TupleTransformer<List<Object>> {

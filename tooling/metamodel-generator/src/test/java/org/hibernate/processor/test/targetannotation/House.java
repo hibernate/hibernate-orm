@@ -8,7 +8,7 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 
 /**
  * @author Hardy Ferentschik
@@ -19,7 +19,7 @@ class House {
 	long id;
 
 	@Embedded
-	@Target(AddressImpl.class)
+	@TargetEmbeddable(AddressImpl.class)
 	private Address address;
 
 	public Address getAddress() {

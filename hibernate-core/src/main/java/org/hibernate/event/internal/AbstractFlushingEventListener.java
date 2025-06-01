@@ -5,7 +5,6 @@
 package org.hibernate.event.internal;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -16,7 +15,6 @@ import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
-import org.hibernate.engine.internal.Collections;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingActions;
@@ -39,6 +37,7 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.internal.Collections.processUnreachableCollection;
 import static org.hibernate.engine.internal.Collections.skipRemoval;
 
 /**
@@ -126,11 +125,12 @@ public abstract class AbstractFlushingEventListener {
 	 * any newly referenced entity that must be passed to saveOrUpdate(),
 	 * and also apply orphan delete
 	 */
-	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext) throws HibernateException {
+	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext)
+			throws HibernateException {
 		LOG.debug( "Processing flush-time cascades" );
 		final PersistContext context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			final EntityEntry entry = me.getValue();
 			if ( flushable( entry ) ) {
@@ -145,9 +145,9 @@ public abstract class AbstractFlushingEventListener {
 		// processed, so that all entities which will be persisted are
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
-		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {
 			final EntityEntry entry = me.getValue();
-			if ( flushable( entry ) ) {
+			if ( checkable( entry ) ) {
 				Cascade.cascade(
 						CascadingActions.CHECK_ON_FLUSH,
 						CascadePoint.BEFORE_FLUSH,
@@ -164,7 +164,13 @@ public abstract class AbstractFlushingEventListener {
 		final Status status = entry.getStatus();
 		return status == Status.MANAGED
 			|| status == Status.SAVING
-			|| status == Status.READ_ONLY;
+			|| status == Status.READ_ONLY; // debatable, see HHH-19398
+	}
+
+	private static boolean checkable(EntityEntry entry) {
+		final Status status = entry.getStatus();
+		return status == Status.MANAGED
+			|| status == Status.SAVING;
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)
@@ -186,11 +192,10 @@ public abstract class AbstractFlushingEventListener {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
 		LOG.debug( "Dirty checking collections" );
-		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries =
-				persistenceContext.getCollectionEntries();
+		final var collectionEntries = persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
-			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> entry :
-					( (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).toArray() ) {
+			final var identityMap = (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries;
+			for ( var entry : identityMap.toArray() ) {
 				entry.getValue().preFlush( entry.getKey() );
 			}
 		}
@@ -215,12 +220,12 @@ public abstract class AbstractFlushingEventListener {
 		// collections that are changing roles. This might cause entities
 		// to be loaded.
 		// So this needs to be safe from concurrent modification problems.
-		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
+		final var entityEntries = persistenceContext.reentrantSafeEntityEntries();
 		final int count = entityEntries.length;
 
 		FlushEntityEvent entityEvent = null; //allow reuse of the event as it's heavily allocated in certain use cases
 		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
-		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
+		for ( var me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
 			final EntityEntry entry = me.getValue();
 			final Status status = entry.getStatus();
@@ -264,17 +269,18 @@ public abstract class AbstractFlushingEventListener {
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
-		final Map<PersistentCollection<?>, CollectionEntry> collectionEntries = persistenceContext.getCollectionEntries();
+		final var collectionEntries = persistenceContext.getCollectionEntries();
 		final int count;
 		if ( collectionEntries == null ) {
 			count = 0;
 		}
 		else {
 			count = collectionEntries.size();
-			for ( Map.Entry<PersistentCollection<?>, CollectionEntry> me : ( (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries ).toArray() ) {
+			final var identityMap = (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries;
+			for ( var me : identityMap.toArray() ) {
 				final CollectionEntry ce = me.getValue();
 				if ( !ce.isReached() && !ce.isIgnore() ) {
-					Collections.processUnreachableCollection( me.getKey(), session );
+					processUnreachableCollection( me.getKey(), session );
 				}
 			}
 		}

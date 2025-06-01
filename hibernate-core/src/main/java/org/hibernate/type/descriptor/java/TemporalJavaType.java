@@ -20,27 +20,19 @@ import jakarta.persistence.TemporalType;
 public interface TemporalJavaType<T> extends BasicJavaType<T> {
 
 	static int resolveJdbcTypeCode(TemporalType requestedTemporalPrecision) {
-		switch ( requestedTemporalPrecision ) {
-			case DATE:
-				return Types.DATE;
-			case TIME:
-				return Types.TIME;
-			case TIMESTAMP:
-				return Types.TIMESTAMP;
-		}
-		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
+		return switch ( requestedTemporalPrecision ) {
+			case DATE -> Types.DATE;
+			case TIME -> Types.TIME;
+			case TIMESTAMP -> Types.TIMESTAMP;
+		};
 	}
 
 	static Class<?> resolveJavaTypeClass(TemporalType requestedTemporalPrecision) {
-		switch ( requestedTemporalPrecision ) {
-			case DATE:
-				return java.sql.Date.class;
-			case TIME:
-				return java.sql.Time.class;
-			case TIMESTAMP:
-				return java.sql.Timestamp.class;
-		}
-		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
+		return switch ( requestedTemporalPrecision ) {
+			case DATE -> java.sql.Date.class;
+			case TIME -> java.sql.Time.class;
+			case TIMESTAMP -> java.sql.Timestamp.class;
+		};
 	}
 
 	/**

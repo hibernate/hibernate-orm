@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <persistence-unit-metadata>
+        <xml-mapping-metadata-complete/>
+    </persistence-unit-metadata>
+    <entity name="DynamicCompositeIdBasic">
+        <table name="hbm_dynamic_cid_basic"/>
+        <id-class class=""/>
+        <attributes>
+            <id name="key1">
+                <target>Integer</target>
+            </id>
+            <id name="key2">
+                <target>Integer</target>
+            </id>
+            <basic name="attr1">
+                <target>String</target>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

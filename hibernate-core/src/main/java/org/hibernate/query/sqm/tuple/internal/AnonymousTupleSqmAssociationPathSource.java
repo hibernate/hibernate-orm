@@ -57,6 +57,16 @@ public class AnonymousTupleSqmAssociationPathSource<O, J>
 	}
 
 	@Override
+	public Class<J> getBindableJavaType() {
+		return getExpressibleJavaType().getJavaTypeClass();
+	}
+
+	@Override
+	public Class<J> getJavaType() {
+		return getExpressibleJavaType().getJavaTypeClass();
+	}
+
+	@Override
 	public SqmDomainType<J> getPathType() {
 		return (SqmDomainType<J>) domainType;
 	}

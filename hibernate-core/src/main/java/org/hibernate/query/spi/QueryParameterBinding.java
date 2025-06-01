@@ -9,8 +9,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

@@ -10,6 +10,7 @@ import org.hibernate.internal.util.QuotingHelper;
 import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.criteria.JpaXmlTableColumnNode;
 import org.hibernate.query.criteria.JpaXmlTableFunction;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -415,7 +416,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 			if ( columnDefinitions.isEmpty() ) {
 				throw new IllegalArgumentException( "Couldn't determine types of columns of function 'xmltable'" );
 			}
-			final SqmExpressible<?>[] componentTypes = new SqmExpressible<?>[columnDefinitions.size()];
+			final SqmBindableType<?>[] componentTypes = new SqmBindableType<?>[columnDefinitions.size()];
 			final String[] componentNames = new String[columnDefinitions.size()];
 			int offset = 0;
 			for ( ColumnDefinition columnDefinition : columnDefinitions ) {
@@ -456,7 +457,7 @@ public class SqmXmlTableFunction<T> extends SelfRenderingSqmSetReturningFunction
 		}
 
 		@Override
-		public @Nullable SqmExpressible<Object> getNodeType() {
+		public @Nullable SqmBindableType<Object> getNodeType() {
 			return null;
 		}
 

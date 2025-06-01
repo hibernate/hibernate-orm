@@ -59,25 +59,25 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		final EntityMappingType indicatedEntity = matchingValueDetails.getIndicatedEntity();
 		//noinspection unchecked
 		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
+			&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
 				? (O) indicatedEntity.getJavaType().getJavaTypeClass()
 				: (O) indicatedEntity.getEntityName();
 	}
 
 	@Override
 	public R toRelationalValue(O domainForm) {
-		assert domainForm == null || domainForm instanceof String || domainForm instanceof Class;
-
+		final String entityName;
 		if ( domainForm == null ) {
 			return null;
 		}
-
-		final String entityName;
-		if ( domainForm instanceof Class<?> clazz ) {
+		else if ( domainForm instanceof Class<?> clazz ) {
 			entityName = clazz.getName();
 		}
+		else if ( domainForm instanceof String name ) {
+			entityName = name;
+		}
 		else {
-			entityName = (String) domainForm;
+			throw new IllegalArgumentException( "Illegal discriminator value: " + domainForm );
 		}
 
 		final DiscriminatorValueDetails discriminatorValueDetails = getDetailsForEntityName( entityName );

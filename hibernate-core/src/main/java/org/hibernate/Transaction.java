@@ -25,6 +25,12 @@ import static org.hibernate.resource.transaction.backend.jta.internal.StatusTran
  * {@code session.getTransaction().begin()}, and ends with a call to {@link #commit()}
  * or {@link #rollback()}.
  * <p>
+ * When a transaction rolls back, Hibernate makes no attempt to roll back the state of
+ * entity instances held in memory to their state at the beginning of the transaction.
+ * After a transaction rollback, the current {@linkplain Session persistence context}
+ * must be discarded, and the state of its entities must be assumed inconsistent with
+ * the state held by the database.
+ * <p>
  * A single session might span multiple transactions since the notion of a session
  * (a conversation between the application and the datastore) is of coarser granularity
  * than the concept of a database transaction. However, there is at most one uncommitted

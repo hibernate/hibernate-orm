@@ -46,6 +46,11 @@ public class StringJavaType extends AbstractClassJavaType<String> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof String;
+	}
+
+	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators stdIndicators) {
 		final TypeConfiguration typeConfiguration = stdIndicators.getTypeConfiguration();
 		final JdbcTypeRegistry stdRegistry = typeConfiguration.getJdbcTypeRegistry();

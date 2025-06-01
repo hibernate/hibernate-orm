@@ -102,7 +102,7 @@ public class SelfRenderingFunctionSqlAstExpression<T>
 		final BasicValueConverter<T, ?> converter;
 		if ( jdbcMapping != null ) {
 			jdbcJavaType = (JavaType<T>) jdbcMapping.getJdbcJavaType();
-			converter = jdbcMapping.getValueConverter();
+			converter = (BasicValueConverter<T, ?>) jdbcMapping.getValueConverter();
 		}
 		else if ( type != null ) {
 			jdbcJavaType = type.getExpressibleJavaType();

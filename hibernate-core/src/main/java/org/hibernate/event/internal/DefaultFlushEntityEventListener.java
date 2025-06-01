@@ -357,8 +357,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static Object[] currentState(Object entity, SessionFactoryImplementor factory) {
-		return factory.getRuntimeMetamodels()
-				.getEntityMappingType( entity.getClass() )
+		return factory.getMappingMetamodel()
+				.getEntityDescriptor( entity.getClass() )
 				.getEntityPersister()
 				.getValues( entity );
 	}
@@ -663,10 +663,8 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			for ( int i = 0; i < dirtyProperties.length; i++ ) {
 				dirtyPropertyNames[i] = allPropertyNames[dirtyProperties[i]];
 			}
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
-							+ "] : "+ Arrays.toString( dirtyPropertyNames ) );
-			}
+			LOG.trace( "Found dirty properties [" + infoString( persister.getEntityName(), entry.getId() )
+						+ "] : "+ Arrays.toString( dirtyPropertyNames ) );
 		}
 	}
 

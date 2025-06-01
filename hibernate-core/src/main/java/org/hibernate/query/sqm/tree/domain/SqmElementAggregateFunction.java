@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -61,13 +61,17 @@ public class SqmElementAggregateFunction<T> extends AbstractSqmSpecificPluralPar
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
-		return returnableType == null ? super.getExpressible() : returnableType.resolveExpressible( nodeBuilder() );
+	public SqmBindableType<T> getExpressible() {
+		return returnableType == null
+				? super.getExpressible()
+				: nodeBuilder().resolveExpressible( returnableType );
 	}
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		return returnableType == null ? super.getJavaTypeDescriptor() : returnableType.getExpressibleJavaType();
+		return returnableType == null
+				? super.getJavaTypeDescriptor()
+				: returnableType.getExpressibleJavaType();
 	}
 
 	@Override

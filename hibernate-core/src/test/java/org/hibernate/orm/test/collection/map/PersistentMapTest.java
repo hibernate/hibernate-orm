@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gail Badner
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/map/Mappings.hbm.xml",
+		xmlMappings = "org/hibernate/orm/test/collection/map/Mappings.xml",
 		annotatedClasses = {
 				PersistentMapTest.User.class,
 				PersistentMapTest.UserData.class,

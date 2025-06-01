@@ -41,15 +41,13 @@ public class DiscriminatorTypeImpl<O> extends ConvertedBasicTypeImpl<O> implemen
 		return underlyingJdbcMapping;
 	}
 
-	@SuppressWarnings("rawtypes")
-	@Override
-	public DiscriminatorConverter getValueConverter() {
-		return (DiscriminatorConverter) super.getValueConverter();
+	@Override @SuppressWarnings("unchecked")
+	public DiscriminatorConverter<O,?> getValueConverter() {
+		return (DiscriminatorConverter<O,?>) super.getValueConverter();
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public Class getJavaType() {
+	public Class<O> getJavaType() {
 		return domainJavaType.getJavaTypeClass();
 	}
 

@@ -355,6 +355,13 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		getEntityStatistics( entityName.getFullPath() ).incrementCacheMissCount();
 	}
 
+	@Override
+	public void entityCacheRemove(NavigableRole entityName, String regionName) {
+		secondLevelCacheMissCount.increment();
+		getDomainDataRegionStatistics( regionName ).incrementRemoveCount();
+		getEntityStatistics( entityName.getFullPath() ).incrementCacheRemoveCount();
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Collection stats

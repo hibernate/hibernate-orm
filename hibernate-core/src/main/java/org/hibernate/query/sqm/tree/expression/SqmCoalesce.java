@@ -12,7 +12,7 @@ import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
@@ -31,13 +31,13 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		this( null, nodeBuilder );
 	}
 
-	public SqmCoalesce(SqmExpressible<T> type, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(SqmBindableType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
 		this.arguments = new ArrayList<>();
 	}
 
-	public SqmCoalesce(SqmExpressible<T> type, int numberOfArguments, NodeBuilder nodeBuilder) {
+	public SqmCoalesce(SqmBindableType<T> type, int numberOfArguments, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		functionDescriptor = nodeBuilder.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "coalesce" );
 		this.arguments = new ArrayList<>( numberOfArguments );

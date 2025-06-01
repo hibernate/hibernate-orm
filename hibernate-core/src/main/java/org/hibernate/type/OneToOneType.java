@@ -149,9 +149,9 @@ public class OneToOneType extends EntityType {
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
-		//this should be a call to resolve(), not resolveIdentifier(),
-		//because it might be a property-ref, and we did not cache the
-		//referenced value
+		// this should be a call to resolve(), not resolveIdentifier(),
+		// because it might be a property-ref, and we did not cache the
+		// referenced value
 		return resolve( session.getContextEntityIdentifier( owner ), session, owner );
 	}
 

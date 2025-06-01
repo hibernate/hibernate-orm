@@ -19,20 +19,16 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/list/ParentChildMapping.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/collection/list/ParentChildMapping.xml"
 )
 @SessionFactory
 public class IterateOverListInTheSetMethodTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Child" ).executeUpdate();
-					session.createMutationQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+		scope.dropData();
 	}
 
 

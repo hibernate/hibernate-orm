@@ -6,7 +6,6 @@ package org.hibernate.orm.test.annotations.collectionelement;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.Filter;
@@ -15,7 +14,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -39,7 +37,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
-@SuppressWarnings("unchecked")
 @DomainModel(
 		annotatedClasses = {
 				Boy.class,
@@ -102,10 +99,10 @@ public class DefaultNamingCollectionElementTest {
 					assertNotNull( boy.getFavoriteNumbers() );
 					assertEquals( 3, boy.getFavoriteNumbers()[1] );
 					assertTrue( boy.getCharacters().contains( CharacterTrait.CRAFTY ) );
-					assertTrue( boy.getFavoriteFood().get( "dinner" ).equals( FavoriteFood.SUSHI ) );
-					assertTrue( boy.getFavoriteFood().get( "lunch" ).equals( FavoriteFood.KUNGPAOCHICKEN ) );
-					assertTrue( boy.getFavoriteFood().get( "breakfast" ).equals( FavoriteFood.PIZZA ) );
-					List result = session.createQuery(
+					assertEquals( FavoriteFood.SUSHI, boy.getFavoriteFood().get( "dinner" ) );
+					assertEquals( FavoriteFood.KUNGPAOCHICKEN, boy.getFavoriteFood().get( "lunch" ) );
+					assertEquals( FavoriteFood.PIZZA, boy.getFavoriteFood().get( "breakfast" ) );
+					var result = session.createQuery(
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
@@ -210,11 +207,11 @@ public class DefaultNamingCollectionElementTest {
 					assertTrue( boy.getNickNames().contains( "Thing" ) );
 					assertNotNull( boy.getScorePerNickName() );
 					assertTrue( boy.getScorePerNickName().containsKey( "Thing" ) );
-					assertEquals( new Integer( 5 ), boy.getScorePerNickName().get( "Thing" ) );
+					assertEquals( Integer.valueOf( 5 ), boy.getScorePerNickName().get( "Thing" ) );
 					assertNotNull( boy.getFavoriteNumbers() );
 					assertEquals( 3, boy.getFavoriteNumbers()[1] );
 					assertTrue( boy.getCharacters().contains( CharacterTrait.CRAFTY ) );
-					List result = session.createQuery(
+					var result = session.createQuery(
 							"select boy from Boy boy join boy.nickNames names where names = :name" )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
@@ -240,9 +237,8 @@ public class DefaultNamingCollectionElementTest {
 					Filter filter = session.enableFilter( "selectedLocale" );
 					filter.setParameter( "param", "fr" );
 
-					Query q = session.createQuery( "from TestCourse t" );
-					List l = q.list();
-					assertEquals( 1, l.size() );
+					assertEquals( 1,
+							session.createQuery( "from TestCourse t" ).list().size() );
 
 					TestCourse t = session.get( TestCourse.class, test.getTestCourseId() );
 					assertEquals( 1, t.getTitle().getVariations().size() );
@@ -407,8 +403,7 @@ public class DefaultNamingCollectionElementTest {
 		assertEquals( ownerForeignKeyNameExpected, ownerCollection.getKey().getSelectables().get( 0 ).getText() );
 
 		boolean hasOwnerFK = false;
-		for (Iterator it = ownerCollection.getCollectionTable().getForeignKeys().values().iterator(); it.hasNext(); ) {
-			final ForeignKey fk = (ForeignKey) it.next();
+		for ( final ForeignKey fk : ownerCollection.getCollectionTable().getForeignKeyCollection() ) {
 			assertSame( ownerCollection.getCollectionTable(), fk.getTable() );
 			if ( fk.getColumnSpan() > 1 ) {
 				continue;

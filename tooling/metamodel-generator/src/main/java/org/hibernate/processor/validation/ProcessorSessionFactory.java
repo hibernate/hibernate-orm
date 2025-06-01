@@ -8,6 +8,7 @@ import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -436,7 +437,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		public BasicType<?> versionType() {
 			for (Element element : type.getEnclosedElements()) {
 				if ( hasAnnotation(element, "Version") ) {
-					return (BasicType<?>) factory.propertyType(element, getEntityName(), "{version}", defaultAccessType);
+					return (BasicType<?>) factory.propertyType(element, getEntityName(),
+							EntityVersionMapping.VERSION_ROLE_NAME, defaultAccessType);
 				}
 			}
 			return null;

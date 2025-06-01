@@ -261,7 +261,7 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	public SingularPersistentAttribute<? super J, ?> findVersionAttribute() {
+	public SqmSingularPersistentAttribute<? super J, ?> findVersionAttribute() {
 		if ( versionAttribute != null ) {
 			return versionAttribute;
 		}

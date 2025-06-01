@@ -77,6 +77,7 @@ import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.unqualify;
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isRangeParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isRestrictionParam;
 import static org.hibernate.processor.annotation.AbstractQueryMethod.isSessionParameter;
@@ -354,14 +355,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String scope() {
-		if (jakartaDataRepository) {
-			return context.addTransactionScopedAnnotation()
-					? "jakarta.transaction.TransactionScoped"
-					: "jakarta.enterprise.context.RequestScoped";
-		}
-		else {
-			return "jakarta.enterprise.context.Dependent";
-		}
+		// @TransactionScoped doesn't work here because repositories
+		// are supposed to be able to demarcate transactions, which
+		// means they should be injectable when there is no active tx
+		// @RequestScoped doesn't work because Arc folks think this
+		// scope should only be active during a HTTP request, which
+		// is simply wrong according to me, but whatever
+		// @ApplicationScoped could work in principle, but buys us
+		// nothing additional, since repositories are stateless
+		return "jakarta.enterprise.context.Dependent";
 	}
 
 	@Override
@@ -416,8 +418,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 
 			primaryEntity = primaryEntity( lifecycleMethods );
-			if ( primaryEntity != null && !hasAnnotation(primaryEntity, ENTITY)
-					|| !checkEntities(lifecycleMethods)) {
+			final boolean hibernateRepo = isExplicitlyHibernateRepository();
+			if ( !checkEntity( primaryEntity, hibernateRepo )
+					|| !checkEntities( lifecycleMethods, hibernateRepo ) ) {
 				// NOTE EARLY EXIT with initialized = false
 				return;
 			}
@@ -465,6 +468,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private boolean checkEntity(@Nullable TypeElement entity, boolean hibernateRepo) {
+		if ( entity != null && !hasAnnotation( entity, ENTITY ) ) {
+			if ( hibernateRepo ) {
+				context.message( element,
+						"unrecognized primary entity type: " + entity.getQualifiedName(),
+						Diagnostic.Kind.ERROR );
+			}
+			return false;
+		}
+		return true;
+	}
+
+	private boolean isExplicitlyHibernateRepository() {
+		final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
+		if ( repository != null ) {
+			final AnnotationValue provider = getAnnotationValue( repository, "provider" );
+			return provider != null && provider.getValue().toString().equalsIgnoreCase( "hibernate" );
+		}
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -611,7 +637,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& isSameType( context.getTypeUtils().boxedClass( ((PrimitiveType) type) ).asType(), match );
 	}
 
-	private boolean checkEntities(List<ExecutableElement> lifecycleMethods) {
+	private boolean checkEntities(List<ExecutableElement> lifecycleMethods, boolean hibernateRepo) {
 		boolean foundPersistenceEntity = false;
 		VariableElement nonPersistenceParameter = null;
 		for (ExecutableElement lifecycleMethod : lifecycleMethods) {
@@ -636,7 +662,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			message(nonPersistenceParameter,
 					"parameter type '" + nonPersistenceParameter.asType()
 							+ "' is not a Jakarta Persistence entity class (skipping entire repository)",
-					Diagnostic.Kind.WARNING);
+					hibernateRepo ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING);
 		}
 		return nonPersistenceParameter == null;
 	}
@@ -2246,7 +2272,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable FieldType validateFinderParameter(TypeElement entityType, VariableElement param) {
-		final Element member = memberMatchingPath( entityType, parameterName( param ) );
+		final String path = parameterName( param );
+		final boolean idClassRef = isIdRef( path ) && hasAnnotation( entityType, ID_CLASS );
+		final Element member = idClassRef ? null : memberMatchingPath( entityType, path );
 		if ( member != null ) {
 			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
 				message( param,
@@ -2277,23 +2305,45 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return FieldType.BASIC;
 			}
 		}
-		else {
+		else if ( idClassRef ) {
 			final AnnotationMirror idClass = getAnnotationMirror( entityType, ID_CLASS );
-			if ( idClass != null ) {
+			if ( idClass == null ) {
+				return null; // cannot happen!
+			}
+			else {
 				final AnnotationValue value = getAnnotationValue( idClass );
-				if ( value != null ) {
-					if ( isSameType( param.asType(), (TypeMirror) value.getValue() ) ) {
-						return FieldType.ID;
-					}
+				if ( value != null
+					&& isSameType( actualParameterType( param ),
+						(TypeMirror) value.getValue() ) ) {
+					return FieldType.ID;
+				}
+				else {
+					message( param,
+							"does not match id class of entity class '" + entityType + "'",
+							Diagnostic.Kind.ERROR );
+					return null;
 				}
 			}
-
+		}
+		else {
 			message( param,
-					"no matching field named '" + parameterName( param )
-							+ "' in entity class '" + entityType + "'",
+					"no matching field named '" + path
+						+ "' in entity class '" + entityType + "'",
 					Diagnostic.Kind.ERROR );
 			return null;
 		}
+	}
+
+	private TypeMirror actualParameterType(VariableElement param) {
+		final ExecutableElement method =
+				(ExecutableElement)
+						param.getEnclosingElement();
+		final ExecutableType methodType =
+				(ExecutableType)
+						context.getTypeUtils()
+								.asMemberOf( (DeclaredType) element.asType(), method );
+		return methodType.getParameterTypes()
+				.get( method.getParameters().indexOf( param ) );
 	}
 
 	/**
@@ -2422,8 +2472,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isIdRef(String token) {
-		return "#id".equals(token) // for Jakarta Data M4 release
-			|| "id(this)".equalsIgnoreCase(token); // post M4
+		return "id(this)".equalsIgnoreCase(token); // post M4
 	}
 
 	private @Nullable Element memberMatchingPath(
@@ -3140,27 +3189,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static List<Boolean> parameterPatterns(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(param -> hasAnnotation(param, PATTERN))
-				.collect(toList());
+				.toList();
 	}
 
 	private List<String> parameterNames(ExecutableElement method, TypeElement entity) {
 		final String idName =
-				// account for special @By("#id") hack in Jakarta Data
-				entity.getEnclosedElements().stream()
-						.filter(member -> hasAnnotation(member, ID))
-						.map(TypeUtils::propertyName)
-						.findFirst()
-						.orElse("id");
+				hasAnnotation( entity, ID_CLASS )
+					? ID_ROLE_NAME
+					// account for special @By("id(this)") hack in Jakarta Data
+					: entity.getEnclosedElements().stream()
+							.filter(member -> hasAnnotation(member, ID))
+							.map(TypeUtils::propertyName)
+							.findFirst()
+							.orElse(ID_ROLE_NAME);
 		return method.getParameters().stream()
 				.map(AnnotationMetaEntity::parameterName)
 				.map(name -> isIdRef(name) ? idName : name)
-				.collect(toList());
+				.toList();
 	}
 
 	private static List<String> parameterNames(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(AnnotationMetaEntity::parameterName)
-				.collect(toList());
+				.toList();
 	}
 
 	private static String parameterName(VariableElement parameter) {

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.batch</package>
+
+	<entity class="DataPoint">
+		<table>
+			<unique-constraint name="xy">
+				<column-name>xval</column-name>
+				<column-name>yval</column-name>
+			</unique-constraint>
+		</table>
+		<dynamic-update>true</dynamic-update>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="description"/>
+			<basic name="x">
+				<column name="xval" nullable="false" precision="25" scale="20"/>
+			</basic>
+			<basic name="y">
+				<column name="yval" nullable="false" precision="25" scale="20"/>
+			</basic>
+		</attributes>
+	</entity>
+</entity-mappings>

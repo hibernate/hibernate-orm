@@ -4,24 +4,23 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable;
 
-import java.lang.reflect.Field;
-
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.entity.EntityMetamodel;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.lang.reflect.Field;
 
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
@@ -146,7 +145,7 @@ public class MutableNaturalIdTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.lock( created, LockOptions.NONE );
+						session.lock( created, LockMode.NONE );
 
 						name.set( created, "Gavin" );
 						final User loaded = session

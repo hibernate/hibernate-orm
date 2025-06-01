@@ -37,13 +37,6 @@ tasks.register("preVerifyRelease") {
     dependsOn releasePrepareTask
 }
 
-tasks.register( 'releasePerform' ) {
-    group "release-perform"
-    description "See :release:releasePerform for details.  Here we hook in publishing to Sonatype"
-
-    dependsOn tasks.publishAllPublicationsToSonatypeRepository
-}
-
 var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
 publishingExtension.publications.named("publishedArtifacts") {
     from components.java

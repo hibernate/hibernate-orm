@@ -90,6 +90,11 @@ class Person {
 }
 ----
 
+[NOTE]
+====
+This feature is considered incubating.
+====
+
 See the link:{userGuideBase}#embeddable-column-naming[User Guide] for details.
 
 
@@ -115,31 +120,78 @@ link:{userGuideBase}#fetching-strategies-dynamic-fetching-entity-graph-parsing-a
 
 
 [[session-find-multiple]]
-== findMultiple()
+== findMultiple() and getMultiple()
 
-The new operation `Session.findMultiple()` provides a convenient way to fetch a batch of entities by id.
+The new operations `Session.findMultiple()` and `StatelessSession.getMultiple()` provide a convenient way to fetch a batch of entities by id.
 Combined with the `BatchSize` option, allows breaking up the JDBC calls into "batches".
 
 
+[[operation-options]]
+== FindOption, LockOption, RefreshOption
+
+As a more typesafe replacement for hints, Jakarta Persistence now allows for "option objects" which indicate these hints.  Not only is it more typesafe, but also more concise - a double win!
+
+These "option objects" come in 3 flavors depending on what operation is being performed -
+
+FindOption:: Used to indicate options for find operations :
+    * `Session.find`
+    * `Session.findMultiple`
+    * etc
+LockOption:: Used to indicate options for `Session.lock`
+RefreshOption:: Used to indicate options for `Session.refresh`
+
+Each of these are interfaces.  Jakarta Persistence does provide some built-in options:
+
+CacheRetrieveMode:: Is now a `FindOption`.
+CacheStoreMode:: Is now a `FindOption` and a `RefreshOption`.
+LockModeType:: Is now a `FindOption` and a `RefreshOption`.
+Timeout (new):: Is a `FindOption`, a `RefreshOption` and a `LockOption`.  See also `org.hibernate.Timeouts` for some magic values.
+PessimisticLockScope:: Is now a `FindOption`, a `RefreshOption` and a `LockOption`
+
+Hibernate provides a few additional options:
+
+ReadOnlyMode (new):: Is a `FindOption` which indicates whether the entities and collections being loaded should be considered read-only.
+EnabledFetchProfile (new):: Is a `FindOption` indicating a fetch-profile to be enabled for the find operation.
+LockMode:: Is now a `FindOption` and a `RefreshOption` (expanded version of JPA's `LockModeType`).
+CacheMode:: Is now a `FindOption`.
+BatchSize (new):: Is now a `FindOption`.
+
+
+All operations which accept options (which previously accepted hints) accept a varargs grouping of them.  E.g.
+
+====
+[source, java, indent=0]
+----
+Book loaded = session.find(
+    Book.class,
+    1,
+    LockMode.PESSIMISTIC_WRITE,
+    Timeouts.NO_WAIT,
+    new EnabledFetchProfile("with-authors")
+);
+----
+====
+
+
 [[QuerySpecification]]
-== QuerySpecification
+== QuerySpecification, Restriction, and Range
 
 A new API has been added for incremental definition of a query, with support for selections -
 
 ====
 [source, java, indent=0]
 ----
-SelectionQuery<Book> qry = session.createSelectionSpecification(
-    "from Book",
-    Book.class
-).restriction(
+SelectionQuery<Book> qry = SelectionSpecification.create(
+    Book.class,
+    "from Book"
+).restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
     )
-).order(
+).sort(
     Order.asc(Book_.suggestedCost)
-).createQuery();
+).createQuery(session);
 ----
 ====
 
@@ -148,21 +200,21 @@ as well as mutations -
 ====
 [source, java, indent=0]
 ----
-MutationQuery<Book> qry = session.createMutationSpecification(
-    "delete Book",
-    Book.class
-).restriction(
+MutationQuery<Book> qry = MutationSpecification.create(
+    Book.class,
+    "delete Book"
+).restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
     )
-).createQuery();
+).createQuery(session);
 ----
 ====
 
 [NOTE]
 ====
-These APIs are considered incubating.
+This feature is considered incubating.
 ====
 
 See the link:{userGuideBase}#QuerySpecification[User Guide] for details.
@@ -172,6 +224,22 @@ See the link:{userGuideBase}#QuerySpecification[User Guide] for details.
 == Direct access to first-level cache
 
 The new operation `Session.getManagedEntities()` allows the application to iterate over all entities in the first-level cache, or over all entities of a given type.
+
+[NOTE]
+====
+This feature is considered incubating.
+====
+
+
+[[metamode-param-binding]]
+== Use of metamodel in query parameter binding
+
+When an argument to a query parameter is of ambiguous type, the static metamodel may now be used to disambiguate.
+
+[source,java]
+session.createSelectionQuery("from Thing where uniqueKey = ?1")
+        .setParameter(1, key, Thing_.uniqueKey.getType())
+        .getSingleResult();
 
 
 [[enum-checks]]
@@ -224,6 +292,11 @@ entity.
 
 Second, it allows mixing of explicit and implicit value strategies.
 
+[NOTE]
+====
+This feature is considered incubating.
+====
+
 See the link:{userGuideBase}#associations-any[User Guide] for details.
 
 
@@ -231,6 +304,11 @@ See the link:{userGuideBase}#associations-any[User Guide] for details.
 == StatelessSession and Batch Operations
 
 `StatelessSession` now supports explicit batch operations via `insertMultiple()`, `updateMultiple()`, or `deleteMultiple()`.
+
+[NOTE]
+====
+This feature is considered incubating.
+====
 
 
 [[stateless-session-cache]]
@@ -259,6 +337,26 @@ However, the preferred approach is to <<stateless-session-multiple,explicitly ba
 
 The `Transaction` interface leaks the SPI type `TransactionStatus` via `getStatus()`, and the JTA-defined type `Synchronization` via `registerSynchronization()`, which breaks layering in a fairly harmless way.
 New operations were added to the `Transaction` interface, allowing code to inspect the status of the transaction or register callbacks without the use of layer-breaking operations.
+
+[NOTE]
+====
+This feature is considered incubating.
+====
+
+[[collection-id-java-class]]
+== @CollectionIdJavaClass
+
+`@CollectionIdJavaClass` is an alternative to `@CollectionIdJavaType` for simpler cases of id-bag mappings.  E.g.
+
+====
+[source, java, indent=0]
+----
+@Bag
+@CollectionId(generator="increment")
+@CollectionIdJavaClass(Integer.class)
+Collection<Person> authors;
+----
+====
 
 
 [[schema-manager-populate]]

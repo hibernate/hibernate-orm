@@ -6,8 +6,7 @@ package org.hibernate.orm.test.annotations.uniqueconstraint;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.engine.jdbc.spi.SQLExceptionLogging;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.LoggerInspectionRule;
@@ -20,11 +19,9 @@ import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.PersistenceException;
 
-import java.lang.invoke.MethodHandles;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,8 +44,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class UniqueConstraintBatchingTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, SqlExceptionHelper.class.getName() ) );
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SQLExceptionLogging.ERROR_LOG );
 
 	private Triggerable triggerable;
 

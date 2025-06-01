@@ -12,10 +12,8 @@ import java.util.stream.Stream;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.BindableType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -30,6 +28,8 @@ import jakarta.persistence.metamodel.Metamodel;
 /**
  * Access to information about the runtime relational O/R mapping model.
  *
+ * @apiNote This is an incubating SPI. Its name and package may change.
+ *
  * @author Steve Ebersole
  */
 @Incubating
@@ -38,23 +38,6 @@ public interface MappingMetamodel extends Metamodel {
 	 * The {@link TypeConfiguration} this metamodel is associated with
 	 */
 	TypeConfiguration getTypeConfiguration();
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SQM model -> Mapping model
-
-	// todo (6.0) : POC intended for use in SQM to SQL translation
-	@Internal
-	MappingModelExpressible<?> resolveMappingExpressible(
-			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath,
-			TableGroup> tableGroupLocator);
-
-	/**
-	 * Given a Java type, determine the corresponding BindableType to
-	 * use implicitly
-	 */
-	<T> BindableType<T> resolveQueryParameterType(Class<T> javaType);
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity descriptors
@@ -186,7 +169,7 @@ public interface MappingMetamodel extends Metamodel {
 	// JPA entity graphs
 
 	RootGraph<?> findNamedGraph(String name);
-	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
+	void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph);
 	void forEachNamedGraph(Consumer<RootGraph<?>> action);
 	RootGraph<?> defaultGraph(String entityName);
 	RootGraph<?> defaultGraph(Class<?> entityJavaType);
@@ -196,4 +179,14 @@ public interface MappingMetamodel extends Metamodel {
 	List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType);
 	List<RootGraph<?>> findRootGraphsForType(String baseEntityName);
 	List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// SQM model -> Mapping model
+
+	// TODO Layer breaker used in SQM to SQL translation.
+	//      Consider moving to QueryEngine or collaborators.
+	@Internal
+	MappingModelExpressible<?> resolveMappingExpressible(
+			SqmExpressible<?> sqmExpressible,
+			Function<NavigablePath, TableGroup> tableGroupLocator);
 }

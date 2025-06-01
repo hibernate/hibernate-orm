@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;

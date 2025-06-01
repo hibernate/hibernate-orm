@@ -79,6 +79,7 @@ public class GeneratedValuesHelper {
 	 */
 	public static GeneratedValues getGeneratedValues(
 			ResultSet resultSet,
+			PreparedStatement statement,
 			EntityPersister persister,
 			EventType timing,
 			SharedSessionContractImplementor session) throws SQLException {
@@ -98,7 +99,7 @@ public class GeneratedValuesHelper {
 		}
 
 		final GeneratedValuesImpl generatedValues = new GeneratedValuesImpl( generatedProperties );
-		final Object[] results = readGeneratedValues( resultSet, persister, mappingProducer, session );
+		final Object[] results = readGeneratedValues( resultSet, statement, persister, mappingProducer, session );
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Extracted generated values for entity "
@@ -125,22 +126,17 @@ public class GeneratedValuesHelper {
 	 */
 	private static Object[] readGeneratedValues(
 			ResultSet resultSet,
+			PreparedStatement statement,
 			EntityPersister persister,
 			JdbcValuesMappingProducer mappingProducer,
 			SharedSessionContractImplementor session) {
 		final ExecutionContext executionContext = new BaseExecutionContext( session );
 
-		final DirectResultSetAccess directResultSetAccess;
-		try {
-			directResultSetAccess = new DirectResultSetAccess(
+		final DirectResultSetAccess directResultSetAccess = new DirectResultSetAccess(
 					session,
-					(PreparedStatement) resultSet.getStatement(),
+					statement,
 					resultSet
 			);
-		}
-		catch (SQLException e) {
-			throw new HibernateException( "Could not retrieve statement from generated values result set", e );
-		}
 
 		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
 				directResultSetAccess,

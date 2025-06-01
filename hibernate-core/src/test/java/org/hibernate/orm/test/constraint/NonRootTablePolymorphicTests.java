@@ -94,8 +94,8 @@ public class NonRootTablePolymorphicTests {
 							//		1) for the sub->root inheritance fk
 							//		2) for the sub->child fk
 
-							assertThat( subclassTable.getForeignKeys().size(), is( 2 ) );
-							subclassTable.getForeignKeys().values().iterator().forEachRemaining(
+							assertThat( subclassTable.getForeignKeyCollection().size(), is( 2 ) );
+							subclassTable.getForeignKeyCollection().iterator().forEachRemaining(
 									(foreignKey) -> {
 										assertThat( foreignKey.getTable(), sameInstance( subclassTable ) );
 
@@ -159,8 +159,8 @@ public class NonRootTablePolymorphicTests {
 					final Selectable selectable = toOne.getSelectables().get( 0 );
 					assertThat( selectable.getText(), is( "parent_sub_fk" ) );
 
-					assertThat( subParent.getTable().getForeignKeys().size(), is( 1 ) );
-					final ForeignKey foreignKey = subParent.getTable().getForeignKeys().values().iterator().next();
+					assertThat( subParent.getTable().getForeignKeyCollection().size(), is( 1 ) );
+					final ForeignKey foreignKey = subParent.getTable().getForeignKeyCollection().iterator().next();
 
 					assertThat( foreignKey.getReferencedTable().getName(), is( "sub" ) );
 					assertThat( foreignKey.getTable(), sameInstance( toOne.getTable() ) );

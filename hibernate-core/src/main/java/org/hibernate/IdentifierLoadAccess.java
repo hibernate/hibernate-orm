@@ -6,8 +6,11 @@ package org.hibernate;
 
 import java.util.Optional;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 /**
  * Loads an entity by its primary identifier.
@@ -43,6 +46,38 @@ import org.hibernate.graph.RootGraph;
  * @see Session#byId(Class)
  */
 public interface IdentifierLoadAccess<T> {
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 * @return {@code this}, for method chaining
+	 */
+	default IdentifierLoadAccess<T> with(LockMode lockMode) {
+		return with( lockMode, PessimisticLockScope.NORMAL );
+	}
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	IdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope);
+
+	/**
+	 * Specify the {@linkplain Timeout timeout} to use when
+	 * querying the database.
+	 *
+	 * @param timeout The timeout to apply to the database operation
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	IdentifierLoadAccess<T> with(Timeout timeout);
+
 	/**
 	 * Specify the {@linkplain LockOptions lock options} to use when
 	 * querying the database.
@@ -50,7 +85,12 @@ public interface IdentifierLoadAccess<T> {
 	 * @param lockOptions The lock options to use
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use one of {@linkplain #with(LockMode)},
+	 * {@linkplain #with(LockMode, PessimisticLockScope)}
+	 * and/or {@linkplain #with(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	IdentifierLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
@@ -76,7 +116,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default IdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -87,7 +127,7 @@ public interface IdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default IdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -95,7 +135,7 @@ public interface IdentifierLoadAccess<T> {
 	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
-	default IdentifierLoadAccess<T> with(RootGraph<T> graph) {
+	default IdentifierLoadAccess<T> with(EntityGraph<T> graph) {
 		return withLoadGraph( graph );
 	}
 
@@ -104,7 +144,7 @@ public interface IdentifierLoadAccess<T> {
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
-	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	IdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a

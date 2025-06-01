@@ -44,6 +44,11 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 		return Long.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Long;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Long value, Class<X> type, WrapperOptions options) {

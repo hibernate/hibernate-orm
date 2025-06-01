@@ -44,6 +44,11 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 		return Byte.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Byte;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Byte value, Class<X> type, WrapperOptions options) {

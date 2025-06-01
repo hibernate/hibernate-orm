@@ -1,7 +1,117 @@
-Hibernate 6 Changelog
+Hibernate 7 Changelog
 =======================
 
 Note: Please refer to JIRA to learn more about each issue.
+
+Changes in 7.0.0.Final (May 19, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33439
+
+** Task
+    * [HHH-19474] - Release 7.0
+
+
+Changes in 7.0.0.CR2 (May 14, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33340
+
+** Bug
+    * [HHH-19425] - incorrect class literals in Processor-generated code
+    * [HHH-19389] - use of @Struct on databases without UDTs
+    * [HHH-19386] - MutationSepectification#getResultType should return null
+
+** Deprecation
+    * [HHH-19440] - Deprecate exposing of LockOptions
+
+** Improvement
+    * [HHH-19460] - mis-named <embedded-id/> leads to NPE
+    * [HHH-19456] - Upgrade to hibernate-models 1.0.0.CR3
+    * [HHH-19449] - how does client obtain a BindableType
+    * [HHH-19448] - API/SPI split for BindableType/BindingContext
+    * [HHH-19447] - org.hibernate.query.procedure
+    * [HHH-19445] - methods of ProcedureCall accept BasicTypeReference
+    * [HHH-19444] - [SQLiteDialect] Fix ViolatedConstraintNameExtractor
+    * [HHH-19442] - ProcedureCall should not extend NameableQuery
+    * [HHH-19438] - move OutputableType
+    * [HHH-19428] - Support @ListIndexBase in mapping.xml
+    * [HHH-19422] - Introduce @CollectionIdJavaClass
+    * [HHH-19420] - Support batch-size for collections in mapping.xml
+    * [HHH-19399] - setting to enable logging of SQLExceptions
+    * [HHH-19397] - LIMIT clause does not work without ORDER BY clause
+    * [HHH-19324] - Switch tests using hbm.xml to use mapping.xml
+    * [HHH-19310] - Simplified declaration of type for basic mappings in XML
+    * [HHH-19299] - <element-collection/> with LIST classification interpreted as BAG
+    * [HHH-19209] - Verify and fix ID class generation for inner classes
+
+** New Feature
+    * [HHH-19450] - Have processor generate EnabledFetchProfile for all discovered profiles
+
+
+Changes in 7.0.0.CR1 (April 24, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33078
+
+** Bug
+    * [HHH-19375] - fix check for presence of Quarkus in reactive case
+    * [HHH-19374] - repositories should always be @Dependent
+    * [HHH-19345] - EntityManager#remove checks for entity state are too strict
+    * [HHH-19334] - CCE arising from tuple passed to HQL position() function
+    * [HHH-19330] - Error in lockstring generation in PostgreSQL 
+    * [HHH-19320] - Assigned id value is not passed into BeforeExecutionGenerator#generate() method when allowAssignedIdentifiers() is true and id has been assigned
+    * [HHH-19318] - follow-on locking and StatelessSession
+    * [HHH-19314] - StackOverflowException when using onConflict with createCriteriaInsertValues and createCriteriaInsertSelect
+    * [HHH-19306] - Composite generator may not respect the event types of generators it consits of
+    * [HHH-19301] - Must import FQCN when generating metamodel class for inner Jakarta Data repository interface
+    * [HHH-19291] - Expressions.nullExpresion() in querydsl result in NPE in SqmExpressible with named parameters
+    * [HHH-19280] - ResourceRegistryStandardImpl#close(java.sql.Statement) is called on already closed statements
+    * [HHH-19279] - @Basic not implicit optional
+    * [HHH-19248] - Return of deleted entities doesn't work with naturalid multiloading
+    * [HHH-19208] - Javadoc of org.hibernate.cfg.QuerySettings.QUERY_PLAN_CACHE_ENABLED mentions that the query plan cache is disabled by default, but it is enabled by default
+    * [HHH-19207] - JPA OrderBy annotated relation not ordered when using entity graph with criteria api
+    * [HHH-19059] - Bytecode enhancement fails when inherited fields are mapped using property access in subclass
+    * [HHH-18991] - Restrictions should use JDBC parameters
+    * [HHH-18920] - Enum parameters in Jakarta Data repository method return type constructor are not properly matched
+    * [HHH-18745] - Unnecessary joins when use TREAT operator 
+    * [HHH-14694] - Use stable proxy names to avoid managing proxy state and memory leaks
+    * [HHH-9127] - L2 cache stores stale data when an entity is locked with OPTIMISTIC_FORCE_INCREMENT lock type
+
+** Deprecation
+    * [HHH-19357] - deprecate hibernate.discard_pc_on_close
+
+** Improvement
+    * [HHH-19378] - find by multiple ids with EntityGraph
+    * [HHH-19364] - Introduce QuerySpecification
+    * [HHH-19358] - Add a "What's New" document for series
+    * [HHH-19352] - move legacy LimitHandlers to community dialects module
+    * [HHH-19350] - SessionBuilder exposes SPI types
+    * [HHH-19349] - rework ImmutableEntityUpdateQueryHandlingMode and immutable_entity_update_query_handling_mode
+    * [HHH-19340] - Make TypedParameterValue a record
+    * [HHH-19325] - Upgrade to Jandex 3.3.0
+    * [HHH-19317] - Mark org.hibernate.boot.models as incubating
+    * [HHH-19300] - more ConstraintKinds
+    * [HHH-19286] - Ignoring auto-applied conversions on special mappings
+    * [HHH-19284] - Extract Duplicated Vector Function Registration Logic
+    * [HHH-19278] - fixes to logic in MultiIdEntityLoaders
+    * [HHH-19096] - Adjust `SelectionQuery#setEntityGraph(..)` to accept entity graphs of supertypes
+    * [HHH-19001] - Map ConstraintType to UNIQUE on ConstraintViolationException
+    * [HHH-18896] - Use binary_float/binary_double on Oracle for Java float/double
+    * [HHH-18008] - Ability to clear persistence context for a specific type
+    * [HHH-17002] - Query plan caching for CriteriaQuery based on query structure
+    * [HHH-16972] - Reorganize parts of org.hibernate.query.sqm
+
+** New Feature
+    * [HHH-19327] - overload SF.addNamedQuery() to take TypedQuery and return TypedQueryReference
+    * [HHH-19319] - StatelessSession.findMultiple() accepting a LockMode
+    * [HHH-19303] - validate @Id fields against @IdClass in Processor
+    * [HHH-19298] - add convenience overloads of StatelessSession.get() which default GraphSemantic.LOAD
+    * [HHH-19296] - overload createSelectionQuery() to accept an EntityGraph instead of a result class
+    * [HHH-19115] - Implement support for ordered loading by multiple natural-id values
+    * [HHH-18563] - Add foreign key target tables to affected tables (update query set-clause)
+    * [HHH-16643] - @NamedFetchGraph annotation
+
 
 Changes in 7.0.0.Beta5 (March 21, 2025)
 ------------------------------------------------------------------------------------------------------------------------

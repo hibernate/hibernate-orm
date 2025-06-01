@@ -32,6 +32,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.IdGeneratorType;
 import org.hibernate.annotations.Immutable;
@@ -122,7 +123,7 @@ public class PropertyBinder {
 	private Component componentElement;
 	private boolean insertable = true;
 	private boolean updatable = true;
-	private String cascade;
+	private EnumSet<CascadeType> cascadeTypes;
 	private BasicValueBinder basicValueBinder;
 	private ClassDetails declaringClass;
 	private boolean declaringClassSet;
@@ -199,8 +200,8 @@ public class PropertyBinder {
 		this.componentElement = componentElement;
 	}
 
-	public void setCascade(String cascadeStrategy) {
-		this.cascade = cascadeStrategy;
+	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
+		this.cascadeTypes = cascadeTypes;
 	}
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
@@ -438,7 +439,7 @@ public class PropertyBinder {
 		property.setValue( value );
 		property.setLazy( lazy );
 		property.setLazyGroup( lazyGroup );
-		property.setCascade( cascade );
+		property.setCascade( cascadeTypes );
 		property.setPropertyAccessorName( accessType.getType() );
 		property.setReturnedClassName( returnedClassName );
 //		property.setPropertyAccessStrategy( propertyAccessStrategy );

@@ -33,7 +33,7 @@ import java.util.UUID;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * References to common {@link BasicTypeReference} instances
+ * References to common instances of {@link BasicTypeReference}.
  *
  * @author Gavin King
  * @author Steve Ebersole

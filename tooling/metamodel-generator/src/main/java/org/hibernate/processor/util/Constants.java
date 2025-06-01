@@ -109,6 +109,7 @@ public final class Constants {
 	public static final String MUTINY_SESSION = "org.hibernate.reactive.mutiny.Mutiny.Session";
 	public static final String MUTINY_STATELESS_SESSION = "org.hibernate.reactive.mutiny.Mutiny.StatelessSession";
 	public static final String QUARKUS_SESSION_OPERATIONS = "io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations";
+	public static final String HIB_ENABLED_FETCH_PROFILE = "org.hibernate.EnabledFetchProfile";
 
 	public static final String TUPLE = "jakarta.persistence.Tuple";
 

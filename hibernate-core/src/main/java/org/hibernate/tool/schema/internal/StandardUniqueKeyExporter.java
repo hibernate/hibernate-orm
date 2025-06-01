@@ -14,6 +14,8 @@ import org.hibernate.tool.schema.spi.Exporter;
  * An {@link Exporter} for {@linkplain UniqueKey unique constraints}.
  *
  * @author Brett Meyer
+ *
+ * @see org.hibernate.dialect.unique.UniqueDelegate
  */
 public class StandardUniqueKeyExporter implements Exporter<UniqueKey> {
 	private final Dialect dialect;

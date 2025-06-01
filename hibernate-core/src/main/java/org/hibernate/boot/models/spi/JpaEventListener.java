@@ -41,6 +41,14 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
  * @see JaxbEntityListenerImpl
  * @see GlobalRegistrations#getEntityListenerRegistrations()
  *
+ * @see jakarta.persistence.PostLoad
+ * @see jakarta.persistence.PostPersist
+ * @see jakarta.persistence.PostRemove
+ * @see jakarta.persistence.PostUpdate
+ * @see jakarta.persistence.PrePersist
+ * @see jakarta.persistence.PreRemove
+ * @see jakarta.persistence.PreUpdate
+ *
  * @author Steve Ebersole
  */
 public class JpaEventListener {
@@ -59,7 +67,7 @@ public class JpaEventListener {
 
 	private final MethodDetails postLoadMethod;
 
-	private JpaEventListener(
+	public JpaEventListener(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClass,
 			MethodDetails prePersistMethod,

@@ -47,6 +47,11 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		return Float.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Float;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Float value, Class<X> type, WrapperOptions options) {

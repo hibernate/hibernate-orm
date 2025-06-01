@@ -73,7 +73,8 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public SqmSetPersistentAttribute<O, E> getModel() {
-		return (SqmSetPersistentAttribute<O, E>) super.getNodeType();
+//		return (SqmSetPersistentAttribute<O, E>) super.getNodeType();
+		return (SqmSetPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override

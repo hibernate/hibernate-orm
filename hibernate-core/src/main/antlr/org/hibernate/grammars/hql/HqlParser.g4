@@ -159,9 +159,9 @@ queryExpression
  * A query with an optional 'order by' clause
  */
 orderedQuery
-	: query queryOrder?										# QuerySpecExpression
-	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
-	| queryOrder											# QueryOrderExpression
+	: query orderByClause? limitOffset                                   # QuerySpecExpression
+	| LEFT_PAREN queryExpression RIGHT_PAREN orderByClause? limitOffset  # NestedQueryExpression
+	| orderByClause	limitOffset                                          # QueryOrderExpression
 	;
 
 /**
@@ -174,10 +174,10 @@ setOperator
 	;
 
 /**
- * The 'order by' clause and optional subclauses for limiting and pagination
+ * Optional subclauses for limiting and pagination
  */
-queryOrder
-	: orderByClause limitClause? offsetClause? fetchClause?
+limitOffset
+	: limitClause? offsetClause? fetchClause?
 	;
 
 /**
@@ -185,11 +185,14 @@ queryOrder
  *
  * - The 'select' clause may come first, in which case 'from' is optional
  * - The 'from' clause may come first, in which case 'select' is optional, and comes last
+ * - If both 'select' and 'from' are missing, a 'where' clause on its own is allowed
+ *
+ * Note that 'having' is only allowed with 'group by', but we don't enforce
+ * that in the grammar.
  */
 query
-// TODO: add with clause
-	: selectClause fromClause? whereClause? (groupByClause havingClause?)?
-	| fromClause whereClause? (groupByClause havingClause?)? selectClause?
+	: selectClause fromClause? whereClause? groupByClause? havingClause?
+	| fromClause whereClause? groupByClause? havingClause? selectClause?
 	| whereClause
 	;
 

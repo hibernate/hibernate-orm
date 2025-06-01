@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.function.FunctionRenderer;
@@ -93,15 +93,14 @@ public class FunctionExpression implements OrderingExpression, FunctionRenderer 
 			String collation,
 			String modelPartName,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence,
+			Nulls nullPrecedence,
 			SqlAstCreationState creationState) {
-		final SelfRenderingFunctionSqlAstExpression expression = resolve( ast, tableGroup, modelPartName, creationState );
 		final Expression sortExpression = OrderingExpression.applyCollation(
-				expression,
+				resolve( ast, tableGroup, modelPartName, creationState ),
 				collation,
 				creationState
 		);
-		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence.getJpaValue() ) );
+		ast.addSortSpecification( new SortSpecification( sortExpression, sortOrder, nullPrecedence ) );
 	}
 
 	@Override

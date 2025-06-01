@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
 
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
@@ -33,6 +34,7 @@ import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.type.descriptor.converter.internal.ConverterHelper.createValueConverter;
 
 /**
  * Adapts {@link UserType} to the generic {@link Type} interface, in order
@@ -62,22 +64,25 @@ public class CustomType<J>
 	private final ValueBinder<J> valueBinder;
 	private final JdbcLiteralFormatter<J> jdbcLiteralFormatter;
 
+	private final BasicValueConverter<J, ?> converter;
+
 	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, EMPTY_STRING_ARRAY, typeConfiguration );
 	}
 
 	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration) {
 		this.userType = userType;
+		this.registrationKeys = registrationKeys;
 		name = userType.getClass().getName();
-
 		mappedJavaType = getMappedJavaType( userType );
 
-		final BasicValueConverter<J, Object> converter = userType.getValueConverter();
-		if ( converter != null ) {
+		final AttributeConverter<J, ?> valueConverter = userType.getValueConverter();
+		if ( valueConverter != null ) {
+			converter = createValueConverter( valueConverter, typeConfiguration.getJavaTypeRegistry() );
 			// When an explicit value converter is given,
 			// we configure the custom type to use that instead of adapters that delegate to UserType.
 			// This is necessary to support selecting a column with multiple domain type representations.
-			jdbcType = userType.getJdbcType( typeConfiguration );
+			jdbcType = typeConfiguration.getJdbcTypeRegistry().getDescriptor( userType.getSqlType() );
 			jdbcJavaType = converter.getRelationalJavaType();
 			//noinspection unchecked
 			valueExtractor = (ValueExtractor<J>) jdbcType.getExtractor( jdbcJavaType );
@@ -93,16 +98,17 @@ public class CustomType<J>
 			valueExtractor = jdbcType.getExtractor( mappedJavaType );
 			valueBinder = jdbcType.getBinder( mappedJavaType );
 			jdbcLiteralFormatter =
-					userType instanceof EnhancedUserType ? jdbcType.getJdbcLiteralFormatter( mappedJavaType ) : null;
+					userType instanceof EnhancedUserType
+							? jdbcType.getJdbcLiteralFormatter( mappedJavaType )
+							: null;
+			converter = null;
 		}
-
-		this.registrationKeys = registrationKeys;
 	}
 
 	private JavaType<J> getMappedJavaType(UserType<J> userType) {
 		return userType instanceof UserVersionType<J> userVersionType
-				? new UserTypeVersionJavaTypeWrapper<>( userVersionType )
-				: new UserTypeJavaTypeWrapper<>( userType );
+				? new UserTypeVersionJavaTypeWrapper<>( userVersionType, this )
+				: new UserTypeJavaTypeWrapper<>( userType, this );
 	}
 
 	public UserType<J> getUserType() {
@@ -166,11 +172,9 @@ public class CustomType<J>
 		// we have to handle the fact that it could produce a null value,
 		// in which case we will try to use a converter for assembling,
 		// or if that doesn't exist, simply use the relational value as is
-		if ( assembled == null && cached != null ) {
-			final BasicValueConverter<J, Object> converter = getUserType().getValueConverter();
-			return converter == null ? cached : converter.toDomainValue( cached );
-		}
-		return assembled;
+		return assembled == null && cached != null
+				? convertToDomainValue( cached )
+				: assembled;
 	}
 
 	@Override
@@ -189,20 +193,15 @@ public class CustomType<J>
 		// we have to handle the fact that it could produce a null value,
 		// in which case we will try to use a converter for disassembling,
 		// or if that doesn't exist, simply use the domain value as is
-		if ( disassembled == null ){
-			final BasicValueConverter<J, Object> converter = getUserType().getValueConverter();
-			return converter == null ? disassembled : (Serializable) converter.toRelationalValue( (J) value );
-		}
-		else {
-			return disassembled;
-		}
+		return disassembled == null
+				? (Serializable) convertToRelationalValue( (J) value )
+				: disassembled;
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		// Use the value converter if available for conversion to the jdbc representation
-		final BasicValueConverter<J, Object> converter = getUserType().getValueConverter();
-		return converter == null ? value : converter.toRelationalValue( (J) value );
+		return convertToRelationalValue( (J) value );
 	}
 
 	@Override
@@ -395,8 +394,8 @@ public class CustomType<J>
 	}
 
 	@Override
-	public BasicValueConverter<J, Object> getValueConverter() {
-		return userType.getValueConverter();
+	public BasicValueConverter<J, ?> getValueConverter() {
+		return converter;
 	}
 
 }

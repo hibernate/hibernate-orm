@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -73,9 +74,9 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		return wrappedPath;
 	}
 
-	@SuppressWarnings({ "rawtypes" })
+	@SuppressWarnings("rawtypes")
 	@Override
-	public SqmPathSource getNodeType() {
+	public SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 

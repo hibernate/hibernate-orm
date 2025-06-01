@@ -109,7 +109,7 @@ and `io.agroal:agroal-pool`
 | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
 `org.hibernate.validator:hibernate-validator` +
-and `org.glassfish:jakarta.el`
+and `org.glassfish.expressly:expressly`
 | Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
 and `org.ehcache:ehcache`
 | Local second-level cache support via JCache and {caffeine}[Caffeine]| `org.hibernate.orm:hibernate-jcache` +

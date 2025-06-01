@@ -67,14 +67,6 @@ public interface PersistenceContext {
 		return true;
 	}
 
-//	/**
-//	 * Add a collection which has no owner loaded
-//	 *
-//	 * @param key The collection key under which to add the collection
-//	 * @param collection The collection to add
-//	 */
-//	void addUnownedCollection(CollectionKey key, PersistentCollection<?> collection);
-
 	/**
 	 * Take ownership of a previously unowned collection, if one.  This method returns {@code null} if no such
 	 * collection was previously added () or was previously removed.
@@ -99,11 +91,6 @@ public interface PersistenceContext {
 	 */
 	void clear();
 
-//	/**
-//	 * @return false if we know for certain that all the entities are read-only
-//	 */
-//	boolean hasNonReadOnlyEntities();
-
 	/**
 	 * Set the status of an entry
 	 *
@@ -118,8 +105,9 @@ public interface PersistenceContext {
 	void afterTransactionCompletion();
 
 	/**
-	 * Get the current state of the entity as known to the underlying database, or null if there is no
-	 * corresponding row
+	 * Get the current state of the entity as known to the underlying database,
+	 * or {@code null} if there is no corresponding row. This operation might
+	 * result in a {@code select} query being executed against the database.
 	 *
 	 * @param id The identifier of the entity for which to grab a snapshot
 	 * @param persister The persister of the entity.
@@ -133,13 +121,16 @@ public interface PersistenceContext {
 	/**
 	 * Retrieve the cached database snapshot for the requested entity key.
 	 * <p>
-	 * This differs from {@link #getDatabaseSnapshot} in two important respects:<ol>
-	 * <li>no snapshot is obtained from the database if not already cached</li>
-	 * <li>an entry of {@link #NO_ROW} here is interpreted as an exception</li>
+	 * This differs from {@link #getDatabaseSnapshot} in two important ways:
+	 * <ol>
+	 * <li>no snapshot is obtained from the database if not already cached,
+	 *     and
+	 * <li>an entry of {@link #NO_ROW} here results in an exception.
 	 * </ol>
+	 *
 	 * @param key The entity key for which to retrieve the cached snapshot
 	 * @return The cached snapshot
-	 * @throws IllegalStateException if the cached snapshot was == {@link #NO_ROW}.
+	 * @throws IllegalStateException if the cached snapshot was {@link #NO_ROW}.
 	 */
 	Object[] getCachedDatabaseSnapshot(EntityKey key);
 
@@ -657,7 +648,7 @@ public interface PersistenceContext {
 	 * if the child is contained within that collection.  If so, we have found the owner; if not, we go on.
 	 * <p>
 	 * Also need to account for {@code mergeMap} which acts as a local copy cache managed for the duration of a merge
-	 * operation.  It represents a map of the detached entity instances pointing to the corresponding managed instance.
+	 * operation. It represents a map of the detached entity instances pointing to the corresponding managed instance.
 	 *
 	 * @param entityName The entity name for the entity type which would own the child
 	 * @param propertyName The name of the property on the owning entity type which would name this child association.

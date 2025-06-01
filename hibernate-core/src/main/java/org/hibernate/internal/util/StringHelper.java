@@ -646,6 +646,10 @@ public final class StringHelper {
 		return string.length() <= length ? string : string.substring( 0, length );
 	}
 
+	/**
+	 * @deprecated No longer used
+	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public static String generateAlias(String description) {
 		return generateAliasRoot( description ) + '_';
 	}
@@ -658,7 +662,10 @@ public final class StringHelper {
 	 * @param unique A uniquing value
 	 *
 	 * @return an alias of the form <samp>foo1_</samp>
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public static String generateAlias(String description, int unique) {
 		return generateAliasRoot( description )
 				+ AliasConstantsHelper.get( unique );
@@ -672,7 +679,10 @@ public final class StringHelper {
 	 * @param description The root name from which to generate a root alias.
 	 *
 	 * @return The generated root alias.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	private static String generateAliasRoot(String description) {
 		String result = truncate( unqualifyEntityName( description ), ALIAS_TRUNCATE_LENGTH )
 				.toLowerCase( Locale.ROOT )
@@ -689,7 +699,10 @@ public final class StringHelper {
 	 * @param alias The generated alias to be cleaned.
 	 *
 	 * @return The cleaned alias, stripped of any leading non-alpha characters.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	private static String cleanAlias(String alias) {
 		final char[] chars = alias.toCharArray();
 		// shortcut check...

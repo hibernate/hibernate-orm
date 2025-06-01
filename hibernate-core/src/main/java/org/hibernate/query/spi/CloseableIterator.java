@@ -9,7 +9,7 @@ import java.util.Iterator;
 import org.hibernate.Incubating;
 
 /**
- * Unification of Iterator and AutoCloseable
+ * Unification of {@link Iterator} and {@link AutoCloseable}.
  *
  * @author Steve Ebersole
  *

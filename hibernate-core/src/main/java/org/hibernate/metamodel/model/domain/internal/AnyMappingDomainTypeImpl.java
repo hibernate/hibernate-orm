@@ -19,6 +19,7 @@ import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 
 import java.util.List;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart.determineDiscriminatorConverter;
 
 /**
@@ -60,6 +61,11 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 		return this;
 	}
 
+//	@Override
+//	public Class<T> getJavaType() {
+//		return AnyMappingDomainType.super.getJavaType();
+//	}
+
 	@Override
 	public String getTypeName() {
 		return baseJtd.getTypeName();
@@ -87,7 +93,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T>, Sqm
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
+		return ENTITY;
 	}
 
 	@Override

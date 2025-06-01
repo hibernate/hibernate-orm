@@ -4,9 +4,13 @@
  */
 package org.hibernate.boot.models.xml.internal;
 
+import org.hibernate.internal.util.StringHelper;
+
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.net.URL;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
@@ -31,305 +35,295 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.java.BigDecimalJavaType;
-import org.hibernate.type.descriptor.java.BigIntegerJavaType;
-import org.hibernate.type.descriptor.java.BlobJavaType;
-import org.hibernate.type.descriptor.java.BooleanJavaType;
-import org.hibernate.type.descriptor.java.ByteJavaType;
-import org.hibernate.type.descriptor.java.CalendarJavaType;
-import org.hibernate.type.descriptor.java.CharacterJavaType;
-import org.hibernate.type.descriptor.java.ClassJavaType;
-import org.hibernate.type.descriptor.java.ClobJavaType;
-import org.hibernate.type.descriptor.java.CurrencyJavaType;
-import org.hibernate.type.descriptor.java.DoubleJavaType;
-import org.hibernate.type.descriptor.java.DurationJavaType;
-import org.hibernate.type.descriptor.java.FloatJavaType;
-import org.hibernate.type.descriptor.java.InetAddressJavaType;
-import org.hibernate.type.descriptor.java.InstantJavaType;
-import org.hibernate.type.descriptor.java.IntegerJavaType;
-import org.hibernate.type.descriptor.java.JdbcDateJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
-import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
-import org.hibernate.type.descriptor.java.LocalDateJavaType;
-import org.hibernate.type.descriptor.java.LocalDateTimeJavaType;
-import org.hibernate.type.descriptor.java.LocalTimeJavaType;
-import org.hibernate.type.descriptor.java.LocaleJavaType;
-import org.hibernate.type.descriptor.java.LongJavaType;
-import org.hibernate.type.descriptor.java.NClobJavaType;
-import org.hibernate.type.descriptor.java.OffsetDateTimeJavaType;
-import org.hibernate.type.descriptor.java.OffsetTimeJavaType;
-import org.hibernate.type.descriptor.java.ShortJavaType;
-import org.hibernate.type.descriptor.java.StringJavaType;
-import org.hibernate.type.descriptor.java.TimeZoneJavaType;
-import org.hibernate.type.descriptor.java.UUIDJavaType;
-import org.hibernate.type.descriptor.java.UrlJavaType;
-import org.hibernate.type.descriptor.java.YearJavaType;
-import org.hibernate.type.descriptor.java.ZoneIdJavaType;
-import org.hibernate.type.descriptor.java.ZoneOffsetJavaType;
-import org.hibernate.type.descriptor.java.ZonedDateTimeJavaType;
-
 /**
  * @author Steve Ebersole
  */
 public enum SimpleTypeInterpretation {
-	BOOLEAN( Boolean.class, BooleanJavaType.class ),
-	BYTE( Byte.class, ByteJavaType.class ),
-	SHORT( Short.class, ShortJavaType.class ),
-	INTEGER( Integer.class, IntegerJavaType.class ),
-	LONG( Long.class, LongJavaType.class ),
-	DOUBLE( Double.class, DoubleJavaType.class ),
-	FLOAT( Float.class, FloatJavaType.class ),
-	BIG_INTEGER( BigInteger.class, BigIntegerJavaType.class ),
-	BIG_DECIMAL( BigDecimal.class, BigDecimalJavaType.class ),
-	CHARACTER( Character.class, CharacterJavaType.class ),
-	STRING( String.class, StringJavaType.class ),
-	INSTANT( Instant.class, InstantJavaType.class ),
-	DURATION( Duration.class, DurationJavaType.class ),
-	YEAR( Year.class, YearJavaType.class ),
-	LOCAL_DATE_TIME( LocalDateTime.class, LocalDateTimeJavaType.class ),
-	LOCAL_DATE( LocalDate.class, LocalDateJavaType.class ),
-	LOCAL_TIME( LocalTime.class, LocalTimeJavaType.class ),
-	OFFSET_DATE_TIME( OffsetDateTime.class, OffsetDateTimeJavaType.class ),
-	OFFSET_TIME( OffsetTime.class, OffsetTimeJavaType.class ),
-	ZONED_DATE_TIME( ZonedDateTime.class, ZonedDateTimeJavaType.class ),
-	ZONE_ID( ZoneId.class, ZoneIdJavaType.class ),
-	ZONE_OFFSET( ZoneOffset.class, ZoneOffsetJavaType.class ),
-	UUID( UUID .class, UUIDJavaType.class ),
-	URL( java.net.URL.class, UrlJavaType.class ),
-	INET_ADDRESS( InetAddress.class, InetAddressJavaType.class ),
-	CURRENCY( Currency.class, CurrencyJavaType.class ),
-	LOCALE( Locale.class, LocaleJavaType.class ),
-	CLASS( Class.class, ClassJavaType.class ),
-	BLOB( Blob.class, BlobJavaType.class ),
-	CLOB( Clob.class, ClobJavaType.class ),
-	NCLOB( NClob.class, NClobJavaType.class ),
-	JDBC_TIMESTAMP( Timestamp.class, JdbcTimestampJavaType.class ),
-	JDBC_DATE( Date.class, JdbcDateJavaType.class ),
-	JDBC_TIME( Time.class, JdbcTimeJavaType.class ),
-	CALENDAR( Calendar.class, CalendarJavaType.class ),
-	TIME_ZONE( TimeZone.class, TimeZoneJavaType.class )
+	BOOLEAN( Boolean.class ),
+	BYTE( Byte.class ),
+	SHORT( Short.class ),
+	INTEGER( Integer.class ),
+	LONG( Long.class ),
+	DOUBLE( Double.class ),
+	FLOAT( Float.class ),
+	BIG_INTEGER( BigInteger.class ),
+	BIG_DECIMAL( BigDecimal.class ),
+	CHARACTER( Character.class ),
+	STRING( String.class ),
+	INSTANT( Instant.class ),
+	DURATION( Duration.class ),
+	YEAR( Year.class ),
+	LOCAL_DATE_TIME( LocalDateTime.class ),
+	LOCAL_DATE( LocalDate.class ),
+	LOCAL_TIME( LocalTime.class ),
+	OFFSET_DATE_TIME( OffsetDateTime.class ),
+	OFFSET_TIME( OffsetTime.class ),
+	ZONED_DATE_TIME( ZonedDateTime.class ),
+	ZONE_ID( ZoneId.class ),
+	ZONE_OFFSET( ZoneOffset.class ),
+	UUID( UUID .class ),
+	URL( java.net.URL.class ),
+	INET_ADDRESS( InetAddress.class ),
+	CURRENCY( Currency.class ),
+	LOCALE( Locale.class ),
+	CLASS( Class.class ),
+	BLOB( Blob.class ),
+	CLOB( Clob.class ),
+	NCLOB( NClob.class ),
+	JDBC_TIMESTAMP( Timestamp.class ),
+	JDBC_DATE( Date.class ),
+	JDBC_TIME( Time.class ),
+	CALENDAR( Calendar.class ),
+	TIME_ZONE( TimeZone.class ),
+	SERIALIZABLE( Serializable.class ),
+
+	PRIMITIVE_BOOLEAN( boolean.class, BOOLEAN ),
+	PRIMITIVE_BYTE( byte.class, BYTE ),
+	PRIMITIVE_SHORT( short.class, SHORT ),
+	PRIMITIVE_INTEGER( int.class, INTEGER ),
+	PRIMITIVE_LONG( long.class, LONG ),
+	PRIMITIVE_DOUBLE( double.class, DOUBLE ),
+	PRIMITIVE_FLOAT( float.class, FLOAT ),
+	PRIMITIVE_CHARACTER( char.class, CHARACTER ),
 	;
 
-	SimpleTypeInterpretation(Class<?> javaType, Class<? extends BasicJavaType<?>> javaTypeDescriptorType) {
-		this.javaType = javaType;
-		this.javaTypeDescriptorType = javaTypeDescriptorType;
-	}
 
 	private final Class<?> javaType;
-	private final Class<? extends BasicJavaType<?>> javaTypeDescriptorType;
+	private final SimpleTypeInterpretation objectForm;
+
+	SimpleTypeInterpretation(Class<?> javaType) {
+		this.javaType = javaType;
+		this.objectForm = this;
+	}
+
+	SimpleTypeInterpretation(Class<?> javaType, SimpleTypeInterpretation objectForm) {
+		this.javaType = javaType;
+		this.objectForm = objectForm;
+	}
 
 	public Class<?> getJavaType() {
 		return javaType;
 	}
 
-	public Class<? extends BasicJavaType<?>> getJavaTypeDescriptorType() {
-		return javaTypeDescriptorType;
+	public SimpleTypeInterpretation getObjectForm() {
+		return objectForm;
 	}
 
 	public static SimpleTypeInterpretation interpret(String name) {
 		assert StringHelper.isNotEmpty( name );
 
+		if ( boolean.class.getName().equals( name ) ) {
+			return PRIMITIVE_BOOLEAN;
+		}
 
-		if ( name.equalsIgnoreCase( "boolean" )
-				|| Boolean.class.getName().equals( name ) ) {
+		if ( byte.class.getName().equals( name ) ) {
+			return PRIMITIVE_BYTE;
+		}
+
+		if ( short.class.getName().equals( name ) ) {
+			return PRIMITIVE_SHORT;
+		}
+
+		if ( int.class.getName().equals( name ) ) {
+			return PRIMITIVE_INTEGER;
+		}
+
+		if ( long.class.getName().equals( name ) ) {
+			return PRIMITIVE_LONG;
+		}
+
+		if ( double.class.getName().equals( name ) ) {
+			return PRIMITIVE_DOUBLE;
+		}
+
+		if ( float.class.getName().equals( name ) ) {
+			return PRIMITIVE_FLOAT;
+		}
+
+		if ( char.class.getName().equals( name ) ) {
+			return PRIMITIVE_CHARACTER;
+		}
+
+		if ( Boolean.class.getName().equals( name )
+				|| Boolean.class.getSimpleName().equals( name ) ) {
 			return BOOLEAN;
 		}
 
-		if ( name.equalsIgnoreCase( "byte" )
-				|| Byte.class.getName().equals( name ) ) {
+		if ( Byte.class.getName().equals( name )
+				|| Byte.class.getSimpleName().equals( name ) ) {
 			return BYTE;
 		}
 
-		if ( name.equalsIgnoreCase( "short" )
-				|| Short.class.getName().equals( name ) ) {
+		if ( Short.class.getName().equals( name )
+				|| Short.class.getSimpleName().equals( name ) ) {
 			return SHORT;
 		}
 
-		if ( name.equalsIgnoreCase( "int" )
-				|| name.equalsIgnoreCase( "integer" )
-				|| Integer.class.getName().equals( name ) ) {
+		if ( Integer.class.getName().equals( name )
+				|| Integer.class.getSimpleName().equals( name ) ) {
 			return INTEGER;
 		}
 
-		if ( name.equalsIgnoreCase( "long" )
-				|| Long.class.getName().equals( name ) ) {
+		if ( Long.class.getName().equals( name )
+				|| Long.class.getSimpleName().equals( name ) ) {
 			return LONG;
 		}
 
-		if ( name.equalsIgnoreCase( "double" )
-				|| Double.class.getName().equals( name ) ) {
+		if ( Double.class.getName().equals( name )
+				|| Double.class.getSimpleName().equals( name ) ) {
 			return DOUBLE;
 		}
 
-		if ( name.equalsIgnoreCase( "float" )
-				|| Float.class.getName().equals( name ) ) {
+		if ( Float.class.getName().equals( name )
+				|| Float.class.getSimpleName().equals( name ) ) {
 			return FLOAT;
 		}
 
-		if ( name.equalsIgnoreCase( "biginteger" )
-				|| name.equalsIgnoreCase( "big_integer" )
-				|| BigInteger.class.getName().equals( name ) ) {
+		if ( BigInteger.class.getName().equals( name )
+				|| BigInteger.class.getSimpleName().equals( name ) ) {
 			return BIG_INTEGER;
 		}
 
-		if ( name.equalsIgnoreCase( "bigdecimal" )
-				|| name.equalsIgnoreCase( "big_decimal" )
-				|| BigDecimal.class.getName().equals( name ) ) {
+		if ( BigDecimal.class.getName().equals( name )
+				|| BigDecimal.class.getSimpleName().equals( name ) ) {
 			return BIG_DECIMAL;
 		}
 
-		if ( name.equalsIgnoreCase( "char" )
-				|| name.equalsIgnoreCase( "character" )
-				|| Character.class.getName().equalsIgnoreCase( name ) ) {
-			return CHARACTER;
-		}
-
-		if ( name.equalsIgnoreCase( "string" )
-				|| String.class.getName().equalsIgnoreCase( name ) ) {
+		if ( String.class.getName().equals( name )
+				|| String.class.getSimpleName().equals( name ) ) {
 			return STRING;
 		}
 
-		if ( name.equalsIgnoreCase( "instant" )
-				|| Instant.class.getName().equals( name ) ) {
-			return INSTANT;
+		if ( Character.class.getName().equals( name )
+				|| Character.class.getSimpleName().equals( name ) ) {
+			return CHARACTER;
 		}
 
-		if ( name.equalsIgnoreCase( "duration" )
-				|| Duration.class.getName().equals( name ) ) {
-			return DURATION;
-		}
-
-		if ( name.equalsIgnoreCase( "year" )
-				|| Year.class.getName().equals( name ) ) {
-			return YEAR;
-		}
-
-		if ( name.equalsIgnoreCase( "localdatetime" )
-				|| name.equalsIgnoreCase( "local_date_time" )
-				|| LocalDateTime.class.getName().equals( name ) ) {
-			return LOCAL_DATE_TIME;
-		}
-
-		if ( name.equalsIgnoreCase( "localdate" )
-				|| name.equalsIgnoreCase( "local_date" )
-				|| LocalDate.class.getName().equals( name ) ) {
-			return LOCAL_DATE;
-		}
-
-		if ( name.equalsIgnoreCase( "localtime" )
-				|| name.equalsIgnoreCase( "local_time" )
-				|| LocalTime.class.getName().equals( name ) ) {
-			return LOCAL_TIME;
-		}
-
-		if ( name.equalsIgnoreCase( "zoneddatetime" )
-				|| name.equalsIgnoreCase( "zoned_date_time" )
-				|| ZonedDateTime.class.getName().equals( name ) ) {
-			return ZONED_DATE_TIME;
-		}
-
-		if ( name.equalsIgnoreCase( "offsetdatetime" )
-				|| name.equalsIgnoreCase( "offset_date_time" )
-				|| OffsetDateTime.class.getName().equals( name ) ) {
-			return OFFSET_DATE_TIME;
-		}
-
-		if ( name.equalsIgnoreCase( "offsettime" )
-				|| name.equalsIgnoreCase( "offset_time" )
-				|| OffsetTime.class.getName().equals( name ) ) {
-			return OFFSET_TIME;
-		}
-
-		if ( name.equalsIgnoreCase( "zoneid" )
-				|| name.equalsIgnoreCase( "zone_id" )
-				|| ZoneId.class.getName().equals( name ) ) {
-			return ZONE_ID;
-		}
-
-		if ( name.equalsIgnoreCase( "zoneoffset" )
-				|| name.equalsIgnoreCase( "zone_offset" )
-				|| ZoneOffset.class.getName().equals( name ) ) {
-			return ZONE_OFFSET;
-		}
-
-		if ( name.equalsIgnoreCase( "uuid" )
-				|| UUID.class.getName().equals( name ) ) {
+		if ( UUID.class.getName().equals( name )
+				|| UUID.class.getSimpleName().equals( name ) ) {
 			return UUID;
 		}
 
-		if ( name.equalsIgnoreCase( "url" )
-				|| java.net.URL.class.getName().equals( name ) ) {
+		if ( URL.class.getName().equals( name )
+				|| URL.class.getSimpleName().equals( name ) ) {
 			return URL;
 		}
 
-		if ( name.equalsIgnoreCase( "inet" )
-				|| name.equalsIgnoreCase( "inetaddress" )
-				|| name.equalsIgnoreCase( "inet_address" )
-				|| InetAddress.class.getName().equals( name ) ) {
+		if ( InetAddress.class.getName().equals( name )
+				|| InetAddress.class.getSimpleName().equals( name ) ) {
 			return INET_ADDRESS;
 		}
 
-		if ( name.equalsIgnoreCase( "currency" )
-				|| Currency.class.getName().equals( name ) ) {
-			return CURRENCY;
-		}
-
-		if ( name.equalsIgnoreCase( "locale" )
-				|| Locale.class.getName().equals( name ) ) {
-			return LOCALE;
-		}
-
-		if ( name.equalsIgnoreCase( "class" )
-				|| Class.class.getName().equals( name ) ) {
-			return CLASS;
-		}
-
-		if ( name.equalsIgnoreCase( "blob" )
-				|| Blob.class.getName().equals( name ) ) {
+		if ( Blob.class.getName().equals( name )
+				|| Blob.class.getSimpleName().equals( name ) ) {
 			return BLOB;
 		}
 
-		if ( name.equalsIgnoreCase( "clob" )
-				|| Clob.class.getName().equals( name ) ) {
+		if ( Clob.class.getName().equals( name )
+				|| Clob.class.getSimpleName().equals( name ) ) {
 			return CLOB;
 		}
 
-		if ( name.equalsIgnoreCase( "nclob" )
-				|| NClob.class.getName().equals( name ) ) {
+		if ( NClob.class.getName().equals( name )
+				|| NClob.class.getSimpleName().equals( name ) ) {
 			return NCLOB;
 		}
 
-		if ( name.equalsIgnoreCase( "timestamp" )
-				|| name.equalsIgnoreCase( "time_stamp" )
-				|| java.util.Date.class.getName().equals( name )
-				|| Timestamp.class.getName().equals( name ) ) {
+		if ( Instant.class.getName().equals( name )
+				|| Instant.class.getSimpleName().equals( name ) ) {
+			return INSTANT;
+		}
+
+		if ( LocalDate.class.getName().equals( name )
+				|| LocalDate.class.getSimpleName().equals( name ) ) {
+			return LOCAL_DATE;
+		}
+
+		if ( LocalTime.class.getName().equals( name )
+				|| LocalTime.class.getSimpleName().equals( name ) ) {
+			return LOCAL_TIME;
+		}
+
+		if ( LocalDateTime.class.getName().equals( name )
+				|| LocalDateTime.class.getSimpleName().equals( name ) ) {
+			return LOCAL_DATE_TIME;
+		}
+
+		if ( ZonedDateTime.class.getName().equals( name )
+				|| ZonedDateTime.class.getSimpleName().equals( name ) ) {
+			return ZONED_DATE_TIME;
+		}
+
+		if ( OffsetTime.class.getName().equals( name )
+				|| OffsetTime.class.getSimpleName().equals( name ) ) {
+			return OFFSET_TIME;
+		}
+
+		if ( OffsetDateTime.class.getName().equals( name )
+				|| OffsetDateTime.class.getSimpleName().equals( name ) ) {
+			return OFFSET_DATE_TIME;
+		}
+
+		if ( ZoneId.class.getName().equals( name )
+				|| ZoneId.class.getSimpleName().equals( name ) ) {
+			return ZONE_ID;
+		}
+
+		if ( ZoneOffset.class.getName().equals( name )
+				|| ZoneOffset.class.getSimpleName().equals( name ) ) {
+			return ZONE_OFFSET;
+		}
+
+		if ( Duration.class.getName().equals( name )
+			|| Duration.class.getSimpleName().equals( name ) ) {
+			return DURATION;
+		}
+
+		if ( Year.class.getName().equals( name )
+			|| Year.class.getSimpleName().equals( name ) ) {
+			return YEAR;
+		}
+
+		if ( Timestamp.class.getName().equals( name )
+				|| Timestamp.class.getSimpleName().equals( name ) ) {
 			return JDBC_TIMESTAMP;
 		}
 
-		if ( name.equalsIgnoreCase( "date" )
-				|| java.sql.Date.class.getName().equals( name ) ) {
+		if ( Date.class.getName().equals( name )
+				|| Date.class.getSimpleName().equals( name ) ) {
 			return JDBC_DATE;
 		}
 
-		if ( name.equalsIgnoreCase( "time" )
-				|| java.sql.Time.class.getName().equals( name ) ) {
+		if ( Time.class.getName().equals( name )
+				|| Time.class.getSimpleName().equals( name ) ) {
 			return JDBC_TIME;
 		}
 
-		if ( name.equalsIgnoreCase( "calendar" )
-				|| name.equalsIgnoreCase( "gregoriancalendar" )
-				|| name.equalsIgnoreCase( "gregorian_calendar" )
-				|| Calendar.class.getName().equals( name )
-				|| GregorianCalendar.class.getName().equals( name ) ) {
+		if ( Calendar.class.getName().equals( name )
+			|| Calendar.class.getSimpleName().equals( name )
+			|| GregorianCalendar.class.getName().equals( name )
+			|| GregorianCalendar.class.getSimpleName().equals( name ) ) {
 			return CALENDAR;
 		}
 
-		if ( name.equalsIgnoreCase( "timezone" )
-				|| name.equalsIgnoreCase( "time_zone" )
-				|| TimeZone.class.getName().equals( name ) ) {
+		if ( TimeZone.class.getName().equals( name )
+				|| TimeZone.class.getSimpleName().equals( name ) ) {
 			return TIME_ZONE;
+		}
+
+		if ( Currency.class.getName().equals( name )
+			|| Currency.class.getSimpleName().equals( name ) ) {
+			return CURRENCY;
+		}
+
+		if ( Locale.class.getName().equals( name )
+			|| Locale.class.getSimpleName().equals( name ) ) {
+			return LOCALE;
+		}
+
+		if ( Class.class.getName().equals( name )
+			|| Class.class.getSimpleName().equals( name ) ) {
+			return CLASS;
 		}
 
 		return null;

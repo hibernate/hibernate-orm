@@ -9,6 +9,7 @@ import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -105,7 +106,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public SqmPathSource<S> getNodeType() {
+	public SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 

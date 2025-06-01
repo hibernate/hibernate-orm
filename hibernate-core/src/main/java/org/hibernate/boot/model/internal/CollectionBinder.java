@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -17,57 +18,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Bag;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheLayout;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Check;
-import org.hibernate.annotations.Checks;
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.CollectionIdJavaType;
-import org.hibernate.annotations.CollectionIdJdbcType;
-import org.hibernate.annotations.CollectionIdJdbcTypeCode;
-import org.hibernate.annotations.CollectionType;
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.CompositeType;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchProfileOverride;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterJoinTable;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.HQLSelect;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.ListIndexBase;
-import org.hibernate.annotations.ListIndexJavaType;
-import org.hibernate.annotations.ListIndexJdbcType;
-import org.hibernate.annotations.ListIndexJdbcTypeCode;
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyJavaType;
-import org.hibernate.annotations.MapKeyJdbcType;
-import org.hibernate.annotations.MapKeyJdbcTypeCode;
-import org.hibernate.annotations.MapKeyMutability;
-import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.QueryCacheLayout;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLJoinTableRestriction;
-import org.hibernate.annotations.SQLOrder;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.SQLSelect;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SoftDelete;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.Synchronize;
+import org.hibernate.annotations.*;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
@@ -139,6 +90,7 @@ import static jakarta.persistence.AccessType.PROPERTY;
 import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
 import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static jakarta.persistence.FetchType.LAZY;
+import static org.hibernate.annotations.CascadeType.DELETE_ORPHAN;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.EMBEDDABLE;
 import static org.hibernate.boot.model.internal.AnnotatedClassType.NONE;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromAnnotation;
@@ -147,11 +99,11 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFrom
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
 import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
-import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
@@ -202,7 +154,7 @@ public abstract class CollectionBinder {
 	protected MemberDetails property;
 	private TypeDetails collectionElementType;
 	private TypeDetails targetEntity;
-	private String cascadeStrategy;
+	private EnumSet<CascadeType> cascadeTypes;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
 	private CacheLayout queryCacheLayout;
@@ -292,7 +244,6 @@ public abstract class CollectionBinder {
 		collectionBinder.setInheritanceStatePerClass( inheritanceStatePerClass );
 		collectionBinder.setDeclaringClass( inferredData.getDeclaringClass() );
 
-//		final Comment comment = property.getAnnotation( Comment.class );
 		final Cascade hibernateCascade = property.getAnnotationUsage( Cascade.class, modelsContext );
 
 		collectionBinder.setElementColumns( elementColumns(
@@ -311,7 +262,6 @@ public abstract class CollectionBinder {
 				entityBinder,
 				context,
 				property
-//				comment
 		) );
 
 		collectionBinder.setMapKeyManyToManyColumns( mapKeyJoinColumns(
@@ -320,7 +270,6 @@ public abstract class CollectionBinder {
 				entityBinder,
 				context,
 				property
-//				comment
 		) );
 
 		bindJoinedTableAssociation(
@@ -401,10 +350,8 @@ public abstract class CollectionBinder {
 			EntityBinder entityBinder,
 			MetadataBuildingContext context,
 			MemberDetails property) {
-//			Comment comment) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
 				mapKeyJoinColumnAnnotations( property, context ),
-//				comment,
 				null,
 				entityBinder.getSecondaryTables(),
 				propertyHolder,
@@ -514,12 +461,9 @@ public abstract class CollectionBinder {
 			collectionBinder.setFkJoinColumns( joinColumns );
 			mappedBy = nullIfEmpty( oneToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( oneToManyAnn.targetEntity() );
-			collectionBinder.setCascadeStrategy( getCascadeStrategy(
-					oneToManyAnn.cascade(),
-					hibernateCascade,
-					oneToManyAnn.orphanRemoval(),
-					context
-			) );
+			collectionBinder.setCascadeStrategy(
+					aggregateCascadeTypes( oneToManyAnn.cascade(), hibernateCascade,
+							oneToManyAnn.orphanRemoval(), context ) );
 			collectionBinder.setOneToMany( true );
 		}
 		else if ( elementCollectionAnn != null ) {
@@ -535,23 +479,15 @@ public abstract class CollectionBinder {
 		else if ( manyToManyAnn != null ) {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );
 			collectionBinder.setTargetEntity( manyToManyAnn.targetEntity() );
-			collectionBinder.setCascadeStrategy( getCascadeStrategy(
-					manyToManyAnn.cascade(),
-					hibernateCascade,
-					false,
-					context
-			) );
+			collectionBinder.setCascadeStrategy(
+					aggregateCascadeTypes( manyToManyAnn.cascade(), hibernateCascade, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else if ( property.hasDirectAnnotationUsage( ManyToAny.class ) ) {
 			mappedBy = null;
 			collectionBinder.setTargetEntity( ClassDetails.VOID_CLASS_DETAILS );
-			collectionBinder.setCascadeStrategy( getCascadeStrategy(
-					null,
-					hibernateCascade,
-					false,
-					context
-			) );
+			collectionBinder.setCascadeStrategy(
+					aggregateCascadeTypes( null, hibernateCascade, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else {
@@ -807,8 +743,8 @@ public abstract class CollectionBinder {
 		this.insertable = insertable;
 	}
 
-	private void setCascadeStrategy(String cascadeStrategy) {
-		this.cascadeStrategy = cascadeStrategy;
+	private void setCascadeStrategy(EnumSet<CascadeType> cascadeTypes) {
+		this.cascadeTypes = cascadeTypes;
 	}
 
 	private void setAccessType(AccessType accessType) {
@@ -1004,6 +940,7 @@ public abstract class CollectionBinder {
 		}
 
 		if ( property.hasDirectAnnotationUsage( CollectionId.class )
+				|| property.hasDirectAnnotationUsage( CollectionIdJavaClass.class )
 				|| property.hasDirectAnnotationUsage( CollectionIdJdbcType.class )
 				|| property.hasDirectAnnotationUsage( CollectionIdJdbcTypeCode.class )
 				|| property.hasDirectAnnotationUsage( CollectionIdJavaType.class ) ) {
@@ -1254,12 +1191,19 @@ public abstract class CollectionBinder {
 		}
 		else if ( oneToMany
 				&& property.hasDirectAnnotationUsage( OnDelete.class )
-				&& !property.hasDirectAnnotationUsage( JoinColumn.class )
-				&& !property.hasDirectAnnotationUsage( JoinColumns.class )) {
+				&& !hasExplicitJoinColumn() ) {
 			throw new AnnotationException( "Unidirectional '@OneToMany' association '"
 					+ qualify( propertyHolder.getPath(), propertyName )
 					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
 		}
+	}
+
+	private boolean hasExplicitJoinColumn() {
+		return property.hasDirectAnnotationUsage( JoinColumn.class )
+			|| property.hasDirectAnnotationUsage( JoinColumns.class )
+			|| property.hasDirectAnnotationUsage( JoinTable.class )
+			&& property.getDirectAnnotationUsage( JoinTable.class )
+						.joinColumns().length > 0;
 	}
 
 	private void bindProperty() {
@@ -1267,8 +1211,8 @@ public abstract class CollectionBinder {
 		PropertyBinder binder = new PropertyBinder();
 		binder.setName( propertyName );
 		binder.setValue( collection );
-		binder.setCascade( cascadeStrategy );
-		if ( cascadeStrategy != null && cascadeStrategy.contains( "delete-orphan" ) ) {
+		binder.setCascade( cascadeTypes );
+		if ( cascadeTypes != null && cascadeTypes.contains( DELETE_ORPHAN ) ) {
 			collection.setOrphanDelete( true );
 		}
 		binder.setLazy( collection.isLazy() );

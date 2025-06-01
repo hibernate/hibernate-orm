@@ -67,12 +67,12 @@ public class KeyBasedPagination {
 			NodeBuilder builder) {
 		final List<SqmPath<?>> keyPaths = new ArrayList<>();
 		for ( Order<? super R> key : keyDefinition ) {
-			keyPaths.add( root.get( key.getAttributeName() ) );
+			keyPaths.add( root.get( key.attributeName() ) );
 		}
 		SqmPredicate restriction = null;
 		for (int i = 0; i < keyDefinition.size(); i++ ) {
 			// ordering by an attribute of the returned entity
-			final SortDirection direction = keyDefinition.get(i).getDirection();
+			final SortDirection direction = keyDefinition.get(i).direction();
 			final SqmPath key = keyPaths.get(i);
 			final Comparable keyValue = keyValues.get(i);
 			final List<SqmPath<?>> previousKeys = keyPaths.subList(0, i);
@@ -88,15 +88,15 @@ public class KeyBasedPagination {
 			NodeBuilder builder) {
 		final List<SqmPath<?>> items = new ArrayList<>();
 		for ( Order<? super R> key : keyDefinition ) {
-			if ( key.getEntityClass() == null ) {
+			if ( key.entityClass() == null ) {
 				throw new IllegalQueryOperationException("Key-based pagination based on select list items is not yet supported");
 			}
 			else {
-				if ( !key.getEntityClass().isAssignableFrom( selected.getJavaType() ) ) {
+				if ( !key.entityClass().isAssignableFrom( selected.getJavaType() ) ) {
 					throw new IllegalQueryOperationException("Select item was of wrong entity type");
 				}
 				// ordering by an attribute of the returned entity
-				items.add( root.get( key.getAttributeName() ) );
+				items.add( root.get( key.attributeName() ) );
 			}
 		}
 		return keyedResultConstructor( selected, builder, items );

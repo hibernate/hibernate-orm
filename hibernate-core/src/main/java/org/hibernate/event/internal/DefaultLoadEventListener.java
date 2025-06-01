@@ -329,11 +329,13 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			EventSource session) {
 		if ( keyToLoad.isBatchLoadable( session.getLoadQueryInfluencers() ) ) {
 			// Add a batch-fetch entry into the queue for this entity
-			session.getPersistenceContextInternal().getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+			session.getPersistenceContextInternal().getBatchFetchQueue()
+					.addBatchLoadableEntityKey( keyToLoad );
 		}
 		// This is the crux of HHH-11147
 		// create the (uninitialized) entity instance - has only id set
-		return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( keyToLoad, true, session );
+		return persister.getBytecodeEnhancementMetadata()
+				.createEnhancedProxy( keyToLoad, true, session );
 	}
 
 	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {

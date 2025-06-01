@@ -96,44 +96,72 @@ Similarly, the Java-style postfix is case-insensitive.
 [[datetime-literals]]
 ==== Date and time literals
 
-According to the JPQL specification, date and time literals may be specified using the JDBC escape syntax.
-Since this syntax is rather unpleasant to look at, HQL provides not one, but two alternatives.
+According to the JPQL specification, literal dates and times may be specified using the JDBC escape syntax.
 
+[cols="~,~,~,^15"]
 |===
-| Date/time type | Recommended Java type | JDBC escape syntax 💀| Braced literal syntax | Explicitly typed literal syntax
+| Date/time type | Java type | JDBC escape syntax | JPA standard
 
-| Date | `LocalDate` | `{d 'yyyy-mm-dd'}` | `{yyyy-mm-dd}` | `date yyyy-mm-dd`
-| Time | `LocalTime` | `{t 'hh:mm'}` | `{hh:mm}` | `time hh:mm`
-| Time with seconds | `LocalTime` | `{t 'hh:mm:ss'}` | `{hh:mm:ss}` | `time hh:mm:ss`
-| Datetime | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss'}` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss`
-| Datetime with milliseconds | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis`
-| Datetime with an offset | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm`
-| Datetime with a time zone | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT`
-|===
-
-Literals referring to the current date and time are also provided.
-Again there is some flexibility.
-
-|===
-| Date/time type | Java type | Underscored syntax | Spaced syntax
-
-| Date | `java.time.LocalDate` | `local_date` | `local date`
-| Time | `java.time.LocalTime` | `local_time` | `local time`
-| Datetime | `java.time.LocalDateTime` | `local_datetime` | `local datetime`
-| Offset datetime | `java.time.OffsetDateTime`| `offset_datetime` | `offset datetime`
-| Instant | `java.time.Instant` | `instant` | `instant`
-| Date | `java.sql.Date` 💀| `current_date` | `current date`
-| Time | `java.sql.Time` 💀| `current_time` | `current time`
-| Datetime | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp`
+| Date | `java.sql.Date` 💀 | `{d 'yyyy-mm-dd'}` | ✔
+| Time | `java.sql.Time` 💀 | `{t 'hh:mm'}` | ✔
+| Time with seconds | `java.sql.Time` 💀 | `{t 'hh:mm:ss'}` | ✔
+| Timestamp | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss'}` | ✔
+| Timestamp with milliseconds | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | ✔
+| Timestamp with an offset | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | ✔
+| Timestamp with a time zone | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | ✔
 |===
 
-Of these, only `local date`, `local time`, `local datetime`, `current_date`, `current_time`, and `current_timestamp` are defined by the JPQL specification.
+There's two problems here:
+
+1. this syntax is rather unpleasant to look at, and
+2. these literals are assigned types defined by JDBC, instead of date/time types defined in `java.time`.
 
 [IMPORTANT]
 ====
 The use of date and time types from the `java.sql` package is strongly discouraged!
+Jakarta Persistence 3.2 deprecates support for these types.
 Always use `java.time` types in new code.
 ====
+
+HQL provides not one, but two alternatives.
+
+[cols="~,~,~,~,^15"]
+|===
+| Date/time type | Java type| Braced literal syntax | Explicitly-typed literal syntax | JPA standard
+
+| Date | `LocalDate` | `{yyyy-mm-dd}` | `date yyyy-mm-dd` | ✖
+| Time | `LocalTime` | `{hh:mm}` | `time hh:mm` | ✖
+| Time with seconds | `LocalTime` | `{hh:mm:ss}` | `time hh:mm:ss` | ✖
+| Datetime | `LocalDateTime` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss` | ✖
+| Datetime with milliseconds | `LocalDateTime` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis` | ✖
+| Datetime with an offset | `OffsetDateTime` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm` | ✖
+| Datetime with a time zone | `OffsetDateTime` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT` | ✖
+|===
+
+Literals referring to the current date and time are also available.
+
+[cols="~,~,~,^15"]
+|===
+| Date/time type | Java type | Syntax | JPA standard
+
+| Date | `java.time.LocalDate` | `local date` | ✔
+| Time | `java.time.LocalTime` | `local time` | ✔
+| Datetime | `java.time.LocalDateTime` | `local datetime` | ✔
+| Offset datetime | `java.time.OffsetDateTime` | `offset datetime` | ✖
+| Instant | `java.time.Instant` | `instant` | ✖
+|===
+
+The following are deprecated in JPA 3.2.
+We include them here only for completeness:
+
+[cols="~,~,~,~,^15"]
+|===
+| Date/time type | Java type | JPA syntax ✔ | HQL syntax ✖ | JPA standard
+
+| JDBC date | `java.sql.Date` 💀| `current_date` | `current date` | 💀
+| JDBC time | `java.sql.Time` 💀| `current_time` | `current time` | 💀
+| JDBC timestamp | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp` | 💀
+|===
 
 [[duration-literals]]
 ==== Duration literals

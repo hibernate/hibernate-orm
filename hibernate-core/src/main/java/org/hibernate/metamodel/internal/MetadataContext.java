@@ -173,8 +173,9 @@ public class MetadataContext {
 	}
 
 	public  void registerEntityType(PersistentClass persistentClass, EntityTypeImpl<?> entityType) {
-		if ( entityType.getBindableJavaType() != null && entityType.getBindableJavaType() != Map.class ) {
-			entityTypes.put( entityType.getBindableJavaType(), entityType );
+		final Class<?> javaType = entityType.getJavaType();
+		if ( javaType != null && javaType != Map.class ) {
+			entityTypes.put( javaType, entityType );
 		}
 
 		identifiableTypesByName.put( persistentClass.getEntityName(), entityType );
@@ -525,7 +526,13 @@ public class MetadataContext {
 			if ( identifierMapper != null ) {
 				cidProperties = identifierMapper.getProperties();
 				propertySpan = identifierMapper.getPropertySpan();
-				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
+				if ( identifierMapper.getComponentClassName() == null ) {
+					// support for no id-class, especially for dynamic models
+					idClassType = null;
+				}
+				else {
+					idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier() );
+				}
 			}
 			else {
 				cidProperties = compositeId.getProperties();

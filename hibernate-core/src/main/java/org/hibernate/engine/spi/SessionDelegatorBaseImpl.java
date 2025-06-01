@@ -873,16 +873,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityType, Object id, LockMode lockMode) {
-		return delegate.find( entityType, id, lockMode );
-	}
-
-	@Override
-	public <T> T find(Class<T> entityType, Object id, LockOptions lockOptions) {
-		return delegate.find( entityType, id, lockOptions );
-	}
-
-	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		return delegate.getReference( entityClass, id );
 	}
@@ -900,6 +890,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void lock(Object object, LockMode lockMode) {
 		delegate.lock( object, lockMode );
+	}
+
+	@Override
+	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+		delegate.lock( object, lockMode, lockOptions );
 	}
 
 	@Override
@@ -938,11 +933,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(Object object, LockMode lockMode) {
-		delegate.refresh( object, lockMode );
-	}
-
-	@Override
 	public void refresh(Object object, LockOptions lockOptions) {
 		delegate.refresh( object, lockOptions );
 	}
@@ -968,6 +958,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		return  delegate.findMultiple( entityGraph, ids, options );
+	}
+
+	@Override
 	public <T> T get(Class<T> theClass, Object id) {
 		return delegate.get( theClass, id );
 	}
@@ -978,11 +973,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T get(Class<T> theClass, Object id, LockOptions lockOptions) {
-		return delegate.get( theClass, id, lockOptions );
-	}
-
-	@Override
 	public Object get(String entityName, Object id) {
 		return delegate.get( entityName, id );
 	}
@@ -990,6 +980,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		return delegate.get( entityName, id, lockMode );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return delegate.get( entityType, id, lockOptions );
 	}
 
 	@Override

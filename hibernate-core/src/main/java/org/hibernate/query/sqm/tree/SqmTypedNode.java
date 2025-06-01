@@ -4,14 +4,14 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Optional contract for SqmNode implementations which are
- * typed
+ * Optional contract for {@link SqmNode} implementations which are typed.
  *
  * @author Steve Ebersole
  */
@@ -21,15 +21,16 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressibleAccessor<T>, Sqm
 	 */
 	default @Nullable JavaType<T> getNodeJavaType() {
 		final SqmExpressible<T> nodeType = getNodeType();
-		return nodeType != null ? nodeType.getExpressibleJavaType() : null;
+		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
 	@Override
-	default @Nullable SqmExpressible<T> getExpressible() {
+	default @Nullable SqmBindableType<T> getExpressible() {
 		return getNodeType();
 	}
 
-	@Nullable SqmExpressible<T> getNodeType();
+	@Nullable
+	SqmBindableType<T> getNodeType();
 
 	@Override
 	SqmTypedNode<T> copy(SqmCopyContext context);

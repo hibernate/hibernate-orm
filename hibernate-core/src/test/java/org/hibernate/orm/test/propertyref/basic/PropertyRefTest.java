@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.propertyref.basic;
 
-import java.util.Iterator;
-import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
@@ -73,10 +71,9 @@ public class PropertyRefTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Person" ).list();
-					Iterator itr = results.iterator();
-					while ( itr.hasNext() ) {
-						session.remove( itr.next() );
+					var results = session.createQuery( "from Person" ).list();
+					for ( Object result : results ) {
+						session.remove( result );
 					}
 				}
 		);
@@ -150,7 +147,7 @@ public class PropertyRefTest {
 					p2 = session.get( Person.class, p2.getId() ); //get null address reference by outer join
 					assertNull( p2.getAddress() );
 					assertNotNull( p.getAddress() );
-					List l = session.createQuery( "from Person" ).list(); //pull address references for cache
+					var l = session.createQuery( "from Person" ).list(); //pull address references for cache
 					assertEquals( 2, l.size() );
 					assertTrue( l.contains( p ) && l.contains( p2 ) );
 					session.clear();
@@ -267,15 +264,15 @@ public class PropertyRefTest {
 	public void testForeignKeyCreation(SessionFactoryScope scope) {
 		PersistentClass classMapping = scope.getMetadataImplementor().getEntityBinding( Account.class.getName() );
 
-		Iterator foreignKeyIterator = classMapping.getTable().getForeignKeys().values().iterator();
+		var foreignKeyIterator = classMapping.getTable().getForeignKeyCollection().iterator();
 		boolean found = false;
 		while ( foreignKeyIterator.hasNext() ) {
-			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
+			final ForeignKey element = foreignKeyIterator.next();
 			if ( element.getReferencedEntityName().equals( Person.class.getName() ) ) {
 
 				if ( !element.isReferenceToPrimaryKey() ) {
-					List referencedColumns = element.getReferencedColumns();
-					Column column = (Column) referencedColumns.get( 0 );
+					var referencedColumns = element.getReferencedColumns();
+					Column column = referencedColumns.get( 0 );
 					if ( column.getName().equals( "person_userid" ) ) {
 						found = true; // extend test to include the columns
 					}

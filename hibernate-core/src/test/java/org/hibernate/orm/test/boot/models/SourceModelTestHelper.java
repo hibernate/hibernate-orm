@@ -90,12 +90,14 @@ public class SourceModelTestHelper {
 		if ( jandexIndex == null ) {
 			ctx = new BasicModelsContextImpl(
 					classLoadingAccess,
+					false,
 					(contributions, buildingContext1) -> forEachOrmAnnotation( contributions::registerAnnotation )
 			);
 		}
 		else {
 			ctx = new JandexModelsContextImpl(
 					jandexIndex,
+					false,
 					classLoadingAccess,
 					(contributions, buildingContext1) -> forEachOrmAnnotation( contributions::registerAnnotation )
 			);
@@ -271,14 +273,14 @@ public class SourceModelTestHelper {
 		final GlobalRegistrationsImpl globalRegistrations =
 				new GlobalRegistrationsImpl( ModelsContext, bootstrapContext );
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				true,
 				globalRegistrations,
 				ModelsContext
 		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
+				persistenceUnitMetadata,
+				modelCategorizationCollector::apply,
 				ModelsContext,
 				bootstrapContext,
 				rootMappingDefaults
@@ -298,7 +300,7 @@ public class SourceModelTestHelper {
 			}
 		} );
 
-		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+		xmlProcessingResult.apply();
 
 		return ModelsContext;
 	}
@@ -306,8 +308,8 @@ public class SourceModelTestHelper {
 	private static ModelsContext createModelsContext(
 			IndexView jandexIndex, ClassLoaderServiceLoading classLoading) {
 		return jandexIndex == null
-				? new BasicModelsContextImpl( classLoading, ModelsHelper::preFillRegistries )
-				: new JandexModelsContextImpl( jandexIndex, classLoading, ModelsHelper::preFillRegistries );
+				? new BasicModelsContextImpl( classLoading, false, ModelsHelper::preFillRegistries )
+				: new JandexModelsContextImpl( jandexIndex, false, classLoading, ModelsHelper::preFillRegistries );
 	}
 
 	private static void collectHbmClasses(JaxbHbmHibernateMapping hbmRoot, Consumer<String> classNameConsumer) {

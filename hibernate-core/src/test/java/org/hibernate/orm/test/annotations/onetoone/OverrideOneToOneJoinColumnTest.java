@@ -52,7 +52,7 @@ public class OverrideOneToOneJoinColumnTest {
 
 			final Table personTable = metadata.getDatabase().getDefaultNamespace().locateTable(
 					Identifier.toIdentifier( "PERSON_TABLE" ) );
-			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeys().values();
+			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeyCollection();
 			assertThat( foreignKeys.size(), is( 1 ) );
 			final Optional<ForeignKey> foreignKey = foreignKeys.stream().findFirst();
 

@@ -17,20 +17,14 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.mapping.Backref;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
-import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
@@ -38,7 +32,7 @@ import org.hibernate.usertype.CompositeUserType;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
-import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.metamodel.internal.PropertyAccessHelper.propertyAccessStrategy;
 
 /**
  * @author Steve Ebersole
@@ -180,38 +174,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 			Property bootAttributeDescriptor,
 			Class<?> embeddableClass,
 			boolean requireSetters) {
-		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( embeddableClass );
-
-		if ( strategy == null ) {
-			final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
-			if ( isNotEmpty( propertyAccessorName ) ) {
-
-				// handle explicitly specified attribute accessor
-				strategy = strategySelector.resolveStrategy(
-						PropertyAccessStrategy.class,
-						propertyAccessorName
-				);
-			}
-			else {
-				if ( bootAttributeDescriptor instanceof Backref backref ) {
-					strategy = new PropertyAccessStrategyBackRefImpl(
-							backref.getCollectionRole(),
-							backref.getEntityName()
-					);
-				}
-				else if ( bootAttributeDescriptor instanceof IndexBackref indexBackref ) {
-					strategy = new PropertyAccessStrategyIndexBackRefImpl(
-							indexBackref.getCollectionRole(),
-							indexBackref.getEntityName()
-					);
-				}
-				else {
-					// for now...
-					strategy = BuiltInPropertyAccessStrategies.MIXED.getStrategy();
-				}
-			}
-		}
-
+		final var strategy = propertyAccessStrategy( bootAttributeDescriptor, embeddableClass, strategySelector );
 		if ( strategy == null ) {
 			throw new HibernateException(
 					String.format(
@@ -222,12 +185,7 @@ public class EmbeddableRepresentationStrategyPojo implements EmbeddableRepresent
 					)
 			);
 		}
-
-		return strategy.buildPropertyAccess(
-				embeddableClass,
-				bootAttributeDescriptor.getName(),
-				requireSetters
-		);
+		return strategy.buildPropertyAccess( embeddableClass, bootAttributeDescriptor.getName(), requireSetters );
 	}
 
 	private static ReflectionOptimizer buildReflectionOptimizer(

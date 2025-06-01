@@ -22,7 +22,10 @@ import static org.hibernate.engine.spi.CascadingActions.getLoadedElementsIterato
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
- * Implements the algorithm for validating property values for illegal null values
+ * Implements the algorithm for validating property values for illegal null values.
+ * <p>
+ * For example, a field or property does not accept null values if it is mapped
+ * {@link jakarta.persistence.Basic#optional @Basic(optional=false)}.
  *
  * @author Gavin King
  */
@@ -81,8 +84,8 @@ public final class Nullability {
 	 */
 	public void checkNullability(final Object[] values, final EntityPersister persister) {
 
-		// Typically when Bean Validation is on, we don't want to validate null values
-		// at the Hibernate Core level. Hence, the checkNullability setting.
+		// Typically, when Bean Validation is present, we don't validate
+		// not-null values here. Hence, the checkNullability setting.
 		if ( checkNullability ) {
 			// Algorithm:
 			// Check for any level one nullability breaks
@@ -91,49 +94,57 @@ public final class Nullability {
 			// Look at Collections containing components to
 			//   recursively check next level of nullability breaks
 			//
-			// In the previous implementation, not-null stuffs where checked
-			// filtering by level one only updatable
-			// or insertable columns. So setting a subcomponent as update="false"
-			// has no effect on not-null check if the main component had good checkability
+			// In the previous implementation, not-null stuff was checked
+			// filtering by level one only updatable or insertable columns.
+			// So setting a subcomponent as update="false" has no effect on
+			// not-null check if the main component had good checkability
 			// In this implementation, we keep this feature.
-			// However, I never see any documentation mentioning that, but it's for
-			// sure a limitation.
+			// However, I never see any documentation mentioning that, but
+			// it's for sure a limitation.
 
 			final boolean[] nullability = persister.getPropertyNullability();
-			final boolean[] checkability = checkType == NullabilityCheckType.CREATE
-					? persister.getPropertyInsertability()
-					: persister.getPropertyUpdateability();
+			final boolean[] checkability = getCheckability( persister );
 			final Type[] propertyTypes = persister.getPropertyTypes();
 			final Generator[] generators = persister.getEntityMetamodel().getGenerators();
 			for ( int i = 0; i < values.length; i++ ) {
 				if ( checkability[i]
-						&& values[i] != LazyPropertyInitializer.UNFETCHED_PROPERTY
+						&& !unfetched( values[i] )
 						&& !generated( generators[i] ) ) {
 					final Object value = values[i];
-					if ( !nullability[i] && value == null ) {
-						//check basic level one nullability
-						throw new PropertyValueException(
-								"not-null property references a null or transient value",
-								persister.getEntityName(),
-								persister.getPropertyNames()[i]
+					if ( value == null ) {
+						if ( !nullability[i] ) {
+							// check basic level-one nullability
+							throw new PropertyValueException(
+									"not-null property references a null or transient value",
+									persister.getEntityName(),
+									persister.getPropertyNames()[i]
 							);
-
+						}
 					}
-					else if ( value != null ) {
-						//values is not null and is checkable, we'll look deeper
+					else {
+						// values is not null and is checkable, we'll look deeper
 						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
 						if ( breakProperties != null ) {
 							throw new PropertyValueException(
-								"not-null property references a null or transient value",
-								persister.getEntityName(),
-								qualify( persister.getPropertyNames()[i], breakProperties )
+									"not-null property references a null or transient value",
+									persister.getEntityName(),
+									qualify( persister.getPropertyNames()[i], breakProperties )
 							);
 						}
-
 					}
 				}
 			}
 		}
+	}
+
+	private boolean[] getCheckability(EntityPersister persister) {
+		return checkType == NullabilityCheckType.CREATE
+				? persister.getPropertyInsertability()
+				: persister.getPropertyUpdateability();
+	}
+
+	private static boolean unfetched(Object value) {
+		return value == LazyPropertyInitializer.UNFETCHED_PROPERTY;
 	}
 
 	private static boolean generated(Generator generator) {
@@ -190,14 +201,14 @@ public final class Nullability {
 	 * @throws HibernateException error while getting subcomponent values
 	 */
 	private String checkComponentNullability(Object composite, CompositeType compositeType) {
-		// IMPL NOTE : we currently skip checking "any" and "many to any" mappings.
+		// IMPL NOTE: we currently skip checking "any" and "many-to-any" mappings.
 		//
-		// This is not the best solution. But atm there is a mismatch between AnyType#getPropertyNullability
-		// and the fact that cascaded-saves for "many to any" mappings are not performed until after this nullability
-		// check. So the nullability check fails for transient entity elements with generated identifiers because
-		// the identifier is not yet generated/assigned (is null)
+		// This is not the best solution. But there's a mismatch between AnyType.getPropertyNullability()
+		// and the fact that cascaded-saves for "many-to-any" mappings are not performed until after this
+		// nullability check. So the nullability check fails for transient entity elements with generated
+		// identifiers because the identifier is not yet generated/assigned (is null).
 		//
-		// The more correct fix would be to cascade saves of the many-to-any elements before the Nullability checking
+		// The fix would be to cascade saves of the many-to-any elements before Nullability checking.
 
 		if ( compositeType instanceof AnyType ) {
 			return null;
@@ -205,20 +216,21 @@ public final class Nullability {
 		else {
 			final boolean[] nullability = compositeType.getPropertyNullability();
 			if ( nullability != null ) {
-				//do the test
+				// do the test
 				final Object[] values = compositeType.getPropertyValues( composite, session );
 				final Type[] propertyTypes = compositeType.getSubtypes();
+				final String[] propertyNames = compositeType.getPropertyNames();
 				for ( int i = 0; i < values.length; i++ ) {
 					final Object value = values[i];
 					if ( value == null ) {
 						if ( !nullability[i] ) {
-							return compositeType.getPropertyNames()[i];
+							return propertyNames[i];
 						}
 					}
 					else {
 						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
 						if ( breakProperties != null ) {
-							return qualify( compositeType.getPropertyNames()[i], breakProperties );
+							return qualify( propertyNames[i], breakProperties );
 						}
 					}
 				}

@@ -334,21 +334,23 @@ public class CacheLoadHelper {
 			);
 		}
 		final Object version = getVersion( values, subclassPersister );
+		final EntityEntry entityEntry = persistenceContext.addEntry(
+				entity,
+				isReadOnly ? Status.READ_ONLY : Status.MANAGED,
+				values,
+				null,
+				entityId,
+				version,
+				LockMode.NONE,
+				true,
+				subclassPersister,
+				false
+		);
 		holder.setEntityEntry(
-				persistenceContext.addEntry(
-						entity,
-						isReadOnly ? Status.READ_ONLY : Status.MANAGED,
-						values,
-						null,
-						entityId,
-						version,
-						LockMode.NONE,
-						true,
-						subclassPersister,
-						false
-				)
+				entityEntry
 		);
 		subclassPersister.afterInitialize( entity, source );
+		entityEntry.postLoad( entity );
 		persistenceContext.initializeNonLazyCollections();
 
 		return entity;

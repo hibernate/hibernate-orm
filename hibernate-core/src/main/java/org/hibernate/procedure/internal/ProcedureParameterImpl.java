@@ -14,9 +14,9 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.OutputableType;
-import org.hibernate.query.internal.BindingTypeHelper;
+import org.hibernate.type.BindableType;
+import org.hibernate.type.OutputableType;
+import org.hibernate.type.internal.BindingTypeHelper;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
@@ -103,16 +103,14 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			ProcedureCallImplementor<?> procedureCall) {
 		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
 		final boolean isNamed = procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && this.name != null;
-
-		final BindableType<T> bindableType = getBindableType( binding );
-
 		final SharedSessionContractImplementor session = procedureCall.getSession();
 
-		final OutputableType<T> typeToUse = (OutputableType<T>) BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
-				binding == null ? null : binding.getExplicitTemporalPrecision(),
-				bindableType,
-				session.getFactory().getQueryEngine().getCriteriaBuilder()
-		);
+		final OutputableType<T> typeToUse = (OutputableType<T>)
+				BindingTypeHelper.resolveTemporalPrecision(
+						binding == null ? null : binding.getExplicitTemporalPrecision(),
+						getBindableType( binding ),
+						session.getFactory().getQueryEngine().getCriteriaBuilder()
+				);
 
 		final String jdbcParamName;
 		final JdbcParameterBinder parameterBinder;

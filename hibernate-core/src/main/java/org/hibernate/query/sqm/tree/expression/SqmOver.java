@@ -10,7 +10,7 @@ import org.hibernate.query.common.FrameExclusion;
 import org.hibernate.query.common.FrameKind;
 import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
@@ -87,7 +87,7 @@ public class SqmOver<T> extends AbstractSqmExpression<T> {
 	}
 
 	@Override
-	public @Nullable SqmExpressible<T> getNodeType() {
+	public @Nullable SqmBindableType<T> getNodeType() {
 		return expression.getNodeType();
 	}
 

@@ -20,16 +20,16 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final Collection<String> querySpaces;
-	private final TupleTransformer tupleTransformer;
-	private final ResultListTransformer resultListTransformer;
+	private final TupleTransformer<?> tupleTransformer;
+	private final ResultListTransformer<?> resultListTransformer;
 	private final int hash;
 
 	public SelectInterpretationsKey(
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
-			TupleTransformer tupleTransformer,
-			ResultListTransformer resultListTransformer) {
+			TupleTransformer<?> tupleTransformer,
+			ResultListTransformer<?> resultListTransformer) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.querySpaces = querySpaces;
@@ -42,8 +42,8 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
-			TupleTransformer tupleTransformer,
-			ResultListTransformer resultListTransformer,
+			TupleTransformer<?> tupleTransformer,
+			ResultListTransformer<?> resultListTransformer,
 			int hash) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;

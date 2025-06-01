@@ -5,13 +5,14 @@
 package org.hibernate.boot.models.xml.spi;
 
 import org.hibernate.boot.internal.RootMappingDefaults;
-import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.models.xml.internal.ManagedTypeProcessor;
 import org.hibernate.boot.models.xml.internal.XmlDocumentContextImpl;
-import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
 import org.hibernate.boot.models.xml.internal.XmlProcessingResultImpl;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.models.spi.ModelsContext;
+
+import java.util.function.BiConsumer;
 
 /**
  * Processes XML mappings - applying metadata-complete mappings and collecting
@@ -22,25 +23,24 @@ import org.hibernate.models.spi.ModelsContext;
 public class XmlProcessor {
 	public static XmlProcessingResult processXml(
 			XmlPreProcessingResult xmlPreProcessingResult,
-			DomainModelCategorizationCollector modelCategorizationCollector,
+			PersistenceUnitMetadata persistenceUnitMetadata,
+			BiConsumer<JaxbEntityMappingsImpl,XmlDocumentContext> jaxbRootConsumer,
 			ModelsContext ModelsContext,
 			BootstrapContext bootstrapContext,
 			RootMappingDefaults mappingDefaults) {
-		final boolean xmlMappingsGloballyComplete = xmlPreProcessingResult.getPersistenceUnitMetadata().areXmlMappingsComplete();
+		final boolean xmlMappingsGloballyComplete = persistenceUnitMetadata.areXmlMappingsComplete();
 		final XmlProcessingResultImpl xmlOverlay = new XmlProcessingResultImpl();
 
-		xmlPreProcessingResult.getDocuments().forEach( (jaxbRoot) -> {
-			final XmlDocumentImpl xmlDocument = XmlDocumentImpl.consume(
-					jaxbRoot,
-					xmlPreProcessingResult.getPersistenceUnitMetadata()
-			);
+		xmlPreProcessingResult.getDocuments().forEach( (xmlDocument) -> {
 			final XmlDocumentContext xmlDocumentContext = new XmlDocumentContextImpl(
 					xmlDocument,
 					mappingDefaults,
 					ModelsContext,
 					bootstrapContext
 			);
-			modelCategorizationCollector.apply( jaxbRoot, xmlDocumentContext );
+
+			final JaxbEntityMappingsImpl jaxbRoot = xmlDocument.getRoot();
+			jaxbRootConsumer.accept( jaxbRoot, xmlDocumentContext );
 
 			jaxbRoot.getEmbeddables().forEach( (jaxbEmbeddable) -> {
 				if ( xmlMappingsGloballyComplete || jaxbEmbeddable.isMetadataComplete() == Boolean.TRUE ) {

@@ -125,7 +125,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	public Class<J> getJavaType() {
-		return this.getExpressibleJavaType().getJavaTypeClass();
+		return getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override

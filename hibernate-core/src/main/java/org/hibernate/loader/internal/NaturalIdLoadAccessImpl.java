@@ -4,16 +4,19 @@
  */
 package org.hibernate.loader.internal;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
-
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Steve Ebersole
@@ -23,6 +26,18 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 
 	public NaturalIdLoadAccessImpl(LoadAccessContext context, EntityMappingType entityDescriptor) {
 		super( context, entityDescriptor );
+	}
+
+	@Override
+	public NaturalIdLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope) {
+		//noinspection unchecked
+		return (NaturalIdLoadAccess<T>) super.with( lockMode, lockScope );
+	}
+
+	@Override
+	public NaturalIdLoadAccess<T> with(Timeout timeout) {
+		//noinspection unchecked
+		return (NaturalIdLoadAccess<T>) super.with( timeout );
 	}
 
 	@Override
@@ -70,7 +85,7 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 	}
 
 	@Override
-	public NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+	public NaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic) {
 		super.with( graph, semantic );
 		return this;
 	}

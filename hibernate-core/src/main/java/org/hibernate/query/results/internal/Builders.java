@@ -11,7 +11,6 @@ import java.util.Locale;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -206,9 +205,8 @@ public class Builders {
 			String tableAlias,
 			String entityName,
 			SessionFactoryImplementor sessionFactory) {
-		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
-		final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
-
+		final EntityMappingType entityMapping =
+				sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return new DynamicResultBuilderEntityStandard( entityMapping, tableAlias );
 	}
 
@@ -239,7 +237,7 @@ public class Builders {
 			String entityName,
 			LockMode explicitLockMode,
 			SessionFactoryImplementor sessionFactory) {
-		final EntityMappingType entityMapping = sessionFactory.getRuntimeMetamodels().getEntityMappingType( entityName );
+		final EntityMappingType entityMapping = sessionFactory.getMappingMetamodel().getEntityDescriptor( entityName );
 		return new DynamicResultBuilderEntityCalculated( entityMapping, tableAlias, explicitLockMode );
 	}
 

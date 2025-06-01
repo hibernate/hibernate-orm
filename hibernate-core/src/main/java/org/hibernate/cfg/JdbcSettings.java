@@ -452,6 +452,9 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	/**
 	 * When enabled, specifies that JDBC statement warnings should be logged.
 	 * <p>
+	 * Logging of JDBC warnings may also be controlled via the log category
+	 * {@value org.hibernate.engine.jdbc.spi.SQLExceptionLogging#WARN_NAME}.
+	 * <p>
 	 * The default is determined by
 	 * {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}.
 	 *
@@ -460,6 +463,19 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	 * @since 5.1
 	 */
 	String LOG_JDBC_WARNINGS = "hibernate.jdbc.log.warnings";
+
+	/**
+	 * When enabled, specifies that JDBC errors should be logged before being rethrown.
+	 * <p>
+	 * Logging of JDBC errors may also be controlled via the log category
+	 * {@value org.hibernate.engine.jdbc.spi.SQLExceptionLogging#ERROR_NAME}.
+	 *
+	 * @settingDefault {@code true}
+	 *
+	 * @since 7
+	 */
+	@Incubating // this was added for symmetry with LOG_JDBC_WARNINGS
+	String LOG_JDBC_ERRORS = "hibernate.jdbc.log.errors";
 
 	/**
 	 * Specifies the {@linkplain java.util.TimeZone time zone} to use in the JDBC driver,

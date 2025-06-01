@@ -49,6 +49,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
+	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
@@ -74,6 +75,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return null;
 	}
 
+	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return propertyVersionability[i] && super.includeEntityProperty( values, i );
 	}

@@ -3,21 +3,26 @@
 
 Hibernate Data Repositories provides repositories backed by https://hibernate.org/reactive/[Hibernate Reactive] for use in reactive programming.
 The methods of a reactive repository are non-blocking, and so every operation returns a reactive stream.
-This is an extension to the programming model defined by Jakarta Data.
 
 [NOTE]
 ====
-The Jakarta Data specification has not yet defined a way to write repositories for use in reactive programming, but the spec was written to accommodate such extensions, and this capability might be standardized in a future release.
+Jakarta Data 1.0 does not define a way to write repositories for use in reactive programming, but the spec was written to accommodate such extensions.
+This capability is being written into Data 1.1 under the more general category of _asynchronous repositories_.
 ====
 
 In Hibernate Data Repositories we use https://smallrye.io/smallrye-mutiny/[Mutiny] to work with reactive streams.
 
-[WARNING]
+[CAUTION]
 ====
-If and when Jakarta Data _does_ provide standard support for reactive repositories, the functionality will almost certainly be based on Java's `CompletionStage`, and not on Mutiny.
+A future version of Hibernate Data Repositories will also allow the use of `CompletionStage` from `java.util.concurrent`.
+Asynchronous repositories based on Mutiny are unlikely to ever be portable to other implementations of Jakarta Data.
 ====
 
 In our opinion, Mutiny is a _much_ more comfortable API than `CompletionStage`.
+
+[TIP]
+The documentation for Hibernate Reactive contains a https://hibernate.org/reactive/documentation/3.0/reference/html_single/#_apis_for_chaining_reactive_operations[comparison table] that's useful if you're more familiar with `CompletionStage`.
+
 
 === Defining a reactive repository
 
@@ -49,6 +54,8 @@ interface Library {
 
 It's _not_ possible to mix blocking and non-blocking operations in the same repository interface.
 
+IMPORTANT: Depending on how you're managing the stateless session, you might need to declare the resource accessor method with the type `Uni<Mutiny.StatelessSession>`.
+
 === Obtaining a reactive repository
 
 To make use of our reactive repository, we'll need to bootstrap Hibernate Reactive and obtain a `Mutiny.SessionFactory`.
@@ -61,7 +68,9 @@ Mutiny.SessionFactory factory =
                 .unwrap(Mutiny.SessionFactory.class);
 ----
 
-Please refer to the documentation for Hibernate Reactive for more information on this topic.
+Please refer to the https://hibernate.org/reactive/documentation/[documentation for Hibernate Reactive] for more information on this topic.
+
+TIP: In Quarkus, this step is unnecessary, and you can let Quarkus manage and inject the reactive `SessionFactory`.
 
 Once we have the `SessionFactory`, we can easily obtain a `Mutiny.StatelessSession`, and use it to instantiate our repository:
 
@@ -73,7 +82,11 @@ factory.withStatelessTransaction(session -> {
 })
 ----
 
-TIP: In Quarkus, all this is unnecessary, and you can directly inject the `Library`.
+TIP: An even better approach is to make a `@RequestScoped` instance of `Mutiny.StatelessSession` or `Uni<Mutiny.StatelessSession>` available for injection by CDI.
+Then the `Library` repository itself may be directly injected, and you won't have to worry about managing the stateless session in application program code.
+This is a little bit tricky to get working perfectly, so hopefully by the time you're reading this, there will already be a built-in implementation in Quarkus.
+
+// TIP: In Quarkus, all this is unnecessary, and you can directly inject the `Library`.
 
 === Calling a reactive repository
 

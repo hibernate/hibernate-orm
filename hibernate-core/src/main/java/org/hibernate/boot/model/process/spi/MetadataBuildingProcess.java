@@ -50,6 +50,7 @@ import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.model.source.internal.hbm.ModelBinder;
 import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
 import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
 import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
@@ -68,6 +69,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
@@ -371,13 +373,12 @@ public class MetadataBuildingProcess {
 		//		- allKnownClassNames (technically could be included in xmlPreProcessingResult)
 		//		- ModelsContext
 
+		final PersistenceUnitMetadata aggregatedPersistenceUnitMetadata = metadataCollector.getPersistenceUnitMetadata();
 		final ModelsContext modelsContext = bootstrapContext.getModelsContext();
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources(
 				managedResources,
-				metadataCollector.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
-
-		assert metadataCollector.getPersistenceUnitMetadata() == xmlPreProcessingResult.getPersistenceUnitMetadata();
 
 		final List<String> allKnownClassNames = mutableJoin(
 				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
@@ -411,49 +412,51 @@ public class MetadataBuildingProcess {
 		//		- mappedSuperClasses
 		//  	- embeddables
 
-		// JPA id generator global-ity thing
-		final boolean areIdGeneratorsGlobal = true;
 		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
-				areIdGeneratorsGlobal,
 				metadataCollector.getGlobalRegistrations(),
 				modelsContext
 		);
 
 		final RootMappingDefaults rootMappingDefaults = new RootMappingDefaults(
 				optionDefaults,
-				xmlPreProcessingResult.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml(
 				xmlPreProcessingResult,
-				modelCategorizationCollector,
+				aggregatedPersistenceUnitMetadata,
+				modelCategorizationCollector::apply,
 				modelsContext,
 				bootstrapContext,
 				rootMappingDefaults
 		);
 
 		final HashSet<String> categorizedClassNames = new HashSet<>();
-		allKnownClassNames.forEach( (className) -> applyKnownClass(
-				className,
-				categorizedClassNames,
-				classDetailsRegistry,
-				modelCategorizationCollector
-		) );
-		xmlPreProcessingResult.getMappedNames().forEach( (className) -> applyKnownClass(
-				className,
-				categorizedClassNames,
-				classDetailsRegistry,
-				modelCategorizationCollector
-		) );
+		// apply known classes
+		allKnownClassNames.forEach( (className) -> {
+			if ( categorizedClassNames.add( className ) ) {
+				// not known yet
+				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
+				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		} );
+		// apply known "names" - generally this handles dynamic models
+		xmlPreProcessingResult.getMappedNames().forEach( (mappedName) -> {
+			if ( categorizedClassNames.add( mappedName ) ) {
+				// not known yet
+				final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( mappedName );
+				applyKnownClass( classDetails, categorizedClassNames, classDetailsRegistry, modelCategorizationCollector );
+			}
+		} );
 
-		xmlProcessingResult.apply( xmlPreProcessingResult.getPersistenceUnitMetadata() );
+		xmlProcessingResult.apply();
 
 		return new DomainModelSource(
 				classDetailsRegistry,
-				allKnownClassNames,
+				CollectionHelper.mutableJoin( allKnownClassNames, xmlPreProcessingResult.getMappedNames() ),
 				modelCategorizationCollector.getGlobalRegistrations(),
 				rootMappingDefaults,
-				xmlPreProcessingResult.getPersistenceUnitMetadata()
+				aggregatedPersistenceUnitMetadata
 		);
 	}
 

@@ -110,6 +110,7 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
 import static org.hibernate.jpa.internal.util.CacheModeHelper.interpretCacheMode;
+import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull;
@@ -1620,9 +1621,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return defaultLockOptions;
 	}
 
-	private static FlushMode defaultFlushMode(Map<String, Object> defaultSessionProperties) {
-		final Object setMode = defaultSessionProperties.get( HibernateHints.HINT_FLUSH_MODE );
-		return org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode( setMode, FlushMode.AUTO );
+	private static FlushMode defaultFlushMode(Map<String, Object> properties) {
+		return getFlushMode( properties.get( HibernateHints.HINT_FLUSH_MODE ), FlushMode.AUTO );
 	}
 
 	private static LockOptions defaultLockOptions(Map<String, Object> defaultSessionProperties) {
@@ -1640,9 +1640,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		final HashMap<String,Object> settings = new HashMap<>();
 
 		//Static defaults:
-		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO.name() );
-		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
-		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED.name() );
+		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO );
+		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
+		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
 		settings.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
 		settings.putIfAbsent( JAKARTA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
 		settings.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );

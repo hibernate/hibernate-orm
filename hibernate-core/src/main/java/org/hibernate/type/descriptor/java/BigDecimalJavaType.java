@@ -33,6 +33,11 @@ public class BigDecimalJavaType extends AbstractClassJavaType<BigDecimal> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof BigDecimal;
+	}
+
+	@Override
 	public boolean areEqual(BigDecimal one, BigDecimal another) {
 		return one == another
 			|| one != null && another != null && one.compareTo( another ) == 0;

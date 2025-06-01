@@ -8,7 +8,7 @@ import java.util.List;
 
 public class Zoo {
 	long id;
-	List animals = new ArrayList();
+	List<Animal> animals = new ArrayList<>();
 
 	public long getId() {
 		return id;
@@ -16,10 +16,10 @@ public class Zoo {
 	public void setId( long id ) {
 		this.id = id;
 	}
-	public List getAnimals() {
+	public List<Animal> getAnimals() {
 		return animals;
 	}
-	public void setAnimals(List animals) {
+	public void setAnimals(List<Animal> animals) {
 		this.animals = animals;
 	}
 

@@ -30,7 +30,7 @@ import jakarta.persistence.AttributeConverter;
  */
 public class ConverterHelper {
 	public static ParameterizedType extractAttributeConverterParameterizedType(Class<? extends AttributeConverter<?,?>> base) {
-		return GenericsHelper.extractParameterizedType( base );
+		return GenericsHelper.extractParameterizedType( base, AttributeConverter.class );
 	}
 
 	public static ResolvedType resolveAttributeType(MemberDetails memberDetails, MetadataBuildingContext context) {

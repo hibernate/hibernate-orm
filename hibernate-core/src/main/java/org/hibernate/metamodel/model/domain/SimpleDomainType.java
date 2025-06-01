@@ -4,20 +4,14 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.query.BindableType;
+import jakarta.persistence.metamodel.Type;
 
 /**
- * Describes any non-collection type
+ * Describes any non-collection type.
  *
  * @author Steve Ebersole
  */
-public interface SimpleDomainType<J>
-		extends DomainType<J>, BindableType<J>, jakarta.persistence.metamodel.Type<J> {
-	@Override
-	default Class<J> getBindableJavaType() {
-		return getJavaType();
-	}
-
+public interface SimpleDomainType<J> extends DomainType<J>, Type<J> {
 	@Override
 	default Class<J> getJavaType() {
 		return getExpressibleJavaType().getJavaTypeClass();

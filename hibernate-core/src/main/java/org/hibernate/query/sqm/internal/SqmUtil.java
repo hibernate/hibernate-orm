@@ -55,6 +55,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -865,40 +866,33 @@ public class SqmUtil {
 
 	public static SqmSortSpecification sortSpecification(SqmSelectStatement<?> sqm, Order<?> order) {
 		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
-		final int element = order.getElement();
-		if ( element < 1) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element
-					+ " (the first select item is element 1)");
-		}
-		if ( element > items.size() ) {
-			throw new IllegalQueryOperationException("Cannot order by element " + element
-					+ " (there are only " + items.size() + " select items)");
-		}
-		final SqmSelectableNode<?> selected = items.get( element-1 );
+		final SqmSelectableNode<?> selected = selectedNode( sqm, order ); // does validation by side effect!
+		return createSortSpecification( sqm, order, items, selected );
+	}
 
+	private static SqmSortSpecification createSortSpecification(
+			SqmSelectStatement<?> sqm, Order<?> order, List<SqmSelectableNode<?>> items, SqmSelectableNode<?> selected) {
 		final NodeBuilder builder = sqm.nodeBuilder();
-		if ( order.getEntityClass() == null ) {
+		if ( order.entityClass() == null ) {
 			// ordering by an element of the select list
 			return new SqmSortSpecification(
-					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
-					order.getDirection(),
-					order.getNullPrecedence(),
-					order.isCaseInsensitive()
+					new SqmAliasedNodeRef( order.element(), builder.getIntegerType(), builder ),
+					order.direction(), order.nullPrecedence(), !order.caseSensitive()
 			);
 		}
 		else {
 			// ordering by an attribute of the returned entity
-			if ( items.size() == 1) {
+			if ( items.size() <= 1) {
 				if ( selected instanceof SqmFrom<?, ?> root ) {
-					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
+					if ( !order.entityClass().isAssignableFrom( root.getJavaType() ) ) {
 						throw new IllegalQueryOperationException("Select item was of wrong entity type");
 					}
-					final StringTokenizer tokens = new StringTokenizer( order.getAttributeName(), "." );
+					final StringTokenizer tokens = new StringTokenizer( order.attributeName(), "." );
 					SqmPath<?> path = root;
 					while ( tokens.hasMoreTokens() ) {
 						path = path.get( tokens.nextToken() );
 					}
-					return builder.sort( path, order.getDirection(), order.getNullPrecedence(), order.isCaseInsensitive() );
+					return builder.sort( path, order.direction(), order.nullPrecedence(), !order.caseSensitive() );
 				}
 				else {
 					throw new IllegalQueryOperationException("Select item was not an entity type");
@@ -910,6 +904,32 @@ public class SqmUtil {
 		}
 	}
 
+	private static SqmSelectableNode<?> selectedNode(SqmSelectStatement<?> sqm, Order<?> order) {
+		final int element = order.element();
+		if ( element < 1) {
+			throw new IllegalQueryOperationException("Cannot order by element " + element
+					+ " (the first select item is element 1)");
+		}
+		final var selectionItems = sqm.getQuerySpec().getSelectClause().getSelectionItems();
+		final int items = selectionItems.size();
+		if ( items == 0 && element == 1 ) {
+			if ( order.entityClass() == null || sqm.getQuerySpec().getRootList().size() > 1 ) {
+				throw new IllegalQueryOperationException("Cannot order by element " + element
+						+ " (there is no select list)");
+			}
+			else {
+				return sqm.getQuerySpec().getRootList().get(0);
+			}
+		}
+		else if ( element > items ) {
+			throw new IllegalQueryOperationException( "Cannot order by element " + element
+					+ " (there are only " + items + " select items)");
+		}
+		else {
+			return selectionItems.get( element - 1 );
+		}
+	}
+
 	public static boolean isSelectionAssignableToResultType(SqmSelection<?> selection, Class<?> expectedResultType) {
 		if ( expectedResultType == null ) {
 			return true;
@@ -917,7 +937,7 @@ public class SqmUtil {
 		else if ( selection != null && selection.getSelectableNode() instanceof SqmParameter<?> sqmParameter ) {
 			final Class<?> anticipatedClass =
 					sqmParameter.getAnticipatedType() != null
-							? sqmParameter.getAnticipatedType().getBindableJavaType()
+							? sqmParameter.getAnticipatedType().getJavaType()
 							: null;
 			return anticipatedClass != null
 				&& expectedResultType.isAssignableFrom( anticipatedClass );
@@ -947,10 +967,37 @@ public class SqmUtil {
 	public static <X> SqmPredicate restriction(
 			SqmSelectStatement<X> sqmStatement,
 			Class<X> resultType,
-			Restriction<X> restriction) {
+			Restriction<? super X> restriction) {
 		//noinspection unchecked
 		final JpaRoot<X> root = (JpaRoot<X>) sqmStatement.getRoot( 0, resultType );
 		return  (SqmPredicate) restriction.toPredicate( root, sqmStatement.nodeBuilder() );
+	}
+
+	public static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
+		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
+			if ( sqmQuerySpec.getSelectClause().getSelections().isEmpty() ) {
+				// make sure there is at least one root
+				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Criteria did not define any query roots" );
+				}
+				// if there is a single root, use that as the selection
+				if ( sqmRoots.size() == 1 ) {
+					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
+				}
+				else {
+					throw new IllegalArgumentException( "Criteria has multiple query roots" );
+				}
+			}
+		}
+		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
+			for ( SqmQueryPart<?> part : queryGroup.getQueryParts() ) {
+				validateCriteriaQuery( part );
+			}
+		}
+		else {
+			assert false;
+		}
 	}
 
 	private static class CriteriaParameterCollector {
@@ -1172,10 +1219,18 @@ public class SqmUtil {
 		}
 
 		if ( !jpaCompliance.isJpaQueryComplianceEnabled() ) {
-			verifyResultType( expectedResultClass, selection.getExpressible() );
+			verifyResultType( expectedResultClass, selection );
 		}
 	}
 
+	/**
+	 * Any query result can be represented as a {@link Tuple}, {@link List}, or {@link Map},
+	 * simply by repackaging the result tuple. Also, any query result is assignable to
+	 * {@code Object}, or can be returned as an instance of {@code Object[]}.
+	 *
+	 * @see ConcreteSqmSelectQueryPlan#determineRowTransformer
+	 * @see org.hibernate.query.sql.internal.NativeQueryImpl#determineTupleTransformerForResultType
+	 */
 	public static boolean isResultTypeAlwaysAllowed(Class<?> expectedResultClass) {
 		return expectedResultClass == null
 			|| expectedResultClass == Object.class
@@ -1185,15 +1240,17 @@ public class SqmUtil {
 			|| expectedResultClass == Tuple.class;
 	}
 
-	protected static void verifyResultType(Class<?> resultClass, @Nullable SqmExpressible<?> selectionExpressible) {
-		if ( selectionExpressible != null ) {
-			final JavaType<?> javaType = selectionExpressible.getExpressibleJavaType();
-			if ( javaType != null ) {
-				final Class<?> javaTypeClass = javaType.getJavaTypeClass();
-				if ( javaTypeClass != Object.class ) {
-					if ( !isValid( resultClass, selectionExpressible, javaTypeClass, javaType ) ) {
-						throwQueryTypeMismatchException( resultClass, selectionExpressible );
-					}
+	protected static void verifyResultType(Class<?> resultClass, SqmSelectableNode<?> selectableNode) {
+		final SqmBindableType<?> selectionExpressible = selectableNode.getExpressible();
+		final JavaType<?> javaType =
+				selectionExpressible == null
+						? selectableNode.getNodeJavaType() // for SqmDynamicInstantiation
+						: selectionExpressible.getExpressibleJavaType();
+		if ( javaType != null ) {
+			final Class<?> javaTypeClass = javaType.getJavaTypeClass();
+			if ( javaTypeClass != Object.class ) {
+				if ( !isValid( resultClass, selectionExpressible, javaTypeClass, javaType ) ) {
+					throwQueryTypeMismatchException( resultClass, selectionExpressible, javaTypeClass );
 				}
 			}
 		}
@@ -1213,10 +1270,10 @@ public class SqmUtil {
 
 	private static boolean isEntityIdType(SqmExpressible<?> selectionExpressible, Class<?> resultClass) {
 		if ( selectionExpressible instanceof IdentifiableDomainType<?> identifiableDomainType ) {
-			return resultClass.isAssignableFrom( identifiableDomainType.getIdType().getBindableJavaType() );
+			return resultClass.isAssignableFrom( identifiableDomainType.getIdType().getJavaType() );
 		}
 		else if ( selectionExpressible instanceof EntitySqmPathSource<?> entityPath ) {
-			return resultClass.isAssignableFrom( entityPath.getPathType().getIdType().getBindableJavaType() );
+			return resultClass.isAssignableFrom( entityPath.getPathType().getIdType().getJavaType() );
 		}
 		else {
 			return false;
@@ -1259,11 +1316,13 @@ public class SqmUtil {
 		}
 	}
 
-	private static void throwQueryTypeMismatchException(Class<?> resultClass, SqmExpressible<?> sqmExpressible) {
+	private static void throwQueryTypeMismatchException(
+			Class<?> resultClass,
+			@Nullable SqmExpressible<?> sqmExpressible, @Nullable Class<?> javaTypeClass) {
 		throw new QueryTypeMismatchException( String.format(
 				Locale.ROOT,
 				"Incorrect query result type: query produces '%s' but type '%s' was given",
-				sqmExpressible.getTypeName(),
+				sqmExpressible == null ? javaTypeClass.getName() : sqmExpressible.getTypeName(),
 				resultClass.getName()
 		) );
 	}

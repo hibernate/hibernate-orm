@@ -54,8 +54,8 @@ public @interface FetchProfileOverride {
 	FetchType fetch() default EAGER;
 
 	/**
-	 * The name of the {@link FetchProfile fetch profile} in
-	 * which this fetch mode should be applied.
+	 * The name of the {@linkplain FetchProfile fetch profile}
+	 * in which this fetch mode should be applied.
 	 */
 	String profile();
 }

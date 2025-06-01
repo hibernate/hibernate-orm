@@ -46,7 +46,7 @@ public interface XmlProcessingResult {
 		}
 	}
 
-	void apply(PersistenceUnitMetadata metadata);
+	void apply();
 
 	List<OverrideTuple<JaxbEntityImpl>> getEntityOverrides();
 	List<OverrideTuple<JaxbMappedSuperclassImpl>> getMappedSuperclassesOverrides();

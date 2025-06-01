@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaJsonQueryNode;
 import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
 import org.hibernate.query.criteria.JpaJsonTableFunction;
 import org.hibernate.query.criteria.JpaJsonValueNode;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -961,7 +962,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 			if ( table.columnNames.isEmpty() ) {
 				throw new IllegalArgumentException( "Couldn't determine types of columns of function 'json_table'" );
 			}
-			final SqmExpressible<?>[] componentTypes = new SqmExpressible<?>[table.columnNames.size()];
+			final SqmBindableType<?>[] componentTypes = new SqmBindableType<?>[table.columnNames.size()];
 			final String[] componentNames = new String[table.columnNames.size()];
 			int result = populateTupleType( 0, componentNames, componentTypes );
 
@@ -981,7 +982,7 @@ public class SqmJsonTableFunction<T> extends SelfRenderingSqmSetReturningFunctio
 		}
 
 		@Override
-		public @Nullable SqmExpressible<Object> getNodeType() {
+		public @Nullable SqmBindableType<Object> getNodeType() {
 			return null;
 		}
 

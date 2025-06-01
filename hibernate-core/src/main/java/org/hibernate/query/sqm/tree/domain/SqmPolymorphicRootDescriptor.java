@@ -34,6 +34,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.ENTITY_TYPE;
+import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Comparator.comparing;
 
@@ -123,6 +125,11 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 	}
 
 	@Override
+	public Class<T> getBindableJavaType() {
+		return polymorphicJavaType.getJavaTypeClass();
+	}
+
+	@Override
 	public String getName() {
 		return polymorphicJavaType.getTypeName();
 	}
@@ -149,22 +156,17 @@ public class SqmPolymorphicRootDescriptor<T> implements SqmEntityDomainType<T> {
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.ENTITY_TYPE;
+		return ENTITY_TYPE;
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
+	public Class<T> getJavaType() {
 		return polymorphicJavaType.getJavaTypeClass();
 	}
 
 	@Override
 	public PersistenceType getPersistenceType() {
-		return PersistenceType.ENTITY;
-	}
-
-	@Override
-	public Class<T> getJavaType() {
-		return getBindableJavaType();
+		return ENTITY;
 	}
 
 	@Override

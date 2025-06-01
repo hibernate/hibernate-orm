@@ -17,6 +17,7 @@ import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -31,6 +32,10 @@ import org.hibernate.sql.results.spi.ResultsConsumer;
 import static java.util.Collections.emptyList;
 
 /**
+ * Standard implementation of {@link SelectQueryPlan} for
+ * {@link org.hibernate.query.NativeQuery}, that is, for
+ * queries written in SQL.
+ *
  * @author Steve Ebersole
  */
 public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {

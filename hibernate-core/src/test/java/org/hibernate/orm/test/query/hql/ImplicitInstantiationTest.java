@@ -47,23 +47,40 @@ public class ImplicitInstantiationTest {
 				session -> {
 					session.persist(new Thing(1L, "thing"));
 					Record result = session.createSelectionQuery("select id, upper(name) from Thing", Record.class).getSingleResult();
-					assertEquals( result.id(), 1L );
-					assertEquals( result.name(), "THING" );
+					assertEquals( 1L, result.id() );
+					assertEquals( "THING", result.name() );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
 	}
 
 	@Test
-	public void testSqlRecordInstantiationWithoutAlias(SessionFactoryScope scope) {
+	public void testSqlRecordInstantiationWithoutMapping(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Record result = (Record) session.createNativeQuery( "select id, upper(name) as name from thingy_table", Record.class)
+					Record result = session.createNativeQuery( "select id, upper(name) as name from thingy_table", Record.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
-					assertEquals( result.id(), 1L );
-					assertEquals( result.name(), "THING" );
+					assertEquals( 1L, result.id() );
+					assertEquals( "THING", result.name() );
+					session.getTransaction().setRollbackOnly();
+				}
+		);
+	}
+
+	@Test
+	public void testSqlRecordInstantiationWithMapping(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist(new Thing(1L, "thing"));
+					Record result = session.createNativeQuery( "select id, upper(name) as name from thingy_table", Record.class)
+							.addScalar("id", Long.class)
+							.addScalar("name", String.class)
+							.addSynchronizedEntityClass(Thing.class)
+							.getSingleResult();
+					assertEquals( 1L, result.id() );
+					assertEquals( "THING", result.name() );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -75,8 +92,8 @@ public class ImplicitInstantiationTest {
 				session -> {
 					session.persist(new Thing(1L, "thing"));
 					Tuple result = session.createQuery("select id as id, upper(name) as name from Thing", Tuple.class).getSingleResult();
-					assertEquals( result.get("id"), 1L );
-					assertEquals( result.get("name"), "THING" );
+					assertEquals( 1L, result.get("id") );
+					assertEquals( "THING", result.get("name") );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -88,8 +105,8 @@ public class ImplicitInstantiationTest {
 				session -> {
 					session.persist(new Thing(1L, "thing"));
 					Tuple result = session.createSelectionQuery("select id, upper(name) from Thing", Tuple.class).getSingleResult();
-					assertEquals( result.get(0), 1L );
-					assertEquals( result.get(1), "THING" );
+					assertEquals( 1L, result.get(0) );
+					assertEquals( "THING", result.get(1) );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -100,9 +117,9 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Map result = session.createSelectionQuery("select id, upper(name) from Thing", Map.class).getSingleResult();
-					assertEquals( result.get("0"), 1L );
-					assertEquals( result.get("1"), "THING" );
+					Map<?,?> result = session.createSelectionQuery("select id, upper(name) from Thing", Map.class).getSingleResult();
+					assertEquals( 1L, result.get("0") );
+					assertEquals( "THING", result.get("1") );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -113,9 +130,9 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Map result = session.createQuery("select id as id, upper(name) as name from Thing", Map.class).getSingleResult();
-					assertEquals( result.get("id"), 1L );
-					assertEquals( result.get("name"), "THING" );
+					Map<?,?> result = session.createQuery("select id as id, upper(name) as name from Thing", Map.class).getSingleResult();
+					assertEquals( 1L, result.get("id") );
+					assertEquals( "THING", result.get("name") );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -126,9 +143,9 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					List result = session.createSelectionQuery("select id, upper(name) from Thing", List.class).getSingleResult();
-					assertEquals( result.get(0), 1L );
-					assertEquals( result.get(1), "THING" );
+					List<?> result = session.createSelectionQuery("select id, upper(name) from Thing", List.class).getSingleResult();
+					assertEquals( 1L, result.get(0) );
+					assertEquals( "THING", result.get(1) );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -139,9 +156,9 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					List result = session.createQuery("select id as id, upper(name) as name from Thing", List.class).getSingleResult();
-					assertEquals( result.get(0), 1L );
-					assertEquals( result.get(1), "THING" );
+					List<?> result = session.createQuery("select id as id, upper(name) as name from Thing", List.class).getSingleResult();
+					assertEquals( 1L, result.get(0) );
+					assertEquals( "THING", result.get(1) );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -152,11 +169,11 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Tuple result = (Tuple) session.createNativeQuery( "select id as id, upper(name) as name from thingy_table", Tuple.class)
+					Tuple result = session.createNativeQuery( "select id as id, upper(name) as name from thingy_table", Tuple.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
-					assertEquals( result.get("id"), 1L );
-					assertEquals( result.get("name"), "THING" );
+					assertEquals( 1L, result.get("id") );
+					assertEquals( "THING", result.get("name") );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -167,11 +184,11 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Map result = (Map) session.createNativeQuery( "select id as id, upper(name) as name from thingy_table", Map.class)
+					Map<?,?> result = session.createNativeQuery( "select id as id, upper(name) as name from thingy_table", Map.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
-					assertEquals( result.get("id"), 1L );
-					assertEquals( result.get("name"), "THING" );
+					assertEquals( 1L, result.get("id") );
+					assertEquals( "THING", result.get("name") );
 					session.getTransaction().setRollbackOnly();
 				}
 		);
@@ -182,11 +199,11 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					List result = (List) session.createNativeQuery( "select id, upper(name) as name from thingy_table", List.class)
+					List<?> result = session.createNativeQuery( "select id, upper(name) as name from thingy_table", List.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
-					assertEquals( result.get(0), 1L );
-					assertEquals( result.get(1), "THING" );
+					assertEquals( 1L, result.get(0) );
+					assertEquals( "THING", result.get(1) );
 					session.getTransaction().setRollbackOnly();
 				}
 		);

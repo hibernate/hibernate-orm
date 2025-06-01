@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.bidi</package>
+
+	<entity class="Auction">
+		<table name="auctions"/>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="description"/>
+			<basic name="end">
+				<column name="end_date_time"/>
+			</basic>
+			<many-to-one name="successfulBid">
+				<join-column name="win_bid_fk"/>
+			</many-to-one>
+			<one-to-many name="bids" mapped-by="item">
+				<cascade>
+					<cascade-persist/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<entity class="Bid">
+		<table name="bids"/>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="amount">
+				<column scale="19" precision="31" />
+			</basic>
+			<basic name="datetime">
+				<column name="creation_date_time"/>
+			</basic>
+			<basic name="successful">
+				<column name="success"/>
+			</basic>
+			<many-to-one name="item">
+				<join-column name="auction_fk"/>
+				<cascade>
+					<cascade-persist/>
+				</cascade>
+			</many-to-one>
+		</attributes>
+	</entity>
+
+</entity-mappings>

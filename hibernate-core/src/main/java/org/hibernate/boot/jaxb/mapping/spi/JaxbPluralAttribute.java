@@ -26,6 +26,8 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbCollectionIdImpl getCollectionId();
 	void setCollectionId(JaxbCollectionIdImpl id);
 
+	Integer getBatchSize();
+	void setBatchSize(Integer size);
 
 	LimitedCollectionClassification getClassification();
 	void setClassification(LimitedCollectionClassification value);
@@ -35,6 +37,9 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 
 	JaxbOrderColumnImpl getOrderColumn();
 	void setOrderColumn(JaxbOrderColumnImpl value);
+
+	Integer getListIndexBase();
+	void setListIndexBase(Integer value);
 
 	String getSort();
 	void setSort(String value);

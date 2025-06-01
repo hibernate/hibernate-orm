@@ -4,9 +4,20 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
+import java.sql.Date;
+import java.sql.Blob;
+import java.sql.Clob;
+
+@Entity
 public class Person {
+	@Id
+	@GeneratedValue
+	@SequenceGenerator(sequenceName = "PERSON_SEQ")
 	private int id;
 	private String name;
 	private Date birthDate;

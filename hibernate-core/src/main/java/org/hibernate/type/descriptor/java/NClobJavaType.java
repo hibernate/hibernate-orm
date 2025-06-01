@@ -57,6 +57,11 @@ public class NClobJavaType extends AbstractClassJavaType<NClob> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof NClob;
+	}
+
+	@Override
 	public String extractLoggableRepresentation(NClob value) {
 		return value == null ? "null" : "{nclob}";
 	}

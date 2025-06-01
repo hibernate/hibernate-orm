@@ -215,6 +215,7 @@ public interface Interceptor {
 	 */
 	default void onCollectionUpdate(Object collection, Object key) {
 	}
+
 	/**
 	 * Called before a flush.
 	 *
@@ -223,32 +224,37 @@ public interface Interceptor {
 	default void preFlush(Iterator<Object> entities) {}
 
 	/**
-	 * Called after a flush that actually ends in execution of the SQL statements required to synchronize
-	 * in-memory state with the database.
+	 * Called after a flush that actually ends in execution of the SQL statements
+	 * required to synchronize in-memory state with the database.
 	 *
 	 * @param entities The entities that were flushed.
 	 */
 	default void postFlush(Iterator<Object> entities) {}
 
 	/**
-	 * Called to distinguish between transient and detached entities. The return value determines the
-	 * state of the entity with respect to the current session.
+	 * Called to distinguish between transient and detached entities. The return
+	 * value determines the state of the entity with respect to the current session.
+	 * This method should return:
 	 * <ul>
-	 * <li>{@code Boolean.TRUE} - the entity is transient
-	 * <li>{@code Boolean.FALSE} - the entity is detached
-	 * <li>{@code null} - Hibernate uses the {@code unsaved-value} mapping and other heuristics to
-	 * determine if the object is unsaved
+	 * <li>{@code Boolean.TRUE} if the entity is transient,
+	 * <li>{@code Boolean.FALSE} if the entity is detached, or
+	 * <li>{@code null} to signal that the usual heuristics should be used to determine
+	 *     if the instance is transient
 	 * </ul>
+	 * Heuristics used when this method returns null are based on the value of the
+	 * {@linkplain jakarta.persistence.GeneratedValue generated} id field, or the
+	 * {@linkplain jakarta.persistence.Version version} field, if any.
 	 *
 	 * @param entity a transient or detached entity
-	 * @return Boolean or {@code null} to choose default behaviour
+	 * @return {@link Boolean} or {@code null} to choose default behaviour
 	 */
 	default Boolean isTransient(Object entity) {
 		return null;
 	}
 
 	/**
-	 * Called from {@code flush()}. The return value determines whether the entity is updated
+	 * Called from {@code flush()}. The return value determines whether the entity
+	 * is updated
 	 * <ul>
 	 * <li>an array of property indices - the entity is dirty
 	 * <li>an empty array - the entity is not dirty
@@ -258,11 +264,13 @@ public interface Interceptor {
 	 * @param entity The entity for which to find dirty properties.
 	 * @param id The identifier of the entity
 	 * @param currentState The current entity state as taken from the entity instance
-	 * @param previousState The state of the entity when it was last synchronized (generally when it was loaded)
+	 * @param previousState The state of the entity when it was last synchronized
+	 *                      (generally when it was loaded)
 	 * @param propertyNames The names of the entity properties.
 	 * @param types The types of the entity properties
 	 *
-	 * @return array of dirty property indices or {@code null} to indicate Hibernate should perform default behaviour
+	 * @return array of dirty property indices or {@code null} to indicate Hibernate
+	 *         should perform default behaviour
 	 */
 	default int[] findDirty(
 			Object entity,
@@ -275,9 +283,9 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Instantiate the entity. Return {@code null} to indicate that Hibernate should use
-	 * the default constructor of the class. The identifier property of the returned instance
-	 * should be initialized with the given identifier.
+	 * Instantiate the entity. Return {@code null} to indicate that Hibernate should
+	 * use the default constructor of the class. The identifier property of the
+	 * returned instance should be initialized with the given identifier.
 	 */
 	default Object instantiate(
 			String entityName,
@@ -287,9 +295,9 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Instantiate the entity. Return {@code null} to indicate that Hibernate should use
-	 * the default constructor of the class. The identifier property of the returned instance
-	 * should be initialized with the given identifier.
+	 * Instantiate the entity. Return {@code null} to indicate that Hibernate should
+	 * use the default constructor of the class. The identifier property of the
+	 * returned instance should be initialized with the given identifier.
 	 */
 	default Object instantiate(
 			String entityName,
@@ -324,9 +332,10 @@ public interface Interceptor {
 	}
 
 	/**
-	 * Called when a Hibernate transaction is begun via the Hibernate {@code Transaction}
-	 * API. Will not be called if transactions are being controlled via some other
-	 * mechanism (CMT, for example).
+	 * Called when a Hibernate transaction is begun via the JPA-standard
+	 * {@link jakarta.persistence.EntityTransaction} API, or via {@link Transaction}.
+	 * This method is not be called if transactions are being controlled via some
+	 * other mechanism, for example, if transactions are managed by a container.
 	 *
 	 * @param tx The Hibernate transaction facade object
 	 */

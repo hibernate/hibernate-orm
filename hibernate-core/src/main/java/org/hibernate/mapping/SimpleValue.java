@@ -352,9 +352,27 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	@Override
+	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
+		if ( isConstrained() ) {
+			final ForeignKey foreignKey = table.createForeignKey(
+					getForeignKeyName(),
+					getConstraintColumns(),
+					entityName,
+					getForeignKeyDefinition(),
+					getForeignKeyOptions(),
+					referencedColumns
+			);
+			foreignKey.setOnDeleteAction( onDeleteAction );
+			return foreignKey;
+		}
+
+		return null;
+	}
+
+	@Override
 	public void createUniqueKey(MetadataBuildingContext context) {
 		if ( hasFormula() ) {
-			throw new MappingException( "unique key constraint involves formulas" );
+			throw new MappingException( "Unique key constraint involves formulas" );
 		}
 		getTable().createUniqueKey( getConstraintColumns(), context );
 	}

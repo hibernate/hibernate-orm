@@ -6,12 +6,15 @@ package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
@@ -38,6 +41,8 @@ import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
  * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
@@ -135,6 +140,10 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	public OnDeleteAction getOnDeleteAction() {
+		return value instanceof ToOne toOne ? toOne.getOnDeleteAction() : null;
+	}
+
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
 		if ( type instanceof AnyType ) {
@@ -184,17 +193,23 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCascadeStyle(String cascade) {
-		if ( cascade==null || cascade.equals("none") ) {
+		if ( cascade==null || cascade.equals("none") || isBlank(cascade) ) {
 			return CascadeStyles.NONE;
 		}
 		else {
 			final StringTokenizer tokens = new StringTokenizer(cascade, ", ");
-			final CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
-			int i=0;
-			while ( tokens.hasMoreTokens() ) {
-				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+			final int length = tokens.countTokens();
+			if ( length == 1) {
+				return CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
-			return new CascadeStyles.MultipleCascadeStyle(styles);
+			else {
+				final CascadeStyle[] styles = new CascadeStyle[length];
+				int i = 0;
+				while ( tokens.hasMoreTokens() ) {
+					styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+				}
+				return new CascadeStyles.MultipleCascadeStyle( styles );
+			}
 		}
 	}
 
@@ -204,6 +219,10 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setCascade(String cascade) {
 		this.cascade = cascade;
+	}
+
+	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
+		cascade = cascadeTypes == null ? null : renderCascadeTypeList( cascadeTypes );
 	}
 
 	public void setName(String name) {

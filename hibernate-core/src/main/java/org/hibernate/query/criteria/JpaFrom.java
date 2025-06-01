@@ -324,4 +324,7 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	@Override
 	<S extends T> JpaTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatJavaType);
+
+	@Incubating
+	JpaExpression<?> id();
 }

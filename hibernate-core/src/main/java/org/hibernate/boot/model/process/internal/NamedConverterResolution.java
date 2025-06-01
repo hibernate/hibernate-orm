@@ -19,7 +19,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.converter.internal.AttributeConverterMutabilityPlanImpl;
+import org.hibernate.type.descriptor.converter.internal.AttributeConverterMutabilityPlan;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -167,7 +167,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 			return ImmutableMutabilityPlan.instance();
 		}
 		else {
-			return new AttributeConverterMutabilityPlanImpl<>( converter, true );
+			return new AttributeConverterMutabilityPlan<>( converter, true );
 		}
 	}
 

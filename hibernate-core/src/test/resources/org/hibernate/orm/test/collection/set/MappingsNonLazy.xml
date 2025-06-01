@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.set</package>
+
+    <entity class="Parent">
+        <attributes>
+            <id name="name"/>
+            <one-to-many name="children" mapped-by="parent" fetch="EAGER">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Child">
+        <attributes>
+            <id name="name"/>
+            <basic name="description"/>
+            <many-to-one name="parent" fetch="EAGER">
+                <join-column name="parent_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="Container">
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+            </id>
+            <basic name="name"/>
+            <element-collection name="contents" target-class="Container$Content" fetch="EAGER">
+                <collection-table name="container_contents">
+                    <join-column name="container_fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+
+    <embeddable class="Container$Content">
+        <attributes>
+            <basic name="name"/>
+        </attributes>
+    </embeddable>
+</entity-mappings>
+

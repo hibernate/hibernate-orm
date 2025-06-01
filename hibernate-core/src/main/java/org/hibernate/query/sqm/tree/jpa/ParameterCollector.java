@@ -9,8 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.BindableType;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
@@ -118,7 +118,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	private <T> BindableType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
 		BindableType<?> parameterType = null;
 		if ( inferenceBasis != null ) {
-			final SqmExpressible<?> expressible = inferenceBasis.getExpressible();
+			final SqmBindableType<?> expressible = inferenceBasis.getExpressible();
 			if ( expressible != null ) {
 				parameterType = expressible;
 			}
@@ -167,7 +167,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		withTypeInference(
 				() -> {
 					for ( var whenFragment : expression.getWhenFragments() ) {
-						final SqmExpressible<?> resolved = whenFragment.getCheckValue().getExpressible();
+						final SqmBindableType<?> resolved = whenFragment.getCheckValue().getExpressible();
 						if ( resolved != null ) {
 							return resolved;
 						}
@@ -254,7 +254,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	}
 
 	private <T> SqmExpressibleAccessor<T> toExpressibleAccessor(SqmExpression<T> expression) {
-		final SqmExpressible<T> expressible = expression.getExpressible();
+		final SqmBindableType<T> expressible = expression.getExpressible();
 		return expressible == null ? null : () -> expressible;
 	}
 

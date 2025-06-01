@@ -3163,7 +3163,10 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="type" type="xsd:string" minOccurs="0"/>
+            <xsd:choice>
+                <xsd:element name="type" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="java-class" type="xsd:string" minOccurs="0"/>
+            </xsd:choice>
             <xsd:element name="column" type="orm:column" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
     </xsd:complexType>
@@ -3196,6 +3199,8 @@
             <xsd:element name="discriminator" type="orm:any-discriminator"/>
             <xsd:element name="key" type="orm:any-key"/>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+
+            <xsd:element name="join-table" type="orm:join-table"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
@@ -3283,6 +3288,8 @@
                     <xsd:complexType/>
                 </xsd:element>
             </xsd:choice>
+            <!-- @ListIndexBase -->
+            <xsd:element name="list-index-base" type="xsd:int" minOccurs="0"/>
             <xsd:choice>
                 <xsd:element name="map-key" type="orm:map-key" minOccurs="0"/>
                 <xsd:sequence>
@@ -3297,7 +3304,10 @@
                     </xsd:choice>
                     <xsd:choice>
                         <xsd:sequence>
-                            <xsd:element name="map-key-column" type="orm:map-key-column" minOccurs="0"/>
+                            <xsd:choice minOccurs="0">
+                                <xsd:element name="map-key-column" type="orm:map-key-column" minOccurs="0"/>
+                                <xsd:element name="map-key-formula" type="xsd:string" minOccurs="0"/>
+                            </xsd:choice>
                             <xsd:element name="map-key-type" type="orm:user-type" minOccurs="0"/>
                         </xsd:sequence>
                         <xsd:sequence>
@@ -3307,6 +3317,9 @@
                     </xsd:choice>
                 </xsd:sequence>
             </xsd:choice>
+
+            <!-- @BatchSize -->
+            <xsd:element name="batch-size" type="xsd:int" minOccurs="0"/>
 
             <xsd:element name="sql-restriction" type="xsd:string" minOccurs="0"/>
 

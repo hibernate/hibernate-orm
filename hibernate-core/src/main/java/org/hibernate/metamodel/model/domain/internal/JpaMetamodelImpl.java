@@ -27,10 +27,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -111,19 +111,12 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
-	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
 	}
 
-	@Override
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
-	}
-
-	@Override
-	public JpaCompliance getJpaCompliance() {
-		return typeConfiguration.getJpaCompliance();
 	}
 
 	@Override
@@ -394,31 +387,31 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public <T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph) {
-		final EntityGraph<?> old = entityGraphMap.put( graphName, entityGraph.makeImmutableCopy( graphName ) );
+	public void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph) {
+		final RootGraphImplementor<?> rootGraph = (RootGraphImplementor<?>) entityGraph;
+		final EntityGraph<?> old = entityGraphMap.put( graphName, rootGraph.makeImmutableCopy( graphName ) );
 		if ( old != null ) {
 			log.debugf( "EntityGraph being replaced on EntityManagerFactory for name %s", graphName );
 		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <T> RootGraphImplementor<T> findEntityGraphByName(String name) {
-		return (RootGraphImplementor<T>) entityGraphMap.get( name );
+	public RootGraphImplementor<?> findEntityGraphByName(String name) {
+		return entityGraphMap.get( name );
 	}
 
 	@Override
-	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
+	public <T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		final EntityDomainType<T> entityType = entity( entityClass );
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
 		}
 		else {
-			final List<RootGraphImplementor<? super T>> results = new ArrayList<>();
-			for ( RootGraphImplementor<?> entityGraph : entityGraphMap.values() ) {
+			final List<RootGraph<? super T>> results = new ArrayList<>();
+			for ( var entityGraph : entityGraphMap.values() ) {
 				if ( entityGraph.appliesTo( entityType ) ) {
-					@SuppressWarnings("unchecked")
-					final RootGraphImplementor<? super T> result = (RootGraphImplementor<? super T>) entityGraph;
+					@SuppressWarnings("unchecked") // safe, we just checked
+					var result = (RootGraphImplementor<? super T>) entityGraph;
 					results.add( result );
 				}
 			}
@@ -434,10 +427,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		}
 		else {
 			final Map<String, EntityGraph<? extends T>> results = new HashMap<>();
-			for ( RootGraphImplementor<?> entityGraph : entityGraphMap.values() ) {
+			for ( var entityGraph : entityGraphMap.values() ) {
 				if ( entityGraph.appliesTo( entityType ) ) {
-					//noinspection unchecked
-					results.put( entityGraph.getName(), (EntityGraph<? extends T>) entityGraph );
+					@SuppressWarnings("unchecked") // safe, we just checked
+					var graph = (EntityGraph<? extends T>) entityGraph;
+					results.put( entityGraph.getName(), graph );
 				}
 			}
 			return results;
@@ -736,7 +730,9 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			MetadataContext context,
 			final TypeConfiguration typeConfiguration) {
 		@SuppressWarnings("unchecked")
-		final EntityDomainType<T> entityType = (EntityDomainType<T>) context.locateEntityType( persistentClass );
+		final EntityDomainType<T> entityType =
+				(EntityDomainType<T>)
+						context.locateEntityType( persistentClass );
 		return entityType == null
 				? buildEntityType( persistentClass, context, typeConfiguration )
 				: entityType;

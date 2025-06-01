@@ -24,6 +24,11 @@ import static org.hibernate.boot.jaxb.internal.MappingBinder.NON_VALIDATING;
  * @author Steve Ebersole
  */
 public class XmlHelper {
+	public static Binding<JaxbEntityMappingsImpl> bindMapping(String resourceName, ClassLoading classLoadingAccess) {
+		final JaxbEntityMappingsImpl jaxbRoot = loadMapping( resourceName, classLoadingAccess );
+		return new Binding<>( jaxbRoot, new Origin( SourceType.RESOURCE, resourceName ) );
+	}
+
 	public static JaxbEntityMappingsImpl loadMapping(String resourceName, ClassLoading classLoadingAccess) {
 		final ResourceStreamLocatorImpl resourceStreamLocator = new ResourceStreamLocatorImpl( classLoadingAccess );
 		final MappingBinder mappingBinder = new MappingBinder( resourceStreamLocator, NON_VALIDATING );
@@ -34,25 +39,19 @@ public class XmlHelper {
 		return (JaxbEntityMappingsImpl) binding.getRoot();
 	}
 
-	private static class ResourceStreamLocatorImpl implements ResourceStreamLocator {
-		private final ClassLoading classLoadingAccess;
-
-		public ResourceStreamLocatorImpl(ClassLoading classLoadingAccess) {
-			this.classLoadingAccess = classLoadingAccess;
-		}
-
-		@Override
-		public InputStream locateResourceStream(String resourceName) {
-			final URL resource = classLoadingAccess.locateResource( resourceName );
-			if ( resource == null ) {
-				throw new XmlResourceException( "Could not locate XML mapping resource - " + resourceName );
-			}
-			try {
-				return resource.openStream();
-			}
-			catch (IOException e) {
-				throw new XmlResourceException( "Could not open XML mapping resource stream - " + resourceName, e );
+	private record ResourceStreamLocatorImpl(ClassLoading classLoadingAccess) implements ResourceStreamLocator {
+			@Override
+			public InputStream locateResourceStream(String resourceName) {
+				final URL resource = classLoadingAccess.locateResource( resourceName );
+				if ( resource == null ) {
+					throw new XmlResourceException( "Could not locate XML mapping resource - " + resourceName );
+				}
+				try {
+					return resource.openStream();
+				}
+				catch (IOException e) {
+					throw new XmlResourceException( "Could not open XML mapping resource stream - " + resourceName, e );
+				}
 			}
 		}
-	}
 }

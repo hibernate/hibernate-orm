@@ -4,6 +4,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
 import org.hibernate.AnnotationException;
@@ -11,6 +12,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
@@ -29,7 +31,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
-import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
+import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 
@@ -67,7 +69,7 @@ public class AnyBinder {
 			}
 		}
 		bindAny(
-				getCascadeStrategy( null, hibernateCascade, false, context ),
+				aggregateCascadeTypes( null, hibernateCascade, false, context ),
 				//@Any has no cascade attribute
 				joinColumns,
 				onDeleteAnn == null ? null : onDeleteAnn.action(),
@@ -81,7 +83,7 @@ public class AnyBinder {
 	}
 
 	private static void bindAny(
-			String cascadeStrategy,
+			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns columns,
 			OnDeleteAction onDeleteAction,
 			Nullability nullability,

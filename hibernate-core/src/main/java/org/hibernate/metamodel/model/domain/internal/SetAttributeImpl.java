@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 public class SetAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Set<E>, E>
 		implements SqmSetPersistentAttribute<X, E> {
+
 	public SetAttributeImpl(PluralAttributeBuilder<X, Set<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
 		super( xceBuilder, metadataContext );
 	}

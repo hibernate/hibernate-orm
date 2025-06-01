@@ -11,9 +11,9 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralFetchModeImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.boot.models.XmlAnnotations;
-import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.ListIndexBaseAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyClassJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyEnumeratedJpaAnnotation;
@@ -29,8 +29,8 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableMemberDetails;
 
 /**
  * @author Marco Belladelli
@@ -56,12 +56,20 @@ public class CommonPluralAttributeProcessing {
 				memberDetails.applyAnnotationUsage( HibernateAnnotations.BAG, buildingContext );
 			}
 			else {
-				final CollectionClassificationXmlAnnotation collectionClassificationAnn = (CollectionClassificationXmlAnnotation) memberDetails.applyAnnotationUsage(
-						XmlAnnotations.COLLECTION_CLASSIFICATION,
-						buildingContext
+				XmlAnnotationHelper.applyCollectionClassification(
+						jaxbPluralAttribute.getClassification(),
+						memberDetails,
+						xmlDocumentContext
 				);
-				collectionClassificationAnn.value( jaxbPluralAttribute.getClassification() );
 			}
+		}
+
+		if ( jaxbPluralAttribute.getBatchSize() != null ) {
+			final BatchSizeAnnotation batchSizeAnnotation = (BatchSizeAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.BATCH_SIZE,
+					buildingContext
+			);
+			batchSizeAnnotation.size( jaxbPluralAttribute.getBatchSize() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,12 +78,6 @@ public class CommonPluralAttributeProcessing {
 		XmlAnnotationHelper.applyCollectionUserType( jaxbPluralAttribute.getCollectionType(), memberDetails, xmlDocumentContext );
 
 		XmlAnnotationHelper.applyCollectionId( jaxbPluralAttribute.getCollectionId(), memberDetails, xmlDocumentContext );
-
-		XmlAnnotationHelper.applyCollectionClassification(
-				jaxbPluralAttribute.getClassification(),
-				memberDetails,
-				xmlDocumentContext
-		);
 
 		if ( StringHelper.isNotEmpty( jaxbPluralAttribute.getOrderBy() ) ) {
 			final OrderByJpaAnnotation orderByAnn = (OrderByJpaAnnotation) memberDetails.applyAnnotationUsage(
@@ -200,8 +202,7 @@ public class CommonPluralAttributeProcessing {
 	private static FetchMode interpretFetchMode(JaxbPluralFetchModeImpl fetchMode) {
 		return switch ( fetchMode ) {
 			case JOIN -> FetchMode.JOIN;
-			case SELECT -> FetchMode.SELECT;
-			case SUBSELECT -> FetchMode.SELECT;
+			case SELECT, SUBSELECT -> FetchMode.SELECT;
 		};
 	}
 
@@ -210,15 +211,28 @@ public class CommonPluralAttributeProcessing {
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
 		final JaxbOrderColumnImpl jaxbOrderColumn = jaxbPluralAttribute.getOrderColumn();
-		if ( jaxbOrderColumn == null ) {
-			return;
+		final Integer listIndexBase = jaxbPluralAttribute.getListIndexBase();
+		if ( jaxbOrderColumn != null
+				|| listIndexBase != null
+				|| jaxbPluralAttribute.getClassification() == LimitedCollectionClassification.LIST ) {
+			// apply @OrderColumn in any of these cases
+			final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
+					JpaAnnotations.ORDER_COLUMN,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+
+			if ( jaxbOrderColumn != null ) {
+				// apply any explicit config
+				orderColumnAnn.apply( jaxbOrderColumn, xmlDocumentContext );
+			}
 		}
 
-		final OrderColumnJpaAnnotation orderColumnAnn = (OrderColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
-				JpaAnnotations.ORDER_COLUMN,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-
-		orderColumnAnn.apply( jaxbOrderColumn, xmlDocumentContext );
+		if ( listIndexBase != null ) {
+			final ListIndexBaseAnnotation annUsage = (ListIndexBaseAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.LIST_INDEX_BASE,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			annUsage.value( listIndexBase );
+		}
 	}
 }

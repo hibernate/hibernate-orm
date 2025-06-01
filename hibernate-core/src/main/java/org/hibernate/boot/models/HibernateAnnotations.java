@@ -114,6 +114,10 @@ public interface HibernateAnnotations {
 			CollectionId.class,
 			CollectionIdAnnotation.class
 	);
+	OrmAnnotationDescriptor<CollectionIdJavaClass,CollectionIdJavaClassAnnotation> COLLECTION_ID_JAVA_CLASS = new OrmAnnotationDescriptor<>(
+			CollectionIdJavaClass.class,
+			CollectionIdJavaClassAnnotation.class
+	);
 	OrmAnnotationDescriptor<CollectionIdJavaType,CollectionIdJavaTypeAnnotation> COLLECTION_ID_JAVA_TYPE = new OrmAnnotationDescriptor<>(
 			CollectionIdJavaType.class,
 			CollectionIdJavaTypeAnnotation.class
@@ -599,9 +603,9 @@ public interface HibernateAnnotations {
 			Synchronize.class,
 			SynchronizeAnnotation.class
 	);
-	OrmAnnotationDescriptor<Target,TargetLegacyAnnotation> TARGET_LEGACY = new OrmAnnotationDescriptor<>(
-			Target.class,
-			TargetLegacyAnnotation.class
+	OrmAnnotationDescriptor<TargetEmbeddable,TargetEmbeddableAnnotation> TARGET_EMBEDDABLE = new OrmAnnotationDescriptor<>(
+			TargetEmbeddable.class,
+			TargetEmbeddableAnnotation.class
 	);
 	SpecializedAnnotationDescriptor<TenantId,TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
 			TenantId.class,

@@ -16,7 +16,7 @@ import org.hibernate.annotations.Any;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
@@ -326,7 +326,7 @@ public class PropertyContainer {
 	}
 
 	private static boolean discoverTypeWithoutReflection(ClassDetails classDetails, MemberDetails memberDetails) {
-		if ( memberDetails.hasDirectAnnotationUsage( Target.class ) ) {
+		if ( memberDetails.hasDirectAnnotationUsage( TargetEmbeddable.class ) ) {
 			return true;
 		}
 

@@ -16,6 +16,7 @@ import org.hibernate.Incubating;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -105,7 +106,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(String name, P value, BindableType<P> type);
+	<P> MutationQuery setParameter(String name, P value, Type<P> type);
 
 	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(String name, Instant value, TemporalType temporalType);
@@ -123,7 +124,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(int position, P value, BindableType<P> type);
+	<P> MutationQuery setParameter(int position, P value, Type<P> type);
 
 	@Override @Deprecated(since = "7")
 	MutationQuery setParameter(int position, Instant value, TemporalType temporalType);
@@ -141,7 +142,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> MutationQuery setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> MutationQuery setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<T> MutationQuery setParameter(Parameter<T> param, T value);
@@ -159,7 +160,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> MutationQuery setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	MutationQuery setParameterList(String name, Object[] values);
@@ -168,7 +169,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(String name, P[] values, BindableType<P> type);
+	<P> MutationQuery setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	MutationQuery setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -177,7 +178,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> MutationQuery setParameterList(int position, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	MutationQuery setParameterList(int position, Object[] values);
@@ -186,7 +187,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(int position, P[] values, BindableType<P> type);
+	<P> MutationQuery setParameterList(int position, P[] values, Type<P> type);
 
 	@Override
 	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -195,7 +196,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values);
@@ -204,7 +205,7 @@ public interface MutationQuery extends CommonQueryContract {
 	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> MutationQuery setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	MutationQuery setProperties(Object bean);

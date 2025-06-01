@@ -99,6 +99,7 @@ public final class PropertyFactory {
 						.setDirtyCheckable( property.isUpdateable() && !lazy )
 						.setVersionable( property.isOptimisticLocked() )
 						.setCascadeStyle( property.getCascadeStyle() )
+						.setOnDeleteAction( property.getOnDeleteAction() )
 						.createInformation()
 		);
 	}
@@ -169,6 +170,7 @@ public final class PropertyFactory {
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
 								.setCascadeStyle( property.getCascadeStyle() )
+								.setOnDeleteAction( property.getOnDeleteAction() )
 								.setFetchMode( property.getValue().getFetchMode() )
 								.createInformation()
 				);
@@ -188,6 +190,7 @@ public final class PropertyFactory {
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
 								.setCascadeStyle( property.getCascadeStyle() )
+								.setOnDeleteAction( property.getOnDeleteAction() )
 								.setFetchMode( property.getValue().getFetchMode() )
 								.createInformation()
 				);
@@ -209,6 +212,7 @@ public final class PropertyFactory {
 								.setDirtyCheckable( alwaysDirtyCheck || property.isUpdateable() )
 								.setVersionable( property.isOptimisticLocked() )
 								.setCascadeStyle( property.getCascadeStyle() )
+								.setOnDeleteAction( property.getOnDeleteAction() )
 								.setFetchMode( property.getValue().getFetchMode() )
 								.createInformation()
 				);

@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.UnknownParameterException;

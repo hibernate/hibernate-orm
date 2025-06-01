@@ -22,6 +22,7 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 	private final LongAdder hitCount = new LongAdder();
 	private final LongAdder missCount = new LongAdder();
 	private final LongAdder putCount = new LongAdder();
+	private final LongAdder removeCount = new LongAdder();
 
 	CacheRegionStatisticsImpl(Region region) {
 		this.region = region;
@@ -45,6 +46,11 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 	@Override
 	public long getPutCount() {
 		return putCount.sum();
+	}
+
+	@Override
+	public long getRemoveCount() {
+		return removeCount.sum();
 	}
 
 	@Override
@@ -80,6 +86,11 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 		putCount.increment();
 	}
 
+
+	public void incrementRemoveCount() {
+		removeCount.increment();
+	}
+
 	@Override
 	public String toString() {
 		String buf = "CacheRegionStatistics" +
@@ -87,6 +98,7 @@ public class CacheRegionStatisticsImpl implements CacheRegionStatistics, Seriali
 				",hitCount=" + this.hitCount +
 				",missCount=" + this.missCount +
 				",putCount=" + this.putCount +
+				",removeCount=" + this.removeCount +
 				",elementCountInMemory=" + this.getElementCountInMemory() +
 				",elementCountOnDisk=" + this.getElementCountOnDisk() +
 				",sizeInMemory=" + this.getSizeInMemory() +

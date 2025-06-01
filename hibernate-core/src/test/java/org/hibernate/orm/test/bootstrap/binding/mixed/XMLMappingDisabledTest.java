@@ -4,47 +4,29 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.mixed;
 
-import java.util.Map;
-
-import org.hibernate.cfg.AvailableSettings;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 /**
  * Verifies that setting org.hibernate.cfg.AvailableSettings#XML_MAPPING_ENABLED to
  * false actually ignores the mapping files.
  */
-public class XMLMappingDisabledTest extends BaseNonConfigCoreFunctionalTestCase {
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry(settings = @Setting(name= MappingSettings.XML_MAPPING_ENABLED, value = "false"))
+public class XMLMappingDisabledTest {
 
 	@Test
-	public void xmlMappedEntityIsIgnored() throws Exception {
-		// If this booted we're good: the XML mapping used in this test is invalid.
-	}
+	public void xmlMappedEntityIsIgnored(ServiceRegistryScope registryScope) throws Exception {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( AnnotationEntity.class, XmlEntity.class )
+				.addResource( "org/hibernate/orm/test/bootstrap/binding/hbm/BadMapping.xml" );
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				AnnotationEntity.class,
-				HBMEntity.class
-		};
+		// even though BadMapping.xml is invalid, this should be ok
+		// because we disabled XML processing
+		metadataSources.buildMetadata();
 	}
-
-	@Override
-	protected String[] getMappings() {
-		return new String[] {
-				"HBMEntity.hbm.xml"
-		};
-	}
-
-	@Override
-	protected String getBaseForMappings() {
-		return "/org/hibernate/orm/test/bootstrap/binding/mixed/";
-	}
-
-	@Override
-	protected void addSettings(Map<String,Object> settings) {
-		settings.put( AvailableSettings.XML_MAPPING_ENABLED, "false" );
-	}
-
 }

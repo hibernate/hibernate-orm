@@ -8,10 +8,16 @@ import org.hibernate.InstantiationException;
 import org.hibernate.query.TupleTransformer;
 
 import java.lang.reflect.Constructor;
-import java.util.List;
 
 /**
- * A {@link TupleTransformer} for handling {@link List} results from native queries.
+ * A {@link TupleTransformer} which packages each native query result in
+ * an instance of the result class by calling an appropriate constructor.
+ *
+ * @implNote The result type must have exactly one constructor with the
+ * correct number of parameters. Constructors cannot be disambiguated by
+ * parameter type.
+ *
+ * @since 6.3
  *
  * @author Gavin King
  */

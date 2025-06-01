@@ -4,21 +4,22 @@
  */
 package org.hibernate.query.sqm.tuple;
 
-import java.util.List;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.sqm.SqmBindableType;
 
-import org.hibernate.query.sqm.SqmExpressible;
+import java.util.List;
 
 /**
  * Describes any structural type without a direct java type representation.
  *
  * @author Christian Beikov
  */
-public interface TupleType<J> extends SqmExpressible<J> {
+public interface TupleType<J> extends ReturnableType<J> {
 
 	int componentCount();
 	String getComponentName(int index);
 	List<String> getComponentNames();
 
-	SqmExpressible<?> get(int index);
-	SqmExpressible<?> get(String componentName);
+	SqmBindableType<?> get(int index);
+	SqmBindableType<?> get(String componentName);
 }

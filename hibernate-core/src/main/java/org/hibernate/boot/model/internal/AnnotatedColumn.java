@@ -20,9 +20,9 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
@@ -299,7 +299,8 @@ public class AnnotatedColumn {
 		else {
 			mappingColumn = new Column();
 			mappingColumn.setExplicit( !isImplicit );
-			redefineColumnName( columnName, propertyName, applyNamingStrategy );
+			final boolean nameDetermined =
+					inferColumnNameIfPossible( columnName, propertyName, applyNamingStrategy );
 			mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //relevant precision
 				mappingColumn.setPrecision( precision );
@@ -311,7 +312,12 @@ public class AnnotatedColumn {
 			mappingColumn.setArrayLength( arrayLength );
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
-			if ( unique ) {
+			mappingColumn.setUnique( unique );
+			// if the column name is not determined, we will assign the
+			// name to the unique key later this method gets called again
+			// from linkValueUsingDefaultColumnNaming() in second pass
+			if ( unique && nameDetermined ) {
+				// assign a unique key name to the column
 				getParent().getTable().createUniqueKey( mappingColumn, getBuildingContext() );
 			}
 			for ( CheckConstraint constraint : checkConstraints ) {
@@ -341,20 +347,29 @@ public class AnnotatedColumn {
 		return mappingColumn == null || isEmpty( mappingColumn.getName() );
 	}
 
-	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( StringHelper.isEmpty( columnName ) && StringHelper.isEmpty( propertyName ) ) {
-			// nothing to do
-			return;
+	/**
+	 * Attempt to infer the column name from the explicit {@code name} given by the annotation and the property or field
+	 * name. In the case of a {@link jakarta.persistence.JoinColumn}, this is impossible, due to the rules implemented in
+	 * {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl#determineJoinColumnName}. In cases
+	 * where the column name cannot be inferred, the {@link Column} is not assigned a name, and this method returns
+	 * {@code false}. The "dummy" {@code Column} will later be replaced with a {@code Column} with a name determined by
+	 * the {@link ImplicitNamingStrategy} when {@link AnnotatedJoinColumn#linkValueUsingDefaultColumnNaming} is called
+	 * during a {@link org.hibernate.boot.spi.SecondPass}.
+	 * @return {@code true} if a name could be inferred
+	 */
+	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
+		if ( !isEmpty( columnName ) || !isEmpty( propertyName ) ) {
+			final String logicalColumnName = resolveLogicalColumnName( columnName, propertyName );
+			mappingColumn.setName( processColumnName( logicalColumnName, applyNamingStrategy ) );
+			return true;
 		}
-		final String logicalColumnName = resolveLogicalColumnName( columnName, propertyName );
-		mappingColumn.setName( processColumnName( logicalColumnName, applyNamingStrategy ) );
+		else {
+			return false;
+		}
 	}
 
 	private String resolveLogicalColumnName(String columnName, String propertyName) {
-		final String baseColumnName = StringHelper.isNotEmpty( columnName )
-				? columnName
-				: inferColumnName( propertyName );
-
+		final String baseColumnName = isNotEmpty( columnName ) ? columnName : inferColumnName( propertyName );
 		if ( parent.getPropertyHolder() != null && parent.getPropertyHolder().isComponent() ) {
 			// see if we need to apply one-or-more @EmbeddedColumnNaming patterns
 			return applyEmbeddedColumnNaming( baseColumnName, (ComponentPropertyHolder) parent.getPropertyHolder() );
@@ -370,7 +385,7 @@ public class AnnotatedColumn {
 		boolean appliedAnyPatterns = false;
 
 		final String columnNamingPattern = propertyHolder.getComponent().getColumnNamingPattern();
-		if ( StringHelper.isNotEmpty( columnNamingPattern ) ) {
+		if ( isNotEmpty( columnNamingPattern ) ) {
 			// zip_code
 			result = String.format( columnNamingPattern, result );
 			appliedAnyPatterns = true;
@@ -380,7 +395,7 @@ public class AnnotatedColumn {
 		while ( tester.parent.isComponent() ) {
 			final ComponentPropertyHolder parentHolder = (ComponentPropertyHolder) tester.parent;
 			final String parentColumnNamingPattern = parentHolder.getComponent().getColumnNamingPattern();
-			if ( StringHelper.isNotEmpty( parentColumnNamingPattern ) ) {
+			if ( isNotEmpty( parentColumnNamingPattern ) ) {
 				// 	home_zip_code
 				result = String.format( parentColumnNamingPattern, result );
 				appliedAnyPatterns = true;
@@ -398,24 +413,19 @@ public class AnnotatedColumn {
 
 	protected String processColumnName(String columnName, boolean applyNamingStrategy) {
 		if ( applyNamingStrategy ) {
-			final Database database = getBuildingContext().getMetadataCollector().getDatabase();
-			return getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy()
+			final Database database = getDatabase();
+			return getPhysicalNamingStrategy()
 					.toPhysicalColumnName( database.toIdentifier( columnName ), database.getJdbcEnvironment() )
 					.render( database.getDialect() );
 		}
 		else {
-			return getBuildingContext().getObjectNameNormalizer().toDatabaseIdentifierText( columnName );
+			return getObjectNameNormalizer().toDatabaseIdentifierText( columnName );
 		}
-
 	}
 
 	protected String inferColumnName(String propertyName) {
-		final Database database = getBuildingContext().getMetadataCollector().getDatabase();
-		final ObjectNameNormalizer normalizer = getBuildingContext().getObjectNameNormalizer();
-		final ImplicitNamingStrategy implicitNamingStrategy = getBuildingContext().getBuildingOptions().getImplicitNamingStrategy();
-
-		Identifier implicitName = normalizer.normalizeIdentifierQuoting(
-				implicitNamingStrategy.determineBasicColumnName(
+		Identifier implicitName = getObjectNameNormalizer().normalizeIdentifierQuoting(
+				getImplicitNamingStrategy().determineBasicColumnName(
 						new ImplicitBasicColumnNameSource() {
 							final AttributePath attributePath = AttributePath.parse( propertyName );
 
@@ -448,9 +458,26 @@ public class AnnotatedColumn {
 			);
 		}
 
-		return getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy()
+		final Database database = getDatabase();
+		return getPhysicalNamingStrategy()
 				.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() )
 				.render( database.getDialect() );
+	}
+
+	private ObjectNameNormalizer getObjectNameNormalizer() {
+		return getBuildingContext().getObjectNameNormalizer();
+	}
+
+	private Database getDatabase() {
+		return getBuildingContext().getMetadataCollector().getDatabase();
+	}
+
+	private PhysicalNamingStrategy getPhysicalNamingStrategy() {
+		return getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy();
+	}
+
+	private ImplicitNamingStrategy getImplicitNamingStrategy() {
+		return getBuildingContext().getBuildingOptions().getImplicitNamingStrategy();
 	}
 
 	public String getName() {
@@ -503,14 +530,12 @@ public class AnnotatedColumn {
 
 	protected void addColumnBinding(SimpleValue value) {
 		final String logicalColumnName;
-		final MetadataBuildingContext context = getBuildingContext();
-		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( isNotEmpty( this.logicalColumnName ) ) {
 			logicalColumnName = this.logicalColumnName;
 		}
 		else {
-			final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
-					context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
+			final Identifier implicitName = getObjectNameNormalizer().normalizeIdentifierQuoting(
+					getImplicitNamingStrategy().determineBasicColumnName(
 							new ImplicitBasicColumnNameSource() {
 								@Override
 								public AttributePath getAttributePath() {
@@ -524,14 +549,15 @@ public class AnnotatedColumn {
 
 								@Override
 								public MetadataBuildingContext getBuildingContext() {
-									return context;
+									return AnnotatedColumn.this.getBuildingContext();
 								}
 							}
 					)
 			);
-			logicalColumnName = implicitName.render( collector.getDatabase().getDialect() );
+			logicalColumnName = implicitName.render( getDatabase().getDialect() );
 		}
-		collector.addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
+		getBuildingContext().getMetadataCollector()
+				.addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
 	}
 
 	public void forceNotNull() {

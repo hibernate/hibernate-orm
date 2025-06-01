@@ -4,13 +4,12 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.query.OutputableType;
-
 /**
- * Optional {@link Type} contract for implementations that are aware of how to extract values from
- * store procedure OUT/INOUT parameters.
+ * Optional {@link Type} contract for implementations that are aware of
+ * how to extract values from stored procedure OUT/INOUT parameters.
  *
  * @author Steve Ebersole
  */
-public interface ProcedureParameterExtractionAware<T> extends OutputableType<T> {
+public interface ProcedureParameterExtractionAware<T>
+		extends BindableType<T>, OutputableType<T> {
 }

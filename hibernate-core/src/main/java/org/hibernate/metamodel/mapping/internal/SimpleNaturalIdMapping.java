@@ -162,7 +162,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping
 	}
 
 	private boolean isLoadByIdComplianceEnabled() {
-		return getTypeConfiguration().getJpaCompliance().isLoadByIdComplianceEnabled();
+		return sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 	}
 
 	@Override

@@ -8,6 +8,17 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -65,57 +76,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
-import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
-import org.hibernate.boot.models.annotations.internal.CheckConstraintJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.CollectionClassificationXmlAnnotation;
-import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
-import org.hibernate.boot.models.annotations.internal.CollectionTypeAnnotation;
-import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.ColumnTransformerAnnotation;
-import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorFormulaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorOptionsAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
-import org.hibernate.boot.models.annotations.internal.FilterJoinTableAnnotation;
-import org.hibernate.boot.models.annotations.internal.FilterJoinTablesAnnotation;
-import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
-import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
-import org.hibernate.boot.models.annotations.internal.IdClassJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.IndexJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.JavaTypeAnnotation;
-import org.hibernate.boot.models.annotations.internal.JdbcTypeAnnotation;
-import org.hibernate.boot.models.annotations.internal.JdbcTypeCodeAnnotation;
-import org.hibernate.boot.models.annotations.internal.NaturalIdCacheAnnotation;
-import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
-import org.hibernate.boot.models.annotations.internal.ParameterAnnotation;
-import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
-import org.hibernate.boot.models.annotations.internal.SQLJoinTableRestrictionAnnotation;
-import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryRowAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryRowsAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TargetXmlAnnotation;
-import org.hibernate.boot.models.annotations.internal.TemporalJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
+import org.hibernate.boot.models.annotations.internal.*;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
 import org.hibernate.boot.models.JpaEventListenerStyle;
@@ -389,6 +350,23 @@ public class XmlAnnotationHelper {
 		final JaxbGeneratedValueImpl generator = jaxbCollectionId.getGenerator();
 		if ( generator != null && isNotEmpty( generator.getGenerator() ) ) {
 			collectionIdAnn.generator( generator.getGenerator() );
+		}
+
+		if ( StringHelper.isNotEmpty( jaxbCollectionId.getTarget() ) ) {
+			final SimpleTypeInterpretation simpleTypeInterpretation = SimpleTypeInterpretation.interpret(
+					jaxbCollectionId.getTarget()
+			);
+			assert simpleTypeInterpretation != null;
+
+			final CollectionIdJavaClassAnnotation annotationUsage = (CollectionIdJavaClassAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.COLLECTION_ID_JAVA_CLASS,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			annotationUsage.idType( simpleTypeInterpretation.getJavaType() );
+		}
+		else {
+			// this will likely lead to an error later.
+			// should we throw an exception here?
 		}
 	}
 
@@ -1001,6 +979,39 @@ public class XmlAnnotationHelper {
 		else if ( UUID.class.getSimpleName().equalsIgnoreCase( name ) ) {
 			name = Character.class.getName();
 		}
+		else if ( URL.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = URL.class.getName();
+		}
+		else if ( Blob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Blob.class.getName();
+		}
+		else if ( Clob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Clob.class.getName();
+		}
+		else if ( NClob.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = NClob.class.getName();
+		}
+		else if ( Instant.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = Instant.class.getName();
+		}
+		else if ( LocalDate.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalDate.class.getName();
+		}
+		else if ( LocalTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalTime.class.getName();
+		}
+		else if ( LocalDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = LocalDateTime.class.getName();
+		}
+		else if ( ZonedDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = ZonedDateTime.class.getName();
+		}
+		else if ( OffsetTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = OffsetTime.class.getName();
+		}
+		else if ( OffsetDateTime.class.getSimpleName().equalsIgnoreCase( name ) ) {
+			name = OffsetDateTime.class.getName();
+		}
 		else {
 			name = StringHelper.qualifyConditionallyIfNot( packageName, name );
 		}
@@ -1017,9 +1028,6 @@ public class XmlAnnotationHelper {
 		}
 		else if ( jaxbBasicMapping.getJavaType() != null ) {
 			applyJavaTypeDescriptor( jaxbBasicMapping.getJavaType(), memberDetails, xmlDocumentContext );
-		}
-		else if ( isNotEmpty( jaxbBasicMapping.getTarget() ) ) {
-			applyTargetClass( jaxbBasicMapping.getTarget(), memberDetails, xmlDocumentContext );
 		}
 
 		if ( isNotEmpty( jaxbBasicMapping.getJdbcType() ) ) {

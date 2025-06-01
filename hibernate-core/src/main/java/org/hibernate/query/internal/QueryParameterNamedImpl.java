@@ -6,7 +6,7 @@ package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;

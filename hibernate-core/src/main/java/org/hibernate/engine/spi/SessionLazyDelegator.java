@@ -232,6 +232,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+		this.lazySession.get().lock( object, lockMode, lockOptions );
+	}
+
+	@Override
 	public void lock(Object object, LockOptions lockOptions) {
 		this.lazySession.get().lock( object, lockOptions );
 	}
@@ -239,11 +244,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public void refresh(Object object) {
 		this.lazySession.get().refresh( object );
-	}
-
-	@Override
-	public void refresh(Object object, LockMode lockMode) {
-		this.lazySession.get().refresh( object, lockMode );
 	}
 
 	@Override
@@ -272,6 +272,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		return this.lazySession.get().findMultiple( entityGraph, ids, options );
+	}
+
+	@Override
 	public <T> T get(Class<T> entityType, Object id) {
 		return this.lazySession.get().get( entityType, id );
 	}
@@ -282,11 +287,6 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
-		return this.lazySession.get().get( entityType, id, lockOptions );
-	}
-
-	@Override
 	public Object get(String entityName, Object id) {
 		return this.lazySession.get().get( entityName, id );
 	}
@@ -294,6 +294,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		return this.lazySession.get().get( entityName, id, lockMode );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return this.lazySession.get().get( entityType, id, lockOptions );
 	}
 
 	@Override
@@ -797,16 +802,6 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
 		return this.lazySession.get().find( entityGraph, primaryKey, options );
-	}
-
-	@Override
-	public <T> T find(Class<T> entityType, Object id, LockMode lockMode) {
-		return this.lazySession.get().find( entityType, id, lockMode );
-	}
-
-	@Override
-	public <T> T find(Class<T> entityType, Object id, LockOptions lockOptions) {
-		return this.lazySession.get().find( entityType, id, lockOptions );
 	}
 
 	@Override

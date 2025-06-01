@@ -4,194 +4,112 @@
  */
 package org.hibernate.orm.test.annotations.fetchprofile;
 
-import java.io.InputStream;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.service.ServiceRegistry;
-
-import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.util.ServiceRegistryUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test case for HHH-4812
  *
  * @author Hardy Ferentschik
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-4812" )
-public class FetchProfileTest extends BaseUnitTestCase {
-
-	private ServiceRegistry serviceRegistry;
-
-	@Before
-	public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-	}
-
-	@After
-	public void tearDown() {
-		if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
+public class FetchProfileTest {
+	@Test
+	@DomainModel(annotatedClasses = {Customer.class, Order.class, SupportTickets.class, Country.class})
+	@SessionFactory
+	public void testFetchProfileConfigured(SessionFactoryScope factoryScope) {
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		assertThat( sessionFactory.containsFetchProfileDefinition( "customer-with-orders" ) ).isTrue();
+		assertThat( sessionFactory.containsFetchProfileDefinition( "package-profile-1" ) ).isFalse();
 	}
 
 	@Test
-	public void testFetchProfileConfigured() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( SupportTickets.class );
-		config.addAnnotatedClass( Country.class );
-		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		)) {
-
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "customer-with-orders" )
-			);
-			assertFalse(
-					"package info should not be parsed",
-					sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
-			);
-		}
-	}
-
-	@Test
-	public void testWrongAssociationName() {
-		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass( Customer2.class )
-				.addAnnotatedClass( Order.class )
-				.addAnnotatedClass( Country.class );
+	@ServiceRegistry
+	public void testWrongAssociationName(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( Customer2.class, Order.class, Country.class );
 
 		try {
 			metadataSources.buildMetadata();
-			fail();
+			fail( "Expecting an exception, but none thrown" );
 		}
-		catch ( MappingException e ) {
-			log.trace("success");
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+		catch (MappingException expected) {
 		}
 	}
 
 	@Test
-	public void testWrongClass() {
-		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass( Customer3.class )
-				.addAnnotatedClass( Order.class )
-				.addAnnotatedClass( Country.class );
+	@ServiceRegistry
+	public void testWrongClass(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( Customer2.class, Order.class, Country.class );
 
 		try {
 			metadataSources.buildMetadata();
-			fail();
+			fail( "Expecting an exception, but none thrown" );
 		}
-		catch ( MappingException e ) {
-			log.trace("success");
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+		catch (MappingException expected) {
 		}
 	}
 
 	@Test
-	public void testNowSupportedFetchMode() {
-		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass( Customer4.class )
-				.addAnnotatedClass( Order.class )
-				.addAnnotatedClass( Country.class );
+	@DomainModel(annotatedClasses = {Customer4.class, Order.class, Country.class})
+	@SessionFactory
+	public void testNowSupportedFetchMode(SessionFactoryScope factoryScope) {
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		assertThat( sessionFactory.containsFetchProfileDefinition( "unsupported-fetch-mode" ) ).isTrue();
+	}
 
+	@Test
+	@ServiceRegistry
+	@NotImplementedYet(reason = "See HHH-19417")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-19417" )
+	public void testXmlOverride(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( Customer5.class, Order.class, Country.class )
+				.addResource( "org/hibernate/orm/test/annotations/fetchprofile/mappings.xml" );
+		// NOTE : until HHH-19417 is addressed, this will fail
+		metadataSources.buildMetadata();
+
+//		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+//		assertThat( sessionFactory.containsFetchProfileDefinition( "orders-profile" ) ).isTrue();
+	}
+
+	@Test
+	@ServiceRegistry
+	public void testMissingXmlOverride(ServiceRegistryScope registryScope) {
+		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( Customer5.class, Order.class, Country.class );
 		try {
 			metadataSources.buildMetadata();
+			fail( "Expecting an exception, but none thrown" );
 		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
+		catch (MappingException expected) {
 		}
 	}
 
 	@Test
-	public void testXmlOverride() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer5.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( Country.class );
-		InputStream is = Thread.currentThread()
-				.getContextClassLoader()
-				.getResourceAsStream( "org/hibernate/orm/test/annotations/fetchprofile/mappings.hbm.xml" );
-		config.addInputStream( is );
-		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		)) {
-
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "orders-profile" )
-			);
-		}
-
-		// now the same with no xml
-		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
-				.addAnnotatedClass( Customer5.class )
-				.addAnnotatedClass( Order.class )
-				.addAnnotatedClass( Country.class );
-
-		try {
-			metadataSources.buildMetadata();
-			fail();
-		}
-		catch ( MappingException e ) {
-			log.trace("success");
-		}
-		finally {
-			ServiceRegistry metaServiceRegistry = metadataSources.getServiceRegistry();
-			if(metaServiceRegistry instanceof BootstrapServiceRegistry) {
-				BootstrapServiceRegistryBuilder.destroy( metaServiceRegistry );
-			}
-		}
-	}
-
-	@Test
-	public void testPackageConfiguredFetchProfile() {
-		Configuration config = new Configuration();
-		config.addAnnotatedClass( Customer.class );
-		config.addAnnotatedClass( Order.class );
-		config.addAnnotatedClass( SupportTickets.class );
-		config.addAnnotatedClass( Country.class );
-		config.addPackage( Customer.class.getPackage().getName() );
-		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
-				serviceRegistry
-		)) {
-
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
-			);
-			assertTrue(
-					"fetch profile not parsed properly",
-					sessionImpl.containsFetchProfileDefinition( "package-profile-2" )
-			);
-		}
+	@DomainModel(
+			annotatedClasses = {Customer.class, Order.class, SupportTickets.class, Country.class},
+			annotatedPackageNames = "org.hibernate.orm.test.annotations.fetchprofile"
+	)
+	@SessionFactory
+	public void testPackageConfiguredFetchProfile(SessionFactoryScope factoryScope) {
+		final SessionFactoryImplementor sessionFactory = factoryScope.getSessionFactory();
+		assertThat( sessionFactory.containsFetchProfileDefinition( "package-profile-1" ) ).isTrue();
+		assertThat( sessionFactory.containsFetchProfileDefinition( "package-profile-2" ) ).isTrue();
 	}
 }

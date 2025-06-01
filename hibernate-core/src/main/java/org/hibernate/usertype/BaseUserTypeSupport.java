@@ -33,19 +33,17 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	protected abstract void resolve(BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer);
 
 	private void ensureResolved() {
-		if ( resolved ) {
-			return;
+		if ( !resolved ) {
+			resolve( (javaType, jdbcType) -> {
+				this.javaType = javaType;
+				this.jdbcType = jdbcType;
+
+				jdbcValueExtractor = jdbcType.getExtractor( javaType );
+				jdbcValueBinder = jdbcType.getBinder( javaType );
+
+				resolved = true;
+			} );
 		}
-
-		resolve( (javaType,jdbcType) -> {
-			this.javaType = javaType;
-			this.jdbcType = jdbcType;
-
-			jdbcValueExtractor = jdbcType.getExtractor( javaType );
-			jdbcValueBinder = jdbcType.getBinder( javaType );
-
-			resolved = true;
-		});
 	}
 
 	protected JdbcType jdbcType() {

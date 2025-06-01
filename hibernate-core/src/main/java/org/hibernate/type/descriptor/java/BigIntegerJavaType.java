@@ -35,6 +35,11 @@ public class BigIntegerJavaType extends AbstractClassJavaType<BigInteger> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof BigInteger;
+	}
+
+	@Override
 	public int extractHashCode(BigInteger value) {
 		return value.intValue();
 	}

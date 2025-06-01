@@ -16,7 +16,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Vasily Kochnev
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/lazynocascade/Parent.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/collection/lazynocascade/Parent.xml"
 )
 @SessionFactory
 public class LazyAssociationNoCascadeTest {

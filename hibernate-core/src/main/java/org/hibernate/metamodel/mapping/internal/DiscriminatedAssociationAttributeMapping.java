@@ -270,9 +270,8 @@ public class DiscriminatedAssociationAttributeMapping
 		final String entityName = session == null
 				? sessionFactory.bestGuessEntityName( entity )
 				: session.bestGuessEntityName( entity );
-		return sessionFactory
-				.getRuntimeMetamodels()
-				.getEntityMappingType( entityName );
+		return sessionFactory.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 	}
 
 	@Override

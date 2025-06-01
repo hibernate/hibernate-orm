@@ -30,6 +30,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 	}
 
 	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Locale;
+	}
+
+	@Override
 	public boolean useObjectEqualsHashCode() {
 		return true;
 	}

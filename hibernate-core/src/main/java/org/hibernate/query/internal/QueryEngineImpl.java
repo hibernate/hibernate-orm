@@ -16,7 +16,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;

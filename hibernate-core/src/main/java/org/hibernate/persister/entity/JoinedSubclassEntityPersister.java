@@ -1084,7 +1084,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						notNullColumnNames,
 						discriminatorValues,
 						discriminatorAbstract,
-						resolveDiscriminatorType()
+						getDiscriminatorDomainType()
 				);
 			}
 		}

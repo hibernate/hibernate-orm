@@ -16,8 +16,9 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.LockOptions;
+import jakarta.persistence.Timeout;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.BooleanDecoder;
@@ -1410,12 +1411,36 @@ public class OracleLegacyDialect extends Dialect {
 		return " for update of " + aliases + " skip locked";
 	}
 
+	private String withTimeout(String lockString, Timeout timeout) {
+		return withTimeout( lockString, timeout.milliseconds() );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
 	private String withTimeout(String lockString, int timeout) {
 		return switch ( timeout ) {
-			case LockOptions.NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER -> lockString;
-			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
 		};
 	}
 

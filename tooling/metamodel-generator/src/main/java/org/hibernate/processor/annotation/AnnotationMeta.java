@@ -23,6 +23,7 @@ import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
 import static org.hibernate.processor.util.Constants.ENTITY_GRAPH;
+import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
@@ -91,49 +92,47 @@ public abstract class AnnotationMeta implements Metamodel {
 			final Context context = getContext();
 			final boolean reportErrors = context.checkNamedQuery( name );
 			final AnnotationValue value = getAnnotationValue( mirror, "query" );
-			if ( value != null ) {
-				if ( value.getValue() instanceof String hql ) {
-					final SqmStatement<?> statement =
-							Validation.validate(
-									hql,
-									null,
-									true,
-									// If we are in the scope of @CheckHQL, semantic errors in the
-									// query result in compilation errors. Otherwise, they only
-									// result in warnings, so we don't break working code.
-									new WarningErrorHandler( context, getElement(), mirror, value, hql,
-											reportErrors, checkHql ),
-									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-											context.getEntityNameMappings(), context.getEnumTypesByValue(),
-											context.isIndexing() )
-							);
-					if ( !isJakartaDataStyle()
-							&& statement instanceof SqmSelectStatement<?> selectStatement ) {
-						if ( isQueryMethodName( name ) ) {
-							final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
-							final String resultType = annotationValue != null
-									? annotationValue.getValue().toString()
-									: resultType( selectStatement );
-							putMember( name,
-									new NamedQueryMethod(
-											this,
-											selectStatement,
-											name.substring(1),
-											isRepository(),
-											getSessionType(),
-											getSessionVariableName(),
-											context.addNonnullAnnotation(),
-											resultType
-									)
-							);
-						}
-						if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
-							final String resultType = resultType( selectStatement );
-							if ( resultType != null ) {
-								putMember( "QUERY_" + name,
-										new TypedMetaAttribute( this, name, "QUERY_", resultType,
-												TYPED_QUERY_REFERENCE, hql ) );
-							}
+			if ( value != null && value.getValue() instanceof String hql ) {
+				final SqmStatement<?> statement =
+						Validation.validate(
+								hql,
+								null,
+								true,
+								// If we are in the scope of @CheckHQL, semantic errors in the
+								// query result in compilation errors. Otherwise, they only
+								// result in warnings, so we don't break working code.
+								new WarningErrorHandler( context, getElement(), mirror, value, hql,
+										reportErrors, checkHql ),
+								ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+										context.getEntityNameMappings(), context.getEnumTypesByValue(),
+										context.isIndexing() )
+						);
+				if ( !isJakartaDataStyle()
+					&& statement instanceof SqmSelectStatement<?> selectStatement ) {
+					if ( isQueryMethodName( name ) ) {
+						final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
+						final String resultType = annotationValue != null
+								? annotationValue.getValue().toString()
+								: resultType( selectStatement );
+						putMember( name,
+								new NamedQueryMethod(
+										this,
+										selectStatement,
+										name.substring( 1 ),
+										isRepository(),
+										getSessionType(),
+										getSessionVariableName(),
+										context.addNonnullAnnotation(),
+										resultType
+								)
+						);
+					}
+					if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
+						final String resultType = resultType( selectStatement );
+						if ( resultType != null ) {
+							putMember( "QUERY_" + name,
+									new TypedMetaAttribute( this, name, "QUERY_", resultType,
+											TYPED_QUERY_REFERENCE, hql ) );
 						}
 					}
 				}
@@ -184,22 +183,26 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
-		if ( "QUERY_".equals(prefix) ) {
-			final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
-			// if there is no explicit result class, we will infer it later by
-			// type checking the query (this is allowed but not required by JPA)
-			// and then we will replace this TypedMetaAttribute
-			return new TypedMetaAttribute( this, name, prefix,
-					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
-					TYPED_QUERY_REFERENCE, null );
-		}
-		else if ( "GRAPH_".equals(prefix) ) {
-			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
-					ENTITY_GRAPH, null );
-		}
-		else {
-			return new NameMetaAttribute( this, name, prefix);
-		}
+		return switch (prefix) {
+			case "QUERY_" -> {
+				final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
+				// if there is no explicit result class, we will infer it later by
+				// type checking the query (this is allowed but not required by JPA)
+				// and then we will replace this TypedMetaAttribute
+				final String resultTypeName =
+						resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString();
+				yield new TypedMetaAttribute( this, name, prefix, resultTypeName,
+						TYPED_QUERY_REFERENCE, null );
+			}
+			case "GRAPH_" ->
+					new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
+							ENTITY_GRAPH, null );
+			case "PROFILE_" ->
+					new EnabledFetchProfileMetaAttribute( this, name, prefix,
+							HIB_ENABLED_FETCH_PROFILE );
+			default ->
+					new NameMetaAttribute( this, name, prefix );
+		};
 	}
 
 	protected String getSessionVariableName() {

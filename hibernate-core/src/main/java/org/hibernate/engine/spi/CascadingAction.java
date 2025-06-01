@@ -5,13 +5,22 @@
 package org.hibernate.engine.spi;
 
 import java.util.Iterator;
+import java.util.List;
 
-import org.hibernate.HibernateException;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Incubating;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.Type;
 
 /**
  * A session action that may be cascaded from parent entity to its children
+ *
+ * @param <T> The type of some context propagated with the cascading action
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -23,17 +32,38 @@ public interface CascadingAction<T> {
 	 *
 	 * @param session The session within which the cascade is occurring.
 	 * @param child The child to which cascading should be performed.
-	 * @param entityName The child's entity name
-	 * @param anything Anything ;)  Typically some form of cascade-local cache
-	 * which is specific to each CascadingAction type
-	 * @param isCascadeDeleteEnabled Are cascading deletes enabled.
+	 * @param childEntityName The name of the child entity
+	 * @param parentEntityName The name of the parent entity
+	 * @param propertyName The name of the attribute of the parent entity being cascaded
+	 * @param attributePath The full path of the attribute of the parent entity being cascaded
+	 * @param anything Some context specific to the kind of {@link CascadingAction}
+	 * @param isCascadeDeleteEnabled Whether the foreign key is declared with
+	 *        {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
 	 */
 	void cascade(
 			EventSource session,
 			Object child,
-			String entityName,
+			String childEntityName,
+			String parentEntityName,
+			String propertyName,
+			@Nullable List<String> attributePath,
 			T anything,
-			boolean isCascadeDeleteEnabled) throws HibernateException;
+			boolean isCascadeDeleteEnabled);
+
+	/**
+	 * @deprecated No longer called. Will be removed.
+	 */
+	@Deprecated(since = "7", forRemoval = true)
+	default void cascade(
+			EventSource session,
+			Object child,
+			String childEntityName,
+			T anything,
+			boolean isCascadeDeleteEnabled) {
+		cascade( session, child, childEntityName,
+				"", "", null,
+				anything, isCascadeDeleteEnabled );
+	}
 
 	/**
 	 * Given a collection, get an iterator of the children upon which the
@@ -60,4 +90,42 @@ public interface CascadingAction<T> {
 	 * Should this action be performed (or noCascade consulted) in the case of lazy properties.
 	 */
 	boolean performOnLazyProperty();
+
+	/**
+	 * Does this action have any work to do for the entity type with the given persister?
+	 *
+	 * @since 7
+	 */
+	boolean anythingToCascade(EntityPersister persister);
+
+	/**
+	 * Does this action have any work to do for fields of the given type with the given
+	 * cascade style?
+	 *
+	 * @since 7
+	 */
+	boolean appliesTo(Type type, CascadeStyle style);
+
+	/**
+	 * Does this action cascade to the given association at the given {@link CascadePoint}?
+	 *
+	 * @since 7
+	 */
+	boolean cascadeNow(
+			CascadePoint cascadePoint,
+			AssociationType associationType,
+			SessionFactoryImplementor factory);
+
+	/**
+	 * The cascade direction in which we care whether the foreign key is declared with
+	 * {@link org.hibernate.annotations.OnDeleteAction#CASCADE on delete cascade}.
+	 *
+	 * @apiNote This allows us to reuse the long-existing boolean parameter of
+	 *          {@link #cascade(EventSource,Object,String,String,String,List,Object,boolean)}
+	 *          for multiple purposes.
+	 *
+	 * @since 7
+	 */
+	@Incubating @Nullable
+	ForeignKeyDirection directionAffectedByCascadeDelete();
 }

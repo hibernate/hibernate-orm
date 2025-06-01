@@ -32,6 +32,9 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	public Object assemble(RowProcessingState rowProcessingState) {
 		final InitializerData data = initializer.getData( rowProcessingState );
 		final Initializer.State state = data.getState();
+		if ( state == Initializer.State.UNINITIALIZED ) {
+			initializer.resolveKey( data );
+		}
 		if ( state == Initializer.State.KEY_RESOLVED ) {
 			initializer.resolveInstance( data );
 		}

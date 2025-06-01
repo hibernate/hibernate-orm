@@ -4,7 +4,6 @@
  */
 package org.hibernate.procedure;
 
-import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Outputs;
 
 /**

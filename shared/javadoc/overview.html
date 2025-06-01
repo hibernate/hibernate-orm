@@ -11,8 +11,8 @@
 </p>
 <ul>
     <li>
-        a <em>native API</em> centered around {@link org.hibernate.SessionFactory} and
-        {@link org.hibernate.Session},
+        a <em>native API</em> centered around {@link org.hibernate.SessionFactory},
+        {@link org.hibernate.Session}, and {@link org.hibernate.StatelessSession},
     </li>
     <li>
         an implementation of the <em>Java (or Jakarta) Persistence API</em> (JPA),
@@ -35,12 +35,17 @@
     using the native API will often make use of the following interfaces:
 </p>
 <ul>
-    <li>{@link org.hibernate.cfg.Configuration} to configure and bootstrap Hibernate,</li>
-    <li>{@link org.hibernate.StatelessSession} for processes involving many entity instances,</li>
+    <li>{@link org.hibernate.jpa.HibernatePersistenceConfiguration} or
+        {@link org.hibernate.cfg.Configuration} to configure and bootstrap Hibernate,</li>
     <li>{@link org.hibernate.Cache} to manage the second-level cache,</li>
     <li>{@link org.hibernate.Transaction} to control local transactions,</li>
-    <li>{@link org.hibernate.query.Query} to execute HQL queries,</li>
+    <li>{@link org.hibernate.query.SelectionQuery} and {@link org.hibernate.query.MutationQuery} to
+        execute HQL queries,</li>
     <li>{@link org.hibernate.query.NativeQuery} to execute native SQL queries,</li>
+    <li>{@link org.hibernate.query.specification.SelectionSpecification} and
+        {@link org.hibernate.query.specification.MutationSpecification} for working with dynamic
+        {@linkplain org.hibernate.query.restriction.Restriction restrictions} and
+        {@linkplain org.hibernate.query.Order ordering},</li>
     <li>{@link org.hibernate.Filter} to manage filters,</li>
     <li>{@link org.hibernate.query.criteria.HibernateCriteriaBuilder} to construct criteria queries,
         and</li>
@@ -60,10 +65,14 @@
     {@link jakarta.persistence.EntityManager}, programs based on the standard JPA API often use:
 </p>
 <ul>
-    <li>{@link jakarta.persistence.Persistence} to bootstrap Hibernate via JPA,</li>
+    <li>{@link jakarta.persistence.Persistence} and {@link jakarta.persistence.PersistenceConfiguration}
+        to bootstrap Hibernate via JPA,</li>
     <li>{@link jakarta.persistence.TypedQuery} to execute queries,</li>
     <li>{@link jakarta.persistence.EntityGraph} to control the boundaries of fetched data,</li>
     <li>{@link jakarta.persistence.EntityTransaction} to control local transactions,</li>
+    <li>{@link jakarta.persistence.Cache} to manage the second-level cache,</li>
+    <li>{@link jakarta.persistence.SchemaManager} to execute DDL in tests,</li>
+    <li>{@link jakarta.persistence.criteria.CriteriaBuilder} to construct criteria queries,</li>
     <li>{@link jakarta.persistence.metamodel.Metamodel} to implement generic code which makes use of
         persistent entity classes in a reflective fashion, and</li>
     <li>{@link jakarta.persistence.criteria.CriteriaBuilder} to build JPA criteria queries.</li>

@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -52,7 +52,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this.pattern = pattern;
 		this.escapeCharacter = escapeCharacter;
 		this.isCaseSensitive = isCaseSensitive;
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType(
 				matchExpression.getExpressible(),
 				pattern.getExpressible()
 		);

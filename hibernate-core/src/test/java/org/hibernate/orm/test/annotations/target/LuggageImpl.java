@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 
 /**
  * @author Emmanuel Bernard
@@ -21,7 +21,7 @@ public class LuggageImpl implements Luggage {
 	private Owner owner;
 
 	@Embedded
-	@Target(OwnerImpl.class)
+	@TargetEmbeddable(OwnerImpl.class)
 	public Owner getOwner() {
 		return owner;
 	}

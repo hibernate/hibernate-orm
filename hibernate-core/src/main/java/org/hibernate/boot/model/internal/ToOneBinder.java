@@ -5,12 +5,14 @@
 package org.hibernate.boot.model.internal;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfileOverride;
@@ -46,7 +48,7 @@ import jakarta.persistence.PrimaryKeyJoinColumns;
 
 import static jakarta.persistence.FetchType.EAGER;
 import static jakarta.persistence.FetchType.LAZY;
-import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
+import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
@@ -103,7 +105,7 @@ public class ToOneBinder {
 		final OnDelete onDelete = property.getDirectAnnotationUsage( OnDelete.class );
 		final JoinTable joinTable = propertyHolder.getJoinTable( property );
 		bindManyToOne(
-				getCascadeStrategy( manyToOne.cascade(), hibernateCascade, false, context ),
+				aggregateCascadeTypes( manyToOne.cascade(), hibernateCascade, false, context ),
 				joinColumns,
 				joinTable,
 				!isMandatory( manyToOne.optional(), property, notFoundAction ),
@@ -144,7 +146,7 @@ public class ToOneBinder {
 	}
 
 	private static void bindManyToOne(
-			String cascadeStrategy,
+			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns joinColumns,
 			JoinTable joinTable,
 			boolean optional,
@@ -256,7 +258,7 @@ public class ToOneBinder {
 	}
 
 	private static void processManyToOneProperty(
-			String cascadeStrategy,
+			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns columns,
 			boolean optional,
 			PropertyData inferredData,
@@ -426,7 +428,7 @@ public class ToOneBinder {
 		final OnDelete onDelete = property.getDirectAnnotationUsage( OnDelete.class );
 		final JoinTable joinTable = propertyHolder.getJoinTable( property );
 		bindOneToOne(
-				getCascadeStrategy( oneToOne.cascade(), hibernateCascade, oneToOne.orphanRemoval(), context ),
+				aggregateCascadeTypes( oneToOne.cascade(), hibernateCascade, oneToOne.orphanRemoval(), context ),
 				joinColumns,
 				joinTable,
 				!isMandatory( oneToOne.optional(), property, notFoundAction ),
@@ -447,7 +449,7 @@ public class ToOneBinder {
 	}
 
 	private static void bindOneToOne(
-			String cascadeStrategy,
+			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns joinColumns,
 			JoinTable joinTable,
 			boolean optional,

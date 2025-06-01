@@ -94,6 +94,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	abstract boolean isNullable(int index);
 
+	boolean initiallyUnwrapped() {
+		return !isUsingEntityManager() // a TypedQuery from EntityManager is not a SelectionQuery
+			|| isUsingSpecification() && !isReactive(); // SelectionSpecification.createQuery() returns SelectionQuery
+	}
+
 	List<String> parameterTypes() {
 		return paramTypes.stream()
 				.map(paramType -> isOrderParam(paramType) && paramType.endsWith("[]")
@@ -108,6 +113,17 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				.map(annotationMetaEntity::importType)
 				.reduce((x, y) -> x + ',' + y)
 				.orElse("");
+	}
+
+	boolean hasRestriction() {
+		return paramTypes.stream()
+				.anyMatch( type -> isRestrictionParam( type )
+								|| isRangeParam( type ) );
+	}
+
+	boolean hasOrder() {
+		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
+			|| !orderBys.isEmpty();
 	}
 
 	String strip(final String fullType) {
@@ -154,7 +170,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
-					.append(paramNames.get(i).replace('.', '$'));
+					.append(parameterName(paramNames.get(i)));
 		}
 		declaration
 				.append(")");
@@ -264,18 +280,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	boolean applyOrder(
-			StringBuilder declaration, List<String> paramTypes,
-			@Nullable String containerType, boolean unwrapped) {
-		if ( !isJakartaCursoredPage(containerType) && hasOrdering(paramTypes) ) {
-			unwrapQuery( declaration, unwrapped );
-			declaration
-					.append("\t\t\t.setOrder(_orders)\n");
-			return true;
-		}
-		return unwrapped;
-	}
-
 	void handlePageParameters(
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType) {
@@ -298,25 +302,26 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			if ( isRestrictionParam(paramType) ) {
 				if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
 					declaration
-							.append( "\t\t\t.addRestriction(" )
+							.append( "\t_spec.restrict(" )
 							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
 							.append( ".all(" )
 							.append( paramName )
-							.append( "))\n" );
+							.append( "));\n" );
 
 				}
 				else {
 					declaration
-							.append( "\t\t\t.addRestriction(" )
+							.append( "\t_spec.restrict(" )
 							.append( paramName )
-							.append( ")\n" );
+							.append( ");\n" );
 				}
 			}
 			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
-				final TypeElement entityElement = annotationMetaEntity.getContext().getElementUtils()
-						.getTypeElement( returnTypeName );
+				final TypeElement entityElement =
+						annotationMetaEntity.getContext().getElementUtils()
+								.getTypeElement( returnTypeName );
 				declaration
-						.append("\t\t\t.addRestriction(")
+						.append("\t_spec.restrict(")
 						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
 						.append(".restrict(")
 						.append(annotationMetaEntity.importType(
@@ -325,7 +330,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						.append(paramName)
 						.append(", ")
 						.append(paramName)
-						.append("))\n");
+						.append("));\n");
 			}
 		}
 	}
@@ -461,6 +466,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	void createQuery(StringBuilder declaration) {}
 
+	void createSpecification(StringBuilder declaration) {}
+
 	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {}
 
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
@@ -533,22 +540,34 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
+	void collectOrdering(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( hasOrdering(paramTypes) ) {
 			if ( returnTypeName != null ) {
-				declaration
-						.append("\tvar _orders = new ")
-						.append(annotationMetaEntity.importType("java.util.ArrayList"))
-						.append("<")
-						.append(annotationMetaEntity.importType(HIB_ORDER))
-						.append("<? super ")
-						.append(annotationMetaEntity.importType(returnTypeName))
-						.append(">>();\n");
+				final boolean cursoredPage = isJakartaCursoredPage( containerType );
+				final String add;
+				if ( cursoredPage ) {
+					// we need to collect them together in a List
+					declaration
+							.append("\tvar _orders = new ")
+							.append(annotationMetaEntity.importType("java.util.ArrayList"))
+							.append("<")
+							.append(annotationMetaEntity.importType(HIB_ORDER))
+							.append("<? super ")
+							.append(annotationMetaEntity.importType(returnTypeName))
+							.append(">>();\n");
+					add = "_orders.add";
+				}
+				else {
+					add = "_spec.sort";
+				}
+
 				// static orders declared using @OrderBy must come first
 				for ( OrderBy orderBy : orderBys ) {
 					annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 					declaration
-							.append("\t_orders.add(")
+							.append("\t")
+							.append(add)
+							.append('(')
 							.append(annotationMetaEntity.staticImport(HIB_ORDER, orderBy.descending  ? "desc" : "asc"))
 							.append('(')
 							.append(annotationMetaEntity.importType(returnTypeName))
@@ -571,20 +590,36 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append("\tfor (var _sort : ")
 								.append(name)
 								.append(") {\n")
-								.append("\t\t_orders.add(_sort);\n")
+								.append("\t\t")
+								.append(add)
+								.append("(_sort);\n")
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(HIB_ORDER) ) {
 						declaration
-								.append("\t_orders.add(")
+								.append("\t")
+								.append(add)
+								.append('(')
 								.append(name)
 								.append(");\n");
 					}
 					else if ( type.startsWith(LIST + "<" + HIB_ORDER) ) {
-						declaration
-								.append("\t_orders.addAll(")
-								.append(name)
-								.append(");\n");
+						if ( cursoredPage ) {
+							declaration
+									.append("\t_orders.addAll(")
+									.append(name)
+									.append(");\n");
+						}
+						else {
+							declaration
+									.append("\tfor (var _sort : ")
+									.append(name)
+									.append(") {\n")
+									.append("\t\t")
+									.append(add)
+									.append("(_sort);\n")
+									.append("\t}\n");
+						}
 					}
 					else if ( type.startsWith(JD_ORDER) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
@@ -592,7 +627,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append("\tfor (var _sort : ")
 								.append(name)
 								.append(".sorts()) {\n")
-								.append("\t\t_orders.add(")
+								.append("\t\t")
+								.append(add)
+								.append('(')
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
@@ -610,7 +647,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append("\tfor (var _sort : ")
 								.append(name)
 								.append(") {\n")
-								.append("\t\t_orders.add(")
+								.append("\t\t")
+								.append(add)
+								.append('(')
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
@@ -624,7 +663,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					else if ( type.startsWith(JD_SORT) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
-								.append("\t_orders.add(")
+								.append("\t")
+								.append(add)
+								.append('(')
 								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
@@ -648,6 +689,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	private boolean hasOrdering(List<String> paramTypes) {
 		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
 			|| !orderBys.isEmpty();
+	}
+
+	boolean isUsingSpecification() {
+		return false;
 	}
 
 	protected void executeSelect(

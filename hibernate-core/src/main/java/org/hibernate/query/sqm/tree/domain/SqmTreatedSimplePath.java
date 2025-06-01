@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.query.PathException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -103,7 +104,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
-	public SqmPathSource<S> getNodeType() {
+	public SqmBindableType<S> getNodeType() {
 		return treatTarget;
 	}
 

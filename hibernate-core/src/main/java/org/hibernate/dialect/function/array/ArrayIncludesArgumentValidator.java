@@ -6,7 +6,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;

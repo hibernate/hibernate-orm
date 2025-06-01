@@ -20,9 +20,9 @@ A `SelectionSpecification` allows to iteratively build a query from a "base", ad
 ====
 [source, java, indent=0]
 ----
-SelectionSpecification<Book> spec = session.createSelectionSpecification(
-    "from Book",
-    Book.class
+SelectionSpecification<Book> spec = SelectionSpecification.create(
+    Book.class,
+    "from Book"
 );
 ----
 ====
@@ -33,7 +33,7 @@ or a root entity as the base -
 ====
 [source, java, indent=0]
 ----
-SelectionSpecification<Book> spec = session.createSelectionSpecification(Book.class);
+SelectionSpecification<Book> spec = SelectionSpecification.create(Book.class);
 ----
 ====
 
@@ -45,7 +45,7 @@ Once we have the `SelectionSpecification` we can adjust the query adding restric
 ----
 // from here we can augment the base query "from Book",
 // with either restrictions
-spec.restriction(
+spec.restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
@@ -53,7 +53,7 @@ spec.restriction(
 );
 
 // or here with some sorting
-spec.order(
+spec.sort(
     Order.asc(Book_.suggestedCost)
 )
 ----
@@ -70,7 +70,7 @@ After adjusting the query, we can obtain the executable `SelectionQuery`:
 ====
 [source, java, indent=0]
 ----
-SelectionQuery<Book> qry = ds.createQuery();
+SelectionQuery<Book> qry = ds.createQuery(session);
 List<Book> books = qry.getResultList();
 ----
 ====
@@ -81,17 +81,17 @@ These calls can even be chained, e.g.
 ====
 [source, java, indent=0]
 ----
-SelectionQuery<Book> qry = session.createSelectionSpecification(
-    "from Book",
-    Book.class
-).restriction(
+SelectionQuery<Book> qry = SelectionSpecification.create(
+    Book.class,
+    "from Book"
+).restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
     )
-).order(
+).sort(
     Order.asc(Book_.suggestedCost)
-).createQuery();
+).createQuery(session);
 ----
 ====
 
@@ -112,14 +112,14 @@ At the moment, only update and delete queries are supported.  E.g.
 ====
 [source, java, indent=0]
 ----
-MutationQuery<Book> qry = session.createMutationSpecification(
-    "delete Book",
-    Book.class
-).restriction(
+MutationQuery<Book> qry = MutationSpecification.create(
+    Book.class,
+    "delete Book"
+).restrict(
     Restriction.restrict(
         Book_.suggestedCost,
         Range.closed(10.00, 19.99)
     )
-).createQuery();
+).createQuery(session);
 ----
 ====

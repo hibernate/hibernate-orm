@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.internal.OutputsImpl;
 import org.hibernate.sql.exec.ExecutionException;
@@ -144,11 +144,5 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 			results.add( result );
 			return buildResultSetOutput( () -> results );
 		}
-	}
-
-	@Override
-	public void release() {
-		super.release();
-		getResultContext().getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( callableStatement );
 	}
 }

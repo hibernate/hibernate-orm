@@ -44,6 +44,11 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 		return string == null ? null : Integer.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Integer;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Integer value, Class<X> type, WrapperOptions options) {

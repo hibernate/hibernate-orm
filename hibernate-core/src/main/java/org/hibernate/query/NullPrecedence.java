@@ -7,6 +7,7 @@ package org.hibernate.query;
 import org.hibernate.dialect.NullOrdering;
 
 import jakarta.persistence.criteria.Nulls;
+import org.hibernate.query.internal.NullPrecedenceHelper;
 
 /**
  * Enumerates the possibilities for the precedence of null values within
@@ -38,21 +39,7 @@ public enum NullPrecedence {
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	public boolean isDefaultOrdering(SortDirection sortOrder, NullOrdering nullOrdering) {
-		return switch (this) {
-			case NONE -> true;
-			case FIRST -> switch (nullOrdering) {
-				case FIRST -> true;
-				case LAST -> false;
-				case SMALLEST -> sortOrder == SortDirection.ASCENDING;
-				case GREATEST -> sortOrder == SortDirection.DESCENDING;
-			};
-			case LAST -> switch (nullOrdering) {
-				case LAST -> true;
-				case FIRST -> false;
-				case SMALLEST -> sortOrder == SortDirection.DESCENDING;
-				case GREATEST -> sortOrder == SortDirection.ASCENDING;
-			};
-		};
+		return NullPrecedenceHelper.isDefaultOrdering( getJpaValue(), sortOrder, nullOrdering );
 	}
 
 	/**
@@ -99,6 +86,5 @@ public enum NullPrecedence {
 			case FIRST -> NullPrecedence.FIRST;
 			case LAST -> NullPrecedence.LAST;
 		};
-
 	}
 }

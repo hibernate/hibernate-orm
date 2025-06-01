@@ -17,8 +17,8 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.Query;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.Type;
 
 import org.hibernate.testing.orm.junit.JiraKey;

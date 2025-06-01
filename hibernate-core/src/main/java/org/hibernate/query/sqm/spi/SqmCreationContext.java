@@ -7,7 +7,7 @@ package org.hibernate.query.sqm.spi;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.BindingContext;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 

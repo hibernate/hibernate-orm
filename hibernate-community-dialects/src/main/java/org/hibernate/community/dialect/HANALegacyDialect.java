@@ -4,41 +4,12 @@
  */
 package org.hibernate.community.dialect;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FilterInputStream;
-import java.io.FilterReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
-import java.sql.Types;
-import java.time.temporal.TemporalAccessor;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -48,7 +19,6 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.HANAServerConfiguration;
-import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.RowLockStrategy;
@@ -62,6 +32,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.HANASqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -131,7 +102,37 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FilterInputStream;
+import java.io.FilterReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
@@ -993,6 +994,42 @@ public class HANALegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout.milliseconds() );
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI ) {
+			return getForUpdateNowaitString( aliases );
+		}
+		else {
+			return getForUpdateString( aliases );
+		}
+	}
+
+	@Override
 	public String getReadLockString(int timeout) {
 		return getWriteLockString( timeout );
 	}
@@ -1004,10 +1041,10 @@ public class HANALegacyDialect extends Dialect {
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
+		if ( Timeouts.isRealTimeout( timeout ) ) {
+			return getForUpdateString() + " wait " + Timeouts.getTimeoutInSeconds( timeout );
 		}
-		else if ( timeout == 0 ) {
+		else if ( timeout == Timeouts.NO_WAIT_MILLI ) {
 			return getForUpdateNowaitString();
 		}
 		else {

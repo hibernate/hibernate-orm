@@ -316,8 +316,8 @@ To make use of multi-tenancy, we'll usually need to set at least one of these co
 |===
 | Configuration property name           | Purpose
 
-| `hibernate.tenant_identifier_resolver`  | Specifies the `CurrentTenantIdentifierResolver`
-| `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_IDENTIFIER_RESOLVER[`hibernate.tenant_identifier_resolver`]  | Specifies the `CurrentTenantIdentifierResolver`
+| link:{doc-javadoc-url}org/hibernate/cfg/MultiTenancySettings.html#MULTI_TENANT_CONNECTION_PROVIDER[`hibernate.multi_tenant_connection_provider`]  | Specifies the `MultiTenantConnectionProvider`
 |===
 
 Do not configure those properties if you would like the configured `BeanContainer` provide the implementation.
@@ -467,7 +467,7 @@ Furthermore, the link:{doc-javadoc-url}org/hibernate/annotations/ValueGeneration
 // .The older APIs are still available in Hibernate 6
 ====
 These APIs were new in Hibernate 6, and supersede the classic `IdentifierGenerator` interface and `@GenericGenerator` annotation from older versions of Hibernate.
-However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 6.
+However, the older APIs are still available and custom ``IdentifierGenerator``s written for older versions of Hibernate continue to work in Hibernate 7.
 ====
 
 Hibernate has a range of built-in generators which are defined in terms of this new framework.
@@ -477,12 +477,12 @@ Hibernate has a range of built-in generators which are defined in terms of this 
 |===
 | Annotation | Implementation | Purpose
 
-| `@Generated` | `GeneratedGeneration` | Generically handles database-generated values
-| `@GeneratedColumn` | `GeneratedAlwaysGeneration` | Handles values generated using `generated always`
-| `@CurrentTimestamp` | `CurrentTimestampGeneration` | Generic support for database or in-memory generation of creation or update timestamps
-| `@CreationTimestamp` | `CurrentTimestampGeneration` | A timestamp generated when an entity is first made persistent
-| `@UpdateTimestamp` | `CurrentTimestampGeneration` | A timestamp generated when an entity is made persistent, and regenerated every time the entity is modified
-| `@UuidGenerator` | `UuidGenerator` | A more flexible generator for RFC 4122 UUIDs
+| link:{doc-javadoc-url}org/hibernate/annotations/Generated.html[`@Generated`] | `GeneratedGeneration` | Generically handles database-generated values
+| link:{doc-javadoc-url}org/hibernate/annotations/GeneratedColumn.html[`@GeneratedColumn`] | `GeneratedAlwaysGeneration` | Handles values generated using `generated always`
+| link:{doc-javadoc-url}org/hibernate/annotations/CurrentTimestamp.html[`@CurrentTimestamp`] | `CurrentTimestampGeneration` | Generic support for database or in-memory generation of creation or update timestamps
+| link:{doc-javadoc-url}org/hibernate/annotations/CreationTimestamp.html[`@CreationTimestamp`] | `CurrentTimestampGeneration` | A timestamp generated when an entity is first made persistent
+| link:{doc-javadoc-url}org/hibernate/annotations/UpdateTimestamp.html[`@UpdateTimestamp`] | `CurrentTimestampGeneration` | A timestamp generated when an entity is made persistent, and regenerated every time the entity is modified
+| link:{doc-javadoc-url}org/hibernate/annotations/UuidGenerator.html[`@UuidGenerator`] | `UuidGenerator` | A more flexible generator for RFC 4122 UUIDs
 |===
 
 Furthermore, support for JPA's standard id generation strategies is also defined in terms of this framework.
@@ -595,8 +595,8 @@ Custom naming strategies may be enabled using the configuration properties we al
 |===
 | Configuration property name           | Purpose
 
-| `hibernate.implicit_naming_strategy`  | Specifies the `ImplicitNamingStrategy`
-| `hibernate.physical_naming_strategy`  | Specifies the `PhysicalNamingStrategy`
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#IMPLICIT_NAMING_STRATEGY[`hibernate.implicit_naming_strategy`]  | Specifies the `ImplicitNamingStrategy`
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PHYSICAL_NAMING_STRATEGY[`hibernate.physical_naming_strategy`]  | Specifies the `PhysicalNamingStrategy`
 |===
 
 [[spatial]]
@@ -1140,12 +1140,27 @@ We may define as many different fetch profiles as we like.
 | `@FetchProfileOverride` | Specifies the fetch strategy for the annotated association, in a given fetch profile
 |===
 
-A fetch profile must be explicitly enabled for a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
+A fetch profile must be explicitly enabled for a given session by passing the name of the profile to link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
 
 [source,java]
 ----
 session.enableFetchProfile(Book_.PROFILE_EAGER_BOOK);
 Book eagerBook = session.find(Book.class, bookId);
+----
+
+Alternatively, an instance of link:{doc-javadoc-url}org/hibernate/EnabledFetchProfile.html[`EnabledFetchProfile`] may be obtained in a type safe way from the static metamodel, and applied to the session:
+
+[source,java]
+----
+Book_._EagerBook.enable(session);
+Book eagerBook = session.find(Book.class, bookId);
+----
+
+Even better, the `EnabledFetchProfile` may be passed as a `FindOption`:
+
+[source,java]
+----
+Book eagerBook = entityManager.find(Book.class, bookId, Book_._EagerBook);
 ----
 
 So why or when might we prefer named fetch profiles to entity graphs?

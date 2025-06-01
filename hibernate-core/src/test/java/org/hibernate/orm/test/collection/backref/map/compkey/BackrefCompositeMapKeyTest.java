@@ -8,9 +8,14 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
+import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
+import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -20,17 +25,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
- * BackrefCompositeMapKeyTest implementation.  Test access to a composite map-key
- * backref via a number of different access methods.
- *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(
 		xmlMappings = (
-				"org/hibernate/orm/test/collection/backref/map/compkey/Mappings.hbm.xml"
+				"org/hibernate/orm/test/collection/backref/map/compkey/Mappings.xml"
 		)
 )
 @SessionFactory
+@BytecodeEnhanced(runNotEnhancedAsWell = true)
+@CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
 public class BackrefCompositeMapKeyTest {
 
 	@Test
@@ -54,9 +59,9 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ), "Orphan 'Widge' was not deleted" );
-					assertNull( session.get( Part.class, "Get" ), "Orphan 'Get' was not deleted" );
-					assertNull( session.get( Product.class, "Widget" ), "Orphan 'Widget' was not deleted" );
+					assertNull( session.find( Part.class, "Widge" ), "Orphan 'Widge' was not deleted" );
+					assertNull( session.find( Part.class, "Get" ), "Orphan 'Get' was not deleted" );
+					assertNull( session.find( Product.class, "Widget" ), "Orphan 'Widget' was not deleted" );
 				}
 		);
 	}
@@ -102,9 +107,9 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.remove( session.get( Product.class, "Widget" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
+					session.remove( session.find( Product.class, "Widget" ) );
 				}
 		);
 
@@ -136,9 +141,9 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNotNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.remove( session.get( Product.class, "Widget" ) );
+					assertNotNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
+					session.remove( session.find( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -177,11 +182,11 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					Product prod = session.get( Product.class, "Widget" );
+					Product prod = session.find( Product.class, "Widget" );
 					assertTrue( Hibernate.isInitialized( prod.getParts() ) );
 					assertNull( prod.getParts().get( new MapKey( "Top" ) ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.remove( session.get( Product.class, "Widget" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
+					session.remove( session.find( Product.class, "Widget" ) );
 				}
 		);
 	}
@@ -210,10 +215,15 @@ public class BackrefCompositeMapKeyTest {
 
 		scope.inTransaction(
 				session -> {
-					assertNull( session.get( Part.class, "Widge" ) );
-					assertNotNull( session.get( Part.class, "Get" ) );
-					session.remove( session.get( Product.class, "Widget" ) );
+					assertNull( session.find( Part.class, "Widge" ) );
+					assertNotNull( session.find( Part.class, "Get" ) );
+					session.remove( session.find( Product.class, "Widget" ) );
 				}
 		);
+	}
+
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 }

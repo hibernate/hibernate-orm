@@ -198,7 +198,7 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 				continue;
 			}
 
-			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+			for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 				if ( dialect.canDisableConstraints() ) {
 					applySqlString(
 							dialect.getTableCleaner().getSqlDisableConstraintString( foreignKey, metadata, context ),
@@ -241,7 +241,7 @@ public class SchemaTruncatorImpl extends AbstractSchemaPopulator implements Sche
 				continue;
 			}
 
-			for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
+			for ( ForeignKey foreignKey : table.getForeignKeyCollection() ) {
 				if ( dialect.canDisableConstraints() ) {
 					applySqlString(
 							dialect.getTableCleaner().getSqlEnableConstraintString( foreignKey, metadata, context ),

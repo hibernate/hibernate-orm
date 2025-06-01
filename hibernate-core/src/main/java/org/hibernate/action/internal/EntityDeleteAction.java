@@ -23,6 +23,7 @@ import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -297,6 +298,14 @@ public class EntityDeleteAction extends EntityAction {
 		final EntityPersister persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			persister.getCacheAccessStrategy().remove( getSession(), ck );
+
+			final StatisticsImplementor statistics = getSession().getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.entityCacheRemove(
+						StatsHelper.getRootEntityRole( persister ),
+						getPersister().getCacheAccessStrategy().getRegion().getName()
+				);
+			}
 		}
 	}
 }

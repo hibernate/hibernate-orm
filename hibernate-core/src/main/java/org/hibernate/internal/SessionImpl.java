@@ -549,16 +549,13 @@ public class SessionImpl
 			}
 		}
 
-		final EntityEntry e = persistenceContext.getEntry( object );
-		if ( e == null ) {
-			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
-		}
-		else if ( e.getStatus().isDeletedOrGone() ) {
-			throw new ObjectDeletedException( "Given entity was removed", e.getId(),
-					e.getPersister().getEntityName() );
+		final EntityEntry entry = getEntityEntry( object );
+		if ( entry.getStatus().isDeletedOrGone() ) {
+			throw new ObjectDeletedException( "Given entity was removed", entry.getId(),
+					entry.getPersister().getEntityName() );
 		}
 		else {
-			return e.getLockMode();
+			return entry.getLockMode();
 		}
 	}
 
@@ -1555,17 +1552,11 @@ public class SessionImpl
 		}
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
-			if ( lazyInitializer.getSession() != this ) {
-				throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
-			}
+			checkOwnsProxy( lazyInitializer );
 			return lazyInitializer.getInternalIdentifier();
 		}
 		else {
-			final EntityEntry entry = persistenceContext.getEntry( object );
-			if ( entry == null ) {
-				throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
-			}
-			return entry.getId();
+			return getEntityEntry( object ).getId();
 		}
 	}
 
@@ -1819,17 +1810,25 @@ public class SessionImpl
 
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
-			if ( !persistenceContext.containsProxy( object ) ) {
-				throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
-			}
+			checkOwnsProxy( lazyInitializer );
 			object = lazyInitializer.getImplementation();
 		}
 
+		return getEntityEntry( object ).getPersister().getEntityName();
+	}
+
+	private void checkOwnsProxy(LazyInitializer lazyInitializer) {
+		if ( lazyInitializer.getSession() != this ) {
+			throw new IllegalArgumentException( "Given proxy is not associated with the persistence context" );
+		}
+	}
+
+	private EntityEntry getEntityEntry(Object object) {
 		final EntityEntry entry = persistenceContext.getEntry( object );
 		if ( entry == null ) {
 			throw new IllegalArgumentException( "Given entity is not associated with the persistence context" );
 		}
-		return entry.getPersister().getEntityName();
+		return entry;
 	}
 
 	@Override @SuppressWarnings("unchecked")
@@ -2788,7 +2787,7 @@ public class SessionImpl
 		if ( !contains( entity ) ) {
 			// convert() calls markForRollbackOnly()
 			throw getExceptionConverter()
-					.convert( new IllegalArgumentException( "Entity not associated with the persistence context" ) );
+					.convert( new IllegalArgumentException( "Given entity is not associated with the persistence context" ) );
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );

@@ -344,7 +344,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 
 		em.clear();
-		assertEquals( em.getProperties().get(HibernateHints.HINT_FLUSH_MODE), "AUTO" );
+		assertEquals( em.getProperties().get(HibernateHints.HINT_FLUSH_MODE), FlushMode.AUTO );
 		assertNotNull(
 				"With default settings the entity should be persisted on commit.",
 				em.find( Wallet.class, wallet.getSerial() )

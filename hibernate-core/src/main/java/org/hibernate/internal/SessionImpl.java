@@ -332,8 +332,12 @@ public class SessionImpl
 
 	private Object getSessionProperty(String propertyName) {
 		return properties == null
-				? getSessionFactoryOptions().getDefaultSessionProperties().get( propertyName )
+				? getDefaultProperties().get( propertyName )
 				: properties.get( propertyName );
+	}
+
+	private Map<String, Object> getDefaultProperties() {
+		return getSessionFactoryOptions().getDefaultSessionProperties();
 	}
 
 	@Override
@@ -2810,7 +2814,7 @@ public class SessionImpl
 
 		// store property for future reference:
 		if ( properties == null ) {
-			properties = computeCurrentSessionProperties();
+			properties = computeCurrentProperties();
 		}
 		properties.put( propertyName, value );
 
@@ -2878,18 +2882,18 @@ public class SessionImpl
 		}
 	}
 
-	private Map<String, Object> computeCurrentSessionProperties() {
-		final Map<String, Object> map = new HashMap<>( getSessionFactoryOptions().getDefaultSessionProperties() );
+	private Map<String, Object> computeCurrentProperties() {
+		final var map = new HashMap<>( getDefaultProperties() );
 		//The FLUSH_MODE is always set at Session creation time,
 		//so it needs special treatment to not eagerly initialize this Map:
-		map.put( HINT_FLUSH_MODE, getHibernateFlushMode().name() );
+		map.put( HINT_FLUSH_MODE, getHibernateFlushMode() );
 		return map;
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
 		if ( properties == null ) {
-			properties = computeCurrentSessionProperties();
+			properties = computeCurrentProperties();
 		}
 		return unmodifiableMap( properties );
 	}

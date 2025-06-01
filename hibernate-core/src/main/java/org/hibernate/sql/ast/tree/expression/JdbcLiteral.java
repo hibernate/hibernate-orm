@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -79,7 +78,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	// MappingModelExpressible
 
 	@Override
-	public MappingModelExpressible getExpressionType() {
+	public MappingModelExpressible<?> getExpressionType() {
 		return this;
 	}
 
@@ -114,14 +113,20 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return;
+		if ( value != null ) {
+			cacheKey.addValue( disassemble( value, jdbcMapping.getJdbcJavaType().getMutabilityPlan(), session ) );
+			cacheKey.addHashCode( hashCode( value, jdbcMapping.getJavaTypeDescriptor() ) );
 		}
-		final Serializable disassemble = ( (MutabilityPlan<Object>) jdbcMapping.getJdbcJavaType().getMutabilityPlan() )
-				.disassemble( value, session );
-		final int hashCode = jdbcMapping.getJavaTypeDescriptor().extractHashCode( value );
-		cacheKey.addValue( disassemble );
-		cacheKey.addHashCode( hashCode );
+	}
+
+	private static <T> int hashCode(Object value, JavaType<T> javaTypeDescriptor) {
+		return javaTypeDescriptor.extractHashCode( (T) value );
+	}
+
+	private static <T> Serializable disassemble(
+			Object value, MutabilityPlan<T> mutabilityPlan,
+			SharedSessionContractImplementor session) {
+		return mutabilityPlan.disassemble( (T) value, session );
 	}
 
 	@Override
@@ -155,28 +160,25 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressible<T>, Doma
 	@Override
 	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				this,
-				jdbcMapping.getJdbcJavaType(),
-				null,
-				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
-
+		final SqlSelection sqlSelection =
+				sqlAstCreationState.getSqlExpressionResolver()
+						.resolveSqlSelection(
+								this,
+								jdbcMapping.getJdbcJavaType(),
+								null,
+								sqlAstCreationState.getCreationContext().getTypeConfiguration()
+						);
 		return new BasicResult<>( sqlSelection.getValuesArrayPosition(), resultVariable, jdbcMapping );
 	}
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-
-		sqlExpressionResolver.resolveSqlSelection(
+		sqlAstCreationState.getSqlExpressionResolver().resolveSqlSelection(
 				this,
 				jdbcMapping.getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getMappingMetamodel().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

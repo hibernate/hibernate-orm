@@ -124,9 +124,12 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 		}
 		else {
 			//noinspection unchecked
-			final BasicValueConverter<Boolean, Object> converter = (BasicValueConverter<Boolean, Object>) resolution.getValueConverter();
+			final BasicValueConverter<Boolean, ?> converter =
+					(BasicValueConverter<Boolean, ?>)
+							resolution.getValueConverter();
 			//noinspection unchecked
-			final JdbcLiteralFormatter<Object> literalFormatter = resolution.getJdbcMapping().getJdbcLiteralFormatter();
+			final JdbcLiteralFormatter<Object> literalFormatter =
+					resolution.getJdbcMapping().getJdbcLiteralFormatter();
 
 			if ( converter == null ) {
 				// the database column is BIT or BOOLEAN : pass-thru
@@ -175,16 +178,10 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	@Override
 	public Assignment createSoftDeleteAssignment(TableReference tableReference) {
 		final ColumnReference columnReference = new ColumnReference( tableReference, this );
-		final Expression valueExpression;
-
-		if ( strategy == SoftDeleteType.TIMESTAMP ) {
-			valueExpression = currentTimestampFunctionExpression;
-		}
-		else {
-			//noinspection rawtypes,unchecked
-			valueExpression = new JdbcLiteral( deletedLiteralValue, jdbcMapping );
-		}
-
+		final Expression valueExpression =
+				strategy == SoftDeleteType.TIMESTAMP
+						? currentTimestampFunctionExpression
+						: new JdbcLiteral<>( deletedLiteralValue, jdbcMapping );
 		return new Assignment( columnReference, valueExpression );
 	}
 

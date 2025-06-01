@@ -44,7 +44,7 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				JdbcLockStrategy.AUTO,
 				null,
 				null
-				);
+		);
 	}
 
 	public JdbcOperationQuerySelect(
@@ -101,7 +101,7 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 			if ( jdbcParameterBindings == null ) {
 				return false;
 			}
-			for ( Map.Entry<JdbcParameter, JdbcParameterBinding> entry : appliedParameters.entrySet() ) {
+			for ( var entry : appliedParameters.entrySet() ) {
 				final JdbcParameter parameter = entry.getKey();
 				final JdbcParameterBinding appliedBinding = entry.getValue();
 				// This is a special case where the rendered SQL depends on the presence of the parameter,

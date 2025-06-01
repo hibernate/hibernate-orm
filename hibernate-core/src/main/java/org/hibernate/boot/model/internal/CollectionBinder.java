@@ -1191,12 +1191,19 @@ public abstract class CollectionBinder {
 		}
 		else if ( oneToMany
 				&& property.hasDirectAnnotationUsage( OnDelete.class )
-				&& !property.hasDirectAnnotationUsage( JoinColumn.class )
-				&& !property.hasDirectAnnotationUsage( JoinColumns.class )) {
+				&& !hasExplicitJoinColumn() ) {
 			throw new AnnotationException( "Unidirectional '@OneToMany' association '"
 					+ qualify( propertyHolder.getPath(), propertyName )
 					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
 		}
+	}
+
+	private boolean hasExplicitJoinColumn() {
+		return property.hasDirectAnnotationUsage( JoinColumn.class )
+			|| property.hasDirectAnnotationUsage( JoinColumns.class )
+			|| property.hasDirectAnnotationUsage( JoinTable.class )
+			&& property.getDirectAnnotationUsage( JoinTable.class )
+						.joinColumns().length > 0;
 	}
 
 	private void bindProperty() {

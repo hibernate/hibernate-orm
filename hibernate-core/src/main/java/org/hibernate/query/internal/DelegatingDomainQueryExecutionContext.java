@@ -16,7 +16,7 @@ import org.hibernate.sql.exec.spi.Callback;
 public class DelegatingDomainQueryExecutionContext implements DomainQueryExecutionContext {
 	private final DomainQueryExecutionContext delegate;
 
-	public <R> DelegatingDomainQueryExecutionContext(DomainQueryExecutionContext delegate) {
+	public DelegatingDomainQueryExecutionContext(DomainQueryExecutionContext delegate) {
 		this.delegate = delegate;
 	}
 

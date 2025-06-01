@@ -11,18 +11,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
 import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -30,8 +28,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
-import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -86,8 +82,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 		this.jdbcValueDescriptors = CollectionHelper.arrayList( parameters.size() );
 		for ( int i = 0; i < parameters.size(); i++ ) {
-			final ColumnValueParameter valueParameter = parameters.get( i );
-			jdbcValueDescriptors.add( new JdbcValueDescriptorImpl( valueParameter, i+1 ) );
+			jdbcValueDescriptors.add( new JdbcValueDescriptorImpl( parameters.get( i ), i + 1 ) );
 		}
 	}
 
@@ -125,57 +120,51 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			ValuesAnalysis incomingValuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final UpdateValuesAnalysis valuesAnalysis = (UpdateValuesAnalysis) incomingValuesAnalysis;
-		if ( !valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping )
-				&& !valuesAnalysis.getTablesNeedingDynamicUpdate().contains( tableMapping ) ) {
-			return;
-		}
-
-		try {
-			if ( !valuesAnalysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
-				// all the new values for this table were null - possibly delete the row
-				if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
-					performDelete( jdbcValueBindings, session );
-				}
-			}
-			else {
-				// there are some non-null values for the table - we need to update or insert the values.
-
-				// first, try the update and see if any row was affected
-				final boolean wasUpdated;
-				if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
-					// either
-					// 		1) not know if the values for this table were previously all null (because old values are not known)
-					//		2) the values for this table were previously had at least one non-null
-					wasUpdated = performUpdate( jdbcValueBindings, session );
+		if ( valuesAnalysis.getTablesNeedingUpdate().contains( tableMapping )
+				|| valuesAnalysis.getTablesNeedingDynamicUpdate().contains( tableMapping ) ) {
+			try {
+				if ( !valuesAnalysis.getTablesWithNonNullValues().contains( tableMapping ) ) {
+					// all the new values for this table were null - possibly delete the row
+					if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
+						performDelete( jdbcValueBindings, session );
+					}
 				}
 				else {
-					wasUpdated = false;
-				}
+					// there are some non-null values for the table - we need to update or insert the values.
 
-				if ( !wasUpdated ) {
-					MODEL_MUTATION_LOGGER.debugf(
-							"Upsert update altered no rows - inserting : %s",
-							tableMapping.getTableName()
-					);
-					performInsert( jdbcValueBindings, session );
+					// first, try the update and see if any row was affected
+					final boolean wasUpdated;
+					if ( valuesAnalysis.getTablesWithPreviousNonNullValues().contains( tableMapping ) ) {
+						// either
+						// 		1) not know if the values for this table were previously all null (because old values are not known)
+						//		2) the values for this table were previously had at least one non-null
+						wasUpdated = performUpdate( jdbcValueBindings, session );
+					}
+					else {
+						wasUpdated = false;
+					}
+
+					if ( !wasUpdated ) {
+						MODEL_MUTATION_LOGGER.debugf(
+								"Upsert update altered no rows - inserting : %s",
+								tableMapping.getTableName()
+						);
+						performInsert( jdbcValueBindings, session );
+					}
 				}
 			}
+			finally {
+				jdbcValueBindings.afterStatement( tableMapping );
+			}
 		}
-		finally {
-			jdbcValueBindings.afterStatement( tableMapping );
-		}
-
 	}
 
 	private void performDelete(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final JdbcDeleteMutation jdbcDelete = createJdbcDelete( session );
-
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final PreparedStatement deleteStatement = createStatementDetails( jdbcDelete, jdbcCoordinator );
 		session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcDelete.getSqlString() );
-
 		bindKeyValues( jdbcValueBindings, deleteStatement, jdbcDelete, session );
-
 		try {
 			session.getJdbcCoordinator().getResultSetReturn()
 					.executeUpdate( deleteStatement, jdbcDelete.getSqlString() );
@@ -204,41 +193,34 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 		int jdbcBindingPosition = 1;
 		boolean foundKeyBindings = false;
-
-		final Set<Binding> bindings = bindingGroup.getBindings();
 		// leverage the fact that bindings are contiguous to avoid full nested iterations
 		final Iterator<ColumnValueBinding> keyBindingsItr = keyBindings.iterator();
-
-		bindings: for ( Binding binding : bindings ) {
+		bindings: for ( Binding binding : bindingGroup.getBindings() ) {
 			// binding-position here is 1-based (JDBC)
 			final JdbcValueDescriptor valueDescriptor = jdbcValueDescriptors.get( binding.getPosition() - 1 );
-
 			// key bindings would have a usage of RESTRICT relative to the UPDATE
-			if ( valueDescriptor.getUsage() != ParameterUsage.RESTRICT ) {
-				continue;
-			}
-
-			while ( keyBindingsItr.hasNext() ) {
-				final ColumnValueBinding valueBinding = keyBindingsItr.next();
-
-				if ( Objects.equals( valueBinding.getColumnReference().getColumnExpression(), binding.getColumnName() ) ) {
-					// `binding` is for a key column
-					foundKeyBindings = true;
-					bindKeyValue(
-							jdbcBindingPosition++,
-							binding,
-							valueDescriptor,
-							statement,
-							jdbcDelete.getSqlString(),
-							tableMapping,
-							session
-					);
-					break;
-				}
-				else {
-					if ( foundKeyBindings ) {
-						// we are now "beyond" the key bindings
-						break bindings;
+			if ( valueDescriptor.getUsage() == ParameterUsage.RESTRICT ) {
+				while ( keyBindingsItr.hasNext() ) {
+					if ( Objects.equals( keyBindingsItr.next().getColumnReference().getColumnExpression(),
+							binding.getColumnName() ) ) {
+						// binding is for a key column
+						foundKeyBindings = true;
+						bindKeyValue(
+								jdbcBindingPosition++,
+								binding,
+								valueDescriptor,
+								statement,
+								jdbcDelete.getSqlString(),
+								tableMapping,
+								session
+						);
+						break;
+					}
+					else {
+						if ( foundKeyBindings ) {
+							// we are now "beyond" the key bindings
+							break bindings;
+						}
 					}
 				}
 			}
@@ -298,53 +280,41 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 
 		final SessionFactoryImplementor factory = session.getSessionFactory();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = factory
-				.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory();
-
-		final SqlAstTranslator<JdbcDeleteMutation> translator = sqlAstTranslatorFactory.buildModelMutationTranslator(
-				tableDelete,
-				factory
-		);
-
-		return translator.translate( null, MutationQueryOptions.INSTANCE );
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( tableDelete, factory )
+				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	private boolean performUpdate(
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
 		MODEL_MUTATION_LOGGER.tracef( "#performUpdate(%s)", tableMapping.getTableName() );
-		final JdbcMutationOperation jdbcUpdate = createJdbcUpdate( session );
 
-		final PreparedStatementGroupSingleTable statementGroup = new PreparedStatementGroupSingleTable( jdbcUpdate, session );
-		final PreparedStatementDetails statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
-
+		final JdbcServices jdbcServices = session.getJdbcServices();
+		final var statementGroup = new PreparedStatementGroupSingleTable( createJdbcUpdate( session ), session );
+		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
 			final PreparedStatement updateStatement = statementDetails.resolveStatement();
-
-			session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-
+			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 			jdbcValueBindings.beforeStatement( statementDetails );
-
-			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
-					.executeUpdate( updateStatement, statementDetails.getSqlString() );
-
+			final int rowCount =
+					session.getJdbcCoordinator().getResultSetReturn()
+							.executeUpdate( updateStatement, statementDetails.getSqlString() );
 			if ( rowCount == 0 ) {
 				return false;
 			}
-
-			expectation.verifyOutcome(
-					rowCount,
-					updateStatement,
-					-1,
-					statementDetails.getSqlString()
-			);
-
-			return true;
+			else {
+				expectation.verifyOutcome(
+						rowCount,
+						updateStatement,
+						-1,
+						statementDetails.getSqlString()
+				);
+				return true;
+			}
 		}
 		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
 					"Unable to execute mutation PreparedStatement against table `" + tableMapping.getTableName() + "`",
 					statementDetails.getSqlString()
@@ -384,24 +354,18 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			);
 		}
 
-		final SqlAstTranslator<JdbcMutationOperation> translator = session
-				.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( tableUpdate, session.getFactory() );
-
-		return translator.translate( null, MutationQueryOptions.INSTANCE );
+		return session.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( tableUpdate, session.getFactory() )
+				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	private void performInsert(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {
 		final JdbcInsertMutation jdbcInsert = createJdbcInsert( session );
-
+		final JdbcServices jdbcServices = session.getJdbcServices();
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final PreparedStatement insertStatement = createStatementDetails( jdbcInsert, jdbcCoordinator );
-
 		try {
-			session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcInsert.getSqlString() );
-
+			jdbcServices.getSqlStatementLogger().logStatement( jdbcInsert.getSqlString() );
 			final BindingGroup bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
 			if ( bindingGroup != null ) {
 				bindingGroup.forEachBinding( binding -> {
@@ -416,7 +380,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 							);
 						}
 						catch (SQLException e) {
-							throw session.getJdbcServices().getSqlExceptionHelper().convert(
+							throw jdbcServices.getSqlExceptionHelper().convert(
 									e,
 									"Unable to bind parameter for upsert insert",
 									jdbcInsert.getSqlString()
@@ -425,7 +389,6 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					}
 				} );
 			}
-
 			jdbcCoordinator.getResultSetReturn()
 					.executeUpdate( insertStatement, jdbcInsert.getSqlString() );
 		}
@@ -460,24 +423,16 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		}
 
 		final SessionFactoryImplementor factory = session.getSessionFactory();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = factory
-				.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory();
-
-		final SqlAstTranslator<JdbcInsertMutation> translator = sqlAstTranslatorFactory.buildModelMutationTranslator(
-				tableInsert,
-				factory
-		);
-
-		return translator.translate( null, MutationQueryOptions.INSTANCE );
+		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( tableInsert, factory )
+				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	private static PreparedStatement createStatementDetails(
 			PreparableMutationOperation operation,
 			JdbcCoordinator jdbcCoordinator) {
-		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
-		final PreparedStatement statement = statementPreparer.prepareStatement( operation.getSqlString(), false );
+		final var statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
+		final var statement = statementPreparer.prepareStatement( operation.getSqlString(), false );
 		jdbcCoordinator.getLogicalConnection().getResourceRegistry().register( null, statement );
 		return statement;
 	}

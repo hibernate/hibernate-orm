@@ -12,10 +12,8 @@ import jakarta.persistence.ManyToMany;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -29,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		{OnDeleteManyToManyTest.A.class,
 		OnDeleteManyToManyTest.B.class},
 		useCollectingStatementInspector = true)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+//@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 class OnDeleteManyToManyTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		var inspector = scope.getCollectingStatementInspector();
@@ -60,7 +58,7 @@ class OnDeleteManyToManyTest {
 			em.remove( a );
 			assertFalse( Hibernate.isInitialized( a.bs ) );
 		} );
-		inspector.assertExecutedCount( 2 );
+		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 2 : 3 );
 
 		scope.inTransaction( em -> {
 			assertEquals( 1,

@@ -293,10 +293,12 @@ public interface SchemaToolingSettings {
 	String HBM2DDL_DEFAULT_CONSTRAINT_MODE = "hibernate.hbm2ddl.default_constraint_mode";
 
 	/**
-	 * Specifies the default storage engine for a relational databases that supports
+	 * Specifies the default storage engine for a relational database that supports
 	 * multiple storage engines. This property must be set either as an {@link Environment}
 	 * variable or JVM System Property, since the {@link org.hibernate.dialect.Dialect} is
 	 * instantiated before Hibernate property resolution.
+	 * <p>
+	 * For MySQL, the legal values are {@code innodb} (the default) and {@code myisam}.
 	 *
 	 * @since 5.2.9
 	 */

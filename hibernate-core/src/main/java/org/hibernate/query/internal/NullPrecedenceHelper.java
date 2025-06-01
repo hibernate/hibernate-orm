@@ -4,7 +4,6 @@
  */
 package org.hibernate.query.internal;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.query.SortDirection;
 
@@ -22,38 +21,21 @@ public class NullPrecedenceHelper {
 			Nulls precedence,
 			SortDirection sortOrder,
 			NullOrdering nullOrdering) {
-		switch (precedence) {
-			case NONE:
-				return true;
-			case FIRST:
-				switch ( nullOrdering ) {
-					case FIRST:
-						return true;
-					case LAST:
-						return false;
-					case SMALLEST:
-						return sortOrder == SortDirection.ASCENDING;
-					case GREATEST:
-						return sortOrder == SortDirection.DESCENDING;
-					default:
-						throw new AssertionFailure( "Unrecognized NullOrdering");
-				}
-			case LAST:
-				switch ( nullOrdering ) {
-					case LAST:
-						return true;
-					case FIRST:
-						return false;
-					case SMALLEST:
-						return sortOrder == SortDirection.DESCENDING;
-					case GREATEST:
-						return sortOrder == SortDirection.ASCENDING;
-					default:
-						throw new AssertionFailure("Unrecognized NullOrdering");
-				}
-			default:
-				throw new AssertionFailure("Unrecognized NullPrecedence");
-		}
+		return switch ( precedence ) {
+			case NONE -> true;
+			case FIRST -> switch ( nullOrdering ) {
+				case FIRST -> true;
+				case LAST -> false;
+				case SMALLEST -> sortOrder == SortDirection.ASCENDING;
+				case GREATEST -> sortOrder == SortDirection.DESCENDING;
+			};
+			case LAST -> switch ( nullOrdering ) {
+				case LAST -> true;
+				case FIRST -> false;
+				case SMALLEST -> sortOrder == SortDirection.DESCENDING;
+				case GREATEST -> sortOrder == SortDirection.ASCENDING;
+			};
+		};
 	}
 
 	/**

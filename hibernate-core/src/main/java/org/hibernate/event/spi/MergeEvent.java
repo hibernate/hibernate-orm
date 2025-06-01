@@ -28,18 +28,14 @@ public class MergeEvent extends AbstractEvent {
 		this(entityName, original, source);
 		this.requestedId = id;
 		if ( requestedId == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null identifier"
-				);
+			throw new IllegalArgumentException( "Identifier may not be null" );
 		}
 	}
 
 	public MergeEvent(Object object, EventSource source) {
 		super(source);
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null entity"
-				);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		this.original = object;
 	}

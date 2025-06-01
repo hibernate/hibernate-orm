@@ -83,7 +83,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	@Override
 	public Object getIdentifier(Object entity) {
 		if ( entity == null ) {
-			throw new IllegalArgumentException( "Passed entity cannot be null" );
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
 		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
@@ -107,7 +107,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	@Override
 	public Object getVersion(Object entity) {
 		if ( entity == null ) {
-			throw new IllegalArgumentException( "Passed entity cannot be null" );
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 
 		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );

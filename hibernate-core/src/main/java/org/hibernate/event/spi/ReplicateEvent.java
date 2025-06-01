@@ -27,14 +27,10 @@ public class ReplicateEvent extends AbstractEvent {
 		this.entityName = entityName;
 
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null entity"
-			);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		if ( replicationMode == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null replication mode"
-			);
+			throw new IllegalArgumentException( "ReplicationMode may not be null" );
 		}
 
 		this.object = object;

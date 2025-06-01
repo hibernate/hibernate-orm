@@ -1550,6 +1550,9 @@ public class SessionImpl
 	public Object getIdentifier(Object object) {
 		checkOpen();
 		checkTransactionSynchStatus();
+		if ( object == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			if ( lazyInitializer.getSession() != this ) {
@@ -1809,6 +1812,11 @@ public class SessionImpl
 	public String getEntityName(Object object) {
 		checkOpen();
 //		checkTransactionSynchStatus();
+
+		if ( object == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+
 		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			if ( !persistenceContext.containsProxy( object ) ) {
@@ -2774,8 +2782,13 @@ public class SessionImpl
 			throw new TransactionRequiredException( "No active transaction" );
 		}
 
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		if ( !contains( entity ) ) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( "Entity not associated with the persistence context" ) );
+			// convert() calls markForRollbackOnly()
+			throw getExceptionConverter()
+					.convert( new IllegalArgumentException( "Entity not associated with the persistence context" ) );
 		}
 
 		return LockModeTypeHelper.getLockModeType( getCurrentLockMode( entity ) );

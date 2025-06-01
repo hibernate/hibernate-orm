@@ -26,6 +26,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Selaron
@@ -50,7 +52,12 @@ public class OrderColumnListIndexHHH18771ListInitializerTest extends BaseEntityM
 			person.getChildren().get( 0 ).setMother( person );
 		} );
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.find( Person.class, 1L );
+			Person person = entityManager.find( Person.class, 1L );
+			assertNotNull( person );
+			assertEquals( 1, person.getPhones().size() );
+			assertNotNull( person.getPhones().get( 0 ) );
+			assertEquals( 1, person.getChildren().size() );
+			assertEquals( person, person.getChildren().get( 0 ).getMother() );
 		} );
 	}
 

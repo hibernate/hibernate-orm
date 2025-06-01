@@ -20,16 +20,53 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#064;OnDelete(action = CASCADE)
  * Parent parent;
  * </pre>
- * Note that this results in an {@code on delete cascade} clause in
- * the DDL definition of the foreign key. It's completely different
- * to {@link jakarta.persistence.CascadeType#REMOVE}.
+ * This code results in an {@code on delete cascade} clause in the DDL
+ * definition of the foreign key.
  * <p>
- * In fact, {@code @OnDelete} may be combined with {@code cascade=REMOVE}.
+ * The {@code @OnDelete} annotation may be applied to any field or
+ * property representing an association or collection, or to a subclass
+ * in a {@linkplain jakarta.persistence.InheritanceType#JOINED joined}
+ * inheritance hierarchy.
  * <pre>
- * &#064;ManyToOne(cascade = REMOVE)
+ * &#064;Entity
+ * &#064;Inheritance(strategy = JOINED)
+ * class Publication {
+ *     &#064;Id
+ *     long id;
+ *     ...
+ *     &#064;ElementCollection
+ *     &#064;OnDelete(action = CASCADE)
+ *     String&lt;String&gt; keywords;
+ * }
+ *
+ * &#064;Entity
  * &#064;OnDelete(action = CASCADE)
- * Parent parent;
+ * class Book extends Publication {
+ *     &#064;Column(unique = true);
+ *     String isbn;
+ *     ...
+ *     &#064;ManyToMany
+ *     &#064;OnDelete(action = CASCADE)
+ *     Set&lt;Author&gt; authors;
+ * }
  * </pre>
+ * <p>
+ * The affect of {@code @OnDelete(action = CASCADE)} is quite different
+ * to {@link jakarta.persistence.CascadeType#REMOVE}. It's more efficient
+ * to delete a row via {@code on delete cascade}, but there's a catch.
+ * Like database triggers, {@code on delete} actions can cause state held
+ * in memory to lose synchronization with the database. In particular,
+ * when an entity instance is deleted via {@code on delete cascade}, the
+ * instance might not be removed from the second-level cache.
+ * <p>
+ * To alleviate this problem, {@code @OnDelete} may be used together with
+ * {@code cascade=REMOVE}.
+ * <pre>
+ * &#064;OneToMany(mappedBy = Child_.parent, cascade = {PERSIST, REMOVE})
+ * &#064;OnDelete(action = CASCADE)
+ * Set&lt;Child&gt; children = new HashSet<>();
+ * </pre>
+ * This mapping looks redundant, but it's not.
  * <ul>
  * <li>If {@code @OnDelete(action = CASCADE)} is used in conjunction
  *     with {@code cascade=REMOVE}, then associated entities are fetched
@@ -41,9 +78,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     deleted in the persistence context, and are not automatically
  *     evicted from the second-level cache.
  * </ul>
- * <p>
- * Like database triggers, {@code on delete} actions can cause state
- * held in memory to lose synchronization with the database.
  *
  * @author Emmanuel Bernard
  */

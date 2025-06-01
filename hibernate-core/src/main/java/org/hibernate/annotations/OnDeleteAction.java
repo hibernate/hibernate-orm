@@ -27,11 +27,15 @@ public enum OnDeleteAction {
 
 	/**
 	 * Cascade deletion of the parent to the child.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete cascade}.
 	 */
 	CASCADE,
 
 	/**
 	 * Prevents deletion of the parent by raising an error immediately.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete restrict}.
 	 *
 	 * @since 6.2
 	 */
@@ -39,6 +43,8 @@ public enum OnDeleteAction {
 
 	/**
 	 * Set the referencing foreign key to null.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete set null}.
 	 *
 	 * @since 6.2
 	 */
@@ -46,6 +52,8 @@ public enum OnDeleteAction {
 
 	/**
 	 * Set the referencing foreign key to its default value.
+	 * <p>
+	 * Produces a foreign key constraint with {@code on delete set default}.
 	 *
 	 * @since 6.2
 	 */

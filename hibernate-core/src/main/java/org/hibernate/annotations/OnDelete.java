@@ -78,6 +78,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     deleted in the persistence context, and are not automatically
  *     evicted from the second-level cache.
  * </ul>
+ * <p>
+ * Other options such as {@link OnDeleteAction#SET_NULL} and
+ * {@link OnDeleteAction#SET_DEFAULT} are much less commonly used.
+ * Note that {@code @OnDelete(SET_DEFAULT)} should be used together
+ * with {@link ColumnDefault @ColumnDefault}.
+ * <pre>
+ * &#064;ManyToOne
+ * &#064;OnDelete(action = OnDeleteAction.SET_DEFAULT)
+ * &#064;ColumnDefault("-1")
+ * Parent parent;
+ * </pre>
  *
  * @author Emmanuel Bernard
  */

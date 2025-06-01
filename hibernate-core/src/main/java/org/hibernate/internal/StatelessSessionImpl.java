@@ -1207,15 +1207,21 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public String guessEntityName(Object entity) {
 		checkOpen();
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		return entity.getClass().getName();
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String entityName, Object object) {
+	public EntityPersister getEntityPersister(String entityName, Object entity) {
 		checkOpen();
+		if ( entity == null ) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		return entityName == null
-				? requireEntityPersister( guessEntityName( object ) )
-				: requireEntityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );
+				? requireEntityPersister( guessEntityName( entity ) )
+				: requireEntityPersister( entityName ).getSubclassEntityPersister( entity, getFactory() );
 	}
 
 	@Override

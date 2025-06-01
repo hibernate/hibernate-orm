@@ -19,6 +19,9 @@ public class EvictEvent extends AbstractEvent {
 
 	public EvictEvent(Object object, EventSource source) {
 		super(source);
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		this.object = object;
 	}
 

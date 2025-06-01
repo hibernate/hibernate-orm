@@ -25,7 +25,7 @@ public class DeleteEvent extends AbstractEvent {
 	public DeleteEvent(Object object, EventSource source) {
 		super(source);
 		if (object == null) {
-			throw new IllegalArgumentException( "attempt to create delete event with null entity" );
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		this.object = object;
 	}

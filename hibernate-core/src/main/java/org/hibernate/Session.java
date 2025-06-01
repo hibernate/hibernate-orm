@@ -488,8 +488,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @param object the managed entity to evict
 	 *
-	 * @throws NullPointerException if the passed object is {@code null}
-	 * @throws IllegalArgumentException if the passed object is not mapped as an entity
+	 * @throws IllegalArgumentException if the given object is not an entity
 	 */
 	void evict(Object object);
 
@@ -1026,7 +1025,10 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void refresh(Object object, LockOptions lockOptions);
 
 	/**
-	 * Return the entity name for a persistent entity.
+	 * Return the entity name for the given persistent entity.
+	 * <p>
+	 * If the given entity is an uninitialized proxy, the proxy is initialized by
+	 * side effect.
 	 *
 	 * @param object a persistent entity associated with this session
 	 *

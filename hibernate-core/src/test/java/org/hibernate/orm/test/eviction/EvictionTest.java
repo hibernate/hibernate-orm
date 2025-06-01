@@ -55,9 +55,9 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		try {
 			session.evict( null );
-			fail( "Expecting evict(null) to throw NPE" );
+			fail( "Expecting evict(null) to throw IAE" );
 		}
-		catch (NullPointerException expected) {
+		catch (IllegalArgumentException expected) {
 		}
 		session.getTransaction().commit();
 		session.close();

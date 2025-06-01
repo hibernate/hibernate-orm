@@ -9,8 +9,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -236,9 +238,33 @@ public class ScopeTests {
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), REPORTS );
 			TransactionUtil.deleteFromTable( factoryScope, REPORTS.getTableName(), true );
-			TransactionUtil.deleteFromTable( factoryScope, PERSONS.getTableName(), session.getDialect().getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL );
-			TransactionUtil.deleteFromTable( factoryScope, REPORT_LABELS.getTableName(), session.getDialect().getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL );
+			TransactionUtil.deleteFromTable( factoryScope, PERSONS.getTableName(), willAggressivelyLockJoinedTables( session.getDialect() ) );
+			TransactionUtil.deleteFromTable( factoryScope, REPORT_LABELS.getTableName(), willAggressivelyLockJoinedTables( session.getDialect() ) );
 		} );
+	}
+
+	private boolean willAggressivelyLockJoinedTables(Dialect dialect) {
+		// true when we have something like:
+		//		select ...
+		//		from books b
+		//			join persons p on ...
+		//		for update
+		// and the database extends for-update to the joins
+		//
+		// todo : this is something we should consider and disallow the situation
+
+		final OuterJoinLockingLevel outerJoinLockingLevel = dialect.getOuterJoinLockingLevel();
+		if ( outerJoinLockingLevel == OuterJoinLockingLevel.FULL ) {
+			// there will be a join with some form of locking
+			final PessimisticLockStyle pessimisticLockStyle = dialect.getPessimisticLockStyle();
+			if ( pessimisticLockStyle == PessimisticLockStyle.CLAUSE ) {
+				final RowLockStrategy rowLockStrategy = dialect.getWriteRowLockStrategy();
+				if ( rowLockStrategy == RowLockStrategy.NONE ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	@Test

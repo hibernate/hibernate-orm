@@ -10,10 +10,8 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		OnDeleteJoinedInheritanceTest.B.class,
 		OnDeleteJoinedInheritanceTest.C.class},
 		useCollectingStatementInspector = true)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
+//@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 class OnDeleteJoinedInheritanceTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		var inspector = scope.getCollectingStatementInspector();
@@ -45,7 +43,7 @@ class OnDeleteJoinedInheritanceTest {
 			em.remove( b );
 			em.remove( c );
 		} );
-		inspector.assertExecutedCount( 4 );
+		inspector.assertExecutedCount( scope.getDialect().supportsCascadeDelete() ? 4 : 6 );
 
 		scope.inTransaction( em -> {
 			assertEquals( 0,

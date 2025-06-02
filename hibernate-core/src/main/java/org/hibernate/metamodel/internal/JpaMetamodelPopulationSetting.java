@@ -26,10 +26,10 @@ public enum JpaMetamodelPopulationSetting {
 		};
 	}
 
-	public static JpaMetamodelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
+	public static JpaMetamodelPopulationSetting determineJpaMetaModelPopulationSetting(Map<String, Object> settings) {
 		String setting = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
-				configurationValues,
+				settings,
 				"ignoreUnsupported"
 		);
 		return JpaMetamodelPopulationSetting.parse( setting );

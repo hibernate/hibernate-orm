@@ -7,6 +7,7 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.ComparableExecutable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
@@ -105,6 +106,23 @@ public final class CollectionUpdateAction extends CollectionAction {
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.updateCollection( persister.getRole() );
 		}
+	}
+
+	@Override
+	public int compareTo(ComparableExecutable o) {
+		if ( o instanceof CollectionUpdateAction that
+				&& getPrimarySortClassifier().equals( o.getPrimarySortClassifier() ) ) {
+			final CollectionPersister persister = getPersister();
+			boolean hasDeletes = this.getCollection().getDeletes( persister, false ).hasNext();
+			boolean otherHasDeletes = that.getCollection().getDeletes( persister, false ).hasNext();
+			if ( hasDeletes && !otherHasDeletes ) {
+				return -1;
+			}
+			if ( otherHasDeletes && !hasDeletes ) {
+				return 1;
+			}
+		}
+		return super.compareTo( o );
 	}
 
 	private void preUpdate() {

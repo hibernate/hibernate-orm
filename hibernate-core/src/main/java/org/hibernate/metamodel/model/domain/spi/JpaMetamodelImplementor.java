@@ -21,6 +21,7 @@ public interface JpaMetamodelImplementor extends JpaMetamodel {
 	MappingMetamodel getMappingMetamodel();
 
 	RootGraphImplementor<?> findEntityGraphByName(String name);
+	void addNamedEntityGraph(String graphName, RootGraphImplementor<?> rootGraph);
 
 	<T> List<EntityGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityClass);

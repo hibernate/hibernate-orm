@@ -928,7 +928,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getMappingMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
 	@Override

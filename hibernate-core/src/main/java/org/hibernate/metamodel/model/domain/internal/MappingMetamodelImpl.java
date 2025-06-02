@@ -7,7 +7,6 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +21,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.CacheImplementor;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -558,60 +556,6 @@ public class MappingMetamodelImpl
 	@Override
 	public CollectionPersister findCollectionDescriptor(String role) {
 		return collectionPersisterMap.get( role );
-	}
-
-	@Override
-	public void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph) {
-		jpaMetamodel.addNamedEntityGraph( graphName, entityGraph );
-	}
-
-	private RootGraph<?> findEntityGraphByName(String name) {
-		return jpaMetamodel.findEntityGraphByName( name );
-	}
-
-	@Override
-	public RootGraph<?> findNamedGraph(String name) {
-		return findEntityGraphByName( name );
-	}
-
-	@Override
-	public void forEachNamedGraph(Consumer<RootGraph<?>> action) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public RootGraph<?> defaultGraph(String entityName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public RootGraph<?> defaultGraph(Class<?> entityJavaType) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public RootGraph<?> defaultGraph(EntityPersister entityDescriptor) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public RootGraph<?> defaultGraph(EntityDomainType<?> entityDomainType) {
-		return null;
-	}
-
-	@Override
-	public List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public List<RootGraph<?>> findRootGraphsForType(String baseEntityName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor) {
-		return null;
 	}
 
 	@Override

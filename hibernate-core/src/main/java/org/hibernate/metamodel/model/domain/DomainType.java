@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * <p>
  * Encapsulates a {@link JavaType} describing the more rudimentary aspects
  * of the Java type. The {@code DomainType} is a higher-level construct
- * incorporating information such as bean properties, constructors, etc.
+ * incorporating information such as bean properties, constructors, and so on.
  *
  * @implNote The actual JPA type system is more akin to {@link SimpleDomainType}.
  *           This contract represents a "higher level" abstraction, allowing

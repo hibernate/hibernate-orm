@@ -13,7 +13,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -100,6 +99,9 @@ public interface JpaMetamodel extends Metamodel {
 
 	String qualifyImportableName(String queryName);
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Enumerations and Java constants (useful for interpreting HQL)
+
 	@Nullable Set<String> getEnumTypesForValue(String enumValue);
 
 	EnumJavaType<?> getEnumType(String className);
@@ -122,15 +124,12 @@ public interface JpaMetamodel extends Metamodel {
 	@Override
 	<X> EmbeddableDomainType<X> embeddable(Class<X> cls);
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity graphs
 
-	void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph);
+	EntityGraph<?> findEntityGraphByName(String name);
 
-	RootGraph<?> findEntityGraphByName(String name);
-
-	<T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
+	<T> List<? extends EntityGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
 	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType);
 }

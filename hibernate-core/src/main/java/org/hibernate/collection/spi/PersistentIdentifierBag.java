@@ -300,6 +300,18 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	}
 
 	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
+		int deletes = snap.size();
+		for ( E value : collection ) {
+			if ( value != null ) {
+				deletes --;
+			}
+		}
+		return deletes > 0;
+	}
+
+	@Override
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
 		throw new UnsupportedOperationException("Bags don't have indexes");
 	}

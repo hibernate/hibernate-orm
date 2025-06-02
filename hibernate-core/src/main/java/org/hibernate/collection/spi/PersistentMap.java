@@ -448,6 +448,16 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 	}
 
 	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		for ( Entry<?,?> e : ((Map<?,?>) getSnapshot()).entrySet() ) {
+			if ( e.getValue() != null && map.get( e.getKey() ) == null ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final Map<?,?> sn = (Map<?,?>) getSnapshot();
 		final Entry<?,?> e = (Entry<?,?>) entry;

@@ -332,6 +332,38 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	}
 
 	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final List<?> sn = (List<?>) getSnapshot();
+		final Iterator<?> olditer = sn.iterator();
+		int i = 0;
+		final Iterator<E> bagiter = collection.iterator();
+		while ( olditer.hasNext() ) {
+			final Object old = olditer.next();
+			final Iterator<E> newiter = collection.iterator();
+			boolean found = false;
+			if ( collection.size() > i && i++ > 0 && elementType.isSame( old, bagiter.next() ) ) {
+				//a shortcut if its location didn't change!
+				found = true;
+			}
+			else {
+				//search for it
+				//note that this code is incorrect for other than one-to-many
+				while ( newiter.hasNext() ) {
+					if ( elementType.isSame( old, newiter.next() ) ) {
+						found = true;
+						break;
+					}
+				}
+			}
+			if ( !found ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final List<?> sn = (List<?>) getSnapshot();
 		if ( sn.size() > i && elemType.isSame( sn.get( i ), entry ) ) {

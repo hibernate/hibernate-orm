@@ -81,10 +81,10 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			predicate = tableGroupJoin.getPredicate();
 		}
 		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 

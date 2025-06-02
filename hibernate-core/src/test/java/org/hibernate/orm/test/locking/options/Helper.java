@@ -143,7 +143,7 @@ public class Helper {
 		}
 	}
 
-	public static void checkSql(String sql, Dialect dialect, Table... tablesFetched) {
+	public static void checkSql(String sql, Dialect dialect, TableInformation... tablesFetched) {
 		// note: assume `tables` is in order
 		final PessimisticLockStyle pessimisticLockStyle = dialect.getPessimisticLockStyle();
 		if ( pessimisticLockStyle == PessimisticLockStyle.CLAUSE ) {
@@ -155,7 +155,7 @@ public class Helper {
 			else if ( rowLockStrategy == RowLockStrategy.TABLE ) {
 				final StringBuilder buffer = new StringBuilder();
 				boolean firstPass = true;
-				for ( Table table : tablesFetched ) {
+				for ( TableInformation table : tablesFetched ) {
 					if ( firstPass ) {
 						firstPass = false;
 					}
@@ -170,7 +170,7 @@ public class Helper {
 				assert rowLockStrategy == RowLockStrategy.COLUMN;
 				final StringBuilder buffer = new StringBuilder();
 				boolean firstPass = true;
-				for ( Table table : tablesFetched ) {
+				for ( TableInformation table : tablesFetched ) {
 					if ( firstPass ) {
 						firstPass = false;
 					}
@@ -188,7 +188,7 @@ public class Helper {
 		else {
 			// Transact SQL (mssql, sybase) "table hint"-style locking
 			final LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-			for ( Table table : tablesFetched ) {
+			for ( TableInformation table : tablesFetched ) {
 				final String booksTableReference = dialect.appendLockHint( lockOptions, table.getTableAlias() );
 				assertThat( sql ).contains( booksTableReference );
 			}

@@ -28,6 +28,8 @@ public class Report {
 	@Version
 	private Integer revision = -1;
 
+	private String title;
+
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "reporter_fk")
 	private Person reporter;

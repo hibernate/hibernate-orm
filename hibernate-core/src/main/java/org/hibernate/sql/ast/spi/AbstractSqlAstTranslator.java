@@ -34,7 +34,9 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
@@ -5655,7 +5657,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		assert getStatementStack().getCurrent() instanceof UpdateStatement updateStatement
 			&& updateStatement.getTargetTable() == tableGroup.getPrimaryTableReference();
 		appendSql( getDual() );
-		renderTableReferenceJoins( tableGroup );
+		renderTableReferenceJoins( tableGroup, LockMode.NONE );
 		processNestedTableGroupJoins( tableGroup, null );
 		processTableGroupJoins( tableGroup );
 		if ( tableGroup.getModelPart() instanceof EntityPersister persister ) {
@@ -5697,7 +5699,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			addAdditionalWherePredicate( determineLateralEmulationPredicate( tableGroup ) );
 		}
 
-		renderTableReferenceJoins( tableGroup );
+		final LockMode lockMode = getEffectiveLockMode();
+		renderTableReferenceJoins( tableGroup, lockMode );
 		processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
 		if ( tableGroupJoinCollector != null ) {
 			tableGroupJoinCollector.addAll( tableGroup.getTableGroupJoins() );
@@ -5713,7 +5716,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate, List<TableGroupJoin> tableGroupJoinCollector) {
+	/**
+	 * Called to render the joined TableGroup from a {@linkplain TableGroupJoin}
+	 * @param tableGroup The joined TableGroup
+	 * @param tableGroupJoinCollector Collector for any nested TableGroupJoins
+	 */
+	protected void renderJoinedTableGroup(TableGroup tableGroup, Predicate predicate, List<TableGroupJoin> tableGroupJoinCollector) {
+		final LockMode lockModeToApply = determineJoinedTableGroupLockMode( tableGroup );
+
 		final boolean realTableGroup;
 		int swappedJoinIndex = -1;
 		boolean forceLeftJoin = false;
@@ -5746,7 +5756,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 					// Render the table reference of the table reference join first
 					final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins().get( swappedJoinIndex );
-					renderNamedTableReference( tableReferenceJoin.getJoinedTableReference(), LockMode.NONE );
+					renderNamedTableReference( tableReferenceJoin.getJoinedTableReference(), lockModeToApply );
 					// along with the predicate for the table group
 					if ( predicate != null ) {
 						appendSql( " on " );
@@ -5772,15 +5782,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( OPEN_PARENTHESIS );
 		}
 
-		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
-		final boolean usesLockHint = renderPrimaryTableReference( tableGroup, effectiveLockMode );
+		renderPrimaryTableReference( tableGroup, lockModeToApply );
 		final List<TableGroupJoin> tableGroupJoins;
 
 		if ( realTableGroup ) {
 			// For real table groups, we collect all normal table group joins within that table group
 			// The purpose of that is to render them in-order outside of the group/parenthesis
 			// This is necessary for at least Derby but is also a lot easier to read
-			renderTableReferenceJoins( tableGroup );
+			renderTableReferenceJoins( tableGroup, lockModeToApply );
 			if ( tableGroupJoinCollector == null ) {
 				tableGroupJoins = new ArrayList<>();
 				processNestedTableGroupJoins( tableGroup, tableGroupJoins );
@@ -5814,7 +5823,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( !realTableGroup ) {
-			renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
+			renderTableReferenceJoins( tableGroup, lockModeToApply, swappedJoinIndex, forceLeftJoin );
 			processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
 		}
 		if ( tableGroupJoinCollector != null ) {
@@ -5836,6 +5845,32 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				registerAffectedTable( querySpaces[i] );
 			}
 		}
+	}
+
+	private LockMode determineJoinedTableGroupLockMode(TableGroup joinedTableGroup) {
+		final Locking.Scope lockingScope = lockOptions == null ? Locking.Scope.ROOT_ONLY : lockOptions.getScope();
+
+		if ( lockingScope == Locking.Scope.ROOT_ONLY ) {
+			return LockMode.NONE;
+		}
+
+		if ( lockingScope == Locking.Scope.INCLUDE_FETCHES ) {
+			return joinedTableGroup.isFetched() ? getEffectiveLockMode() : LockMode.NONE;
+		}
+
+		if ( lockingScope == Locking.Scope.INCLUDE_COLLECTIONS ) {
+			// if the TableGroup is an owned (aka, non-inverse) collection, lock it
+			if ( joinedTableGroup.getModelPart() instanceof PluralAttributeMapping attrMapping ) {
+				if ( !attrMapping.getCollectionDescriptor().isInverse() ) {
+					// owned collection
+					if ( attrMapping.getElementDescriptor() instanceof BasicValuedCollectionPart ) {
+						return getEffectiveLockMode();
+					}
+				}
+			}
+		}
+
+		return LockMode.NONE;
 	}
 
 	protected boolean needsLocking(QuerySpec querySpec) {
@@ -6122,11 +6157,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		affectedTableNames.add( tableExpression );
 	}
 
-	protected void renderTableReferenceJoins(TableGroup tableGroup) {
-		renderTableReferenceJoins( tableGroup, -1, false );
+	protected void renderTableReferenceJoins(TableGroup tableGroup, LockMode lockMode) {
+		renderTableReferenceJoins( tableGroup, lockMode, -1, false );
 	}
 
-	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, LockMode lockMode, int swappedJoinIndex, boolean forceLeftJoin) {
 		final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
 		if ( joins == null || joins.isEmpty() ) {
 			return;
@@ -6154,7 +6189,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				appendSql( "join " );
 
-				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), lockMode );
 
 				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
 					appendSql( " on " );
@@ -6220,10 +6255,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			predicate = tableGroupJoin.getPredicate();
 		}
 		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 		if ( lockingClauseStrategy != null ) {
 			lockingClauseStrategy.registerJoin( tableGroupJoin );

@@ -149,23 +149,19 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	@Override
 	public String toString() {
-		return unqualify( getClass().getName() ) + infoString( collectionRole, key );
+		return unqualify( getClass().getName() )
+				+ infoString( collectionRole, key );
 	}
 
 	@Override
-	public int compareTo(ComparableExecutable o) {
+	public int compareTo(ComparableExecutable executable) {
 		// sort first by role name
-		final int roleComparison = collectionRole.compareTo( o.getPrimarySortClassifier() );
-		if ( roleComparison != 0 ) {
-			return roleComparison;
-		}
-		else {
-			//then by fk
-			return persister.getAttributeMapping().getKeyDescriptor().compare( key, o.getSecondarySortIndex() );
-//			//noinspection unchecked
-//			final JavaType<Object> javaType = (JavaType<Object>) persister.getAttributeMapping().getKeyDescriptor().getJavaType();
-//			return javaType.getComparator().compare( key, action.key );
-		}
+		final int roleComparison = collectionRole.compareTo( executable.getPrimarySortClassifier() );
+		return roleComparison != 0
+				? roleComparison
+				//then by fk
+				: persister.getAttributeMapping().getKeyDescriptor()
+						.compare( key, executable.getSecondarySortIndex() );
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {

@@ -148,13 +148,14 @@ public abstract class EntityAction
 	}
 
 	@Override
-	public int compareTo(ComparableExecutable o) {
+	public int compareTo(ComparableExecutable executable) {
 		//sort first by entity name
-		final int roleComparison = entityName.compareTo( o.getPrimarySortClassifier() );
+		final int roleComparison = entityName.compareTo( executable.getPrimarySortClassifier() );
 		return roleComparison != 0
 				? roleComparison
 				//then by id
-				: persister.getIdentifierType().compare( id, o.getSecondarySortIndex(), session.getSessionFactory() );
+				: persister.getIdentifierType()
+						.compare( id, executable.getSecondarySortIndex(), session.getFactory() );
 	}
 
 	@Override
@@ -181,8 +182,12 @@ public abstract class EntityAction
 		// guard against NullPointerException
 		if ( session != null ) {
 			this.session = session;
-			this.persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
-			this.instance = session.getPersistenceContext().getEntity( session.generateEntityKey( id, persister ) );
+			this.persister =
+					session.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
+			this.instance =
+					session.getPersistenceContext()
+							.getEntity( session.generateEntityKey( id, persister ) );
 		}
 	}
 

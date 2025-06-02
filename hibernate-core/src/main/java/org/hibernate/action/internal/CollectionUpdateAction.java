@@ -109,9 +109,9 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 
 	@Override
-	public int compareTo(ComparableExecutable o) {
-		if ( o instanceof CollectionUpdateAction that
-				&& getPrimarySortClassifier().equals( o.getPrimarySortClassifier() ) ) {
+	public int compareTo(ComparableExecutable executable) {
+		if ( executable instanceof CollectionUpdateAction that
+				&& getPrimarySortClassifier().equals( executable.getPrimarySortClassifier() ) ) {
 			final CollectionPersister persister = getPersister();
 			boolean hasDeletes = this.getCollection().getDeletes( persister, false ).hasNext();
 			boolean otherHasDeletes = that.getCollection().getDeletes( persister, false ).hasNext();
@@ -122,7 +122,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 				return 1;
 			}
 		}
-		return super.compareTo( o );
+		return super.compareTo( executable );
 	}
 
 	private void preUpdate() {

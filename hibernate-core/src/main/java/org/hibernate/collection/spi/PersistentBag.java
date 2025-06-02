@@ -335,6 +335,11 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	public boolean hasDeletes(CollectionPersister persister) {
 		final Type elementType = persister.getElementType();
 		final List<?> sn = (List<?>) getSnapshot();
+		if ( sn == null) {
+			// workaround for missing snapshot
+			// related to HHH-13053
+			return false;
+		}
 		final Iterator<?> olditer = sn.iterator();
 		int i = 0;
 		final Iterator<E> bagiter = collection.iterator();

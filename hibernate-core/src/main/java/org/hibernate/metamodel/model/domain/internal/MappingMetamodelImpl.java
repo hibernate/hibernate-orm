@@ -68,7 +68,6 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
@@ -566,19 +565,8 @@ public class MappingMetamodelImpl
 		jpaMetamodel.addNamedEntityGraph( graphName, entityGraph );
 	}
 
-	@Override
-	public RootGraph<?> findEntityGraphByName(String name) {
+	private RootGraph<?> findEntityGraphByName(String name) {
 		return jpaMetamodel.findEntityGraphByName( name );
-	}
-
-	@Override
-	public <T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType) {
-		return jpaMetamodel.getNamedEntityGraphs( entityType );
-	}
-
-	@Override
-	public <T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
-		return jpaMetamodel.findEntityGraphsByJavaType( entityClass );
 	}
 
 	@Override

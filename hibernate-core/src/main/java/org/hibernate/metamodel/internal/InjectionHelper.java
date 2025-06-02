@@ -10,7 +10,6 @@ import org.hibernate.boot.query.NamedQueryDefinition;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 
 import java.lang.reflect.Field;
 
@@ -22,7 +21,7 @@ public class InjectionHelper {
 	public static void injectEntityGraph(
 			NamedEntityGraphDefinition definition,
 			Class<?> metamodelClass,
-			JpaMetamodel jpaMetamodel) {
+			JpaMetamodelImplementor jpaMetamodel) {
 		if ( metamodelClass != null ) {
 			try {
 				injectField(

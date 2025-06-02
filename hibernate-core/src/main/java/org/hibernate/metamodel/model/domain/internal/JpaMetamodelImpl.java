@@ -400,13 +400,13 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public <T> List<RootGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
+	public <T> List<EntityGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		final EntityDomainType<T> entityType = entity( entityClass );
 		if ( entityType == null ) {
 			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
 		}
 		else {
-			final List<RootGraph<? super T>> results = new ArrayList<>();
+			final List<EntityGraph<? super T>> results = new ArrayList<>();
 			for ( var entityGraph : entityGraphMap.values() ) {
 				if ( entityGraph.appliesTo( entityType ) ) {
 					@SuppressWarnings("unchecked") // safe, we just checked

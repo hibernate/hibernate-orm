@@ -641,9 +641,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return sqlStringGenerationContext;
 	}
 
-	@Override @SuppressWarnings({"rawtypes","unchecked"})
+	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return (List) getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
+		return getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage

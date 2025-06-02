@@ -4,11 +4,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.EntityGraph;
 
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -124,12 +121,4 @@ public interface JpaMetamodel extends Metamodel {
 	@Override
 	<X> EmbeddableDomainType<X> embeddable(Class<X> cls);
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Entity graphs
-
-	EntityGraph<?> findEntityGraphByName(String name);
-
-	<T> List<? extends EntityGraph<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
-
-	<T> Map<String, EntityGraph<? extends T>> getNamedEntityGraphs(Class<T> entityType);
 }

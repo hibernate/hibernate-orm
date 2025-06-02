@@ -27,7 +27,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -355,8 +354,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		try {
 			final Field referencedField = getJavaField( className, fieldName );
 			if ( referencedField != null ) {
-				return getTypeConfiguration()
-						.getJavaTypeRegistry()
+				return getTypeConfiguration().getJavaTypeRegistry()
 						.getDescriptor( referencedField.getType() );
 			}
 		}
@@ -386,11 +384,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return null;
 	}
 
-	public void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph) {
-		final RootGraphImplementor<?> rootGraph = (RootGraphImplementor<?>) entityGraph;
+	@Override
+	public void addNamedEntityGraph(String graphName, RootGraphImplementor<?> rootGraph) {
 		final EntityGraph<?> old = entityGraphMap.put( graphName, rootGraph.makeImmutableCopy( graphName ) );
 		if ( old != null ) {
-			log.debugf( "EntityGraph being replaced on EntityManagerFactory for name %s", graphName );
+			log.debugf( "EntityGraph named '%s' was replaced", graphName );
 		}
 	}
 

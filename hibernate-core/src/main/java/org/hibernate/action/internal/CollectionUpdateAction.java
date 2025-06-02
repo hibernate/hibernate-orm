@@ -108,13 +108,17 @@ public final class CollectionUpdateAction extends CollectionAction {
 		}
 	}
 
+	/**
+	 * Sort update actions with deletions to the start of the line
+	 * in order to limit the chance of a unique key violation.
+	 */
 	@Override
 	public int compareTo(ComparableExecutable executable) {
 		if ( executable instanceof CollectionUpdateAction that
 				&& getPrimarySortClassifier().equals( executable.getPrimarySortClassifier() ) ) {
 			final CollectionPersister persister = getPersister();
-			boolean hasDeletes = this.getCollection().getDeletes( persister, false ).hasNext();
-			boolean otherHasDeletes = that.getCollection().getDeletes( persister, false ).hasNext();
+			final boolean hasDeletes = this.getCollection().hasDeletes( persister );
+			final boolean otherHasDeletes = that.getCollection().hasDeletes( persister );
 			if ( hasDeletes && !otherHasDeletes ) {
 				return -1;
 			}

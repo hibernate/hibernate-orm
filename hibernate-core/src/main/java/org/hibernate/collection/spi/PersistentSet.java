@@ -361,6 +361,32 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	}
 
 	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final java.util.Map<?,?> sn = (java.util.Map<?,?>) getSnapshot();
+
+		Iterator<?> itr = sn.keySet().iterator();
+		while ( itr.hasNext() ) {
+			if ( !set.contains( itr.next() ) ) {
+				// the element has been removed from the set
+				return true;
+			}
+		}
+
+		itr = set.iterator();
+		while ( itr.hasNext() ) {
+			final Object test = itr.next();
+			final Object oldValue = sn.get( test );
+			if ( oldValue!=null && elementType.isDirty( test, oldValue, getSession() ) ) {
+				// the element has changed
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final Object oldValue = ( (java.util.Map<?,?>) getSnapshot() ).get( entry );
 		// note that it might be better to iterate the snapshot but this is safe,

@@ -219,7 +219,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	}
 
 	@Override
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
+	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		final List<Integer> deletes = new ArrayList<>();
 		final Serializable sn = getSnapshot();
 		final int snSize = Array.getLength( sn );
@@ -240,6 +240,22 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 			}
 		}
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) throws HibernateException {
+		final Serializable sn = getSnapshot();
+		final int snSize = Array.getLength( sn );
+		final int arraySize = Array.getLength( array );
+		if ( snSize > arraySize ) {
+			return true;
+		}
+		for ( int i=0; i<snSize; i++ ) {
+			if ( Array.get( array, i ) == null && Array.get( sn, i ) != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

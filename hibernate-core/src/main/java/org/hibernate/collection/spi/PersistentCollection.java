@@ -317,6 +317,17 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula);
 
 	/**
+	 * Does this collection have any elements which must be deleted?
+	 *
+	 * @param persister The collection persister
+	 *
+	 * @return {@code true} if elements were removed
+	 *
+	 * @since 7
+	 */
+	boolean hasDeletes(CollectionPersister persister);
+
+	/**
 	 * Is this the wrapper for the given collection instance?
 	 *
 	 * @param collection The collection to check whether this is wrapping it

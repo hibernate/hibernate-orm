@@ -386,7 +386,6 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		return null;
 	}
 
-	@Override
 	public void addNamedEntityGraph(String graphName, RootGraph<?> entityGraph) {
 		final RootGraphImplementor<?> rootGraph = (RootGraphImplementor<?>) entityGraph;
 		final EntityGraph<?> old = entityGraphMap.put( graphName, rootGraph.makeImmutableCopy( graphName ) );

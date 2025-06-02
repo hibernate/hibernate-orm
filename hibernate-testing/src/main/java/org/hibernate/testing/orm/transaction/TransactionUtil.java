@@ -147,6 +147,32 @@ public abstract class TransactionUtil {
 		}
 	}
 
+	public static void updateTable(SessionFactoryScope factoryScope, String tableName, String columnName, boolean expectingToBlock) {
+		try {
+			AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
+				factoryScope.inTransaction( (session) -> {
+					//noinspection deprecation
+					final String sql = String.format( "update %s set %s = null", tableName, columnName );
+					session.createNativeQuery( sql ).executeUpdate();
+					if ( expectingToBlock ) {
+						fail( "Expecting update to " + tableName + " to block dues to locks" );
+					}
+				} );
+			} );
+		}
+		catch (AsyncExecutor.TimeoutException expected) {
+			if ( !expectingToBlock ) {
+				fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", expected );
+			}
+		}
+		catch (RuntimeException re) {
+			if ( re.getCause() instanceof ConstraintViolationException cve ) {
+				throw cve;
+			}
+			throw re;
+		}
+	}
+
 	public static void deleteFromTable(SessionFactoryScope factoryScope, String tableName, boolean expectingToBlock) {
 		try {
 			AsyncExecutor.executeAsync( 2, TimeUnit.SECONDS, () -> {
@@ -161,7 +187,7 @@ public abstract class TransactionUtil {
 		}
 		catch (AsyncExecutor.TimeoutException expected) {
 			if ( !expectingToBlock ) {
-				fail( "Expecting delete from " + tableName + " succeed, but failed (presumably due to locks)" );
+				fail( "Expecting delete from " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", expected );
 			}
 		}
 		catch (RuntimeException re) {

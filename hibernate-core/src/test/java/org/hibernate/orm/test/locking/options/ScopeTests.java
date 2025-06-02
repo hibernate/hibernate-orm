@@ -185,7 +185,6 @@ public class ScopeTests {
 			session.lock( theTalisman, PESSIMISTIC_WRITE, EXTENDED );
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), BOOKS );
-			TransactionUtil.deleteFromTable( factoryScope, BOOKS.getTableName(), true );
 			// Again, for strict compliance, EXTENDED here should lock `book_genres` but we do not
 			TransactionUtil.deleteFromTable( factoryScope, BOOK_GENRES.getTableName(), false );
 			TransactionUtil.deleteFromTable( factoryScope, BOOK_AUTHORS.getTableName(), false );
@@ -204,7 +203,7 @@ public class ScopeTests {
 			session.refresh( theTalisman, PESSIMISTIC_WRITE );
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), BOOKS );
-			TransactionUtil.deleteFromTable( factoryScope, BOOKS.getTableName(), true );
+			TransactionUtil.deleteFromTable( factoryScope, PERSONS.getTableName(), false );
 			TransactionUtil.deleteFromTable( factoryScope, BOOK_GENRES.getTableName(), false );
 			TransactionUtil.deleteFromTable( factoryScope, BOOK_AUTHORS.getTableName(), false );
 		} );
@@ -237,19 +236,21 @@ public class ScopeTests {
 			session.find( Report.class, 2, PESSIMISTIC_WRITE );
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), REPORTS );
-			TransactionUtil.deleteFromTable( factoryScope, REPORTS.getTableName(), true );
-			TransactionUtil.deleteFromTable( factoryScope, PERSONS.getTableName(), willAggressivelyLockJoinedTables( session.getDialect() ) );
-			TransactionUtil.deleteFromTable( factoryScope, REPORT_LABELS.getTableName(), willAggressivelyLockJoinedTables( session.getDialect() ) );
+			TransactionUtil.updateTable( factoryScope, REPORTS.getTableName(), "title", true );
+			TransactionUtil.updateTable( factoryScope, REPORT_LABELS.getTableName(), "txt", willAggressivelyLockJoinedTables( session.getDialect() ) );
+			TransactionUtil.updateTable( factoryScope, PERSONS.getTableName(), "name", willAggressivelyLockJoinedTables( session.getDialect() ) );
 		} );
 	}
 
 	private boolean willAggressivelyLockJoinedTables(Dialect dialect) {
 		// true when we have something like:
+		//
 		//		select ...
 		//		from books b
 		//			join persons p on ...
 		//		for update
-		// and the database extends for-update to the joins
+		///
+		// and the database extends for-update to `persons`
 		//
 		// todo : this is something we should consider and disallow the situation
 

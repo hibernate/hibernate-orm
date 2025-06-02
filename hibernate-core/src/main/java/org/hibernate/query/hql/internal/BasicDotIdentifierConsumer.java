@@ -7,11 +7,11 @@ package org.hibernate.query.hql.internal;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
@@ -26,6 +26,8 @@ import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
 
 /**
  * A {@link DotIdentifierConsumer} used to interpret paths outside any
@@ -78,7 +80,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		}
 		pathSoFar.append( identifier );
 
-		HqlLogging.QUERY_LOGGER.tracef(
+		QUERY_LOGGER.tracef(
 				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
 				identifier,
 				isBase,
@@ -119,7 +121,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				String identifier,
 				boolean isTerminal,
 				SqmCreationState creationState) {
-			HqlLogging.QUERY_LOGGER.tracef(
+			QUERY_LOGGER.tracef(
 					"BaseLocalSequencePart#consumeIdentifier( %s, %s, %s ) - %s",
 					identifier,
 					isBase,
@@ -129,50 +131,89 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 
 			if ( isBase ) {
 				isBase = false;
-
-				final SqmPathRegistry sqmPathRegistry =
-						creationState.getProcessingStateStack().getCurrent()
-								.getPathRegistry();
-
-				final SqmFrom<?,?> pathRootByAlias = sqmPathRegistry.findFromByAlias( identifier, true );
-				if ( pathRootByAlias != null ) {
-					// identifier is an alias (identification variable)
-					validateAsRoot( pathRootByAlias );
-					return isTerminal ? pathRootByAlias : new DomainPathPart( pathRootByAlias );
-				}
-
-				final SqmFrom<?, ?> pathRootByExposedNavigable = sqmPathRegistry.findFromExposing( identifier );
-				if ( pathRootByExposedNavigable != null ) {
-					// identifier is an "unqualified attribute reference"
-					validateAsRoot( pathRootByExposedNavigable );
-					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier, true );
-					return isTerminal ? sqmPath : new DomainPathPart( sqmPath );
+				final SemanticPathPart pathPart =
+						resolvePath( identifier, isTerminal, creationState );
+				if ( pathPart != null ) {
+					return pathPart;
 				}
 			}
 
-			// at the moment, below this point we wait to resolve the sequence until we hit the terminal
+			// Below this point we wait to resolve the sequence until we hit the terminal.
+			// We could check for "intermediate resolution", but that comes with a performance hit.
+			// Consider:
 			//
-			// we could check for "intermediate resolution", but that comes with a performance hit.  E.g., consider
+			//		org.hibernate.test.Sex.MALE
 			//
-			//		`org.hibernate.test.Sex.MALE`
-			//
-			// we could check `org` and then `org.hibernate` and then `org.hibernate.test` and then ... until
-			// we know it is a package, class or entity name.  That gets expensive though.  For now, plan on
-			// resolving these at the terminal
-			//
-			// todo (6.0) : finish this logic.  and see above note in `! isTerminal` block
+			// We could check 'org', then 'org.hibernate', then 'org.hibernate.test' and so on until
+			// we know it's a package, class or entity name. That's more expensive though, and the
+			// error message would not be better.
 
+			return isTerminal ? resolveTerminal( creationState ) : this;
+		}
 
-			if ( ! isTerminal ) {
-				return this;
-			}
-
+		private SemanticPathPart resolveTerminal(SqmCreationState creationState) {
 			final SqmCreationContext creationContext = creationState.getCreationContext();
-			final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
-			final String path = pathSoFar.toString();
-			final String importableName = jpaMetamodel.qualifyImportableName( path );
 			final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-			if ( importableName != null ) {
+			final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
+			final QueryEngine queryEngine = creationContext.getQueryEngine();
+
+			final SemanticPathPart literalType =
+					resolveLiteralType( jpaMetamodel, nodeBuilder );
+			if ( literalType != null ) {
+				return literalType;
+			}
+
+			final SqmFunctionDescriptor functionDescriptor =
+					resolveFunction( queryEngine );
+			if ( functionDescriptor != null ) {
+				return functionDescriptor.generateSqmExpression( null, queryEngine );
+			}
+
+			final SemanticPathPart literalJava =
+					resolveLiteralJavaElement( jpaMetamodel, nodeBuilder );
+			if ( literalJava != null ) {
+				return literalJava;
+			}
+
+			throw new SemanticException( "Could not interpret path expression '" + pathSoFar + "'" );
+		}
+
+		private SemanticPathPart resolvePath(String identifier, boolean isTerminal, SqmCreationState creationState) {
+			final SqmPathRegistry sqmPathRegistry =
+					creationState.getProcessingStateStack().getCurrent()
+							.getPathRegistry();
+
+			final SqmFrom<?,?> pathRootByAlias =
+					sqmPathRegistry.findFromByAlias( identifier, true );
+			if ( pathRootByAlias != null ) {
+				// identifier is an alias (identification variable)
+				validateAsRoot( pathRootByAlias );
+				return isTerminal ? pathRootByAlias : new DomainPathPart( pathRootByAlias );
+			}
+
+			final SqmFrom<?, ?> pathRootByExposedNavigable =
+					sqmPathRegistry.findFromExposing( identifier );
+			if ( pathRootByExposedNavigable != null ) {
+				// identifier is an "unqualified attribute reference"
+				validateAsRoot( pathRootByExposedNavigable );
+				final SqmPath<?> sqmPath =
+						pathRootByExposedNavigable.get( identifier, true );
+				return isTerminal ? sqmPath : new DomainPathPart( sqmPath );
+			}
+
+			return null;
+		}
+
+		private SqmFunctionDescriptor resolveFunction(QueryEngine queryEngine) {
+			return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( pathSoFar.toString() );
+		}
+
+		private SemanticPathPart resolveLiteralType(JpaMetamodel jpaMetamodel, NodeBuilder nodeBuilder) {
+			final String importableName = jpaMetamodel.qualifyImportableName( pathSoFar.toString() );
+			if ( importableName == null ) {
+				return null;
+			}
+			else {
 				final ManagedDomainType<?> managedType = jpaMetamodel.managedType( importableName );
 				if ( managedType instanceof SqmEntityDomainType<?> entityDomainType ) {
 					return new SqmLiteralEntityType<>( entityDomainType, nodeBuilder );
@@ -180,36 +221,34 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				else if ( managedType instanceof SqmEmbeddableDomainType<?> embeddableDomainType ) {
 					return new SqmLiteralEmbeddableType<>( embeddableDomainType, nodeBuilder );
 				}
+				else {
+					return null;
+				}
 			}
+		}
 
-			final SqmFunctionDescriptor functionDescriptor =
-					creationContext.getQueryEngine().getSqmFunctionRegistry()
-							.findFunctionDescriptor( path );
-			if ( functionDescriptor != null ) {
-				return functionDescriptor.generateSqmExpression( null, creationContext.getQueryEngine() );
-			}
-
+		private SemanticPathPart resolveLiteralJavaElement(JpaMetamodel metamodel, NodeBuilder nodeBuilder) {
+			final String path = pathSoFar.toString();
 			// see if it is a named field/enum reference
 			final int splitPosition = path.lastIndexOf( '.' );
 			if ( splitPosition > 0 ) {
 				final String prefix = path.substring( 0, splitPosition );
 				final String terminal = path.substring( splitPosition + 1 );
 				try {
-					final EnumJavaType<?> enumType = jpaMetamodel.getEnumType( prefix );
+					final EnumJavaType<?> enumType = metamodel.getEnumType( prefix );
 					if ( enumType != null ) {
-						return sqmEnumLiteral( jpaMetamodel, enumType, terminal, nodeBuilder );
+						return sqmEnumLiteral( metamodel, enumType, terminal, nodeBuilder );
 					}
 
-					final JavaType<?> fieldJtdTest = jpaMetamodel.getJavaConstantType( prefix, terminal );
+					final JavaType<?> fieldJtdTest = metamodel.getJavaConstantType( prefix, terminal );
 					if ( fieldJtdTest != null ) {
-						return sqmFieldLiteral( jpaMetamodel, prefix, terminal, fieldJtdTest, nodeBuilder );
+						return sqmFieldLiteral( metamodel, prefix, terminal, fieldJtdTest, nodeBuilder );
 					}
 				}
 				catch (Exception ignore) {
 				}
 			}
-
-			throw new SemanticException( "Could not interpret path expression '" + path + "'" );
+			return null;
 		}
 
 		private static <E> SqmFieldLiteral<E> sqmFieldLiteral(

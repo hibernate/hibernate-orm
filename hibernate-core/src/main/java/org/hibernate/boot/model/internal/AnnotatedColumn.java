@@ -393,9 +393,7 @@ public class AnnotatedColumn {
 			);
 		}
 
-		return getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy()
-				.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() )
-				.render( database.getDialect() );
+		return implicitName.render( database.getDialect() );
 	}
 
 	public String getName() {

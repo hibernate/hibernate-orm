@@ -2573,6 +2573,15 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Usually Oracle-style (except for Informix which quite close to MySQL-style)
+	 *
+	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
+	 */
+	public void format_toChar_gaussdb() {
+		functionRegistry.register( "format", new GaussDBFormatFunction( "to_char", typeConfiguration ) );
+	}
+
+	/**
 	 * MySQL-style (also Ingres)
 	 *
 	 * @see org.hibernate.dialect.MySQLDialect#datetimeFormat
@@ -2663,6 +2672,14 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * GaussDB array() constructor function
+	 */
+	public void array_gaussdb() {
+		functionRegistry.register( "array", new GaussDBArrayConstructorFunction( false ) );
+		functionRegistry.register( "array_list", new GaussDBArrayConstructorFunction( true ) );
+	}
+
+	/**
 	 * Google Spanner array() constructor function
 	 */
 	public void array_spanner() {
@@ -2747,6 +2764,15 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * GaussDB array contains operator
+	 */
+	public void arrayContains_gaussdb() {
+		functionRegistry.register( "array_contains_nullable", new GaussDBArrayContainsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, typeConfiguration ) );
+	}
+
+	/**
 	 * Oracle array_contains() function
 	 */
 	public void arrayContains_oracle() {
@@ -2792,6 +2818,16 @@ public class CommonFunctionFactory {
 	 * CockroachDB and PostgreSQL array intersects operator
 	 */
 	public void arrayIntersects_postgresql() {
+		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
+		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
+		functionRegistry.registerAlternateKey( "array_overlaps_nullable", "array_intersects_nullable" );
+	}
+
+	/**
+	 * GaussDB array intersects operator
+	 */
+	public void arrayIntersects_gaussdb() {
 		functionRegistry.register( "array_intersects", new ArrayIntersectsOperatorFunction( false, typeConfiguration ) );
 		functionRegistry.register( "array_intersects_nullable", new ArrayIntersectsOperatorFunction( true, typeConfiguration ) );
 		functionRegistry.registerAlternateKey( "array_overlaps", "array_intersects" );
@@ -2938,6 +2974,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * PostgreSQL array_concat() function
+	 */
+	public void arrayConcat_gaussdb() {
+		functionRegistry.register( "array_concat", new GaussDBArrayConcatFunction() );
+	}
+
+	/**
 	 * Oracle array_concat() function
 	 */
 	public void arrayConcat_oracle() {
@@ -2959,6 +3002,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * GaussDB array_prepend() function
+	 */
+	public void arrayPrepend_gaussdb() {
+		functionRegistry.register( "array_prepend", new GaussDBArrayConcatElementFunction( true ) );
+	}
+
+	/**
 	 * Oracle array_prepend() function
 	 */
 	public void arrayPrepend_oracle() {
@@ -2977,6 +3027,13 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayAppend_postgresql() {
 		functionRegistry.register( "array_append", new PostgreSQLArrayConcatElementFunction( false ) );
+	}
+
+	/**
+	 * GaussDB array_append() function
+	 */
+	public void arrayAppend_gaussdb() {
+		functionRegistry.register( "array_append", new GaussDBArrayConcatElementFunction( false ) );
 	}
 
 	/**
@@ -3055,6 +3112,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * GaussDB array_set() function
+	 */
+	public void arraySet_gaussdb() {
+		functionRegistry.register( "array_set", new GaussDBArraySetFunction() );
+	}
+
+	/**
 	 * Oracle array_set() function
 	 */
 	public void arraySet_oracle() {
@@ -3085,6 +3149,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * GaussDB array_remove() function
+	 */
+	public void arrayRemove_gaussdb() {
+		functionRegistry.register( "array_remove",  new GaussDBArrayRemoveFunction());
+	}
+
+	/**
 	 * HSQL array_remove() function
 	 */
 	public void arrayRemove_hsql() {
@@ -3096,6 +3167,13 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayRemove_oracle() {
 		functionRegistry.register( "array_remove", new OracleArrayRemoveFunction() );
+	}
+
+	/**
+	 * GaussDB array_remove_index() function
+	 */
+	public void arrayRemoveIndex_gaussdb() {
+		functionRegistry.register( "array_remove_index", new GaussDBArrayRemoveIndexFunction(false) );
 	}
 
 	/**
@@ -3216,6 +3294,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * GaussDB array_replace() function
+	 */
+	public void arrayReplace_gaussdb() {
+		functionRegistry.register( "array_replace", new GaussDBArrayReplaceFunction() );
+	}
+
+	/**
 	 * H2, HSQLDB, CockroachDB and PostgreSQL array_trim() function
 	 */
 	public void arrayTrim_trim_array() {
@@ -3273,6 +3358,14 @@ public class CommonFunctionFactory {
 	public void arrayFill_postgresql() {
 		functionRegistry.register( "array_fill", new PostgreSQLArrayFillFunction( false ) );
 		functionRegistry.register( "array_fill_list", new PostgreSQLArrayFillFunction( true ) );
+	}
+
+	/**
+	 * GaussDB array_fill() function
+	 */
+	public void arrayFill_gaussdb() {
+		functionRegistry.register( "array_fill", new GaussDBArrayFillFunction( false ) );
+		functionRegistry.register( "array_fill_list", new GaussDBArrayFillFunction( true ) );
 	}
 
 	/**
@@ -3562,6 +3655,13 @@ public class CommonFunctionFactory {
 	 */
 	public void jsonObject_postgresql() {
 		functionRegistry.register( "json_object", new PostgreSQLJsonObjectFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * GaussDB json_object() function
+	 */
+	public void jsonObject_gaussdb() {
+		functionRegistry.register( "json_object", new GaussDBJsonObjectFunction( typeConfiguration ) );
 	}
 
 	/**

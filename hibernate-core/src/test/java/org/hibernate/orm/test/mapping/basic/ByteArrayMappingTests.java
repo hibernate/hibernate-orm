@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -27,6 +28,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,6 +49,7 @@ import static org.hamcrest.Matchers.isOneOf;
 public class ByteArrayMappingTests {
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB does not support byte array operations through lob type")
 	public void verifyMappings(SessionFactoryScope scope) {
 		final MappingMetamodelImplementor mappingMetamodel = scope.getSessionFactory()
 				.getRuntimeMetamodels()

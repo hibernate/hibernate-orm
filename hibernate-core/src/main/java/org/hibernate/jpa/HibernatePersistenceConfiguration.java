@@ -4,8 +4,11 @@
  */
 package org.hibernate.jpa;
 
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -17,6 +20,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StatisticsSettings;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -66,6 +70,13 @@ import jakarta.persistence.ValidationMode;
  * <li>JVM {@linkplain System#getProperties() system properties}, and
  * <li>properties specified in {@code hibernate.properties}.
  * </ul>
+ * <p>
+ * When a {@linkplain #rootUrl() root URL} is supplied, or when at least
+ * one {@linkplain #jarFileUrls() JAR file URL} is supplied, and when
+ * {@code hibernate-scan-jandex} or some other service implementing
+ * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} is available,
+ * the given URLs are scanned for entity classes, alleviating the program
+ * of the need to call {@link #managedClass}.
  *
  * @apiNote The specification explicitly encourages implementors to extend
  *          {@link PersistenceConfiguration} to accommodate vendor-specific
@@ -78,6 +89,10 @@ import jakarta.persistence.ValidationMode;
  * @since 7.0
  */
 public class HibernatePersistenceConfiguration extends PersistenceConfiguration {
+
+	private URL rootUrl;
+	private final List<URL> jarFileUrls = new ArrayList<>();
+
 	/**
 	 * Create a new empty configuration. An empty configuration does not
 	 * typically hold enough information for successful invocation of
@@ -88,6 +103,49 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	public HibernatePersistenceConfiguration(String name) {
 		super( name );
+	}
+
+	/**
+	 * Create a new empty configuration with a given {@linkplain #rootUrl root URL}
+	 * used for {@linkplain PersistenceSettings#SCANNER_DISCOVERY entity discovery}
+	 * via scanning.
+	 * <p>
+	 * The module {@code hibernate-scan-jandex} must be added as a dependency,
+	 * or some other implementation of the service
+	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made
+	 * available.
+	 *
+	 * @param name the name of the persistence unit, which may be used by
+	 * the persistence provider for logging and error reporting
+	 * @param rootURL the root URL of the persistence unit
+	 *
+	 * @since 7.1
+	 */
+	public HibernatePersistenceConfiguration(String name, URL rootURL) {
+		super( name );
+		this.rootUrl = rootURL;
+	}
+
+	/**
+	 * Create a new empty configuration with the {@linkplain #rootUrl root URL}
+	 * inferred from the given class file and used for
+	 * {@linkplain PersistenceSettings#SCANNER_DISCOVERY entity discovery}
+	 * via scanning.
+	 * <p>
+	 * The module {@code hibernate-scan-jandex} must be added as a dependency,
+	 * or some other implementation of the service
+	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made
+	 * available.
+	 *
+	 * @param name the name of the persistence unit, which may be used by
+	 * the persistence provider for logging and error reporting
+	 * @param classFromRootUrl a class loaded from the root URL of the
+	 * persistence unit
+	 *
+	 * @since 7.1
+	 */
+	public HibernatePersistenceConfiguration(String name, Class<?> classFromRootUrl) {
+		this( name, classFromRootUrl.getProtectionDomain().getCodeSource().getLocation() );
 	}
 
 	/**
@@ -458,7 +516,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	/**
 	 * Add the specified resource names as {@linkplain #mappingFiles() mapping files}.
 	 *
-	 * @see #mappingFiles
+	 * @see #mappingFiles()
 	 */
 	public HibernatePersistenceConfiguration mappingFiles(String... names) {
 		Collections.addAll( mappingFiles(), names );
@@ -468,10 +526,40 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	/**
 	 * Add the specified resource names as {@linkplain #mappingFiles() mapping files}.
 	 *
-	 * @see #mappingFiles
+	 * @see #mappingFiles()
 	 */
 	public HibernatePersistenceConfiguration mappingFiles(Collection<String> names) {
 		mappingFiles().addAll( names );
+		return this;
+	}
+
+	/**
+	 * Add the specified URL as a {@linkplain #jarFileUrls() JAR file}.
+	 *
+	 * @see #jarFileUrls()
+	 */
+	public HibernatePersistenceConfiguration jarFileUrl(URL url) {
+		jarFileUrls.add( url );
+		return this;
+	}
+
+	/**
+	 * Add the specified URLs as {@linkplain #jarFileUrls() JAR files}.
+	 *
+	 * @see #jarFileUrls()
+	 */
+	public HibernatePersistenceConfiguration jarFileUrls(URL... urls) {
+		Collections.addAll( jarFileUrls, urls );
+		return this;
+	}
+
+	/**
+	 * Add the specified URLs as {@linkplain #jarFileUrls() JAR files}.
+	 *
+	 * @see #jarFileUrls()
+	 */
+	public HibernatePersistenceConfiguration jarFileUrls(Collection<URL> urls) {
+		jarFileUrls.addAll( urls );
 		return this;
 	}
 
@@ -542,5 +630,33 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	@Override
 	public HibernatePersistenceConfiguration properties(Map<String, ?> properties) {
 		return (HibernatePersistenceConfiguration) super.properties( properties );
+	}
+
+	/**
+	 * URLs of JAR files.
+	 * When {@linkplain org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
+	 * entity discovery} is enabled, the JAR files will be scanned for entities.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getJarFileUrls
+	 *
+	 * @since 7.1
+	 */
+	public List<URL> jarFileUrls() {
+		return jarFileUrls;
+	}
+
+	/**
+	 * Root URL of the persistence unit.
+	 * When {@linkplain org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
+	 * entity discovery} is enabled, this root URL will be scanned for entities.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitRootUrl
+	 *
+	 * @since 7.1
+	 */
+	public URL rootUrl() {
+		return rootUrl;
 	}
 }

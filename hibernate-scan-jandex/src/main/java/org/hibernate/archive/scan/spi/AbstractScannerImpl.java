@@ -6,6 +6,7 @@ package org.hibernate.archive.scan.spi;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.hibernate.archive.scan.internal.NoopEntryHandler;
@@ -37,18 +38,19 @@ public abstract class AbstractScannerImpl implements Scanner {
 	public ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters parameters) {
 		final ScanResultCollector collector = new ScanResultCollector( environment, options, parameters );
 
-		if ( environment.getNonRootUrls() != null ) {
+		final List<URL> nonRootUrls = environment.getNonRootUrls();
+		if ( nonRootUrls != null ) {
 			final ArchiveContext context = new ArchiveContextImpl( false, collector );
-			for ( URL url : environment.getNonRootUrls() ) {
-				final ArchiveDescriptor descriptor = buildArchiveDescriptor( url, environment, false );
-				descriptor.visitArchive( context );
+			for ( URL url : nonRootUrls ) {
+				buildArchiveDescriptor( url, environment, false )
+						.visitArchive( context );
 			}
 		}
 
-		if ( environment.getRootUrl() != null ) {
-			final ArchiveContext context = new ArchiveContextImpl( true, collector );
-			final ArchiveDescriptor descriptor = buildArchiveDescriptor( environment.getRootUrl(), environment, true );
-			descriptor.visitArchive( context );
+		final URL rootUrl = environment.getRootUrl();
+		if ( rootUrl != null ) {
+			buildArchiveDescriptor( rootUrl, environment, true )
+					.visitArchive( new ArchiveContextImpl( true, collector ) );
 		}
 
 		return collector.toScanResult();
@@ -62,14 +64,11 @@ public abstract class AbstractScannerImpl implements Scanner {
 		final ArchiveDescriptor descriptor;
 		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url );
 		if ( descriptorInfo == null ) {
-			if ( !isRootUrl && archiveDescriptorFactory instanceof JarFileEntryUrlAdjuster ) {
-				url = ( (JarFileEntryUrlAdjuster) archiveDescriptorFactory ).adjustJarFileEntryUrl( url, environment.getRootUrl() );
+			if ( !isRootUrl && archiveDescriptorFactory instanceof JarFileEntryUrlAdjuster jarFileEntryUrlAdjuster ) {
+				url = jarFileEntryUrlAdjuster.adjustJarFileEntryUrl( url, environment.getRootUrl() );
 			}
 			descriptor = archiveDescriptorFactory.buildArchiveDescriptor( url );
-			archiveDescriptorCache.put(
-					url,
-					new ArchiveDescriptorInfo( descriptor, isRootUrl )
-			);
+			archiveDescriptorCache.put( url, new ArchiveDescriptorInfo( descriptor, isRootUrl ) );
 		}
 		else {
 			validateReuse( descriptorInfo, isRootUrl );

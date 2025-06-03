@@ -68,7 +68,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INT
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 
 /**
- * A SQL dialect for TimesTen
+ * A SQL dialect for Oracle TimesTen
  * <p>
  * Known limitations:
  * joined-subclass support because of no CASE support in TimesTen
@@ -96,8 +96,12 @@ public class TimesTenDialect extends Dialect {
 	 * Licensed under the Universal Permissive License v 1.0 as shown
 	 * at http://oss.oracle.com/licenses/upl
 	 *
-	 * - Added more datatypes support. ( TIMESTAMP, BLOB, CLOB, NCLOB)
-	 *
+	 * - Added more datatypes into columnType():
+   *     BIT, CHAR, VARCHAR, LONGVARCHAR, BINARY, VARBINARY
+   *     LONGVARBINARY, BINARY_FLOAT, BINARY_DOUBLE, TIMESTAMP,
+   *     BLOB, CLOB, NCLOB
+	 * 
+   * @Author: Carlos Blanco
 	*/
 	@Override
 	protected String columnType(int sqlTypeCode) {
@@ -201,8 +205,16 @@ public class TimesTenDialect extends Dialect {
 	 * Licensed under the Universal Permissive License v 1.0 as shown
 	 * at http://oss.oracle.com/licenses/upl
 	 *
-	 * - Added more SQL functions support.
-	 *
+	 * - Added more SQL functions support into initializeFunctionRegistry():
+   *     lower, upper, rtrim, ltrim, length, to_char, chr, instr, instrb,
+   *     lpad, rpad, substr, substrb, substring, str, soundex, replace,
+   *     to_date, sysdate, getdate, current_date, current_time, current_timestamp,
+   *     to_timestamp, add_months, months_between, abs, acos, asin, atan, atan2,
+   *     ceil, cos, cosh, exp, ln, sin, sign, sinh, mod, round, trunc, tan, tanh,
+   *     floor, power, bitnot, bitor, bitxor, nvl, user, rowid, uid, rownum, 
+   *     vsize, SESSION_USER, SYSTEM_USER, CURRENT_USER
+   *
+   * @Author: Carlos Blanco
 	*/
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
@@ -504,6 +516,7 @@ public class TimesTenDialect extends Dialect {
 	*
 	* - Updated the custom definition for 'getForUpdateString()'
 	*
+  * @Author: Carlos Blanco
 	*/
 	@Override
 	public String getForUpdateString() {
@@ -695,6 +708,7 @@ public class TimesTenDialect extends Dialect {
 	 *  - Added a custom definition for 'getDual()'
 	 *  - Added a custom definition for 'getFromDualForSelectOnly()'
 	 *
+   * @Author: Carlos Blanco
 	*/
 
 	@Override 

@@ -12,7 +12,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -36,6 +35,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ import java.util.Locale;
  *
  * @author Christian Beikov
  */
-public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	/**
 	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.
@@ -437,4 +437,31 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
 	}
+
+	/*
+		Upsert Template: (for an entity WITHOUT @Version)
+			INSERT INTO employees (id, name, salary, version)
+				VALUES (?, ?, ?, ?) AS tr
+			ON DUPLICATE KEY UPDATE
+				name = tr.name,
+				salary = tr.salary
+	*/
+	@Override
+	protected void renderNewRowAlias() {
+		appendSql( "as " );
+		renderAlias();
+		appendSql( " " );
+	}
+
+	@Override
+	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+		renderAlias();
+		appendSql( "." );
+		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+	}
+
+	private void renderAlias() {
+		appendSql( "tr" );
+	}
+
 }

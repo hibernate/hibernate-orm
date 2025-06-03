@@ -14,7 +14,6 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -38,13 +37,14 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcOperationQueryInsertImpl;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 /**
  * A SQL AST translator for MariaDB.
  *
  * @author Christian Beikov
  */
-public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	private final MariaDBDialect dialect;
 
@@ -410,4 +410,20 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
 	}
+
+	/*
+		Upsert Template: (for an entity WITHOUT @Version)
+			INSERT INTO employees (id, name, salary, version)
+				VALUES (?, ?, ?, ?)
+			ON DUPLICATE KEY UPDATE
+				name = values(name),
+				salary = values(salary)
+	*/
+	@Override
+	protected void renderUpdatevalue(ColumnValueBinding columnValueBinding) {
+		appendSql( "values(" );
+		appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+		appendSql( ")" );
+	}
+
 }

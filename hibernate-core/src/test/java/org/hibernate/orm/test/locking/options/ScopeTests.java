@@ -290,7 +290,7 @@ public class ScopeTests {
 				assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 				Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), REPORTS, REPORT_LABELS );
 				TransactionUtil.updateTable( factoryScope, REPORTS.getTableName(), "title", true );
-				TransactionUtil.updateTable( factoryScope, PERSONS.getTableName(), "name",  false );
+				TransactionUtil.updateTable( factoryScope, PERSONS.getTableName(), "name",  willAggressivelyLockJoinedTables( session.getDialect() ) );
 				TransactionUtil.updateTable( factoryScope, REPORT_LABELS.getTableName(), "txt", true );
 			}
 			else {

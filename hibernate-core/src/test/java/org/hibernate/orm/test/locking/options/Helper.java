@@ -112,7 +112,7 @@ public class Helper {
 		public String getTableName() {
 			return switch ( this ) {
 				case BOOKS -> "books";
-				case PERSONS -> "the_persons";
+				case PERSONS -> "persons";
 				case PUBLISHER -> "publishers";
 				case REPORTS, JOINED_REPORTER -> "reports";
 				case BOOK_GENRES -> "book_genres";
@@ -124,8 +124,7 @@ public class Helper {
 		public String getTableAlias() {
 			return switch ( this ) {
 				case BOOKS -> "b1_0";
-				case PERSONS -> "t1_0";
-				case PUBLISHER -> "p1_0";
+				case PUBLISHER, PERSONS -> "p1_0";
 				case REPORTS -> "r1_0";
 				case BOOK_GENRES -> "g1_0";
 				case BOOK_AUTHORS -> "a1_0";

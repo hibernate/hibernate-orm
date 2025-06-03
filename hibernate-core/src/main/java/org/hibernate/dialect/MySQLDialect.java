@@ -45,6 +45,7 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
@@ -63,6 +64,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.NullType;
 import org.hibernate.type.SqlTypes;
@@ -1666,6 +1669,15 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(EntityMutationTarget mutationTarget, OptionalTableUpdate optionalTableUpdate, SessionFactoryImplementor factory) {
+		if ( optionalTableUpdate.getNumberOfOptimisticLockBindings() == 0 ) {
+			final MySQLSqlAstTranslator<?> translator = new MySQLSqlAstTranslator<>( factory, optionalTableUpdate, MySQLDialect.this );
+			return translator.createMergeOperation( optionalTableUpdate );
+		}
+		return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
 	}
 
 }

@@ -41,7 +41,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 
 	private final OptionalTableUpdate optionalTableUpdate;
 
-	private final Expectation expectation = new Expectation.RowCount();
+	private final Expectation expectation = getExpectation();
 
 	public DeleteOrUpsertOperation(
 			EntityMutationTarget mutationTarget,
@@ -127,7 +127,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 					.executeUpdate( upsertDeleteStatement, statementDetails.getSqlString() );
 			MODEL_MUTATION_LOGGER.tracef( "`%s` rows upsert-deleted from `%s`", rowCount, tableMapping.getTableName() );
 			try {
-				expectation.verifyOutcome( rowCount, upsertDeleteStatement, -1, statementDetails.getSqlString() );
+				getExpectation().verifyOutcome( rowCount, upsertDeleteStatement, -1, statementDetails.getSqlString() );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -203,7 +203,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 							.executeUpdate( updateStatement, statementDetails.getSqlString() );
 			MODEL_MUTATION_LOGGER.tracef( "`%s` rows upserted into `%s`", rowCount, tableMapping.getTableName() );
 			try {
-				expectation.verifyOutcome( rowCount, updateStatement, -1, statementDetails.getSqlString() );
+				getExpectation().verifyOutcome( rowCount, updateStatement, -1, statementDetails.getSqlString() );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -230,5 +230,9 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	 */
 	public OptionalTableUpdate getOptionalTableUpdate() {
 		return optionalTableUpdate;
+	}
+
+	protected Expectation getExpectation() {
+		return new Expectation.RowCount();
 	}
 }

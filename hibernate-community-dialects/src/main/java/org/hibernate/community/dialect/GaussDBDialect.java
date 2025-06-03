@@ -778,7 +778,14 @@ public class GaussDBDialect extends Dialect {
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
 				if ( sqlState != null ) {
-					switch ( Integer.parseInt( sqlState ) ) {
+					int state;
+					try {
+						state = Integer.parseInt(sqlState);
+					}
+					catch (NumberFormatException e) {
+						state = 23001; // or some default value
+					}
+					switch ( state ) {
 						// CHECK VIOLATION
 						case 23514:
 							return extractUsingTemplate( "violates check constraint \"", "\"", sqle.getMessage() );
@@ -1207,13 +1214,13 @@ public class GaussDBDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
-		contributeGaussDBTypes( typeContributions, serviceRegistry);
+		contributeGaussDBTypes( typeContributions);
 	}
 
 	/**
 	 * Allow for extension points to override this only
 	 */
-	protected void contributeGaussDBTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+	protected void contributeGaussDBTypes(TypeContributions typeContributions) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		// For how BLOB affects Hibernate, see:

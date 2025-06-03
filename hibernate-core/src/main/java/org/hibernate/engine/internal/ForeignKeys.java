@@ -89,7 +89,7 @@ public final class ForeignKeys {
 		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
 		private Object nullifyTransientReferences(final Object value, final String propertyName, final Type type) {
-			final Object returnedValue = nullifyTransient(value, propertyName, type);
+			final Object returnedValue = nullifyTransient( value, propertyName, type );
 			// value != returnedValue if either:
 			// 1) returnedValue was nullified (set to null);
 			// or 2) returnedValue was initialized, but not nullified.
@@ -149,7 +149,7 @@ public final class ForeignKeys {
 			else {
 				// If value is lazy, it may need to be initialized to
 				// determine if the value is nullifiable.
-				final Object possiblyInitializedValue = initializeIfNecessary(value, propertyName, entityType );
+				final Object possiblyInitializedValue = initializeIfNecessary( value, propertyName, entityType );
 				if ( possiblyInitializedValue == null ) {
 					// The uninitialized value was initialized to null
 					return null;
@@ -157,7 +157,7 @@ public final class ForeignKeys {
 				else {
 					// If the value is not nullifiable, make sure that the
 					// possibly initialized value is returned.
-					return isNullifiable(entityType.getAssociatedEntityName(), possiblyInitializedValue)
+					return isNullifiable( entityType.getAssociatedEntityName(), possiblyInitializedValue )
 							? null
 							: possiblyInitializedValue;
 				}
@@ -199,7 +199,7 @@ public final class ForeignKeys {
 
 		/**
 		 * Determine if the object already exists in the database,
-		 * using a "best guess"
+		 * using heuristics.
 		 *
 		 * @param entityName The name of the entity
 		 * @param object The entity instance
@@ -207,7 +207,7 @@ public final class ForeignKeys {
 		private boolean isNullifiable(final String entityName, Object object)
 				throws HibernateException {
 			if ( object == UNFETCHED_PROPERTY ) {
-				// this is the best we can do...
+				// this is the best we can do
 				return false;
 			}
 
@@ -244,10 +244,10 @@ public final class ForeignKeys {
 					|| isDelete && hasSelfReferentialForeignKeyBug();
 			}
 
-			// See if the entity is already bound to this session, if not look at the
-			// entity identifier and assume that the entity is persistent if the
-			// id is not "unsaved" (that is, we rely on foreign keys to keep
-			// database integrity)
+			// See if the entity is already bound to this session;
+			// if it's not, look at the entity identifier and assume
+			// that the entity is persistent if the id is not "unsaved"
+			// (that is, we rely on foreign keys to keep database integrity)
 
 			final EntityEntry entityEntry = persistenceContext.getEntry( object );
 			return entityEntry == null
@@ -416,11 +416,11 @@ public final class ForeignKeys {
 			boolean isEarlyInsert,
 			SharedSessionContractImplementor session) {
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
-		final Nullifier nullifier = new Nullifier( entity, false, isEarlyInsert, session, persister );
+		final var nullifier = new Nullifier( entity, false, isEarlyInsert, session, persister );
 		final String[] propertyNames = persister.getPropertyNames();
 		final Type[] types = persister.getPropertyTypes();
 		final boolean[] nullability = persister.getPropertyNullability();
-		final NonNullableTransientDependencies nonNullableTransientEntities = new NonNullableTransientDependencies();
+		final var nonNullableTransientEntities = new NonNullableTransientDependencies();
 		for ( int i = 0; i < types.length; i++ ) {
 			collectNonNullableTransientEntities(
 					nullifier,

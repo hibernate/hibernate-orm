@@ -458,10 +458,7 @@ public class AnnotatedColumn {
 			);
 		}
 
-		final Database database = getDatabase();
-		return getPhysicalNamingStrategy()
-				.toPhysicalColumnName( implicitName, database.getJdbcEnvironment() )
-				.render( database.getDialect() );
+		return implicitName.render( getDatabase().getDialect() );
 	}
 
 	private ObjectNameNormalizer getObjectNameNormalizer() {

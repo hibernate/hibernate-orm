@@ -153,7 +153,7 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	 *
 	 * - Added a custom definition for 'renderRowsToClause()'.
 	 *
-   * @Author: Carlos Blanco
+	 * @Author: Carlos Blanco
 	*/
 	@Override
 	protected void renderRowsToClause(Expression offsetClauseExpression, Expression fetchClauseExpression) {

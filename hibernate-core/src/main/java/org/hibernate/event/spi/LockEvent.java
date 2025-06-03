@@ -33,17 +33,13 @@ public class LockEvent extends AbstractEvent {
 			throw new IllegalArgumentException( "LockOptions may not be null" );
 		}
 		if ( lockOptions.getLockMode() == LockMode.UPGRADE_SKIPLOCKED
-			 || lockOptions.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
+			|| lockOptions.getTimeout().milliseconds() == Timeouts.SKIP_LOCKED_MILLI ) {
 			throw new IllegalArgumentException( ILLEGAL_SKIP_LOCKED );
 		}
 
 		this.entityName = entityName;
 		this.object = object;
 		this.lockOptions = lockOptions;
-	}
-
-	public LockEvent(String entityName, Object object, LockMode lockMode, EventSource source) {
-		this( entityName, object, lockMode.toLockOptions(), source );
 	}
 
 	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {

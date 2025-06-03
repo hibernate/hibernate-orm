@@ -187,7 +187,7 @@ public class JdkVersionConfig {
 			// We disable toolchains for convenience, so that anyone can just run the build with their own JDK
 			// without any additional options and without downloading the whole JDK.
 
-			if ( gradleJdkVersion.asInt() > minSupportedJdkVersion.asInt() ) {
+			if ( gradleJdkVersion.asInt() < minSupportedJdkVersion.asInt() ) {
 				throw new GradleException("This build requires at least JDK " + minSupportedJdkVersion + ", but you are using JDK " + gradleJdkVersion.asInt());
 			}
 

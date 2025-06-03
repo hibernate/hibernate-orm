@@ -375,8 +375,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 														string,
 														start,
 														i
-												),
-												jdbcMapping.getJdbcJavaType()
+												)
 										),
 										options
 								);
@@ -765,8 +764,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 																string,
 																start,
 																i
-														),
-														elementType.getJdbcJavaType()
+														)
 												),
 												options
 										)
@@ -1001,14 +999,14 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 			int count = 0;
 			for ( int i = 0; i < size; i++ ) {
 				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
-				if ( modelPart.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
-					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
+				if ( modelPart.getMappedType() instanceof EmbeddableMappingType nestEmbeddableMappingType ) {
+					final SelectableMapping aggregateMapping = nestEmbeddableMappingType.getAggregateMapping();
 					if ( aggregateMapping == null ) {
-						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
+						final SelectableMapping subSelectable = nestEmbeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
 						if ( subSelectable != null ) {
 							return subSelectable;
 						}
-						count += embeddableMappingType.getJdbcValueCount();
+						count += nestEmbeddableMappingType.getJdbcValueCount();
 					}
 					else {
 						if ( count == jdbcValueSelectableIndex ) {
@@ -1110,7 +1108,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 		return DateTimeFormatter.ISO_LOCAL_TIME.parse( subSequence, LocalTime::from );
 	}
 
-	private Object parseTimestamp(CharSequence subSequence, JavaType<?> jdbcJavaType) {
+	private Object parseTimestamp(CharSequence subSequence) {
 		final TemporalAccessor temporalAccessor = LOCAL_DATE_TIME.parse( subSequence );
 		final LocalDateTime localDateTime = LocalDateTime.from( temporalAccessor );
 		final Timestamp timestamp = Timestamp.valueOf( localDateTime );
@@ -1257,7 +1255,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 			case SqlTypes.DECIMAL:
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DURATION:
-				appender.append( subValue.toString() );
+				appender.append( subValue != null ? subValue.toString() : "");
 				break;
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -1306,7 +1304,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 				);
 				break;
 			case SqlTypes.UUID:
-				appender.append( subValue.toString() );
+				appender.append( subValue != null ? subValue.toString() : "");
 				break;
 			case SqlTypes.ARRAY:
 				if ( subValue != null ) {

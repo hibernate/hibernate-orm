@@ -7,7 +7,6 @@ package org.hibernate.community.dialect.aggregate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.internal.util.StringHelper;
@@ -61,7 +60,7 @@ public class GaussDBAggregateSupport extends AggregateSupportImpl {
 	private static final String XML_QUERY_SEPARATOR = "' passing ";
 	private static final String XML_QUERY_END = " columns v xml path '.')t)";
 
-	public static AggregateSupport valueOf(Dialect dialect) {
+	public static AggregateSupport valueOf() {
 		return GaussDBAggregateSupport.INSTANCE;
 	}
 

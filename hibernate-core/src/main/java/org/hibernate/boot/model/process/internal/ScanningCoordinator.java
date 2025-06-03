@@ -94,12 +94,16 @@ public class ScanningCoordinator {
 							.loadJavaServices( ScannerFactory.class )
 							.iterator();
 			if ( iterator.hasNext() ) {
-				// todo: check for multiple scanner and in case raise a warning?
 				final ScannerFactory factory = iterator.next();
-				return factory.getScanner( archiveDescriptorFactory );
+				final Scanner scanner = factory.getScanner( archiveDescriptorFactory );
+				if ( iterator.hasNext() ) {
+					log.warn("Multiple ScannerFactory services available; using '"
+								+ scanner.getClass().getName() + "'");
+				}
+				return scanner;
 			}
 			else {
-				// todo: add a debug message that there is no Scanner?
+				log.debug("No ScannerFactory available; add 'hibernate-scan-jandex' dependency to enable scanning");
 				return new DisabledScanner();
 			}
 		}

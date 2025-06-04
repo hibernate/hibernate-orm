@@ -13,7 +13,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -263,18 +262,7 @@ public class ScopeTests {
 		//
 		// todo : this is something we should consider and disallow the situation
 
-		final OuterJoinLockingLevel outerJoinLockingLevel = dialect.getOuterJoinLockingLevel();
-		if ( outerJoinLockingLevel == OuterJoinLockingLevel.FULL ) {
-			// there will be a join with some form of locking
-			final PessimisticLockStyle pessimisticLockStyle = dialect.getPessimisticLockStyle();
-			if ( pessimisticLockStyle == PessimisticLockStyle.CLAUSE ) {
-				final RowLockStrategy rowLockStrategy = dialect.getWriteRowLockStrategy();
-				if ( rowLockStrategy == RowLockStrategy.NONE ) {
-					return true;
-				}
-			}
-		}
-		return false;
+		return dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL;
 	}
 
 	@Test

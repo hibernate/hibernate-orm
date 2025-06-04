@@ -20,7 +20,6 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -890,11 +889,6 @@ public class DB2Dialect extends Dialect {
 		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_SHARE_SKIP_LOCKED_SQL
 				: FOR_SHARE_SQL;
-	}
-
-	@Override
-	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
-		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

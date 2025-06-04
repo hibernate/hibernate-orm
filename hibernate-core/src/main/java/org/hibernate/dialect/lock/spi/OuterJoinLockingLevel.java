@@ -40,5 +40,15 @@ public enum OuterJoinLockingLevel {
 	 * Applying locks to joins is fully supported, acquiring locks
 	 * on all tables.
 	 */
-	FULL
+	FULL,
+
+	/**
+	 * The joined rows to lock can be controlled per table reference,
+	 * generally via one of:<ul>
+	 *     <li>{@linkplain org.hibernate.dialect.RowLockStrategy#TABLE}
+	 *     <li>{@linkplain org.hibernate.dialect.RowLockStrategy#COLUMN}
+	 *     <li>{@linkplain org.hibernate.dialect.lock.PessimisticLockStyle#TABLE_HINT}
+	 * </ul>
+	 */
+	IDENTIFIED
 }

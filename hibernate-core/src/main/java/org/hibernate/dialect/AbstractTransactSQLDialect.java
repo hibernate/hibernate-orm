@@ -14,6 +14,7 @@ import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -202,6 +203,11 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	public PessimisticLockStyle getPessimisticLockStyle() {
 		// TransactSQL uses table-based lock hints
 		return PessimisticLockStyle.TABLE_HINT;
+	}
+
+	@Override
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.IDENTIFIED;
 	}
 
 	@Override

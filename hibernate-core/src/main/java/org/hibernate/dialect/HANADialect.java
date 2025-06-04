@@ -21,6 +21,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
@@ -651,6 +652,11 @@ public class HANADialect extends Dialect {
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.COLUMN;
+	}
+
+	@Override
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.IDENTIFIED;
 	}
 
 	@Override

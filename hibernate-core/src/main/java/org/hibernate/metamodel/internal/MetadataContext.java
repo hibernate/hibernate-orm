@@ -92,7 +92,7 @@ public class MetadataContext {
 	private final Map<EmbeddableDomainType<?>, Component> componentByEmbeddable = new HashMap<>();
 
 	private final Map<MappedSuperclass, MappedSuperclassDomainType<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
-	private final Map<MappedSuperclassDomainType<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
+	private final Map<MappedSuperclassDomainType<?>, Set<PersistentClass>> mappedSuperClassTypeToPersistentClass = new HashMap<>();
 
 	//this list contains MappedSuperclass and EntityTypes ordered by superclass first
 	private final List<Object> orderedMappings = new ArrayList<>();
@@ -204,11 +204,17 @@ public class MetadataContext {
 		identifiableTypesByName.put( mappedSuperclassType.getTypeName(), mappedSuperclassType );
 		mappedSuperclassByMappedSuperclassMapping.put( mappedSuperclass, mappedSuperclassType );
 		orderedMappings.add( mappedSuperclass );
-		if ( !stackOfPersistentClassesBeingProcessed.isEmpty() ) {
-			mappedSuperClassTypeToPersistentClass.put( mappedSuperclassType, getEntityWorkedOn() );
-		}
 
 		knownMappedSuperclasses.remove( mappedSuperclass );
+	}
+
+	public void registerMappedSuperclassForPersistenceClass(MappedSuperclassDomainType<?> mappedSuperclassType) {
+		if ( stackOfPersistentClassesBeingProcessed.isEmpty() ) {
+			return;
+		}
+
+		final Set<PersistentClass> persistentClassSet = mappedSuperClassTypeToPersistentClass.computeIfAbsent( mappedSuperclassType, x -> new HashSet<>() );
+		persistentClassSet.add( getEntityWorkedOn() );
 	}
 
 	/**
@@ -826,7 +832,7 @@ public class MetadataContext {
 		);
 	}
 
-	public PersistentClass getPersistentClassHostingProperties(MappedSuperclassTypeImpl<?> mappedSuperclassType) {
+	public Set<PersistentClass> getPersistentClassHostingProperties(MappedSuperclassTypeImpl<?> mappedSuperclassType) {
 		return mappedSuperClassTypeToPersistentClass.get( mappedSuperclassType );
 	}
 

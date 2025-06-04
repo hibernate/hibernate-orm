@@ -9,6 +9,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.PropertyNotFoundException;
@@ -395,20 +396,29 @@ public class AttributeFactory {
 	private static EntityPersister getDeclaringEntity(
 			AbstractIdentifiableType<?> ownerType,
 			MetadataContext metadataContext) {
+		final java.util.List<EntityPersister> resultList = getDeclarerEntityPersister( ownerType, metadataContext );
+		return resultList.isEmpty() ? null : resultList.get(0);
+	}
+
+	private static java.util.List<EntityPersister> getAllDeclaringEntities(AbstractIdentifiableType<?> ownerType,
+																		MetadataContext metadataContext) {
 		return getDeclarerEntityPersister( ownerType, metadataContext );
 	}
 
-	private static EntityPersister getDeclarerEntityPersister(
+	private static java.util.List<EntityPersister> getDeclarerEntityPersister(
 			AbstractIdentifiableType<?> ownerType,
 			MetadataContext metadataContext) {
 		final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 		if ( persistenceType == Type.PersistenceType.ENTITY ) {
-			return metadataContext.getMetamodel().getEntityDescriptor( ownerType.getTypeName() );
+			return java.util.List.of(metadataContext.getMetamodel().getEntityDescriptor( ownerType.getTypeName() ));
 		}
 		else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
-			final PersistentClass persistentClass =
+			final Set<PersistentClass> persistentClassSet =
 					metadataContext.getPersistentClassHostingProperties( (MappedSuperclassTypeImpl<?>) ownerType );
-			return persistentClass != null ? metadataContext.getMetamodel().findEntityDescriptor( persistentClass.getClassName() ) : null;
+			if (persistentClassSet == null) {
+				return java.util.List.of();
+			}
+			return persistentClassSet.stream().map( persistentClass -> metadataContext.getMetamodel().findEntityDescriptor( persistentClass.getClassName() ) ).toList();
 		}
 		else {
 			throw new AssertionFailure( "Cannot get the metamodel for PersistenceType: " + persistenceType );
@@ -680,18 +690,27 @@ public class AttributeFactory {
 
 	private static final MemberResolver virtualIdentifierMemberResolver = (attributeContext, metadataContext) -> {
 		final AbstractIdentifiableType<?> identifiableType = (AbstractIdentifiableType<?>) attributeContext.getOwnerType();
-		final EntityPersister declaringEntity = getDeclaringEntity( identifiableType, metadataContext );
-		return resolveVirtualIdentifierMember( attributeContext.getPropertyMapping(), declaringEntity );
+		final java.util.List<EntityPersister> declaringEntities = getAllDeclaringEntities( identifiableType, metadataContext );
+		return resolveVirtualIdentifierMember( attributeContext.getPropertyMapping(), declaringEntities );
 	};
 
-	private static Member resolveVirtualIdentifierMember( Property property, EntityPersister entityPersister) {
-		final EntityIdentifierMapping identifierMapping = entityPersister.getIdentifierMapping();
+	private static Member resolveVirtualIdentifierMember( Property property, java.util.List<EntityPersister> entityPersisters) {
+		CompositeIdentifierMapping cid = null;
 
-		if ( identifierMapping.getNature() != EntityIdentifierMapping.Nature.VIRTUAL ) {
+		// HHH-19076: Find the first EntityPersister for the property with a VIRTUAL identifierMapping
+		for (EntityPersister entityPersister : entityPersisters) {
+			EntityIdentifierMapping identifierMapping = entityPersister.getIdentifierMapping();
+
+			if ( identifierMapping.getNature() == EntityIdentifierMapping.Nature.VIRTUAL ) {
+				cid = (CompositeIdentifierMapping) identifierMapping;
+				break;
+			}
+		}
+
+		if ( cid == null ) {
 			throw new IllegalArgumentException( "expecting IdClass mapping" );
 		}
 
-		final CompositeIdentifierMapping cid = (CompositeIdentifierMapping) identifierMapping;
 		final EmbeddableMappingType embeddable = cid.getPartMappingType();
 		final String attributeName = property.getName();
 		final AttributeMapping attributeMapping = embeddable.findAttributeMapping( attributeName );
@@ -718,7 +737,7 @@ public class AttributeFactory {
 		return switch ( persistenceType ) {
 			case ENTITY ->
 					resolveEntityMember( property,
-							getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext ) );
+							getAllDeclaringEntities( (AbstractIdentifiableType<?>) ownerType, metadataContext ) );
 			case MAPPED_SUPERCLASS ->
 					resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) ownerType, metadataContext );
 			case EMBEDDABLE ->
@@ -727,23 +746,24 @@ public class AttributeFactory {
 		};
 	};
 
-	private static Member resolveEntityMember(Property property, EntityPersister declaringEntity) {
+	private static Member resolveEntityMember(Property property, java.util.List<EntityPersister> declaringEntities) {
 		final String propertyName = property.getName();
-		final AttributeMapping attributeMapping = declaringEntity.findAttributeMapping( propertyName );
+		final EntityPersister firstDeclaringEntity = declaringEntities.get(0);
+		final AttributeMapping attributeMapping = firstDeclaringEntity.findAttributeMapping( propertyName );
 		return attributeMapping == null
 				// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
-				? resolveVirtualIdentifierMember( property, declaringEntity )
-				: getter( declaringEntity, property, propertyName, property.getType().getReturnedClass() );
+				? resolveVirtualIdentifierMember( property, declaringEntities )
+				: getter( firstDeclaringEntity, property, propertyName, property.getType().getReturnedClass() );
 	}
 
 	private static Member resolveMappedSuperclassMember(
 			Property property,
 			MappedSuperclassDomainType<?> ownerType,
 			MetadataContext context) {
-		final EntityPersister declaringEntity =
-				getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, context );
-		if ( declaringEntity != null ) {
-			return resolveEntityMember( property, declaringEntity );
+		final java.util.List<EntityPersister> declaringEntities =
+				getAllDeclaringEntities( (AbstractIdentifiableType<?>) ownerType, context );
+		if ( !declaringEntities.isEmpty() ) {
+			return resolveEntityMember( property, declaringEntities );
 		}
 		else {
 			final ManagedDomainType<?> subType = ownerType.getSubTypes().iterator().next();
@@ -751,7 +771,7 @@ public class AttributeFactory {
 			return switch ( persistenceType ) {
 				case ENTITY ->
 						resolveEntityMember( property,
-								getDeclaringEntity( (AbstractIdentifiableType<?>) subType, context ) );
+								getAllDeclaringEntities( (AbstractIdentifiableType<?>) subType, context ) );
 				case MAPPED_SUPERCLASS ->
 						resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) subType, context );
 				case EMBEDDABLE ->

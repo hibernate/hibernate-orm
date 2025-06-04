@@ -2542,17 +2542,24 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Reports the Dialect's level of support for outer joins with pessimistic locking.
+	 */
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.FULL;
+	}
+
+	/**
 	 * Does this dialect support {@code FOR UPDATE} in conjunction with
 	 * outer-joined rows?
 	 *
 	 * @return True if outer-joined rows can be locked via {@code FOR UPDATE}.
+	 *
+	 * @deprecated Use {@linkplain #getOuterJoinLockingLevel()} instead.
 	 */
+	@Deprecated
 	public boolean supportsOuterJoinForUpdate() {
-		return getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL;
-	}
-
-	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
-		return OuterJoinLockingLevel.FULL;
+		return getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL
+				|| getOuterJoinLockingLevel() == OuterJoinLockingLevel.IDENTIFIED;
 	}
 
 	/**

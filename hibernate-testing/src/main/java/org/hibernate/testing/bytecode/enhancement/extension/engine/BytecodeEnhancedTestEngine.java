@@ -39,6 +39,7 @@ import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
 import org.junit.jupiter.engine.descriptor.ClassTestDescriptor;
 import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
+import org.junit.jupiter.engine.descriptor.LauncherStoreFacade;
 import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
 import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
@@ -215,7 +216,8 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 	protected JupiterEngineExecutionContext createExecutionContext(ExecutionRequest request) {
 		return new JupiterEngineExecutionContext(
 				request.getEngineExecutionListener(),
-				this.getJupiterConfiguration( request )
+				this.getJupiterConfiguration( request ),
+				new LauncherStoreFacade( request.getStore() )
 		);
 	}
 
@@ -270,6 +272,11 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		@Override
 		public boolean isParallelExecutionEnabled() {
 			return configuration.isParallelExecutionEnabled();
+		}
+
+		@Override
+		public boolean isClosingStoredAutoCloseablesEnabled() {
+			return configuration.isClosingStoredAutoCloseablesEnabled();
 		}
 
 		@Override

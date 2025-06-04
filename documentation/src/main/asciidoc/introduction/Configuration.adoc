@@ -122,6 +122,7 @@ or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 | <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
+| Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -263,6 +264,35 @@ Actually, these APIs are very simple facades resting on the much more powerful--
 This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
+
+[[entity-discovery]]
+=== Entity discovery
+
+In a Jakarta EE container environment, we don't usually need to list entity and embeddable classes explicitly in `persistence.xml`.
+Instead, the container scans the persistence unit `jar` file and automatically discovers classes annotated `@Entity`, `@Embeddable`, or `@MappedSuperclass`.
+
+`HibernatePersistenceConfiguration` offers the same functionality if the <<optional-dependencies,optional dependency>> `hibernate-scan-jandex` is available at runtime.
+
+In the following code, entity classes available on the class loader which loaded `Main.class` are automatically discovered.
+
+[source,java]
+----
+SessionFactory sessionFactory =
+        // entities discovered on ClassLoader of Main.class
+        new HibernatePersistenceConfiguration("Bookshop", Main.class)
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
+            // Create a new SessionFactory
+            .createEntityManagerFactory();
+----
+
+Notice that we were able to remove the calls to `managedClass()`.
 
 [[configuration-properties]]
 === Configuration using Hibernate properties file

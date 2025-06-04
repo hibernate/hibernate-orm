@@ -75,8 +75,9 @@ import jakarta.persistence.ValidationMode;
  * one {@linkplain #jarFileUrls() JAR file URL} is supplied, and when
  * {@code hibernate-scan-jandex} or some other service implementing
  * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} is available,
- * the given URLs are scanned for entity classes, alleviating the program
- * of the need to call {@link #managedClass}.
+ * the given URLs are scanned for entity classes, embeddable classes,
+ * mapped superclasses, converters, and XML mappings, alleviating the
+ * need to call {@link #managedClass} or {@link #mappingFile}.
  *
  * @apiNote The specification explicitly encourages implementors to extend
  *          {@link PersistenceConfiguration} to accommodate vendor-specific
@@ -90,7 +91,7 @@ import jakarta.persistence.ValidationMode;
  */
 public class HibernatePersistenceConfiguration extends PersistenceConfiguration {
 
-	private URL rootUrl;
+	private final URL rootUrl;
 	private final List<URL> jarFileUrls = new ArrayList<>();
 
 	/**
@@ -103,6 +104,7 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	public HibernatePersistenceConfiguration(String name) {
 		super( name );
+		this.rootUrl = null;
 	}
 
 	/**

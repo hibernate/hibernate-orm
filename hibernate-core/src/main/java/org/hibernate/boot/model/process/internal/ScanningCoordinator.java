@@ -103,7 +103,7 @@ public class ScanningCoordinator {
 				return scanner;
 			}
 			else {
-				log.debug("No ScannerFactory available; add 'hibernate-scan-jandex' dependency to enable scanning");
+				log.debug("No ScannerFactory available; to enable scanning add 'hibernate-scan-jandex' dependency or supply a custom ScannerFactory");
 				return new DisabledScanner();
 			}
 		}

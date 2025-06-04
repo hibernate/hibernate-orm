@@ -76,7 +76,7 @@ dependencyResolutionManagement {
             def byteBuddyVersion = version "byteBuddy", "1.15.11"
             def classmateVersion = version "classmate", "1.7.0"
             def geolatteVersion = version "geolatte", "1.9.1"
-            def hibernateModelsVersion = version "hibernateModels", "1.0.0.CR3"
+            def hibernateModelsVersion = version "hibernateModels", "1.0.0"
             def jandexVersion = version "jandex", "3.3.0"
             def jacksonVersion = version "jackson", "2.18.2"
             def jbossLoggingVersion = version "jbossLogging", "3.6.1.Final"

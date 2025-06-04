@@ -75,7 +75,6 @@ public class GaussDBStructuredJdbcType extends GaussDBAbstractStructuredJdbcType
 					throws SQLException {
 				final String stringValue = ( (GaussDBStructuredJdbcType) getJdbcType() ).toString(
 						value,
-						getJavaType(),
 						options
 				);
 				st.setString( index, stringValue );
@@ -86,7 +85,6 @@ public class GaussDBStructuredJdbcType extends GaussDBAbstractStructuredJdbcType
 					throws SQLException {
 				final String stringValue = ( (GaussDBStructuredJdbcType) getJdbcType() ).toString(
 						value,
-						getJavaType(),
 						options
 				);
 				st.setString( name, stringValue );

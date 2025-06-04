@@ -1147,7 +1147,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
 		final StringBuilder sb = new StringBuilder();
-		serializeStructTo( new PostgreSQLAppender( sb ), domainValue, options );
+		serializeStructTo( new GaussDBAppender( sb ), domainValue, options );
 		return sb.toString();
 	}
 
@@ -1166,22 +1166,22 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 		return rawJdbcValue.toString();
 	}
 
-	protected <X> String toString(X value, JavaType<X> javaType, WrapperOptions options) throws SQLException {
+	protected <X> String toString(X value, WrapperOptions options) throws SQLException {
 		if ( value == null ) {
 			return null;
 		}
 		final StringBuilder sb = new StringBuilder();
-		serializeStructTo( new PostgreSQLAppender( sb ), value, options );
+		serializeStructTo( new GaussDBAppender( sb ), value, options );
 		return sb.toString();
 	}
 
-	private void serializeStructTo(PostgreSQLAppender appender, Object value, WrapperOptions options) throws SQLException {
+	private void serializeStructTo(GaussDBAppender appender, Object value, WrapperOptions options) throws SQLException {
 		serializeDomainValueTo( appender, options, value, '(' );
 		appender.append( ')' );
 	}
 
 	private void serializeDomainValueTo(
-			PostgreSQLAppender appender,
+			GaussDBAppender appender,
 			WrapperOptions options,
 			Object domainValue,
 			char separator) throws SQLException {
@@ -1194,7 +1194,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 	}
 
 	private void serializeJdbcValuesTo(
-			PostgreSQLAppender appender,
+			GaussDBAppender appender,
 			WrapperOptions options,
 			Object[] jdbcValues,
 			char separator) throws SQLException {
@@ -1227,7 +1227,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 	}
 
 	private void serializeConvertedBasicTo(
-			PostgreSQLAppender appender,
+			GaussDBAppender appender,
 			WrapperOptions options,
 			JdbcMapping jdbcMapping,
 			Object subValue) throws SQLException {
@@ -1513,11 +1513,11 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 		return StructHelper.getJdbcValues( embeddableMappingType, orderMapping, value, options );
 	}
 
-	private static class PostgreSQLAppender extends StringBuilderSqlAppender {
+	private static class GaussDBAppender extends StringBuilderSqlAppender {
 
 		private int quote = 1;
 
-		public PostgreSQLAppender(StringBuilder sb) {
+		public GaussDBAppender(StringBuilder sb) {
 			super( sb );
 		}
 
@@ -1536,7 +1536,7 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 		}
 
 		@Override
-		public PostgreSQLAppender append(char fragment) {
+		public GaussDBAppender append(char fragment) {
 			if ( quote != 1 ) {
 				appendWithQuote( fragment );
 			}
@@ -1547,12 +1547,12 @@ public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdb
 		}
 
 		@Override
-		public PostgreSQLAppender append(CharSequence csq) {
+		public GaussDBAppender append(CharSequence csq) {
 			return append( csq, 0, csq.length() );
 		}
 
 		@Override
-		public PostgreSQLAppender append(CharSequence csq, int start, int end) {
+		public GaussDBAppender append(CharSequence csq, int start, int end) {
 			if ( quote != 1 ) {
 				int len = end - start;
 				sb.ensureCapacity( sb.length() + len );

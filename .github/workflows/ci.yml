@@ -3,10 +3,10 @@ name: GH Actions CI
 on:
   push:
     branches:
-      - 'main'
+      - '7.0'
   pull_request:
     branches:
-      - 'main'
+      - '7.0'
 
 permissions: { } # none
 

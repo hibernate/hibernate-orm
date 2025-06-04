@@ -38,31 +38,26 @@ public class HibernateEnhancerMojo extends AbstractMojo {
 
 	@Parameter(
 			defaultValue = "${project.build.directory}/classes",
-			readonly = true,
 			required = true)
 	private File classesDirectory;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableAssociationManagement;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableDirtyTracking;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableLazyInitialization;
 
 	@Parameter(
 			defaultValue = "false",
-			readonly = true,
 			required = true)
 	private boolean enableExtendedEnhancement;
 

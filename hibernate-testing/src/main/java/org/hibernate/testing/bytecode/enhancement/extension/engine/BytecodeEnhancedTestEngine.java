@@ -11,7 +11,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedClassUtils.enhanceTestClass;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -19,22 +23,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.ClassOrderer;
 import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.io.CleanupMode;
-import org.junit.jupiter.api.io.TempDirFactory;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.engine.JupiterTestEngine;
 import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
@@ -44,6 +37,7 @@ import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
 import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
 import org.junit.platform.engine.EngineDiscoveryRequest;
+import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
@@ -143,9 +137,13 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 			Set<? extends TestDescriptor> children, TestDescriptor parent, String[] testEnhancedClasses,
 			Object enhancementContextId)
 			throws NoSuchMethodException {
-		DelegatingJupiterConfiguration configuration = new DelegatingJupiterConfiguration( jc, enhancementContextId );
+		final JupiterConfiguration configuration = (JupiterConfiguration) Proxy.newProxyInstance(
+				BytecodeEnhancedTestEngine.class.getClassLoader(),
+				new Class[] { JupiterConfiguration.class },
+				new JupiterConfigurationInvocationHandler( jc, enhancementContextId )
+		);
 
-		ClassTestDescriptor updated = new ClassTestDescriptor(
+		final ClassTestDescriptor updated = new ClassTestDescriptor(
 				convertUniqueId( descriptor.getUniqueId(), enhancementContextId ),
 				enhanced,
 				configuration
@@ -210,6 +208,24 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	protected JupiterEngineExecutionContext createExecutionContext(ExecutionRequest request) {
+		try {
+			// Try constructing the JupiterEngineExecutionContext the way it is done in 5.13+
+			final Class<?> storeFacadeClass =
+					Class.forName( "org.junit.jupiter.engine.descriptor.LauncherStoreFacade" );
+			final Method getStore = ExecutionRequest.class.getMethod( "getStore" );
+			final Constructor<?> storeConstructor = storeFacadeClass.getConstructor( getStore.getReturnType() );
+			final Constructor<JupiterEngineExecutionContext> constructor = JupiterEngineExecutionContext.class
+					.getConstructor( EngineExecutionListener.class, JupiterConfiguration.class, storeFacadeClass );
+			return constructor.newInstance(
+					request.getEngineExecutionListener(),
+					this.getJupiterConfiguration( request ),
+					storeConstructor.newInstance( getStore.invoke( request ) )
+			);
+		}
+		catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			// Ignore errors as they are probably due to version mismatches and try the 5.12 way
+		}
+
 		return new JupiterEngineExecutionContext(
 				request.getEngineExecutionListener(),
 				this.getJupiterConfiguration( request )
@@ -237,97 +253,38 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 	}
 
-	private static class DelegatingJupiterConfiguration implements JupiterConfiguration {
+	private static class JupiterConfigurationInvocationHandler implements InvocationHandler {
 		private final JupiterConfiguration configuration;
-		private final DelegatingDisplayNameGenerator displayNameGenerator;
+		private final DisplayNameGenerator displayNameGenerator;
 
-		private DelegatingJupiterConfiguration(JupiterConfiguration configuration, Object id) {
+		private JupiterConfigurationInvocationHandler(JupiterConfiguration configuration, Object id) {
 			this.configuration = configuration;
-			displayNameGenerator = new DelegatingDisplayNameGenerator(
-					configuration.getDefaultDisplayNameGenerator(),
-					id
+			displayNameGenerator = (DisplayNameGenerator) Proxy.newProxyInstance(
+					BytecodeEnhancedTestEngine.class.getClassLoader(),
+					new Class[]{ DisplayNameGenerator.class },
+					new DisplayNameGeneratorInvocationHandler( configuration.getDefaultDisplayNameGenerator(), id )
 			);
 		}
 
 		@Override
-		public Optional<String> getRawConfigurationParameter(String s) {
-			return configuration.getRawConfigurationParameter( s );
-		}
-
-		@Override
-		public <T> Optional<T> getRawConfigurationParameter(String s, Function<String, T> function) {
-			return configuration.getRawConfigurationParameter( s, function );
-		}
-
-		@Override
-		public boolean isParallelExecutionEnabled() {
-			return configuration.isParallelExecutionEnabled();
-		}
-
-		@Override
-		public boolean isExtensionAutoDetectionEnabled() {
-			return configuration.isExtensionAutoDetectionEnabled();
-		}
-
-		@Override
-		public ExecutionMode getDefaultExecutionMode() {
-			return configuration.getDefaultExecutionMode();
-		}
-
-		@Override
-		public ExecutionMode getDefaultClassesExecutionMode() {
-			return configuration.getDefaultClassesExecutionMode();
-		}
-
-		@Override
-		public TestInstance.Lifecycle getDefaultTestInstanceLifecycle() {
-			return configuration.getDefaultTestInstanceLifecycle();
-		}
-
-		@Override
-		public Predicate<ExecutionCondition> getExecutionConditionFilter() {
-			return configuration.getExecutionConditionFilter();
-		}
-
-		@Override
-		public DisplayNameGenerator getDefaultDisplayNameGenerator() {
-			return displayNameGenerator;
-		}
-
-		@Override
-		public Optional<MethodOrderer> getDefaultTestMethodOrderer() {
-			return configuration.getDefaultTestMethodOrderer();
-		}
-
-		@Override
-		public Optional<ClassOrderer> getDefaultTestClassOrderer() {
-			return configuration.getDefaultTestClassOrderer();
-		}
-
-		@Override
-		public CleanupMode getDefaultTempDirCleanupMode() {
-			return configuration.getDefaultTempDirCleanupMode();
-		}
-
-		@Override
-		public Supplier<TempDirFactory> getDefaultTempDirFactorySupplier() {
-			return configuration.getDefaultTempDirFactorySupplier();
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			if ( "getDefaultDisplayNameGenerator".equals( method.getName() ) ) {
+				return displayNameGenerator;
+			}
+			else {
+				return method.invoke( configuration, args );
+			}
 		}
 	}
 
-	private static class DelegatingDisplayNameGenerator implements DisplayNameGenerator {
+	private static class DisplayNameGeneratorInvocationHandler implements InvocationHandler {
 
 		private final DisplayNameGenerator delegate;
 		private final Object id;
 
-		private DelegatingDisplayNameGenerator(DisplayNameGenerator delegate, Object id) {
+		private DisplayNameGeneratorInvocationHandler(DisplayNameGenerator delegate, Object id) {
 			this.delegate = delegate;
 			this.id = id;
-		}
-
-		@Override
-		public String generateDisplayNameForClass(Class<?> aClass) {
-			return prefix() + delegate.generateDisplayNameForClass( aClass );
 		}
 
 		private String prefix() {
@@ -335,13 +292,12 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 
 		@Override
-		public String generateDisplayNameForNestedClass(Class<?> aClass) {
-			return prefix() + delegate.generateDisplayNameForNestedClass( aClass );
-		}
-
-		@Override
-		public String generateDisplayNameForMethod(Class<?> aClass, Method method) {
-			return prefix() + delegate.generateDisplayNameForMethod( aClass, method );
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			final Object result = method.invoke( delegate, args );
+			if ( method.getDeclaringClass() == DisplayNameGenerator.class ) {
+				return prefix() + result;
+			}
+			return result;
 		}
 	}
 
@@ -350,9 +306,7 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		private final boolean enhanced;
 		private final String[] classes;
 
-		public EnhancementWorkedCheckMethodTestDescriptor(UniqueId uniqueId, Class<?> testClass,
-				JupiterConfiguration configuration,
-				boolean enhanced, String[] classes) {
+		public EnhancementWorkedCheckMethodTestDescriptor(UniqueId uniqueId, Class<?> testClass, JupiterConfiguration configuration, boolean enhanced, String[] classes) {
 			super(
 					prepareId( uniqueId, testMethod( enhanced ) ),
 					testClass, testMethod( enhanced ),

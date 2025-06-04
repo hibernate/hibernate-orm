@@ -539,6 +539,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * Add the specified URL as a {@linkplain #jarFileUrls() JAR file}.
 	 *
 	 * @see #jarFileUrls()
+	 *
+	 * @since 7.1
 	 */
 	public HibernatePersistenceConfiguration jarFileUrl(URL url) {
 		jarFileUrls.add( url );
@@ -549,6 +551,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * Add the specified URLs as {@linkplain #jarFileUrls() JAR files}.
 	 *
 	 * @see #jarFileUrls()
+	 *
+	 * @since 7.1
 	 */
 	public HibernatePersistenceConfiguration jarFileUrls(URL... urls) {
 		Collections.addAll( jarFileUrls, urls );
@@ -559,6 +563,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 * Add the specified URLs as {@linkplain #jarFileUrls() JAR files}.
 	 *
 	 * @see #jarFileUrls()
+	 *
+	 * @since 7.1
 	 */
 	public HibernatePersistenceConfiguration jarFileUrls(Collection<URL> urls) {
 		jarFileUrls.addAll( urls );

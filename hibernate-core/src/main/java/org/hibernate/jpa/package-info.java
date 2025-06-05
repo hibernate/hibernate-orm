@@ -26,6 +26,14 @@
  * <p>
  * Thus, Hibernate's many powerful extensions to the JPA specification are
  * always readily accessible.
+ * <p>
+ * The class {@link org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * extends {@link jakarta.persistence.PersistenceConfiguration} with options
+ * specific to Hibernate, as explicitly encouraged by the specification, and
+ * is now the preferred way to start Hibernate when operating outside any
+ * container environment.
+ * <p>
+ * Subpackages define a range of SPIs.
  * <ul>
  * <li>The subpackage {@link org.hibernate.jpa.boot.spi} contains the SPI of
  *     this persistence provider, including an SPI used to
@@ -33,9 +41,10 @@
  *     provider, and interfaces which may be implemented to contribute extensions
  *     during of the bootstrap process.
  * <li>The package {@link org.hibernate.jpa.event.spi org.hibernate.jpa.event}
- *     implements support for JPA {@linkplain jakarta.persistence.EntityListeners
- *     event listeners}.
- * <li>The package {@link org.hibernate.jpa.spi} provides SPIs for managing cases
+ *     implements support for JPA entity lifecycle callback methods and
+ *     {@linkplain jakarta.persistence.EntityListeners entity listeners}.
+ * <li>The package {@link org.hibernate.jpa.spi} provides
+ *     {@linkplain org.hibernate.jpa.spi.JpaCompliance an SPI} for managing cases
  *     where Hibernate intentionally violates the JPA specification by default
  *     (something Hibernate only does when it has a really good reason to do so).
  * </ul>

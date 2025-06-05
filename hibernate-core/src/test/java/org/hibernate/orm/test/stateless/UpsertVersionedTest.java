@@ -7,7 +7,7 @@ package org.hibernate.orm.test.stateless;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
-import org.hibernate.StaleObjectStateException;
+import org.hibernate.StaleStateException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -60,7 +60,7 @@ public class UpsertVersionedTest {
 			} );
 			fail();
 		}
-		catch (StaleObjectStateException sose) {
+		catch (StaleStateException sse) {
 			//expected
 		}
 		scope.inStatelessTransaction( s-> {

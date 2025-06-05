@@ -627,6 +627,13 @@ specify a name for JNDI binding.  The new behavior is as follows (assuming `hibe
 Hibernate can use the persistence-unit name for binding into JNDI as well, but `hibernate.session_factory_name_is_jndi`
 must be explicitly set to true.
 
+[[jandex-scanning]]
+=== Entity Discovery
+
+Entity discovery, i.e. automatic detection of mapped Java classes through classpath scanning, now requires by default the new `hibernate-scan-jandex` module. Standalone Hibernate ORM applications relying on this feature will need to add a dependency to this new module in order to continue using it.
+
+Users can still provide custom `org.hibernate.Scanner` implementations via the `org.hibernate.boot.archive.scan.spi.ScannerFactory` service or the `hibernate.archive.scanner` configuration parameter.
+
 [[unowned-order-column]]
 === @OrderColumn in Unowned @OneToMany Associations
 

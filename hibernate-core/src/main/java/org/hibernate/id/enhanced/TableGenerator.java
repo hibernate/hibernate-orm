@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -584,6 +585,11 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				else {
 					final int defaultValue = storeLastUsedValue ? 0 : 1;
 					value.initialize( selectRS, defaultValue );
+					if ( selectRS.wasNull() ) {
+						throw new HibernateException(
+								String.format( "%s for %s '%s' is null", valueColumnName, segmentColumnName,
+										segmentValue ) );
+					}
 				}
 				selectRS.close();
 			}

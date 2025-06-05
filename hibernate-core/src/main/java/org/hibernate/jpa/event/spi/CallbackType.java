@@ -14,24 +14,53 @@ import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 
 /**
+ * Enumerates the entity lifecycle callback types defined by JPA.
+ *
  * @author Steve Ebersole
  */
 public enum CallbackType {
-	PRE_UPDATE( PreUpdate.class ),
-	POST_UPDATE( PostUpdate.class ),
-	PRE_PERSIST( PrePersist.class ),
-	POST_PERSIST( PostPersist.class ),
-	PRE_REMOVE( PreRemove.class ),
-	POST_REMOVE( PostRemove.class ),
-	POST_LOAD( PostLoad.class );
+	/**
+	 * @see PreUpdate
+	 */
+	PRE_UPDATE,
+	/**
+	 * @see PostUpdate
+	 */
+	POST_UPDATE,
+	/**
+	 * @see PrePersist
+	 */
+	PRE_PERSIST,
+	/**
+	 * @see PostPersist
+	 */
+	POST_PERSIST,
+	/**
+	 * @see PreRemove
+	 */
+	PRE_REMOVE,
+	/**
+	 * @see PostRemove
+	 */
+	POST_REMOVE,
+	/**
+	 * @see PostLoad
+	 */
+	POST_LOAD;
 
-	private final Class<? extends Annotation> callbackAnnotation;
-
-	CallbackType(Class<? extends Annotation> callbackAnnotation) {
-		this.callbackAnnotation = callbackAnnotation;
-	}
-
+	/**
+	 * The JPA-defined callback annotation type corresponding
+	 * to this lifecycle event type.
+	 */
 	public Class<? extends Annotation> getCallbackAnnotation() {
-		return callbackAnnotation;
+		return switch ( this ) {
+			case PRE_PERSIST -> PrePersist.class;
+			case PRE_UPDATE -> PreUpdate.class;
+			case PRE_REMOVE -> PreRemove.class;
+			case POST_PERSIST -> PostPersist.class;
+			case POST_UPDATE -> PostUpdate.class;
+			case POST_REMOVE -> PostRemove.class;
+			case POST_LOAD -> PostLoad.class;
+		};
 	}
 }

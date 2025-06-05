@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.sql.DriverManager;
+import java.util.Properties;
 
 import org.apache.maven.project.MavenProject;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +34,6 @@ public class GenerateJavaMojoTest {
 	@BeforeEach
 	public void beforeEach() throws Exception {
 		createDatabase();
-		createPropertiesFile();
 		createOutputDirectory();
 		createGenerateJavaMojo();
 	}
@@ -48,7 +49,7 @@ public class GenerateJavaMojoTest {
 		// Person.java should not exist
 		assertFalse(personJavaFile.exists());
 		// Execute mojo with default value of 'ejb3' field which is 'true'
-		generateJavaMojo.execute();
+		generateJavaMojo.executeExporter(createMetadataDescriptor());
 		// Person.java should exist
 		assertTrue(personJavaFile.exists());
 		// Person.java should be an annotated entity
@@ -65,7 +66,7 @@ public class GenerateJavaMojoTest {
 		Field ejb3Field = GenerateJavaMojo.class.getDeclaredField("ejb3");
 		ejb3Field.setAccessible(true);
 		ejb3Field.set(generateJavaMojo, false);
-		generateJavaMojo.execute();
+		generateJavaMojo.executeExporter(createMetadataDescriptor());
 		// Person.java should exist
 		assertTrue(personJavaFile.exists());
 		// Person.java should be an annotated entity
@@ -87,15 +88,6 @@ public class GenerateJavaMojoTest {
 			.execute(DROP_PERSON_TABLE);
 	}
 
-	private void createPropertiesFile() throws Exception {
-		File propertiesFile = new File(tempDir, "hibernate.properties");
-        try (FileWriter fileWriter = new FileWriter(propertiesFile)) {
-			fileWriter.write("hibernate.connection.url=" + JDBC_CONNECTION + '\n');
-			fileWriter.write("hibernate.default_catalog=TEST\n");
-			fileWriter.write("hibernate.default_schema=PUBLIC\n");
-        }
-	}
-	
 	private void createGenerateJavaMojo() throws Exception {
 		generateJavaMojo = new GenerateJavaMojo();
 		Field projectField = AbstractGenerationMojo.class.getDeclaredField("project");
@@ -114,5 +106,18 @@ public class GenerateJavaMojoTest {
 		outputDirectory.mkdir();
 	}
 
+	private MetadataDescriptor createMetadataDescriptor() {
+		return MetadataDescriptorFactory.createReverseEngineeringDescriptor(
+				null,
+				createProperties());
+	}
+
+	private Properties createProperties() {
+		Properties result = new Properties();
+		result.put("hibernate.connection.url", JDBC_CONNECTION);
+		result.put("hibernate.default_catalog", "TEST");
+		result.put("hibernate.default_schema", "PUBLIC");
+		return result;
+	}
 
 }

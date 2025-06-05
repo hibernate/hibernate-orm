@@ -181,7 +181,7 @@ public interface Expectation {
 
 	/**
 	 * Essentially identical to {@link RowCount} except that the row count
-	 * is obtained via an output parameter of a {@link CallableStatement
+	 * is obtained via an output parameter of a {@linkplain CallableStatement
 	 * stored procedure}.
 	 * <p>
 	 * Statement batching is disabled when {@code OutParameter} is used.

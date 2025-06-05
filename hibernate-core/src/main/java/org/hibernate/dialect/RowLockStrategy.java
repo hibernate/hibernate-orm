@@ -8,14 +8,15 @@ package org.hibernate.dialect;
  * The strategy for rendering which row to lock with the {@code FOR UPDATE OF} clause.
  *
  * @author Christian Beikov
+ * @author Steve Ebersole
  */
 public enum RowLockStrategy {
 	/**
-	 * Use a column name.
+	 * Use the column reference (column name qualified by the table alias).
 	 */
 	COLUMN,
 	/**
-	 * Use a table alias.
+	 * Use the table alias.
 	 */
 	TABLE,
 	/**

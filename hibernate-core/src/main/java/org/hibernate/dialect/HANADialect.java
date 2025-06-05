@@ -21,6 +21,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
 import org.hibernate.dialect.identity.HANAIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.HANASequenceSupport;
@@ -654,6 +655,11 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.IDENTIFIED;
+	}
+
+	@Override
 	public String getCreateTableString() {
 		return isDefaultTableTypeColumn() ? "create column table" : "create row table";
 	}
@@ -685,18 +691,17 @@ public class HANADialect extends Dialect {
 
 	@Override
 	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
-		LockMode lockMode = lockOptions.findGreatestLockMode();
-		lockOptions.setLockMode( lockMode );
+		final LockMode lockMode = lockOptions.getLockMode();
 
 		// not sure why this is sometimes empty
 		if ( aliases == null || aliases.isEmpty() ) {
 			return getForUpdateString( lockOptions );
 		}
 
-		return getForUpdateString( aliases, lockMode, lockOptions.getTimeOut() );
+		return getForUpdateString( aliases, lockMode, lockOptions.getTimeout() );
 	}
 
-	private String getForUpdateString(String aliases, LockMode lockMode, int timeout) {
+	private String getForUpdateString(String aliases, LockMode lockMode, Timeout timeout) {
 		return switch ( lockMode ) {
 			case PESSIMISTIC_READ -> getReadLockString( aliases, timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( aliases, timeout );

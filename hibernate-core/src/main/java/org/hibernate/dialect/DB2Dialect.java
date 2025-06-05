@@ -892,11 +892,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}

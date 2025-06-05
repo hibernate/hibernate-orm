@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -53,10 +54,10 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		this.loadPlanCreator = loadPlanCreator;
 		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
 		// we should preload a few - maybe LockMode.NONE and LockMode.READ
-		final LockOptions lockOptions = LockOptions.NONE;
-		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( LockOptions.NONE, influencers );
-		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
-			selectByLockMode.put( lockOptions.getLockMode(), plan );
+		final LockOptions noLocking = new LockOptions();
+		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( noLocking, influencers );
+		if ( isLoadPlanReusable( noLocking, influencers ) ) {
+			selectByLockMode.put( LockMode.NONE, plan );
 		}
 	}
 
@@ -133,7 +134,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	}
 
 	private boolean isLoadPlanReusable(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		return lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER
+		return lockOptions.getTimeout().milliseconds() == Timeouts.WAIT_FOREVER_MILLI
 			&& !getLoadable().isAffectedByEntityGraph( influencers )
 			&& !getLoadable().isAffectedByEnabledFetchProfiles( influencers );
 	}

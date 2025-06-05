@@ -65,7 +65,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				uniqueKeyMapping,
 				null,
 				loadQueryInfluencers,
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				factory
 		);
@@ -127,7 +127,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				uniqueKeyAttribute,
 				null,
 				new LoadQueryInfluencers( factory ),
-				LockOptions.NONE,
+				new LockOptions(),
 				builder::add,
 				factory
 		);

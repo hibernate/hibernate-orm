@@ -100,7 +100,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 	}
 
 	@Override
-	public JsonDocumentWriter serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
+	public <T> JsonDocumentWriter serializeJsonValue(Object value, JavaType<T> javaType, JdbcType jdbcType, WrapperOptions options) {
 		serializeValue(value, javaType, jdbcType, options);
 		return this;
 	}
@@ -114,8 +114,8 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 	 * @param jdbcType the JDBC SQL type of the value
 	 * @param options the wapping options.
 	 */
-	private void serializeValue(Object value,
-								JavaType<Object> javaType,
+	private <T> void serializeValue(Object value,
+								JavaType<T> javaType,
 								JdbcType jdbcType,
 								WrapperOptions options) {
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
@@ -132,23 +132,23 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 					generator.write( ((Enum<?>) value ).ordinal() );
 					break;
 				}
-				generator.write( javaType.unwrap( value,Integer.class,options ) );
+				generator.write( javaType.unwrap( (T)value,Integer.class,options ) );
 				break;
 			case SqlTypes.BOOLEAN:
-				generator.write( javaType.unwrap( value,Boolean.class,options ) );
+				generator.write( javaType.unwrap( (T)value,Boolean.class,options ) );
 				break;
 			case SqlTypes.BIT:
-				generator.write( javaType.unwrap( value,Integer.class,options ) );
+				generator.write( javaType.unwrap( (T)value,Integer.class,options ) );
 				break;
 			case SqlTypes.BIGINT:
-				generator.write( javaType.unwrap( value, BigInteger.class,options ) );
+				generator.write( javaType.unwrap( (T)value, BigInteger.class,options ) );
 				break;
 			case SqlTypes.FLOAT:
-				generator.write( javaType.unwrap( value,Float.class,options ) );
+				generator.write( javaType.unwrap( (T)value,Float.class,options ) );
 				break;
 			case SqlTypes.REAL:
 			case SqlTypes.DOUBLE:
-				generator.write( javaType.unwrap( value,Double.class,options ) );
+				generator.write( javaType.unwrap( (T)value,Double.class,options ) );
 				break;
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -169,40 +169,40 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 			case SqlTypes.MATERIALIZED_NCLOB:
 			case SqlTypes.ENUM:
 			case SqlTypes.NAMED_ENUM:
-				generator.write( javaType.toString( value ) );
+				generator.write( javaType.toString( (T)value ) );
 				break;
 			case SqlTypes.DATE:
-				DATE dd = new DATE(javaType.unwrap( value,java.sql.Date.class,options ));
+				DATE dd = new DATE(javaType.unwrap( (T)value,java.sql.Date.class,options ));
 				OracleJsonDate jsonDate = new OracleJsonDateImpl(dd.shareBytes());
 				generator.write(jsonDate);
 				break;
 			case SqlTypes.TIME:
 			case SqlTypes.TIME_WITH_TIMEZONE:
 			case SqlTypes.TIME_UTC:
-				generator.write( javaType.toString( value ) );
+				generator.write( javaType.toString( (T)value ) );
 				break;
 			case SqlTypes.TIMESTAMP:
-				TIMESTAMP TS = new TIMESTAMP(javaType.unwrap( value, Timestamp.class, options ));
+				TIMESTAMP TS = new TIMESTAMP(javaType.unwrap( (T)value, Timestamp.class, options ));
 				OracleJsonTimestamp writeTimeStamp = new OracleJsonTimestampImpl(TS.shareBytes());
 				generator.write(writeTimeStamp);
 				break;
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-				OffsetDateTime dateTime = javaType.unwrap( value, OffsetDateTime.class, options );
+				OffsetDateTime dateTime = javaType.unwrap( (T)value, OffsetDateTime.class, options );
 				generator.write( dateTime );
 				break;
 			case SqlTypes.TIMESTAMP_UTC:
-				OffsetDateTime odt = javaType.unwrap( value, OffsetDateTime.class, options );
+				OffsetDateTime odt = javaType.unwrap( (T)value, OffsetDateTime.class, options );
 				generator.write( odt );
 				break;
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
-				BigDecimal bd = javaType.unwrap( value, BigDecimal.class, options );
+				BigDecimal bd = javaType.unwrap( (T)value, BigDecimal.class, options );
 				generator.write( bd );
 				break;
 
 			case SqlTypes.DURATION:
 			case SqlTypes.UUID:
-				generator.write( javaType.toString( value ) );
+				generator.write( javaType.toString( (T)value ) );
 				break;
 			case SqlTypes.BINARY:
 			case SqlTypes.VARBINARY:
@@ -211,7 +211,7 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 			case SqlTypes.BLOB:
 			case SqlTypes.MATERIALIZED_BLOB:
 				// how to handle
-				byte[] bytes = javaType.unwrap( value, byte[].class, options );
+				byte[] bytes = javaType.unwrap( (T)value, byte[].class, options );
 				generator.write( bytes );
 				break;
 			case SqlTypes.ARRAY:

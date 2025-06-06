@@ -10,6 +10,6 @@ package org.hibernate.boot.jaxb.mapping.spi;
  * @author Steve Ebersole
  */
 public interface JaxbLockableAttribute extends JaxbPersistentAttribute {
-	boolean isOptimisticLock();
+	Boolean isOptimisticLock();
 	void setOptimisticLock(Boolean value);
 }

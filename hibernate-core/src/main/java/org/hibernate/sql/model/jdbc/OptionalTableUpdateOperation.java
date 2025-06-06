@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
@@ -23,6 +24,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -48,6 +50,7 @@ import org.hibernate.sql.model.internal.TableInsertStandard;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
+import static org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -149,7 +152,16 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 								"Upsert update altered no rows - inserting : %s",
 								tableMapping.getTableName()
 						);
-						performInsert( jdbcValueBindings, session );
+						try {
+							performInsert( jdbcValueBindings, session );
+						}
+						catch (ConstraintViolationException cve) {
+							throw cve.getKind() == UNIQUE
+									// assume it was the primary key constraint which was violated,
+									// due to a new version of the row existing in the database
+									? new StaleStateException( mutationTarget.getRolePath(), cve )
+									: cve;
+						}
 					}
 				}
 			}

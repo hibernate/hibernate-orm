@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleT
 import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
@@ -39,6 +40,8 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	private final UpsertOperation upsertOperation;
 
 	private final OptionalTableUpdate optionalTableUpdate;
+
+	private final Expectation expectation = new Expectation.RowCount();
 
 	public DeleteOrUpsertOperation(
 			EntityMutationTarget mutationTarget,
@@ -123,6 +126,16 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			final int rowCount = session.getJdbcCoordinator().getResultSetReturn()
 					.executeUpdate( upsertDeleteStatement, statementDetails.getSqlString() );
 			MODEL_MUTATION_LOGGER.tracef( "`%s` rows upsert-deleted from `%s`", rowCount, tableMapping.getTableName() );
+			try {
+				expectation.verifyOutcome( rowCount, upsertDeleteStatement, -1, statementDetails.getSqlString() );
+			}
+			catch (SQLException e) {
+				throw jdbcServices.getSqlExceptionHelper().convert(
+						e,
+						"Unable to verify outcome for upsert delete",
+						statementDetails.getSqlString()
+				);
+			}
 		}
 		finally {
 			statementDetails.releaseStatement( session );
@@ -182,12 +195,23 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 		final var statementDetails = statementGroup.resolvePreparedStatementDetails( tableMapping.getTableName() );
 		try {
 			final PreparedStatement updateStatement = statementDetails.resolveStatement();
-			session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+			final JdbcServices jdbcServices = session.getJdbcServices();
+			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
 			jdbcValueBindings.beforeStatement( statementDetails );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
 							.executeUpdate( updateStatement, statementDetails.getSqlString() );
 			MODEL_MUTATION_LOGGER.tracef( "`%s` rows upserted into `%s`", rowCount, tableMapping.getTableName() );
+			try {
+				expectation.verifyOutcome( rowCount, updateStatement, -1, statementDetails.getSqlString() );
+			}
+			catch (SQLException e) {
+				throw jdbcServices.getSqlExceptionHelper().convert(
+						e,
+						"Unable to verify outcome for upsert",
+						statementDetails.getSqlString()
+				);
+			}
 		}
 		finally {
 			statementDetails.releaseStatement( session );

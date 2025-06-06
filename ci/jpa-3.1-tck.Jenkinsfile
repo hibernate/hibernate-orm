@@ -1,4 +1,4 @@
-@Library('hibernate-jenkins-pipeline-helpers@1.13') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
@@ -80,6 +80,7 @@ pipeline {
                             docker volume create tck-vol
                             docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z -v tck-vol:/tck/persistence-tck/tmp/:z -e NO_SLEEP=${params.NO_SLEEP} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
                             docker cp tck:/tck/persistence-tck/tmp/ ./results
+                            rm -Rf ./results/jdk-bundles
                         """
                         archiveArtifacts artifacts: 'results/**'
                         script {

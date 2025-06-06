@@ -95,7 +95,7 @@ public class JsonHelper {
 				writer.nullValue();
 			}
 			else {
-				writer.serializeJsonValue( value ,(JavaType<Object>) elementJavaType,elementJdbcType,options);
+				writer.serializeJsonValue( value ,(JavaType<?>) elementJavaType,elementJdbcType,options);
 			}
 		}
 		writer.endArray();
@@ -135,15 +135,11 @@ public class JsonHelper {
 		else if ( mappedType instanceof EmbeddableMappingType ) {
 			serialize( (EmbeddableMappingType) mappedType, value, options, writer );
 		}
-		else if ( mappedType instanceof BasicType<?> ) {
-			//noinspection unchecked
-			final BasicType<Object> basicType = (BasicType<Object>) mappedType;
-
+		else if ( mappedType instanceof BasicType<?> basicType) {
 			if ( isArrayType(basicType.getJdbcType())) {
 				final int length = Array.getLength( value );
 				writer.startArray();
 				if ( length != 0 ) {
-					//noinspection unchecked
 					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
 					final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
 					final Object domainArray = basicType.convertToRelationalValue( value );

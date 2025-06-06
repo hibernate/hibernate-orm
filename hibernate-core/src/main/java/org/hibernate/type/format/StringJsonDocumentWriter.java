@@ -108,7 +108,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			throw new IllegalArgumentException( "key cannot be null or empty" );
 		}
 
-		if (this.processingStates.getCurrent().equals( JsonProcessingState.OBJECT )) {
+		if (JsonProcessingState.OBJECT.equals(this.processingStates.getCurrent())) {
 			// we have started an object, and we are adding an item key: we do add a separator.
 			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
@@ -222,12 +222,23 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	}
 
 	@Override
-	public JsonDocumentWriter serializeJsonValue(Object value, JavaType<Object> javaType, JdbcType jdbcType, WrapperOptions options) {
+	public <T> JsonDocumentWriter serializeJsonValue(Object value, JavaType<T> javaType, JdbcType jdbcType, WrapperOptions options) {
 		addItemsSeparator();
 		convertedBasicValueToString(value, options,this.appender,javaType,jdbcType);
 		moveProcessingStateMachine();
 		return this;
 	}
+
+	private <T> void convertedCastBasicValueToString(Object value,
+															WrapperOptions options,
+															JsonAppender appender,
+															JavaType<T> javaType,
+															JdbcType jdbcType) {
+		assert javaType.isInstance( value );
+		//noinspection unchecked
+		convertedBasicValueToString( (T) value, options, appender, javaType, jdbcType );
+	}
+
 
 	/**
 	 * Converts a value to String according to its mapping type.
@@ -238,12 +249,15 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 * @param jdbcType the JDBC SQL type of the value
 	 * @param options the wapping options.
 	 */
-	private  void convertedBasicValueToString(
+	private <T> void convertedBasicValueToString(
 			Object value,
 			WrapperOptions options,
 			JsonAppender appender,
-			JavaType<Object> javaType,
+			JavaType<T> javaType,
 			JdbcType jdbcType) {
+
+		assert javaType.isInstance( value );
+
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
@@ -264,7 +278,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.REAL:
 			case SqlTypes.DOUBLE:
 				// These types fit into the native representation of JSON, so let's use that
-				javaType.appendEncodedString( appender, value );
+				javaType.appendEncodedString( appender, (T)value );
 				break;
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -290,7 +304,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				// These literals can contain the '"' character, so we need to escape it
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				appender.startEscaping();
-				javaType.appendEncodedString( appender, value );
+				javaType.appendEncodedString( appender, (T)value );
 				appender.endEscaping();
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -298,7 +312,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcDateJavaType.INSTANCE.appendEncodedString(
 						appender,
-						javaType.unwrap( value, java.sql.Date.class, options )
+						javaType.unwrap( (T)value, java.sql.Date.class, options )
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -308,7 +322,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcTimeJavaType.INSTANCE.appendEncodedString(
 						appender,
-						javaType.unwrap( value, java.sql.Time.class, options )
+						javaType.unwrap( (T)value, java.sql.Time.class, options )
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -316,7 +330,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcTimestampJavaType.INSTANCE.appendEncodedString(
 						appender,
-						javaType.unwrap( value, java.sql.Timestamp.class, options )
+						javaType.unwrap( (T)value, java.sql.Timestamp.class, options )
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -324,7 +338,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.TIMESTAMP_UTC:
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.formatTo(
-						javaType.unwrap( value, OffsetDateTime.class, options ),
+						javaType.unwrap( (T)value, OffsetDateTime.class, options ),
 						appender
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
@@ -335,7 +349,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.UUID:
 				// These types need to be serialized as JSON string, but don't have a need for escaping
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
-				javaType.appendEncodedString( appender, value );
+				javaType.appendEncodedString( appender, (T)value );
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.BINARY:
@@ -346,7 +360,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.MATERIALIZED_BLOB:
 				// These types need to be serialized as JSON string, and for efficiency uses appendString directly
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
-				appender.write( javaType.unwrap( value, byte[].class, options ) );
+				appender.write( javaType.unwrap( (T)value, byte[].class, options ) );
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.ARRAY:

@@ -83,8 +83,8 @@ public interface JsonDocumentWriter {
 	 * @param options the wrapping options
 	 * @return this instance
 	 */
-	JsonDocumentWriter serializeJsonValue(Object value,
-							JavaType<Object> javaType,
+	<T> JsonDocumentWriter serializeJsonValue(Object value,
+							JavaType<T> javaType,
 							JdbcType jdbcType,
 							WrapperOptions options);
 }

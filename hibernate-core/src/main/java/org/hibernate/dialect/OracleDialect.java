@@ -117,6 +117,9 @@ import java.util.regex.Pattern;
 import org.jboss.logging.Logger;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static org.hibernate.LockOptions.NO_WAIT;
+import static org.hibernate.LockOptions.SKIP_LOCKED;
+import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;

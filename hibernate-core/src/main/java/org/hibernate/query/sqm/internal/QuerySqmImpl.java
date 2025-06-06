@@ -490,10 +490,16 @@ public class QuerySqmImpl<R>
 	}
 
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		final QueryInterpretationCache.Key cacheKey = createInterpretationsKey( this );
-		return cacheKey != null
-				? interpretationCache().resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan )
-				: buildSelectQueryPlan();
+		final QueryInterpretationCache queryCache = interpretationCache();
+		if ( queryCache.isEnabled() ) {
+			final QueryInterpretationCache.Key cacheKey = createInterpretationsKey( this );
+			return cacheKey != null
+					? queryCache.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan )
+					: buildSelectQueryPlan();
+		}
+		else {
+			return buildSelectQueryPlan();
+		}
 	}
 
 	private QueryInterpretationCache interpretationCache() {

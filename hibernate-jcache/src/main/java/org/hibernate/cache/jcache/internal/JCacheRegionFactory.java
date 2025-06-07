@@ -23,6 +23,7 @@ import org.hibernate.cache.cfg.spi.DomainDataRegionBuildingContext;
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
 import org.hibernate.cache.jcache.ConfigSettings;
+import org.hibernate.cache.jcache.JCacheHelper;
 import org.hibernate.cache.jcache.MissingCacheStrategy;
 import org.hibernate.cache.spi.CacheKeysFactory;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -42,6 +43,12 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 	private volatile CacheManager cacheManager;
 	private volatile MissingCacheStrategy missingCacheStrategy;
+
+	// need to save the classloader from Caching.getDefaultClassLoader to reset it
+	// when this service is released again.
+	private volatile ClassLoader oldJsr107CacheClassLoader;
+	// in case caches were already set up beforehand with a different configuration
+	private volatile CacheManager preInitializedCacheManager;
 
 	@SuppressWarnings("unused")
 	public JCacheRegionFactory() {
@@ -85,7 +92,8 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 	protected Cache<Object, Object> getOrCreateCache(String unqualifiedRegionName, SessionFactoryImplementor sessionFactory) {
 		verifyStarted();
-		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName, sessionFactory.getSessionFactoryOptions() );
+		assert !RegionNameQualifier.INSTANCE.isQualified( unqualifiedRegionName,
+				sessionFactory.getSessionFactoryOptions() );
 
 		final String qualifiedRegionName = RegionNameQualifier.INSTANCE.qualify(
 				unqualifiedRegionName,
@@ -94,6 +102,13 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 
 		final Cache<Object, Object> cache = cacheManager.getCache( qualifiedRegionName );
 		if ( cache == null ) {
+			if ( preInitializedCacheManager != null ) {
+				final Cache<Object, Object> cacheFromBefore = preInitializedCacheManager.getCache(
+						qualifiedRegionName );
+				if ( cacheFromBefore != null ) {
+					return cacheFromBefore;
+				}
+			}
 			return createCache( qualifiedRegionName );
 		}
 		return cache;
@@ -110,7 +125,8 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 			case CREATE:
 				return cacheManager.createCache( regionName, new MutableConfiguration<>() );
 			case FAIL:
-				throw new CacheException( "On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
+				throw new CacheException(
+						"On-the-fly creation of JCache Cache objects is not supported [" + regionName + "]" );
 			default:
 				throw new IllegalStateException( "Unsupported missing cache strategy: " + missingCacheStrategy );
 		}
@@ -121,7 +137,9 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 				unqualifiedRegionName,
 				sessionFactory.getSessionFactoryOptions()
 		);
-		return cacheManager.getCache( qualifiedRegionName ) != null;
+		return cacheManager.getCache( qualifiedRegionName ) != null ||
+			(preInitializedCacheManager != null &&
+				preInitializedCacheManager.getCache( qualifiedRegionName ) != null);
 	}
 
 	@Override
@@ -155,9 +173,9 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	protected final String defaultRegionName(String regionName, SessionFactoryImplementor sessionFactory,
-			String defaultRegionName, List<String> legacyDefaultRegionNames) {
+											String defaultRegionName, List<String> legacyDefaultRegionNames) {
 		if ( defaultRegionName.equals( regionName )
-				&& !cacheExists( regionName, sessionFactory ) ) {
+			&& !cacheExists( regionName, sessionFactory ) ) {
 			// Maybe the user configured caches explicitly with legacy names; try them and use the first that exists
 
 			for ( String legacyDefaultRegionName : legacyDefaultRegionNames ) {
@@ -172,7 +190,6 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Lifecycle
 
@@ -182,7 +199,14 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 	}
 
 	@Override
-	protected void prepareForUse(SessionFactoryOptions settings, Map<String,Object> configValues) {
+	protected void prepareForUse(SessionFactoryOptions settings, Map<String, Object> configValues) {
+		final ClassLoader serviceClassLoader = getServiceClassLoader( settings );
+		if ( serviceClassLoader != null ) {
+			preInitializedCacheManager = JCacheHelper.locateStandardCacheManager();
+			oldJsr107CacheClassLoader = Caching.getDefaultClassLoader();
+			Caching.setDefaultClassLoader( serviceClassLoader );
+		}
+
 		this.cacheManager = resolveCacheManager( settings, configValues );
 		if ( this.cacheManager == null ) {
 			throw new CacheException( "Could not locate/create CacheManager" );
@@ -192,30 +216,38 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		);
 	}
 
-	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map<String,Object> properties) {
+	protected CacheManager resolveCacheManager(SessionFactoryOptions settings, Map<String, Object> properties) {
 		final Object explicitCacheManager = properties.get( ConfigSettings.CACHE_MANAGER );
 		if ( explicitCacheManager != null ) {
 			return useExplicitCacheManager( settings, explicitCacheManager );
 		}
 
-		final CachingProvider cachingProvider = getCachingProvider( properties );
+		final ClassLoader serviceClassLoader = getServiceClassLoader( settings );
+		final CachingProvider cachingProvider = getCachingProvider( properties, serviceClassLoader );
 		final CacheManager cacheManager;
 		final URI cacheManagerUri = getUri( settings, properties );
+		final ClassLoader classLoader = getClassLoader( cachingProvider, serviceClassLoader );
 		if ( cacheManagerUri != null ) {
-			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, getClassLoader( cachingProvider ) );
+			cacheManager = cachingProvider.getCacheManager( cacheManagerUri, classLoader );
 		}
 		else {
-			cacheManager = cachingProvider.getCacheManager( cachingProvider.getDefaultURI(), getClassLoader( cachingProvider ) );
+			cacheManager = cachingProvider.getCacheManager( cachingProvider.getDefaultURI(), classLoader );
 		}
 		return cacheManager;
 	}
 
-	protected ClassLoader getClassLoader(CachingProvider cachingProvider) {
-		// todo (5.3) : shouldn't this use Hibernate's AggregatedClassLoader?
-		return cachingProvider.getDefaultClassLoader();
+	private ClassLoader getServiceClassLoader(SessionFactoryOptions settings) {
+		final ClassLoaderService classLoaderService = settings.getServiceRegistry()
+				.getService( ClassLoaderService.class );
+		return (classLoaderService == null) ? null :
+				classLoaderService.workWithClassLoader( classLoader -> classLoader );
 	}
 
-	protected URI getUri(SessionFactoryOptions settings, Map<String,Object> properties) {
+	protected ClassLoader getClassLoader(CachingProvider cachingProvider, ClassLoader serviceClassLoader) {
+		return (serviceClassLoader != null) ? serviceClassLoader : cachingProvider.getDefaultClassLoader();
+	}
+
+	protected URI getUri(SessionFactoryOptions settings, Map<String, Object> properties) {
 		String cacheManagerUri = getProp( properties, ConfigSettings.CONFIG_URI );
 		if ( cacheManagerUri == null ) {
 			return null;
@@ -237,18 +269,18 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 		}
 	}
 
-	private String getProp(Map<String,Object> properties, String prop) {
+	private String getProp(Map<String, Object> properties, String prop) {
 		return properties != null ? (String) properties.get( prop ) : null;
 	}
 
-	protected CachingProvider getCachingProvider(final Map<String,Object> properties){
+	protected CachingProvider getCachingProvider(final Map<String, Object> properties, ClassLoader classLoader) {
 		final CachingProvider cachingProvider;
 		final String provider = getProp( properties, ConfigSettings.PROVIDER );
 		if ( provider != null ) {
-			cachingProvider = Caching.getCachingProvider( provider );
+			cachingProvider = Caching.getCachingProvider( provider, classLoader );
 		}
 		else {
-			cachingProvider = Caching.getCachingProvider();
+			cachingProvider = Caching.getCachingProvider( classLoader );
 		}
 		return cachingProvider;
 	}
@@ -283,6 +315,9 @@ public class JCacheRegionFactory extends RegionFactoryTemplate {
 			//		- when the explicit `setting` passed to `#useExplicitCacheManager` is
 			//		a CacheManager instance
 			cacheManager.close();
+			if ( oldJsr107CacheClassLoader != null ) {
+				Caching.setDefaultClassLoader( oldJsr107CacheClassLoader );
+			}
 		}
 		finally {
 			cacheManager = null;

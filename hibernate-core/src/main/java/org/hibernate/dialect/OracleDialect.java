@@ -624,8 +624,23 @@ public class OracleDialect extends Dialect {
 			case HOUR -> "to_number(to_char(?2,'HH24'))";
 			case MINUTE -> "to_number(to_char(?2,'MI'))";
 			case SECOND -> "to_number(to_char(?2,'SS'))";
-			case EPOCH -> "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
 			default -> super.extractPattern(unit);
+		};
+	}
+
+	@Override
+	@SuppressWarnings("deprecation")
+	public String extractPattern(TemporalUnit unit, TemporalType temporalType) {
+		return switch ( unit ) {
+			case EPOCH:
+				if ( temporalType == TemporalType.DATE ) {
+					yield "trunc((cast(from_tz(cast(?2 as timestamp),'UTC') as date) - date '1970-1-1')*86400)";
+				}
+				else {
+					yield "trunc((cast(?2 at time zone 'UTC' as date) - date '1970-1-1')*86400)";
+				}
+			default:
+				yield extractPattern( unit );
 		};
 	}
 

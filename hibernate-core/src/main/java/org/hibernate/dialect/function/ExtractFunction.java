@@ -4,7 +4,9 @@
  */
 package org.hibernate.dialect.function;
 
+import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
@@ -24,6 +26,7 @@ import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -37,6 +40,7 @@ import static org.hibernate.query.sqm.BinaryArithmeticOperator.*;
 import static org.hibernate.query.common.TemporalUnit.*;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
+import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
 import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME;
 
 /**
@@ -69,10 +73,22 @@ public class ExtractFunction extends AbstractSqmFunctionDescriptor implements Fu
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
+		new PatternRenderer( extractPattern( sqlAstArguments ) ).render( sqlAppender, sqlAstArguments, walker );
+	}
+
+	@SuppressWarnings("deprecation")
+	private String extractPattern(List<? extends SqlAstNode> sqlAstArguments) {
 		final ExtractUnit field = (ExtractUnit) sqlAstArguments.get( 0 );
 		final TemporalUnit unit = field.getUnit();
-		final String pattern = dialect.extractPattern( unit );
-		new PatternRenderer( pattern ).render( sqlAppender, sqlAstArguments, walker );
+		final Expression expression = (Expression) sqlAstArguments.get( 1 );
+		final TemporalType temporalType;
+		if ( dialect instanceof OracleDialect && (temporalType = getSqlTemporalType(
+				expression.getExpressionType() )) != null ) {
+			return dialect.extractPattern( unit, temporalType );
+		}
+		else {
+			return dialect.extractPattern( unit );
+		}
 	}
 
 	@Override

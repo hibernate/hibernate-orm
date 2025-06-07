@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.dialect;
+package org.hibernate.community.dialect;
 
 import java.util.Locale;
 
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.query.spi.Limit;
 
 import org.junit.After;
@@ -20,16 +20,16 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the Limit/Offset handler for {@link SQLServerDialect, v11}.
+ * Tests the Limit/Offset handler for SQLServerDialect.
  *
  * @author Chris Cranford
  */
 public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
-	private SQLServerDialect dialect;
+	private Dialect dialect;
 
 	@Before
 	public void setup() {
-		dialect = new SQLServerDialect( DatabaseVersion.make( 11 ) );
+		dialect = new SQLServerLegacyDialect( DatabaseVersion.make( 11 ) );
 	}
 
 	@After

@@ -1410,6 +1410,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return "extract(?1 from ?2)";
 	}
 
+	@SuppressWarnings("deprecation")
+	public String extractPattern(TemporalUnit unit, TemporalType temporalType) {
+		return extractPattern( unit );
+	}
+
 	/**
 	 * Obtain a pattern for the SQL equivalent to a
 	 * {@code cast()} function call. The resulting

@@ -116,6 +116,16 @@ public class CompositeNestedGeneratedValueGenerator
 		this.compositeType = compositeType;
 	}
 
+	// Used by Hibernate Reactive
+	public CompositeNestedGeneratedValueGenerator(
+			GenerationContextLocator generationContextLocator,
+			CompositeType compositeType,
+			List<GenerationPlan> generationPlans) {
+		this.generationContextLocator = generationContextLocator;
+		this.compositeType = compositeType;
+		this.generationPlans.addAll( generationPlans );
+	}
+
 	public void addGeneratedValuePlan(GenerationPlan plan) {
 		generationPlans.add( plan );
 	}
@@ -171,5 +181,20 @@ public class CompositeNestedGeneratedValueGenerator
 		for ( GenerationPlan plan : generationPlans ) {
 			plan.initialize( context );
 		}
+	}
+
+	// Used by Hibernate Reactive
+	public List<GenerationPlan> getGenerationPlans() {
+		return generationPlans;
+	}
+
+	// Used by Hibernate Reactive
+	public GenerationContextLocator getGenerationContextLocator() {
+		return generationContextLocator;
+	}
+
+	// Used by Hibernate Reactive
+	public CompositeType getCompositeType() {
+		return compositeType;
 	}
 }

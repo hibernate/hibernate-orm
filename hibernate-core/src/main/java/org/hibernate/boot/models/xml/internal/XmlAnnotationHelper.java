@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import jakarta.persistence.AccessType;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.NotFoundAction;
@@ -73,6 +74,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUniqueConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUuidGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.XmlAnnotations;
@@ -81,6 +83,7 @@ import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
 import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.internal.db.TableProcessing;
@@ -136,6 +139,7 @@ import static org.hibernate.boot.models.JpaAnnotations.SECONDARY_TABLE;
 import static org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT;
 import static org.hibernate.boot.models.xml.internal.UserTypeCasesMapKey.MAP_KEY_USER_TYPE_CASES;
 import static org.hibernate.boot.models.xml.internal.UserTypeCasesStandard.STANDARD_USER_TYPE_CASES;
+import static org.hibernate.internal.util.NullnessHelper.coalesce;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.unqualify;
@@ -1700,5 +1704,33 @@ public class XmlAnnotationHelper {
 				xmlDocumentContext.getModelBuildingContext()
 		);
 		collectionClassification.value( classification );
+	}
+
+	public static void applyVersion(JaxbVersionImpl version, MutableClassDetails mutableClassDetails, AccessType classAccessType, XmlDocumentContext xmlDocumentContext) {
+		if ( version != null ) {
+			final AccessType accessType = coalesce( version.getAccess(), classAccessType );
+			final String versionAttributeName = version.getName();
+
+			final MutableMemberDetails memberDetails = XmlProcessingHelper.getAttributeMember(
+					versionAttributeName,
+					accessType,
+					mutableClassDetails
+			);
+			memberDetails.applyAnnotationUsage(
+					JpaAnnotations.VERSION,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			CommonAttributeProcessing.applyAccess( accessType, memberDetails, xmlDocumentContext );
+			CommonAttributeProcessing.applyAttributeAccessor( version, memberDetails, xmlDocumentContext );
+			XmlAnnotationHelper.applyTemporal( version.getTemporal(), memberDetails, xmlDocumentContext );
+			if ( version.getColumn() != null ) {
+				final ColumnJpaAnnotation columnAnn = (ColumnJpaAnnotation) memberDetails.applyAnnotationUsage(
+						JpaAnnotations.COLUMN,
+						xmlDocumentContext.getModelBuildingContext()
+				);
+				columnAnn.apply( version.getColumn(), xmlDocumentContext );
+				XmlAnnotationHelper.applyColumnTransformation( version.getColumn(), memberDetails, xmlDocumentContext );
+			}
+		}
 	}
 }

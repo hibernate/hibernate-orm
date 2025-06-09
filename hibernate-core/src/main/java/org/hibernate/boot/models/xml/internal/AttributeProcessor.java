@@ -10,6 +10,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributeOverrideImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBaseAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
@@ -22,6 +23,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.xml.internal.attr.AnyMappingAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.attr.BasicAttributeProcessing;
@@ -151,11 +153,20 @@ public class AttributeProcessor {
 	}
 
 	public static void processAttributes(
-			JaxbAttributesContainer attributesContainer,
+			JaxbAttributesContainerImpl attributesContainer,
 			MutableClassDetails mutableClassDetails,
 			AccessType classAccessType,
 			XmlDocumentContext xmlDocumentContext) {
 		processAttributes( attributesContainer, mutableClassDetails, classAccessType, null, xmlDocumentContext );
+	}
+	public static void processAttributes(
+			JaxbAttributesContainerImpl attributesContainer,
+			MutableClassDetails mutableClassDetails,
+			AccessType classAccessType,
+			MemberAdjuster memberAdjuster,
+			XmlDocumentContext xmlDocumentContext) {
+		processAttributes( (JaxbAttributesContainer) attributesContainer, mutableClassDetails, classAccessType, memberAdjuster, xmlDocumentContext );
+		processVersionAttribute( attributesContainer.getVersion(), mutableClassDetails, classAccessType, xmlDocumentContext );
 	}
 
 	public static void processAttributes(
@@ -262,6 +273,19 @@ public class AttributeProcessor {
 		XmlAnnotationHelper.applyAssociationOverrides(
 				associationOverrides,
 				mutableClassDetails,
+				xmlDocumentContext
+		);
+	}
+
+	public static void processVersionAttribute(
+			JaxbVersionImpl version,
+			MutableClassDetails mutableClassDetails, AccessType classAccessType,
+			XmlDocumentContext xmlDocumentContext
+	) {
+		XmlAnnotationHelper.applyVersion(
+				version,
+				mutableClassDetails,
+				classAccessType,
 				xmlDocumentContext
 		);
 	}

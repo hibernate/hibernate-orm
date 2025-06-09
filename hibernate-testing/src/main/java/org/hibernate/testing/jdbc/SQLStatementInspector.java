@@ -127,7 +127,19 @@ public class SQLStatementInspector implements StatementInspector {
 				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).startsWith( "update" ) );
 	}
 
+	public void assertInsert() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).startsWith( "insert" ) );
+	}
+
 	public static SQLStatementInspector extractFromSession(SessionImplementor session) {
 		return (SQLStatementInspector) session.getJdbcSessionContext().getStatementInspector();
+	}
+
+	public void assertHasQueryMatching(String queryPattern) {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).matches( queryPattern ) );
 	}
 }

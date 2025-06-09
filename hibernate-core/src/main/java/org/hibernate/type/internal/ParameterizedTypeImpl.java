@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.StringJoiner;
 
+import jakarta.annotation.Nullable;
 import org.hibernate.models.spi.ParameterizedTypeDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.models.spi.TypeVariableScope;
@@ -21,7 +22,7 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 	private final Type rawType;
 	private final Type ownerType;
 
-	public ParameterizedTypeImpl(Type rawType, Type[] substTypeArgs, Type ownerType) {
+	public ParameterizedTypeImpl(Type rawType, Type[] substTypeArgs, @Nullable Type ownerType) {
 		this.substTypeArgs = substTypeArgs;
 		this.rawType = rawType;
 		this.ownerType = ownerType;

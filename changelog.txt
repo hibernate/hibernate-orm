@@ -3,6 +3,45 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.1.Final (June 10, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33571
+
+** Bug
+    * [HHH-19528] - Version xml mapping is ignored
+    * [HHH-19515] - PhysicalNamingStrategy called to produce a logical column name
+    * [HHH-19495] - [Hibernate 7] - Extra update when mixing entity annotation with XML when a collection is dirty
+    * [HHH-19490] - NPE when using array_position function
+    * [HHH-19482] - entity assigned LockMode.READ when read outside transaction
+    * [HHH-19480] - missing FK constraint for unidirectional @OneToMany on a non-primary key
+    * [HHH-19479] - single referenced column not marked unique
+    * [HHH-19477] - ConnectionReleaseMode.AFTER_STATEMENT ineffective due to missing connection release
+    * [HHH-19476] - claimEntityHolderIfPossible Assertion Error
+    * [HHH-19473] - Bytecode enhancement incorrectly generates code for Bidirectional Generic Entities
+    * [HHH-19472] - Native query "SELECT 1" with result type Object[] return singular object
+    * [HHH-19463] - Hibernate processor silently ignores incorrect repository definitions (e.g. @Save on non-entity type)
+    * [HHH-19446] - [Regression] UnknownEntityException: Could not resolve root entity
+    * [HHH-19387] - AssertionError in EntityInitializerImpl data.concreteDescriptor is null
+    * [HHH-19383] - validation of NativeQuery result mappings
+    * [HHH-19372] - AccessOptimizer.setPropertyValues() and getPropertyValues() error with entity hierarchy.
+    * [HHH-19369] - Entity hierarchy ordering error within metamodel building with enhancement
+    * [HHH-18891] - java.lang.AssertionError generated in getResolvedInstance even though NotFound IGNORE set
+    * [HHH-18876] - ArrayInitializer#resolveInstanceSubInitializers should consider @ListIndexBase
+    * [HHH-18813] - DML update of secondary table column fails
+    * [HHH-18774] - two bad bugs in cascade refresh
+    * [HHH-18252] - Support @IdClass during annotation processing for Jakarta Data 
+
+** Improvement
+    * [HHH-19507] - Upgrade to Hibernate Models 1.0.0
+
+** Patch
+    * [HHH-19471] -  Server startup fails in FIPS mode because of MD5 usage for @OneToMany Constraint Name and FK name generation.
+
+** Task
+    * [HHH-19519] - Document breaking changes in new Hibernate Maven Plugin
+
+
 Changes in 7.0.0.Final (May 19, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

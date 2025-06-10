@@ -67,6 +67,7 @@ import jakarta.persistence.AccessType;
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -100,6 +101,7 @@ import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
+import static org.hibernate.processor.util.TypeUtils.resolveTypeMirror;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -2526,7 +2528,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				return null;
 			}
 
-			if ( checkParameterType( entityType, param, memberType( member ) ) ) {
+			final var memberType = memberType( member );
+			final var attributeType = requireNonNullElse(
+					resolveTypeMirror(
+							entityType,
+							member.getEnclosingElement(),
+							memberType.toString()
+					), memberType
+			);
+			if ( checkParameterType( entityType, param, attributeType ) ) {
 				return FieldType.MULTIVALUED;
 			}
 			else if ( containsAnnotation( param, PATTERN ) ) {

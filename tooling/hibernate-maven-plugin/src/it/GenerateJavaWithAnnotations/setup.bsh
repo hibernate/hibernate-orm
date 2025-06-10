@@ -1,0 +1,12 @@
+import java.sql.DriverManager;
+import java.sql.Connection;
+
+String JDBC_CONNECTION = "jdbc:h2:mem:test";
+String CREATE_PERSON_TABLE = "create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
+
+DriverManager
+	.getConnection(JDBC_CONNECTION)
+	.createStatement()
+	.execute(CREATE_PERSON_TABLE);
+
+System.out.println("Database created!");

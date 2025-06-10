@@ -9,8 +9,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -28,14 +26,14 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
-				OneToOneJoinColumnsEmbeddedIdTest.EntityA.class,
-				OneToOneJoinColumnsEmbeddedIdTest.EntityB.class,
+				OneToOneEmbeddedIdTest.EntityA.class,
+				OneToOneEmbeddedIdTest.EntityB.class,
 		}
 )
 @SessionFactory
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 @JiraKey("HHH-17838")
-public class OneToOneJoinColumnsEmbeddedIdTest {
+public class OneToOneEmbeddedIdTest {
 
 	private static final String ENTITY_A_NAME = "a";
 	private static final String ENTITY_B_NAME = "B";
@@ -43,8 +41,8 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 	private static final Integer ENTITY_A_ID1 = 1;
 	private static final String ENTITY_A_ID2 = "1";
 
-	private static final Integer ENTITY_B_ID1 = 1;
-	private static final String ENTITY_B_ID2 = "1";
+	private static final Integer ENTITY_B_ID1 = 2;
+	private static final String ENTITY_B_ID2 = "2";
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -105,6 +103,20 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 					assertThat( entityAKey.id2 ).isEqualTo( ENTITY_A_ID2 );
 
 					assertThat( entityA.getName() ).isEqualTo( ENTITY_A_NAME );
+				}
+		);
+	}
+
+	@Test
+	public void testNativeQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					String query = "select a.* from ENTITY_A a";
+					List<EntityA> entityAS = session.createNativeQuery( query, EntityA.class ).list();
+					assertThat( entityAS.size() ).isEqualTo( 1 );
+					EntityA entityA = entityAS.get( 0 );
+					assertThat( entityA.getName() ).isEqualTo( ENTITY_A_NAME );
+					assertThat( entityA.getEntityB().getName() ).isEqualTo( ENTITY_B_NAME );
 				}
 		);
 	}
@@ -184,12 +196,12 @@ public class OneToOneJoinColumnsEmbeddedIdTest {
 		private String name;
 
 		@OneToOne(optional = false, fetch = FetchType.LAZY)
-		@JoinColumns({
-				@JoinColumn(name = "id1", referencedColumnName = "id1", nullable = false,
-						insertable = false, updatable = false),
-				@JoinColumn(name = "id2", referencedColumnName = "id2", nullable = false,
-						insertable = false, updatable = false)
-		})
+//		@JoinColumns({
+//				@JoinColumn(name = "id1", referencedColumnName = "id1", nullable = false,
+//						insertable = false, updatable = false),
+//				@JoinColumn(name = "id2", referencedColumnName = "id2", nullable = false,
+//						insertable = false, updatable = false)
+//		})
 		private EntityA entityA;
 
 		public EntityB() {

@@ -784,6 +784,11 @@ public final class TypeUtils {
 	public static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
 
+	public static String resolveTypeName(TypeElement typeElement, Element element, String name) {
+		final var mirror = resolveTypeMirror( typeElement, element, name );
+		return mirror == null ? name : mirror.toString();
+	}
+
 	public static @Nullable TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
 		final var mirrorMap = resolveTypeParameters( typeElement.asType(), element, Map.of(), new HashSet<>() );
 		return mirrorMap == null ? null : mirrorMap.get( name );
@@ -808,7 +813,7 @@ public final class TypeUtils {
 					? generic.get( 0 ).getBounds().get( 0 )
 					: typeArguments.get( n );
 			final var value = mirror.toString();
-			map.put( generic.get( n ).toString(), parametersMap.getOrDefault( value, mirror ) );
+			map.put( generic.get( n ).asType().toString(), parametersMap.getOrDefault( value, mirror ) );
 		}
 		if ( typeElement.equals( element ) ) {
 			return map;

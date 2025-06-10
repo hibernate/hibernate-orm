@@ -42,8 +42,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 			SharedSessionContractImplementor session) {
 		super( entityName, session );
 		this.identifier = identifier;
-		//Important optimisation to not actually do a Map lookup for entities which don't have any lazy fields at all:
-		this.lazyFields = org.hibernate.internal.util.collections.CollectionHelper.toSmallSet( lazyFields );
+		this.lazyFields = lazyFields;
 	}
 
 	@Override

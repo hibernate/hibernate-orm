@@ -94,6 +94,8 @@ public final class TypeUtils {
 		PRIMITIVES.put( TypeKind.DOUBLE, "double" );
 	}
 
+	private static final Map<Element, GenericTypeParameterResolver> typeResolversMap = new HashMap<>();
+
 	private TypeUtils() {
 	}
 
@@ -774,4 +776,17 @@ public final class TypeUtils {
 
 	public static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
+
+	private static GenericTypeParameterResolver getTypeParameterResolver(TypeElement typeElement) {
+		final GenericTypeParameterResolver typeParameterResolver = typeResolversMap.get( typeElement );
+		if ( typeParameterResolver != null ) {
+			return typeParameterResolver;
+		}
+		return new GenericTypeParameterResolver( typeElement );
+	}
+
+	public static TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
+		final var typeParameterResolver = getTypeParameterResolver( typeElement );
+		return typeParameterResolver.resolveTypeMirror( element, name );
+	}
 }

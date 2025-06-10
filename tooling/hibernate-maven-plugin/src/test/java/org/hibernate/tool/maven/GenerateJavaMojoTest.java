@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
+import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.apache.maven.project.MavenProject;
@@ -22,6 +24,10 @@ public class GenerateJavaMojoTest {
 	private static final String JDBC_CONNECTION = "jdbc:h2:mem:test";
 	private static final String CREATE_PERSON_TABLE =
 			"create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
+	private static final String CREATE_ITEM_TABLE =
+			"create table ITEM (ID int not null, NAME varchar(20), OWNER_ID int not null, primary key (ID), foreign key (OWNER_ID) references PERSON(ID))";
+	private static final String DROP_ITEM_TABLE =
+			"drop table ITEM";
 	private static final String DROP_PERSON_TABLE =
 			"drop table PERSON";
 
@@ -79,18 +85,54 @@ public class GenerateJavaMojoTest {
 		assertFalse(new String(raw).contains("import jakarta.persistence.Entity;"));
 	}
 
+	@Test
+	public void testGenerateJavaWithGenerics() throws Exception {
+		File personJavaFile = new File(outputDirectory, "Person.java");
+		// Person.java should not exist
+		assertFalse(personJavaFile.exists());
+		// Set value of field 'jdk5' to 'true' and execute mojo
+		Field jdk5Field = GenerateJavaMojo.class.getDeclaredField("jdk5");
+		jdk5Field.setAccessible(true);
+		jdk5Field.set(generateJavaMojo, true);
+		// Execute mojo
+		generateJavaMojo.executeExporter(createMetadataDescriptor());
+		// Person.java should exist
+		assertTrue(personJavaFile.exists());
+		// Person.java should be an annotated entity
+		byte[] raw = Files.readAllBytes(personJavaFile.toPath());
+		assertTrue(new String(raw).contains("Set<Item>"));
+	}
+
+	@Test
+	public void testGenerateJavaWithoutGenerics() throws Exception {
+		File personJavaFile = new File(outputDirectory, "Person.java");
+		// Person.java should not exist
+		assertFalse(personJavaFile.exists());
+		// Set value of field 'jdk5' to 'true' and execute mojo
+		Field jdk5Field = GenerateJavaMojo.class.getDeclaredField("jdk5");
+		jdk5Field.setAccessible(true);
+		jdk5Field.set(generateJavaMojo, false);
+		// Execute mojo
+		generateJavaMojo.executeExporter(createMetadataDescriptor());
+		// Person.java should exist
+		assertTrue(personJavaFile.exists());
+		// Person.java should be an annotated entity
+		byte[] raw = Files.readAllBytes(personJavaFile.toPath());
+		assertFalse(new String(raw).contains("Set<Item>"));
+	}
+
 	private void createDatabase() throws Exception {
-		DriverManager
-			.getConnection(JDBC_CONNECTION)
-			.createStatement()
-			.execute(CREATE_PERSON_TABLE);
+		Connection connection = DriverManager.getConnection(JDBC_CONNECTION);
+		Statement statement = connection.createStatement();
+		statement.execute(CREATE_PERSON_TABLE);
+		statement.execute(CREATE_ITEM_TABLE);
 	}
 
 	private void dropDatabase() throws Exception {
-		DriverManager
-			.getConnection(JDBC_CONNECTION)
-			.createStatement()
-			.execute(DROP_PERSON_TABLE);
+		Connection connection = DriverManager.getConnection(JDBC_CONNECTION);
+		Statement statement = connection.createStatement();
+		statement.execute(DROP_ITEM_TABLE);
+		statement.execute(DROP_PERSON_TABLE);
 	}
 
 	private void createGenerateJavaMojo() throws Exception {

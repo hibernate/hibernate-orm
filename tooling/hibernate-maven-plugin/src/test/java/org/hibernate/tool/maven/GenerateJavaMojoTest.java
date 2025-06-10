@@ -48,7 +48,11 @@ public class GenerateJavaMojoTest {
 		File personJavaFile = new File(outputDirectory, "Person.java");
 		// Person.java should not exist
 		assertFalse(personJavaFile.exists());
-		// Execute mojo with default value of 'ejb3' field which is 'true'
+		// Set value of field 'ejb3' to 'true' and execute mojo
+		Field ejb3Field = GenerateJavaMojo.class.getDeclaredField("ejb3");
+		ejb3Field.setAccessible(true);
+		ejb3Field.set(generateJavaMojo, true);
+		// Execute mojo
 		generateJavaMojo.executeExporter(createMetadataDescriptor());
 		// Person.java should exist
 		assertTrue(personJavaFile.exists());
@@ -66,6 +70,7 @@ public class GenerateJavaMojoTest {
 		Field ejb3Field = GenerateJavaMojo.class.getDeclaredField("ejb3");
 		ejb3Field.setAccessible(true);
 		ejb3Field.set(generateJavaMojo, false);
+		// Execute mojo
 		generateJavaMojo.executeExporter(createMetadataDescriptor());
 		// Person.java should exist
 		assertTrue(personJavaFile.exists());

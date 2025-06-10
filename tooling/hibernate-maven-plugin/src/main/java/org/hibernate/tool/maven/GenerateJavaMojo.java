@@ -48,7 +48,7 @@ public class GenerateJavaMojo extends AbstractGenerationMojo {
     /** Code will contain JPA features, e.g. using annotations from jakarta.persistence
      * and org.hibernate.annotations. */
     @Parameter(defaultValue = "true")
-    private boolean ejb3 = true;
+    private boolean ejb3;
     
     /** Code will contain JDK 5 constructs such as generics and static imports. */
     @Parameter(defaultValue = "false")

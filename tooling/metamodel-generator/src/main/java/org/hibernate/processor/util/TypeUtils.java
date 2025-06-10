@@ -30,13 +30,17 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static java.beans.Introspector.decapitalize;
+import static java.util.stream.Stream.concat;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
@@ -779,4 +783,41 @@ public final class TypeUtils {
 
 	public static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
+
+	public static TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
+		final var mirrorMap = resolveTypeParameters( typeElement.asType(), element, Map.of(), new HashSet<>() );
+		return mirrorMap == null ? null : mirrorMap.get( name );
+	}
+
+	private static Map<String, TypeMirror> resolveTypeParameters(TypeMirror type, Element element, Map<String, TypeMirror> parametersMap, Collection<Element> visited) {
+		if ( !(type instanceof DeclaredType declaredType
+			&& declaredType.asElement() instanceof TypeElement typeElement) ) {
+			return null;
+		}
+		if ( !visited.add( typeElement ) ) {
+			return null;
+		}
+		final var generic = typeElement.getTypeParameters();
+		final var map = new HashMap<String, TypeMirror>();
+		var typeArguments = declaredType.getTypeArguments();
+		if ( !(typeArguments.isEmpty() || generic.size() == typeArguments.size()) ) {
+			return null;
+		}
+		for ( var n = 0; n < generic.size(); ++n ) {
+			final var mirror = typeArguments.isEmpty()
+					? generic.get( 0 ).getBounds().get( 0 )
+					: typeArguments.get( n );
+			final var value = mirror.toString();
+			map.put( generic.get( n ).toString(), parametersMap.getOrDefault( value, mirror ) );
+		}
+		if ( typeElement.equals( element ) ) {
+			return map;
+		}
+		return concat(
+				Stream.of( typeElement.getSuperclass() ),
+				typeElement.getInterfaces().stream()
+		).map( tm -> resolveTypeParameters( tm, element, map, visited ) )
+				.filter( Objects::nonNull )
+				.findFirst().orElse( null );
+	}
 }

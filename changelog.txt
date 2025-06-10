@@ -29,17 +29,13 @@ https://hibernate.atlassian.net/projects/HHH/versions/33571
     * [HHH-18891] - java.lang.AssertionError generated in getResolvedInstance even though NotFound IGNORE set
     * [HHH-18876] - ArrayInitializer#resolveInstanceSubInitializers should consider @ListIndexBase
     * [HHH-18813] - DML update of secondary table column fails
-    * [HHH-18774] - two bad bugs in cascade refresh
-    * [HHH-18252] - Support @IdClass during annotation processing for Jakarta Data 
+    * [HHH-18252] - Support @IdClass during annotation processing for Jakarta Data
 
 ** Improvement
     * [HHH-19507] - Upgrade to Hibernate Models 1.0.0
 
 ** Patch
     * [HHH-19471] -  Server startup fails in FIPS mode because of MD5 usage for @OneToMany Constraint Name and FK name generation.
-
-** Task
-    * [HHH-19519] - Document breaking changes in new Hibernate Maven Plugin
 
 
 Changes in 7.0.0.Final (May 19, 2025)

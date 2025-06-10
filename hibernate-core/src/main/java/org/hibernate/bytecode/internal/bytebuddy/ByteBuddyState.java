@@ -228,8 +228,17 @@ public final class ByteBuddyState {
 	 * @return The loaded generated class.
 	 */
 	public Class<?> load(Class<?> referenceClass, String className, BiFunction<ByteBuddy, NamingStrategy, DynamicType.Builder<?>> makeClassFunction) {
+
 		try {
-			return referenceClass.getClassLoader().loadClass( className );
+			Class<?> result = referenceClass.getClassLoader().loadClass(className);
+			if (result.getClassLoader() != referenceClass.getClassLoader()) {
+				LOG.info("xxx ByteBuddyState.load detected problem where " +
+					"loading generated class \"" + className + "\" from a subdeployment is actually loading the generated class in the ear lib." +
+					"\nDetails: " +
+					"referenceClass.getClassLoader() == " + referenceClass.getClassLoader() +
+					"\nLoaded class classloader = " + result.getClassLoader());
+				}
+				return result;
 		}
 		catch (ClassNotFoundException e) {
 			// Ignore

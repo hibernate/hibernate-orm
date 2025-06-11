@@ -51,7 +51,7 @@ public class GenerateJavaMojo extends AbstractGenerationMojo {
     private boolean ejb3;
     
     /** Code will contain JDK 5 constructs such as generics and static imports. */
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "true")
     private boolean jdk5;
 
     /** A path used for looking up user-edited templates. */

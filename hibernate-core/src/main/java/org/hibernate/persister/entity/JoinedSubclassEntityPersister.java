@@ -1437,15 +1437,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Map<String, EntityNameUse> entityNameUses,
 			MappingMetamodelImplementor metamodel) {
 		if ( tableReference.getTableExpression().equals( getRootTableName() ) ) {
-			assert join.getJoinType() == SqlAstJoinType.INNER : "Found table reference join with root table of non-INNER type: " + join.getJoinType();
 			final String discriminatorPredicate = getPrunedDiscriminatorPredicate(
 					entityNameUses,
 					metamodel,
 					"t"
-//					tableReference.getIdentificationVariable()
 			);
-			tableReference.setPrunedTableExpression( "(select * from " + getRootTableName() + " t where " + discriminatorPredicate + ")" );
-//			join.applyPredicate( new SqlFragmentPredicate( discriminatorPredicate ) );
+			// null means we're filtering for all subtypes, so we don't need to apply a predicate
+			if ( discriminatorPredicate != null ) {
+				assert join.getJoinType() == SqlAstJoinType.INNER : "Found table reference join with root table of non-INNER type: " + join.getJoinType();
+				tableReference.setPrunedTableExpression( "(select * from " + getRootTableName() + " t where " + discriminatorPredicate + ")" );
+			}
 			return true;
 		}
 		return false;

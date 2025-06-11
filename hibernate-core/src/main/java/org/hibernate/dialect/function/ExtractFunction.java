@@ -48,7 +48,7 @@ import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUs
  */
 public class ExtractFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 
-	private final Dialect dialect;
+	final Dialect dialect;
 
 	public ExtractFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(

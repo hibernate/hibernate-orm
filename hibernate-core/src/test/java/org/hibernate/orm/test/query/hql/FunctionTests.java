@@ -57,7 +57,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.List;
@@ -2571,5 +2573,41 @@ public class FunctionTests {
 			byte[] bytes = s.createSelectionQuery("select column(e.ctid as binary) from EntityOfBasics e", byte[].class)
 					.getSingleResultOrNull();
 		});
+	}
+
+	@Test
+	@JiraKey("HHH-18837")
+	public void testEpochFunction(SessionFactoryScope scope) {
+
+		LocalDate someLocalDate = LocalDate.of( 2013, 7, 5 );
+		LocalDateTime someLocalDateTime = someLocalDate.atStartOfDay();
+		Date someDate = Date.from( someLocalDateTime.toInstant( ZoneOffset.UTC ) );
+		ZonedDateTime someZonedDateTime = ZonedDateTime.of( someLocalDate, LocalTime.MIN,
+															ZoneId.of( "Europe/Vienna" ) );
+
+		scope.inTransaction( session -> {
+			EntityOfBasics entityOfBasics = new EntityOfBasics();
+			entityOfBasics.setId( 124 );
+			entityOfBasics.setTheDate( someDate );
+			entityOfBasics.setTheLocalDate( someLocalDate );
+			entityOfBasics.setTheLocalDateTime( someLocalDateTime );
+			entityOfBasics.setTheZonedDateTime( someZonedDateTime );
+			session.persist( entityOfBasics );
+
+			assertEquals( someDate.toInstant().toEpochMilli() / 1000,
+						  session.createSelectionQuery( "select epoch(a.theDate) from EntityOfBasics a where id=124",
+														Long.class ).getSingleResult() );
+			assertEquals( someLocalDate.atStartOfDay( ZoneOffset.UTC ).toInstant().toEpochMilli() / 1000,
+						  session.createSelectionQuery( "select epoch(a.theLocalDate) from EntityOfBasics a where id=124",
+														Long.class ).getSingleResult() );
+			assertEquals( someLocalDateTime.toEpochSecond( ZoneOffset.UTC ), session.createSelectionQuery(
+					"select epoch(a.theLocalDateTime) from EntityOfBasics a where id=124",
+					Long.class ).getSingleResult() );
+			assertEquals( someZonedDateTime.toEpochSecond(), session.createSelectionQuery(
+					"select epoch(a.theZonedDateTime) from EntityOfBasics a where id=124",
+					Long.class ).getSingleResult() );
+
+			session.remove( entityOfBasics );
+		} );
 	}
 }

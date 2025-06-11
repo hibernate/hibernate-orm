@@ -24,7 +24,7 @@ import java.lang.reflect.Constructor;
 public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T> {
 
 	private final Class<T> resultClass;
-	private Constructor<T> constructor;
+	private transient Constructor<T> constructor;
 
 	private Constructor<T> constructor(Object[] elements) {
 		if ( constructor == null ) {
@@ -74,5 +74,17 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 		catch (Exception e) {
 			throw new InstantiationException( "Cannot instantiate query result type", resultClass, e );
 		}
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof NativeQueryConstructorTransformer<?> that
+			&& this.resultClass == that.resultClass;
+			// should be safe to ignore the cached constructor here
+	}
+
+	@Override
+	public int hashCode() {
+		return resultClass.hashCode();
 	}
 }

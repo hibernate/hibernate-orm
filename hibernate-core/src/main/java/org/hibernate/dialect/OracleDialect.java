@@ -16,6 +16,7 @@ import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.OracleAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.ModeStatsModeEmulation;
+import org.hibernate.dialect.function.OracleExtractFunction;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
@@ -417,6 +418,11 @@ public class OracleDialect extends Dialect {
 		functionFactory.hex( "rawtohex(?1)" );
 		functionFactory.sha( "standard_hash(?1, 'SHA256')" );
 		functionFactory.md5( "standard_hash(?1, 'MD5')" );
+
+		functionContributions.getFunctionRegistry().register(
+				"extract",
+				new OracleExtractFunction( this, typeConfiguration )
+		);
 	}
 
 	/**

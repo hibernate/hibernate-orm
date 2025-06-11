@@ -80,7 +80,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 					return new JDBCConnectionException( message, sqlException, sql );
 				case
 					"21",	// "cardinality violation"
-					"22":	// "data exception" (22001 is string too long)
+					"22":	// "data exception" (22001 is string too long; 22003 is numeric value out of range)
 					return new DataException( message, sqlException, sql );
 				case
 					"28":	// "authentication failure"

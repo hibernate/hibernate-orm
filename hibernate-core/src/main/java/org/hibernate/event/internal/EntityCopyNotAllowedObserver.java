@@ -45,12 +45,9 @@ public final class EntityCopyNotAllowedObserver implements EntityCopyObserver {
 	}
 
 	private String getManagedOrDetachedEntityString(Object managedEntity, Object entity ) {
-		if ( entity == managedEntity) {
-			return  "Managed: [" + entity + "]";
-		}
-		else {
-			return "Detached: [" + entity + "]";
-		}
+		return entity == managedEntity
+				? "Managed: [" + entity + "]"
+				: "Detached: [" + entity + "]";
 	}
 
 	public void clear() {

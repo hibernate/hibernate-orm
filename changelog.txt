@@ -3,6 +3,24 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.2.Final (June 12, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33901
+
+** Bug
+    * [HHH-19533] - Implement equals() and hashCode() for NativeQueryConstructorTransformer
+    * [HHH-19531] - Jakarta Data implementation casts StatlessSession to *Implementor interfaces
+    * [HHH-19529] - Check bytecode generated classes with stable names class loaders
+    * [HHH-19522] - upserts fail silently instead of throwing StaleObjectStateException
+
+** Improvement
+    * [HHH-19532] - Add unwrap() method to StatelessSession/SharedSessionContract
+
+** Task
+    * [HHH-19518] - Make hibernate-maven-plugin configuration parameters non-readonly
+
+
 Changes in 7.0.1.Final (June 10, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

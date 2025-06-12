@@ -50,7 +50,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 	@Test
@@ -67,7 +68,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position,be1_0.id" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position,be1_0.id", " order by be1_0.\"position\",be1_0.id" );
 	}
 
 	@Test
@@ -83,7 +85,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 	@Test
@@ -99,7 +102,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position,be1_0.id" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position,be1_0.id", " order by be1_0.\"position\",be1_0.id" );
 	}
 
 	@Test
@@ -116,7 +120,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
@@ -128,7 +133,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 	@Test
@@ -144,7 +150,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.position between ? and ?" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
 	}
 
 	@Test
@@ -160,7 +167,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.position between ? and ?" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
 	}
 
 	@Test
@@ -216,7 +224,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.position between ? and ?" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
 	}
 
 	@Test
@@ -232,7 +241,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.position between ? and ?" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
 	}
 
 	@Test
@@ -248,7 +258,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 	@Test
@@ -270,7 +281,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 	@Test
@@ -287,7 +299,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 	@Test
@@ -309,7 +322,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 	@Test
 	void testBaseParameters(SessionFactoryScope factoryScope) {
@@ -325,7 +339,9 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.id>? and be1_0.position between ? and ?" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).containsAnyOf(
+				" where be1_0.id>? and be1_0.position between ? and ?",
+				" where be1_0.id>? and be1_0.\"position\" between ? and ?" );
 	}
 
 	@Test
@@ -385,7 +401,8 @@ public class SimpleQuerySpecificationTests {
 		} );
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
-		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " order by be1_0.position" );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
+				.containsAnyOf( " order by be1_0.position", " order by be1_0.\"position\"" );
 	}
 
 }

@@ -265,6 +265,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static final class SupportsTruncateWithCast implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsTruncateWithCast();
+		}
+	}
+
 	public static class DoubleQuoteQuoting implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
@@ -406,8 +413,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsTruncateThroughCast implements DialectFeatureCheck {
+	public static class SupportsDateTimeTruncation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if (dialect instanceof DerbyDialect
+				|| dialect instanceof FirebirdDialect
+				|| dialect instanceof InformixDialect) {
+				return false;
+			}
 			try {
 				dialect.appendDatetimeFormat( new StringBuilderSqlAppender(), "" );
 				return true;

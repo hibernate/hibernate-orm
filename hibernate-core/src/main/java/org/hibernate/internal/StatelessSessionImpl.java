@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import jakarta.persistence.PersistenceException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -1425,6 +1426,18 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
 		return CacheLoadHelper.loadFromSecondLevelCache( this, instanceToLoad, lockMode, persister, entityKey );
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> type) {
+		checkOpen();
+
+		if ( type.isInstance( this ) ) {
+			return type.cast( this );
+		}
+
+		throw new PersistenceException(
+				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
 	}
 
 	private static final class MultiLoadOptions implements MultiIdLoadOptions {

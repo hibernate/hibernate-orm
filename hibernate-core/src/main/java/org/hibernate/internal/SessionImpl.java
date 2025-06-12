@@ -2948,7 +2948,8 @@ public class SessionImpl
 			return type.cast( persistenceContext );
 		}
 
-		throw new PersistenceException( "Hibernate cannot unwrap EntityManager as '" + type.getName() + "'" );
+		throw new PersistenceException(
+				"Hibernate cannot unwrap '" + getClass().getName() + "' as '" + type.getName() + "'" );
 	}
 
 	@Override

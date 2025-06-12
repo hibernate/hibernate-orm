@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate.tool.maven.test</groupId>
-    <artifactId>jpa-default</artifactId>
+    <artifactId>hbm2java-no-generics</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <dependencies>
@@ -47,7 +47,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <templatePath>${basedir}/templates</templatePath>
+                    <jdk5>false</jdk5>
                 </configuration>
             </plugin>
         </plugins>

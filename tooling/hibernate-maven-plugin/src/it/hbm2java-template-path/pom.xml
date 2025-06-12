@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate.tool.maven.test</groupId>
-    <artifactId>use-generics</artifactId>
+    <artifactId>hbm2java-template-path</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <dependencies>
@@ -47,7 +47,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <jdk5>false</jdk5>
+                    <templatePath>${basedir}/templates</templatePath>
                 </configuration>
             </plugin>
         </plugins>

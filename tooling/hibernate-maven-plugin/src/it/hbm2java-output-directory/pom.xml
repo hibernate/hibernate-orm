@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate.tool.maven.test</groupId>
-    <artifactId>jpa-default</artifactId>
+    <artifactId>hbm2java-output-directory</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <dependencies>

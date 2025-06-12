@@ -20,7 +20,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.hibernate.tool.maven.test</groupId>
-    <artifactId>no-annotations</artifactId>
+    <artifactId>hbm2java-jpa-default</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <dependencies>
@@ -46,9 +46,6 @@
                         </goals>
                     </execution>
                 </executions>
-                <configuration>
-                    <ejb3>false</ejb3>
-                </configuration>
             </plugin>
         </plugins>
     </build>

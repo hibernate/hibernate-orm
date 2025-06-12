@@ -326,15 +326,13 @@ public final class CollectionHelper {
 	 * @return will never return null, but might return an immutable collection.
 	 */
 	public static <T> Set<T> toSmallSet(Set<T> set) {
-		switch ( set.size() ) {
-			case 0:
-				return emptySet();
-			case 1:
-				return singleton( set.iterator().next() );
-			default:
-				//TODO assert tests pass even if this is set to return an unmodifiable Set
-				return set;
-		}
+		return switch ( set.size() ) {
+			case 0 -> emptySet();
+			case 1 -> singleton( set.iterator().next() );
+			//TODO assert tests pass even if this is set to return an unmodifiable Set
+			default -> set;
+
+		};
 	}
 
 	/**
@@ -345,16 +343,16 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 */
 	public static <K, V> Map<K, V> toSmallMap(final Map<K, V> map) {
-		switch ( map.size() ) {
-			case 0:
-				return emptyMap();
-			case 1:
-				Map.Entry<K, V> entry = map.entrySet().iterator().next();
-				return singletonMap( entry.getKey(), entry.getValue() );
-			default:
-				//TODO assert tests pass even if this is set to return an unmodifiable Map
-				return map;
-		}
+		return switch ( map.size() ) {
+			case 0 -> emptyMap();
+			case 1 -> {
+				var entry = map.entrySet().iterator().next();
+				yield singletonMap( entry.getKey(), entry.getValue() );
+			}
+			//TODO assert tests pass even if this is set to return an unmodifiable Map
+			default -> map;
+
+		};
 	}
 
 	/**
@@ -365,15 +363,14 @@ public final class CollectionHelper {
 	 * The goal is to save memory.
 	 */
 	public static <V> List<V> toSmallList(ArrayList<V> arrayList) {
-		switch ( arrayList.size() ) {
-			case 0:
-				return emptyList();
-			case 1:
-				return singletonList( arrayList.get( 0 ) );
-			default:
+		return switch ( arrayList.size() ) {
+			case 0 -> emptyList();
+			case 1 -> singletonList( arrayList.get( 0 ) );
+			default -> {
 				arrayList.trimToSize();
-				return arrayList;
-		}
+				yield arrayList;
+			}
+		};
 	}
 
 	public static <O> List<O> combine(List<O> list1, List<O> list2) {

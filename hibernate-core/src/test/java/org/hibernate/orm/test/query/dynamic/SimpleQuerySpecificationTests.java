@@ -8,6 +8,8 @@ import jakarta.persistence.criteria.CommonAbstractCriteria;
 import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionLazyDelegator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Order;
@@ -19,6 +21,7 @@ import org.hibernate.query.restriction.Path;
 import org.hibernate.query.restriction.Restriction;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
@@ -158,6 +161,46 @@ public class SimpleQuerySpecificationTests {
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( " where be1_0.position between ? and ?" );
+	}
+
+	@Test
+	@JiraKey("HHH-19531")
+	void testSelectionOnSessionProxy(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		factoryScope.inTransaction( (session) -> {
+			var sessionProxy = new SessionLazyDelegator( () -> session );
+			// The test only makes sense if this is true. It currently is, but who knows what the future has in store for us.
+			//noinspection ConstantValue
+			assert !(sessionProxy instanceof SharedSessionContractImplementor);
+
+			sqlCollector.clear();
+			SelectionSpecification.create( BasicEntity.class, "from BasicEntity" )
+					.createQuery( sessionProxy )
+					.list();
+		} );
+
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+	}
+
+	@Test
+	@JiraKey("HHH-19531")
+	void testMutationOnSessionProxy(SessionFactoryScope factoryScope) {
+		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
+
+		factoryScope.inTransaction( (session) -> {
+			var sessionProxy = new SessionLazyDelegator( () -> session );
+			// The test only makes sense if this is true. It currently is, but who knows what the future has in store for us.
+			//noinspection ConstantValue
+			assert !(sessionProxy instanceof SharedSessionContractImplementor);
+
+			sqlCollector.clear();
+			MutationSpecification.create( BasicEntity.class, "delete BasicEntity" )
+					.createQuery( sessionProxy )
+					.executeUpdate();
+		} );
+
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 	}
 
 	@Test

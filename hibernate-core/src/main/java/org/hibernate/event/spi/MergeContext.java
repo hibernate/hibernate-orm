@@ -275,7 +275,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
 	public void putAll(Map<?,?> map) {
-		for ( Entry<?,?> entry : map.entrySet() ) {
+		for ( var entry : map.entrySet() ) {
 			put( entry.getKey(), entry.getValue() );
 		}
 	}

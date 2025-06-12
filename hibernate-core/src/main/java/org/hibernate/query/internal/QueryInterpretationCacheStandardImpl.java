@@ -8,7 +8,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
+import org.hibernate.internal.util.cache.InternalCache;
+import org.hibernate.internal.util.cache.InternalCacheFactory;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -37,31 +38,31 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	/**
 	 * the cache of the actual plans...
 	 */
-	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
+	private final InternalCache<Key, QueryPlan> queryPlanCache;
 
 	private final ServiceRegistry serviceRegistry;
-	private final BoundedConcurrentHashMap<Object, HqlInterpretation<?>> hqlInterpretationCache;
-	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
+	private final InternalCache<Object, HqlInterpretation<?>> hqlInterpretationCache;
+	private final InternalCache<String, ParameterInterpretation> nativeQueryParamCache;
 
 	private StatisticsImplementor statistics;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
 		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
-
-		this.queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		this.hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
-		this.nativeQueryParamCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
+		final InternalCacheFactory cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
+		this.queryPlanCache = cacheFactory.createInternalCache( maxQueryPlanCount );
+		this.hqlInterpretationCache = cacheFactory.createInternalCache( maxQueryPlanCount );
+		this.nativeQueryParamCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.serviceRegistry = serviceRegistry;
 	}
 
 	@Override
 	public int getNumberOfCachedHqlInterpretations() {
-		return hqlInterpretationCache.size();
+		return hqlInterpretationCache.heldElementsEstimate();
 	}
 
 	@Override
 	public int getNumberOfCachedQueryPlans() {
-		return queryPlanCache.size();
+		return queryPlanCache.heldElementsEstimate();
 	}
 
 	private StatisticsImplementor getStatistics() {

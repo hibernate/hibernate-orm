@@ -25,7 +25,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EntityCopyObserver;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
@@ -274,7 +273,7 @@ public class DefaultMergeEventListener
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		copyCache.put( entity, entity, true );  //before cascade!
 		cascadeOnMerge( source, persister, entity, copyCache );
-		copyValues( persister, entity, entity, source, copyCache );
+		TypeHelper.replace( persister, entity, source, entity, copyCache );
 		event.setResult( entity );
 	}
 
@@ -285,13 +284,27 @@ public class DefaultMergeEventListener
 		final EventSource session = event.getSession();
 		final String entityName = event.getEntityName();
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
+		final String[] propertyNames = persister.getPropertyNames();
+		final Type[] propertyTypes = persister.getPropertyTypes();
 		final Object copy = copyEntity( copyCache, entity, session, persister, id );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
 		super.cascadeBeforeSave( session, persister, entity, copyCache );
-		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.FROM_PARENT );
+
+		final Object[] sourceValues = persister.getValues( entity );
+		session.getInterceptor().preMerge( entity, sourceValues, propertyNames, propertyTypes );
+		final Object[] copiedValues = TypeHelper.replace(
+				sourceValues,
+				persister.getValues( copy ),
+				propertyTypes,
+				session,
+				copy,
+				copyCache,
+				ForeignKeyDirection.FROM_PARENT
+		);
+		persister.setValues( copy, copiedValues );
 
 		saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
 
@@ -299,10 +312,24 @@ public class DefaultMergeEventListener
 		// copy created before we actually copy
 		super.cascadeAfterSave( session, persister, entity, copyCache );
 
-		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
+		// this is the second pass through on a merge op, so here we limit the
+		// replacement to association types (value types were already replaced
+		// during the first pass)
+//		final Object[] newSourceValues = persister.getValues( entity );
+		final Object[] targetValues = TypeHelper.replaceAssociations(
+				sourceValues, // newSourceValues,
+				persister.getValues( copy ),
+				propertyTypes,
+				session,
+				copy,
+				copyCache,
+				ForeignKeyDirection.TO_PARENT
+		);
+		persister.setValues( copy, targetValues );
+		session.getInterceptor().postMerge( entity, copy, targetValues, null, propertyNames, propertyTypes );
 
 		// saveTransientEntity has been called using a copy that contains empty collections
-		// (copyValues uses `ForeignKeyDirection.FROM_PARENT`) then the PC may contain a wrong
+		// (copyValues uses ForeignKeyDirection.FROM_PARENT) then the PC may contain a wrong
 		// collection snapshot, the CollectionVisitor realigns the collection snapshot values
 		// with the final copy
 		new CollectionVisitor( copy, id, session )
@@ -382,11 +409,11 @@ public class DefaultMergeEventListener
 		LOG.trace( "Merging detached instance" );
 
 		final Object entity = event.getEntity();
-		final EventSource source = event.getSession();
-		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
+		final EventSource session = event.getSession();
+		final EntityPersister persister = session.getEntityPersister( event.getEntityName(), entity );
 		final String entityName = persister.getEntityName();
 		if ( originalId == null ) {
-			originalId = persister.getIdentifier( entity, source );
+			originalId = persister.getIdentifier( entity, session );
 		}
 		final Object clonedIdentifier = copiedId == null
 				? persister.getIdentifierType().deepCopy( originalId, event.getFactory() )
@@ -394,9 +421,9 @@ public class DefaultMergeEventListener
 		final Object id = getDetachedEntityId( event, originalId, persister );
 		// we must clone embedded composite identifiers, or we will get back the same instance that we pass in
 		// apply the special MERGE fetch profile and perform the resolution (Session#get)
-		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
+		final Object result = session.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.MERGE,
-				() -> source.get( entityName, clonedIdentifier )
+				() -> session.get( entityName, clonedIdentifier )
 		);
 
 		if ( result == null ) {
@@ -404,7 +431,7 @@ public class DefaultMergeEventListener
 			// we got here because we assumed that an instance
 			// with an assigned id and no version was detached,
 			// when it was really transient (or deleted)
-			final Boolean knownTransient = persister.isTransient( entity, source );
+			final Boolean knownTransient = persister.isTransient( entity, session );
 			if ( knownTransient == Boolean.FALSE ) {
 				// we know for sure it's detached (generated id
 				// or a version property), and so the instance
@@ -424,8 +451,24 @@ public class DefaultMergeEventListener
 			final Object target = targetEntity( event, entity, persister, id, result );
 			// cascade first, so that all unsaved objects get their
 			// copy created before we actually copy
-			cascadeOnMerge( source, persister, entity, copyCache );
-			copyValues( persister, entity, target, source, copyCache );
+			cascadeOnMerge( session, persister, entity, copyCache );
+
+			final String[] propertyNames = persister.getPropertyNames();
+			final Type[] propertyTypes = persister.getPropertyTypes();
+
+			final Object[] sourceValues = persister.getValues( entity );
+			final Object[] originalValues = persister.getValues( target );
+			session.getInterceptor().preMerge( entity, sourceValues, propertyNames, propertyTypes );
+			final Object[] targetValues = TypeHelper.replace(
+					sourceValues,
+					originalValues,
+					propertyTypes,
+					session,
+					target,
+					copyCache
+			);
+			persister.setValues( target, targetValues );
+			session.getInterceptor().postMerge( entity, target, targetValues, originalValues, propertyNames, propertyTypes );
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
 			markInterceptorDirty( entity, target );
 			event.setResult( result );
@@ -568,64 +611,6 @@ public class DefaultMergeEventListener
 		}
 
 		return entry != null && entry.isExistsInDatabase();
-	}
-
-	protected void copyValues(
-			final EntityPersister persister,
-			final Object entity,
-			final Object target,
-			final SessionImplementor source,
-			final MergeContext copyCache) {
-		if ( entity == target ) {
-			TypeHelper.replace( persister, entity, source, entity, copyCache );
-		}
-		else {
-			final Object[] copiedValues = TypeHelper.replace(
-					persister.getValues( entity ),
-					persister.getValues( target ),
-					persister.getPropertyTypes(),
-					source,
-					target,
-					copyCache
-			);
-			persister.setValues( target, copiedValues );
-		}
-	}
-
-	protected void copyValues(
-			final EntityPersister persister,
-			final Object entity,
-			final Object target,
-			final SessionImplementor source,
-			final MergeContext copyCache,
-			final ForeignKeyDirection foreignKeyDirection) {
-		final Object[] copiedValues;
-		if ( foreignKeyDirection == ForeignKeyDirection.TO_PARENT ) {
-			// this is the second pass through on a merge op, so here we limit the
-			// replacement to associations types (value types were already replaced
-			// during the first pass)
-			copiedValues = TypeHelper.replaceAssociations(
-					persister.getValues( entity ),
-					persister.getValues( target ),
-					persister.getPropertyTypes(),
-					source,
-					target,
-					copyCache,
-					foreignKeyDirection
-			);
-		}
-		else {
-			copiedValues = TypeHelper.replace(
-					persister.getValues( entity ),
-					persister.getValues( target ),
-					persister.getPropertyTypes(),
-					source,
-					target,
-					copyCache,
-					foreignKeyDirection
-			);
-		}
-		persister.setValues( target, copiedValues );
 	}
 
 	/**

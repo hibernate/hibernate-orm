@@ -1499,4 +1499,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
+
+	@Override
+	default <T> T unwrap(Class<T> type) {
+		return SharedSessionContract.super.unwrap(type);
+	}
 }

@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 import org.hibernate.Internal;
@@ -42,6 +44,7 @@ public interface HibernateProxy extends Serializable, PrimeAmongSecondarySuperty
 	 *
 	 * @return The serializable proxy replacement.
 	 */
+	@Serial
 	Object writeReplace();
 
 	/**

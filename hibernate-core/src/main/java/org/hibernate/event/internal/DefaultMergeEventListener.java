@@ -220,7 +220,7 @@ public class DefaultMergeEventListener
 							)
 					);
 					source.getActionQueue().unScheduleUnloadedDeletion( entity );
-					entityIsDetached(event, copiedId, originalId, copiedAlready);
+					entityIsDetached( event, copiedId, originalId, copiedAlready );
 					break;
 				}
 				throw new ObjectDeletedException( "deleted instance passed to merge",
@@ -298,7 +298,6 @@ public class DefaultMergeEventListener
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		super.cascadeAfterSave( session, persister, entity, copyCache );
-
 
 		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
 

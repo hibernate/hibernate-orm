@@ -157,13 +157,10 @@ public class StrategySelectorImpl implements StrategySelector {
 			return strategy.cast( strategyReference );
 		}
 
-		final Class<? extends T> implementationClass;
-		if ( strategyReference instanceof Class ) {
-			implementationClass = (Class<T>) strategyReference;
-		}
-		else {
-			implementationClass = selectStrategyImplementor( strategy, strategyReference.toString() );
-		}
+		final Class<? extends T> implementationClass =
+				strategyReference instanceof Class
+						? (Class<? extends T>) strategyReference
+						: selectStrategyImplementor( strategy, strategyReference.toString() );
 
 		try {
 			return creator.create( implementationClass );

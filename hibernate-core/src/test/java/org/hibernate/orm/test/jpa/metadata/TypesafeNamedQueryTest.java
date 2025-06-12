@@ -22,6 +22,8 @@ public class TypesafeNamedQueryTest {
 		scope.inTransaction( entityManager -> {
 			Record record1 = new Record("Hello, World!");
 			Record record2 = new Record("Goodbye!");
+			// make sure record2 timestamp is actually different from record1 to prevent test failure
+			record2.timestamp = record1.timestamp.plusNanos( scope.getDialect().getFractionalSecondPrecisionInNanos() );
 			entityManager.persist(record1);
 			entityManager.persist(record2);
 			String text = entityManager.createQuery(Record_._TextById_).setParameter(1, record1.id).getSingleResult();

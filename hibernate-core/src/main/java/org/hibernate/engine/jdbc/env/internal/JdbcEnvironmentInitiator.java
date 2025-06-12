@@ -402,10 +402,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 							final String version = metadata.getDatabaseProductVersion();
 							final String prefix =
 									metadata.getDatabaseMajorVersion() + "." + metadata.getDatabaseMinorVersion() + ".";
-							if ( version.startsWith(prefix) ) {
+							final int versionIndex = version.indexOf( prefix );
+							if ( versionIndex >= 0 ) {
 								try {
-									final String substring = version.substring( prefix.length() );
-									final String micro = new StringTokenizer(substring," .,-:;/()[]").nextToken();
+									final String substring = version.substring( versionIndex + prefix.length() );
+									final String micro = new StringTokenizer( substring, " .,-:;/()[]" ).nextToken();
 									return parseInt(micro);
 								}
 								catch (NumberFormatException nfe) {

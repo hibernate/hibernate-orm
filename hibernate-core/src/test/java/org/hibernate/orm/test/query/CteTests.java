@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.query.Query;
@@ -239,6 +240,7 @@ public class CteTests {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "The emulation of CTEs in subqueries results in correlation in nesting level 2, which is not possible with Sybase ASE")
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Current Firebird versions treat this as an IN value list, see also https://github.com/FirebirdSQL/firebird/issues/8182" )
 	public void testInSubquery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

@@ -35,6 +35,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.function.Function;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -369,9 +371,9 @@ public class MultiLoadLockingTest {
 	}
 
 	private void checkStatement(int stmtCount, String lockString) {
-		assertEquals( stmtCount,sqlStatementInspector.getSqlQueries().size() );
+		assertEquals( stmtCount, sqlStatementInspector.getSqlQueries().size() );
 		for ( String stmt : sqlStatementInspector.getSqlQueries() ) {
-			assertTrue( stmt.contains( lockString ) );
+			assertThat( stmt, containsString( lockString ) );
 		}
 		sqlStatementInspector.clear();
 	}

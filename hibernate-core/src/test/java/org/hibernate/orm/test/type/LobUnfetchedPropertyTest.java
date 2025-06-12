@@ -27,6 +27,7 @@ import jakarta.persistence.Lob;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -65,9 +66,7 @@ public class LobUnfetchedPropertyTest {
 			assertFalse( Hibernate.isPropertyInitialized( file, "blob" ) );
 			Blob blob = file.getBlob();
 			try {
-				assertTrue(
-					Arrays.equals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) )
-				);
+				assertArrayEquals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) );
 			}
 			catch (SQLException ex) {
 				fail( "could not determine Lob length" );
@@ -76,6 +75,7 @@ public class LobUnfetchedPropertyTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Driver cannot determine clob length" )
 	public void testClob(SessionFactoryScope scope) throws SQLException {
 		final int id = scope.fromTransaction( s -> {
 			FileClob file = new FileClob();

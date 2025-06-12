@@ -747,7 +747,11 @@ public class CommonFunctionFactory {
 	}
 
 	public void repeat_rpad() {
-		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*length(?1),?1)" )
+		repeat_rpad( "length" );
+	}
+
+	public void repeat_rpad(String lengthFunctionName) {
+		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*" + lengthFunctionName + "(?1),?1)" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)

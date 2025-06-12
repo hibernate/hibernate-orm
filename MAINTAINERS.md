@@ -54,10 +54,12 @@ If you're looking for information about how to release Hibernate ORM, read on.
 
 ### Automated releases
 
-On select maintenance branches (`6.2`, `6.4`, ...),
-micro releases (`x.y.1`, `x.y.2`, ...) are performed as soon as you push to that branch.
+On select maintenance branches (`6.2`, `6.4`, `7.0`, ...),
+micro releases (`x.y.1`, `x.y.2`, ...) are performed on weekends
+if, since the last release, commits were pushed with a message starting with `[HHH-` or `HHH-` --
+which is taken as "someone fixed something worthy of a Jira issue".
 
-Make sure to assign fix versions properly before merging pull requests.
+Make sure to assign fix versions properly in Jira when merging pull requests.
 
 No announcements are expected for such releases:
 neither through X, blog posts, or email.

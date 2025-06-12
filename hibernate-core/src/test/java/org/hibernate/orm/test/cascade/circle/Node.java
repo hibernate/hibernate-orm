@@ -9,54 +9,33 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class Node {
-
-//	@Id
-//	@SequenceGenerator(name="NODE_SEQ", sequenceName="NODE_SEQ", initialValue=1, allocationSize=1)
-//	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="NODE_SEQ")
-	private Long nodeID;
-
+	private Integer nodeID;
 	private long version;
-
 	private String name;
-
-	/** the list of orders that are delivered at this node */
-//	@OneToMany(fetch=FetchType.LAZY, cascade={CascadeType.MERGE, CascadeType.REFRESH}, mappedBy="deliveryNode")
-	private Set deliveryTransports = new HashSet();
-
-	/** the list of orders that are picked up at this node */
-//	@OneToMany(fetch=FetchType.LAZY, cascade=CascadeType.ALL, mappedBy="pickupNode")
-	private Set pickupTransports = new HashSet();
-
-	/** the route to which this node belongs */
-//	@ManyToOne(targetEntity=Route.class, optional=false, fetch=FetchType.EAGER)
-//	@JoinColumn(name="ROUTEID", nullable=false, insertable=true, updatable=true)
 	private Route route = null;
-
-	/** the tour this node belongs to, null if this node does not belong to a tour (e.g first node of a route) */
-//	@ManyToOne(targetEntity=Tour.class, cascade={CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, optional=true, fetch=FetchType.LAZY)
-//	@JoinColumn(name="TOURID", nullable=true, insertable=true, updatable=true)
+	private Set<Transport> deliveryTransports = new HashSet<>();
+	private Set<Transport> pickupTransports = new HashSet<>();
 	private Tour tour;
 
-//	@Transient
 	private String transientField = "node original value";
 
-	public Set getDeliveryTransports() {
+	public Set<Transport> getDeliveryTransports() {
 		return deliveryTransports;
 	}
 
-	public void setDeliveryTransports(Set deliveryTransports) {
+	public void setDeliveryTransports(Set<Transport> deliveryTransports) {
 		this.deliveryTransports = deliveryTransports;
 	}
 
-	public Set getPickupTransports() {
+	public Set<Transport> getPickupTransports() {
 		return pickupTransports;
 	}
 
-	public void setPickupTransports(Set pickupTransports) {
+	public void setPickupTransports(Set<Transport> pickupTransports) {
 		this.pickupTransports = pickupTransports;
 	}
 
-	public Long getNodeID() {
+	public Integer getNodeID() {
 		return nodeID;
 	}
 
@@ -126,7 +105,7 @@ public class Node {
 		this.transientField = transientField;
 	}
 
-	protected void setNodeID(Long nodeID) {
+	protected void setNodeID(Integer nodeID) {
 		this.nodeID = nodeID;
 	}
 

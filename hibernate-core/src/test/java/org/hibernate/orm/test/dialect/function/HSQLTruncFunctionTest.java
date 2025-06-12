@@ -6,60 +6,53 @@ package org.hibernate.orm.test.dialect.function;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.RequiresDialect;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
-@author Vlad Mihalcea
+ * @author Vlad Mihalcea
  */
 @RequiresDialect( HSQLDialect.class )
-public class HSQLTruncFunctionTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class
-		};
-	}
+@DomainModel(annotatedClasses = HSQLTruncFunctionTest.Person.class)
+@SessionFactory
+public class HSQLTruncFunctionTest {
 
 	@Test
-	public void testTruncateAndTruncFunctions(){
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testTruncateAndTruncFunctions(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (entityManager) -> {
 			Person person = new Person();
 			person.setId( 1L );
 			person.setHighestScore( 99.56d );
 			entityManager.persist( person );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( (entityManager) -> {
 			Double score = entityManager.createQuery(
-				"select truncate(p.highestScore, 1) " +
-				"from Person p " +
-				"where p.id = :id", Double.class)
-			.setParameter( "id", 1L )
-			.getSingleResult();
+							"select truncate(p.highestScore, 1) " +
+							"from Person p " +
+							"where p.id = :id", Double.class)
+					.setParameter( "id", 1L )
+					.getSingleResult();
 
 			assertEquals( 99.5d, score, 0.01 );
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		factoryScope.inTransaction( (entityManager) -> {
 			Double score = entityManager.createQuery(
-				"select trunc(p.highestScore, 1) " +
-				"from Person p " +
-				"where p.id = :id", Double.class)
-			.setParameter( "id", 1L )
-			.getSingleResult();
+							"select trunc(p.highestScore, 1) " +
+							"from Person p " +
+							"where p.id = :id", Double.class)
+					.setParameter( "id", 1L )
+					.getSingleResult();
 
 			assertEquals( 99.5d, score, 0.01 );
 		} );
-
 	}
 
 	@Entity(name = "Person")

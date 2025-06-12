@@ -4,30 +4,15 @@
  */
 package org.hibernate.orm.test.cascade.circle;
 
+
 public class Transport {
-
-//	@Id
-//	@SequenceGenerator(name="TRANSPORT_SEQ", sequenceName="TRANSPORT_SEQ", initialValue=1, allocationSize=1)
-//	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="TRANSPORT_SEQ")
-	private Long transportID;
-
+	private Integer transportID;
 	private long version;
-
 	private String name;
-
-	/** node value object at which the order is picked up */
-//	@ManyToOne(optional=false, cascade={CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, fetch=FetchType.EAGER)
-//	@JoinColumn(name="PICKUPNODEID", /*nullable=false,*/insertable=true, updatable=true)
-	private Node pickupNode = null;
-
-	/** node value object at which the order is delivered */
-//	@ManyToOne(optional=false, cascade={CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}, fetch=FetchType.EAGER)
-//	@JoinColumn(name="DELIVERYNODEID", /*nullable=false,*/ insertable=true, updatable=true)
-	private Node deliveryNode = null;
-
+	private Node pickupNode;
+	private Node deliveryNode;
 	private Vehicle vehicle;
 
-//	@Transient
 	private String transientField = "transport original value";
 
 	public Node getDeliveryNode() {
@@ -42,7 +27,7 @@ public class Transport {
 		return pickupNode;
 	}
 
-	protected void setTransportID(Long transportID) {
+	protected void setTransportID(Integer transportID) {
 		this.transportID = transportID;
 	}
 
@@ -58,7 +43,7 @@ public class Transport {
 		this.vehicle = vehicle;
 	}
 
-	public Long getTransportID() {
+	public Integer getTransportID() {
 		return transportID;
 	}
 

@@ -6,39 +6,32 @@ package org.hibernate.orm.test.cascade;
 
 import java.util.Set;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Gail
- * Date: Jan 2, 2007
- * Time: 4:50:24 PM
- * To change this template use File | Settings | File Templates.
- */
 public class Parent {
-	private Long id;
-	private Set deleteOrphanChildren;
-	private Set children;
+	private Integer id;
+	private Set<DeleteOrphanChild> deleteOrphanChildren;
+	private Set<Child> children;
 
-	public Long getId() {
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 
-	public Set getDeleteOrphanChildren() {
+	public Set<DeleteOrphanChild> getDeleteOrphanChildren() {
 		return deleteOrphanChildren;
 	}
 
-	public void setDeleteOrphanChildren(Set deleteOrphanChildren) {
+	public void setDeleteOrphanChildren(Set<DeleteOrphanChild> deleteOrphanChildren) {
 		this.deleteOrphanChildren = deleteOrphanChildren;
 	}
 
-	public Set getChildren() {
+	public Set<Child> getChildren() {
 		return children;
 	}
 
-	public void setChildren(Set children) {
+	public void setChildren(Set<Child> children) {
 		this.children = children;
 	}
 }

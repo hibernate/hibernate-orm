@@ -24,11 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/deletetransient/Person.hbm.xml"
-		}
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/deletetransient/Person.xml")
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
@@ -36,7 +33,7 @@ public class DeleteTransientEntityTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "from java.lang.Object", Object.class ).list().forEach( session::remove ) );
+		scope.dropData();
 	}
 
 	@Test

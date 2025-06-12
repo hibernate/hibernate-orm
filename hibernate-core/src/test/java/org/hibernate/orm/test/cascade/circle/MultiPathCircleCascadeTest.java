@@ -33,17 +33,11 @@ import org.hibernate.testing.orm.junit.Setting;
  *
  * @author Pavol Zibrita, Gail Badner
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascade.hbm.xml"
-		}
-)
+@ServiceRegistry(settings = {
+		@Setting(name = Environment.GENERATE_STATISTICS, value = "true"),
+		@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0"),
+})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/cascade/circle/MultiPathCircleCascade.xml")
 @SessionFactory
-@ServiceRegistry(
-		settings = {
-				@Setting(name = Environment.GENERATE_STATISTICS, value = "true"),
-				@Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "0"),
-		}
-)
 public class MultiPathCircleCascadeTest extends AbstractMultiPathCircleCascadeTest {
 }

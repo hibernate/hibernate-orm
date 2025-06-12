@@ -7,15 +7,8 @@ package org.hibernate.orm.test.cascade;
 import java.util.HashSet;
 import java.util.Set;
 
-public class A
-{
-	// Constants -----------------------------------------------------------------------------------
-
-	// Static --------------------------------------------------------------------------------------
-
-	// Attributes ----------------------------------------------------------------------------------
-
-	private long id;
+public class A {
+	private int id;
 
 	private String data;
 
@@ -26,77 +19,54 @@ public class A
 	private G g;
 
 
-	// Constructors --------------------------------------------------------------------------------
-
-	public A()
-	{
+	public A() {
 		hs = new HashSet();
 	}
 
-	public A(String data)
-	{
+	public A(String data) {
 		this();
 		this.data = data;
 	}
 
-	// Public --------------------------------------------------------------------------------------
 
-	public long getId()
-	{
+	public int getId() {
 		return id;
 	}
 
-	public void setId(long id)
-	{
+	public void setId(int id) {
 		this.id = id;
 	}
 
-	public void setData(String data)
-	{
+	public void setData(String data) {
 		this.data = data;
 	}
 
-	public String getData()
-	{
+	public String getData() {
 		return data;
 	}
 
-	public void setHs(Set hs)
-	{
+	public void setHs(Set hs) {
 		this.hs = hs;
 	}
 
-	public Set getHs()
-	{
+	public Set getHs() {
 		return hs;
 	}
 
-	public void setG(G g)
-	{
+	public void setG(G g) {
 		this.g = g;
 	}
 
-	public G getG()
-	{
+	public G getG() {
 		return g;
 	}
 
-	public void addH(H h)
-	{
-		hs.add(h);
-		h.setA(this);
+	public void addH(H h) {
+		hs.add( h );
+		h.setA( this );
 	}
 
-	public String toString()
-	{
+	public String toString() {
 		return "A[" + id + ", " + data + "]";
 	}
-
-	// Package protected ---------------------------------------------------------------------------
-
-	// Protected -----------------------------------------------------------------------------------
-
-	// Private -------------------------------------------------------------------------------------
-
-	// Inner classes -------------------------------------------------------------------------------
 }

@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<!--
+        This mapping demonstrates "dynamic" entities.
+    -->
+
+	<entity name="ProductLine" metadata-complete="true">
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+				<target>Integer</target>
+			</id>
+			<basic name="description" optional="false">
+				<column length="200"/>
+				<target>String</target>
+			</basic>
+			<one-to-many name="models" mapped-by="productLine" classification="BAG" target-entity="Model">
+				<cascade>
+					<cascade-all/>
+				</cascade>
+			</one-to-many>
+		</attributes>
+	</entity>
+
+	<entity name="Model" metadata-complete="true">
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+				<target>Integer</target>
+			</id>
+			<basic name="name" optional="false">
+				<column length="25"/>
+				<target>String</target>
+			</basic>
+			<basic name="description" optional="false">
+				<column length="200"/>
+				<target>String</target>
+			</basic>
+			<many-to-one name="productLine" optional="false" fetch="LAZY" target-entity="ProductLine">
+				<join-column name="product_line_fk"/>
+			</many-to-one>
+		</attributes>
+	</entity>
+</entity-mappings>
+

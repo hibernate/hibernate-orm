@@ -122,7 +122,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	}
 
 	public MutationQuery createQuery(SharedSessionContract session) {
-		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final SqmDeleteOrUpdateStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
 		return new QuerySqmImpl<>( sqmStatement, true, null, sessionImpl );
 	}

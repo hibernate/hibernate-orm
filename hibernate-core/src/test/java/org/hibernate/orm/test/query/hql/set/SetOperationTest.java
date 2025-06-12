@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query.hql.set;
 
 import java.util.List;
 
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.SemanticException;
 
@@ -204,6 +205,7 @@ public class SetOperationTest {
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Dialect requires distinct column names in parenthesized subquery (treats it as a derived table)" )
 	public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

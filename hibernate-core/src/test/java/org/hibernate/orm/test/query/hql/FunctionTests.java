@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -43,7 +44,8 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -87,7 +89,7 @@ public class FunctionTests {
 
 	public static final double ERROR = 0.00001d;
 
-	@BeforeAll @SuppressWarnings("deprecation")
+	@BeforeEach @SuppressWarnings("deprecation")
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -122,6 +124,11 @@ public class FunctionTests {
 					em.persist(eom);
 				}
 		);
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.dropData();
 	}
 
 	@Test
@@ -580,8 +587,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support any form of date truncation")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -609,9 +615,8 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "See HHH-16442, Oracle trunc() throws away the timezone")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't support any form of date truncation")
 	public void testDateTruncWithOffsetFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1138,7 +1143,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase cast to char does not do truncatation")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateWithCast.class )
 	public void testCastFunctionWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1164,12 +1169,12 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateWithCast.class, comment = "Dialect does not support truncate with cast" )
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
 	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "CockroachDB bytes doesn't have a length")
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncatation")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncation")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
-	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase cast to raw does not do truncatation")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -1364,6 +1369,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class,
 			reason = "Altibase timestampadd does not support seconds with fractional part")
+	@SkipForDialect( dialectClass = FirebirdDialect.class )
 	public void testAddSecondsWithFractionalPart(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1626,8 +1632,18 @@ public class FunctionTests {
 							session.createQuery("select cast(?1 as OffsetDateTime)", OffsetDateTime.class)
 									.setParameter( 1, instant )
 									.getSingleResult() );
-					assertEquals( instant.atOffset(ZoneOffset.UTC).toLocalDateTime(),
-							session.createQuery("select cast(?1 as LocalDateTime)", LocalDateTime.class)
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Parameter is typed by the cast to TIMESTAMP, and driver does not accept an OffsetDatetime/Instant for that type" )
+	public void testInstantCast_nonTimeZoneType(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Instant instant = Instant.ofEpochSecond( 123456789 );
+					assertEquals( instant.atOffset( ZoneOffset.UTC ).toLocalDateTime(),
+							session.createQuery( "select cast(?1 as LocalDateTime)", LocalDateTime.class )
 									.setParameter( 1, instant )
 									.getSingleResult() );
 				}
@@ -1717,6 +1733,7 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect( dialectClass = TiDBDialect.class, reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase returns 2025-03-31 as a result of select {2024-02-29} + 13 month")
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Firebird returns 2025-03-31 as a result of select {2024-02-29} + 13 month")
 	public void testDurationArithmetic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2618,6 +2635,7 @@ public class FunctionTests {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(HANADialect.class)
 	@RequiresDialect(CockroachDialect.class)
+	@RequiresDialect(value = FirebirdDialect.class, majorVersion = 4)
 	public void testSha256Function(SessionFactoryScope scope) {
 		scope.inTransaction(s -> {
 			byte[] bytes = s.createSelectionQuery("select sha('hello')", byte[].class).getSingleResult();

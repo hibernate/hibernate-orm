@@ -16,6 +16,7 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -27,13 +28,18 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.ValuesTableReference;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -47,6 +53,27 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	public FirebirdSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateMerge( statement );
+		}
+		else {
+			super.visitUpdateStatementOnly( statement );
+		}
 	}
 
 	@Override
@@ -123,6 +150,11 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return " with lock";
 	}
 
+	@Override
+	protected String getForShare(int timeoutMillis) {
+		return getForUpdate();
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Percent fetches or ties fetches aren't supported in Firebird
 		// Before 3.0 there was also no support for window functions
@@ -151,6 +183,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
+	// overridden due to visitSqlSelections
 	@Override
 	public void visitSelectClause(SelectClause selectClause) {
 		Stack<Clause> clauseStack = getClauseStack();
@@ -238,6 +271,11 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		}
 	}
 
+	@Override
+	public void visitValuesTableReference(ValuesTableReference tableReference) {
+		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
+
 	private boolean supportsOffsetFetchClause() {
 		return getDialect().getVersion().isSameOrAfter( 3 );
 	}
@@ -259,13 +297,21 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
 		// see comments in visitParameter
 		boolean inFunction = this.inFunction;
-		this.inFunction = !( expression instanceof FunctionExpression ) || !"cast".equals( ( (FunctionExpression) expression ).getFunctionName() );
+		this.inFunction = isFunctionOrCastWithArithmeticExpression( expression );
 		try {
 			super.visitSelfRenderingExpression( expression );
 		}
 		finally {
 			this.inFunction = inFunction;
 		}
+	}
+
+	private boolean isFunctionOrCastWithArithmeticExpression(SelfRenderingExpression expression) {
+		// see comments in visitParameter
+		return expression instanceof FunctionExpression fe
+			&& ( !"cast".equals( fe.getFunctionName() )
+				// types of parameters in an arithmetic expression inside a cast are not (always?) inferred
+				|| fe.getArguments().get( 0 ) instanceof BinaryArithmeticExpression );
 	}
 
 	@Override
@@ -308,4 +354,38 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			renderLiteral( literal, inFunction );
 		}
 	}
+
+	@Override
+	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
+		if ( isParameterOrContainsParameter( comparisonPredicate.getLeftHandExpression() )
+			&& isParameterOrContainsParameter( comparisonPredicate.getRightHandExpression() ) ) {
+			// Firebird cannot compare two parameters with each other as they will be untyped, and in some cases
+			// comparisons involving arithmetic expression with parameters also fails to infer the type
+			withParameterRenderingMode(
+					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+					() -> super.visitRelationalPredicate( comparisonPredicate )
+			);
+		}
+		else {
+			super.visitRelationalPredicate( comparisonPredicate );
+		}
+	}
+
+	private static boolean isParameterOrContainsParameter( Expression expression ) {
+		if ( expression instanceof BinaryArithmeticExpression arithmeticExpression ) {
+			// Recursive search for parameter
+			return isParameterOrContainsParameter( arithmeticExpression.getLeftHandOperand() )
+				|| isParameterOrContainsParameter( arithmeticExpression.getRightHandOperand() );
+		}
+		return isParameter( expression );
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
 }

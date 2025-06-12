@@ -6,6 +6,7 @@ package org.hibernate.orm.test.insertordering;
 
 import java.sql.PreparedStatement;
 import java.sql.Types;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -28,15 +29,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 
 	static class Batch {
-		String sql;
+		Collection<String> sql;
 		int size;
 
 		Batch(String sql, int size) {
+			this(List.of(sql), size);
+		}
+
+		Batch(String sql) {
+			this( sql, 1 );
+		}
+
+		Batch(Collection<String> sql, int size) {
+			if (sql.isEmpty()) {
+				throw new IllegalArgumentException( "At least one expected statement is required" );
+			}
 			this.sql = sql;
 			this.size = size;
 		}
 
-		Batch(String sql) {
+		Batch(Collection<String> sql) {
 			this( sql, 1 );
 		}
 	}
@@ -76,7 +88,7 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 
 	void verifyContainsBatches(Batch... expectedBatches) {
 		for ( Batch expectedBatch : expectedBatches ) {
-			PreparedStatement preparedStatement = connectionProvider.getPreparedStatement( expectedBatch.sql );
+			PreparedStatement preparedStatement = findPreparedStatement( expectedBatch );
 			try {
 				List<Object[]> addBatchCalls = connectionProvider.spyContext.getCalls(
 						PreparedStatement.class.getMethod( "addBatch" ),
@@ -93,6 +105,25 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 				throw new RuntimeException( e );
 			}
 		}
+	}
+
+	private PreparedStatement findPreparedStatement(Batch expectedBatch) {
+		IllegalArgumentException firstException = null;
+		for (String sql : expectedBatch.sql) {
+			try {
+				return connectionProvider.getPreparedStatement( sql );
+			}
+			catch ( IllegalArgumentException e ) {
+				if ( firstException == null ) {
+					firstException = e;
+				} else {
+					firstException.addSuppressed( e );
+				}
+			}
+		}
+		throw firstException != null
+				? firstException
+				: new IllegalArgumentException( "No prepared statement found as none were expected" );
 	}
 
 	void verifyPreparedStatementCount(int expectedBatchCount) {

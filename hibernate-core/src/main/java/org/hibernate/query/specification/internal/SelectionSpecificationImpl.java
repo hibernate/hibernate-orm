@@ -164,7 +164,7 @@ public class SelectionSpecificationImpl<T> implements SelectionSpecification<T>,
 	}
 
 	public SelectionQuery<T> createQuery(SharedSessionContract session) {
-		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final SqmSelectStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
 		return new SqmSelectionQueryImpl<>( sqmStatement, true, resultType, sessionImpl );
 	}

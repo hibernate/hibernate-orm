@@ -4,9 +4,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.EntityFilterException;
-import org.hibernate.FetchNotFoundException;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -37,7 +34,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	}
 
 	@Override
-	protected void initialize(EntitySelectFetchInitializerData data) {
+	protected void initializeIfNecessary(EntitySelectFetchInitializerData data) {
 		final String entityName = concreteDescriptor.getEntityName();
 		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
 
@@ -61,18 +58,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			data.setInstance( instance );
 
 			if ( instance == null ) {
-				if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
-					if ( affectedByFilter ) {
-						throw new EntityFilterException(
-								entityName,
-								data.entityIdentifier,
-								toOneMapping.getNavigableRole().getFullPath()
-						);
-					}
-					if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
-						throw new FetchNotFoundException( entityName, data.entityIdentifier );
-					}
-				}
+				handleNotFound( data, entityName );
 			}
 			// If the entity was not in the Persistence Context, but was found now,
 			// add it to the Persistence Context

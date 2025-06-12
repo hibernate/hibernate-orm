@@ -1889,9 +1889,10 @@ public abstract class AbstractEntityPersister
 		for ( ; i < sqlSelections.size(); i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );
 			final ColumnReference columnReference = (ColumnReference) sqlSelection.getExpression();
-			final String selectAlias = !columnReference.isColumnExpressionFormula()
-					? columnAliases[columnIndex++] + suffix
-					: formulaAliases[formulaIndex++] + suffix;
+			final String selectAlias =
+					columnReference.isColumnExpressionFormula()
+							? formulaAliases[formulaIndex++] + suffix
+							: columnAliases[columnIndex++] + suffix;
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
@@ -1916,48 +1917,46 @@ public abstract class AbstractEntityPersister
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
-
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = fetchableContainer.getFetchable( i );
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
 				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				if ( fetchable.asBasicValuedModelPart() != null ) {
-					// Ignore lazy basic columns
-					if ( fetchTiming == FetchTiming.DELAYED ) {
-						continue;
+				if ( !skipFetchable( fetchable, fetchTiming ) ) {
+					if ( fetchTiming == null ) {
+						throw new AssertionFailure( "fetchTiming was null" );
 					}
-				}
-				else if ( fetchable instanceof Association association ) {
-					// Ignore the fetchable if the FK is on the other side
-					if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-						continue;
+					if ( fetchable.isSelectable() ) {
+						final Fetch fetch = fetchParent.generateFetchableFetch(
+								fetchable,
+								fetchParent.resolveNavigablePath( fetchable ),
+								fetchTiming,
+								false,
+								null,
+								creationState
+						);
+						fetches.add( fetch );
 					}
-					// Ensure the FK comes from the root table
-					if ( !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
-						continue;
-					}
-				}
-
-				if ( fetchTiming == null ) {
-					throw new AssertionFailure("fetchTiming was null");
-				}
-
-				if ( fetchable.isSelectable() ) {
-					final Fetch fetch = fetchParent.generateFetchableFetch(
-							fetchable,
-							fetchParent.resolveNavigablePath( fetchable ),
-							fetchTiming,
-							false,
-							null,
-							creationState
-					);
-					fetches.add( fetch );
 				}
 			}
 		}
-
 		return fetches.build();
+	}
+
+	private boolean skipFetchable(Fetchable fetchable, FetchTiming fetchTiming) {
+		if ( fetchable.asBasicValuedModelPart() != null ) {
+			// Ignore lazy basic columns
+			return fetchTiming == FetchTiming.DELAYED;
+		}
+		else if ( fetchable instanceof Association association ) {
+			// Ignore the fetchable if the FK is on the other side
+			return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+				// Ensure the FK comes from the root table
+				|| !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() );
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override

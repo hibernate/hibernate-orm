@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -32,10 +31,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * An implementation of this interface must certainly be thread-safe. Ideally, it should also be
  * immutable.
  *
+ * @apiNote
+ * This interface&mdash;which has existed since the very earliest days of Hibernate&mdash;used
+ * to be an important API. In modern versions of Hibernate its role has evolved, and it is no
+ * longer considered an API, though it's still a very important SPI. Application programs should
+ * avoid direct use of this interface where possible. In many cases,
+ * {@link org.hibernate.type.descriptor.java.JavaType} or
+ * {@link org.hibernate.type.descriptor.jdbc.JdbcType} may be used instead.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  */
-@Internal
 public interface Type extends Serializable {
 	/**
 	 * Return true if the implementation is castable to {@link AssociationType}. This does not

@@ -399,7 +399,7 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	 *
 	 * @return The iterator
 	 */
-	Iterator<E> queuedAdditionIterator();
+	Iterator<?> queuedAdditionIterator();
 
 	/**
 	 * Get the "queued" orphans

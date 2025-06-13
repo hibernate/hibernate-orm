@@ -268,9 +268,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final JdbcMapping jdbcMapping = tenantFilter.getParameterJdbcMapping( TenantIdBinder.PARAMETER_NAME );
 			assert jdbcMapping != null;
 			//noinspection unchecked
-			tenantIdentifierJavaType = jdbcMapping.getJavaTypeDescriptor();
+			tenantIdentifierJavaType = (JavaType<Object>) jdbcMapping.getJavaTypeDescriptor();
 		}
-		for ( Map.Entry<String, FilterDefinition> filterEntry : filters.entrySet() ) {
+		for ( var filterEntry : filters.entrySet() ) {
 			if ( filterEntry.getValue().isAutoEnabled() ) {
 				autoEnabledFilters.add( filterEntry.getValue() );
 			}

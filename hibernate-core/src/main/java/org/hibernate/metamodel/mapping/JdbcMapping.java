@@ -54,7 +54,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The descriptor for the Java type represented by this
 	 * expressible type
 	 */
-	JavaType getJavaTypeDescriptor();
+	JavaType<?> getJavaTypeDescriptor();
 
 	/**
 	 * The descriptor for the SQL type represented by this

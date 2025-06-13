@@ -30,10 +30,10 @@ public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtracto
 	public ResultSet extractResultSet(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		final boolean supportsNamedParameters = session.getJdbcServices()
-				.getJdbcEnvironment()
-				.getExtractedDatabaseMetaData()
-				.supportsNamedParameters();
+//		final boolean supportsNamedParameters = session.getJdbcServices()
+//				.getJdbcEnvironment()
+//				.getExtractedDatabaseMetaData()
+//				.supportsNamedParameters();
 		return session.getFactory()
 				.getServiceRegistry()
 				.requireService( RefCursorSupport.class )

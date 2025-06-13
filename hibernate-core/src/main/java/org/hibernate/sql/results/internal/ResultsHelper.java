@@ -77,14 +77,18 @@ public class ResultsHelper {
 		}
 
 		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
-			// in case of PersistentArrayHolder we have to realign the EntityEntry loaded state with
-			// the entity values
+			// in case of PersistentArrayHolder we have to realign
+			// the EntityEntry loaded state with the entity values
 			final Object owner = collectionInstance.getOwner();
 			final EntityEntry entry = persistenceContext.getEntry( owner );
-			final PluralAttributeMapping mapping = collectionDescriptor.getAttributeMapping();
-			final int propertyIndex = mapping.getStateArrayPosition();
 			final Object[] loadedState = entry.getLoadedState();
-			loadedState[propertyIndex] = mapping.getValue( owner );
+			if ( loadedState != null ) {
+				final PluralAttributeMapping mapping = collectionDescriptor.getAttributeMapping();
+				final int propertyIndex = mapping.getStateArrayPosition();
+				loadedState[propertyIndex] = mapping.getValue( owner );
+			}
+			// else it must be an immutable entity or loaded in read-only mode,
+			// but unfortunately we have no way to reliably determine that here
 			persistenceContext.addCollectionHolder( collectionInstance );
 		}
 

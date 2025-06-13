@@ -9,6 +9,8 @@ import jakarta.persistence.LockOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.RefreshOption;
 
+import java.util.Locale;
+
 /**
  * Support for various aspects of pessimistic locking.
  *
@@ -94,6 +96,13 @@ public interface Locking {
 			// null, NORMAL
 			return ROOT_ONLY;
 		}
+
+		public static Scope interpret(String name) {
+			if ( name == null ) {
+				return null;
+			}
+			return valueOf( name.toUpperCase( Locale.ROOT ) );
+		}
 	}
 
 	/**
@@ -133,6 +142,14 @@ public interface Locking {
 		 * @apiNote This may lead to exceptions from the database.
 		 */
 		FORCE;
+
+		public static FollowOn interpret(String name) {
+			if ( name == null ) {
+				return null;
+			}
+
+			return valueOf( name.toUpperCase( Locale.ROOT ) );
+		}
 
 		/**
 		 * Interprets the follow-on strategy into the legacy boolean values.

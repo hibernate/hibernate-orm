@@ -273,6 +273,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsLockingJoins implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL
+					|| dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.IDENTIFIED;
+		}
+	}
+
 	public static class DoubleQuoteQuoting implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
@@ -449,12 +456,6 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsWait();
-		}
-	}
-
-	public static class SupportsLockingJoins implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL;
 		}
 	}
 

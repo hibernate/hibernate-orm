@@ -805,11 +805,18 @@ public abstract class AbstractEntityPersister
 			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
 		}
 		else {
-			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ), null );
 		}
 	}
 
-	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions) {
+		if ( lockOptions != null ) {
+			if ( lockOptions.getLockMode().isPessimistic() && lockOptions.getScope() != Locking.Scope.ROOT_ONLY ) {
+				return new SingleIdEntityLoaderStandardImpl<>( this, loadQueryInfluencers );
+			}
+		}
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry().requireService( BatchLoaderFactory.class )
@@ -1614,7 +1621,7 @@ public abstract class AbstractEntityPersister
 					ex.getSQLException(),
 					"could not initialize lazy properties: "
 							+ infoString( this, id, getFactory() ),
-					lazySelect.getJdbcSelect().getSqlString()
+					ex.getSQL()
 			);
 		}
 	}
@@ -1641,7 +1648,7 @@ public abstract class AbstractEntityPersister
 					ex.getSQLException(),
 					"could not initialize lazy properties: "
 							+ infoString( this, id, getFactory() ),
-					lazyLoanPlan.getJdbcSelect().getSqlString()
+					ex.getSQL()
 			);
 		}
 	}
@@ -3484,9 +3491,10 @@ public abstract class AbstractEntityPersister
 		else {
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			final boolean needsUniqueLoader = isAffectedByInfluencers( influencers, true )
-					|| lockOptions.getScope() != Locking.Scope.ROOT_ONLY;
+					|| lockOptions.getScope() != Locking.Scope.ROOT_ONLY
+					|| lockOptions.getFollowOnStrategy() != Locking.FollowOn.ALLOW;
 			return needsUniqueLoader
-					? buildSingleIdEntityLoader( influencers )
+					? buildSingleIdEntityLoader( influencers, lockOptions )
 					: getSingleIdLoader();
 		}
 	}

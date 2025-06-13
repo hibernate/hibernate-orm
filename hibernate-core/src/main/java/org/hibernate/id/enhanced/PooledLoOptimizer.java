@@ -4,17 +4,19 @@
  */
 package org.hibernate.id.enhanced;
 
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.jboss.logging.Logger;
+
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Lock;
-
-import org.hibernate.HibernateException;
-import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Variation of {@link PooledOptimizer} which interprets the incoming database
@@ -124,5 +126,10 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	@Override
 	public boolean applyIncrementSizeToSourceValues() {
 		return true;
+	}
+
+	@Override
+	public Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory) {
+		return databaseValue;
 	}
 }

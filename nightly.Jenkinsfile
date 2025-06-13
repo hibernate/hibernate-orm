@@ -53,7 +53,9 @@ stage('Configure') {
 			buildDiscarder(
 					logRotator(daysToKeepStr: '30', numToKeepStr: '10')
 			),
-			rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true]),
+			pipelineTriggers([
+					cron('H H(4-6) * * *')
+			]),
 			// If two builds are about the same branch or pull request,
 			// the older one will be aborted when the newer one starts.
 			disableConcurrentBuilds(abortPrevious: true),

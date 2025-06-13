@@ -5,7 +5,6 @@
 package org.hibernate.sql.exec.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +21,10 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Models the actual call, allowing iterative building of the parts.
@@ -42,17 +45,17 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 				builder.callableName,
 				builder.functionReturn,
 				builder.parameterRegistrations == null
-						? Collections.emptyList()
-						: Collections.unmodifiableList( builder.parameterRegistrations ),
+						? emptyList()
+						: unmodifiableList( builder.parameterRegistrations ),
 				builder.parameterBinders == null
-						? Collections.emptyList()
-						: Collections.unmodifiableList( builder.parameterBinders ),
+						? emptyList()
+						: unmodifiableList( builder.parameterBinders ),
 				builder.parameterExtractors == null
-						? Collections.emptyList()
-						: Collections.unmodifiableList( builder.parameterExtractors ),
+						? emptyList()
+						: unmodifiableList( builder.parameterExtractors ),
 				builder.refCursorExtractors == null
-						? Collections.emptyList()
-						: Collections.unmodifiableList( builder.refCursorExtractors )
+						? emptyList()
+						: unmodifiableList( builder.refCursorExtractors )
 		);
 	}
 
@@ -99,12 +102,12 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 
 	@Override
 	public List<JdbcCallParameterRegistration> getParameterRegistrations() {
-		return parameterRegistrations == null ? Collections.emptyList() : parameterRegistrations;
+		return parameterRegistrations == null ? emptyList() : parameterRegistrations;
 	}
 
 	@Override
 	public List<JdbcParameterBinder> getParameterBinders() {
-		return parameterBinders == null ? Collections.emptyList() : parameterBinders;
+		return parameterBinders == null ? emptyList() : parameterBinders;
 	}
 
 	@Override
@@ -119,7 +122,7 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 
 	@Override
 	public Map<JdbcParameter, JdbcParameterBinding> getAppliedParameters() {
-		return Collections.emptyMap();
+		return emptyMap();
 	}
 
 	@Override
@@ -130,12 +133,12 @@ public class JdbcCallImpl implements JdbcOperationQueryCall {
 
 	@Override
 	public List<JdbcCallParameterExtractor> getParameterExtractors() {
-		return parameterExtractors == null ? Collections.emptyList() : parameterExtractors;
+		return parameterExtractors == null ? emptyList() : parameterExtractors;
 	}
 
 	@Override
 	public List<JdbcCallRefCursorExtractor> getCallRefCursorExtractors() {
-		return refCursorExtractors == null ? Collections.emptyList() : refCursorExtractors;
+		return refCursorExtractors == null ? emptyList() : refCursorExtractors;
 	}
 
 	@Override

@@ -3,6 +3,19 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.18.Final (June 13, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33703
+
+** Bug
+    * [HHH-19533] - Implement equals() and hashCode() for NativeQueryConstructorTransformer
+    * [HHH-19529] - Check bytecode generated classes with stable names class loaders
+    * [HHH-18891] - java.lang.AssertionError generated in getResolvedInstance even though NotFound IGNORE set
+    * [HHH-18876] - ArrayInitializer#resolveInstanceSubInitializers should consider @ListIndexBase
+    * [HHH-18771] - ListInitializer should consistently consider @ListIndexBase
+
+
 Changes in 6.6.17.Final (May 28, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

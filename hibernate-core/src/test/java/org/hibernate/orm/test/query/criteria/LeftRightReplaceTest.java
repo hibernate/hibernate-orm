@@ -39,7 +39,7 @@ class LeftRightReplaceTest {
 					builder.replace( builder.literal( "Hibernate in Action" ), "Action", "Quarkus" )
 			) );
 			var result = entityManager.createQuery( query ).getSingleResult();
-			assertEquals("Hibernate in Quarkus", result[2] );
+			assertEquals("Hibernate in Quarkus", result[0] );
 		} );
 	}
 }

@@ -14,7 +14,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;

@@ -24,6 +24,10 @@ public final class CharSequenceHelper {
 		}
 	}
 
+	public static CharSequence subSequence(CharSequence sequence) {
+		return subSequence(sequence, 0, sequence.length());
+	}
+
 	public static boolean isEmpty(CharSequence string) {
 		return string == null || string.length() == 0;
 	}

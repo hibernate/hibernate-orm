@@ -335,7 +335,7 @@ public class XmlHelper {
 		final ArrayList<Object> arrayList = new ArrayList<>();
 		final int end = fromArrayString(
 				string,
-				false,
+				true,
 				options,
 				COLLECTION_START_TAG.length(),
 				arrayList,
@@ -646,7 +646,7 @@ public class XmlHelper {
 								else {
 									arrayList.add( array );
 								}
-								i = end + 1;
+								i = end;
 							}
 							else {
 								throw new IllegalArgumentException( "XML not properly formed: " + string.substring( start ) );

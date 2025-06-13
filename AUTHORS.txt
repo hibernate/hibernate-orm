@@ -5,6 +5,7 @@
 # Corporate contributors
 
 Red Hat, Inc.
+Oracle, Corporation.
 
 # Individual contributors
 

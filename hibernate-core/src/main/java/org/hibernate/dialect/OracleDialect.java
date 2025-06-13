@@ -966,6 +966,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsUserDefinedTypes() {
+		return true;
+	}
+
+	@Override
 	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
 		return ( javaElementTypeName == null ? elementTypeName : javaElementTypeName ) + "Array";
 	}

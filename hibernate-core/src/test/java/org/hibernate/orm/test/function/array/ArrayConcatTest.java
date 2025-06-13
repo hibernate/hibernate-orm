@@ -201,7 +201,10 @@ public class ArrayConcatTest {
 					root.get( "id" ),
 					cb.collectionConcat( root.get( "theCollection" ), cb.collectionLiteral( "xyz" ) ),
 					cb.collectionConcat( root.get( "theCollection" ), List.of( "xyz" ) ),
-					cb.collectionConcat( List.of( "xyz" ), root.get( "theCollection" ) )
+					cb.collectionConcat( List.of( "xyz" ), root.get( "theCollection" ) ),
+					cb.collectionConcat( root.get( "theLabels" ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionConcat( root.get( "theLabels" ), List.of( Label.A ) ),
+					cb.collectionConcat( List.of( Label.A ), root.get( "theLabels" ) )
 			);
 			em.createQuery( cq ).getResultList();
 

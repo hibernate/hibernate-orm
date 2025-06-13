@@ -106,7 +106,8 @@ public class ArrayLengthTest {
 			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
 			cq.multiselect(
 					root.get( "id" ),
-					cb.collectionLength( root.get( "theCollection" ) )
+					cb.collectionLength( root.get( "theCollection" ) ),
+					cb.collectionLength( root.get( "theLabels" ) )
 			);
 			em.createQuery( cq ).getResultList();
 		} );

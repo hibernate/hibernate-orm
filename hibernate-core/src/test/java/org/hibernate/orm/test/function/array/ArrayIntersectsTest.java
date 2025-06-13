@@ -148,7 +148,13 @@ public class ArrayIntersectsTest {
 					cb.collectionIntersects( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) ),
 					cb.collectionIntersectsNullable( root.<Collection<String>>get( "theCollection" ), cb.collectionLiteral( "xyz" ) ),
 					cb.collectionIntersectsNullable( root.get( "theCollection" ), List.of( "xyz" ) ),
-					cb.collectionIntersectsNullable( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) )
+					cb.collectionIntersectsNullable( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) ),
+					cb.collectionIntersects( root.<Collection<Label>>get( "theLabels" ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionIntersects( root.get( "theLabels" ), List.of( Label.A ) ),
+					cb.collectionIntersects( List.of( Label.A, Label.B ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionIntersectsNullable( root.<Collection<Label>>get( "theLabels" ), cb.collectionLiteral( Label.A ) ),
+					cb.collectionIntersectsNullable( root.get( "theLabels" ), List.of( Label.A ) ),
+					cb.collectionIntersectsNullable( List.of( Label.A, Label.B ), cb.collectionLiteral( Label.A ) )
 			);
 			em.createQuery( cq ).getResultList();
 

@@ -225,7 +225,7 @@ public class ScopeTests {
 			assertThat( Hibernate.isInitialized( theTalisman ) ).isTrue();
 
 			sqlCollector.clear();
-			session.lock( theTalisman, PESSIMISTIC_WRITE, EXTENDED );
+			session.refresh( theTalisman, PESSIMISTIC_WRITE, EXTENDED );
 			assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 			Helper.checkSql( sqlCollector.getSqlQueries().get( 0 ), session.getDialect(), BOOKS );
 			TransactionUtil.updateTable( factoryScope, BOOKS.getTableName(), "title", true );

@@ -2536,6 +2536,9 @@ public class SessionImpl
 			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
 				lockOptions.setScope( Locking.Scope.fromJpaScope( pessimisticLockScope ) );
 			}
+			else if ( option instanceof Locking.FollowOn followOn ) {
+				lockOptions.setFollowOnStrategy( followOn );
+			}
 			else if ( option instanceof Timeout timeout ) {
 				lockOptions.setTimeout( timeout );
 			}

@@ -109,6 +109,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.CacheMode.fromJpaModes;
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_COPY_TREE;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
@@ -326,7 +327,7 @@ public class SessionImpl
 				HINT_JAVAEE_LOCK_TIMEOUT,
 				this::getSessionProperty,
 				// treat WAIT_FOREVER the same as null
-				value -> !Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( value )
+				value -> !Integer.valueOf( WAIT_FOREVER_MILLI ).equals( value )
 		);
 	}
 
@@ -2529,11 +2530,17 @@ public class SessionImpl
 			else if ( option instanceof LockOptions lockOpts ) {
 				lockOptions = lockOpts;
 			}
+			else if ( option instanceof Locking.Scope lockScope ) {
+				lockOptions.setScope( lockScope );
+			}
 			else if ( option instanceof PessimisticLockScope pessimisticLockScope ) {
-				lockOptions.setLockScope( pessimisticLockScope );
+				lockOptions.setScope( Locking.Scope.fromJpaScope( pessimisticLockScope ) );
+			}
+			else if ( option instanceof Locking.FollowOn followOn ) {
+				lockOptions.setFollowOnStrategy( followOn );
 			}
 			else if ( option instanceof Timeout timeout ) {
-				lockOptions.setTimeOut( timeout.milliseconds() );
+				lockOptions.setTimeout( timeout );
 			}
 			else if ( option instanceof EnabledFetchProfile enabledFetchProfile ) {
 				loadAccess.enableFetchProfile( enabledFetchProfile.profileName() );

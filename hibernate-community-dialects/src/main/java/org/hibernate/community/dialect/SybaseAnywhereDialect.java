@@ -17,6 +17,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -176,8 +177,17 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
+	public PessimisticLockStyle getPessimisticLockStyle() {
+		return getVersion().isBefore( 10 )
+				? PessimisticLockStyle.TABLE_HINT
+				: PessimisticLockStyle.CLAUSE;
+	}
+
+	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
-		return getVersion().isSameOrAfter( 10 ) ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+		return getVersion().isSameOrAfter( 10 )
+				? RowLockStrategy.COLUMN
+				: RowLockStrategy.TABLE;
 	}
 
 	@Override

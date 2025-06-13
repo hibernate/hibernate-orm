@@ -37,6 +37,7 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -697,10 +698,10 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
 		// "WITH LOCK can only be used with a top-level, single-table SELECT statement"
 		// https://www.firebirdsql.org/file/documentation/reference_manuals/fblangref25-en/html/fblangref25-dml-select.html#fblangref25-dml-with-lock
-		return false;
+		return OuterJoinLockingLevel.UNSUPPORTED;
 	}
 
 	@Override

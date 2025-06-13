@@ -74,6 +74,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
+import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_CACHE_STORE_MODE;
@@ -584,15 +585,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	/**
-	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
-	 */
-	@Override
-	public SqmSelectionQuery<R> setLockMode(String alias, LockMode lockMode) {
-		super.setLockMode( alias, lockMode );
-		return this;
-	}
-
-	/**
 	 * Specifies whether follow-on locking should be applied?
 	 */
 	@Override
@@ -686,6 +678,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph );
 		}
 
+		putIfNotNull( hints, HINT_FOLLOW_ON_STRATEGY, getQueryOptions().getLockOptions().getFollowOnStrategy() );
 		putIfNotNull( hints, HINT_FOLLOW_ON_LOCKING, getQueryOptions().getLockOptions().getFollowOnLocking() );
 	}
 

@@ -23,6 +23,7 @@ import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2V1SequenceSupport;
@@ -662,6 +663,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return OffsetFetchLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return OuterJoinLockingLevel.IGNORED;
 	}
 
 	@Override

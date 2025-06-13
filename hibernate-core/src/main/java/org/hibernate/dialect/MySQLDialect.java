@@ -19,6 +19,7 @@ import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
@@ -1579,6 +1580,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
+	}
+
+	@Override
+	public OuterJoinLockingLevel getOuterJoinLockingLevel() {
+		return supportsAliasLocks() ? OuterJoinLockingLevel.IDENTIFIED : OuterJoinLockingLevel.FULL;
 	}
 
 	@Override

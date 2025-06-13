@@ -82,7 +82,7 @@ public class CollectionBatchLoaderArrayParam
 				getLoadable(),
 				keyDescriptor.getKeyPart(),
 				getInfluencers(),
-				LockOptions.NONE,
+				new LockOptions(),
 				jdbcParameter,
 				getSessionFactory()
 		);

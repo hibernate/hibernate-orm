@@ -61,6 +61,8 @@ import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingLevel;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Collection;
@@ -259,9 +261,22 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsSelectLocking implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getPessimisticLockStyle() != PessimisticLockStyle.NONE;
+		}
+	}
+
 	public static class SupportsSkipLocked implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSkipLocked();
+		}
+	}
+
+	public static class SupportsLockingJoins implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.FULL
+					|| dialect.getOuterJoinLockingLevel() == OuterJoinLockingLevel.IDENTIFIED;
 		}
 	}
 
@@ -435,6 +450,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportNoWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNoWait();
+		}
+	}
+
+	public static class SupportsWait implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsWait();
 		}
 	}
 

@@ -47,6 +47,10 @@ import org.hibernate.type.Type;
  *          However, JPA callbacks do not provide the ability to access the previous
  *          value of an updated property in a {@code @PreUpdate} callback, and do not
  *          provide a well-defined way to intercept changes to collections.
+ *          <p>
+ *          Note that this API exposes the interface {@link Type}, which in modern
+ *          versions of Hibernate is considered an SPI. This is unfortunate, and might
+ *          change in the future, but is bearable for now.
  *
  * @see SessionBuilder#interceptor(Interceptor)
  * @see SharedSessionBuilder#interceptor()

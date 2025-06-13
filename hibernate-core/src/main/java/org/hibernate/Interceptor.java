@@ -434,9 +434,10 @@ public interface Interceptor {
 	 *
 	 * @param source The entity passed to {@code merge()}
 	 * @param target The target managed entity
+	 * @param id The identifier of the managed entity
 	 * @param targetState The copied state already assigned to the target managed entity
 	 * @param originalState The original state of the target managed entity before assignment of the copied state,
-	 *                      or {@code null} if the target entity is a new instance
+	 * or {@code null} if the target entity is a new instance
 	 * @param propertyNames The names of the entity properties
 	 * @param propertyTypes The types of the entity properties
 	 *
@@ -444,7 +445,7 @@ public interface Interceptor {
 	 */
 	@Incubating
 	default void postMerge(
-			Object source, Object target,
+			Object source, Object target, Object id,
 			Object[] targetState, Object[] originalState,
 			String[] propertyNames, Type[] propertyTypes) {}
 }

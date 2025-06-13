@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Interceptor;
 import org.hibernate.ObjectDeletedException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
@@ -282,6 +283,7 @@ public class DefaultMergeEventListener
 
 		final Object entity = event.getEntity();
 		final EventSource session = event.getSession();
+		final Interceptor interceptor = session.getInterceptor();
 		final String entityName = event.getEntityName();
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
 		final String[] propertyNames = persister.getPropertyNames();
@@ -294,7 +296,7 @@ public class DefaultMergeEventListener
 		super.cascadeBeforeSave( session, persister, entity, copyCache );
 
 		final Object[] sourceValues = persister.getValues( entity );
-		session.getInterceptor().preMerge( entity, sourceValues, propertyNames, propertyTypes );
+		interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes );
 		final Object[] copiedValues = TypeHelper.replace(
 				sourceValues,
 				persister.getValues( copy ),
@@ -326,7 +328,7 @@ public class DefaultMergeEventListener
 				ForeignKeyDirection.TO_PARENT
 		);
 		persister.setValues( copy, targetValues );
-		session.getInterceptor().postMerge( entity, copy, targetValues, null, propertyNames, propertyTypes );
+		interceptor.postMerge( entity, copy, id, targetValues, null, propertyNames, propertyTypes );
 
 		// saveTransientEntity has been called using a copy that contains empty collections
 		// (copyValues uses ForeignKeyDirection.FROM_PARENT) then the PC may contain a wrong
@@ -341,9 +343,9 @@ public class DefaultMergeEventListener
 		event.setResult( copy );
 
 		if ( isPersistentAttributeInterceptable( copy ) ) {
-			final PersistentAttributeInterceptor interceptor =
+			final PersistentAttributeInterceptor attributeInterceptor =
 					asPersistentAttributeInterceptable( copy ).$$_hibernate_getInterceptor();
-			if ( interceptor == null ) {
+			if ( attributeInterceptor == null ) {
 				persister.getBytecodeEnhancementMetadata().injectInterceptor( copy, id, session );
 			}
 		}
@@ -453,12 +455,13 @@ public class DefaultMergeEventListener
 			// copy created before we actually copy
 			cascadeOnMerge( session, persister, entity, copyCache );
 
+			final Interceptor interceptor = session.getInterceptor();
 			final String[] propertyNames = persister.getPropertyNames();
 			final Type[] propertyTypes = persister.getPropertyTypes();
 
 			final Object[] sourceValues = persister.getValues( entity );
 			final Object[] originalValues = persister.getValues( target );
-			session.getInterceptor().preMerge( entity, sourceValues, propertyNames, propertyTypes );
+			interceptor.preMerge( entity, sourceValues, propertyNames, propertyTypes );
 			final Object[] targetValues = TypeHelper.replace(
 					sourceValues,
 					originalValues,
@@ -468,7 +471,7 @@ public class DefaultMergeEventListener
 					copyCache
 			);
 			persister.setValues( target, targetValues );
-			session.getInterceptor().postMerge( entity, target, targetValues, originalValues, propertyNames, propertyTypes );
+			interceptor.postMerge( entity, target, id, targetValues, originalValues, propertyNames, propertyTypes );
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
 			markInterceptorDirty( entity, target );
 			event.setResult( result );

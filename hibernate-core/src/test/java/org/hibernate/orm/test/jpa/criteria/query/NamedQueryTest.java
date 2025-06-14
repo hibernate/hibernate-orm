@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.criteria.query;
 
-import org.hibernate.query.sqm.internal.SqmQueryImpl;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -62,10 +62,9 @@ public class NamedQueryTest {
 	@Test
 	public void testCriteria(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final TypedQuery<BasicEntity> query = session.createNamedQuery( "criteria_query", BasicEntity.class );
-			final SqmQueryImpl<BasicEntity> querySqm = (SqmQueryImpl<BasicEntity>) query;
-			assertNull( querySqm.getQueryOptions().getLimit().getFirstRow() );
-			assertNull( querySqm.getQueryOptions().getLimit().getMaxRows() );
+			final Query<BasicEntity> query = session.createNamedQuery( "criteria_query", BasicEntity.class );
+			assertNull( query.getQueryOptions().getLimit().getFirstRow() );
+			assertNull( query.getQueryOptions().getLimit().getMaxRows() );
 			assertEquals( 2, query.getResultList().size() );
 		} );
 	}
@@ -73,10 +72,9 @@ public class NamedQueryTest {
 	@Test
 	public void testCriteriaLimit(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final TypedQuery<BasicEntity> query = session.createNamedQuery( "criteria_query_limit", BasicEntity.class );
-			final SqmQueryImpl<BasicEntity> querySqm = (SqmQueryImpl<BasicEntity>) query;
-			assertEquals( 1, querySqm.getQueryOptions().getLimit().getFirstRow() );
-			assertEquals( 1, querySqm.getQueryOptions().getLimit().getMaxRows() );
+			final Query<BasicEntity> query = session.createNamedQuery( "criteria_query_limit", BasicEntity.class );
+			assertEquals( 1, query.getQueryOptions().getLimit().getFirstRow() );
+			assertEquals( 1, query.getQueryOptions().getLimit().getMaxRows() );
 			assertEquals( 1, query.getResultList().size() );
 		} );
 	}
@@ -84,10 +82,9 @@ public class NamedQueryTest {
 	@Test
 	public void testHql(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final TypedQuery<BasicEntity> query = session.createNamedQuery( "hql_query", BasicEntity.class );
-			final SqmQueryImpl<BasicEntity> querySqm = (SqmQueryImpl<BasicEntity>) query;
-			assertNull( querySqm.getQueryOptions().getLimit().getFirstRow() );
-			assertNull( querySqm.getQueryOptions().getLimit().getMaxRows() );
+			final Query<BasicEntity> query = session.createNamedQuery( "hql_query", BasicEntity.class );
+			assertNull( query.getQueryOptions().getLimit().getFirstRow() );
+			assertNull( query.getQueryOptions().getLimit().getMaxRows() );
 			assertEquals( 2, query.getResultList().size() );
 		} );
 	}
@@ -95,10 +92,9 @@ public class NamedQueryTest {
 	@Test
 	public void testHqlLimit(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final TypedQuery<BasicEntity> query = session.createNamedQuery( "hql_query_limit", BasicEntity.class );
-			final SqmQueryImpl<BasicEntity> querySqm = (SqmQueryImpl<BasicEntity>) query;
-			assertEquals( 1, querySqm.getQueryOptions().getLimit().getFirstRow() );
-			assertEquals( 1, querySqm.getQueryOptions().getLimit().getMaxRows() );
+			final Query<BasicEntity> query = session.createNamedQuery( "hql_query_limit", BasicEntity.class );
+			assertEquals( 1, query.getQueryOptions().getLimit().getFirstRow() );
+			assertEquals( 1, query.getQueryOptions().getLimit().getMaxRows() );
 			assertEquals( 1, query.getResultList().size() );
 		} );
 	}

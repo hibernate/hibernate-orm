@@ -102,6 +102,10 @@ public abstract class AbstractSqmSelectQuery<T>
 		return new LinkedHashMap<>( cteStatements );
 	}
 
+	void addCteStatements(Map<String, SqmCteStatement<?>> cteStatements) {
+		this.cteStatements.putAll( cteStatements );
+	}
+
 	@Override
 	public SqmCteStatement<?> getCteStatement(String cteLabel) {
 		return cteStatements.get( cteLabel );
@@ -420,14 +424,11 @@ public abstract class AbstractSqmSelectQuery<T>
 	protected Selection<? extends T> getResultSelection(Selection<?>[] selections) {
 		final Class<T> resultType = getResultType();
 		if ( resultType == null || resultType == Object.class ) {
-			switch ( selections.length ) {
-				case 0:
-					throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
-				case 1:
-					return (Selection<? extends T>) selections[0];
-				default:
-					return (Selection<? extends T>) nodeBuilder().array( selections );
-			}
+			return switch ( selections.length ) {
+				case 0 -> throw new IllegalArgumentException( "Empty selections passed to criteria query typed as Object" );
+				case 1 -> (Selection<? extends T>) selections[0];
+				default -> (Selection<? extends T>) nodeBuilder().array( selections );
+			};
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
 			return (Selection<? extends T>) nodeBuilder().tuple( selections );

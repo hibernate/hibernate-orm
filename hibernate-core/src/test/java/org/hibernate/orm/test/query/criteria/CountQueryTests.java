@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.hibernate.annotations.Imported;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
@@ -43,6 +44,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -72,10 +74,17 @@ public class CountQueryTests {
 					JpaCriteriaQuery<Contract> cq = cb.createQuery( Contract.class );
 					Root<Contract> root = cq.from( Contract.class );
 					cq.select( root );
-					TypedQuery<Long> query = session.createQuery( cq.createCountQuery() );
+					TypedQuery<Long> countQuery = session.createQuery( cq.createCountQuery() );
 					try {
 						// Leads to NPE on pre-6.5 versions
-						query.getSingleResult();
+						countQuery.getSingleResult();
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+					TypedQuery<Boolean> existsQuery = session.createQuery( cq.createExistsQuery() );
+					try {
+						existsQuery.getSingleResult();
 					}
 					catch (Exception e) {
 						fail( e );
@@ -95,10 +104,17 @@ public class CountQueryTests {
 					Root<Contract> root = cq.from( Contract.class );
 					cq.select( root );
 					cq.orderBy( cb.asc( root.get( "customerName" ) ) );
-					TypedQuery<Long> query = session.createQuery( cq.createCountQuery() );
+					TypedQuery<Long> countQuery = session.createQuery( cq.createCountQuery() );
 					try {
 						// Leads to NPE on pre-6.5 versions
-						query.getSingleResult();
+						countQuery.getSingleResult();
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+					TypedQuery<Boolean> existsQuery = session.createQuery( cq.createExistsQuery() );
+					try {
+						existsQuery.getSingleResult();
 					}
 					catch (Exception e) {
 						fail( e );
@@ -114,10 +130,17 @@ public class CountQueryTests {
 					Root<Contract> root = cq.from( Contract.class );
 					cq.select( root );
 					cq.orderBy( cb.desc( root.get( "customerName" ) ) );
-					TypedQuery<Long> query = session.createQuery( cq.createCountQuery() );
+					TypedQuery<Long> countQuery = session.createQuery( cq.createCountQuery() );
 					try {
 						// Leads to NPE on pre-6.5 versions
-						query.getSingleResult();
+						countQuery.getSingleResult();
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+					TypedQuery<Boolean> existsQuery = session.createQuery( cq.createExistsQuery() );
+					try {
+						existsQuery.getSingleResult();
 					}
 					catch (Exception e) {
 						fail( e );
@@ -257,8 +280,10 @@ public class CountQueryTests {
 					)
 			).distinct( true );
 			final Long count = session.createQuery( cq.createCountQuery() ).getSingleResult();
+			final Boolean exists = session.createQuery( cq.createExistsQuery() ).getSingleResult();
 			final List<Tuple> resultList = session.createQuery( cq ).getResultList();
 			assertEquals( 1L, count );
+			assertTrue( exists );
 			assertEquals( resultList.size(), count.intValue() );
 		} );
 	}
@@ -278,6 +303,10 @@ public class CountQueryTests {
 			cq2.select( root2.get( "name" ).get( "first" ) ).where( cb.equal( root2.get( "id" ), 2 ) );
 
 			final JpaCriteriaQuery<String> union = cb.union( cq1, cq2 );
+			if ( !(scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) ) {
+				final Boolean exists = session.createQuery( union.createExistsQuery() ).getSingleResult();
+				assertTrue( exists );
+			}
 			final Long count = session.createQuery( union.createCountQuery() ).getSingleResult();
 			final List<String> resultList = session.createQuery( union ).getResultList();
 			assertEquals( 2L, count );
@@ -390,16 +419,13 @@ public class CountQueryTests {
 		final List<?> resultList = session.createQuery( query ).getResultList();
 		final Long count = session.createQuery( query.createCountQuery() ).getSingleResult();
 		assertEquals( resultList.size(), count.intValue() );
+		final Boolean exists = session.createQuery(  query.createExistsQuery() ).getSingleResult();
+		assertEquals( !resultList.isEmpty(), exists );
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-			session.createMutationQuery( "delete ChildEntity" ).executeUpdate();
-			session.createMutationQuery( "delete ParentEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@MappedSuperclass

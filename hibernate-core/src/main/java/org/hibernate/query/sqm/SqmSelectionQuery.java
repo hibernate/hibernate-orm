@@ -26,7 +26,7 @@ import jakarta.persistence.metamodel.Type;
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
+public interface SqmSelectionQuery<R> extends SqmQuery<R>, SelectionQuery<R> {
 
 	@Override
 	SqmSelectionQuery<R> setParameter(String name, Object value);

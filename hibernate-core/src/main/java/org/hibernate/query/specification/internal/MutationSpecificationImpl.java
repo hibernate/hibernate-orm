@@ -24,7 +24,7 @@ import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
@@ -124,7 +124,7 @@ public class MutationSpecificationImpl<T> implements MutationSpecification<T>, T
 	public MutationQuery createQuery(SharedSessionContract session) {
 		final var sessionImpl = session.unwrap(SharedSessionContractImplementor.class);
 		final SqmDeleteOrUpdateStatement<T> sqmStatement = build( sessionImpl.getFactory().getQueryEngine() );
-		return new QuerySqmImpl<>( sqmStatement, true, null, sessionImpl );
+		return new SqmQueryImpl<>( sqmStatement, true, null, sessionImpl );
 	}
 
 	private SqmDeleteOrUpdateStatement<T> build(QueryEngine queryEngine) {

@@ -115,7 +115,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatemen
  *
  * @author Steve Ebersole
  */
-public class QuerySqmImpl<R>
+public class SqmQueryImpl<R>
 		extends AbstractSqmSelectionQuery<R>
 		implements SqmQueryImplementor<R>, InterpretationsKeySource, DomainQueryExecutionContext {
 
@@ -136,7 +136,7 @@ public class QuerySqmImpl<R>
 	 * instance from a named HQL memento.
 	 * Form used from {@link NamedHqlQueryMementoImpl}.
 	 */
-	public QuerySqmImpl(
+	public SqmQueryImpl(
 			NamedSqmQueryMemento<?> memento,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor session) {
@@ -151,7 +151,7 @@ public class QuerySqmImpl<R>
 	 * instance from a named criteria query memento.
 	 * Form used from {@link NamedCriteriaQueryMementoImpl}
 	 */
-	public QuerySqmImpl(
+	public SqmQueryImpl(
 			NamedSqmQueryMemento<?> memento,
 			SqmStatement<R> statement,
 			Class<R> resultType,
@@ -163,7 +163,7 @@ public class QuerySqmImpl<R>
 	/**
 	 * Form used for HQL queries
 	 */
-	public QuerySqmImpl(
+	public SqmQueryImpl(
 			String hql,
 			HqlInterpretation<R> hqlInterpretation,
 			Class<R> resultType,
@@ -193,7 +193,7 @@ public class QuerySqmImpl<R>
 	/**
 	 * Form used for criteria queries
 	 */
-	public QuerySqmImpl(
+	public SqmQueryImpl(
 			SqmStatement<R> criteria,
 			Class<R> expectedResultType,
 			SharedSessionContractImplementor producer) {
@@ -203,7 +203,7 @@ public class QuerySqmImpl<R>
 	/**
 	 * Used for specifications.
 	 */
-	public QuerySqmImpl(
+	public SqmQueryImpl(
 			SqmStatement<R> criteria,
 			boolean copyAst,
 			Class<R> expectedResultType,

@@ -6,7 +6,7 @@ represents an atomic piece of the query.  E.g. `SqmSelectClause` represents the 
 `SqmSelectClause` is ultimately a collection of one or more `SqmSelection` references representing the individual
 selections to be returned from the query (called the domain results).  Etc
 
-All of these details are handled by the `QuerySqmImpl` implementation of `Query`.  This is what Hibernate
+All of these details are handled by the `SqmQueryImpl` implementation of `Query`.  This is what Hibernate
 uses for both HQL and Criteria queries.
 
 

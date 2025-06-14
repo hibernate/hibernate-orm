@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.Query;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -405,7 +405,7 @@ public class CriteriaEntityGraphTest implements SessionFactoryScopeAware {
 		final StandardSqmTranslator<SelectStatement> sqmConverter = new StandardSqmTranslator<>(
 				sqmStatement,
 				hqlQuery.getQueryOptions(),
-				( (QuerySqmImpl<?>) hqlQuery ).getDomainParameterXref(),
+				( (SqmQueryImpl<?>) hqlQuery ).getDomainParameterXref(),
 				hqlQuery.getParameterBindings(),
 				loadQueryInfluencers,
 				session.getSessionFactory().getSqlTranslationEngine(),

@@ -39,7 +39,7 @@ import org.hibernate.orm.test.cid.Product;
 import org.hibernate.query.Query;
 import org.hibernate.query.SyntaxException;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -238,7 +238,7 @@ public class ASTParserLoadingTest {
 					Query<?> query = session
 							.createQuery( "select a.class from Animal a where a.class = Dog" );
 					query.list();
-					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class )
+					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( SqmQueryImpl.class )
 							.getSqmStatement();
 					List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 1 );
@@ -249,7 +249,7 @@ public class ASTParserLoadingTest {
 					// test
 					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
 					query.list();
-					sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					sqmStatement = (SqmSelectStatement<?>) query.unwrap( SqmQueryImpl.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 1 );
 					typeSelection = selections.get( 0 );
@@ -1455,7 +1455,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					final Query<?> query = session.createQuery( "select h.name from Human h" );
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap(
-							QuerySqmImpl.class ).getSqmStatement();
+							SqmQueryImpl.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections()
 							.get( 0 );
@@ -1838,7 +1838,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					final Query query = session.createQuery( "from Animal a inner join fetch a.mother" );
 					final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap(
-							QuerySqmImpl.class ).getSqmStatement();
+							SqmQueryImpl.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
 					final SqmSelection<?> selection = sqmStatement.getQuerySpec().getSelectClause().getSelections()
 							.get( 0 );
@@ -2150,7 +2150,7 @@ public class ASTParserLoadingTest {
 	}
 
 	private static void verifyAnimalZooSelection(Query q) {
-		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class )
+		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmQueryImpl.class )
 				.getSqmStatement();
 		final SqmSelection<?> sqmSelection = sqmStatement.getQuerySpec().getSelectClause().getSelections().get( 0 );
 		assertThat( sqmSelection.getSelectableNode() ).isInstanceOf( SqmPath.class );
@@ -2584,7 +2584,7 @@ public class ASTParserLoadingTest {
 					session.persist( a );
 
 					Query<?> q = session.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
-					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class )
+					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmQueryImpl.class )
 							.getSqmStatement();
 					List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 2 );
@@ -2592,7 +2592,7 @@ public class ASTParserLoadingTest {
 					assertThat( selections.get( 1 ).getAlias() ).isNull();
 
 					q = session.createQuery( "select count(*), avg(a.bodyWeight) as avg from Animal a" );
-					sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
+					sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmQueryImpl.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 2 );
 

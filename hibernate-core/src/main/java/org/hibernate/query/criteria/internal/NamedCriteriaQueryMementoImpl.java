@@ -18,7 +18,7 @@ import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmSelectionQuery;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -89,7 +89,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 		}
 		@SuppressWarnings("unchecked") // we just checked the result type
 		final SqmStatement<T> statement = (SqmStatement<T>) sqmStatement;
-		return new QuerySqmImpl<>( this, statement, resultType, session );
+		return new SqmQueryImpl<>( this, statement, resultType, session );
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 
 	@Override
 	public String getHqlString() {
-		return QuerySqmImpl.CRITERIA_HQL_STRING;
+		return SqmQueryImpl.CRITERIA_HQL_STRING;
 	}
 
 	@Override

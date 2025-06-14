@@ -18,7 +18,7 @@ import java.util.Map;
  * @author Sanne Grinovero
  * @since 6.2
  */
-public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
+public final class MapBackedClassValue<V> implements ReadOnlyMap<Class<?>,V> {
 
 	private volatile Map<Class<?>, V> map;
 
@@ -44,7 +44,7 @@ public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
 	}
 
 	@Override
-	public V get(Class key) {
+	public V get(Class<?> key) {
 		return classValue.get( key );
 	}
 

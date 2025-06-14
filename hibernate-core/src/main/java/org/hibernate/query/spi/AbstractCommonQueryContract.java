@@ -96,8 +96,15 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMode;
 
 /**
+ * Base implementation of {@link CommonQueryContract}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractCommonQueryContract implements CommonQueryContract {
 	private final SharedSessionContractImplementor session;
 	private final QueryOptionsImpl queryOptions;

@@ -7,6 +7,7 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.common.FetchClauseType;
 
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -33,6 +34,14 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * @see org.hibernate.query.SelectionQuery#getResultCount()
 	 */
 	JpaCriteriaQuery<Long> createCountQuery();
+
+	/**
+	 * A query that returns {@code true} if this query has any results.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaCriteriaQuery<Boolean> createExistsQuery();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause

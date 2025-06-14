@@ -537,10 +537,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			if ( querySpec.getFetch() == null && querySpec.getOffset() == null ) {
 				querySpec.setOrderByClause( null );
 			}
-
 			return (SqmSelectStatement<Long>) copy;
 		}
 		else {
+			//TODO: do some deeper analysis for unions (simplify their select lists)
 			aliasSelections( queryPart );
 			final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
 			final SqmSelectStatement<Long> query = nodeBuilder().createQuery( Long.class );
@@ -551,6 +551,35 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 			}
 			return query;
 		}
+	}
+
+	@Override
+	public SqmSelectStatement<Boolean> createExistsQuery() {
+		final SqmSelectStatement<?> copy = createCopy( noParamCopyContext(), Object.class );
+		final SqmQueryPart<?> queryPart = copy.getQueryPart();
+		//TODO: detect queries with no 'group by', but aggregate functions
+		//      in 'select' list (we don't even need to hit the database to
+		//      know they return exactly one row)
+		if ( queryPart.isSimpleQueryPart() ) {
+			final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;
+			querySpec.setDistinct( false );
+			if ( querySpec.getGroupingExpressions().isEmpty() ) {
+				for ( SqmRoot<?> root : querySpec.getRootList() ) {
+					root.removeLeftFetchJoins();
+				}
+				querySpec.getSelectClause().setSelection( nodeBuilder().literal( 1 ) );
+			}
+		}
+		//TODO: do some deeper analysis for unions (simplify their select lists)
+		aliasSelections( queryPart );
+		final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
+		final SqmSelectStatement<Boolean> query = nodeBuilder().createQuery( Boolean.class );
+		query.select( nodeBuilder().exists( subquery ) );
+		if ( subquery.getFetch() == null && subquery.getOffset() == null ) {
+			subquery.getQueryPart().setOrderByClause( null );
+		}
+		query.addCteStatements( getCteStatementMap() );
+		return query;
 	}
 
 	private <S> void aliasSelections(SqmQueryPart<S> queryPart) {

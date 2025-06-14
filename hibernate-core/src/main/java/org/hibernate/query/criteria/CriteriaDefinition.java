@@ -500,4 +500,9 @@ public abstract class CriteriaDefinition<R>
 	public JpaCriteriaQuery<Long> createCountQuery() {
 		return query.createCountQuery();
 	}
+
+	@Override
+	public JpaCriteriaQuery<Boolean> createExistsQuery() {
+		return query.createExistsQuery();
+	}
 }

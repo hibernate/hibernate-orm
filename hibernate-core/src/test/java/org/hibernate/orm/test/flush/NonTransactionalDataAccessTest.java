@@ -15,7 +15,6 @@ import jakarta.persistence.TransactionRequiredException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.query.sqm.internal.SqmQueryImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -144,7 +143,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 			MyEntity entity = new MyEntity("N1");
 			entityManager.persist(entity);
 
-			SqmQueryImpl<?> q = (SqmQueryImpl<?>) entityManager.createNamedQuery("deleteByName");
+			var q = entityManager.createNamedQuery("deleteByName");
 			q.setParameter("name", "N1");
 			int d = q.executeUpdate();
 			assertEquals(0, d);

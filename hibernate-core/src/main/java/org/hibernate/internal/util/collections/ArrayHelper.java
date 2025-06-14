@@ -212,6 +212,15 @@ public final class ArrayHelper {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
+	@AllowReflection
+	public static <T> T[] add(T[] x, T y) {
+		T[] result = (T[]) Array.newInstance( x.getClass().getComponentType(), x.length + 1 );
+		System.arraycopy( x, 0, result, 0, x.length );
+		result[x.length] = y;
+		return result;
+	}
+
 	public static final boolean[] TRUE = {true};
 	public static final boolean[] FALSE = {false};
 

@@ -319,8 +319,8 @@ public abstract class DelegatingSqmSelectionQueryImplementor<R> implements SqmSe
 		return getDelegate().getQueryString();
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public SqmStatement getSqmStatement() {
+	@Override
+	public SqmStatement<R> getSqmStatement() {
 		return getDelegate().getSqmStatement();
 	}
 

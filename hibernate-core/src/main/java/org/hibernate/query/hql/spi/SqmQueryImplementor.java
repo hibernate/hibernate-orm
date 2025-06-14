@@ -25,7 +25,6 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
 import jakarta.persistence.FlushModeType;
@@ -39,16 +38,12 @@ import jakarta.persistence.metamodel.Type;
  *
  * @author Steve Ebersole
  */
-public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, NameableQuery {
+public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery<R>, NameableQuery {
 	@Override
 	NamedSqmQueryMemento<R> toMemento(String name);
 
 	@Override
 	ParameterMetadataImplementor getParameterMetadata();
-
-	@Override
-	SqmStatement<R> getSqmStatement();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// covariance

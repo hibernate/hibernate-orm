@@ -4,13 +4,19 @@
  */
 package org.hibernate.query.spi;
 
+import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
+ * @apiNote This class is considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Christian Beikov
  */
+@Internal
 public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	private final boolean omitLimit;

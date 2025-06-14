@@ -20,6 +20,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Internal;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.QueryFlushMode;
@@ -67,8 +68,15 @@ import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 
 /**
+ * Base implementation of {@link SelectionQuery}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractSelectionQuery<R>
 		extends AbstractCommonQueryContract
 		implements SelectionQuery<R>, DomainQueryExecutionContext {

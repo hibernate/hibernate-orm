@@ -5,13 +5,21 @@
 package org.hibernate.query.spi;
 
 
+import org.hibernate.Internal;
 import org.hibernate.type.BindableType;
 
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 
 /**
+ * Base implementation of {@link org.hibernate.query.QueryParameter}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractQueryParameter<T> implements QueryParameterImplementor<T> {
 
 	private boolean allowMultiValuedBinding;

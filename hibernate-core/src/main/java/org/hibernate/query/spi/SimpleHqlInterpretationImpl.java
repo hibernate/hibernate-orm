@@ -6,6 +6,7 @@ package org.hibernate.query.spi;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.Internal;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -14,8 +15,15 @@ import static org.hibernate.query.sqm.internal.SqmUtil.checkQueryReturnType;
 import static org.hibernate.query.sqm.internal.SqmUtil.isResultTypeAlwaysAllowed;
 
 /**
+ * Default implementation if {@link HqlInterpretation}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public class SimpleHqlInterpretationImpl<R> implements HqlInterpretation<R> {
 	private final SqmStatement<R> sqmStatement;
 	private final ParameterMetadataImplementor parameterMetadata;

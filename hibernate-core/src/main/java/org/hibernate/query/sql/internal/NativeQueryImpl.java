@@ -969,7 +969,7 @@ public class NativeQueryImpl<R>
 		for ( int i = sourcePosition - 1; i >= 0; i-- ) {
 			final char ch = sqlString.charAt( i );
 			if ( !isWhitespace( ch ) ) {
-				isEnclosedInParens = ch == '(';
+				isEnclosedInParens = ch == '(' || ch == ',';
 				break;
 			}
 		}
@@ -977,7 +977,7 @@ public class NativeQueryImpl<R>
 			for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
 				final char ch = sqlString.charAt( i );
 				if ( !isWhitespace( ch ) ) {
-					isEnclosedInParens = ch == ')';
+					isEnclosedInParens = ch == ')' || ch == ',';
 					break;
 				}
 			}

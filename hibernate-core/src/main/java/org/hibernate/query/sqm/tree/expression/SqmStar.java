@@ -36,4 +36,13 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 		hql.append( "*" );
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmStar;
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;
+	}
 }

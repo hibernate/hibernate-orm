@@ -8,6 +8,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 
+import java.util.Objects;
+
 /**
  * @author Christian Beikov
  */
@@ -78,4 +80,16 @@ public class SqmOverflow<T> extends AbstractSqmExpression<T> {
 		}
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmOverflow<?> that
+			&& this.withCount == that.withCount
+			&& Objects.equals( this.separatorExpression, that.separatorExpression )
+			&& Objects.equals( this.fillerExpression, that.fillerExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( separatorExpression, fillerExpression, withCount );
+	}
 }

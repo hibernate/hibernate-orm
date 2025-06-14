@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.predicate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.criteria.JpaExpression;
@@ -159,6 +160,19 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 			listExpressions.get( i ).appendHqlString( hql, context );
 		}
 		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmInListPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.testExpression, that.testExpression )
+			&& Objects.equals( this.listExpressions, that.listExpressions );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), testExpression, listExpressions );
 	}
 
 	@Override

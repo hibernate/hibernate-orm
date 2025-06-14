@@ -138,7 +138,6 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 		if ( bindingMap == null ) {
 			bindingMap = new IdentityHashMap<>();
 		}
-
 		bindingMap.put( parameter, binding );
 	}
 

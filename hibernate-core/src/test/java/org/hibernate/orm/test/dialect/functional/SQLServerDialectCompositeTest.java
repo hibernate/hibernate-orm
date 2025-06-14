@@ -52,7 +52,7 @@ public class SQLServerDialectCompositeTest {
 		);
 
 		var query = sqlStatementInterceptor.getSqlQueries().get( 0 );
-		assertTrue(query.endsWith( "where exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ));
+		assertTrue( query.endsWith( "where exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ) );
 	}
 
 	@Test
@@ -72,7 +72,7 @@ public class SQLServerDialectCompositeTest {
 		);
 
 		var query = sqlStatementInterceptor.getSqlQueries().get( 0 );
-		assertTrue(query.endsWith( "where not exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ));
+		assertTrue( query.endsWith( "where not exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ) );
 	}
 
 	@Test
@@ -85,7 +85,7 @@ public class SQLServerDialectCompositeTest {
 		compositeIds.add( new CompositeId( 3,4 ) );
 
 		scope.inTransaction( entityManager -> {
-					entityManager.createQuery("SELECT e FROM EntityWithCompositeId e WHERE e.description = :description AND e.id IN (:ids)")
+					entityManager.createQuery( "SELECT e FROM EntityWithCompositeId e WHERE e.description = :description AND e.id IN (:ids)" )
 							.setParameter( "ids", compositeIds )
 							.setParameter( "description", "test" )
 							.getResultList();
@@ -93,6 +93,6 @@ public class SQLServerDialectCompositeTest {
 		);
 
 		var query = sqlStatementInterceptor.getSqlQueries().get( 0 );
-		assertTrue(query.endsWith( "where ewci1_0.description=? and exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ));
+		assertTrue( query.endsWith( "where ewci1_0.description=? and exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ) );
 	}
 }

@@ -220,7 +220,7 @@ dependencyResolutionManagement {
             def db2Version = version "db2", "11.5.9.0"
             // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.15.2.0" )
-            def firebirdVersion = version "firebird", "4.0.8.java11"
+            def firebirdVersion = version "firebird", "6.0.2"
             def hanaVersion = version "hana", "2.22.12"
             def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.3" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.4" )

@@ -61,7 +61,7 @@ import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.ReflectHelper.isClass;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
-import static org.hibernate.query.sqm.internal.QuerySqmImpl.CRITERIA_HQL_STRING;
+import static org.hibernate.query.sqm.internal.SqmQueryImpl.CRITERIA_HQL_STRING;
 import static org.hibernate.query.sqm.internal.SqmUtil.generateJdbcParamsXref;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
 

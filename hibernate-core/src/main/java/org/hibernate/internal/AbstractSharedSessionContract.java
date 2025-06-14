@@ -81,7 +81,7 @@ import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.SqmSelectionQuery;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
@@ -888,7 +888,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checksBeforeQueryCreation();
 		try {
 			final HqlInterpretation<T> interpretation = interpretHql( queryString, expectedResultType );
-			final QuerySqmImpl<T> query = new QuerySqmImpl<>( queryString, interpretation, expectedResultType, this );
+			final SqmQueryImpl<T> query = new SqmQueryImpl<>( queryString, interpretation, expectedResultType, this );
 			applyQuerySettingsAndHints( query );
 			query.setComment( queryString );
 			return query;
@@ -904,11 +904,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checksBeforeQueryCreation();
 		if ( typedQueryReference instanceof SelectionSpecificationImpl<R> specification ) {
 			final CriteriaQuery<R> query = specification.buildCriteria( getCriteriaBuilder() );
-			return new QuerySqmImpl<>( (SqmStatement<R>) query, specification.getResultType(), this );
+			return new SqmQueryImpl<>( (SqmStatement<R>) query, specification.getResultType(), this );
 		}
 		else if ( typedQueryReference instanceof MutationSpecificationImpl<?> specification ) {
 			final CommonAbstractCriteria query = specification.buildCriteria( getCriteriaBuilder() );
-			return new QuerySqmImpl<>( (SqmStatement<R>) query, (Class<R>) specification.getResultType(), this );
+			return new SqmQueryImpl<>( (SqmStatement<R>) query, (Class<R>) specification.getResultType(), this );
 		}
 		else {
 			@SuppressWarnings("unchecked")
@@ -1502,7 +1502,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected <T> QueryImplementor<T> createCriteriaQuery(SqmStatement<T> criteria, Class<T> resultType) {
-		final QuerySqmImpl<T> query = new QuerySqmImpl<>( criteria, resultType, this );
+		final SqmQueryImpl<T> query = new SqmQueryImpl<>( criteria, resultType, this );
 		applyQuerySettingsAndHints( query );
 		return query;
 	}

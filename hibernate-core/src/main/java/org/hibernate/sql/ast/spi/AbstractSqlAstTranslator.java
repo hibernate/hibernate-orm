@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -7641,6 +7642,52 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				itemAccessor = listExpression ->
 						getSqlTuple( listExpression )
 								.getExpressions().get( 0 );
+			}
+			else if ( dialect.supportsRowValueConstructorSyntaxInDerivedTableInList() ) {
+				if ( inListPredicate.isNegated() ) {
+					appendSql( "not " );
+				}
+				appendSql( "exists (select 1 from (values " );
+
+				List<SqlTuple> listTuples = listExpressions.stream()
+						.map( SqlTupleContainer::getSqlTuple )
+						.toList();
+				for ( int i = 0; i < listTuples.size(); i++ ) {
+					if ( i > 0 ) {
+						appendSql( ", " );
+					}
+
+					appendSql( OPEN_PARENTHESIS );
+					renderCommaSeparatedSelectExpression( listTuples.get(i).getExpressions() );
+					appendSql( CLOSE_PARENTHESIS );
+				}
+
+				List<Expression> expressions = lhsTuple.getExpressions()
+						.stream()
+						.filter( expression -> expression.getColumnReference() != null )
+						.collect( Collectors.toList() );
+				appendSql( ") as v(" );
+				for ( int i = 0; i < expressions.size(); i++ ) {
+					if ( i > 0 ) {
+						appendSql( ", " );
+					}
+					appendSql( expressions.get( i ).getColumnReference().getColumnExpression() );
+				}
+
+				appendSql( ") where " );
+				for ( int i = 0; i < expressions.size(); i++ ) {
+					if ( i > 0 ) {
+						appendSql( " and " );
+					}
+
+					Expression expression = expressions.get( i );
+					expression.accept( this );
+					appendSql( " = v." );
+					appendSql( expression.getColumnReference().getColumnExpression() );
+				}
+
+				appendSql( CLOSE_PARENTHESIS );
+				return;
 			}
 			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?

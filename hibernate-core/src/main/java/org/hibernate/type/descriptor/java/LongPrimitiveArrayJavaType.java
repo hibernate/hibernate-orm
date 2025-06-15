@@ -81,7 +81,7 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 		final char lastChar = charSequence.charAt( charSequence.length() - 1 );
 		final char firstChar = charSequence.charAt( 0 );
 		if ( firstChar != '{' || lastChar != '}' ) {
-			throw new IllegalArgumentException( "Cannot parse given string into array of strings. First and last character must be { and }" );
+			throw new IllegalArgumentException( "Cannot parse given string into array of Long. First and last character must be { and }" );
 		}
 		final int len = charSequence.length();
 		int elementStart = 1;

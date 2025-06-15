@@ -25,7 +25,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTra
 /**
  * @author Steve Ebersole
  */
-public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInterceptor {
+public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
 	private final Set<String> identifierAttributeNames;
 	private final CompositeType nonAggregatedCidMapper;
 
@@ -45,7 +45,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			CompositeType nonAggregatedCidMapper,
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {
-		super( entityName, session );
+		super( entityName );
 
 		this.identifierAttributeNames = identifierAttributeNames;
 		assert identifierAttributeNames != null;
@@ -54,6 +54,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 		assert nonAggregatedCidMapper != null || identifierAttributeNames.size() == 1;
 
 		this.entityKey = entityKey;
+		setSession( session );
 
 		final EntityPersister entityPersister =
 				session.getFactory().getMappingMetamodel()

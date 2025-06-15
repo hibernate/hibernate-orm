@@ -13,7 +13,6 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class EntityGraphsTest extends AbstractEntityGraphTest {
@@ -64,10 +63,9 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	}
 
 	@Test
-	@Ignore("Cannot run due to Hibernate bug: https://hibernate.atlassian.net/browse/HHH-10378")
 	public void testEqualLinksWithSubclassesEqual() {
-		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne:MockSubentity(description)" );
-		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne:MockSubentity(description), linkToOne(name)" );
+		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne(GraphParsingTestSubentity:description)" );
+		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(GraphParsingTestSubentity:description), linkToOne(name)" );
 		Assert.assertTrue( EntityGraphs.areEqual( a, b ) );
 	}
 
@@ -87,7 +85,7 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 
 	@Test
 	public void testDifferentLinksEqual3() {
-		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne:MockSubentity(description)" );
+		EntityGraph<GraphParsingTestEntity> a = parseGraph( "linkToOne(name), linkToOne(GraphParsingTestSubentity:description)" );
 		EntityGraph<GraphParsingTestEntity> b = parseGraph( "linkToOne(name, description)" );
 		Assert.assertFalse( EntityGraphs.areEqual( a, b ) );
 	}

@@ -22,13 +22,14 @@ import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tuple.TupleType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -55,26 +56,50 @@ public class AnonymousTupleType<T>
 	private final String[] componentNames;
 	private final Map<String, Integer> componentIndexMap;
 
-	public AnonymousTupleType(SqmSubQuery<T> subQuery) {
-		this( extractSqmExpressibles( subQuery ) );
-	}
+	public AnonymousTupleType(SqmSelectQuery<T> selectQuery) {
+		final SqmSelectClause selectClause = selectQuery.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause();
 
-	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
-		expressibles = new SqmBindableType<?>[components.length];
-		componentSourcePaths = new NavigablePath[components.length];
-		for ( int i = 0; i < components.length; i++ ) {
-			expressibles[i] = components[i].getNodeType();
-			if ( components[i] instanceof SqmPath<?> path ) {
-				componentSourcePaths[i] = path.getNavigablePath();
+		if ( selectClause == null || selectClause.getSelections().isEmpty() ) {
+			throw new IllegalArgumentException( "selectQuery has no selection items" );
+		}
+		// todo: right now, we "snapshot" the state of the selectQuery when creating this type, but maybe we shouldn't?
+		//  i.e. what if the selectQuery changes later on? Or should we somehow mark the selectQuery to signal,
+		//  that changes to the select clause are invalid after a certain point?
+
+		final List<SqmSelection<?>> selections = selectClause.getSelections();
+		final List<SqmSelectableNode<?>> selectableNodes = new ArrayList<>();
+		final List<String> aliases = new ArrayList<>();
+		if ( selections != null ) {
+			for ( SqmSelection<?> selection : selections ) {
+				selection.getSelectableNode().visitSubSelectableNodes( selectableNodes::add );
+
+				if ( selection.getSelectableNode().isCompoundSelection() ) {
+					selection.getSelectableNode().visitSubSelectableNodes( node ->
+							aliases.add( node.getAlias() )
+					);
+				}
+				else {
+					aliases.add( selection.getAlias() );
+				}
 			}
 		}
+
+		final SqmSelectableNode<?>[] components = selectableNodes.toArray(new SqmSelectableNode[0]);
+
+		expressibles = new SqmBindableType<?>[components.length];
+		componentSourcePaths = new NavigablePath[components.length];
 		componentNames = new String[components.length];
 		//noinspection unchecked
 		javaTypeDescriptor = (JavaType<T>) new ObjectArrayJavaType( getTypeDescriptors( components ) );
 		componentIndexMap = linkedMapOfSize( components.length );
 		for ( int i = 0; i < components.length; i++ ) {
-			final SqmSelectableNode<?> component = components[i];
-			final String alias = component.getAlias();
+			expressibles[i] = components[i].getNodeType();
+			if ( components[i] instanceof SqmPath<?> path ) {
+				componentSourcePaths[i] = path.getNavigablePath();
+			}
+			String alias = aliases.get( i );
 			if ( alias == null ) {
 				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
 						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
@@ -108,17 +133,6 @@ public class AnonymousTupleType<T>
 	@Override
 	public String getTypeName() {
 		return SqmDomainType.super.getTypeName();
-	}
-
-	private static SqmSelectableNode<?>[] extractSqmExpressibles(SqmSubQuery<?> subQuery) {
-		final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
-		if ( selectClause == null || selectClause.getSelectionItems().isEmpty() ) {
-			throw new IllegalArgumentException( "subquery has no selection items" );
-		}
-		// todo: right now, we "snapshot" the state of the subquery when creating this type, but maybe we shouldn't?
-		//  i.e. what if the subquery changes later on? Or should we somehow mark the subquery to signal,
-		//  that changes to the select clause are invalid after a certain point?
-		return selectClause.getSelectionItems().toArray( SqmSelectableNode[]::new );
 	}
 
 	private static JavaType<?>[] getTypeDescriptors(SqmSelectableNode<?>[] components) {

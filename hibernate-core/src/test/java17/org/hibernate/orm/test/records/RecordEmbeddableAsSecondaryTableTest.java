@@ -44,6 +44,7 @@ public class RecordEmbeddableAsSecondaryTableTest {
     @Entity
     @SecondaryTable(name = "Person")
     public static class User {
+
         @Id
         private Integer id;
 

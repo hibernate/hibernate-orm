@@ -28,6 +28,7 @@ import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
 import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
+import org.hibernate.internal.util.cache.InternalCacheFactoryInitiator;
 import org.hibernate.loader.ast.internal.BatchLoaderFactoryInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
@@ -155,6 +156,9 @@ public final class StandardServiceInitiators {
 		// ParameterMarkerStrategy
 		serviceInitiators.add( ParameterMarkerStrategyInitiator.INSTANCE );
 		serviceInitiators.add( BatchLoaderFactoryInitiator.INSTANCE );
+
+		// InternalCacheFactoryService
+		serviceInitiators.add( InternalCacheFactoryInitiator.INSTANCE );
 
 		serviceInitiators.trimToSize();
 

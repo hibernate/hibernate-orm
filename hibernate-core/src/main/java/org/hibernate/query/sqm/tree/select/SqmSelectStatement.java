@@ -188,17 +188,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	public boolean producesUniqueResults() {
-		return producesUniqueResults( getQueryPart() );
-	}
-
-	private boolean producesUniqueResults(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> querySpec ) {
-			return querySpec.producesUniqueResults();
-		}
-		else {
-			// For query groups we have to assume that duplicates are possible
-			return true;
-		}
+		// For query groups we have to assume that duplicates are possible
+		return !( getQueryPart() instanceof SqmQuerySpec<?> querySpec )
+			|| querySpec.producesUniqueResults();
 	}
 
 	public boolean containsCollectionFetches() {
@@ -322,8 +314,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
-		//noinspection unchecked,rawtypes
-		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		final SqmPredicate combined =
+				combinePredicates( getQuerySpec().getHavingClausePredicate(), restrictions );
 		getQuerySpec().setHavingClausePredicate( combined );
 		return this;
 	}

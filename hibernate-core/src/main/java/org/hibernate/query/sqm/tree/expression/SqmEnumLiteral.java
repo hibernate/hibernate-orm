@@ -127,24 +127,28 @@ public class SqmEnumLiteral<E extends Enum<E>> extends SqmLiteral<E> implements 
 		);
 	}
 
+	private Integer ordinalValue() {
+		return getExpressibleJavaType().toOrdinal( enumValue );
+	}
+
 	@Override
 	public SqmExpression<Long> asLong() {
-		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ).longValue() );
+		return nodeBuilder().literal( ordinalValue().longValue() );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ) );
+		return nodeBuilder().literal( ordinalValue() );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ).floatValue() );
+		return nodeBuilder().literal( ordinalValue().floatValue() );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return nodeBuilder().literal( getExpressibleJavaType().toOrdinal( enumValue ).doubleValue() );
+		return nodeBuilder().literal( ordinalValue().doubleValue() );
 	}
 
 	@Override

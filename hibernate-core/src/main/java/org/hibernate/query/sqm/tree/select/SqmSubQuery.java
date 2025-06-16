@@ -238,9 +238,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectQuery<?> getParent() {
-		final SqmQuery<?> containingQuery = getContainingQuery();
-		// JPA only allows sub-queries on select queries
-		if ( containingQuery instanceof SqmSelectQuery<?> sqmSelectQuery ) {
+		// JPA only allows subqueries on select queries
+		if ( getContainingQuery() instanceof SqmSelectQuery<?> sqmSelectQuery ) {
 			return sqmSelectQuery;
 		}
 		else {
@@ -656,39 +655,43 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		}
 	}
 
+	private <B> SqmExpression<B> castToBasicType(Class<B> type) {
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( type ) );
+	}
+
 	@Override
 	public SqmExpression<Long> asLong() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Long.class ) );
+		return castToBasicType( Long.class );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
+		return castToBasicType( Integer.class );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Float.class ) );
+		return castToBasicType( Float.class );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
+		return castToBasicType( Double.class );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigDecimal.class ) );
+		return castToBasicType( BigDecimal.class );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigInteger.class ) );
+		return castToBasicType( BigInteger.class );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( String.class ) );
+		return castToBasicType( String.class );
 	}
 
 	@Override
@@ -698,10 +701,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public JavaType<T> getJavaTypeDescriptor() {
-		if ( getNodeType() == null ) {
-			return null;
-		}
-		return getNodeType().getExpressibleJavaType();
+		final SqmBindableType<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 
 	@Override
@@ -728,8 +729,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public Subquery<T> having(List<Predicate> restrictions) {
-		//noinspection unchecked,rawtypes
-		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		final SqmPredicate combined =
+				combinePredicates( getQuerySpec().getHavingClausePredicate(), restrictions );
 		getQuerySpec().setHavingClausePredicate( combined );
 		return this;
 	}

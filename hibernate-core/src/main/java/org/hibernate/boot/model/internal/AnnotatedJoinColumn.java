@@ -458,7 +458,8 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 	@Override
 	boolean inferColumnNameIfPossible(String columnName, String propertyName, boolean applyNamingStrategy) {
 		if ( isNotEmpty( columnName ) ) {
-			getMappingColumn().setName( processColumnName( columnName, applyNamingStrategy ) );
+			getMappingColumn().setName(
+					processColumnName( columnName, applyNamingStrategy, isNotEmpty( columnName ) ) );
 			return true;
 		}
 		else {

@@ -6,7 +6,10 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.Length;
+import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
@@ -117,9 +120,6 @@ import java.util.regex.Pattern;
 import org.jboss.logging.Logger;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
-import static org.hibernate.LockOptions.NO_WAIT;
-import static org.hibernate.LockOptions.SKIP_LOCKED;
-import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_USE_BINARY_FLOATS;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
 import static org.hibernate.dialect.type.OracleJdbcHelper.getArrayJdbcTypeConstructor;
@@ -1470,7 +1470,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getForUpdateNowaitString() {
+	public String getForUpdateNowaitString(){
 		return " for update nowait";
 	}
 
@@ -1494,12 +1494,36 @@ public class OracleDialect extends Dialect {
 		return " for update of " + aliases + " skip locked";
 	}
 
+	private String withTimeout(String lockString, Timeout timeout) {
+		return withTimeout( lockString, timeout.milliseconds() );
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
 	private String withTimeout(String lockString, int timeout) {
 		return switch (timeout) {
-			case NO_WAIT -> supportsNoWait() ? lockString + " nowait" : lockString;
-			case SKIP_LOCKED -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case WAIT_FOREVER -> lockString;
-			default -> supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
 		};
 	}
 

@@ -19,7 +19,7 @@ public class UnknownEntityTypeException extends MappingException {
 	}
 
 	public UnknownEntityTypeException(String entityName) {
-		super( "Unknown entity type: " + entityName );
+		super( "Unknown entity type '" + entityName + "'" );
 	}
 
 	public UnknownEntityTypeException(Class<?> entityClass) {

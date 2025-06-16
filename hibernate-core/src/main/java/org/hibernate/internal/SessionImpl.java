@@ -6,6 +6,7 @@ package org.hibernate.internal;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FindOption;
@@ -1526,21 +1527,30 @@ public class SessionImpl
 			return requireEntityPersister( guessEntityName( object ) );
 		}
 		else {
-			// try block is a hack around fact that currently tuplizers are not
-			// given the opportunity to resolve a subclass entity name.  this
-			// allows the (we assume custom) interceptor the ability to
+			// try block is a hack around fact that currently tuplizers are
+			// not given the opportunity to resolve a subclass entity name.
+			// This allows the (we assume custom) interceptor the ability to
 			// influence this decision if we were not able to based on the
 			// given entityName
 			try {
 				return requireEntityPersister( entityName )
 						.getSubclassEntityPersister( object, getFactory() );
 			}
-			catch ( HibernateException e ) {
+			catch ( UnknownEntityTypeException uee ) {
 				try {
 					return getEntityPersister( null, object );
 				}
-				catch ( HibernateException e2 ) {
-					throw e;
+				catch ( HibernateException e ) {
+					final Class<?> objectClass = object.getClass();
+					final String problem =
+							objectClass.isAnnotationPresent( Entity.class )
+									? "does not belong to this persistence unit"
+									: "is not annotated '@Entity'";
+					throw new UnknownEntityTypeException(
+							uee.getMessage()
+								+ " ('" + objectClass.getSimpleName() + "' " + problem + ")",
+							e
+					);
 				}
 			}
 		}

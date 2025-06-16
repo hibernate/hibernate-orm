@@ -9,7 +9,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
-
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(OracleDialect.class)
 public class OracleLockTimeoutTest extends BaseUnitTestCase {
 
 	private final Dialect dialect = new OracleDialect( DatabaseVersion.make( 12 ) );

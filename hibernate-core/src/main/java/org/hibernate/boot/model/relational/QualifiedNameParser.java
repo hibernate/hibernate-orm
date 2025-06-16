@@ -108,7 +108,7 @@ public class QualifiedNameParser {
 
 		if ( isQuotedInEntirety( text ) ) {
 			return new NameParts( defaultCatalog, defaultSchema,
-					Identifier.toIdentifier( unquote( text ), true ) );
+					Identifier.toIdentifier( unquote( text ), true, true, true ) );
 		}
 
 		String catalogName = null;
@@ -167,7 +167,7 @@ public class QualifiedNameParser {
 		return new NameParts(
 				Identifier.toIdentifier( catalogName, catalogWasQuoted ),
 				Identifier.toIdentifier( schemaName, schemaWasQuoted ),
-				Identifier.toIdentifier( name, nameWasQuoted )
+				Identifier.toIdentifier( name, nameWasQuoted, true, true )
 		);
 	}
 

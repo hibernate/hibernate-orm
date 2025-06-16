@@ -52,5 +52,7 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 		throw new UnsupportedOperationException();
 	}
 
-	//TODO: what is a correct impl of equals() / hashCode() here?
+	// No equals() / hashCode() because this stuff is only
+	// ever used internally and is irrelevant for caching,
+	// so basing equality on the object identity is fine
 }

@@ -7,7 +7,6 @@ package org.hibernate.query.sqm.tree.select;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +75,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
+import static java.util.Collections.emptySet;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
 /**
@@ -736,7 +736,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
-		return Collections.emptySet();
+		return emptySet();
 	}
 
 	@Override

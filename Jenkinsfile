@@ -101,8 +101,9 @@ stage('Build') {
 	Map<String, Closure> executions = [:]
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
-		// Don't build environments for newer JDKs when this is a PR
-		if ( helper.scmSource.pullRequest && buildEnv.testJdkVersion ) {
+		// Don't build environments for newer JDKs when this is a PR, unless the PR is labelled with 'jdk' or 'jdk-<version>'
+		if ( helper.scmSource.pullRequest && buildEnv.testJdkVersion &&
+				!pullRequest.labels.contains( 'jdk' ) && !pullRequest.labels.contains( "jdk-${buildEnv.testJdkVersion}" ) ) {
 			return
 		}
 		state[buildEnv.tag] = [:]

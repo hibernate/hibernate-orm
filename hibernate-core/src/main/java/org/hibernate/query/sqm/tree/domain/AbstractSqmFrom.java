@@ -976,6 +976,16 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private int aliasCounter = 0;
 
 	private String generateAlias() {
-		return alias + "_" + (++aliasCounter);
+		final String prefix;
+		if ( alias == null ) {
+			prefix = "var_";
+		}
+		else if ( alias.startsWith( "var_" ) ) {
+			prefix = alias;
+		}
+		else {
+			prefix = "var_" + alias;
+		}
+		return prefix + "_" + (++aliasCounter);
 	}
 }

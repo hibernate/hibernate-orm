@@ -93,11 +93,12 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	}
 
 	private void validateFetchAlias(String alias) {
-//		if ( fetchJoin && alias != null && nodeBuilder().isJpaQueryComplianceEnabled() ) {
-//			throw new IllegalStateException(
-//					"The JPA specification does not permit specifying an alias for fetch joins."
-//			);
-//		}
+		if ( fetchJoin && alias != null && !alias.startsWith( "var_" )
+				&& nodeBuilder().isJpaQueryComplianceEnabled() ) {
+			throw new IllegalStateException(
+					"The JPA specification does not permit specifying an alias for fetch joins."
+			);
+		}
 	}
 
 	@Override

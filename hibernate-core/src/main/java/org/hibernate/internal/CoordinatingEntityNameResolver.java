@@ -7,7 +7,6 @@ package org.hibernate.internal;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 
 /**
  * @author Steve Ebersole
@@ -28,15 +27,16 @@ public class CoordinatingEntityNameResolver implements EntityNameResolver {
 			return entityName;
 		}
 
-		for ( EntityNameResolver resolver : sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
+		for ( EntityNameResolver resolver :
+				sessionFactory.getSessionFactoryOptions().getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				return entityName;
 			}
 		}
 
-		final MappingMetamodelImplementor mappingMetamodel = sessionFactory.getMappingMetamodel();
-		for ( EntityNameResolver resolver : mappingMetamodel.getEntityNameResolvers() ) {
+		for ( EntityNameResolver resolver :
+				sessionFactory.getMappingMetamodel().getEntityNameResolvers() ) {
 			entityName = resolver.resolveEntityName( entity );
 			if ( entityName != null ) {
 				return entityName;

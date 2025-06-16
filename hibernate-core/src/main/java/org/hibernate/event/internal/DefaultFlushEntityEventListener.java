@@ -71,33 +71,26 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	/**
 	 * make sure user didn't mangle the id
 	 */
-	public void checkId(Object object, EntityPersister persister, Object id, SessionImplementor session)
+	public void checkId(Object object, EntityPersister persister, EntityEntry entry, SessionImplementor session)
 			throws HibernateException {
-
-		if ( id instanceof DelayedPostInsertIdentifier ) {
-			// this is a situation where the entity id is assigned by a post-insert generator
-			// and was saved outside the transaction forcing it to be delayed
-			return;
+		final Object entryId = entry.getId();
+		if ( entryId == null ) {
+			throw new AssertionFailure( "Entry for instance of '" + persister.getEntityName()
+										+ "' has a null identifier (this can happen if the session is flushed after an exception occurs)" );
 		}
-
-		final Object oid = persister.getIdentifier( object, session );
-
-		if ( id == null ) {
-			throw new AssertionFailure( "null id in " + persister.getEntityName()
-					+ " entry (don't flush the Session after an exception occurs)" );
+		if ( !(entryId instanceof DelayedPostInsertIdentifier) ) {
+			final Object currentId = persister.getIdentifier( object, session );
+			// Small optimisation: always try to avoid getIdentifierType().isEqual(..) when possible.
+			// (However it's not safe to invoke the equals() method as it might trigger side effects.)
+			if ( entryId != currentId
+						&& !entry.getStatus().isDeletedOrGone()
+						&& !persister.getIdentifierType().isEqual( entryId, currentId, session.getFactory() ) ) {
+				throw new HibernateException( "Identifier of an instance of '" + persister.getEntityName()
+											+ "' was altered from " + entryId + " to " + currentId );
+			}
 		}
-
-		//Small optimisation: always try to avoid getIdentifierType().isEqual(..) when possible.
-		//(However it's not safe to invoke the equals() method as it might trigger side-effects)
-		if ( id == oid ) {
-			//No further checks necessary:
-			return;
-		}
-
-		if ( !persister.getIdentifierType().isEqual( id, oid, session.getFactory() ) ) {
-			throw new HibernateException( "identifier of an instance of " + persister.getEntityName()
-					+ " was altered from " + oid + " to " + id );
-		}
+		// else this is a situation where the entity id is assigned by a post-insert
+		// generator and was saved outside the transaction, forcing it to be delayed
 	}
 
 	private void checkNaturalId(
@@ -179,7 +172,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		}
 		else {
 			final EntityPersister persister = entry.getPersister();
-			checkId( entity, persister, entry.getId(), session );
+			checkId( entity, persister, entry, session );
 			// grab its current state
 			Object[] values = persister.getValues( entity );
 			checkNaturalId( persister, entity, entry, values, loadedState, session );

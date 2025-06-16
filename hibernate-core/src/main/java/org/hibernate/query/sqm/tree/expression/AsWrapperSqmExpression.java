@@ -56,7 +56,8 @@ public class AsWrapperSqmExpression<T> extends AbstractSqmExpression<T> {
 	@Override
 	public boolean equals(Object object) {
 		return object instanceof AsWrapperSqmExpression<?> that
-			&& Objects.equals( this.expression, that.expression );
+			&& Objects.equals( this.expression, that.expression )
+			&& Objects.equals( this.getNodeType(), that.getNodeType() );
 	}
 
 	@Override

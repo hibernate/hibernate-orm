@@ -52,7 +52,7 @@ public class SQLServerDialectCompositeTest {
 		);
 
 		var query = sqlStatementInterceptor.getSqlQueries().get( 0 );
-		assertTrue( query.endsWith( "where exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ) );
+		assertTrue( query.endsWith( "where exists (select 1 from (values (?,?), (?,?)) as v(col_0, col_1) where ewci1_0.id1 = v.col_0 and ewci1_0.id2 = v.col_1)" ) );
 	}
 
 	@Test
@@ -72,7 +72,7 @@ public class SQLServerDialectCompositeTest {
 		);
 
 		var query = sqlStatementInterceptor.getSqlQueries().get( 0 );
-		assertTrue( query.endsWith( "where not exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ) );
+		assertTrue( query.endsWith( "where not exists (select 1 from (values (?,?), (?,?)) as v(col_0, col_1) where ewci1_0.id1 = v.col_0 and ewci1_0.id2 = v.col_1)" ) );
 	}
 
 	@Test
@@ -93,6 +93,6 @@ public class SQLServerDialectCompositeTest {
 		);
 
 		var query = sqlStatementInterceptor.getSqlQueries().get( 0 );
-		assertTrue( query.endsWith( "where ewci1_0.description=? and exists (select 1 from (values (?,?), (?,?)) as v(id1, id2) where ewci1_0.id1 = v.id1 and ewci1_0.id2 = v.id2)" ) );
+		assertTrue( query.endsWith( "where ewci1_0.description=? and exists (select 1 from (values (?,?), (?,?)) as v(col_0, col_1) where ewci1_0.id1 = v.col_0 and ewci1_0.id2 = v.col_1)" ) );
 	}
 }

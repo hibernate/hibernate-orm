@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -7643,49 +7642,38 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						getSqlTuple( listExpression )
 								.getExpressions().get( 0 );
 			}
-			else if ( dialect.supportsRowValueConstructorSyntaxInDerivedTableInList() ) {
+			else if ( dialect.supportsValuesListForInListExistsEmulation() ) {
 				if ( inListPredicate.isNegated() ) {
 					appendSql( "not " );
 				}
-				appendSql( "exists (select 1 from (values " );
 
-				List<SqlTuple> listTuples = listExpressions.stream()
-						.map( SqlTupleContainer::getSqlTuple )
-						.toList();
-				for ( int i = 0; i < listTuples.size(); i++ ) {
+				appendSql( "exists (select 1 from (values " );
+				for ( int i = 0; i < listExpressions.size(); i++ ) {
 					if ( i > 0 ) {
 						appendSql( ", " );
 					}
-
 					appendSql( OPEN_PARENTHESIS );
-					renderCommaSeparatedSelectExpression( listTuples.get(i).getExpressions() );
+					renderCommaSeparatedSelectExpression( List.of( listExpressions.get( i ) ) );
 					appendSql( CLOSE_PARENTHESIS );
 				}
-
-				List<Expression> expressions = lhsTuple.getExpressions()
-						.stream()
-						.filter( expression -> expression.getColumnReference() != null )
-						.collect( Collectors.toList() );
 				appendSql( ") as v(" );
+
+				final List<? extends SqlAstNode> expressions = lhsTuple.getExpressions();
 				for ( int i = 0; i < expressions.size(); i++ ) {
 					if ( i > 0 ) {
 						appendSql( ", " );
 					}
-					appendSql( expressions.get( i ).getColumnReference().getColumnExpression() );
+					appendSql( "col_" + i );
 				}
-
 				appendSql( ") where " );
+
 				for ( int i = 0; i < expressions.size(); i++ ) {
 					if ( i > 0 ) {
 						appendSql( " and " );
 					}
-
-					Expression expression = expressions.get( i );
-					expression.accept( this );
-					appendSql( " = v." );
-					appendSql( expression.getColumnReference().getColumnExpression() );
+					expressions.get( i ).accept( this );
+					appendSql( " = v.col_" + i );
 				}
-
 				appendSql( CLOSE_PARENTHESIS );
 				return;
 			}

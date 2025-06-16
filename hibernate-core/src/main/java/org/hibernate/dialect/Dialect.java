@@ -6209,8 +6209,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
-	 * does it allow using them in a derived table within an EXISTS predicate that emulates an IN-list?
+	 * This pattern avoids the SQL length and performance issues of large disjunctions,
+	 * and emulates tuple-based IN-list comparisons using a derived VALUES table.
 	 * <p>
 	 * For example:
 	 * <pre>
@@ -6220,13 +6220,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         WHERE T.FIELD1 = V.FIELD1 AND T.FIELD2 = V.FIELD2
 	 *     )
 	 * </pre>
-	 * This pattern avoids the SQL length and performance issues of large disjunctions,
-	 * and emulates tuple-based IN-list comparisons using a derived VALUES table.
-	 *
-	 * @return True if this SQL dialect is known to support row value constructors in
-	 *         derived tables for EXISTS-based IN-list emulation; false otherwise.
 	 */
-	public boolean supportsRowValueConstructorSyntaxInDerivedTableInList() {
+	public boolean supportsValuesListForInListExistsEmulation() {
 		return false;
 	}
 }

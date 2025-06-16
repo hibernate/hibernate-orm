@@ -1245,7 +1245,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntax() {
-		return getVersion().isSameOrAfter( 10 );
+		return false;
 	}
 
 	@Override
@@ -1264,7 +1264,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInDerivedTableInList() {
+	public boolean supportsValuesListForInListExistsEmulation() {
 		return getVersion().isSameOrAfter( 10 );
 	}
 }

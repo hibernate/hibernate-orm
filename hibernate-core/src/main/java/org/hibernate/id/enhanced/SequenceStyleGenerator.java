@@ -368,10 +368,10 @@ public class SequenceStyleGenerator
 			IdentifierHelper identifierHelper) {
 		if ( isNotEmpty( explicitSequenceName ) ) {
 			// we have an explicit name, use it
-			return explicitSequenceName.contains(".")
+			return explicitSequenceName.contains( "." )
 					? QualifiedNameParser.INSTANCE.parse( explicitSequenceName )
 					: new QualifiedNameParser.NameParts( catalog, schema,
-							identifierHelper.toIdentifier( explicitSequenceName ) );
+							identifierHelper.toIdentifier( explicitSequenceName, false, true ) );
 		}
 		else {
 			// otherwise, determine an implicit name to use

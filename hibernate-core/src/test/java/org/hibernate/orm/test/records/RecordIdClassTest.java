@@ -28,12 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class RecordIdClassTest {
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			// Some dialects (e.g. Firebird) (can) fail for a non-cascaded foreign key depending on actual row order
-			// Clear foreign key before delete
-			session.createMutationQuery( "update MyEntity set associatedEntity = null" ).executeUpdate();
-			session.createMutationQuery( "delete from MyEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test

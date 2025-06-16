@@ -295,9 +295,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		// NOTE : this call comes from JPA which inherently supports just a
 		// single (possibly "compound") selection.
 		// We have this special case where we return the SqmSelectClause itself if it doesn't have exactly 1 item
-		if ( selection instanceof SqmSelectClause ) {
+		if ( selection instanceof SqmSelectClause sqmSelectClause ) {
 			if ( selection != selectClause ) {
-				final SqmSelectClause sqmSelectClause = (SqmSelectClause) selection;
 				final List<SqmSelection<?>> selections = sqmSelectClause.getSelections();
 				selectClause.setSelection( selections.get( 0 ).getSelectableNode() );
 				for ( int i = 1; i < selections.size(); i++ ) {

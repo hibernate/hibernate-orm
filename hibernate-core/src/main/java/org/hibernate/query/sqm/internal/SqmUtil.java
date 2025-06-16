@@ -8,6 +8,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -74,6 +76,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
@@ -112,6 +115,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
@@ -1325,5 +1330,28 @@ public class SqmUtil {
 				sqmExpressible == null ? javaTypeClass.getName() : sqmExpressible.getTypeName(),
 				resultClass.getName()
 		) );
+	}
+
+	public static Set<ParameterExpression<?>> getParameters(SqmStatement<?> statement) {
+		final Set<SqmParameter<?>> parameters = statement.getSqmParameters();
+		return switch ( parameters.size() ) {
+			case 0 -> emptySet();
+			case 1 -> {
+				final SqmParameter<?> parameter = parameters.iterator().next();
+				yield parameter instanceof ValueBindJpaCriteriaParameter
+						? emptySet()
+						: singleton( parameter );
+			}
+			default -> {
+				final Set<ParameterExpression<?>> parameterExpressions =
+						new HashSet<>( parameters.size() );
+				for ( SqmParameter<?> parameter : parameters ) {
+					if ( !(parameter instanceof ValueBindJpaCriteriaParameter) ) {
+						parameterExpressions.add( parameter );
+					}
+				}
+				yield unmodifiableSet( parameterExpressions );
+			}
+		};
 	}
 }

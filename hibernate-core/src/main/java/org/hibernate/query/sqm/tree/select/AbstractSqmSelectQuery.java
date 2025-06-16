@@ -254,8 +254,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	 * @see org.hibernate.query.criteria.JpaCriteriaQuery#getRoot(String, Class)
 	 */
 	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
-		final List<SqmRoot<?>> rootList = getQuerySpec().getRootList();
-		for ( SqmRoot<?> root : rootList ) {
+		for ( SqmRoot<?> root : getQuerySpec().getRootList() ) {
 			final String rootAlias = root.getAlias();
 			if ( rootAlias != null && rootAlias.equals( alias ) ) {
 				return castRoot( root, type );

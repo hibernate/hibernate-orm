@@ -48,11 +48,11 @@ stage('Configure') {
 		// and it's useful to test that.
 		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
 		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' ),
+		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview', additionalOptions: '-PskipJacoco=true' )
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true', additionalOptions: '-PskipJacoco=true' ),
 	];
 
 	if ( env.CHANGE_ID ) {

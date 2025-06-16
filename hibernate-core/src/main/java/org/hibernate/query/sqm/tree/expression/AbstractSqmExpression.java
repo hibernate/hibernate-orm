@@ -157,6 +157,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public @Nullable JavaType<T> getJavaTypeDescriptor() {
-		return getNodeType() == null ? null : getNodeType().getExpressibleJavaType();
+		final SqmBindableType<T> nodeType = getNodeType();
+		return nodeType == null ? null : nodeType.getExpressibleJavaType();
 	}
 }

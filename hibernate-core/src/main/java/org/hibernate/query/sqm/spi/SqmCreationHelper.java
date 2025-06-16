@@ -75,14 +75,14 @@ public class SqmCreationHelper {
 		return buildSubNavigablePath( navigablePath, subNavigable, alias );
 	}
 
-	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, List<SqmPredicate> incomingRestrictions) {
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, List<Predicate> incomingRestrictions) {
 		if ( isEmpty( incomingRestrictions ) ) {
 			return baseRestriction;
 		}
 
 		SqmPredicate combined = combinePredicates( null, baseRestriction );
 		for ( int i = 0; i < incomingRestrictions.size(); i++ ) {
-			combined = combinePredicates( combined, incomingRestrictions.get(i) );
+			combined = combinePredicates( combined, (SqmPredicate) incomingRestrictions.get(i) );
 		}
 		return combined;
 	}

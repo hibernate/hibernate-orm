@@ -153,9 +153,9 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 
 	@Override
 	public String toString() {
-		return getExplicitAlias() == null
-				? getEntityName()
-				: getEntityName() + " as " + getExplicitAlias();
+		final String entityName = getEntityName();
+		final String explicitAlias = getExplicitAlias();
+		return explicitAlias == null ? entityName : entityName + " as " + explicitAlias;
 	}
 
 	@Override

@@ -156,10 +156,18 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 
 	@Override
 	public boolean equals(Object object) {
-		return object instanceof AbstractSqmJoin<?, ?> that
-			&& super.equals( object )
-			&& this.joinType == that.joinType; // unnecessary, but harmless
-//			&& Objects.equals( onClausePredicate, that.onClausePredicate ); // including this causes problems
+		// Note that this implementation of equals() is only used for
+		// and is only correct when comparing use of AbstractSqmJoin
+		// within path expressions. See SqmFromClause.equalsJoins().
+		return object instanceof AbstractSqmJoin
+			&& super.equals( object );
+			// We do not need to include these in the comparison because
+			// this is taken care of in SqmFromClause.equalsJoins(), which
+			// exists because including the onClausePredicate would result
+			// in a circularity when comparing AbstractSqmJoin in path
+			// expressions.
+//			&& this.joinType == that.joinType
+//			&& Objects.equals( this.onClausePredicate, that.onClausePredicate );
 	}
 
 	@Override

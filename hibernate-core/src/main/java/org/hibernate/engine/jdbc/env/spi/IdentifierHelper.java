@@ -52,6 +52,21 @@ public interface IdentifierHelper {
 	Identifier toIdentifier(String text, boolean quoted);
 
 	/**
+	 * Generate an Identifier instance from its simple name as obtained from mapping
+	 * information.  Additionally, this form takes a boolean indicating whether to
+	 * explicitly quote the Identifier.
+	 * <p>
+	 * Note that Identifiers returned from here may be implicitly quoted based on
+	 * 'globally quoted identifiers' or based on reserved words.
+	 *
+	 * @param text The text form of a name as obtained from mapping information.
+	 * @param quoted Is the identifier to be quoted explicitly.
+	 * @param isExplicit Whether the name is explicitly set
+	 * @return The identifier form of the name.
+	 */
+	Identifier toIdentifier(String text, boolean quoted, boolean isExplicit);
+
+	/**
 	 * Intended only for use in handling quoting requirements for {@code column-definition}
 	 * as defined by {@link jakarta.persistence.Column#columnDefinition()},
 	 * {@link jakarta.persistence.JoinColumn#columnDefinition}, etc.  This method should not

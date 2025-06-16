@@ -385,7 +385,12 @@ public final class TypeUtils {
 
 	private static void updateEmbeddableAccessType(Context context, AccessType defaultAccessType, TypeElement embedded) {
 		final String embeddedClassName = embedded.getQualifiedName().toString();
-		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo(embeddedClassName);
+		final AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( embedded );
+		final AccessTypeInformation accessTypeInfo =
+				forcedAccessType != null
+						? new AccessTypeInformation( embeddedClassName, null, forcedAccessType )
+						: context.getAccessTypeInfo( embeddedClassName );
+
 		if ( accessTypeInfo == null ) {
 			final AccessTypeInformation newAccessTypeInfo =
 					new AccessTypeInformation( embeddedClassName, null, defaultAccessType );

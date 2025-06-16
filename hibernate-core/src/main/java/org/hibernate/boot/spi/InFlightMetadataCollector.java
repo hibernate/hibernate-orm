@@ -140,6 +140,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	 * @param subselect A select statement which defines a logical table, much
 	 * like a DB view.
 	 * @param isAbstract Is the table abstract (i.e. not really existing in the DB)?
+	 * @param isExplicit Whether the name is explicitly set
 	 *
 	 * @return The created table metadata, or the existing reference.
 	 */
@@ -149,7 +150,8 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 			String name,
 			String subselect,
 			boolean isAbstract,
-			MetadataBuildingContext buildingContext);
+			MetadataBuildingContext buildingContext,
+			boolean isExplicit);
 
 	/**
 	 * Adds a 'denormalized table' to this repository.

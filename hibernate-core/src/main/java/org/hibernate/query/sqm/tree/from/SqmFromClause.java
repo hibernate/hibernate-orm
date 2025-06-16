@@ -192,6 +192,8 @@ public class SqmFromClause implements Serializable {
 	public boolean equals(Object object) {
 		return object instanceof SqmFromClause that
 			&& this.getNumberOfRoots() == that.getNumberOfRoots()
+			// calling equals() here leads to circularity,
+			// and so we need to flatten out the comparison
 			&& equalRoots( this.getRoots(), that.getRoots() );
 	}
 

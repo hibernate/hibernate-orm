@@ -6,7 +6,6 @@ package org.hibernate.query.sqm.tree;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -103,6 +102,6 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 
 	@Override
 	public String generateAlias() {
-		return "t_" + (++aliasCounter);
+		return "var_" + (++aliasCounter);
 	}
 }

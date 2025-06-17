@@ -45,13 +45,13 @@ stage('Configure') {
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview', skipJacoco: true ),
+		new BuildEnvironment( testJdkVersion: '24', testJdkLauncherArgs: '--enable-preview', skipJacoco: true ),
 		// The following JDKs aren't supported by Hibernate ORM out-of-the box yet:
 		// they require the use of -Dnet.bytebuddy.experimental=true.
 		// Make sure to remove that argument as soon as possible
 		// -- generally that requires upgrading bytebuddy after the JDK goes GA.
-		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true' )
+		new BuildEnvironment( testJdkVersion: '25', testJdkLauncherArgs: '--enable-preview -Dnet.bytebuddy.experimental=true', skipJacoco: true ),
 	];
 
 	if ( env.CHANGE_ID ) {
@@ -129,6 +129,10 @@ stage('Build') {
 					if ( buildEnv.node ) {
 						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 								" -Pci.node=${buildEnv.node}"
+					}
+					if ( buildEnv.skipJacoco ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -PskipJacoco=true"
 					}
 					state[buildEnv.tag]['containerName'] = null;
 					stage('Checkout') {
@@ -215,6 +219,7 @@ class BuildEnvironment {
 	String additionalOptions
 	String notificationRecipients
 	boolean longRunning
+	boolean skipJacoco
 
 	String toString() { getTag() }
 	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }

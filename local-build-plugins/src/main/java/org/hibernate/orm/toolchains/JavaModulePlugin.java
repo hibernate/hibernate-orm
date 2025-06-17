@@ -95,8 +95,6 @@ public class JavaModulePlugin implements Plugin<Project> {
 	private void configureCompileTask(JavaCompile compileTask, JavaLanguageVersion releaseVersion) {
 		final CompileOptions compileTaskOptions = compileTask.getOptions();
 		compileTaskOptions.getRelease().set( releaseVersion.asInt() );
-		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
-		addJvmArgs( compileTask, "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" );
 	}
 
 	private void configureCompileTasks(Project project) {

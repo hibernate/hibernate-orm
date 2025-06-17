@@ -64,8 +64,8 @@ public class JavaModulePlugin implements Plugin<Project> {
 			mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
 			mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
 
-			testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompilerVersion().toString() );
-			testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompilerVersion().toString() );
+			testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestReleaseVersion().toString() );
+			testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestReleaseVersion().toString() );
 		}
 		else {
 			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompilerVersion() );

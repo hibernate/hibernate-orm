@@ -113,10 +113,12 @@ public class SearchedCaseExpression<R>
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {
+		final String alias = getAlias();
+		final String projectionExtension = alias == null ? "" : " as " + alias;
 		return render(
 				renderingContext,
 				(Renderable expression, RenderingContext context) -> expression.renderProjection( context )
-		);
+		) + projectionExtension;
 	}
 
 	@Override

@@ -168,7 +168,10 @@ public class JdkVersionConfig {
 				testReleaseVersion = maxSupportedJdkVersion;
 			}
 
-			testLauncherVersion = testReleaseVersion;
+			// This must not be downgraded like we do for the "release version",
+			// first because we don't need to,
+			// second because we don't necessarily have a lower version of the JDK available on the machine.
+			testLauncherVersion = testCompilerVersion;
 
 			return new JdkVersionConfig(
 					true,

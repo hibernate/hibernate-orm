@@ -62,9 +62,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 
 	@Override
 	protected Object handleWrite(Object target, String attributeName, Object oldValue, Object newValue) {
-		if ( !isAttributeLoaded( attributeName ) ) {
-			attributeInitialized( attributeName );
-		}
+		attributeInitialized( attributeName );
 		return newValue;
 	}
 

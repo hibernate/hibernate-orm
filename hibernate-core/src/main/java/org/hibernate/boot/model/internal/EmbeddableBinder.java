@@ -41,6 +41,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -514,6 +515,12 @@ public class EmbeddableBinder {
 				subclassToSuperclass
 		);
 
+//		//sort elements according to the ComponentPropertyHolder
+//		classElements.sort( EmbeddableBinder::embeddableLast );
+//		if ( ReflectHelper.isRecord(component.getComponentClass()) ) {
+//			component.setSimpleRecord( true );
+//		}
+
 		if ( component.isPolymorphic() ) {
 			validateInheritanceIsSupported( subholder, compositeUserType );
 			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
@@ -755,6 +762,14 @@ public class EmbeddableBinder {
 		return classElements;
 	}
 
+	private static int embeddableLast(
+			PropertyData elementA,
+			PropertyData elementB) {
+		final boolean elementAEmbeddable = elementA.getAttributeMember().getType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
+		final boolean elementBEmbeddable = elementB.getAttributeMember().getType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
+		return Boolean.compare( elementAEmbeddable, elementBEmbeddable );
+	}
+
 	private static void collectSubclassElements(
 			AccessType propertyAccessor,
 			MetadataBuildingContext context,
@@ -981,8 +996,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final Component component = new Component( context, propertyHolder.getPersistentClass() );
 		component.setEmbedded( isComponentEmbedded );
-		//yuk
-		component.setTable( propertyHolder.getTable() );
+		component.setTable( resolveTable( propertyHolder, inferredData ) );
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {
 			component.setComponentClassName( component.getOwner().getClassName() );
@@ -998,9 +1012,29 @@ public class EmbeddableBinder {
 		if ( propertyHolder.isComponent() ) {
 			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
 			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
+
 		}
 		applyColumnNamingPattern( component, inferredData );
 		return component;
+	}
+
+	private static Table resolveTable(
+			PropertyHolder propertyHolder,
+			PropertyData inferredData) {
+
+		for ( FieldDetails fieldDetails : inferredData.getPropertyType().determineRawClass().getFields() ) {
+			if ( fieldDetails.hasDirectAnnotationUsage( Column.class ) ) {
+				final String tableName = fieldDetails.getDirectAnnotationUsage( Column.class ).table();
+				if ( tableName != null ) {
+					final Table secondaryTable = propertyHolder.getSecondaryTable( tableName );
+					if ( secondaryTable != null ) {
+						return secondaryTable;
+					}
+				}
+			}
+		}
+
+		return propertyHolder.getTable();
 	}
 
 	private static void applyColumnNamingPattern(Component component, PropertyData inferredData) {

@@ -274,6 +274,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public Table getSecondaryTable(String tableName) {
+		return parent.getSecondaryTable(tableName);
+	}
+
+	@Override
 	public void addProperty(Property prop, MemberDetails attributeMemberDetails, ClassDetails declaringClass) {
 		handleGenericComponentProperty( prop, attributeMemberDetails, getContext() );
 		if ( declaringClass != null ) {

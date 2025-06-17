@@ -458,6 +458,15 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public Table getSecondaryTable(String tableName) {
+		final Join join = persistentClass.getSecondaryTable( tableName );
+		if ( join != null) {
+			return join.getTable();
+		}
+		return null;
+	}
+
+	@Override
 	public boolean isComponent() {
 		return false;
 	}

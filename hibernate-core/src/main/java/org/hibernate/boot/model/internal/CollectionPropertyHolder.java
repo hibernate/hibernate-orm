@@ -261,6 +261,11 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
+	public Table getSecondaryTable(String tableName) {
+		throw new AssertionFailure( "Cannot get secondary table for collection" );
+	}
+
+	@Override
 	public void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass) {
 		throw new AssertionFailure( "Cannot add property to a collection" );
 	}

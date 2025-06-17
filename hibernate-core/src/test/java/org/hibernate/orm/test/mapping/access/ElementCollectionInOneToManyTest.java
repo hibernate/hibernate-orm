@@ -71,7 +71,7 @@ public class ElementCollectionInOneToManyTest {
 			assertEquals( "author", author.name );
 			assertEquals( 1, author.books.size() );
 
-			Book book = author.books.getFirst();
+			Book book = author.books.get( 0 );
 			assertEquals( "book", book.name );
 			assertEquals( 3, book.chapters.size() );
 

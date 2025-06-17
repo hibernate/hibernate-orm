@@ -40,8 +40,9 @@ stage('Configure') {
 // Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
-		// We build with JDK 21, but produce Java 17 bytecode, so we test with JDK 17, to be sure everything works.
-		new BuildEnvironment( testJdkVersion: '17' ),
+		// We generally build with JDK 21, but our baseline is Java 17, so we test with JDK 17, to be sure everything works.
+		// Here we even compile the main code with JDK 17, to be sure no JDK 18+ classes are depended on.
+		new BuildEnvironment( mainJdkVersion: '17', testJdkVersion: '17' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
@@ -109,6 +110,10 @@ stage('Build') {
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
+				def mainJavaHome
+				if ( buildEnv.mainJdkVersion ) {
+					mainJavaHome = tool(name: "OpenJDK ${buildEnv.mainJdkVersion} Latest", type: 'jdk')
+				}
 				def testJavaHome
 				if ( buildEnv.testJdkVersion ) {
 					testJavaHome = tool(name: "OpenJDK ${buildEnv.testJdkVersion} Latest", type: 'jdk')
@@ -118,9 +123,17 @@ stage('Build') {
 				// See https://github.com/jenkinsci/pipeline-plugin/blob/master/TUTORIAL.md
 				withEnv(["JAVA_HOME=${javaHome}", "PATH+JAVA=${javaHome}/bin"]) {
 					state[buildEnv.tag]['additionalOptions'] = '-PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com'
-					if ( testJavaHome ) {
+					if ( buildEnv.mainJdkVersion ) {
 						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-								" -Ptest.jdk.version=${buildEnv.testJdkVersion} -Porg.gradle.java.installations.paths=${javaHome},${testJavaHome}"
+								" -Pmain.jdk.version=${buildEnv.mainJdkVersion}"
+					}
+					if ( buildEnv.testJdkVersion ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Ptest.jdk.version=${buildEnv.testJdkVersion}"
+					}
+					if ( buildEnv.mainJdkVersion || buildEnv.testJdkVersion ) {
+						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
+								" -Porg.gradle.java.installations.paths=${[javaHome, mainJavaHome, testJavaHome].findAll { it != null }.join(',')}"
 					}
 					if ( buildEnv.testJdkLauncherArgs ) {
 						state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
@@ -210,6 +223,7 @@ stage('Build') {
 // Job-specific helpers
 
 class BuildEnvironment {
+	String mainJdkVersion
 	String testJdkVersion
 	String testJdkLauncherArgs
 	String dbName = 'h2'

@@ -17,11 +17,11 @@ import jakarta.persistence.Embedded;
  */
 @Embeddable
 public class EmbeddableA {
-	
+
 	@Embedded
 	@AttributeOverrides({@AttributeOverride(name = "embedAttrB" , column = @Column(table = "TableB"))})
 	private EmbeddableB embedB;
-	
+	@Column(table = "TableB")
 	private String embedAttrA;
 
 	public EmbeddableB getEmbedB() {

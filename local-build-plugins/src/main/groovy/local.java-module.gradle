@@ -16,7 +16,6 @@ plugins {
     id "org.hibernate.orm.database-service"
     id "org.hibernate.orm.build.java-module"
 
-    id "jacoco"
     id "build-dashboard"
     id "project-report"
 }
@@ -26,6 +25,11 @@ def jpaVersion = ormBuildDetails.jpaVersion
 
 def java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 def java9ModuleName = "org.hibernate.orm.$java9ModuleNameBase".replace('-','.')
+
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+    plugins.apply('jacoco')
+}
 
 sourceSets {
     test {

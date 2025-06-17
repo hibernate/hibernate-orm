@@ -982,7 +982,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final Component component = new Component( context, propertyHolder.getPersistentClass() );
 		component.setEmbedded( isComponentEmbedded );
-		component.setTable( resolveTable( propertyHolder, inferredData ) );
+		component.setTable( resolveTable( propertyHolder, inferredData.getClassOrElementType() ) );
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {
 			component.setComponentClassName( component.getOwner().getClassName() );
@@ -1003,16 +1003,20 @@ public class EmbeddableBinder {
 		return component;
 	}
 
-	private static Table resolveTable(
-			PropertyHolder propertyHolder,
-			PropertyData inferredData) {
-		for ( FieldDetails fieldDetails : inferredData.getPropertyType().determineRawClass().getFields() ) {
-			if ( fieldDetails.hasDirectAnnotationUsage( Column.class ) ) {
-				final String tableName = fieldDetails.getDirectAnnotationUsage( Column.class ).table();
-				if ( tableName != null ) {
-					final Table secondaryTable = propertyHolder.getSecondaryTable( tableName );
-					if ( secondaryTable != null ) {
-						return secondaryTable;
+	private static Table resolveTable(PropertyHolder propertyHolder, TypeDetails embeddableClass) {
+		return embeddableClass == null ? propertyHolder.getTable() : resolveTable( propertyHolder, embeddableClass.determineRawClass() );
+	}
+
+	private static Table resolveTable(PropertyHolder propertyHolder, ClassDetails embeddableClass) {
+		if ( embeddableClass != null ) {
+			for ( FieldDetails fieldDetails : embeddableClass.getFields() ) {
+				if ( fieldDetails.hasDirectAnnotationUsage( Column.class ) ) {
+					final String tableName = fieldDetails.getDirectAnnotationUsage( Column.class ).table();
+					if ( !tableName.isBlank() ) {
+						final Table secondaryTable = propertyHolder.getSecondaryTable( tableName );
+						if ( secondaryTable != null ) {
+							return secondaryTable;
+						}
 					}
 				}
 			}

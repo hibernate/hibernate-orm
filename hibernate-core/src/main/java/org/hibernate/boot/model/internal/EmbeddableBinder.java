@@ -998,7 +998,6 @@ public class EmbeddableBinder {
 		if ( propertyHolder.isComponent() ) {
 			final ComponentPropertyHolder componentPropertyHolder = (ComponentPropertyHolder) propertyHolder;
 			component.setParentAggregateColumn( componentPropertyHolder.getAggregateColumn() );
-
 		}
 		applyColumnNamingPattern( component, inferredData );
 		return component;
@@ -1007,7 +1006,6 @@ public class EmbeddableBinder {
 	private static Table resolveTable(
 			PropertyHolder propertyHolder,
 			PropertyData inferredData) {
-
 		for ( FieldDetails fieldDetails : inferredData.getPropertyType().determineRawClass().getFields() ) {
 			if ( fieldDetails.hasDirectAnnotationUsage( Column.class ) ) {
 				final String tableName = fieldDetails.getDirectAnnotationUsage( Column.class ).table();
@@ -1019,7 +1017,6 @@ public class EmbeddableBinder {
 				}
 			}
 		}
-
 		return propertyHolder.getTable();
 	}
 

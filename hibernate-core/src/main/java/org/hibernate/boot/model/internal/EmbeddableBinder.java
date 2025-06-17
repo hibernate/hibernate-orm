@@ -515,12 +515,6 @@ public class EmbeddableBinder {
 				subclassToSuperclass
 		);
 
-//		//sort elements according to the ComponentPropertyHolder
-//		classElements.sort( EmbeddableBinder::embeddableLast );
-//		if ( ReflectHelper.isRecord(component.getComponentClass()) ) {
-//			component.setSimpleRecord( true );
-//		}
-
 		if ( component.isPolymorphic() ) {
 			validateInheritanceIsSupported( subholder, compositeUserType );
 			final BasicType<?> discriminatorType = (BasicType<?>) component.getDiscriminator().getType();
@@ -760,14 +754,6 @@ public class EmbeddableBinder {
 			subclass = superClass;
 		}
 		return classElements;
-	}
-
-	private static int embeddableLast(
-			PropertyData elementA,
-			PropertyData elementB) {
-		final boolean elementAEmbeddable = elementA.getAttributeMember().getType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
-		final boolean elementBEmbeddable = elementB.getAttributeMember().getType().determineRawClass().hasDirectAnnotationUsage( Embeddable.class );
-		return Boolean.compare( elementAEmbeddable, elementBEmbeddable );
 	}
 
 	private static void collectSubclassElements(

@@ -1926,11 +1926,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final Collection<SqmCteStatement<?>> sqmCteStatements = consumer.getCteStatements();
 		cteContainer = new CteContainerImpl( cteContainer );
 		if ( !sqmCteStatements.isEmpty() ) {
+			final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
+			deduplicateSelectionItems = false;
 			currentClauseStack.push( Clause.WITH );
 			for ( SqmCteStatement<?> sqmCteStatement : sqmCteStatements ) {
 				visitCteStatement( sqmCteStatement );
 			}
 			currentClauseStack.pop();
+			deduplicateSelectionItems = originalDeduplicateSelectionItems;
 			// Avoid leaking the processing state from CTEs to upper levels
 			lastPoppedFromClauseIndex = null;
 			lastPoppedProcessingState = null;

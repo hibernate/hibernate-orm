@@ -95,6 +95,11 @@ pipeline {
 				defaultValue: false,
 				description: 'If true, just simulate the release, without pushing any commits or tags, and without uploading any artifacts or documentation.'
 		)
+		booleanParam(
+				name: 'RELEASE_PUBLISH_AUTOMATICALLY',
+				defaultValue: true,
+				description: 'If true, staging repository will get closed and published automatically, otherwise the artifacts will only be uploaded and the publishing (releasing the staging repository) has to be performed manually at Maven Central portal.'
+		)
 	}
 	stages {
 		stage('Check') {
@@ -166,6 +171,9 @@ pipeline {
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
 					env.SCRIPT_OPTIONS = params.RELEASE_DRY_RUN ? "-d" : ""
 					env.JRELEASER_DRY_RUN = params.RELEASE_DRY_RUN
+					if (!params.RELEASE_PUBLISH_AUTOMATICALLY) {
+						env.JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_STAGE='UPLOAD'
+					}
 
 					// Determine version id to check if Jira version exists
 					sh ".release/scripts/determine-jira-version-id.sh ${env.JIRA_KEY} ${releaseVersion.withoutFinalQualifier}"

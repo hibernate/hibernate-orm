@@ -26,6 +26,7 @@ import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -179,6 +180,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	//Lazily initialized
 	private transient ExceptionConverter exceptionConverter;
+	private transient SessionAssociationMarkers sessionAssociationMarkers;
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
@@ -474,6 +476,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 			if ( transactionCoordinator != null ) {
 				removeSharedSessionTransactionObserver( transactionCoordinator );
+			}
+
+			if ( sessionAssociationMarkers != null ) {
+				sessionAssociationMarkers.sessionClosed();
+				sessionAssociationMarkers = null;
 			}
 
 			try {
@@ -1584,6 +1591,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public FormatMapper getJsonFormatMapper() {
 		return factoryOptions.getJsonFormatMapper();
+	}
+
+	@Override
+	public SessionAssociationMarkers getSessionAssociationMarkers() {
+		if ( this.sessionAssociationMarkers == null ) {
+			this.sessionAssociationMarkers = new SessionAssociationMarkers( this );
+		}
+		return sessionAssociationMarkers;
 	}
 
 	@Serial

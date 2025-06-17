@@ -40,6 +40,7 @@ import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -1235,6 +1236,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
 		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
+	}
+
+	@Override
+	public SessionAssociationMarkers getSessionAssociationMarkers() {
+		return delegate.getSessionAssociationMarkers();
 	}
 
 	@Override

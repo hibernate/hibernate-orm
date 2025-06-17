@@ -244,15 +244,15 @@ public class EmbeddableBinder {
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setDeclaringClass( inferredData.getDeclaringClass() );
 		binder.setName( inferredData.getPropertyName() );
-		binder.setValue(component);
+		binder.setValue( component );
 		binder.setProperty( inferredData.getProperty() );
 		binder.setAccessType( inferredData.getDefaultAccess() );
-		binder.setEmbedded(isComponentEmbedded);
-		binder.setHolder(propertyHolder);
-		binder.setId(isId);
-		binder.setEntityBinder(entityBinder);
-		binder.setInheritanceStatePerClass(inheritanceStatePerClass);
-		binder.setBuildingContext(context);
+		binder.setEmbedded( isComponentEmbedded );
+		binder.setHolder( propertyHolder );
+		binder.setId( isId );
+		binder.setEntityBinder( entityBinder );
+		binder.setInheritanceStatePerClass( inheritanceStatePerClass );
+		binder.setBuildingContext( context );
 		binder.makePropertyAndBind();
 		return binder;
 	}
@@ -343,7 +343,7 @@ public class EmbeddableBinder {
 
 		final String subpath = getPath( propertyHolder, inferredData );
 		LOG.tracev( "Binding component with path: {0}", subpath );
-		final PropertyHolder subholder = buildPropertyHolder(
+		final ComponentPropertyHolder subholder = buildPropertyHolder(
 				component,
 				subpath,
 				inferredData,
@@ -469,6 +469,8 @@ public class EmbeddableBinder {
 								+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
 			}
 		}
+
+		subholder.checkPropertyConsistency();
 
 		if ( compositeUserType != null ) {
 			processCompositeUserType( component, compositeUserType );

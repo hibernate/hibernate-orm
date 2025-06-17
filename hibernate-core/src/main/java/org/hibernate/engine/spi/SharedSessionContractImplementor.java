@@ -17,6 +17,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StatelessSession;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.query.Query;
@@ -572,4 +573,15 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating
 	Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode);
+
+	/**
+	 * Wrap all state that lazy loading interceptors might need to
+	 * manage association with this session, or to handle lazy loading
+	 * after detachment via the UUID of the SessionFactory.
+	 * N.B. this captures the current Session, however it can get
+	 * updated to a null session (for detached entities) or updated to
+	 * a different Session.
+	 */
+	@Incubating
+	SessionAssociationMarkers getSessionAssociationMarkers();
 }

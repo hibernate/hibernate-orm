@@ -47,7 +47,7 @@ public final class PropertyHolderBuilder {
 	 *
 	 * @return PropertyHolder
 	 */
-	public static PropertyHolder buildPropertyHolder(
+	public static ComponentPropertyHolder buildPropertyHolder(
 			Component component,
 			String path,
 			PropertyData inferredData,

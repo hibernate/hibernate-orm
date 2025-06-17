@@ -83,13 +83,7 @@ def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) 
 
 	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
 	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
 	shouldRunAfter test
-}
-tasks.named( "compileQuarkusOrmPanacheJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
@@ -98,13 +92,7 @@ def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 
 	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
 	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
 	shouldRunAfter test
-}
-tasks.named( "compileQuarkusHrPanacheJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
@@ -113,13 +101,7 @@ def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
 
     testClassesDirs = sourceSets.jakartaData.output.classesDirs
     classpath = sourceSets.jakartaData.runtimeClasspath
-	javaLauncher = tasks.test.javaLauncher
     shouldRunAfter test
-}
-tasks.named( "compileJakartaDataJava", JavaCompile ) {
-	sourceCompatibility = tasks.compileTestJava.sourceCompatibility
-	targetCompatibility = tasks.compileTestJava.targetCompatibility
-	javaCompiler = tasks.compileTestJava.javaCompiler
 }
 
 check.dependsOn quarkusHrPanacheTestTask

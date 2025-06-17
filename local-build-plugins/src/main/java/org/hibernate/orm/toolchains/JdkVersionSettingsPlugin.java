@@ -56,15 +56,11 @@ public class JdkVersionSettingsPlugin implements Plugin<Settings> {
 		settings.getGradle().projectsLoaded( new Action<Gradle>() {
 			@Override
 			public void execute(Gradle gradle) {
-				final String implicitExplicitString = jdkVersionConfig.isExplicit() ? "explicit" : "implicit";
-
 				System.out.println(
 						"Java versions for main code: " + jdkVersionConfig.getMain()
-						+ " (" + implicitExplicitString + ")"
 				);
 				System.out.println(
 						"Java versions for test code: " + jdkVersionConfig.getTest()
-						+ " (" + implicitExplicitString + ")"
 				);
 			}
 		} );

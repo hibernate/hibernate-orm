@@ -15,7 +15,6 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,6 @@ import org.junit.jupiter.api.Test;
 class NestedEmbeddedObjectWithASecondaryTableTest {
 
 	@Test
-	@NotImplementedYet
 	void testNestedEmbeddedAndSecondaryTables(ServiceRegistryScope registryScope) {
 		final MetadataSources metadataSources = new MetadataSources( registryScope.getRegistry() )
 				.addAnnotatedClasses( Book.class, Author.class, House.class );

@@ -13,7 +13,6 @@ import java.util.Map;
 
 import jakarta.persistence.metamodel.Bindable;
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -28,15 +27,17 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
+import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaType;
 
 import jakarta.persistence.metamodel.Attribute;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 
 
 /**
@@ -47,43 +48,58 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	private final ObjectArrayJavaType javaTypeDescriptor;
 	private final SqmSelectableNode<?>[] components;
+	private final String[] componentNames;
 	private final Map<String, Integer> componentIndexMap;
 
-	public AnonymousTupleType(SqmSubQuery<T> subQuery) {
-		this( extractSqmExpressibles( subQuery ) );
-	}
+	public AnonymousTupleType(SqmSelectQuery<T> selectQuery) {
+		final SqmSelectClause selectClause = selectQuery.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause();
 
-	public AnonymousTupleType(SqmSelectableNode<?>[] components) {
-		this.components = components;
-		this.javaTypeDescriptor = new ObjectArrayJavaType( getTypeDescriptors( components ) );
-		final Map<String, Integer> map = CollectionHelper.linkedMapOfSize( components.length );
-		for ( int i = 0; i < components.length; i++ ) {
-			final SqmSelectableNode<?> component = components[i];
-			final String alias = component.getAlias();
+		if ( selectClause == null || selectClause.getSelections().isEmpty() ) {
+			throw new IllegalArgumentException( "selectQuery has no selection items" );
+		}
+		// todo: right now, we "snapshot" the state of the selectQuery when creating this type, but maybe we shouldn't?
+		//  i.e. what if the selectQuery changes later on? Or should we somehow mark the selectQuery to signal,
+		//  that changes to the select clause are invalid after a certain point?
+
+		final List<SqmSelection<?>> selections = selectClause.getSelections();
+		final List<SqmSelectableNode<?>> selectableNodes = new ArrayList<>();
+		final List<String> aliases = new ArrayList<>();
+		for ( SqmSelection<?> selection : selections ) {
+			final boolean compound = selection.getSelectableNode().isCompoundSelection();
+			selection.getSelectableNode().visitSubSelectableNodes( node -> {
+				selectableNodes.add( node );
+				if ( compound ) {
+					aliases.add( node.getAlias() );
+				}
+			} );
+			if ( !compound ) {
+				// for compound selections we use the sub-selectable nodes aliases
+				aliases.add( selection.getAlias() );
+			}
+		}
+
+		components = new SqmSelectableNode<?>[selectableNodes.size()];
+		componentNames = new String[selectableNodes.size()];
+		javaTypeDescriptor = new ObjectArrayJavaType( getTypeDescriptors( selectableNodes ) );
+		componentIndexMap = linkedMapOfSize( selectableNodes.size() );
+		for ( int i = 0; i < selectableNodes.size(); i++ ) {
+			components[i] = selectableNodes.get(i);
+			String alias = aliases.get( i );
 			if ( alias == null ) {
 				throw new SemanticException( "Select item at position " + (i+1) + " in select list has no alias"
 						+ " (aliases are required in CTEs and in subqueries occurring in from clause)" );
 			}
-			map.put( alias, i );
+			componentIndexMap.put( alias, i );
+			componentNames[i] = alias;
 		}
-		this.componentIndexMap = map;
 	}
 
-	private static SqmSelectableNode<?>[] extractSqmExpressibles(SqmSubQuery<?> subQuery) {
-		final SqmSelectClause selectClause = subQuery.getQuerySpec().getSelectClause();
-		if ( selectClause == null || selectClause.getSelectionItems().isEmpty() ) {
-			throw new IllegalArgumentException( "subquery has no selection items" );
-		}
-		// todo: right now, we "snapshot" the state of the subquery when creating this type, but maybe we shouldn't?
-		//  i.e. what if the subquery changes later on? Or should we somehow mark the subquery to signal,
-		//  that changes to the select clause are invalid after a certain point?
-		return selectClause.getSelectionItems().toArray( SqmSelectableNode[]::new );
-	}
-
-	private static JavaType<?>[] getTypeDescriptors(SqmSelectableNode<?>[] components) {
-		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.length];
-		for ( int i = 0; i < components.length; i++ ) {
-			typeDescriptors[i] = components[i].getExpressible().getExpressibleJavaType();
+	private static JavaType<?>[] getTypeDescriptors(List<SqmSelectableNode<?>> components) {
+		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.size()];
+		for ( int i = 0; i < components.size(); i++ ) {
+			typeDescriptors[i] = components.get( i ).getExpressible().getExpressibleJavaType();
 		}
 		return typeDescriptors;
 	}
@@ -143,7 +159,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 
 	@Override
 	public String getComponentName(int index) {
-		return components[index].getAlias();
+		return componentNames[index];
 	}
 
 	@Override

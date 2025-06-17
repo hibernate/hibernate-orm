@@ -18,8 +18,6 @@ import org.hibernate.query.derived.CteTupleTableGroupProducer;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.type.BasicType;
@@ -36,8 +34,8 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 	private SqmCteTable(
 			String name,
 			SqmCteStatement<T> cteStatement,
-			SqmSelectableNode<?>[] sqmSelectableNodes) {
-		super( sqmSelectableNodes );
+			SqmSelectQuery<T> selectStatement) {
+		super(selectStatement);
 		this.name = name;
 		this.cteStatement = cteStatement;
 		final List<SqmCteTableColumn> columns = new ArrayList<>( componentCount() );
@@ -57,12 +55,7 @@ public class SqmCteTable<T> extends AnonymousTupleType<T> implements JpaCteCrite
 			String name,
 			SqmCteStatement<X> cteStatement,
 			SqmSelectQuery<X> selectStatement) {
-		final SqmSelectableNode<?>[] sqmSelectableNodes = selectStatement.getQueryPart()
-				.getFirstQuerySpec()
-				.getSelectClause()
-				.getSelectionItems()
-				.toArray( SqmSelectableNode[]::new );
-		return new SqmCteTable<>( name, cteStatement, sqmSelectableNodes );
+		return new SqmCteTable<>( name, cteStatement, selectStatement );
 	}
 
 	@Override

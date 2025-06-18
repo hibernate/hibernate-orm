@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -17,6 +16,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
 import org.hibernate.type.format.StringJsonDocumentWriter;
 
 /**
@@ -74,17 +74,9 @@ public class JsonArrayJdbcType extends ArrayJdbcType {
 			return options.getJsonFormatMapper().toString( value, javaType, options);
 		}
 		else {
-			final JdbcType elementJdbcType = getElementJdbcType();
 			final Object[] domainObjects = javaType.unwrap( value, Object[].class, options );
 			final StringJsonDocumentWriter writer = new StringJsonDocumentWriter();
-			if ( elementJdbcType instanceof JsonJdbcType jsonElementJdbcType ) {
-				final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-				JsonHelper.serializeArray( embeddableMappingType, domainObjects, options, writer );
-			}
-			else {
-				assert !(elementJdbcType instanceof AggregateJdbcType);
-				JsonHelper.serializeArray( elementJavaType, elementJdbcType, domainObjects, options, writer );
-			}
+			JsonGeneratingVisitor.INSTANCE.visitArray( elementJavaType, getElementJdbcType(), domainObjects, options, writer );
 			return writer.getJson();
 		}
 	}

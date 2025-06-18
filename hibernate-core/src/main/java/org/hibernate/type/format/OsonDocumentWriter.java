@@ -92,6 +92,31 @@ public class OsonDocumentWriter implements JsonDocumentWriter {
 		return this;
 	}
 
+	@Override
+	public JsonDocumentWriter numericValue(Number number) {
+		if ( number instanceof Integer || number instanceof Short || number instanceof Byte ) {
+			this.generator.write( number.intValue() );
+		}
+		else if ( number instanceof Long ) {
+			this.generator.write( number.longValue() );
+		}
+		else if ( number instanceof Float ) {
+			this.generator.write( number.floatValue() );
+		}
+		else if ( number instanceof Double ) {
+			this.generator.write( number.doubleValue() );
+		}
+		else if ( number instanceof BigInteger ) {
+			this.generator.write( (BigInteger) number );
+		}
+		else if ( number instanceof BigDecimal ) {
+			this.generator.write( (BigDecimal) number );
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported numeric type: " + number.getClass().getName() );
+		}
+		return this;
+	}
 
 	@Override
 	public JsonDocumentWriter stringValue(String value) {

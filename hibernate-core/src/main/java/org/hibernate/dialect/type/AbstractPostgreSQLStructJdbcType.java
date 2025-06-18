@@ -43,7 +43,7 @@ import org.hibernate.type.descriptor.jdbc.StructHelper;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
@@ -999,7 +999,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 			final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
 			int count = 0;
 			for ( int i = 0; i < size; i++ ) {
-				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
+				final ValuedModelPart modelPart = getSubPart( embeddableMappingType, orderMapping[i] );
 				if ( modelPart.getMappedType() instanceof EmbeddableMappingType embeddableMappingType ) {
 					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
 					if ( aggregateMapping == null ) {
@@ -1382,7 +1382,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 				attributeIndex = orderMapping[i];
 			}
 			jdbcIndex += injectAttributeValue(
-					getEmbeddedPart( embeddableMappingType, attributeIndex ),
+					getSubPart( embeddableMappingType, attributeIndex ),
 					attributeValues,
 					attributeIndex,
 					rawJdbcValues,

@@ -22,6 +22,7 @@ import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JsonHelper;
+import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
 import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
@@ -79,7 +80,7 @@ public class OracleOsonJdbcType extends OracleJsonJdbcType {
 				if ( getEmbeddableMappingType() != null ) {
 					// OracleJsonFactory is used and not OracleOsonFactory as Jackson is not involved here
 					try (OracleJsonGenerator generator = OSON_JSON_FACTORY.createJsonBinaryGenerator( out )) {
-						JsonHelper.serialize(
+						JsonGeneratingVisitor.INSTANCE.visit(
 								getEmbeddableMappingType(),
 								value,
 								options,

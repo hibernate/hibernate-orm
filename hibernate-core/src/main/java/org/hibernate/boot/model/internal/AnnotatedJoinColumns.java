@@ -488,7 +488,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			boolean isRefColumnQuoted, Identifier logicalTableName, Identifier columnIdentifier) {
 		return !columnIdentifier.isQuoted()
 			&& ( isRefColumnQuoted || logicalTableName.isQuoted() )
-				? Identifier.quote( columnIdentifier )
+				? columnIdentifier.quoted()
 				: columnIdentifier;
 	}
 
@@ -496,7 +496,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			boolean isRefColumnQuoted, String logicalTableName, Identifier columnIdentifier) {
 		//one element was quoted so we quote
 		return isRefColumnQuoted || isQuoted( logicalTableName )
-				? Identifier.quote( columnIdentifier )
+				? columnIdentifier.quoted()
 				: columnIdentifier;
 	}
 

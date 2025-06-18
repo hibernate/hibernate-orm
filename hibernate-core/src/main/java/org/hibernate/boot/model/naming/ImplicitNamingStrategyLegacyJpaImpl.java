@@ -31,7 +31,7 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 				+ "_" + transformAttributePath( source.getOwningAttributePath() ),
 				source.getBuildingContext()
 		);
-		return owningPhysicalTableName.isQuoted() ? Identifier.quote( identifier ) : identifier;
+		return owningPhysicalTableName.isQuoted() ? identifier.quoted() : identifier;
 	}
 
 	@Override

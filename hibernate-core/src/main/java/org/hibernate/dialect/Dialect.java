@@ -1028,6 +1028,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>ifnull(arg0, arg1)</code>				- synonym of <code>coalesce(a, b)</code>
 	 * </ul>
 	 *
+	 * <ul>
+	 * <li> <code>ordinal(arg)</code>
+	 * <li> <code>string(arg)</code>
+	 * </ul>
+	 *
 	 * Finally, the following functions are defined as abbreviations for
 	 * <code>extract()</code>, and desugared by the parser:
 	 *

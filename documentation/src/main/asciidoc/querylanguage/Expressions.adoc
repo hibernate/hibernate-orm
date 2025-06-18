@@ -576,6 +576,7 @@ The following special functions make it possible to discover or narrow expressio
 | `cast()` | Narrow a basic type | `cast(x as Type)` | ✔
 | `str()` | Cast to a string | `str(x)` | ✖
 | `ordinal()` | Get the ordinal value of an enum | `ordinal(x)` | ✖
+| `string()` | Get the string-valued name of an enum | `string(x)` | ✖
 |===
 
 Let's see what these functions do.
@@ -647,15 +648,16 @@ select str(id) from Order
 
 [[function-ordinal]]
 [discrete]
-===== Extracting the ordinal value of an enum
+===== Extracting the ordinal value or name of an enum
 
-The function `ordinal(x)` extracts the ordinal value of an enum.
-It supports both enum fields mapped as `ORDINAL` and `STRING`.
+The function `ordinal(x)` extracts the ordinal value of an enum, and the function `string(x)` extracts the name of the enum value as a string.
 
 [source, hql]
 ----
-select ordinal(p.type) from Phone p
+select ordinal(p.type), string(p.type) from Phone p
 ----
+
+Both functions work with enum fields mapped as `ORDINAL` and with enum fields mapped as `STRING`.
 
 [[functions-null]]
 ==== Functions for working with null values

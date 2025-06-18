@@ -5,8 +5,6 @@
 package org.hibernate.type.descriptor.jdbc;
 
 
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.AbstractCollection;
 import java.util.ArrayList;
@@ -24,20 +22,14 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.ValuedModelPart;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.type.BasicPluralType;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
-import org.hibernate.type.format.JsonDocumentWriter;
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
+
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapter;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapterFactory;
@@ -53,181 +45,13 @@ import org.hibernate.type.format.StringJsonDocumentReader;
 public class JsonHelper {
 
 	/**
-	 * Serializes an array of values into JSON object/array
-	 * @param elementMappingType the type definitions
-	 * @param values the values to be serialized
-	 * @param options wrapping options
-	 * @param writer the document writer used for serialization
-	 */
-	public static void serializeArray(MappingType elementMappingType, Object[] values, WrapperOptions options, JsonDocumentWriter writer) {
-		writer.startArray();
-		if ( values.length == 0 ) {
-			writer.endArray();
-			return;
-		}
-		for ( Object value : values ) {
-			try {
-				serialize(elementMappingType, value, options, writer);
-			}
-			catch (IOException e) {
-				throw new IllegalArgumentException( "Could not serialize JSON array value" , e );
-			}
-		}
-		writer.endArray();
-	}
-
-	/**
-	 * Serializes an array of values into JSON object/array
-	 * @param elementJavaType the array element type
-	 * @param elementJdbcType the JDBC type
-	 * @param values values to be serialized
-	 * @param options wrapping options
-	 * @param writer the document writer used for serialization
-	 */
-	public static void serializeArray(JavaType<?> elementJavaType, JdbcType elementJdbcType, Object[] values, WrapperOptions options, JsonDocumentWriter writer) {
-		writer.startArray();
-		if ( values.length == 0 ) {
-			writer.endArray();
-			return;
-		}
-		for ( Object value : values ) {
-			if (value == null) {
-				writer.nullValue();
-			}
-			else {
-				writer.serializeJsonValue( value ,(JavaType<?>) elementJavaType,elementJdbcType,options);
-			}
-		}
-		writer.endArray();
-	}
-
-	/**
-	 * Checks that a <code>JDBCType</code> is assignable to an array
-	 * @param type the jdbc type
-	 * @return <code>true</code> if types is of array kind <code>false</code> otherwise.
-	 */
-	private static boolean isArrayType(JdbcType type) {
-		return (type.getDefaultSqlTypeCode() == SqlTypes.ARRAY ||
-				type.getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY);
-	}
-
-	/**
-	 * Serialized an Object value to JSON object using a document writer.
-	 *
-	 * @param embeddableMappingType the embeddable mapping definition of the given value.
-	 * @param domainValue the value to be serialized.
-	 * @param options wrapping options
-	 * @param writer the document writer
-	 * @throws IOException if the underlying writer failed to serialize a mpped value or failed to perform need I/O.
-	 */
-	public static void serialize(EmbeddableMappingType embeddableMappingType,
-										Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
-		writer.startObject();
-		serializeMapping(embeddableMappingType, domainValue, options, writer);
-		writer.endObject();
-	}
-
-	private static void serialize(MappingType mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
-			throws IOException {
-		if ( value == null ) {
-			writer.nullValue();
-		}
-		else if ( mappedType instanceof EmbeddableMappingType ) {
-			serialize( (EmbeddableMappingType) mappedType, value, options, writer );
-		}
-		else if ( mappedType instanceof BasicType<?> basicType) {
-			if ( isArrayType(basicType.getJdbcType())) {
-				final int length = Array.getLength( value );
-				writer.startArray();
-				if ( length != 0 ) {
-					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
-					final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
-					final Object domainArray = basicType.convertToRelationalValue( value );
-					for ( int j = 0; j < length; j++ ) {
-						writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
-					}
-				}
-				writer.endArray();
-			}
-			else {
-				writer.serializeJsonValue(basicType.convertToRelationalValue( value),
-						(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
-			}
-		}
-		else {
-			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
-		}
-	}
-
-	/**
-	 * JSON object attirbute serialization
-	 * @see #serialize(EmbeddableMappingType, Object, WrapperOptions, JsonDocumentWriter)
-	 * @param embeddableMappingType the embeddable mapping definition of the given value.
-	 * @param domainValue the value to be serialized.
-	 * @param options wrapping options
-	 * @param writer the document writer
-	 * @throws IOException if an error occurred while writing to an underlying writer
-	 */
-	private static void serializeMapping(EmbeddableMappingType embeddableMappingType,
-								Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
-		final Object[] values = embeddableMappingType.getValues( domainValue );
-		for ( int i = 0; i < values.length; i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
-			if ( attributeMapping instanceof SelectableMapping ) {
-				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
-				writer.objectKey( name );
-
-				if ( attributeMapping.getMappedType() instanceof EmbeddableMappingType ) {
-					writer.startObject();
-					serializeMapping(  (EmbeddableMappingType)attributeMapping.getMappedType(), values[i], options,writer);
-					writer.endObject();
-				}
-				else {
-					serialize(attributeMapping.getMappedType(), values[i], options, writer);
-				}
-
-			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-				if ( values[i] == null ) {
-					continue;
-				}
-				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
-				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if (aggregateMapping == null) {
-					serializeMapping(
-							mappingType,
-							values[i],
-							options,
-							writer );
-				}
-				else {
-					final String name = aggregateMapping.getSelectableName();
-					writer.objectKey( name );
-					writer.startObject();
-					serializeMapping(
-							mappingType,
-							values[i],
-							options,
-							writer);
-					writer.endObject();
-
-				}
-			}
-			else {
-				throw new UnsupportedOperationException( "Support for attribute mapping type not yet implemented: " + attributeMapping.getClass().getName() );
-			}
-
-		}
-	}
-
-	/**
 	 * Consumes Json document items from a document reader and return the serialized Objects
 	 * @param reader the document reader
 	 * @param embeddableMappingType the type definitions
 	 * @param returnEmbeddable do we return an Embeddable object or array of Objects ?
 	 * @param options wrapping options
 	 * @return serialized values
-	 * @param <X>
+	 * @param <X> the type of the returned value
 	 * @throws SQLException if error occured during mapping of types
 	 */
 	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)

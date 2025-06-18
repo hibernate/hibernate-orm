@@ -22,6 +22,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * Implementation of <code>JsonDocumentWriter</code> for String-based OSON document.
  * This implementation will receive a {@link JsonAppender } to a serialze JSON object to it
+ *
  * @author Emmanuel Jannetti
  */
 public class StringJsonDocumentWriter extends StringJsonDocument implements JsonDocumentWriter {
@@ -32,11 +33,12 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 * Creates a new StringJsonDocumentWriter.
 	 */
 	public StringJsonDocumentWriter() {
-		this(new StringBuilder());
+		this( new StringBuilder() );
 	}
 
 	/**
 	 * Creates a new StringJsonDocumentWriter.
+	 *
 	 * @param sb the StringBuilder to receive the serialized JSON
 	 */
 	public StringJsonDocumentWriter(StringBuilder sb) {
@@ -50,19 +52,19 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public JsonDocumentWriter startObject() {
 		// Note: startArray and startObject must not call moveProcessingStateMachine()
-		if ( this.processingStates.getCurrent() == JsonProcessingState.STARTING_ARRAY) {
+		if ( this.processingStates.getCurrent() == JsonProcessingState.STARTING_ARRAY ) {
 			// are we building an array of objects?
 			// i.e, [{},...]
 			// move to JsonProcessingState.ARRAY first
-			this.processingStates.push( JsonProcessingState.ARRAY);
+			this.processingStates.push( JsonProcessingState.ARRAY );
 		}
-		else if ( this.processingStates.getCurrent() == JsonProcessingState.ARRAY) {
+		else if ( this.processingStates.getCurrent() == JsonProcessingState.ARRAY ) {
 			// That means that we ae building an array of object ([{},...])
 			// JSON object hee are treat as array item.
 			// -> add the marker first
-			this.appender.append(StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter());
+			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
-		this.appender.append( StringJsonDocumentMarker.OBJECT_START.getMarkerCharacter());
+		this.appender.append( StringJsonDocumentMarker.OBJECT_START.getMarkerCharacter() );
 		this.processingStates.push( JsonProcessingState.STARTING_OBJECT );
 		return this;
 	}
@@ -73,7 +75,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public JsonDocumentWriter endObject() {
 		this.appender.append( StringJsonDocumentMarker.OBJECT_END.getMarkerCharacter() );
-		this.processingStates.push( JsonProcessingState.ENDING_OBJECT);
+		this.processingStates.push( JsonProcessingState.ENDING_OBJECT );
 		moveProcessingStateMachine();
 		return this;
 	}
@@ -95,20 +97,18 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public JsonDocumentWriter endArray() {
 		this.appender.append( StringJsonDocumentMarker.ARRAY_END.getMarkerCharacter() );
-		this.processingStates.push( JsonProcessingState.ENDING_ARRAY);
+		this.processingStates.push( JsonProcessingState.ENDING_ARRAY );
 		moveProcessingStateMachine();
 		return this;
 	}
 
-
 	@Override
 	public JsonDocumentWriter objectKey(String key) {
-
-		if (key == null || key.length() == 0) {
+		if ( key == null || key.isEmpty() ) {
 			throw new IllegalArgumentException( "key cannot be null or empty" );
 		}
 
-		if (JsonProcessingState.OBJECT.equals(this.processingStates.getCurrent())) {
+		if ( JsonProcessingState.OBJECT.equals( this.processingStates.getCurrent() ) ) {
 			// we have started an object, and we are adding an item key: we do add a separator.
 			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
@@ -126,7 +126,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 * Separator is to separate array items or key/value pairs in an object.
 	 */
 	private void addItemsSeparator() {
-		if (this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY )) {
+		if ( this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY ) ) {
 			// We started to serialize an array and already added item to it:add a separator anytime.
 			this.appender.append( StringJsonDocumentMarker.SEPARATOR.getMarkerCharacter() );
 		}
@@ -152,10 +152,9 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	 *              -> EO -> NONE
 	 *
 	 *    </pre>
-	 *
 	 */
 	private void moveProcessingStateMachine() {
-		switch (this.processingStates.getCurrent()) {
+		switch ( this.processingStates.getCurrent() ) {
 			case STARTING_OBJECT:
 				//after starting an object, we start adding key/value pairs
 				this.processingStates.push( JsonProcessingState.OBJECT );
@@ -171,8 +170,9 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				// first pop ENDING_ARRAY
 				this.processingStates.pop();
 				// if we have ARRAY, so that's not an empty array. pop that state
-				if (this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY ))
+				if ( this.processingStates.getCurrent().equals( JsonProcessingState.ARRAY ) ) {
 					this.processingStates.pop();
+				}
 				assert this.processingStates.pop().equals( JsonProcessingState.STARTING_ARRAY );
 				break;
 			case ENDING_OBJECT:
@@ -182,8 +182,9 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				// first pop ENDING_OBJECT
 				this.processingStates.pop();
 				// if we have OBJECT, so that's not an empty object. pop that state
-				if (this.processingStates.getCurrent().equals( JsonProcessingState.OBJECT ))
+				if ( this.processingStates.getCurrent().equals( JsonProcessingState.OBJECT ) ) {
 					this.processingStates.pop();
+				}
 				assert this.processingStates.pop().equals( JsonProcessingState.STARTING_OBJECT );
 				break;
 			default:
@@ -200,9 +201,17 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	}
 
 	@Override
+	public JsonDocumentWriter numericValue(Number value) {
+		addItemsSeparator();
+		appender.append( value.toString() );
+		moveProcessingStateMachine();
+		return this;
+	}
+
+	@Override
 	public JsonDocumentWriter booleanValue(boolean value) {
 		addItemsSeparator();
-		BooleanJavaType.INSTANCE.appendEncodedString( this.appender, value);
+		BooleanJavaType.INSTANCE.appendEncodedString( this.appender, value );
 		moveProcessingStateMachine();
 		return this;
 	}
@@ -211,11 +220,11 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	public JsonDocumentWriter stringValue(String value) {
 		addItemsSeparator();
 
-		appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter());
+		appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 		appender.startEscaping();
 		appender.append( value );
 		appender.endEscaping();
-		appender.append(StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
+		appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 
 		moveProcessingStateMachine();
 		return this;
@@ -224,21 +233,16 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 	@Override
 	public <T> JsonDocumentWriter serializeJsonValue(Object value, JavaType<T> javaType, JdbcType jdbcType, WrapperOptions options) {
 		addItemsSeparator();
-		convertedBasicValueToString(value, options,this.appender,javaType,jdbcType);
+		convertedBasicValueToString( value, options, this.appender, javaType, jdbcType );
 		moveProcessingStateMachine();
 		return this;
 	}
 
-	private <T> void convertedCastBasicValueToString(Object value,
-															WrapperOptions options,
-															JsonAppender appender,
-															JavaType<T> javaType,
-															JdbcType jdbcType) {
+	private <T> void convertedCastBasicValueToString(Object value, WrapperOptions options, JsonAppender appender, JavaType<T> javaType, JdbcType jdbcType) {
 		assert javaType.isInstance( value );
 		//noinspection unchecked
 		convertedBasicValueToString( (T) value, options, appender, javaType, jdbcType );
 	}
-
 
 	/**
 	 * Converts a value to String according to its mapping type.
@@ -255,7 +259,6 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			JsonAppender appender,
 			JavaType<T> javaType,
 			JdbcType jdbcType) {
-
 		assert javaType.isInstance( value );
 
 		switch ( jdbcType.getDefaultSqlTypeCode() ) {
@@ -268,7 +271,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 					break;
 				}
 				if ( value instanceof Enum ) {
-					appender.appendSql( ((Enum<?>) value ).ordinal() );
+					appender.appendSql( ((Enum<?>) value).ordinal() );
 					break;
 				}
 			case SqlTypes.BOOLEAN:
@@ -278,7 +281,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.REAL:
 			case SqlTypes.DOUBLE:
 				// These types fit into the native representation of JSON, so let's use that
-				javaType.appendEncodedString( appender, (T)value );
+				javaType.appendEncodedString( appender, (T) value );
 				break;
 			case SqlTypes.CHAR:
 			case SqlTypes.NCHAR:
@@ -288,7 +291,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 					// BooleanJavaType has this as an implicit conversion
 					appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 					appender.append( (Boolean) value ? 'Y' : 'N' );
-					appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter());
+					appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 					break;
 				}
 			case SqlTypes.LONGVARCHAR:
@@ -304,7 +307,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				// These literals can contain the '"' character, so we need to escape it
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				appender.startEscaping();
-				javaType.appendEncodedString( appender, (T)value );
+				javaType.appendEncodedString( appender, (T) value );
 				appender.endEscaping();
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -312,7 +315,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcDateJavaType.INSTANCE.appendEncodedString(
 						appender,
-						javaType.unwrap( (T)value, java.sql.Date.class, options )
+						javaType.unwrap( (T) value, java.sql.Date.class, options )
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -322,7 +325,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcTimeJavaType.INSTANCE.appendEncodedString(
 						appender,
-						javaType.unwrap( (T)value, java.sql.Time.class, options )
+						javaType.unwrap( (T) value, java.sql.Time.class, options )
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -330,7 +333,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				JdbcTimestampJavaType.INSTANCE.appendEncodedString(
 						appender,
-						javaType.unwrap( (T)value, java.sql.Timestamp.class, options )
+						javaType.unwrap( (T) value, java.sql.Timestamp.class, options )
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
@@ -338,7 +341,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.TIMESTAMP_UTC:
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				DateTimeFormatter.ISO_OFFSET_DATE_TIME.formatTo(
-						javaType.unwrap( (T)value, OffsetDateTime.class, options ),
+						javaType.unwrap( (T) value, OffsetDateTime.class, options ),
 						appender
 				);
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
@@ -349,7 +352,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.UUID:
 				// These types need to be serialized as JSON string, but don't have a need for escaping
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
-				javaType.appendEncodedString( appender, (T)value );
+				javaType.appendEncodedString( appender, (T) value );
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.BINARY:
@@ -360,13 +363,13 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 			case SqlTypes.MATERIALIZED_BLOB:
 				// These types need to be serialized as JSON string, and for efficiency uses appendString directly
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
-				appender.write( javaType.unwrap( (T)value, byte[].class, options ) );
+				appender.write( javaType.unwrap( (T) value, byte[].class, options ) );
 				appender.append( StringJsonDocumentMarker.QUOTE.getMarkerCharacter() );
 				break;
 			case SqlTypes.ARRAY:
 			case SqlTypes.JSON_ARRAY:
 				// Caller handles this. We should never end up here actually.
-				throw new IllegalStateException("unexpected JSON array type");
+				throw new IllegalStateException( "unexpected JSON array type" );
 			default:
 				throw new UnsupportedOperationException( "Unsupported JdbcType nested in JSON: " + jdbcType );
 		}
@@ -467,7 +470,7 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 		public void write(int v) {
 			final String hex = Integer.toHexString( v );
 			sb.ensureCapacity( sb.length() + hex.length() + 1 );
-			if ( ( hex.length() & 1 ) == 1 ) {
+			if ( (hex.length() & 1) == 1 ) {
 				sb.append( '0' );
 			}
 			sb.append( hex );
@@ -475,12 +478,12 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 
 		@Override
 		public void write(byte[] bytes) {
-			write(bytes, 0, bytes.length);
+			write( bytes, 0, bytes.length );
 		}
 
 		@Override
 		public void write(byte[] bytes, int off, int len) {
-			sb.ensureCapacity( sb.length() + ( len << 1 ) );
+			sb.ensureCapacity( sb.length() + (len << 1) );
 			for ( int i = 0; i < len; i++ ) {
 				final int v = bytes[off + i] & 0xFF;
 				sb.append( HEX_ARRAY[v >>> 4] );
@@ -498,12 +501,12 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 				case 5:
 				case 6:
 				case 7:
-				//   8 is '\b'
-				//   9 is '\t'
-				//   10 is '\n'
+					//   8 is '\b'
+					//   9 is '\t'
+					//   10 is '\n'
 				case 11:
-				//   12 is '\f'
-				//   13 is '\r'
+					//   12 is '\f'
+					//   13 is '\r'
 				case 14:
 				case 15:
 				case 16:
@@ -525,19 +528,19 @@ public class StringJsonDocumentWriter extends StringJsonDocument implements Json
 					sb.append( "\\u" ).append( Integer.toHexString( fragment ) );
 					break;
 				case '\b':
-					sb.append("\\b");
+					sb.append( "\\b" );
 					break;
 				case '\t':
-					sb.append("\\t");
+					sb.append( "\\t" );
 					break;
 				case '\n':
-					sb.append("\\n");
+					sb.append( "\\n" );
 					break;
 				case '\f':
-					sb.append("\\f");
+					sb.append( "\\f" );
 					break;
 				case '\r':
-					sb.append("\\r");
+					sb.append( "\\r" );
 					break;
 				case '"':
 					sb.append( "\\\"" );

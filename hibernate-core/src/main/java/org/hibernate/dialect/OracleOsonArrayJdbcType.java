@@ -12,19 +12,17 @@ import oracle.sql.json.OracleJsonGenerator;
 import org.hibernate.dialect.type.OracleJsonArrayJdbcType;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
-import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JsonHelper;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JsonGeneratingVisitor;
 import org.hibernate.type.format.OsonDocumentReader;
 import org.hibernate.type.format.OsonDocumentWriter;
 
@@ -78,20 +76,7 @@ public class OracleOsonArrayJdbcType extends OracleJsonArrayJdbcType {
 					}
 					else {
 						final OsonDocumentWriter writer = new OsonDocumentWriter( generator );
-						if ( getElementJdbcType() instanceof JsonJdbcType jsonElementJdbcType ) {
-							final EmbeddableMappingType embeddableMappingType = jsonElementJdbcType.getEmbeddableMappingType();
-							JsonHelper.serializeArray( embeddableMappingType, domainObjects, options, writer );
-						}
-						else {
-							assert !(getElementJdbcType() instanceof AggregateJdbcType);
-							JsonHelper.serializeArray(
-									elementJavaType,
-									getElementJdbcType(),
-									domainObjects,
-									options,
-									writer
-							);
-						}
+						JsonGeneratingVisitor.INSTANCE.visitArray( elementJavaType, getElementJdbcType(), domainObjects, options, writer );
 					}
 				}
 				return out.toByteArray();

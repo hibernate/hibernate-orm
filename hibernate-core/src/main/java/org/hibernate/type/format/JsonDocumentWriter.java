@@ -62,6 +62,13 @@ public interface JsonDocumentWriter {
 	JsonDocumentWriter nullValue();
 
 	/**
+	 * Adds a new JSON element numeric value.
+	 * @return this instance
+	 * @param value the element numeric name.
+	 */
+	JsonDocumentWriter numericValue(Number value);
+
+	/**
 	 * Adds a new JSON element boolean value.
 	 * @return this instance
 	 * @param value the element boolean name.

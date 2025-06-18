@@ -28,6 +28,27 @@ public class SQLQueryParserUnitTests {
 	@DomainModel
 	@SessionFactory
 	@RequiresDialect(H2Dialect.class)
+	void testJDBCEscapeSyntaxParsing(SessionFactoryScope scope) {
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		final String sqlQuery = "select id, name from {h-domain}the_table where date = {d '2025-06-18'}";
+
+		final String full = processSqlString( sqlQuery, "my_catalog", "my_schema", sessionFactory );
+		assertThat( full ).contains( "{d '2025-06-18'}" );
+
+		final String catalogOnly = processSqlString( sqlQuery, "my_catalog", null, sessionFactory );
+		assertThat( catalogOnly ).contains( "{d '2025-06-18'}" );
+
+		final String schemaOnly = processSqlString( sqlQuery, null, "my_schema", sessionFactory );
+		assertThat( schemaOnly ).contains( "{d '2025-06-18'}" );
+
+		final String none = processSqlString( sqlQuery, null, null, sessionFactory );
+		assertThat( none ).contains( "{d '2025-06-18'}" );
+	}
+
+	@Test
+	@DomainModel
+	@SessionFactory
+	@RequiresDialect(H2Dialect.class)
 	void testDomainParsing(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final String sqlQuery = "select id, name from {h-domain}the_table";

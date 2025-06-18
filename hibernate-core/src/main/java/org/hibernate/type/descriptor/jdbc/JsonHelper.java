@@ -6,6 +6,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.AbstractCollection;
@@ -14,20 +15,35 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.collection.spi.CollectionSemantics;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.StandardStack;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
@@ -37,7 +53,9 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.JsonDocumentItemType;
 import org.hibernate.type.format.JsonDocumentReader;
 import org.hibernate.type.format.JsonDocumentWriter;
-import static org.hibernate.type.descriptor.jdbc.StructHelper.getEmbeddedPart;
+
+import static org.hibernate.Hibernate.isInitialized;
+import static org.hibernate.type.descriptor.jdbc.StructHelper.getSubPart;
 import static org.hibernate.type.descriptor.jdbc.StructHelper.instantiate;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapter;
 import org.hibernate.type.format.JsonValueJDBCTypeAdapterFactory;
@@ -67,7 +85,7 @@ public class JsonHelper {
 		}
 		for ( Object value : values ) {
 			try {
-				serialize(elementMappingType, value, options, writer);
+				serializeValue(elementMappingType, value, options, writer);
 			}
 			catch (IOException e) {
 				throw new IllegalArgumentException( "Could not serialize JSON array value" , e );
@@ -111,112 +129,292 @@ public class JsonHelper {
 				type.getDefaultSqlTypeCode() == SqlTypes.JSON_ARRAY);
 	}
 
-	/**
-	 * Serialized an Object value to JSON object using a document writer.
-	 *
-	 * @param embeddableMappingType the embeddable mapping definition of the given value.
-	 * @param domainValue the value to be serialized.
-	 * @param options wrapping options
-	 * @param writer the document writer
-	 * @throws IOException if the underlying writer failed to serialize a mpped value or failed to perform need I/O.
-	 */
-	public static void serialize(EmbeddableMappingType embeddableMappingType,
-										Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
-		writer.startObject();
-		serializeMapping(embeddableMappingType, domainValue, options, writer);
-		writer.endObject();
-	}
-
-	private static void serialize(MappingType mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
+	public static void serializeValue(MappingType mappedType, Object value, WrapperOptions options, JsonDocumentWriter writer)
 			throws IOException {
-		if ( value == null ) {
-			writer.nullValue();
+		if ( handleNullOrLazy( value, writer ) ) {
+			// nothing left to do
+			return;
 		}
-		else if ( mappedType instanceof EmbeddableMappingType ) {
-			serialize( (EmbeddableMappingType) mappedType, value, options, writer );
+
+		if ( mappedType instanceof EntityMappingType entityType ) {
+			serializeEntity( value, entityType, options, writer );
 		}
-		else if ( mappedType instanceof BasicType<?> basicType) {
-			if ( isArrayType(basicType.getJdbcType())) {
+		else if ( mappedType instanceof ManagedMappingType managedMappingType ) {
+			serialize( managedMappingType, value, options, writer );
+		}
+		else if ( mappedType instanceof BasicType<?> basicType ) {
+			if ( isArrayType( basicType.getJdbcType() ) ) {
 				final int length = Array.getLength( value );
 				writer.startArray();
 				if ( length != 0 ) {
-					final JavaType<Object> elementJavaType = ( (BasicPluralJavaType<Object>) basicType.getJdbcJavaType() ).getElementJavaType();
-					final JdbcType elementJdbcType = ( (ArrayJdbcType) basicType.getJdbcType() ).getElementJdbcType();
+					//noinspection unchecked
+					final JavaType<Object> elementJavaType = ((BasicPluralJavaType<Object>) basicType.getJdbcJavaType()).getElementJavaType();
+					final JdbcType elementJdbcType = ((ArrayJdbcType) basicType.getJdbcType()).getElementJdbcType();
 					final Object domainArray = basicType.convertToRelationalValue( value );
 					for ( int j = 0; j < length; j++ ) {
-						writer.serializeJsonValue(Array.get(domainArray,j), elementJavaType, elementJdbcType, options);
+						writer.serializeJsonValue( Array.get( domainArray, j ), elementJavaType, elementJdbcType, options );
 					}
 				}
 				writer.endArray();
 			}
 			else {
-				writer.serializeJsonValue(basicType.convertToRelationalValue( value),
-						(JavaType<Object>)basicType.getJdbcJavaType(),basicType.getJdbcType(), options);
+				writer.serializeJsonValue(
+						basicType.convertToRelationalValue( value ),
+						basicType.getJdbcJavaType(),
+						basicType.getJdbcType(),
+						options
+				);
 			}
 		}
 		else {
-			throw new UnsupportedOperationException( "Support for mapping type not yet implemented: " + mappedType.getClass().getName() );
+			throw new UnsupportedOperationException(
+					"Support for mapping type not yet implemented: " + mappedType.getClass().getName()
+			);
 		}
 	}
 
 	/**
-	 * JSON object attirbute serialization
-	 * @see #serialize(EmbeddableMappingType, Object, WrapperOptions, JsonDocumentWriter)
-	 * @param embeddableMappingType the embeddable mapping definition of the given value.
-	 * @param domainValue the value to be serialized.
+	 * Checks the provided {@code value} is either null or a lazy property.
+	 *
+	 * @param value the value to check
+	 * @param writer the current {@link JsonDocumentWriter}
+	 *
+	 * @return {@code true} if it was, indicating no further processing of the value is needed, {@code false otherwise}.
+	 */
+	private static boolean handleNullOrLazy(Object value, JsonDocumentWriter writer) {
+		if ( value == null ) {
+			writer.nullValue();
+			return true;
+		}
+		else if ( writer.expandProperties() ) {
+			// avoid force-initialization when serializing all properties
+			if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+				writer.stringValue( value.toString() );
+				return true;
+			}
+			else if ( !isInitialized( value ) ) {
+				writer.stringValue( "<uninitialized>" );
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Serialized an Object value to JSON object using a document writer.
+	 *
+	 * @param managedMappingType the managed mapping type of the given value
+	 * @param value the value to be serialized
+	 * @param options wrapping options
+	 * @param writer the document writer
+	 * @throws IOException if the underlying writer failed to serialize a mpped value or failed to perform need I/O.
+	 */
+	public static void serialize(ManagedMappingType managedMappingType, Object value, WrapperOptions options, JsonDocumentWriter writer)
+			throws IOException {
+		writer.startObject();
+		serializeObject( managedMappingType, value, options, writer );
+		writer.endObject();
+	}
+
+	/**
+	 * JSON object managed type serialization.
+	 *
+	 * @param managedMappingType the managed mapping type of the given object
+	 * @param object the object to be serialized
 	 * @param options wrapping options
 	 * @param writer the document writer
 	 * @throws IOException if an error occurred while writing to an underlying writer
+	 * @see #serialize(ManagedMappingType, Object, WrapperOptions, JsonDocumentWriter)
 	 */
-	private static void serializeMapping(EmbeddableMappingType embeddableMappingType,
-								Object domainValue, WrapperOptions options, JsonDocumentWriter writer) throws IOException {
-		final Object[] values = embeddableMappingType.getValues( domainValue );
+	private static void serializeObject(ManagedMappingType managedMappingType, Object object, WrapperOptions options, JsonDocumentWriter writer)
+			throws IOException {
+		final Object[] values = managedMappingType.getValues( object );
 		for ( int i = 0; i < values.length; i++ ) {
-			final ValuedModelPart attributeMapping = getEmbeddedPart( embeddableMappingType, i );
-			if ( attributeMapping instanceof SelectableMapping ) {
-				final String name = ( (SelectableMapping) attributeMapping ).getSelectableName();
-				writer.objectKey( name );
+			final ValuedModelPart subPart = getSubPart( managedMappingType, i );
+			final Object value = values[i];
+			serializeModelPart( subPart, value, options, writer );
+		}
+	}
 
-				if ( attributeMapping.getMappedType() instanceof EmbeddableMappingType ) {
-					writer.startObject();
-					serializeMapping(  (EmbeddableMappingType)attributeMapping.getMappedType(), values[i], options,writer);
-					writer.endObject();
-				}
-				else {
-					serialize(attributeMapping.getMappedType(), values[i], options, writer);
-				}
-
+	private static void serializeModelPart(
+			ValuedModelPart modelPart,
+			Object value,
+			WrapperOptions options,
+			JsonDocumentWriter writer) throws IOException {
+		if ( modelPart instanceof SelectableMapping selectableMapping ) {
+			writer.objectKey( writer.expandProperties() ? modelPart.getPartName() : selectableMapping.getSelectableName() );
+			serializeValue( modelPart.getMappedType(), value, options, writer );
+		}
+		else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
+			if ( writer.expandProperties() ) {
+				writer.objectKey( embeddedAttribute.getAttributeName() );
+				serializeValue( embeddedAttribute.getMappedType(), value, options, writer );
 			}
-			else if ( attributeMapping instanceof EmbeddedAttributeMapping ) {
-				if ( values[i] == null ) {
-					continue;
+			else {
+				if ( value == null ) {
+					return;
 				}
-				final EmbeddableMappingType mappingType = (EmbeddableMappingType) attributeMapping.getMappedType();
+
+				final EmbeddableMappingType mappingType = embeddedAttribute.getMappedType();
 				final SelectableMapping aggregateMapping = mappingType.getAggregateMapping();
-				if (aggregateMapping == null) {
-					serializeMapping(
-							mappingType,
-							values[i],
-							options,
-							writer );
+				if ( aggregateMapping == null ) {
+					serializeObject( mappingType, value, options, writer );
 				}
 				else {
 					final String name = aggregateMapping.getSelectableName();
 					writer.objectKey( name );
-					writer.startObject();
-					serializeMapping(
-							mappingType,
-							values[i],
-							options,
-							writer);
-					writer.endObject();
-
+					serializeValue( mappingType, value, options, writer );
 				}
 			}
-			else {
-				throw new UnsupportedOperationException( "Support for attribute mapping type not yet implemented: " + attributeMapping.getClass().getName() );
+		}
+		else if ( writer.expandProperties() ) {
+			// Entity and plural attribute serialization is only supported for expanded properties
+			if ( modelPart instanceof EntityValuedModelPart entityPart ) {
+				writer.objectKey( entityPart.getPartName() );
+				serializeValue( entityPart.getEntityMappingType(), value, options, writer );
 			}
+			else if ( modelPart instanceof PluralAttributeMapping plural ) {
+				writer.objectKey( plural.getPartName() );
+				serializePluralAttribute( value, plural, options, writer );
+			}
+		}
+		else {
+			// could not handle model part, throw exception
+			throw new UnsupportedOperationException(
+					"Support for model part type not yet implemented: "
+					+ (modelPart != null ? modelPart.getClass().getName() : "null")
+			);
+		}
+	}
 
+	private static void serializeEntity(
+			Object value,
+			EntityMappingType entityType,
+			WrapperOptions options,
+			JsonDocumentWriter writer) throws IOException {
+		final EntityIdentifierMapping identifierMapping = entityType.getIdentifierMapping();
+		writer.trackingEntity( value, entityType, shouldProcessEntity -> {
+			try {
+				writer.startObject();
+				writer.objectKey( identifierMapping.getAttributeName() );
+				serializeEntityIdentifier( value, identifierMapping, options, writer );
+				if ( shouldProcessEntity ) {
+					// if it wasn't already encountered, append all properties
+					serializeObject( entityType, value, options, writer );
+				}
+				writer.endObject();
+			}
+			catch (IOException e) {
+				throw new UncheckedIOException( "Error serializing entity", e );
+			}
+		} );
+	}
+
+	private static void serializeEntityIdentifier(
+			Object value,
+			EntityIdentifierMapping identifierMapping,
+			WrapperOptions options,
+			JsonDocumentWriter writer) throws IOException {
+		final Object identifier = identifierMapping.getIdentifier( value );
+		if ( identifierMapping instanceof SingleAttributeIdentifierMapping singleAttribute ) {
+			writer.serializeJsonValue(
+					identifier,
+					singleAttribute.getJavaType(),
+					singleAttribute.getSingleJdbcMapping().getJdbcType(),
+					options
+			);
+		}
+		else if ( identifier instanceof CompositeIdentifierMapping composite ) {
+			serializeValue( composite.getMappedType(), identifier, options, writer );
+		}
+		else {
+			throw new UnsupportedOperationException( "Unsupported identifier type: " + identifier.getClass().getName() );
+		}
+	}
+
+	private static void serializePluralAttribute(
+			Object value,
+			PluralAttributeMapping plural,
+			WrapperOptions options,
+			JsonDocumentWriter writer) throws IOException {
+		if ( handleNullOrLazy( value, writer ) ) {
+			// nothing left to do
+			return;
+		}
+
+		final CollectionPart element = plural.getElementDescriptor();
+		final CollectionSemantics<?, ?> collectionSemantics = plural.getMappedType().getCollectionSemantics();
+		switch ( collectionSemantics.getCollectionClassification() ) {
+			case MAP:
+			case SORTED_MAP:
+			case ORDERED_MAP:
+				serializePersistentMap(
+						(PersistentMap<?, ?>) value,
+						plural.getIndexDescriptor(),
+						element,
+						options,
+						writer
+				);
+				break;
+			default:
+				serializePersistentCollection(
+						(PersistentCollection<?>) value,
+						plural.getCollectionDescriptor(),
+						element,
+						options,
+						writer
+				);
+		}
+	}
+
+	/**
+	 * Serializes a persistent map to JSON [{key: ..., value: ...}, ...]
+	 */
+	private static <K, E> void serializePersistentMap(
+			PersistentMap<K, E> map,
+			CollectionPart key,
+			CollectionPart value,
+			WrapperOptions options,
+			JsonDocumentWriter writer) throws IOException {
+		writer.startArray();
+		for ( final Map.Entry<K, E> entry : map.entrySet() ) {
+			writer.startObject();
+			writer.objectKey( "key" );
+			serializeCollectionPart( entry.getKey(), key, options, writer );
+			writer.objectKey( "value" );
+			serializeCollectionPart( entry.getValue(), value, options, writer );
+			writer.endObject();
+		}
+		writer.endArray();
+	}
+
+	/**
+	 * Serializes a persistent collection to a JSON array
+	 */
+	private static <E> void serializePersistentCollection(
+			PersistentCollection<E> collection,
+			CollectionPersister persister,
+			CollectionPart element,
+			WrapperOptions options,
+			JsonDocumentWriter appender) throws IOException {
+		appender.startArray();
+		final Iterator<?> entries = collection.entries( persister );
+		while ( entries.hasNext() ) {
+			serializeCollectionPart( entries.next(), element, options, appender );
+		}
+		appender.endArray();
+	}
+
+	private static void serializeCollectionPart(
+			Object value,
+			CollectionPart collectionPart,
+			WrapperOptions options,
+			JsonDocumentWriter appender) throws IOException {
+		if ( collectionPart instanceof BasicValuedCollectionPart basic ) {
+			appender.serializeJsonValue( value, basic.getJavaType(), basic.getJdbcMapping().getJdbcType(), options );
+		}
+		else {
+			serializeValue( collectionPart.getMappedType(), value, options, appender );
 		}
 	}
 
@@ -227,7 +425,7 @@ public class JsonHelper {
 	 * @param returnEmbeddable do we return an Embeddable object or array of Objects ?
 	 * @param options wrapping options
 	 * @return serialized values
-	 * @param <X>
+	 * @param <X> the type of the returned value
 	 * @throws SQLException if error occured during mapping of types
 	 */
 	private static <X> X consumeJsonDocumentItems(JsonDocumentReader reader, EmbeddableMappingType embeddableMappingType, boolean returnEmbeddable, WrapperOptions options)

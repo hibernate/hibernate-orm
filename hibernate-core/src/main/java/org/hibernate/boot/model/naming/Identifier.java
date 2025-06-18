@@ -223,6 +223,13 @@ public class Identifier implements Comparable<Identifier> {
 	}
 
 	/**
+	 * A quoted form of this identifier.
+	 */
+	public Identifier quoted() {
+		return isQuoted ? this : toIdentifier( text, true );
+	}
+
+	/**
 	 * If this is a quoted identifier, then return the identifier name
 	 * enclosed in dialect-specific open- and end-quotes; otherwise,
 	 * simply return the unquoted identifier.
@@ -272,18 +279,20 @@ public class Identifier implements Comparable<Identifier> {
 				: text.toLowerCase( Locale.ENGLISH ).hashCode();
 	}
 
+	@Override
+	public int compareTo(Identifier identifier) {
+		return getCanonicalName().compareTo( identifier.getCanonicalName() );
+	}
+
 	public static boolean areEqual(Identifier id1, Identifier id2) {
 		return Objects.equals( id1, id2 );
 	}
 
+	/**
+	 * @deprecated Use {@link #quoted()}.
+	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	public static Identifier quote(Identifier identifier) {
-		return identifier.isQuoted()
-				? identifier
-				: Identifier.toIdentifier( identifier.getText(), true );
-	}
-
-	@Override
-	public int compareTo(Identifier identifier) {
-		return getCanonicalName().compareTo( identifier.getCanonicalName() );
+		return identifier.quoted();
 	}
 }

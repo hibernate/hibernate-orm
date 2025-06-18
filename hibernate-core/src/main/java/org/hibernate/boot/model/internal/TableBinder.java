@@ -263,7 +263,7 @@ public class TableBinder {
 				}
 
 				if ( ownerEntityTableQuoted || associatedEntityTableQuoted ) {
-					name = Identifier.quote( name );
+					name = name.quoted();
 				}
 
 				return name;

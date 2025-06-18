@@ -965,7 +965,7 @@ public class HANALegacyDialect extends Dialect {
 
 				// need to quote names containing special characters like ':'
 				if ( !normalizedIdentifier.isQuoted() && !normalizedIdentifier.getText().matches( "\\w+" ) ) {
-					normalizedIdentifier = Identifier.quote( normalizedIdentifier );
+					normalizedIdentifier = normalizedIdentifier.quoted();
 				}
 
 				return normalizedIdentifier;

@@ -84,13 +84,21 @@ public class SQLQueryParser {
 					if (!doubleQuoted && !escaped) {
 						singleQuoted = !singleQuoted;
 					}
-					result.append(ch);
+					if (escaped) {
+						token.append(ch);
+					} else {
+						result.append(ch);
+					}
 					break;
 				case '"':
 					if (!singleQuoted && !escaped) {
 						doubleQuoted = !doubleQuoted;
 					}
-					result.append(ch);
+					if (escaped) {
+						token.append(ch);
+					} else {
+						result.append(ch);
+					}
 					break;
 				case '{':
 					if (!singleQuoted && !doubleQuoted) {

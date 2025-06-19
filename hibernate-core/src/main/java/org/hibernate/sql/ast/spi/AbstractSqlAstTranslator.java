@@ -1269,20 +1269,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		boolean firstPass = true;
 
 		final List<ColumnReference> targetColumnReferences = statement.getTargetColumns();
-		if ( targetColumnReferences == null ) {
-			renderImplicitTargetColumnSpec();
-		}
-		else {
-			for (ColumnReference targetColumnReference : targetColumnReferences) {
-				if (firstPass) {
-					firstPass = false;
-				}
-				else {
-					appendSql( COMMA_SEPARATOR_CHAR );
-				}
-
-				appendSql( targetColumnReference.getColumnExpression() );
+		for (ColumnReference targetColumnReference : targetColumnReferences) {
+			if (firstPass) {
+				firstPass = false;
 			}
+			else {
+				appendSql( COMMA_SEPARATOR_CHAR );
+			}
+
+			appendSql( targetColumnReference.getColumnExpression() );
 		}
 
 		appendSql( ") " );
@@ -1635,9 +1630,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		appendSql( " then update" );
 		renderSetClause( assignments );
-	}
-
-	private void renderImplicitTargetColumnSpec() {
 	}
 
 	protected void visitValuesList(List<Values> valuesList) {

@@ -44,6 +44,8 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.type.format.FormatMapper;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
@@ -702,5 +704,15 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return delegate.isIdentifierRollbackEnabled();
+	}
+
+	@Override
+	public void afterObtainConnection(Connection connection) throws SQLException {
+		delegate.afterObtainConnection( connection );
+	}
+
+	@Override
+	public void beforeReleaseConnection(Connection connection) throws SQLException {
+		delegate.beforeReleaseConnection(  connection );
 	}
 }

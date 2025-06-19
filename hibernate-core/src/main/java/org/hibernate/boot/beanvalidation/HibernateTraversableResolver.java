@@ -20,6 +20,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.validation.Path;
 import jakarta.validation.TraversableResolver;
 
@@ -32,6 +33,11 @@ import jakarta.validation.TraversableResolver;
  */
 public class HibernateTraversableResolver implements TraversableResolver {
 	private final Map<Class<?>, Set<String>> associationsPerEntityClass = new HashMap<>();
+	private final PersistenceUnitUtil persistenceUnitUtil;
+
+	public HibernateTraversableResolver(PersistenceUnitUtil persistenceUnitUtil) {
+		this.persistenceUnitUtil = persistenceUnitUtil;
+	}
 
 	public void addPersister(EntityPersister persister, SessionFactoryImplementor factory) {
 		Class<?> javaTypeClass = persister.getEntityMappingType().getMappedJavaType().getJavaTypeClass();
@@ -91,7 +97,7 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			ElementType elementType) {
 		//lazy, don't load
 		return Hibernate.isInitialized( traversableObject )
-			&& Hibernate.isPropertyInitialized( traversableObject, traversableProperty.getName() );
+				&& persistenceUnitUtil.isLoaded( traversableObject, traversableProperty.getName() );
 	}
 
 	public boolean isCascadable(Object traversableObject,

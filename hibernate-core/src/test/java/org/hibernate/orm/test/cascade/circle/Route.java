@@ -8,25 +8,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-
 public class Route {
-
-//	@Id
-//	@SequenceGenerator(name="ROUTE_SEQ", sequenceName="ROUTE_SEQ", initialValue=1, allocationSize=1)
-//	@GeneratedValue(strategy=GenerationType.SEQUENCE, generator="ROUTE_SEQ")
-	private Long routeID;
-
+	private Integer routeID;
 	private long version;
-
-	/** A List of nodes contained in this route. */
-//	@OneToMany(targetEntity=Node.class, fetch=FetchType.EAGER, cascade=CascadeType.ALL, mappedBy="route")
-	private Set nodes = new HashSet();
-
-	private Set vehicles = new HashSet();
-
 	private String name;
+	private Set<Node> nodes = new HashSet<>();
+	private Set<Vehicle> vehicles = new HashSet<>();
 
-//	@Transient
 	private String transientField = null;
 
 	public String getName() {
@@ -37,27 +25,27 @@ public class Route {
 		this.name = name;
 	}
 
-	public Set getNodes() {
+	public Set<Node> getNodes() {
 		return nodes;
 	}
 
-	protected void setNodes(Set nodes) {
+	protected void setNodes(Set<Node> nodes) {
 		this.nodes = nodes;
 	}
 
-	protected Set getVehicles() {
+	protected Set<Vehicle> getVehicles() {
 		return vehicles;
 	}
 
-	protected void setVehicles(Set vehicles) {
+	protected void setVehicles(Set<Vehicle> vehicles) {
 		this.vehicles = vehicles;
 	}
 
-	protected void setRouteID(Long routeID) {
+	protected void setRouteID(Integer routeID) {
 		this.routeID = routeID;
 	}
 
-	public Long getRouteID() {
+	public Integer getRouteID() {
 		return routeID;
 	}
 

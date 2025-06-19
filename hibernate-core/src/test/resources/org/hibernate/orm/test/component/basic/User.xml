@@ -1,0 +1,99 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 version="7.0">
+	<package>org.hibernate.orm.test.component.basic</package>
+
+	<named-query name="userNameIn">
+		<query>
+			<![CDATA[
+			from User
+			where person.name in (:nameList)
+				or userName in (:nameList)
+			]]>
+		</query>
+	</named-query>
+
+	<entity class="User">
+		<table name="t_users"/>
+		<attributes>
+			<id name="userName"/>
+			<basic name="password" optional="false" optimistic-lock="false">
+				<column name="`password`"/>
+			</basic>
+			<version name="lastModified"/>
+			<embedded name="person"/>
+		</attributes>
+	</entity>
+
+	<entity class="Employee">
+		<table name="t_employees"/>
+		<attributes>
+			<id name="id">
+				<generated-value generator="increment"/>
+			</id>
+			<basic name="hireDate">
+				<column name="hire_date"/>
+				<temporal>DATE</temporal>
+			</basic>
+			<one-to-many name="directReports" orphan-removal="true">
+				<join-column name="manager_fk"/>
+				<cascade>
+					<cascade-all/>
+				</cascade>
+			</one-to-many>
+			<embedded name="person">
+				<attribute-override name="yob">
+					<column name="yob"/>
+				</attribute-override>
+				<attribute-override name="heightInches">
+					<column name="heightInches"/>
+				</attribute-override>
+				<attribute-override name="currentAddress">
+					<column name="address_2" insertable="false" updatable="false"/>
+				</attribute-override>
+			</embedded>
+			<embedded name="optionalComponent"/>
+		</attributes>
+	</entity>
+
+	<embeddable class="OptionalComponent">
+		<attributes>
+			<basic name="value1" optional="true"/>
+			<basic name="value2" optional="true"/>
+		</attributes>
+	</embeddable>
+
+	<embeddable class="Person">
+		<attributes>
+			<basic name="name">
+				<column updatable="false" nullable="false"/>
+			</basic>
+			<basic name="dob">
+				<column updatable="false" nullable="false"/>
+			</basic>
+			<basic name="address"/>
+			<basic name="previousAddress">
+				<column insertable="false"/>
+			</basic>
+			<basic name="yob">
+				<formula>year(dob)</formula>
+			</basic>
+			<basic name="heightInches">
+				<column name="height_centimeters" nullable="false">
+					<read>height_centimeters / 2.54E0</read>
+					<write>? * 2.54E0</write>
+				</column>
+			</basic>
+			<basic name="currentAddress">
+				<column name="address" insertable="false" updatable="false"/>
+			</basic>
+		</attributes>
+	</embeddable>
+
+</entity-mappings>
+

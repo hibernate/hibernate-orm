@@ -11,14 +11,22 @@ package org.hibernate.orm.test.component.cascading.toone;
  * @author Steve Ebersole
  */
 public class User {
-	private Long id;
+	private Integer id;
 	private PersonalInfo personalInfo;
 
-	public Long getId() {
+	public User() {
+	}
+
+	public User(Integer id, PersonalInfo personalInfo) {
+		this.id = id;
+		this.personalInfo = personalInfo;
+	}
+
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

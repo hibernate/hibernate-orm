@@ -4,20 +4,20 @@
  */
 package org.hibernate.orm.test.cascade.circle;
 
-import java.util.Iterator;
 import jakarta.persistence.PersistenceException;
-
 import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.TransientPropertyValueException;
-
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Iterator;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,25 +26,26 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * @author Andrea Boriero
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 public abstract class AbstractMultiPathCircleCascadeTest {
 	private interface EntityOperation {
 		boolean isLegacy();
 
+		@SuppressWarnings("UnusedReturnValue")
 		Object doEntityOperation(Object entity, Session s);
 	}
 
-	private static EntityOperation MERGE_OPERATION =
-			new EntityOperation() {
-				@Override
-				public boolean isLegacy() {
-					return false;
-				}
+	private static final EntityOperation MERGE_OPERATION = new EntityOperation() {
+		@Override
+		public boolean isLegacy() {
+			return false;
+		}
 
-				@Override
-				public Object doEntityOperation(Object entity, Session s) {
-					return s.merge( entity );
-				}
-			};
+		@Override
+		public Object doEntityOperation(Object entity, Session s) {
+			return s.merge( entity );
+		}
+	};
 
 	@Test
 	public void testMergeEntityWithNonNullableTransientEntity(SessionFactoryScope scope) {
@@ -55,7 +56,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		Route route = getUpdatedDetachedEntity( scope );
 
-		Node node = (Node) route.getNodes().iterator().next();
+		Node node = route.getNodes().iterator().next();
 		route.getNodes().remove( node );
 
 		Route routeNew = new Route();
@@ -95,7 +96,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 	private void testEntityWithNonNullableEntityNull(SessionFactoryScope scope, EntityOperation operation) {
 		Route route = getUpdatedDetachedEntity( scope );
 
-		Node node = (Node) route.getNodes().iterator().next();
+		Node node = route.getNodes().iterator().next();
 		route.getNodes().remove( node );
 		node.setRoute( null );
 
@@ -129,7 +130,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 	private void testEntityWithNonNullablePropSetToNull(SessionFactoryScope scope, EntityOperation operation) {
 		Route route = getUpdatedDetachedEntity( scope );
-		Node node = (Node) route.getNodes().iterator().next();
+		Node node = route.getNodes().iterator().next();
 		node.setName( null );
 
 		scope.inSession(
@@ -178,7 +179,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Route route = session.get( Route.class, r.getRouteID() );
+					Route route = session.find( Route.class, r.getRouteID() );
 					checkResults( route, true );
 				}
 		);
@@ -197,14 +198,14 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Iterator it = r.getNodes().iterator();
-					Node node = (Node) it.next();
+					Iterator<Node> it = r.getNodes().iterator();
+					Node node = it.next();
 					Node pickupNode;
 					if ( node.getName().equals( "pickupNodeB" ) ) {
 						pickupNode = node;
 					}
 					else {
-						node = (Node) it.next();
+						node = it.next();
 						assertEquals( "pickupNodeB", node.getName() );
 						pickupNode = node;
 					}
@@ -218,7 +219,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Route route = session.get( Route.class, r.getRouteID() );
+					Route route = session.find( Route.class, r.getRouteID() );
 					checkResults( route, false );
 				}
 		);
@@ -237,14 +238,14 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Iterator it = r.getNodes().iterator();
-					Node node = (Node) it.next();
+					Iterator<Node> it = r.getNodes().iterator();
+					Node node = it.next();
 					Node deliveryNode;
 					if ( node.getName().equals( "deliveryNodeB" ) ) {
 						deliveryNode = node;
 					}
 					else {
-						node = (Node) it.next();
+						node = it.next();
 						assertEquals( "deliveryNodeB", node.getName() );
 						deliveryNode = node;
 					}
@@ -259,7 +260,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Route route = session.get( Route.class, r.getRouteID() );
+					Route route = session.find( Route.class, r.getRouteID() );
 					checkResults( route, false );
 				}
 		);
@@ -286,7 +287,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Route route = session.get( Route.class, r.getRouteID() );
+					Route route = session.find( Route.class, r.getRouteID() );
 					checkResults( route, false );
 				}
 		);
@@ -323,21 +324,13 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Route route = session.get( Route.class, r.getRouteID() );
+					Route route = session.find( Route.class, r.getRouteID() );
 					checkResults( route, false );
 				}
 		);
 	}
 
-	private Node getSimpleUpdatedDetachedEntity() {
-
-		Node deliveryNode = new Node();
-		deliveryNode.setName( "deliveryNodeB" );
-		return deliveryNode;
-	}
-
 	private Route getUpdatedDetachedEntity(SessionFactoryScope scope) {
-
 		Route route = new Route();
 		scope.inTransaction(
 				session -> {
@@ -387,14 +380,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Transport" );
-					session.createQuery( "delete from Tour" );
-					session.createQuery( "delete from Node" );
-					session.createQuery( "delete from Route" );
-				}
-		);
+		scope.dropData();
 	}
 
 	private void checkResults(Route route, boolean isRouteUpdated) {
@@ -406,8 +392,8 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		assertEquals( 2, route.getNodes().size() );
 		Node deliveryNode = null;
 		Node pickupNode = null;
-		for ( Iterator it = route.getNodes().iterator(); it.hasNext(); ) {
-			Node node = (Node) it.next();
+		for ( Iterator<Node> it = route.getNodes().iterator(); it.hasNext(); ) {
+			Node node = it.next();
 			if ( "deliveryNodeB".equals( node.getName() ) ) {
 				deliveryNode = node;
 			}
@@ -432,7 +418,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		assertNotNull( pickupNode.getTour() );
 		assertEquals( "node original value", pickupNode.getTransientField() );
 
-		assertTrue( !deliveryNode.getNodeID().equals( pickupNode.getNodeID() ) );
+		assertNotEquals( deliveryNode.getNodeID(), pickupNode.getNodeID() );
 		assertSame( deliveryNode.getTour(), pickupNode.getTour() );
 		assertSame(
 				deliveryNode.getDeliveryTransports().iterator().next(),
@@ -440,7 +426,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 		);
 
 		Tour tour = deliveryNode.getTour();
-		Transport transport = (Transport) deliveryNode.getDeliveryTransports().iterator().next();
+		Transport transport = deliveryNode.getDeliveryTransports().iterator().next();
 
 		assertEquals( "tourB", tour.getName() );
 		assertEquals( 2, tour.getNodes().size() );
@@ -473,7 +459,7 @@ public abstract class AbstractMultiPathCircleCascadeTest {
 
 		scope.inTransaction(
 				session -> {
-					Route route = session.get( Route.class, r.getRouteID() );
+					Route route = session.find( Route.class, r.getRouteID() );
 					route.setName( "new routA" );
 
 					route.setTransientField( "sfnaouisrbn" );

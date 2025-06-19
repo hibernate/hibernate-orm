@@ -5,10 +5,17 @@
 package org.hibernate.orm.test.connections;
 
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+
 /**
  * @author Steve Ebersole
  */
+@Entity
 public class Other {
+	@Id
+	@GeneratedValue(generator = "increment")
 	private Long id;
 	private String name;
 

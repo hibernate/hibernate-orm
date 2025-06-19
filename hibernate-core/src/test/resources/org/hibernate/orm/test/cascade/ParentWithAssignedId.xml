@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.cascade</package>
+
+    <entity class="Parent" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <one-to-many name="children" mapped-by="parent">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+            <transient name="deleteOrphanChildren"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

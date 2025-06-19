@@ -5,22 +5,22 @@
 package org.hibernate.orm.test.cascade;
 
 
-/**
- * Created by IntelliJ IDEA.
- * User: Gail
- * Date: Jan 2, 2007
- * Time: 4:51:29 PM
- * To change this template use File | Settings | File Templates.
- */
 public class Child {
-	private Long id;
+	private Integer id;
 	private Parent parent;
 
-	public Long getId() {
+	public Child() {
+	}
+
+	public Child(Parent parent) {
+		this.parent = parent;
+	}
+
+	public Integer getId() {
 		return id;
 	}
 
-	public void setId(Long id) {
+	public void setId(Integer id) {
 		this.id = id;
 	}
 

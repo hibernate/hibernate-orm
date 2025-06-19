@@ -18,18 +18,12 @@ import org.hibernate.testing.orm.junit.Setting;
 /**
  * @author Gail Badner
  */
-@DomainModel(
-		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.hbm.xml"
-		}
-)
-@ServiceRegistry(
-		settings = {
-				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "0" ),
-				@Setting( name = AvailableSettings.CHECK_NULLABILITY, value = "false" ),
-		}
-)
+@ServiceRegistry(settings = {
+		@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		@Setting( name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "0" ),
+		@Setting( name = AvailableSettings.CHECK_NULLABILITY, value = "false" ),
+})
+@DomainModel(xmlMappings = "org/hibernate/orm/test/cascade/circle/MultiPathCircleCascadeDelayedInsert.xml")
 @SessionFactory
 @BytecodeEnhanced
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })

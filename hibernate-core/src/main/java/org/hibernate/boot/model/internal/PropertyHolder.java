@@ -31,8 +31,6 @@ public interface PropertyHolder {
 
 	Table getTable();
 
-	Table getSecondaryTable(String tableName);
-
 	void addProperty(Property prop, MemberDetails memberDetails, ClassDetails declaringClass);
 
 	void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass);

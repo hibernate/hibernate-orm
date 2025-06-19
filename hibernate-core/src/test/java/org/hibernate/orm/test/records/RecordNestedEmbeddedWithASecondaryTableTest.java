@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.records;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -21,10 +22,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey("HHH-19542")
 @DomainModel(annotatedClasses = {
-		RecordEmbeddedAsSecondaryTableTest.UserEntity.class
+		RecordNestedEmbeddedWithASecondaryTableTest.UserEntity.class
 })
 @SessionFactory
-public class RecordEmbeddedAsSecondaryTableTest {
+public class RecordNestedEmbeddedWithASecondaryTableTest {
 
 	private UserEntity user;
 
@@ -70,6 +71,8 @@ public class RecordEmbeddedAsSecondaryTableTest {
 
 	@Embeddable
 	public record Person(
+			@AttributeOverride(name = "firstName", column = @Column(table = "Person"))
+			@AttributeOverride(name = "lastName", column = @Column(table = "Person"))
 			FullName fullName,
 			@Column(table = "Person")
 			Integer age) {

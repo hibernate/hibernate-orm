@@ -41,7 +41,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -982,7 +981,8 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final Component component = new Component( context, propertyHolder.getPersistentClass() );
 		component.setEmbedded( isComponentEmbedded );
-		component.setTable( resolveTable( propertyHolder, inferredData.getClassOrElementType() ) );
+		// yuk
+		component.setTable( propertyHolder.getTable() );
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {
 			component.setComponentClassName( component.getOwner().getClassName() );
@@ -1001,27 +1001,6 @@ public class EmbeddableBinder {
 		}
 		applyColumnNamingPattern( component, inferredData );
 		return component;
-	}
-
-	private static Table resolveTable(PropertyHolder propertyHolder, TypeDetails embeddableClass) {
-		return embeddableClass == null ? propertyHolder.getTable() : resolveTable( propertyHolder, embeddableClass.determineRawClass() );
-	}
-
-	private static Table resolveTable(PropertyHolder propertyHolder, ClassDetails embeddableClass) {
-		if ( embeddableClass != null ) {
-			for ( FieldDetails fieldDetails : embeddableClass.getFields() ) {
-				if ( fieldDetails.hasDirectAnnotationUsage( Column.class ) ) {
-					final String tableName = fieldDetails.getDirectAnnotationUsage( Column.class ).table();
-					if ( !tableName.isBlank() ) {
-						final Table secondaryTable = propertyHolder.getSecondaryTable( tableName );
-						if ( secondaryTable != null ) {
-							return secondaryTable;
-						}
-					}
-				}
-			}
-		}
-		return propertyHolder.getTable();
 	}
 
 	private static void applyColumnNamingPattern(Component component, PropertyData inferredData) {

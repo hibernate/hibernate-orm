@@ -440,10 +440,11 @@ public class SequenceStyleGenerator
 	@SuppressWarnings("WeakerAccess")
 	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
 		final int resolvedIncrementSize;
-		if ( Math.abs( incrementSize ) > 1 &&
-				StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
+
+		if ( StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
 			if ( incrementSize < -1 ) {
 				resolvedIncrementSize = -1;
+
 				LOG.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
@@ -452,8 +453,8 @@ public class SequenceStyleGenerator
 						resolvedIncrementSize
 				);
 			}
-			else {
-				// incrementSize > 1
+			else if ( incrementSize > 1 ) {
+
 				resolvedIncrementSize = 1;
 				LOG.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
@@ -463,6 +464,12 @@ public class SequenceStyleGenerator
 						resolvedIncrementSize
 				);
 			}
+			else {
+				resolvedIncrementSize = incrementSize;
+			}
+		}
+		else if ( StandardOptimizerDescriptor.LEGACY_HILO.getExternalName().equals( optimizationStrategy ) ) {
+			resolvedIncrementSize = incrementSize - 1;
 		}
 		else {
 			resolvedIncrementSize = incrementSize;

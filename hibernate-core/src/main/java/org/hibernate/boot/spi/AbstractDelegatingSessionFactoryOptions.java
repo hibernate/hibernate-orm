@@ -220,6 +220,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isSetTenantSchemaEnabled() {
+		return delegate.isSetTenantSchemaEnabled();
+	}
+
+	@Override
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return delegate.getCurrentTenantIdentifierResolver();
 	}

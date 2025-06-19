@@ -67,6 +67,8 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.type.format.FormatMapper;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -1246,5 +1248,15 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isIdentifierRollbackEnabled() {
 		return delegate.isIdentifierRollbackEnabled();
+	}
+
+	@Override
+	public void afterObtainConnection(Connection connection) throws SQLException {
+		delegate.afterObtainConnection( connection );
+	}
+
+	@Override
+	public void beforeReleaseConnection(Connection connection) throws SQLException {
+		delegate.beforeReleaseConnection( connection );
 	}
 }

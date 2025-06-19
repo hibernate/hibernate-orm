@@ -28,7 +28,6 @@ import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -108,6 +107,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serial;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
@@ -245,7 +245,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 			}
 			else {
-				final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
+				final var resolver = factory.getCurrentTenantIdentifierResolver();
 				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
 					// turn on the filter, unless this is the "root" tenant with access to all partitions
 					loadQueryInfluencers.enableFilter( TenantIdBinder.FILTER_NAME )
@@ -683,9 +683,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public JdbcConnectionAccess getJdbcConnectionAccess() {
-		// See class-level JavaDocs for a discussion of the concurrent-access safety of this method
+		// See class-level Javadoc for a discussion of the concurrent-access safety of this method
 		if ( jdbcConnectionAccess == null ) {
 			if ( !factoryOptions.isMultiTenancyEnabled() ) {
+				// we might still be using schema-based multitenancy
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						sessionEventsManager,
 						factory.connectionProvider,
@@ -693,6 +694,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 			}
 			else {
+				// we're using datasource-based multitenancy
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						tenantIdentifier,
 						sessionEventsManager,
@@ -702,6 +704,32 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 		}
 		return jdbcConnectionAccess;
+	}
+
+	private boolean useSchemaBasedMultiTenancy() {
+		return tenantIdentifier != null
+			&& factory.getSessionFactoryOptions().isSetTenantSchemaEnabled();
+	}
+
+	private String tenantSchema() {
+		final var tenantIdResolver = factory.getCurrentTenantIdentifierResolver();
+		return tenantIdResolver == null
+				? (String) tenantIdentifier
+				: tenantIdResolver.schemaName( tenantIdentifier );
+	}
+
+	@Override
+	public void afterObtainConnection(Connection connection) throws SQLException {
+		if ( useSchemaBasedMultiTenancy() ) {
+			connection.setSchema( tenantSchema() );
+		}
+	}
+
+	@Override
+	public void beforeReleaseConnection(Connection connection) throws SQLException {
+		if ( useSchemaBasedMultiTenancy() ) {
+			connection.setSchema( null );
+		}
 	}
 
 	@Override

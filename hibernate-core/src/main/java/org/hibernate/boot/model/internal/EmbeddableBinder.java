@@ -981,7 +981,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final Component component = new Component( context, propertyHolder.getPersistentClass() );
 		component.setEmbedded( isComponentEmbedded );
-		// yuk
+		//yuk
 		component.setTable( propertyHolder.getTable() );
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {

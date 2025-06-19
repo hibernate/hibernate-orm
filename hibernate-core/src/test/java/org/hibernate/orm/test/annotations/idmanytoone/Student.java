@@ -5,7 +5,10 @@
 package org.hibernate.orm.test.annotations.idmanytoone;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -25,8 +28,8 @@ public class Student implements Serializable {
 
 	private String name;
 
-	@OneToMany(mappedBy = "student")
-	private Set<CourseStudent> courses;
+	@OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+	private Set<CourseStudent> courses = new HashSet<>();
 
 	public Student() {
 	}

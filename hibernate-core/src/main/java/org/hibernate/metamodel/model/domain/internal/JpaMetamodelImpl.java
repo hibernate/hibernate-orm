@@ -780,11 +780,14 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			MetadataContext context,
 			TypeConfiguration typeConfiguration) {
 		@SuppressWarnings("unchecked")
-		final MappedSuperclassDomainType<T> mappedSuperclassType =
+		MappedSuperclassDomainType<T> mappedSuperclassType =
 				(MappedSuperclassDomainType<T>) context.locateMappedSuperclassType( mappedSuperclass );
-		return mappedSuperclassType == null
-				? buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration )
-				: mappedSuperclassType;
+		if (mappedSuperclassType == null) {
+			mappedSuperclassType = buildMappedSuperclassType( mappedSuperclass, context, typeConfiguration );
+		}
+		// HHH-19076: Ensure that each mapped superclass knows ALL its implementations
+		context.registerMappedSuperclassForPersistenceClass( mappedSuperclassType );
+		return mappedSuperclassType;
 	}
 
 	private <T> MappedSuperclassTypeImpl<T> buildMappedSuperclassType(

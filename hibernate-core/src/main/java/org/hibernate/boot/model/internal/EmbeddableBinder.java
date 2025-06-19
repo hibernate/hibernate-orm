@@ -41,6 +41,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -981,7 +982,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final Component component = new Component( context, propertyHolder.getPersistentClass() );
 		component.setEmbedded( isComponentEmbedded );
-		//yuk
+		// yuk
 		component.setTable( propertyHolder.getTable() );
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {

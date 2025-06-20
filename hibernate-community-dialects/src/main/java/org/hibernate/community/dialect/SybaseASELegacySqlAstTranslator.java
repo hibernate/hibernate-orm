@@ -241,7 +241,10 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			Locking.FollowOn followOnLocking) {
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
 	}

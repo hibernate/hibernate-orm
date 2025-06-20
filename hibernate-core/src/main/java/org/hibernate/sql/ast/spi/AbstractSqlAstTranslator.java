@@ -7642,6 +7642,41 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						getSqlTuple( listExpression )
 								.getExpressions().get( 0 );
 			}
+			else if ( dialect.supportsValuesListForInListExistsEmulation() ) {
+				if ( inListPredicate.isNegated() ) {
+					appendSql( "not " );
+				}
+
+				appendSql( "exists (select 1 from (values " );
+				for ( int i = 0; i < listExpressions.size(); i++ ) {
+					if ( i > 0 ) {
+						appendSql( ", " );
+					}
+					appendSql( OPEN_PARENTHESIS );
+					renderCommaSeparatedSelectExpression( List.of( listExpressions.get( i ) ) );
+					appendSql( CLOSE_PARENTHESIS );
+				}
+				appendSql( ") as v(" );
+
+				final List<? extends SqlAstNode> expressions = lhsTuple.getExpressions();
+				for ( int i = 0; i < expressions.size(); i++ ) {
+					if ( i > 0 ) {
+						appendSql( ", " );
+					}
+					appendSql( "col_" + i );
+				}
+				appendSql( ") where " );
+
+				for ( int i = 0; i < expressions.size(); i++ ) {
+					if ( i > 0 ) {
+						appendSql( " and " );
+					}
+					expressions.get( i ).accept( this );
+					appendSql( " = v.col_" + i );
+				}
+				appendSql( CLOSE_PARENTHESIS );
+				return;
+			}
 			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
 				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
 						ComparisonOperator.NOT_EQUAL :

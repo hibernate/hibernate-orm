@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.Collections.emptyMap;
 
@@ -76,14 +77,18 @@ public class AbstractJdbcOperationQuery implements JdbcOperationQuery {
 			for ( var entry : appliedParameters.entrySet() ) {
 				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( entry.getKey() );
 				final JdbcParameterBinding appliedBinding = entry.getValue();
-				//noinspection unchecked
-				if ( binding == null || !appliedBinding.getBindType()
-						.getJavaTypeDescriptor()
-						.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
+				if ( binding == null
+						|| !equal( appliedBinding, binding, appliedBinding.getBindType().getJavaTypeDescriptor() ) ) {
 					return false;
 				}
 			}
 		}
 		return true;
+	}
+
+	@SuppressWarnings("unchecked")
+	static <T> boolean equal(JdbcParameterBinding appliedBinding, JdbcParameterBinding binding, JavaType<T> type) {
+		return type.isInstance( appliedBinding.getBindValue() )
+			&& type.areEqual( (T) binding.getBindValue(), (T) appliedBinding.getBindValue() );
 	}
 }

@@ -50,9 +50,7 @@ public class WrappedEntityCriteriaTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> entityManager.createQuery( "delete from SimpleEntity" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

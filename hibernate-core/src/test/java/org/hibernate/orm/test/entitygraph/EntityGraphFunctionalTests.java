@@ -104,13 +104,7 @@ public class EntityGraphFunctionalTests {
 
 	@AfterEach
 	void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Comment" ).executeUpdate();
-					session.createQuery( "delete from Issue" ).executeUpdate();
-					session.createQuery( "delete from User" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Issue")

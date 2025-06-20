@@ -40,9 +40,7 @@ public class SecondaryTableTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from User" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

@@ -58,9 +58,7 @@ class CollectionEmbeddableElementConversionTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete ProductEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "ProductEntity")

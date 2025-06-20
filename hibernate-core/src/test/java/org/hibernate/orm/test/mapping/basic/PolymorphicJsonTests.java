@@ -62,12 +62,7 @@ public abstract class PolymorphicJsonTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.remove( session.find( EntityWithJson.class, 1 ) );
-					session.remove( session.find( EntityWithJson.class, 2 ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

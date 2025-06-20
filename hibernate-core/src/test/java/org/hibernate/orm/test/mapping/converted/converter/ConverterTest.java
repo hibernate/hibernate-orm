@@ -71,12 +71,7 @@ public class ConverterTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Photo" ).executeUpdate();
-					entityManager.createQuery( "delete from Employee" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

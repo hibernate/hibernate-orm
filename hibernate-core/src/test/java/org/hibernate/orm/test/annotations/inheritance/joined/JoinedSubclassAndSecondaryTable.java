@@ -35,12 +35,7 @@ public class JoinedSubclassAndSecondaryTable {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				sesison ->
-						sesison.createQuery( "from Pool" ).list().forEach(
-								pool -> sesison.remove( pool )
-						)
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

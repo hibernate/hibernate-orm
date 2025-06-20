@@ -56,12 +56,7 @@ public class LazyLoadingLoggingTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Client" ).executeUpdate();
-					session.createQuery( "delete from Address" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

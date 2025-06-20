@@ -63,9 +63,7 @@ public class XmlArrayUnnestTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createMutationQuery( "delete from Book" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

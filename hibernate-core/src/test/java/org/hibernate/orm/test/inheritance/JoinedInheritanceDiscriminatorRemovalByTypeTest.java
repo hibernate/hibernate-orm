@@ -44,7 +44,7 @@ public class JoinedInheritanceDiscriminatorRemovalByTypeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from BaseEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -58,12 +58,7 @@ public class AnsiNullTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Book" ).executeUpdate();
-					session.createMutationQuery( "delete from WithLongStrings" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

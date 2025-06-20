@@ -63,9 +63,7 @@ public class LongToDateConversionTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "TestEntity")

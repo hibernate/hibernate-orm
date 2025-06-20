@@ -57,13 +57,7 @@ public class LoadFetchGraphWithEagerSelfReferencingEagerToOneTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Sample where id = 1" ).executeUpdate();
-					entityManager.createQuery( "delete from Sample where id = 2" ).executeUpdate();
-					entityManager.createQuery( "delete from Sample where id = 3" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

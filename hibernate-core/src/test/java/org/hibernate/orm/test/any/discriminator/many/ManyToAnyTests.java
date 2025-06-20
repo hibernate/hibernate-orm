@@ -56,13 +56,7 @@ public class ManyToAnyTests {
 	}
 
 	@AfterEach
-	void dropTestData(SessionFactoryScope sessions) {
-		sessions.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Loan" ).executeUpdate();
-			session.createMutationQuery( "delete CashPayment" ).executeUpdate();
-			session.createMutationQuery( "delete CardPayment" ).executeUpdate();
-			session.createMutationQuery( "delete CheckPayment" ).executeUpdate();
-		} );
-
+	void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

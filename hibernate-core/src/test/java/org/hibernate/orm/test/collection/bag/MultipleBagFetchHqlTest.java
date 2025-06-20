@@ -65,13 +65,7 @@ public class MultipleBagFetchHqlTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Post" ).executeUpdate();
-					session.createQuery( "delete from Tag" ).executeUpdate();
-					session.createQuery( "delete from PostComment" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

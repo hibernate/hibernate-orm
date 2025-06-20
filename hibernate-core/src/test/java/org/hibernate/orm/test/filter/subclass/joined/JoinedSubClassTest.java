@@ -26,9 +26,6 @@ public class JoinedSubClassTest extends SubClassTest {
 	@AfterEach
 	protected void cleanupTest() throws Exception {
 		super.cleanupTest();
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Club" ).executeUpdate();
-		} );
 	}
 
 	@Override

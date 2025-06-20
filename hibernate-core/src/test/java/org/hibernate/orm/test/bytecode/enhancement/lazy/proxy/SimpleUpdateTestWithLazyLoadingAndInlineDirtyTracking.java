@@ -93,10 +93,7 @@ public class SimpleUpdateTestWithLazyLoadingAndInlineDirtyTracking {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from Child" ).executeUpdate();
-			s.createQuery( "delete from Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

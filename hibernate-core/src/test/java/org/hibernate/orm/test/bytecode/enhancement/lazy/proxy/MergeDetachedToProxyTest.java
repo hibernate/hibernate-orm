@@ -141,12 +141,7 @@ public class MergeDetachedToProxyTest {
 
 	@AfterEach
 	public void clearTestData(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from AEntity" ).executeUpdate();
-					session.createQuery( "delete from BEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private void assertIsEnhancedProxy(Object entity) {

@@ -91,7 +91,7 @@ public class TimeZoneStorageMappingTests {
 
 	@AfterEach
 	public void destroy(SessionFactoryScope scope) {
-		scope.inTransaction( s -> s.createMutationQuery( "delete from java.lang.Object" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -88,17 +88,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			if ( up.getId() != null ) {
-				s.remove( up );
-			}
-			if ( vp.getId() != null ) {
-				s.remove( vp );
-			}
-			if ( c.getId() != null ) {
-				s.remove( c );
-			}
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

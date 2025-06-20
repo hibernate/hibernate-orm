@@ -74,13 +74,7 @@ public class TablePerClassInheritanceTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Person> people = session.createQuery( "FROM Person p", Person.class ).getResultList();
-					people.forEach( person -> session.remove( person ) );
-
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

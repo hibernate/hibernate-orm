@@ -204,13 +204,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from System" ).executeUpdate();
-					session.createQuery( "delete from DataCenterUser" ).executeUpdate();
-					session.createQuery( "delete from DataCenter" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "DataCenter")

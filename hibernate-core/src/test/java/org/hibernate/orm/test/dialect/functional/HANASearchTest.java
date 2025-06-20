@@ -78,9 +78,7 @@ public class HANASearchTest {
 
 	@AfterEach
 	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from " + ENTITY_NAME ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

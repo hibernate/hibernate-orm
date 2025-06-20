@@ -107,11 +107,7 @@ public class XmlTableTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					em.createMutationQuery( "delete from XmlHolder" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

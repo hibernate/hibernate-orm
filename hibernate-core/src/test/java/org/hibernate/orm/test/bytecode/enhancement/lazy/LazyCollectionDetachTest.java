@@ -65,7 +65,7 @@ public class LazyCollectionDetachTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "from java.lang.Object", Object.class ).list().forEach( session::remove ) );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

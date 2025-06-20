@@ -123,12 +123,8 @@ public class UuidGeneratorAnnotationTests {
 	}
 
 	@AfterEach
-	void dropTestData(final SessionFactoryScope sessionFactoryScope) {
-		sessionFactoryScope.inTransaction( session -> {
-			session.createMutationQuery( "delete EntitySeven" ).executeUpdate();
-			session.createMutationQuery( "delete OtherEntitySeven" ).executeUpdate();
-			session.createMutationQuery( "delete EntitySix" ).executeUpdate();
-		} );
+	void dropTestData(final SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static Instant uuid6Instant(final UUID uuid) {

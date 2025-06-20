@@ -85,12 +85,7 @@ public class ReloadMultipleCollectionElementsTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createMutationQuery( "delete from Ticket" ).executeUpdate();
-			s.createMutationQuery( "delete from Flight" ).executeUpdate();
-			s.createMutationQuery( "delete from Customer" ).executeUpdate();
-			s.createMutationQuery( "delete from Company" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

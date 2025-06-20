@@ -61,9 +61,7 @@ public class CollectionElementExplicitConversionTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Customer" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 	@Entity( name = "Customer" )
 	@Table( name = "CUST" )

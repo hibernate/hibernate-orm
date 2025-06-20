@@ -86,11 +86,7 @@ public class CriteriaLiteralWithSingleQuoteTest {
 
 	@AfterEach
 	public void cleanupData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Student" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Student")

@@ -89,15 +89,7 @@ public class LoadAndFetchGraphAssociationNotExplicitlySpecifiedTest {
 
 	@AfterEach
 	void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery(
-					"update ContainedEntity set"
-							+ " inverseSideOfLazyOneToOneUnowned = null"
-							+ ", inverseSideOfEagerOneToOneUnowned = null"
-			).executeUpdate();
-			session.createMutationQuery( "delete RootEntity" ).executeUpdate();
-			session.createMutationQuery( "delete ContainedEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// Arguments for the parameterized test below

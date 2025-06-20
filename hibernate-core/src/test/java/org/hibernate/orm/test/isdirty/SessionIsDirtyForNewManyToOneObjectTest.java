@@ -69,13 +69,7 @@ public class SessionIsDirtyForNewManyToOneObjectTest extends BaseSessionFactoryF
 	}
 	@AfterEach
 	public void cleanUp() {
-		inTransaction(
-				session -> {
-					session.createQuery("delete from EntityParent").executeUpdate();
-					session.createQuery("delete from EntityChild").executeUpdate();
-					session.createQuery("delete from EntityChildAssigned").executeUpdate();
-				}
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 	@Entity(name = "EntityChild")
 	public static class EntityChild

@@ -76,12 +76,8 @@ public class ManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Product" ).executeUpdate();
-					session.createQuery( "delete from Operator" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
 

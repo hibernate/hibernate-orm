@@ -32,13 +32,7 @@ public class IdClassGeneratedValueTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Simple" ).executeUpdate();
-					session.createQuery( "delete Simple2" ).executeUpdate();
-					session.createQuery( "delete Multiple" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

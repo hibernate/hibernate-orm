@@ -77,11 +77,8 @@ public class MultiLoadTest {
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
 	@Test

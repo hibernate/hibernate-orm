@@ -17,7 +17,6 @@ import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import org.hibernate.SessionFactory;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -179,7 +178,7 @@ public class CollectionActionsValidationTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getSchemaManager().truncateMappedObjects();
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "TestEntity")

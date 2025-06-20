@@ -49,10 +49,7 @@ public class PrivateConstructorEnhancerTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.remove( country );
-			session.remove( person );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -48,12 +48,7 @@ public class QueryCacheAndOneToManyTest {
 
 	@AfterEach
 	public void setUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from MyEntity1" ).executeUpdate();
-					entityManager.createQuery( "delete from MyEntity2" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 
 	}
 

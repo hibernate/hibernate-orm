@@ -282,14 +282,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	public void dropTestData() {
-		scope.inTransaction( (session) -> {
-			session.disableFilter( "subDepartmentFilter" );
-			session.disableFilter( "departmentFilter" );
-			session.createMutationQuery( "delete EntityOne" ).executeUpdate();
-			session.createMutationQuery( "delete EntityTwo" ).executeUpdate();
-			session.createMutationQuery( "delete EntityThree" ).executeUpdate();
-			session.createMutationQuery( "delete EntityFour" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@FilterDef(

@@ -41,13 +41,7 @@ public class NaturalIdOnSingleManyToOneTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete NaturalIdOnManyToOne" ).executeUpdate();
-					session.createMutationQuery( "delete Citizen" ).executeUpdate();
-					session.createMutationQuery( "delete State" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

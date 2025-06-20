@@ -50,10 +50,7 @@ public class FilterInheritanceTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	public void tearDown() throws Exception {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Mammal" ).executeUpdate();
-			session.createQuery( "delete from Human" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

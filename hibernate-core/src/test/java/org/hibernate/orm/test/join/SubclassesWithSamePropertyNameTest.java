@@ -49,9 +49,7 @@ public class SubclassesWithSamePropertyNameTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> s.createQuery( "delete from BlogEntry" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

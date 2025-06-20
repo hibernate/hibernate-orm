@@ -28,13 +28,7 @@ public class IntermediateMappedSuperclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "from Account" ).list().forEach(
-							account -> session.remove( account )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

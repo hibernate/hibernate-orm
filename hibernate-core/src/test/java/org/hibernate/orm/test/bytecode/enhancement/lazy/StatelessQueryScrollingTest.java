@@ -157,17 +157,7 @@ public class StatelessQueryScrollingTest {
 
 	@AfterEach
 	public void deleteTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				s -> {
-					s.createQuery( "delete Task" ).executeUpdate();
-					s.createQuery( "delete Resource" ).executeUpdate();
-					s.createQuery( "delete User" ).executeUpdate();
-
-					s.createQuery( "delete Product" ).executeUpdate();
-					s.createQuery( "delete Producer" ).executeUpdate();
-					s.createQuery( "delete Vendor" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

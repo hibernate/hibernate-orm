@@ -35,11 +35,7 @@ public class AssignedInitialValueTableGeneratorConfiguredTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 		scope.releaseEntityManagerFactory();
 	}
 

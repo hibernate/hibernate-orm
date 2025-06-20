@@ -51,13 +51,7 @@ public class IdClassBackrefTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createNativeMutationQuery( "delete from LINE" ).executeUpdate();
-					session.createNativeMutationQuery( "delete from ITEM " ).executeUpdate();
-					session.createNativeMutationQuery( "delete from BUCKET" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

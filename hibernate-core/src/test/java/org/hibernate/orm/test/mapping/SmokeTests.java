@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping;
 
-import java.sql.Statement;
 import java.sql.Types;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -209,17 +208,7 @@ public class SmokeTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.doWork(
-								work -> {
-									Statement statement = work.createStatement();
-									statement.execute( "delete from mapping_other_entity" );
-									statement.execute( "delete from mapping_simple_entity" );
-									statement.close();
-								}
-						)
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public enum Gender {

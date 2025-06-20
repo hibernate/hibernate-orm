@@ -523,11 +523,7 @@ public class DeepInheritanceProxyTest {
 
 	@AfterEach
 	public void clearTestData(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from AEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@MappedSuperclass

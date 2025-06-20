@@ -28,14 +28,7 @@ public class IndexTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Conductor" ).executeUpdate();
-					session.createQuery( "delete from Vehicule" ).executeUpdate();
-					session.createQuery( "delete from ProfessionalAgreement" ).executeUpdate();
-					session.createQuery( "delete from Truck" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
@@ -24,8 +23,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,7 +34,6 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -435,16 +431,8 @@ public class EntityTest {
 		);
 	}
 
-	// tests are leaving data around, so drop/recreate schema for now.  this is what the old tests did
-
-	@BeforeEach
-	public void runCreateSchema(DomainModelScope domainModelScope) {
-		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), domainModelScope.getDomainModel() );
-	}
-
 	@AfterEach
-	public void runDropSchema(DomainModelScope domainModelScope) {
-		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), domainModelScope.getDomainModel() );
+	public void runDropSchema(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
-
 }

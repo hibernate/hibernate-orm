@@ -94,15 +94,7 @@ public class FetchGraphTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from LedgerRecordItem" ).executeUpdate();
-					entityManager.createQuery( "delete from FinanceEntity" ).executeUpdate();
-					entityManager.createQuery( "delete from LedgerRecord" ).executeUpdate();
-					entityManager.createQuery( "delete from BudgetRecord" ).executeUpdate();
-					entityManager.createQuery( "delete from Trigger" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

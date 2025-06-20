@@ -49,9 +49,7 @@ public class TempTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.remove( session.getReference( Client.class, 1 ) );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

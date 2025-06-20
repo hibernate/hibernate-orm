@@ -72,10 +72,7 @@ public class OneToManyWithDynamicFilterTest extends AbstractStatefulStatelessFil
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( session -> {
-			session.createQuery( "DELETE FROM ArticleTrading" ).executeUpdate();
-			session.createQuery( "DELETE FROM ArticleRevision" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

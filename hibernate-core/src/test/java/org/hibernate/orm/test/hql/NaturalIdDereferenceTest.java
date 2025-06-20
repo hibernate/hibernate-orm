@@ -66,13 +66,7 @@ public class NaturalIdDereferenceTest {
 
 	@AfterEach
 	public void deleteData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from BookRefRef" ).executeUpdate();
-					session.createQuery( "delete from BookRef" ).executeUpdate();
-					session.createQuery( "delete from Book" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

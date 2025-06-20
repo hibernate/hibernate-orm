@@ -43,10 +43,7 @@ public class DialectTempTableNoCommitTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createMutationQuery( "delete from Doctor" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

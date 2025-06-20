@@ -51,10 +51,7 @@ public class BytecodeEnhancedLazyLoadingOnDeletedEntityTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from AOwner" ).executeUpdate();
-			s.createQuery( "delete from ANonOwner" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

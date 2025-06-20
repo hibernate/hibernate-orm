@@ -205,12 +205,7 @@ public class MultiIdEntityLoadTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete BasicEntity" ).executeUpdate();
-					session.createQuery( "delete EntityWithAggregateId" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

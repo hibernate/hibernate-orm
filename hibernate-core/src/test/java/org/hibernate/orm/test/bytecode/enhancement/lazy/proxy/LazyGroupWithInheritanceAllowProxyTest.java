@@ -265,22 +265,6 @@ public class LazyGroupWithInheritanceAllowProxyTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from CreditCardPayment" ).executeUpdate();
-					session.createQuery( "delete from DebitCardPayment" ).executeUpdate();
-
-					session.createQuery( "delete from OrderSupplemental2" ).executeUpdate();
-
-					session.createQuery( "delete from Order" ).executeUpdate();
-
-					session.createQuery( "delete from OrderSupplemental" ).executeUpdate();
-
-					session.createQuery( "delete from DomesticCustomer" ).executeUpdate();
-					session.createQuery( "delete from ForeignCustomer" ).executeUpdate();
-
-					session.createQuery( "delete from Address" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

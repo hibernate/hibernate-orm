@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PostgreSQLTruncRoundFunctionTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from Human" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

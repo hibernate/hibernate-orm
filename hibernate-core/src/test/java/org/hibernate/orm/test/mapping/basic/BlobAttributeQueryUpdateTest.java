@@ -55,10 +55,7 @@ public class BlobAttributeQueryUpdateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createMutationQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

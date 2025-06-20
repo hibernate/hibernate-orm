@@ -32,12 +32,7 @@ public class NonPkCompositeJoinColumnCollectionTest {
 
 	@AfterEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Item" ).executeUpdate();
-					session.createMutationQuery( "delete from Order" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

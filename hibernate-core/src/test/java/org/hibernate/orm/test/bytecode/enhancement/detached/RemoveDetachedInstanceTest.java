@@ -55,11 +55,7 @@ public class RemoveDetachedInstanceTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from ParentChild" ).executeUpdate();
-			session.createMutationQuery( "delete from Child" ).executeUpdate();
-			session.createMutationQuery( "delete from Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

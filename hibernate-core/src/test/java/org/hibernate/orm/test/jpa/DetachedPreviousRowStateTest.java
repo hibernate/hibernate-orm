@@ -61,11 +61,7 @@ class DetachedPreviousRowStateTest {
 
 	@AfterEach
 	void cleanupData(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from LocalizedDescription l" ).executeUpdate();
-			em.createQuery( "delete from Description d" ).executeUpdate();
-			em.createQuery( "delete from Product p" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();;
 	}
 
 	@Test

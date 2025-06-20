@@ -38,14 +38,7 @@ public class CompositeIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from LineItem" ).executeUpdate();
-					session.createMutationQuery( "delete from Order" ).executeUpdate();
-					session.createMutationQuery( "delete from Customer" ).executeUpdate();
-					session.createMutationQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -51,9 +51,7 @@ public class StructComponentInstantiatorTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from RecordStructHolder h" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

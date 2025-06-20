@@ -65,13 +65,7 @@ public class EmbeddableWithManyToOneSelfReferenceTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from EntityTest e where e.embeddedAttribute.association is not null" ).executeUpdate();
-					session.createMutationQuery( "delete from EntityTest e" ).executeUpdate();
-					session.createMutationQuery( "delete from IntIdEntity e" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

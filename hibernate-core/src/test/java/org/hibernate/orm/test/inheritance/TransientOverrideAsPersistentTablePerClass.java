@@ -226,11 +226,7 @@ public class TransientOverrideAsPersistentTablePerClass {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Job" ).executeUpdate();
-			session.createQuery( "delete from Employee" ).executeUpdate();
-			session.createQuery( "delete from Group" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Employee")

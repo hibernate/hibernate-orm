@@ -58,10 +58,7 @@ public class EntityLoadingLoggingTest {
 	@AfterAll
 	public static void tearDown(SessionFactoryScope scope) {
 		LogInspectionHelper.clearAllListeners( EntityLoadingLogging.ENTITY_LOADING_LOGGER );
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Child" ).executeUpdate();
-			session.createMutationQuery( "delete from Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

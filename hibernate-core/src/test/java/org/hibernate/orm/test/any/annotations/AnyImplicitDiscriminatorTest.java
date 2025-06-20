@@ -101,19 +101,7 @@ public class AnyImplicitDiscriminatorTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete StringProperty" ).executeUpdate();
-					session.createMutationQuery( "delete IntegerProperty" ).executeUpdate();
-					session.createMutationQuery( "delete LongProperty" ).executeUpdate();
-					session.createMutationQuery( "delete CharProperty" ).executeUpdate();
-
-					session.createMutationQuery( "delete ImplicitPropertyHolder" ).executeUpdate();
-					session.createMutationQuery( "delete ImplicitPropertyList" ).executeUpdate();
-					session.createMutationQuery( "delete ImplicitPropertyMap" ).executeUpdate();
-					session.createMutationQuery( "delete ImplicitPropertySet" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

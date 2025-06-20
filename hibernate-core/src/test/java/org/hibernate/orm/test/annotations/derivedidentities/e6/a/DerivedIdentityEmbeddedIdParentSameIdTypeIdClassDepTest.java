@@ -65,11 +65,6 @@ public class DerivedIdentityEmbeddedIdParentSameIdTypeIdClassDepTest {
 
 	@AfterEach
 	public void teardDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from MedicalHistory" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

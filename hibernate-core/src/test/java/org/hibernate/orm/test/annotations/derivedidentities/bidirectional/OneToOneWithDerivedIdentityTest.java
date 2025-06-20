@@ -35,14 +35,7 @@ public class OneToOneWithDerivedIdentityTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Bar" ).executeUpdate();
-					session.createQuery( "delete from Foo" ).executeUpdate();
-					session.createQuery( "delete from PersonInfo" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

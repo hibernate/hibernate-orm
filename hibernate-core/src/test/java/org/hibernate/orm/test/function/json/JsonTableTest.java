@@ -60,9 +60,7 @@ public class JsonTableTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createMutationQuery( "delete from EntityWithJson" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

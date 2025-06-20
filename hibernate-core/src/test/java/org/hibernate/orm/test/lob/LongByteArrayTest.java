@@ -126,10 +126,7 @@ public abstract class LongByteArrayTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from LongByteArrayHolder" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private byte[] buildRecursively(int size, boolean on) {

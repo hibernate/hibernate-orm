@@ -39,12 +39,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-					session.createQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

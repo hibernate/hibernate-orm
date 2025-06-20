@@ -72,13 +72,7 @@ public class FetchModeSubselectTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from User" ).executeUpdate();
-					session.createMutationQuery( "delete from Role" ).executeUpdate();
-					session.createMutationQuery( "delete from Agency" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

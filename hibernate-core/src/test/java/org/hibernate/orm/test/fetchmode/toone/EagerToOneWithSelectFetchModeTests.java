@@ -306,10 +306,7 @@ public class EagerToOneWithSelectFetchModeTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from RootEntity" ).executeUpdate();
-			session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "RootEntity")

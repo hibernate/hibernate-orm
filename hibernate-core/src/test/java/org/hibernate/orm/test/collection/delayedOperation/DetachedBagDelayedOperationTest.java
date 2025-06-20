@@ -102,12 +102,7 @@ public class DetachedBagDelayedOperationTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Child" ).executeUpdate();
-					session.createQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

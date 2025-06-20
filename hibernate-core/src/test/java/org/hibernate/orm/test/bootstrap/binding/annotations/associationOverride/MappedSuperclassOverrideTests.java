@@ -103,13 +103,7 @@ public class MappedSuperclassOverrideTests {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete DomesticCustomer" ).executeUpdate();
-					session.createQuery( "delete ForeignCustomer" ).executeUpdate();
-					session.createQuery( "delete Address" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Address" )

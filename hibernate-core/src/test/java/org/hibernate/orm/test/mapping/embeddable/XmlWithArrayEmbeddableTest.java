@@ -72,11 +72,7 @@ public class XmlWithArrayEmbeddableTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from XmlHolder h" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

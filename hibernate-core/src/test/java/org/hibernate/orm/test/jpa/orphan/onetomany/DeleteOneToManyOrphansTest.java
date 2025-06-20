@@ -43,12 +43,7 @@ public class DeleteOneToManyOrphansTest {
 
 	@AfterEach
 	public void cleanupData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete Feature" ).executeUpdate();
-					entityManager.createQuery( "delete Product" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

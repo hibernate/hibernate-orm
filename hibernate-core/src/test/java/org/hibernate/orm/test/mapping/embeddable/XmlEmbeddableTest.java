@@ -62,11 +62,7 @@ public class XmlEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	protected void cleanupTest() {
-		inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from XmlHolder h" ).executeUpdate();
-				}
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

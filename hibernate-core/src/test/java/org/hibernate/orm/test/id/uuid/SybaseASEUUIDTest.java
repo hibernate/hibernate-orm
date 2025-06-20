@@ -45,9 +45,7 @@ public class SybaseASEUUIDTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-			session -> session.createMutationQuery( "delete from Book" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

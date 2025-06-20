@@ -64,12 +64,7 @@ public class SingleTableRelationsTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Post" ).executeUpdate();
-					session.createQuery( "delete from Category" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

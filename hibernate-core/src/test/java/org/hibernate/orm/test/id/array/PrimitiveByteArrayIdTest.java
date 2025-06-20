@@ -62,10 +62,7 @@ public class PrimitiveByteArrayIdTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from PrimitiveByteArrayIdTest$DemoEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	/**

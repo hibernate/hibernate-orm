@@ -142,10 +142,7 @@ public class PostgreSqlLobStringTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "TestEntity")

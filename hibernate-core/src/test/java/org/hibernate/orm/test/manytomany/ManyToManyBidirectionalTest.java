@@ -44,12 +44,7 @@ public class ManyToManyBidirectionalTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Person" ).executeUpdate();
-					entityManager.createQuery( "delete from Address" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

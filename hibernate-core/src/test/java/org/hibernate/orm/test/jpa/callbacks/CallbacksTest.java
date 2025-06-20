@@ -39,14 +39,7 @@ public class CallbacksTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Cat" ).executeUpdate();
-					entityManager.createQuery( "delete from Television" ).executeUpdate();
-					entityManager.createQuery( "delete from Plant" ).executeUpdate();
-					entityManager.createQuery( "delete from Kitten" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

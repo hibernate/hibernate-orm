@@ -23,14 +23,7 @@ public class CascadeTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Student" ).executeUpdate();
-					entityManager.createQuery( "delete from Teacher" ).executeUpdate();
-					entityManager.createQuery( "delete from Song" ).executeUpdate();
-					entityManager.createQuery( "delete from Author" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

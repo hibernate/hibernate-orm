@@ -66,10 +66,8 @@ public class ArrayConstructorInSelectClauseTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createMutationQuery( "delete from Book" ).executeUpdate();
-					session.createMutationQuery( "delete from Author" ).executeUpdate();
-					var dialect = session.getDialect();
-					if ( dialect instanceof OracleDialect ) {
+					scope.getSessionFactory().getSchemaManager().truncate();
+					if ( session.getDialect() instanceof OracleDialect ) {
 						session.createNativeQuery( "drop type LongArray" ).executeUpdate();
 					}
 				}

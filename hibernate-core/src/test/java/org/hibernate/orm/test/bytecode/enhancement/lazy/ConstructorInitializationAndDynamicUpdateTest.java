@@ -73,13 +73,7 @@ public class ConstructorInitializationAndDynamicUpdateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Person" ).executeUpdate();
-					session.createMutationQuery( "delete from LoginAccount" ).executeUpdate();
-					session.createMutationQuery( "delete from AccountPreferences" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -51,10 +51,7 @@ public class JoinedInheritancePessimisticLockingTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager ->
-						entityManager.createQuery( "delete from BaseThing" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

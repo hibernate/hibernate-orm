@@ -55,10 +55,7 @@ public class PrimitiveCharacterArrayIdTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from PrimitiveCharacterArrayIdTest$DemoEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	/**

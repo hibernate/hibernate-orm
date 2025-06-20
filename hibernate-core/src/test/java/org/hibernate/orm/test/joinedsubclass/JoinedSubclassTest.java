@@ -34,15 +34,8 @@ public class JoinedSubclassTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Employee" ).executeUpdate();
-					session.createMutationQuery( "delete from Customer" ).executeUpdate();
-					session.createMutationQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
-
 
 	@Test
 	public void testAccessAsIncorrectSubclass(SessionFactoryScope scope) {

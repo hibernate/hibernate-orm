@@ -53,10 +53,7 @@ public class MappedSuperclassTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			MyEntity testEntity = s.get( MyEntity.class, TEST_ID );
-			s.remove( testEntity );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 

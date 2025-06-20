@@ -60,13 +60,7 @@ public class EmbeddedAnyTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Bar2" ).executeUpdate();
-					session.createQuery( "delete Bar1" ).executeUpdate();
-					session.createQuery( "delete Foo" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -46,12 +46,7 @@ public class ComponentJoinTest {
 
 	@AfterEach
 	public void after(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete Entity" ).executeUpdate();
-					entityManager.createQuery( "delete ManyToOneType" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	private void doTest(EntityManagerFactoryScope scope, JoinBuilder joinBuilder) {

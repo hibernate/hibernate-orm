@@ -31,13 +31,7 @@ public class ExceptionTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Instrument" ).executeUpdate();
-					entityManager.createQuery( "delete from Musician" ).executeUpdate();
-					entityManager.createQuery( "delete from Music" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

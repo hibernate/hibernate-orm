@@ -138,9 +138,9 @@ mariadb_wait_until_start()
     fi
 }
 
-mariadb_10_5() {
+mariadb_10_6() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_10_5:-docker.io/mariadb:10.5.25} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
+    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d ${DB_IMAGE_MARIADB_10_6:-docker.io/mariadb:10.6.20} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
     mariadb_wait_until_start
 }
 
@@ -1077,7 +1077,7 @@ if [ -z ${1} ]; then
     echo -e "\tmariadb_11_4"
     echo -e "\tmariadb_11_1"
     echo -e "\tmariadb_10_11"
-    echo -e "\tmariadb_10_5"
+    echo -e "\tmariadb_10_6"
     echo -e "\tmssql"
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"

@@ -61,13 +61,13 @@ import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
- * A {@linkplain Dialect SQL dialect} for MariaDB 10.5 and above.
+ * A {@linkplain Dialect SQL dialect} for MariaDB 10.6 and above.
  *
  * @author Vlad Mihalcea
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 6 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 	private static final Set<String> GEOMETRY_TYPE_NAMES = Set.of(
 			"POINT",
@@ -128,11 +128,8 @@ public class MariaDBDialect extends MySQLDialect {
 		commonFunctionFactory.jsonArrayAgg_mariadb();
 		commonFunctionFactory.jsonObjectAgg_mariadb();
 		commonFunctionFactory.jsonArrayAppend_mariadb();
-
-		if ( getVersion().isSameOrAfter( 10, 6 ) ) {
-			commonFunctionFactory.unnest_emulated();
-			commonFunctionFactory.jsonTable_mysql();
-		}
+		commonFunctionFactory.unnest_emulated();
+		commonFunctionFactory.jsonTable_mysql();
 
 		commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
@@ -276,8 +273,7 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		//only supported on MySQL and as of 10.6
-		return getVersion().isSameOrAfter( 10, 6 );
+		return true;
 	}
 
 	@Override
@@ -303,7 +299,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	/**
-	 * @return {@code true} for 10.5 and above because Maria supports
+	 * @return {@code true} for 10.6 and above because Maria supports
 	 *         {@code insert ... returning} even though MySQL does not
 	 */
 	@Override

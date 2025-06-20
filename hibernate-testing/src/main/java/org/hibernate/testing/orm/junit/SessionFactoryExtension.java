@@ -412,11 +412,9 @@ public class SessionFactoryExtension
 
 		@Override
 		public void dropData() {
-			if ( sessionFactory == null ) {
-				return;
+			if ( sessionFactory != null ) {
+				sessionFactory.getSchemaManager().truncateMappedObjects();
 			}
-
-			sessionFactory.getSchemaManager().truncateMappedObjects();
 		}
 	}
 }

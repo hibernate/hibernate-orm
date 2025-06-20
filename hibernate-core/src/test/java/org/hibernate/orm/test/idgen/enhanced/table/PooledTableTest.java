@@ -81,6 +81,6 @@ public class PooledTableTest {
 
 	@AfterEach
 	public void cleanTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> s.createQuery( "delete Entity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

@@ -32,6 +32,6 @@ public class JoinedSubclassHierarchyWithIdentityGenerationTest {
 
 	@AfterEach
 	public void cleanTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> s.createQuery( "delete Sub" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

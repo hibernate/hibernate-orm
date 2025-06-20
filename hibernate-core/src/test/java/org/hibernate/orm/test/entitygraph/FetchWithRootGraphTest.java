@@ -49,12 +49,7 @@ public class FetchWithRootGraphTest {
 
 	@AfterEach
 	void after(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete EntityWithReference" ).executeUpdate();
-					session.createQuery( "delete SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

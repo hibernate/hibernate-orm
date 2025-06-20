@@ -59,10 +59,7 @@ public class ManyToManyWithDynamicFilterTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "DELETE FROM User" ).executeUpdate();
-			session.createQuery( "DELETE FROM Role" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

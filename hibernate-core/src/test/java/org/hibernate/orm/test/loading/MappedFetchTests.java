@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.loading;
 
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CollectionTable;
@@ -159,17 +158,7 @@ public class MappedFetchTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.doWork(
-						connection -> {
-							try ( Statement statement = connection.createStatement() ) {
-								statement.execute( "delete from nick_names" );
-								statement.execute( "delete from simple_entity" );
-								statement.execute( "delete from root_entity" );
-							}
-						}
-				)
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "RootEntity" )

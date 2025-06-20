@@ -52,12 +52,7 @@ public class CriteriaSelectSizeCollectionTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Customer" ).executeUpdate();
-					entityManager.createQuery( "delete from Alias" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -72,15 +72,7 @@ public class CascadeManagedAndTransientTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Transport" );
-					session.createMutationQuery( "delete from Tour" );
-					session.createMutationQuery( "delete from Node" );
-					session.createMutationQuery( "delete from Route" );
-					session.createMutationQuery( "delete from Vehicle" );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -29,14 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class AnyFetchEagerTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete StringProperty" ).executeUpdate();
-					session.createMutationQuery( "delete IntegerProperty" ).executeUpdate();
-					session.createMutationQuery( "delete PropertySet" ).executeUpdate();
-					session.createMutationQuery( "delete LazyPropertySet" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 

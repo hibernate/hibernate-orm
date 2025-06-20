@@ -117,12 +117,7 @@ public class MergeEnhancedEntityTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.remove( person );
-		} );
-		scope.inTransaction( s -> {
-			s.createQuery( "delete from NullablePerson" );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// --- //

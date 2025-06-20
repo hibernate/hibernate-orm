@@ -52,10 +52,7 @@ public class BatchAndEnumIdTest {
 
 	@AfterEach
 	public void tearDowm(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createMutationQuery( "delete from Property" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

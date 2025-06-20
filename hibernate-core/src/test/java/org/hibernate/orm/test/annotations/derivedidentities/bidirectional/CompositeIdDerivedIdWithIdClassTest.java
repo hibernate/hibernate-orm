@@ -56,12 +56,7 @@ public class CompositeIdDerivedIdWithIdClassTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from LineItem" ).executeUpdate();
-					session.createQuery( "delete from Cart" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

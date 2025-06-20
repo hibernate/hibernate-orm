@@ -27,14 +27,7 @@ public class LazyKeyManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Customer> customers = session.createQuery( "from Customer" ).list();
-					customers.forEach(
-							customer -> session.remove( customer )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

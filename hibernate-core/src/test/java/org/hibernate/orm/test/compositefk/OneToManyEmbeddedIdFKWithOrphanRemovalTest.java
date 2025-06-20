@@ -84,12 +84,7 @@ public class OneToManyEmbeddedIdFKWithOrphanRemovalTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from SystemUser" ).executeUpdate();
-					session.createQuery( "delete from System" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();;
 	}
 
 	@Entity(name = "System")

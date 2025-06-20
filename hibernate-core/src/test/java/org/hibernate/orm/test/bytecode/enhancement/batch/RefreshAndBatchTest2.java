@@ -72,14 +72,7 @@ public class RefreshAndBatchTest2 {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "update UserInfo set parentUser = null" ).executeUpdate();
-					session.createMutationQuery( "delete User" ).executeUpdate();
-					session.createMutationQuery( "delete Phone" ).executeUpdate();
-					session.createMutationQuery( "delete UserInfo" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

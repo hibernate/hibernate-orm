@@ -86,12 +86,7 @@ public class EntityWithMutableAttributesTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from User" ).executeUpdate();
-					session.createQuery( "delete from Role" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

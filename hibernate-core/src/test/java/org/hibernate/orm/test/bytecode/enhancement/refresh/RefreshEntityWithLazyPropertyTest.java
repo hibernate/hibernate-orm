@@ -75,11 +75,7 @@ public class RefreshEntityWithLazyPropertyTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Course" ).executeUpdate();
-			session.createMutationQuery( "delete from Person" ).executeUpdate();
-			session.createMutationQuery( "delete from Position" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

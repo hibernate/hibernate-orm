@@ -72,12 +72,7 @@ public class CompositeIdBatchDeletionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Product" ).executeUpdate();
-					session.createMutationQuery( "delete from Operator" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

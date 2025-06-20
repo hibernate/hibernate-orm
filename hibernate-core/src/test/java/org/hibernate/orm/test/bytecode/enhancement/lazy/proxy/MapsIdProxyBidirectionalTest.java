@@ -120,12 +120,7 @@ public class MapsIdProxyBidirectionalTest {
 
 	@AfterEach
 	public void cleanupDate(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EmployerInfo" ).executeUpdate();
-					session.createQuery( "delete from Employer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "EmployerInfo")

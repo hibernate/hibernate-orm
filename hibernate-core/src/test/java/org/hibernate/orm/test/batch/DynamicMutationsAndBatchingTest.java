@@ -48,11 +48,7 @@ public class DynamicMutationsAndBatchingTest {
 
 	@AfterEach
 	public void cleanup( SessionFactoryScope scope ) {
-		scope.inTransaction(
-				s -> {
-					s.createMutationQuery( "delete from EntityA" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

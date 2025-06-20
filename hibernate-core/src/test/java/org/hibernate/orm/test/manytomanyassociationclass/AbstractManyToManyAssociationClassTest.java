@@ -45,13 +45,7 @@ public abstract class AbstractManyToManyAssociationClassTest {
 
 	@AfterEach
 	protected void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from " + membership.getClass().getName() ).executeUpdate();
-					session.createMutationQuery( "delete from User" ).executeUpdate();
-					session.createMutationQuery( "delete from Group" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public User getUser() {

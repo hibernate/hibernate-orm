@@ -74,10 +74,7 @@ public class UpdateTimeStampInheritanceTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			entityManager.createQuery( "delete Customer" ).executeUpdate();
-			entityManager.createQuery( "delete Address" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -45,10 +45,7 @@ public class LazyOneToOneMultiAssociationTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createMutationQuery( "delete entityb" ).executeUpdate();
-			s.createMutationQuery( "delete entitya" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

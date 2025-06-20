@@ -37,10 +37,7 @@ public class ForeignGeneratorTests {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope sessionFactoryScope) {
-		sessionFactoryScope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Info" ).executeUpdate();
-			session.createMutationQuery( "delete Thing" ).executeUpdate();
-		} );
+	void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

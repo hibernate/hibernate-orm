@@ -36,10 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class OneToManyNestedEmbeddedIdTest {
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from ChildEntity" ).executeUpdate();
-			em.createQuery( "delete from ParentEntity" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

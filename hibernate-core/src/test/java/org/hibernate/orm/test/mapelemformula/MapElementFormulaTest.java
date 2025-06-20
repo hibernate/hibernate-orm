@@ -38,15 +38,7 @@ public class MapElementFormulaTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Group g = session.get( Group.class, "users" );
-					assertEquals( 1, g.getUsers().size() );
-					session.remove( g );
-					session.remove( g.getUsers().get( "Gavin" ) );
-					session.remove( session.get( User.class, "turin" ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

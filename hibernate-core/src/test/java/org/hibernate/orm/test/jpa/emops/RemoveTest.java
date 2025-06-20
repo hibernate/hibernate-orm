@@ -31,13 +31,7 @@ public class RemoveTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Competitor" ).executeUpdate();
-					entityManager.createQuery( "delete from Race" ).executeUpdate();
-					entityManager.createQuery( "delete from Music" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -48,8 +48,6 @@ public class BasicTableTest {
 
 	@AfterEach
 	public void cleanTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Entity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

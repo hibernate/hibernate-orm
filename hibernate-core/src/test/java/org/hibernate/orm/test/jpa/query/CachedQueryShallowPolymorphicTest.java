@@ -68,11 +68,7 @@ public class CachedQueryShallowPolymorphicTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					em.createQuery( "delete from Employee" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

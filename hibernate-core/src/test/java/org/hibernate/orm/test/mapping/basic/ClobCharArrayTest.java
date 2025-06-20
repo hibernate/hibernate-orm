@@ -45,9 +45,7 @@ public class ClobCharArrayTest {
 
 	@AfterEach
 	public void dropData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery("delete Product").executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	//tag::basic-clob-char-array-example[]

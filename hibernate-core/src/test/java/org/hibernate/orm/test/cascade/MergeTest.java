@@ -36,14 +36,7 @@ public class MergeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					List<Order> orders = session.createQuery( "from Order" ).list();
-					orders.forEach( order ->
-											session.remove( order )
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

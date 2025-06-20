@@ -101,9 +101,7 @@ public class SimpleLazyGroupUpdateTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createQuery( "delete TestEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// --- //

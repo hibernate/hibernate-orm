@@ -70,12 +70,7 @@ public class CriteriaMutationQueryWithSecondaryTableTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Animal" ).executeUpdate();
-				}
-		);
-
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

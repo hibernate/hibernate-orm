@@ -71,7 +71,7 @@ public class BasicFilteredBulkManipulationTest extends AbstractStatefulStateless
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( session -> session.createQuery( "delete Person" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Person" )

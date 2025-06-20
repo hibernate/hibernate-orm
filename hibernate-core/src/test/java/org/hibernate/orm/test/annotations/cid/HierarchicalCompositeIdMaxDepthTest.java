@@ -184,14 +184,7 @@ public class HierarchicalCompositeIdMaxDepthTest {
 
 	@AfterEach
 	void cleanUp(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery("delete from Freight").executeUpdate();
-					entityManager.createQuery("delete from FlightSegmentConfiguration").executeUpdate();
-					entityManager.createQuery("delete from FlightSegment").executeUpdate();
-					entityManager.createQuery("delete from Flight").executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 }

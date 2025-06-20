@@ -92,13 +92,7 @@ public class ImplicitValueTests {
 	}
 
 	@AfterEach
-	void dropTestData(SessionFactoryScope sessions) {
-		sessions.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Order" ).executeUpdate();
-			session.createMutationQuery( "delete CashPayment" ).executeUpdate();
-			session.createMutationQuery( "delete CardPayment" ).executeUpdate();
-			session.createMutationQuery( "delete CheckPayment" ).executeUpdate();
-		} );
-
+	void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

@@ -41,12 +41,7 @@ public class SequenceGeneratorAndAutoFlushTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope){
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Person" ).executeUpdate();
-					entityManager.createQuery( "delete from Account" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

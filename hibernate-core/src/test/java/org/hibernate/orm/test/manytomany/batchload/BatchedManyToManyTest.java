@@ -72,18 +72,7 @@ public class BatchedManyToManyTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		// clean up the test data
-		scope.inTransaction(
-				session -> {
-					// User is the non-inverse side...
-					List<User> users = session.createQuery( "from User" ).list();
-					for ( User user : users ) {
-						session.remove( user );
-					}
-					session.flush();
-					session.createQuery( "delete Group" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

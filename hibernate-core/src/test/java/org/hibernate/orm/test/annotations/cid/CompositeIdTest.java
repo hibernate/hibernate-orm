@@ -58,25 +58,7 @@ public class CompositeIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from LittleGenius" ).executeUpdate();
-					session.createQuery( "delete from Child" ).executeUpdate();
-					session.createQuery( "delete from Parent" ).executeUpdate();
-					session.createQuery( "delete from SomeEntity" ).executeUpdate();
-					session.createQuery( "delete from TvProgram" ).executeUpdate();
-					session.createQuery( "delete from TvProgramIdClass" ).executeUpdate();
-					session.createQuery( "delete from TvMagazin" ).executeUpdate();
-					session.createQuery( "delete from Presenter" ).executeUpdate();
-					session.createQuery( "delete from Channel" ).executeUpdate();
-					session.createQuery( "delete from A" ).executeUpdate();
-					session.createQuery( "delete from B" ).executeUpdate();
-					session.createQuery( "delete from C" ).executeUpdate();
-					session.createQuery( "delete from OrderLine" ).executeUpdate();
-					session.createQuery( "delete from Product" ).executeUpdate();
-					session.createQuery( "delete from Order" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -168,13 +168,7 @@ public class OnDemandLoadWithCollectionInDefaultFetchGroupFalseTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( s -> {
-			Store store = s.find( Store.class, 1L );
-			s.remove( store );
-
-			Product product= s.find( Product.class, "007" );
-			s.remove( product );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// --- //

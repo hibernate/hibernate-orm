@@ -132,9 +132,7 @@ public class PluralEmbeddedOverrideTests {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "delete AggregatedTypeValue" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Embeddable

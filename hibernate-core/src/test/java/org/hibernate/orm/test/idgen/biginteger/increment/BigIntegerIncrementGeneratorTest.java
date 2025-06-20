@@ -40,10 +40,6 @@ public class BigIntegerIncrementGeneratorTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(s) -> {
-					s.createQuery( "delete Entity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

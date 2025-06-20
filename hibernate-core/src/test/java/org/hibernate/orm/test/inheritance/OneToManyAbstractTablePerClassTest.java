@@ -100,11 +100,7 @@ public class OneToManyAbstractTablePerClassTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "from TablePerClassBase", TablePerClassBase.class )
-					.getResultList()
-					.forEach( session::remove );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "TablePerClassBase")

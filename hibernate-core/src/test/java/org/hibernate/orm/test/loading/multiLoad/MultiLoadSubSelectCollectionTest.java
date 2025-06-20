@@ -64,10 +64,7 @@ public class MultiLoadSubSelectCollectionTest {
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete Child" ).executeUpdate();
-			session.createQuery( "delete Parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

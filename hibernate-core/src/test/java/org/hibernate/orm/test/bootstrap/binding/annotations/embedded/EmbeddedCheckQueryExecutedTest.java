@@ -46,10 +46,7 @@ public class EmbeddedCheckQueryExecutedTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from InternetProvider" ).executeUpdate();
-			session.createQuery( "delete from Manager" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

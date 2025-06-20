@@ -45,12 +45,7 @@ public class OptimisticLockTypeDirtyWithLazyOneToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Person" ).executeUpdate();
-					session.createMutationQuery( "delete from Address" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

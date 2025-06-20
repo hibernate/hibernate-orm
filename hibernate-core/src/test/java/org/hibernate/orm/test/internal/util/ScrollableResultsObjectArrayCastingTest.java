@@ -42,9 +42,7 @@ public class ScrollableResultsObjectArrayCastingTest {
 
 	@AfterEach
 	public void dropTestData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(entityManager) -> entityManager.createQuery( "delete Product" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 

@@ -103,11 +103,7 @@ public class UuidGeneratorAnnotationTests {
 	}
 
 	@AfterEach
-	void dropTestData(SessionFactoryScope sessionFactoryScope) {
-		sessionFactoryScope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete TheEntity" ).executeUpdate();
-			session.createMutationQuery( "delete TheOtherEntity" ).executeUpdate();
-			session.createMutationQuery( "delete AnotherEntity" ).executeUpdate();
-		} );
+	void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

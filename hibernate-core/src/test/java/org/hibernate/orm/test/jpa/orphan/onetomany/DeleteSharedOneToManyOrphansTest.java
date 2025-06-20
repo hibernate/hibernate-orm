@@ -66,12 +66,7 @@ public class DeleteSharedOneToManyOrphansTest {
 
 	@AfterEach
 	public void cleanupTest(EntityManagerFactoryScope scope) throws Exception {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from ItemRelation" ).executeUpdate();
-					entityManager.createQuery( "delete from Item" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

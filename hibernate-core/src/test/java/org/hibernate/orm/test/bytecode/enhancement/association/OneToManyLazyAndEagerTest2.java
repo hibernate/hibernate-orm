@@ -57,11 +57,7 @@ public class OneToManyLazyAndEagerTest2 {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from Order" ).executeUpdate();
-			em.createQuery( "delete from Coupon" ).executeUpdate();
-			em.createQuery( "delete from User" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

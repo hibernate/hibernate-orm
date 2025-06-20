@@ -115,9 +115,6 @@ public class FollowOnLockingTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Employee" ).executeUpdate();
-			session.createMutationQuery( "delete Department" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

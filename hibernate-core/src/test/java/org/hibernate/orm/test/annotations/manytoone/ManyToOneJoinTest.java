@@ -31,9 +31,7 @@ public class ManyToOneJoinTest {
 
 	@AfterEach
 	public void teardDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.getSessionFactory().getSchemaManager().truncateMappedObjects()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

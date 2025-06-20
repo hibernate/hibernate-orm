@@ -57,7 +57,7 @@ public interface PreparableMutationOperation extends MutationOperation {
 
 		// This should already be guaranteed by the batchKey being null
 		assert !getTableDetails().isIdentifierTable()
-			|| !(getMutationTarget() instanceof EntityMutationTarget entityMutationTarget
+			|| !( getMutationTarget() instanceof EntityMutationTarget entityMutationTarget
 					&& entityMutationTarget.getMutationDelegate( getMutationType() ) != null );
 
 		if ( getMutationType() == MutationType.UPDATE ) {

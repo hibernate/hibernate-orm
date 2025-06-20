@@ -104,10 +104,7 @@ public class OneToOneLazyDerivedIdFetchModeSelectTest {
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
 		this.foo = null;
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Bar" );
-			session.createQuery( "delete from Foo" );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Foo")

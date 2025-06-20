@@ -33,12 +33,7 @@ public class BidirectionalOneToManyNotNullableColumnTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from ChildData" ).executeUpdate();
-					entityManager.createQuery( "delete from ParentData" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 

@@ -193,13 +193,7 @@ public class QueryScrollingWithInheritanceProxyTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from OtherEntity" ).executeUpdate();
-					session.createQuery( "delete from Employee" ).executeUpdate();
-					session.createQuery( "delete from EmployeeParent" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "EmployeeParent")

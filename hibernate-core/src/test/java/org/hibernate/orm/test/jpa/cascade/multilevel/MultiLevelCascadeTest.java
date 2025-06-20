@@ -24,13 +24,7 @@ public class MultiLevelCascadeTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Middle" ).executeUpdate();
-					entityManager.createQuery( "delete from Bottom" ).executeUpdate();
-					entityManager.createQuery( "delete from Top" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@JiraKey(value = "HHH-5299")

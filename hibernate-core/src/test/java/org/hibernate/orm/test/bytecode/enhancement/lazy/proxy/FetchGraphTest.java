@@ -788,27 +788,7 @@ public class FetchGraphTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from E" ).executeUpdate();
-					session.createQuery( "delete from D" ).executeUpdate();
-					session.createQuery( "delete from C" ).executeUpdate();
-					session.createQuery( "delete from B" ).executeUpdate();
-					session.createQuery( "delete from A" ).executeUpdate();
-					session.createQuery( "delete from G" ).executeUpdate();
-
-					session.createQuery( "delete from Activity" ).executeUpdate();
-					session.createQuery( "delete from Instruction" ).executeUpdate();
-					session.createQuery( "delete from WebApplication" ).executeUpdate();
-
-					session.createQuery( "delete from SpecializedEntity" ).executeUpdate();
-					session.createQuery( "delete from RoleEntity" ).executeUpdate();
-					session.createQuery( "delete from MoreSpecializedKey" ).executeUpdate();
-					session.createQuery( "delete from SpecializedKey" ).executeUpdate();
-					session.createQuery( "delete from GenericKey" ).executeUpdate();
-					session.createQuery( "delete from AbstractKey" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@MappedSuperclass

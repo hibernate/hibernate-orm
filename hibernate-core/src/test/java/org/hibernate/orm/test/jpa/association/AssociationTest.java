@@ -25,14 +25,7 @@ public class AssociationTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Incident" ).executeUpdate();
-					entityManager.createQuery( "delete from IncidentStatus" ).executeUpdate();
-					entityManager.createQuery( "delete from Oven" ).executeUpdate();
-					entityManager.createQuery( "delete from Kitchen" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

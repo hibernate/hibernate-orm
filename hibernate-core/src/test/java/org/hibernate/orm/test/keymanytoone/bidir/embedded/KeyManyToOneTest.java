@@ -35,12 +35,7 @@ public class KeyManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Order" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

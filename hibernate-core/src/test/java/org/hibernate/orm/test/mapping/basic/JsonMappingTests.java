@@ -102,11 +102,7 @@ public abstract class JsonMappingTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.remove( session.find( EntityWithJson.class, 1 ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

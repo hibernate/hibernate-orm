@@ -63,10 +63,7 @@ public class LoadAndFetchGraphCollectionsNotExplicitlySpecifiedTest {
 
 	@AfterEach
 	void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete ContainedEntity" ).executeUpdate();
-			session.createMutationQuery( "delete RootEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

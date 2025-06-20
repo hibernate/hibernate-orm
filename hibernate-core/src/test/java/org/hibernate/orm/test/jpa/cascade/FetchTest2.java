@@ -20,12 +20,7 @@ public class FetchTest2 {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Soldier2" ).executeUpdate();
-					entityManager.createQuery( "delete from Troop2" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

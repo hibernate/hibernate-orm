@@ -60,9 +60,7 @@ public class SingleTableDefaultSchemaFilterTest extends AbstractStatefulStateles
 
 	@AfterEach
 	public void cleanup() {
-		scope.inTransaction(
-				session -> session.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

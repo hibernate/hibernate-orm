@@ -60,11 +60,7 @@ public class JsonEmbeddableArrayTest extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	protected void cleanupTest() {
-		inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from JsonArrayHolder h" ).executeUpdate();
-				}
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

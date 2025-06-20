@@ -73,13 +73,7 @@ public class SetDelayedOperationTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Parent parent = session.get( Parent.class, parentId );
-					parent.getChildren().clear();
-					session.remove( parent );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 
 		parentId = null;
 	}

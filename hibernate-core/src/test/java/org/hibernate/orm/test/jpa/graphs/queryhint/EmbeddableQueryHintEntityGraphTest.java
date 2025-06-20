@@ -68,10 +68,7 @@ public class EmbeddableQueryHintEntityGraphTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						scope.getSessionFactory().getSchemaManager().truncateMappedObjects()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

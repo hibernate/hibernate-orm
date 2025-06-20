@@ -69,10 +69,7 @@ public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	void tearDown() {
-		scope.inTransaction( session -> {
-			session.createQuery( "DELETE FROM PurchaseItem" ).executeUpdate();
-			session.createQuery( "DELETE FROM PurchaseOrder" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

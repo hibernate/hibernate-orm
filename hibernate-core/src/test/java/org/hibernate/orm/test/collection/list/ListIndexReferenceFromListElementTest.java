@@ -56,12 +56,7 @@ public class ListIndexReferenceFromListElementTest {
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete LocalLineItem" ).executeUpdate();
-					session.createQuery( "delete LocalOrder" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -24,12 +24,7 @@ public class EmbeddedGenericsTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Book" ).executeUpdate();
-					session.createQuery( "delete from PopularBook" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

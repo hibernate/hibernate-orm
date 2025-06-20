@@ -53,9 +53,7 @@ public class PropertyAccessTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.remove( session.get( SomeEntity.class, 1L ) );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity

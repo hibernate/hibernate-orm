@@ -60,12 +60,7 @@ public class ListAddTest {
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Question" ).executeUpdate();
-					session.createQuery( "delete Quizz" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	/**

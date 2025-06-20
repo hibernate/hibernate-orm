@@ -109,21 +109,7 @@ public class LoadUninitializedCollectionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-					Bank bank = entityManager.find( Bank.class, 1L );
-					bank.getDepartments().forEach(
-							department -> entityManager.remove( department )
-					);
-					bank.getDepartments().clear();
-					List<BankAccount> accounts = entityManager.createQuery( "from BankAccount" ).getResultList();
-
-					accounts.forEach(
-							account -> entityManager.remove( account )
-					);
-
-					entityManager.remove( bank );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 

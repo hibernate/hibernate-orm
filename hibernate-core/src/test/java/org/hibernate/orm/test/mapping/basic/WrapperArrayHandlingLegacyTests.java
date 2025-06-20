@@ -170,12 +170,7 @@ public class WrapperArrayHandlingLegacyTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createMutationQuery("delete EntityOfByteArrays").executeUpdate();
-					session.createMutationQuery("delete EntityWithCharArrays").executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "EntityOfByteArrays")

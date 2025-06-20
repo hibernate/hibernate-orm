@@ -74,10 +74,7 @@ public class DirtyFlushTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from Profile" ).executeUpdate();
-			em.createQuery( "delete from User" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "User")

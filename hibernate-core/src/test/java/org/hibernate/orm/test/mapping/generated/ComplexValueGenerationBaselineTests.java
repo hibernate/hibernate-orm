@@ -58,7 +58,7 @@ public class ComplexValueGenerationBaselineTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete NonAuditedEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "NonAuditedEntity" )

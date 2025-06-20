@@ -47,10 +47,7 @@ public class EntityWithNotAggregateIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				sesison ->
-						sesison.createQuery( "delete from EntityWithNotAggregateId" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

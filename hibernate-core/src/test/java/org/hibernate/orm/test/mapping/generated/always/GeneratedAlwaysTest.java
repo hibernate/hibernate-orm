@@ -56,7 +56,7 @@ public class GeneratedAlwaysTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete WithGeneratedAlways" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="WithGeneratedAlways")

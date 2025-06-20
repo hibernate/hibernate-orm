@@ -60,12 +60,7 @@ public class FetchClausePaginationTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityOfLists" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

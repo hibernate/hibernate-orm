@@ -34,9 +34,7 @@ public class InheritedNaturalIdNoCacheTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete MyEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

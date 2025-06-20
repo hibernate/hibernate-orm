@@ -371,12 +371,7 @@ public class NativeQueryResultBuilderTests {
 
 	@AfterEach
 	public void cleanUpData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete EntityOfBasics" ).executeUpdate();
-					session.createQuery( "delete BasicEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static class DTO {

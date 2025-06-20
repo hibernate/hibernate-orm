@@ -111,9 +111,7 @@ public class BasicSelectionQueryTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete DummyEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -83,12 +83,7 @@ public class EntityWithLazyBidirectionalOneToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityWithLazyOneToOne" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

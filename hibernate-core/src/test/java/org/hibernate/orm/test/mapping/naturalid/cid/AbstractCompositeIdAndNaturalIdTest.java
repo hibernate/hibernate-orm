@@ -53,11 +53,7 @@ public abstract class AbstractCompositeIdAndNaturalIdTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete Account" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

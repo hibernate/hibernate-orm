@@ -205,9 +205,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete EntityWithJavaTimeValues" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="EntityWithJavaTimeValues")

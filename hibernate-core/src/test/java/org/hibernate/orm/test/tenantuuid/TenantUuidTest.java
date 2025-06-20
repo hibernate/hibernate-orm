@@ -46,10 +46,7 @@ public class TenantUuidTest implements SessionFactoryProducer {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery("delete from Account").executeUpdate();
-			session.createQuery("delete from Client").executeUpdate();
-		});
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Override

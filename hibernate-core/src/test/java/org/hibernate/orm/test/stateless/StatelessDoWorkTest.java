@@ -52,11 +52,7 @@ public class StatelessDoWorkTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from TestEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

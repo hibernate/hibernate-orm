@@ -60,11 +60,6 @@ public class OneToOneJoinTableTest {
 
 	@AfterEach
 	public void cleanUpData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Shipment" ).executeUpdate();
-					session.createQuery( "delete Item" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

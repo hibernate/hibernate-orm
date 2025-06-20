@@ -59,9 +59,7 @@ public class ILikeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from BasicEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

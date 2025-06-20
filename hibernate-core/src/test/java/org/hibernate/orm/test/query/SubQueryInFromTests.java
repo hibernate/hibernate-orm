@@ -478,9 +478,6 @@ public class SubQueryInFromTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

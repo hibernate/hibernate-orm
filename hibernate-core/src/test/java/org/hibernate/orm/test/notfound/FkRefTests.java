@@ -250,10 +250,7 @@ public class FkRefTests {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Coin" ).executeUpdate();
-			session.createMutationQuery( "delete Currency" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Coin")

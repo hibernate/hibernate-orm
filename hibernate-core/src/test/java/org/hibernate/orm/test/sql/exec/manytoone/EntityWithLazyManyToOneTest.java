@@ -60,15 +60,7 @@ public class EntityWithLazyManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "update LazyAbstractEntityReference e set e.entity = null" ).executeUpdate();
-					session.createQuery( "update LazyConcreteEntityReference e set e.entity = null" ).executeUpdate();
-					session.createQuery( "delete from ConcreteEntity" ).executeUpdate();
-					session.createQuery( "delete from LazyAbstractEntityReference" ).executeUpdate();
-					session.createQuery( "delete from LazyConcreteEntityReference" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

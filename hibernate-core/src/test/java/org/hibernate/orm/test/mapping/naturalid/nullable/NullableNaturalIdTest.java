@@ -250,19 +250,6 @@ public class NullableNaturalIdTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "update A set assC = null" ).executeUpdate();
-					session.createQuery( "update B set assA = null" ).executeUpdate();
-					session.createQuery( "update D set associatedC = null" ).executeUpdate();
-
-					session.createQuery( "delete A" ).executeUpdate();
-					session.createQuery( "delete B" ).executeUpdate();
-					session.createQuery( "delete C" ).executeUpdate();
-					session.createQuery( "delete D" ).executeUpdate();
-
-					session.createQuery( "delete User" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

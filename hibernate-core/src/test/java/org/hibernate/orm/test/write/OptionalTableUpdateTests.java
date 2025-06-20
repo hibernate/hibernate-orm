@@ -88,9 +88,7 @@ public class OptionalTableUpdateTests {
 
 	@AfterEach
 	void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete TheEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TheEntity" )

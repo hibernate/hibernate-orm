@@ -109,13 +109,7 @@ public class OneToManyHqlMemberOfQueryTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Call" ).executeUpdate();
-					session.createQuery( "delete from Phone" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

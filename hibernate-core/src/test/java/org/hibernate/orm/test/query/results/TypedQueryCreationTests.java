@@ -34,10 +34,8 @@ public class TypedQueryCreationTests {
 	}
 
 	@AfterEach
-	public void dropTestData(SessionFactoryScope sessions) {
-		sessions.inTransaction( (session) -> {
-			session.createMutationQuery( "delete SimpleEntity" ).executeUpdate();
-		});
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

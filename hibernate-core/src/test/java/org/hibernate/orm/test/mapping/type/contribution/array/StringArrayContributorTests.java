@@ -86,7 +86,7 @@ public class StringArrayContributorTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete Post" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }
 

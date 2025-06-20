@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.inheritance.joined;
 
-import java.sql.Statement;
 import java.util.List;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
@@ -193,24 +192,7 @@ public class MixedInheritanceTest {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.doWork(
-							work -> {
-								Statement statement = work.createStatement();
-								try {
-									statement.execute( "delete from DomesticCustomer" );
-									statement.execute( "delete from ItalianCustomer" );
-									statement.execute( "delete from ForeignCustomer" );
-									statement.execute( "delete from Customer" );
-								}
-								finally {
-									statement.close();
-								}
-							}
-					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Customer")

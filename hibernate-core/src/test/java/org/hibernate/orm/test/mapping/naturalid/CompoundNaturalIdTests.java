@@ -68,11 +68,7 @@ public class CompoundNaturalIdTests {
 
 	@AfterEach
 	public void releaseTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Account" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

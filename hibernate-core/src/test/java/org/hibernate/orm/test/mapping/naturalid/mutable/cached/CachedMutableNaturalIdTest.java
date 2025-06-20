@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 
-import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -27,17 +26,8 @@ public abstract class CachedMutableNaturalIdTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createMutationQuery( "delete from Another" ).executeUpdate();
-					session.createMutationQuery( "delete from AllCached" ).executeUpdate();
-					session.createMutationQuery( "delete from SubClass" ).executeUpdate();
-					session.createMutationQuery( "delete from A" ).executeUpdate();
-				}
-		);
-
-		final CacheImplementor cache = scope.getSessionFactory().getCache();
-		cache.evictAllRegions();
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
 	@Test

@@ -236,9 +236,7 @@ public class StatsTest {
 	}
 
 	private void cleanDb(Session s) {
-		s.createQuery( "delete Locality" ).executeUpdate();
-		s.createQuery( "delete Country" ).executeUpdate();
-		s.createQuery( "delete Continent" ).executeUpdate();
+		s.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

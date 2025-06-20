@@ -828,26 +828,6 @@ public class MergeTest extends AbstractOperationTestCase {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from NumberedNode where parent is not null" ).executeUpdate();
-					session.createQuery( "delete from NumberedNode" ).executeUpdate();
-
-					session.createQuery( "delete from Node where parent is not null" ).executeUpdate();
-					session.createQuery( "delete from Node" ).executeUpdate();
-
-					session.createQuery( "delete from VersionedEntity where parent is not null" ).executeUpdate();
-					session.createQuery( "delete from VersionedEntity" ).executeUpdate();
-					session.createQuery( "delete from TimestampedEntity" ).executeUpdate();
-
-					session.createQuery( "delete from Competitor" ).executeUpdate();
-					session.createQuery( "delete from Competition" ).executeUpdate();
-
-					for ( Employer employer : (List<Employer>) session.createQuery( "from Employer" ).list() ) {
-						session.remove( employer );
-					}
-				}
-		);
-
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

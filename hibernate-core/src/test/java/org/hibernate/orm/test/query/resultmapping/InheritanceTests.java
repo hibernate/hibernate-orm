@@ -47,11 +47,7 @@ public class InheritanceTests {
 
 	@AfterEach
 	public void cleanUpData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Child" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

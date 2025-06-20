@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.mapping.inheritance.joined;
 
-import java.sql.Statement;
 import java.util.List;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -154,29 +153,7 @@ public class JoinedInheritanceTest {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.doWork(
-							work -> {
-								Statement statement = work.createStatement();
-								try {
-									statement.execute( "delete from DomesticCustomer" );
-									statement.execute( "delete from ForeignCustomer" );
-									statement.execute( "delete from Customer" );
-								}
-								finally {
-									statement.close();
-								}
-							}
-					);
-//					session.createQuery( "from DomesticCustomer", DomesticCustomer.class ).list().forEach(
-//							cust -> session.remove( cust )
-//					);
-//					session.createQuery( "from ForeignCustomer", ForeignCustomer.class ).list().forEach(
-//							cust -> session.remove( cust )
-//					);
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Customer")

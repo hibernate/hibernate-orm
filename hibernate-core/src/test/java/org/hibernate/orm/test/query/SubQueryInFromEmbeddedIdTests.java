@@ -218,10 +218,7 @@ public class SubQueryInFromEmbeddedIdTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private <T> void verifySame(T criteriaResult, T hqlResult, Consumer<T> verifier) {

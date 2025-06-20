@@ -56,12 +56,7 @@ public class OptionalEagerMappedByNotFoundTest {
 
 	@AfterEach
 	public void deleteData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-					session.createQuery( "delete from Employment" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

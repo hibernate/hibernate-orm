@@ -90,11 +90,7 @@ public class WhereFragmentTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createNativeMutationQuery( "delete from t_user_skills" ).executeUpdate();
-			session.createNativeMutationQuery( "delete t_user_details" ).executeUpdate();
-			session.createNativeMutationQuery( "delete t_users" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

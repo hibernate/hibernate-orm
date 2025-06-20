@@ -127,8 +127,7 @@ public class InheritedNaturalIdCacheTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete MyEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 }

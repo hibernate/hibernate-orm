@@ -55,10 +55,8 @@ public class NativeQuerySyncSpaceCachingTest {
 
 	@AfterEach
 	public void after(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete Customer" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 
 	@Test

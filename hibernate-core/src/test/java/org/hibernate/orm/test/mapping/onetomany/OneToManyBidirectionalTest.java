@@ -73,10 +73,7 @@ public class OneToManyBidirectionalTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Item" ).executeUpdate();
-			session.createQuery( "delete from Order" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

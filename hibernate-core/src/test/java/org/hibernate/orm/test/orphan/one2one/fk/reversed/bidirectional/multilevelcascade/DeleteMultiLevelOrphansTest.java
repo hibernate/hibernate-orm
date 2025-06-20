@@ -62,13 +62,7 @@ public class DeleteMultiLevelOrphansTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Tranche" ).executeUpdate();
-					session.createQuery( "delete Preisregelung" ).executeUpdate();
-					session.createQuery( "delete Tranchenmodell" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

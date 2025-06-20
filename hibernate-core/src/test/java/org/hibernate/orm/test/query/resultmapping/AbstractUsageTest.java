@@ -27,10 +27,6 @@ public abstract class AbstractUsageTest {
 
 	@AfterEach
 	public void cleanUpData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete SimpleEntityWithNamedMappings" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

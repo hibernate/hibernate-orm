@@ -155,11 +155,7 @@ public class ParameterMarkerStrategyTests {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete EntityOfBasics" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithFilters" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithVersion" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static class ParameterMarkerStrategyImpl implements ParameterMarkerStrategy {

@@ -54,10 +54,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 
 	@AfterEach
 	public void tearDown() {
-		inTransaction(
-				session ->
-						session.createQuery( "delete SimpleEntity" ).executeUpdate()
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

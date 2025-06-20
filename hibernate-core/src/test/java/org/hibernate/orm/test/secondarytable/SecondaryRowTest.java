@@ -75,9 +75,7 @@ public class SecondaryRowTest {
 
 	@AfterEach
 	void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createSelectionQuery( "from Record" ).stream().forEach( session::remove );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private static void verifySecondaryRows(String table, int expectedCount, SessionFactoryScope sfScope) {

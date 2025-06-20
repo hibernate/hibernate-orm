@@ -65,10 +65,7 @@ public class QueryHintHANATest {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> {
-			s.createMutationQuery( "delete from QueryHintHANATest$Employee" ).executeUpdate();
-			s.createMutationQuery( "delete from QueryHintHANATest$Department" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

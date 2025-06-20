@@ -126,10 +126,7 @@ public class JoinResultTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Product" ).executeUpdate();
-			session.createMutationQuery( "delete Vendor" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private static int extractNumberOfSelections(String sql) {

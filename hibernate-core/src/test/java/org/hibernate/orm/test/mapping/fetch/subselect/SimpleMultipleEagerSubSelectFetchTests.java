@@ -99,10 +99,7 @@ public class SimpleMultipleEagerSubSelectFetchTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "delete Thing" ).executeUpdate();
-			session.createQuery( "delete Owner" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Owner")

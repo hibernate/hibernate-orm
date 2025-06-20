@@ -47,13 +47,7 @@ public class UnionSubclassPropertyRefTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Account" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-					session.createQuery( "delete from Customer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

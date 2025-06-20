@@ -62,19 +62,7 @@ public class RequiredLazyNotFoundTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from " + PersonManyToOneSelectException.class.getName() )
-							.executeUpdate();
-					session.createQuery( "delete from " + PersonOneToOneSelectException.class.getName() )
-							.executeUpdate();
-					session.createQuery( "delete from " + PersonMapsIdSelectException.class.getName() ).executeUpdate();
-					session.createQuery( "delete from " + PersonPkjcSelectException.class.getName() ).executeUpdate();
-					session.createQuery( "delete from " + PersonMapsIdColumnSelectException.class.getName() )
-							.executeUpdate();
-					session.createQuery( "delete from " + City.class.getName() ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

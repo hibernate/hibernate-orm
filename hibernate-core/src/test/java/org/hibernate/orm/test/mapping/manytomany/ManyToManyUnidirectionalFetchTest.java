@@ -50,12 +50,7 @@ public class ManyToManyUnidirectionalFetchTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Event event = session.get( Event.class, 1L );
-					session.remove( event );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

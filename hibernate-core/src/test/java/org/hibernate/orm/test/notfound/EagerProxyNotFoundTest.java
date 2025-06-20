@@ -324,12 +324,7 @@ public class EagerProxyNotFoundTest {
 
 	@AfterEach
 	public void deleteData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Task" ).executeUpdate();
-					session.createQuery( "delete from Employee" ).executeUpdate();
-					session.createQuery( "delete from Location" ).executeUpdate();
-				} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Task")

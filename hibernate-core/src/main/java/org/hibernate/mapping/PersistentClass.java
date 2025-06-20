@@ -1211,4 +1211,11 @@ public abstract sealed class PersistentClass
 	public void setDeleteExpectation(Supplier<? extends Expectation> deleteExpectation) {
 		this.deleteExpectation = deleteExpectation;
 	}
+
+	public void removeProperty(Property property) {
+		if ( !declaredProperties.remove( property ) ) {
+			throw new IllegalArgumentException( "Property not among declared properties: " + property.getName() );
+		}
+		properties.remove( property );
+	}
 }

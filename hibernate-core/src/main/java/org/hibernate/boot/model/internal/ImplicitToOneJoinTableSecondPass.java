@@ -14,6 +14,7 @@ import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
 
 import jakarta.persistence.JoinTable;
@@ -58,9 +59,9 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 	}
 
 	// Note: Instead of deferring creation of the whole Table object, perhaps
-	//	   we could create it in the first pass, and reset its name here in
-	//	   the second pass. The problem is that there is some quite involved
-	//	   logic in TableBinder that isn't set up for that.
+	//	     we could create it in the first pass and reset its name here in
+	//	     the second pass. The problem is that there is some quite involved
+	//	     logic in TableBinder that isn't set up for that.
 
 	private void inferJoinTableName(TableBinder tableBinder, Map<String, PersistentClass> persistentClasses) {
 		if ( isEmpty( tableBinder.getName() ) ) {
@@ -116,6 +117,12 @@ public class ImplicitToOneJoinTableSecondPass implements SecondPass {
 		final Table table = tableBinder.bind();
 		value.setTable( table );
 		final Join join = propertyHolder.addJoin( joinTable, table, true );
+		final PersistentClass owner = propertyHolder.getPersistentClass();
+		final Property property = owner.getProperty( inferredData.getPropertyName() );
+		assert property != null;
+		// move the property from the main table to the new join table
+		owner.removeProperty( property );
+		join.addProperty( property );
 		if ( notFoundAction != null ) {
 			join.disableForeignKeyCreation();
 		}

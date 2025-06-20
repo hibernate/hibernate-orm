@@ -43,7 +43,7 @@ import static org.junit.Assert.fail;
 public class ImmutableNaturalIdTest {
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete User" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

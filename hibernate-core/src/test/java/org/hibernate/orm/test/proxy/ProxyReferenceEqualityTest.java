@@ -37,12 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ProxyReferenceEqualityTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from A" ).executeUpdate();
-					session.createQuery( "delete from B" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

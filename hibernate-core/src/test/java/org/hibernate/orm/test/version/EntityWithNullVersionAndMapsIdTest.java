@@ -30,13 +30,7 @@ public class EntityWithNullVersionAndMapsIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Person" );
-					session.createMutationQuery( "delete from Address" );
-
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

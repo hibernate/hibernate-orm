@@ -85,10 +85,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void tearDown() {
-		inTransaction(
-				session ->
-						session.createQuery( "delete from Entity" ).executeUpdate()
-		);
+		sessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

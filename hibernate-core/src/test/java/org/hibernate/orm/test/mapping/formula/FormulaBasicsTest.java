@@ -83,9 +83,7 @@ public class FormulaBasicsTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Account" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Account")

@@ -64,7 +64,7 @@ public class FormulaWithAliasTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete from Customer" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Customer")

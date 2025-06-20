@@ -47,10 +47,7 @@ public class EntityWithEmbeddedIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				sesison ->
-						sesison.createQuery( "delete from TestEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

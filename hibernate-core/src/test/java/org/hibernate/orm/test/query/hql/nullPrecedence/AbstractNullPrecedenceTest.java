@@ -57,6 +57,6 @@ abstract class AbstractNullPrecedenceTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete from ExampleEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

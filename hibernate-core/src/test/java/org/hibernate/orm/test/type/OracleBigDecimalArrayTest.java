@@ -42,9 +42,7 @@ public class OracleBigDecimalArrayTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from EntityWithBigDecimalArray" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

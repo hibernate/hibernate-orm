@@ -34,13 +34,7 @@ public class OneToOneEagerOrphanRemovalTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Car" ).executeUpdate();
-					session.createQuery( "delete from Engine" ).executeUpdate();
-					session.createQuery( "delete from PaintColor" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

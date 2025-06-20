@@ -52,12 +52,7 @@ public class NaturalIdInUninitializedProxyTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete from EntityMutableNaturalId" ).executeUpdate();
-					session.createQuery( "delete from EntityImmutableNaturalId" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

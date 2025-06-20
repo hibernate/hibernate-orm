@@ -25,12 +25,7 @@ public class ReadOnlyVersionedNodesTest extends AbstractReadOnlyTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "select v from VersionedNode v" ).list()
-							.forEach( node -> session.remove( node ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

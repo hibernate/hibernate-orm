@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -78,12 +79,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@AfterEach
 	public void cleanupTestData() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		entityManagerFactory().unwrap(SessionFactory.class).getSchemaManager().truncate();
 	}
 
 	@Test

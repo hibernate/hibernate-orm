@@ -36,10 +36,7 @@ public class OneToManyMappedByCascadeDeleteTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			s.createMutationQuery( "delete from child" ).executeUpdate();
-			s.createMutationQuery( "delete from parent" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

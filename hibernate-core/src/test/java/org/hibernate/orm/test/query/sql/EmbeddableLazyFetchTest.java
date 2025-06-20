@@ -43,10 +43,7 @@ public class EmbeddableLazyFetchTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createMutationQuery( "delete from Person" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();;
 	}
 
 	@Test

@@ -38,14 +38,7 @@ public class DiscrimSubclassOneToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Address" ).executeUpdate();
-					session.createQuery( "delete from MailingAddress" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-					session.createQuery( "delete from Org" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

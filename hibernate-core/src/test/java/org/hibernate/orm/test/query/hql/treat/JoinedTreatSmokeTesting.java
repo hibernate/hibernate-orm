@@ -53,9 +53,7 @@ public class JoinedTreatSmokeTesting {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Volume" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 	@Test
 	public void simpleImplicitTreatTest(SessionFactoryScope scope) {

@@ -62,19 +62,7 @@ public class JoinedInheritanceEagerTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					EntityA entityA = session.get( EntityA.class, 4L );
-					EntityB entityB = session.get( EntityB.class, 3L );
-					EntityD entityD = session.get( EntityD.class, 2L );
-					EntityC entityC = session.get( EntityC.class, 1L );
-
-					session.remove( entityD );
-					session.remove( entityC );
-					session.remove( entityA );
-					session.remove( entityB );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

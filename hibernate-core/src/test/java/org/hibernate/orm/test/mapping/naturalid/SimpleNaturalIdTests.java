@@ -62,12 +62,7 @@ public class SimpleNaturalIdTests {
 
 	@AfterEach
 	public void releaseTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Product" ).executeUpdate();
-					session.createQuery( "delete Vendor" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

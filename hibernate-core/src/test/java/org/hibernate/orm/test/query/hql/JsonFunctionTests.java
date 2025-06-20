@@ -117,12 +117,7 @@ public class JsonFunctionTests {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					em.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate();
-					em.createMutationQuery( "delete from JsonHolder" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

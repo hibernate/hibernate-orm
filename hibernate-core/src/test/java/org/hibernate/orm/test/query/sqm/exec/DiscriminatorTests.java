@@ -42,11 +42,7 @@ public class DiscriminatorTests extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void cleanUpTestData() {
-		inTransaction(
-				session -> {
-					session.createQuery( "delete Vendor" ).executeUpdate();
-				}
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

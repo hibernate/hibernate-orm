@@ -25,12 +25,7 @@ public class ManyToManyOrphanTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from User" ).executeUpdate();
-					session.createQuery( "delete from Group" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

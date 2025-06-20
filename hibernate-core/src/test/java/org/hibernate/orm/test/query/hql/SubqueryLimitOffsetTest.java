@@ -67,10 +67,6 @@ public class SubqueryLimitOffsetTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "from SimpleEntity e" )
-						.list()
-						.forEach( simpleEntity -> session.remove( simpleEntity ) )
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

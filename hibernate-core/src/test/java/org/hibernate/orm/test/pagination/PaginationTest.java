@@ -217,8 +217,6 @@ public class PaginationTest {
 
 	@AfterEach
 	public void cleanupTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createMutationQuery( "delete from DataPoint" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

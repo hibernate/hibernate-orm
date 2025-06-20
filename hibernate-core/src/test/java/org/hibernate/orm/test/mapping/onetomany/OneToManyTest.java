@@ -62,19 +62,7 @@ public class OneToManyTest {
 
 	@AfterEach
 	public void cleanUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Card card = session.get( Card.class, CARD_ID );
-					card.getFields().forEach(
-							cardField -> {
-								Key key = cardField.key;
-								session.remove( cardField );
-								session.remove( key );
-							}
-					);
-					session.remove( card );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

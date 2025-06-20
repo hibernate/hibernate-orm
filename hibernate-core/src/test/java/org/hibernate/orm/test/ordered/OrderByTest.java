@@ -34,10 +34,7 @@ public class OrderByTest {
 
 	@AfterEach
 	public void tearDonw(SessionFactoryScope scope){
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Search" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

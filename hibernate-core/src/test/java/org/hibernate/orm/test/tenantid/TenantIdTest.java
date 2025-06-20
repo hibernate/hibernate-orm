@@ -74,13 +74,7 @@ public class TenantIdTest implements SessionFactoryProducer {
 	public void cleanup(SessionFactoryScope scope) {
 		// Use the root tenant to clean up all partitions
 		currentTenant = "root";
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Account" ).executeUpdate();
-					session.createMutationQuery( "delete from Client" ).executeUpdate();
-					session.createMutationQuery( "delete from Record" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Override

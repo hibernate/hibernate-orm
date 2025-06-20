@@ -58,15 +58,7 @@ public class SetOperationTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					// Because, why not MySQL/MariaDB... https://bugs.mysql.com/bug.php?id=7412
-					session.createQuery( "update EntityWithManyToOneSelfReference set other = null" ).executeUpdate();
-					session.createQuery( "delete from EntityWithManyToOneSelfReference" ).executeUpdate();
-					session.createQuery( "delete from EntityOfLists" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

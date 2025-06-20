@@ -38,7 +38,7 @@ public class SelectJoinedAssociationMultipleTimesTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete Book" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "Book")

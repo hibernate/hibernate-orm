@@ -42,13 +42,7 @@ public class CompositeIdWithAssociationsAndGeneratedValuesMergeTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Bottom " ).executeUpdate();
-					session.createMutationQuery( "delete from Middle" ).executeUpdate();
-					session.createMutationQuery( "delete from Top" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

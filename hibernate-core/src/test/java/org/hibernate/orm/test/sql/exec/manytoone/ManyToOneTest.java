@@ -319,13 +319,7 @@ public class ManyToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from OtherEntity" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-					session.createQuery( "delete from AnotherSimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "OtherEntity")

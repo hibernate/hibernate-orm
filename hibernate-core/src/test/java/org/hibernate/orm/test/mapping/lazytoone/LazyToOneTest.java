@@ -53,12 +53,7 @@ public class LazyToOneTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected void cleanupTestData() throws Exception {
-		inTransaction(
-				(session) -> {
-					session.createQuery( "delete Flight" ).executeUpdate();
-					session.createQuery( "delete Airport" ).executeUpdate();
-				}
-		);
+		sessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

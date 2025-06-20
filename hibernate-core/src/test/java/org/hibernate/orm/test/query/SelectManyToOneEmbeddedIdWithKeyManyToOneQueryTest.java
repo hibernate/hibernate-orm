@@ -67,13 +67,7 @@ public class SelectManyToOneEmbeddedIdWithKeyManyToOneQueryTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "update EmbeddableTestEntity e set e.manyToOne = null" ).executeUpdate();
-					session.createQuery( "delete from EmbeddableTestEntity" ).executeUpdate();
-					session.createQuery( "delete from IntIdEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

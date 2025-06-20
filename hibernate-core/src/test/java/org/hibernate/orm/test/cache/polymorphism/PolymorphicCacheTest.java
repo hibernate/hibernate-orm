@@ -37,12 +37,8 @@ public class PolymorphicCacheTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery("delete from CacheHolder").executeUpdate();
-					session.createMutationQuery( "delete Cacheable" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAll();
 	}
 
 	@Test

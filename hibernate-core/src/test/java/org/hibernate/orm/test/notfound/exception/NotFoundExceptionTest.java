@@ -43,10 +43,7 @@ public class NotFoundExceptionTest {
 
 	@AfterEach
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createNativeMutationQuery( "delete from CHESS_GAME" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

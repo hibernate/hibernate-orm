@@ -37,11 +37,7 @@ public class UpdateEntityWithEmbeddedTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete from Company" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

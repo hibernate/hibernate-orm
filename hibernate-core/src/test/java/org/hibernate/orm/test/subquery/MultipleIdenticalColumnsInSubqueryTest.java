@@ -31,7 +31,7 @@ class MultipleIdenticalColumnsInSubqueryTest {
 
 	@AfterEach
 	void clean(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from Something" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

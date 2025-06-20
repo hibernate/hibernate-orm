@@ -160,12 +160,8 @@ public class QueryRestrictedCollectionCachingTests {
 	}
 
 	@AfterEach
-	void dropTestData(SessionFactoryScope sessions) {
-		sessions.inTransaction( (session) -> {
-//			session.createNativeMutationQuery( "delete book_authors" ).executeUpdate();
-//			session.createNativeMutationQuery( "delete book_editors" ).executeUpdate();
-			session.createMutationQuery( "delete Book" ).executeUpdate();
-			session.createMutationQuery( "delete Person" ).executeUpdate();
-		} );
+	void dropTestData(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.getSessionFactory().getCache().evictAllRegions();
 	}
 }

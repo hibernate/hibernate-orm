@@ -129,7 +129,7 @@ public class NamedEnumEnumerateValueTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete Person" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public enum Gender {

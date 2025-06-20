@@ -81,10 +81,7 @@ public class QueryCacheTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "from java.lang.Object" ).list().forEach( session::remove )
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@AfterAll

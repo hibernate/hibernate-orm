@@ -44,13 +44,7 @@ public class UUIDTypeConverterTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Image" ).executeUpdate();
-					session.createMutationQuery( "delete from MarbleBox" ).executeUpdate();
-					session.createMutationQuery( "delete from Marble" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

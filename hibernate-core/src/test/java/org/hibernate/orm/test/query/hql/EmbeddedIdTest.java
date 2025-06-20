@@ -46,13 +46,7 @@ public class EmbeddedIdTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from PersonDocument" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-					session.createQuery( "delete from Document" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

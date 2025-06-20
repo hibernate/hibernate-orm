@@ -51,12 +51,7 @@ public class MutationQueriesAndNotFoundActionTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from Comment" ).executeUpdate();
-					session.createMutationQuery( "delete from User" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

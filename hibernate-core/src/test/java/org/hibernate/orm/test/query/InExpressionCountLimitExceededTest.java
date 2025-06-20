@@ -57,9 +57,7 @@ public class InExpressionCountLimitExceededTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createMutationQuery( "delete from MyEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -177,7 +177,7 @@ public class DefaultGeneratedValueTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (s) -> s.createQuery( "delete TheEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TheEntity" )

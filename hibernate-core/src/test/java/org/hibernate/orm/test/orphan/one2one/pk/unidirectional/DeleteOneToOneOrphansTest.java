@@ -40,12 +40,7 @@ public class DeleteOneToOneOrphansTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete EmployeeInfo" ).executeUpdate();
-					session.createQuery( "delete Employee" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

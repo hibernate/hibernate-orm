@@ -61,12 +61,7 @@ public class EntityWithLazyManyToOneSelfReferenceTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "update EntityWithLazyManyToOneSelfReference e set e.other = null" ).executeUpdate();
-					session.createQuery( "delete from EntityWithLazyManyToOneSelfReference" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

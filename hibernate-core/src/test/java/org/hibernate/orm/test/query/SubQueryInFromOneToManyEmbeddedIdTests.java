@@ -223,10 +223,7 @@ public class SubQueryInFromOneToManyEmbeddedIdTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createQuery( "update Contact set primaryContact = null" ).executeUpdate();
-			session.createQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	/**

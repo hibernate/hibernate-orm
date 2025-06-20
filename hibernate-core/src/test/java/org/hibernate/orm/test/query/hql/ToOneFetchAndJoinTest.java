@@ -139,12 +139,6 @@ public class ToOneFetchAndJoinTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete Entity1" ).executeUpdate();
-					session.createQuery( "delete Entity2" ).executeUpdate();
-					session.createQuery( "delete Entity3" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

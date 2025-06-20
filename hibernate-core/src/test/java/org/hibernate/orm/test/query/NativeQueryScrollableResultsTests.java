@@ -61,7 +61,7 @@ public class NativeQueryScrollableResultsTests {
 
 	@AfterEach
 	protected void dropTestData(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete from MyEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "MyEntity")

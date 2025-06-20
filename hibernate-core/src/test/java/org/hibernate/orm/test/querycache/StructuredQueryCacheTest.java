@@ -55,12 +55,7 @@ public class StructuredQueryCacheTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from OneToManyWithEmbeddedIdChild" ).executeUpdate();
-					session.createQuery( "delete from OneToManyWithEmbeddedId" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

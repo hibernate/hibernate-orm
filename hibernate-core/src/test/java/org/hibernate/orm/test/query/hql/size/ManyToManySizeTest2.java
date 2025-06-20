@@ -470,13 +470,7 @@ public class ManyToManySizeTest2 {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete from Student" ).executeUpdate();
-					session.createQuery( "delete from Teacher" ).executeUpdate();
-					session.createQuery( "delete from Skill" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 }

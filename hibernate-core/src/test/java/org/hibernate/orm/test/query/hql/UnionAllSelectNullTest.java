@@ -43,12 +43,7 @@ class UnionAllSelectNullTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete TestEntity" ).executeUpdate();
-					session.createQuery( "delete AnotherTestEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

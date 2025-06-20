@@ -86,12 +86,7 @@ public class EntityWithOneToOneJoinTableTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityWithOneToOneJoinTable" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

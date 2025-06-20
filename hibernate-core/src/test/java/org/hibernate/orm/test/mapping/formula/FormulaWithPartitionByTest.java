@@ -75,7 +75,7 @@ public class FormulaWithPartitionByTest {
 
 	@AfterEach
 	void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete from DisplayItem" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "DisplayItem")

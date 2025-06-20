@@ -102,9 +102,6 @@ public class CteCycleTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "update Contact set alternativeContact = null" ).executeUpdate();
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

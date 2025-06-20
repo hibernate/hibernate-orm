@@ -95,7 +95,7 @@ public class ZoneMappingTests {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete ZoneMappingTestEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "ZoneMappingTestEntity" )

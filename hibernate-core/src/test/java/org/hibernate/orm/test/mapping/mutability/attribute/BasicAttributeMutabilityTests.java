@@ -219,7 +219,7 @@ public class BasicAttributeMutabilityTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createMutationQuery( "delete TheEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TheEntity" )

@@ -1442,90 +1442,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private QueryPartTableReference updateSourceAsSubquery(UpdateStatement statement, boolean correlated) {
-		final QuerySpec inlineView = new QuerySpec( !correlated );
-		final SelectClause selectClause = inlineView.getSelectClause();
-		final List<Assignment> assignments = statement.getAssignments();
-		final List<String> columnNames = new ArrayList<>( assignments.size() );
-		for ( Assignment assignment : assignments ) {
-			final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
-			final Expression assignedValue = assignment.getAssignedValue();
-			if ( columnReferences.size() == 1 ) {
-				selectClause.addSqlSelection( new SqlSelectionImpl( assignedValue ) );
-				columnNames.add( "c" + columnNames.size() );
-			}
-			else if ( assignedValue instanceof SqlTuple sqlTuple ) {
-				final List<? extends Expression> expressions = sqlTuple.getExpressions();
-				for ( int i = 0; i < columnReferences.size(); i++ ) {
-					selectClause.addSqlSelection( new SqlSelectionImpl( expressions.get( i ) ) );
-					columnNames.add( "c" + columnNames.size() );
-				}
-			}
-			else {
-				throw new IllegalQueryOperationException( "Unsupported tuple assignment in update query with joins." );
-			}
-		}
-		if ( !correlated ) {
-			final String rowIdExpression = dialect.rowId( null );
-			if ( rowIdExpression == null ) {
-				final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
-				assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
-				final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
-						.asEntityMappingType()
-						.getIdentifierMapping();
-				identifierMapping.forEachSelectable(
-						0,
-						(selectionIndex, selectableMapping) -> {
-							selectClause.addSqlSelection( new SqlSelectionImpl(
-									new ColumnReference( statement.getTargetTable(), selectableMapping )
-							) );
-							columnNames.add( selectableMapping.getSelectionExpression() );
-						}
-				);
-			}
-			else {
-				selectClause.addSqlSelection( new SqlSelectionImpl(
-						new ColumnReference(
-								statement.getTargetTable(),
-								rowIdExpression,
-								sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
-										.resolve( Object.class, dialect.rowIdSqlType() )
-						)
-				) );
-				columnNames.add( "c" + columnNames.size() );
-			}
-		}
+		final QuerySpec inlineView = new QuerySpec(!correlated);
+		final List<String> columnNames = new ArrayList<>(statement.getAssignments().size());
 
-		if ( correlated ) {
-			for ( TableGroup root : statement.getFromClause().getRoots() ) {
-				if ( statement.getTargetTable() == root.getPrimaryTableReference() ) {
-					final TableGroup dmlTargetTableGroup = new StandardTableGroup(
-							true,
-							new NavigablePath( "dual" ),
-							null,
-							null,
-							new NamedTableReference( getDual(), "d_" ),
-							null,
-							sessionFactory
-					);
-					inlineView.getFromClause().addRoot( dmlTargetTableGroup );
-					dmlTargetTableGroup.getTableReferenceJoins().addAll( root.getTableReferenceJoins() );
-					for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
-						dmlTargetTableGroup.addTableGroupJoin( tableGroupJoin );
-					}
-					for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
-						dmlTargetTableGroup.addNestedTableGroupJoin( tableGroupJoin );
-					}
-				}
-				else {
-					inlineView.getFromClause().addRoot( root );
-				}
-			}
-		}
-		else {
-			for ( TableGroup root : statement.getFromClause().getRoots() ) {
-				inlineView.getFromClause().addRoot( root );
-			}
-		}
+		processAssignments( statement, inlineView, columnNames );
+		handleCorrelation( statement, correlated, inlineView, columnNames );
+		processFromClause( statement, correlated, inlineView );
 		inlineView.applyPredicate( statement.getRestriction() );
 
 		return new QueryPartTableReference(
@@ -1535,6 +1457,111 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				false,
 				getSessionFactory()
 		);
+	}
+
+	private void processAssignments(UpdateStatement statement, QuerySpec inlineView, List<String> columnNames) {
+		final SelectClause selectClause = inlineView.getSelectClause();
+
+		for (Assignment assignment : statement.getAssignments()) {
+			processSingleAssignment( assignment, selectClause, columnNames );
+		}
+	}
+
+	private void processSingleAssignment(Assignment assignment, SelectClause selectClause, List<String> columnNames) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Expression assignedValue = assignment.getAssignedValue();
+
+		if ( columnReferences.size() == 1 ) {
+			selectClause.addSqlSelection( new SqlSelectionImpl(assignedValue) );
+			columnNames.add( "c" + columnNames.size() );
+		}
+		else if ( assignedValue instanceof SqlTuple sqlTuple ) {
+			processTupleAssignment( sqlTuple, columnReferences.size(), selectClause, columnNames );
+		}
+		else {
+			throw new IllegalQueryOperationException("Unsupported tuple assignment in update query with joins.");
+		}
+	}
+
+	private void processTupleAssignment(SqlTuple sqlTuple, int columnCount, SelectClause selectClause, List<String> columnNames) {
+		final List<? extends Expression> expressions = sqlTuple.getExpressions();
+		for ( int i = 0; i < columnCount; i++ ) {
+			selectClause.addSqlSelection( new SqlSelectionImpl(expressions.get(i)) );
+			columnNames.add("c" + columnNames.size());
+		}
+	}
+
+	private void handleCorrelation(UpdateStatement statement, boolean correlated, QuerySpec inlineView, List<String> columnNames) {
+		if ( !correlated ) {
+			final String rowIdExpression = dialect.rowId( null );
+			if ( rowIdExpression == null ) {
+				processIdentifierMapping( statement, inlineView, columnNames );
+			}
+			else {
+				addRowIdSelection( statement, inlineView, columnNames, rowIdExpression );
+			}
+		}
+	}
+
+	private void processIdentifierMapping(UpdateStatement statement, QuerySpec inlineView, List<String> columnNames) {
+		final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+		assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+
+		final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
+				.asEntityMappingType()
+				.getIdentifierMapping();
+
+		identifierMapping.forEachSelectable(0, (selectionIndex, selectableMapping) -> {
+			inlineView.getSelectClause().addSqlSelection(new SqlSelectionImpl(
+					new ColumnReference(statement.getTargetTable(), selectableMapping)
+			));
+			columnNames.add( selectableMapping.getSelectionExpression() );
+		});
+	}
+
+	private void addRowIdSelection(UpdateStatement statement, QuerySpec inlineView, List<String> columnNames, String rowIdExpression) {
+		inlineView.getSelectClause().addSqlSelection(new SqlSelectionImpl(
+				new ColumnReference(
+						statement.getTargetTable(),
+						rowIdExpression,
+						sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
+								.resolve( Object.class, dialect.rowIdSqlType() )
+				)
+		));
+		columnNames.add("c" + columnNames.size());
+	}
+
+	private void processFromClause(UpdateStatement statement, boolean correlated, QuerySpec inlineView) {
+		for ( TableGroup root : statement.getFromClause().getRoots() ) {
+			if ( correlated && statement.getTargetTable() == root.getPrimaryTableReference() ) {
+				handleCorrelatedTargetTable(root, inlineView);
+			}
+			else {
+				inlineView.getFromClause().addRoot(root);
+			}
+		}
+	}
+
+	private void handleCorrelatedTargetTable(TableGroup root, QuerySpec inlineView) {
+		final TableGroup dmlTargetTableGroup = new StandardTableGroup(
+				true,
+				new NavigablePath("dual"),
+				null,
+				null,
+				new NamedTableReference( getDual(), "d_" ),
+				null,
+				sessionFactory
+		);
+		inlineView.getFromClause().addRoot( dmlTargetTableGroup );
+		dmlTargetTableGroup.getTableReferenceJoins().addAll( root.getTableReferenceJoins() );
+
+		for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+			dmlTargetTableGroup.addTableGroupJoin( tableGroupJoin );
+		}
+
+		for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+			dmlTargetTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+		}
 	}
 
 	protected void visitUpdateStatementEmulateInlineView(UpdateStatement statement) {

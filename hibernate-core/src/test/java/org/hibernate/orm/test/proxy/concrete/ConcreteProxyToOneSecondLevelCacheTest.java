@@ -22,15 +22,14 @@ import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
+import org.hibernate.testing.orm.junit.ClearMode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,7 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
 		@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
 })
-@SessionFactory
+@SessionFactory(dropData = ClearMode.AFTER_ALL, clearCache = ClearMode.BEFORE_EACH)
 @BytecodeEnhanced(runNotEnhancedAsWell = true)
 @Jira("https://hibernate.atlassian.net/browse/HHH-18872")
 public class ConcreteProxyToOneSecondLevelCacheTest {
@@ -144,11 +143,6 @@ public class ConcreteProxyToOneSecondLevelCacheTest {
 		assertThat( stats.getSecondLevelCachePutCount() ).isEqualTo( puts );
 	}
 
-	@BeforeEach
-	public void clearCache(SessionFactoryScope scope) {
-		scope.getSessionFactory().getCache().evictAllRegions();
-	}
-
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
@@ -158,11 +152,6 @@ public class ConcreteProxyToOneSecondLevelCacheTest {
 			session.persist( node1 );
 			session.persist( node2 );
 		} );
-	}
-
-	@AfterAll
-	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Entity(name = "TestNode")

@@ -6,7 +6,7 @@ package org.hibernate.processor.test.data.namedquery;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
@@ -15,10 +15,11 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
 /**
  * @author Gavin King
  */
-public class NamedQueryTest extends CompilationTest {
+@CompilationTest
+class NamedQueryTest {
 	@Test
 	@WithClasses({ Author.class, Book.class, BookAuthorRepository.class, BookAuthorRepository$.class })
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );
 		System.out.println( getMetaModelSourceAsString( Author.class, true ) );

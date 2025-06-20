@@ -7,17 +7,18 @@ package org.hibernate.processor.test.noentity;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Gavin King
  */
-public class NoEntityTest extends CompilationTest {
+@CompilationTest
+class NoEntityTest {
 	@Test
 	@WithClasses({ Dao.class })
-	public void testGeneratedAnnotationNotGenerated() {
+	void testGeneratedAnnotationNotGenerated() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
 		assertMetamodelClassGeneratedFor( Dao.class );
 	}

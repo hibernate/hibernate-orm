@@ -6,7 +6,7 @@ package org.hibernate.processor.test.mappedsuperclass.mappedsuperclasswithoutid;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -14,10 +14,11 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 /**
  * @author Hardy Ferentschik
  */
-public class MappedSuperclassWithoutExplicitIdTest extends CompilationTest {
+@CompilationTest
+class MappedSuperclassWithoutExplicitIdTest {
 	@Test
 	@WithClasses({ ConcreteProduct.class, Product.class, Shop.class })
-	public void testRightAccessTypeForMappedSuperclass() {
+	void testRightAccessTypeForMappedSuperclass() {
 		assertMetamodelClassGeneratedFor( ConcreteProduct.class );
 		assertMetamodelClassGeneratedFor( Product.class );
 		assertMetamodelClassGeneratedFor( Shop.class );

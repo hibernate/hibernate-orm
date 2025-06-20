@@ -6,14 +6,15 @@ package org.hibernate.processor.test.embeddable.nested.field;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 
-public class NestedEmbeddableTest extends CompilationTest {
+@CompilationTest
+class NestedEmbeddableTest {
 	@Test
 	@WithClasses({ Author.class, Address.class, Postcode.class })
-	public void testCorrectAccessTypeUsedForEmbeddable() {
+	void testCorrectAccessTypeUsedForEmbeddable() {
 		assertAttributeTypeInMetaModelFor(
 				Address.class,
 				"city",

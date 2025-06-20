@@ -13,16 +13,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class InnerRepositoryTest extends CompilationTest {
+@CompilationTest
+class InnerRepositoryTest {
 
 	@Test
 	@WithClasses({Thing.class, ThingRepo.class})
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( ThingRepo.class ) );
 		assertMetamodelClassGeneratedFor( ThingRepo.class );
 	}

@@ -7,7 +7,7 @@ package org.hibernate.processor.test.mixedmode;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -17,11 +17,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 /**
  * @author Hardy Ferentschik
  */
-public class MixedConfigurationTest extends CompilationTest {
+@CompilationTest
+class MixedConfigurationTest {
 	@Test
 	@WithClasses({ Car.class, Vehicle.class })
 	@WithMappingFiles("car.xml")
-	public void testDefaultAccessTypeApplied() {
+	void testDefaultAccessTypeApplied() {
 		assertMetamodelClassGeneratedFor( Vehicle.class );
 		assertMetamodelClassGeneratedFor( Car.class );
 
@@ -33,7 +34,7 @@ public class MixedConfigurationTest extends CompilationTest {
 	@Test
 	@WithClasses({ Truck.class, Vehicle.class })
 	@WithMappingFiles("truck.xml")
-	public void testExplicitXmlConfiguredAccessTypeApplied() {
+	void testExplicitXmlConfiguredAccessTypeApplied() {
 		assertMetamodelClassGeneratedFor( Vehicle.class );
 		assertMetamodelClassGeneratedFor( Truck.class );
 
@@ -46,7 +47,7 @@ public class MixedConfigurationTest extends CompilationTest {
 	@Test
 	@WithClasses({ Car.class, Vehicle.class, RentalCar.class, RentalCompany.class })
 	@WithMappingFiles({ "car.xml", "rentalcar.xml" })
-	public void testMixedConfiguration() {
+	void testMixedConfiguration() {
 		assertMetamodelClassGeneratedFor( RentalCar.class );
 		assertMetamodelClassGeneratedFor( RentalCompany.class );
 
@@ -64,7 +65,7 @@ public class MixedConfigurationTest extends CompilationTest {
 	@Test
 	@WithClasses({ Coordinates.class, ZeroCoordinates.class, Location.class })
 	@WithMappingFiles("coordinates.xml")
-	public void testAccessTypeForXmlConfiguredEmbeddables() {
+	void testAccessTypeForXmlConfiguredEmbeddables() {
 		assertMetamodelClassGeneratedFor( Coordinates.class );
 		assertPresenceOfFieldInMetamodelFor(
 				Coordinates.class, "longitude", "field exists and should be in metamodel"

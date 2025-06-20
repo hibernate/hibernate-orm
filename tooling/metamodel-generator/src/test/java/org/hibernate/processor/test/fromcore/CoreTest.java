@@ -6,14 +6,15 @@ package org.hibernate.processor.test.fromcore;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Hardy Ferentschik
  */
-public class CoreTest extends CompilationTest {
+@CompilationTest
+public class CoreTest {
 	@Test
 	@WithClasses({MapEntity.class, MapEntityLocal.class, Order.class, LineItem.class, CreditCard.class, Customer.class,
 	PersonId.class, Phone.class, Person.class, Product.class, BaseEmbeddedEntity.class, VersionedEntity.class, ShelfLife.class,

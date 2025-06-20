@@ -80,6 +80,7 @@ configurations {
 def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) {
 	description = 'Runs the Quarkus ORM Panache tests.'
 	group = 'verification'
+	useJUnitPlatform()
 
 	testClassesDirs = sourceSets.quarkusOrmPanache.output.classesDirs
 	classpath = sourceSets.quarkusOrmPanache.runtimeClasspath
@@ -89,6 +90,7 @@ def quarkusOrmPanacheTestTask = tasks.register( 'quarkusOrmPanacheTest', Test ) 
 def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 	description = 'Runs the Quarkus HR Panache tests.'
 	group = 'verification'
+	useJUnitPlatform()
 
 	testClassesDirs = sourceSets.quarkusHrPanache.output.classesDirs
 	classpath = sourceSets.quarkusHrPanache.runtimeClasspath
@@ -98,6 +100,7 @@ def quarkusHrPanacheTestTask = tasks.register( 'quarkusHrPanacheTest', Test ) {
 def jakartaDataTestTask = tasks.register( 'jakartaDataTest', Test ) {
     description = 'Runs the Jakarta Data tests.'
     group = 'verification'
+	useJUnitPlatform()
 
     testClassesDirs = sourceSets.jakartaData.output.classesDirs
     classpath = sourceSets.jakartaData.runtimeClasspath

@@ -8,7 +8,7 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -20,11 +20,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
  *
  * @author Igor Vaynberg
  */
-public class DeepInheritanceTest extends CompilationTest {
+@CompilationTest
+class DeepInheritanceTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-69")
 	@WithClasses({ JetPlane.class, PersistenceBase.class, Plane.class })
-	public void testDeepInheritance() throws Exception {
+	void testDeepInheritance() throws Exception {
 		assertMetamodelClassGeneratedFor( Plane.class );
 		assertMetamodelClassGeneratedFor( JetPlane.class );
 		assertPresenceOfFieldInMetamodelFor( JetPlane.class, "jets" );

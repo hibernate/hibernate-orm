@@ -7,7 +7,7 @@ package org.hibernate.processor.test.arraytype;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -15,11 +15,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 /**
  * @author Chris Cranford
  */
-public class ArrayTestWithTypeUseTest extends CompilationTest {
+@CompilationTest
+class ArrayTestWithTypeUseTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12011")
 	@WithClasses(TestEntity.class)
-	public void testArrayWithBeanValidation() {
+	void testArrayWithBeanValidation() {
 		assertMetamodelClassGeneratedFor(  TestEntity.class );
 
 		// Primitive Arrays

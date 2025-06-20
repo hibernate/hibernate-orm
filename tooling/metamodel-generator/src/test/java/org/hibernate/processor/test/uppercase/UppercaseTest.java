@@ -6,17 +6,18 @@ package org.hibernate.processor.test.uppercase;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class UppercaseTest extends CompilationTest {
+@CompilationTest
+class UppercaseTest {
 
 	@Test
 	@WithClasses(value = Person.class)
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Person.class ) );
 
 		assertMetamodelClassGeneratedFor( Person.class );

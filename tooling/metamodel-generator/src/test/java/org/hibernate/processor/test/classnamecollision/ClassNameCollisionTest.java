@@ -6,21 +6,22 @@ package org.hibernate.processor.test.classnamecollision;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 import static org.hibernate.processor.test.util.TestUtil.getMetamodelClassFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ClassNameCollisionTest extends CompilationTest {
+@CompilationTest
+class ClassNameCollisionTest {
 
 	@Test
 	@WithClasses({
 			Something.class,
 			org.hibernate.processor.test.classnamecollision.somewhere.Something.class
 	})
-	public void testAmbiguousSimpleName() {
+	void testAmbiguousSimpleName() {
 		System.out.println( getMetaModelSourceAsString( Something.class ) );
 		assertMetamodelClassGeneratedFor( Something.class );
 		System.out.println( getMetaModelSourceAsString( org.hibernate.processor.test.classnamecollision.somewhere.Something.class ) );

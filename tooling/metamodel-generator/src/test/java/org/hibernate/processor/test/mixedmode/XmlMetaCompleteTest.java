@@ -7,7 +7,7 @@ package org.hibernate.processor.test.mixedmode;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -15,11 +15,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaCompleteTest extends CompilationTest {
+@CompilationTest
+class XmlMetaCompleteTest {
 	@Test
 	@WithClasses(Person.class)
 	@WithMappingFiles("orm.xml")
-	public void testXmlConfiguredEmbeddedClassGenerated() {
+	void testXmlConfiguredEmbeddedClassGenerated() {
 		assertMetamodelClassGeneratedFor( Person.class );
 		assertAbsenceOfFieldInMetamodelFor( Person.class, "name" );
 	}

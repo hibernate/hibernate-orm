@@ -10,18 +10,19 @@ import jakarta.persistence.NamedQuery;
 import org.hibernate.processor.test.innerclass.InnerClassTest.One.Two;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertNoMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class InnerClassTest extends CompilationTest {
+@CompilationTest
+class InnerClassTest {
 
 	@WithClasses({Person.class, Dummy.class, Inner.class, Two.class})
 	@Test
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( InnerClassTest.class ) );
 		System.out.println( getMetaModelSourceAsString( Dummy.class ) );
 		System.out.println( getMetaModelSourceAsString( Person.class ) );

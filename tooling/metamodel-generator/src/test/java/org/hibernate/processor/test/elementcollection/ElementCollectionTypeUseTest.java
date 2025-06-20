@@ -8,18 +8,22 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.processor.test.util.TestUtil.*;
+import static org.hibernate.processor.test.util.TestUtil.assertListAttributeTypeInMetaModelFor;
+import static org.hibernate.processor.test.util.TestUtil.assertMapAttributesInMetaModelFor;
+import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.processor.test.util.TestUtil.assertSetAttributeTypeInMetaModelFor;
 
 /**
  * @author Chris Cranford
  */
-public class ElementCollectionTypeUseTest extends CompilationTest {
+@CompilationTest
+class ElementCollectionTypeUseTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12612")
 	@WithClasses(OfficeBuildingValidated.class)
-	public void testAnnotatedCollectionElements() {
+	void testAnnotatedCollectionElements() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( OfficeBuildingValidated.class ) );
 		assertMetamodelClassGeneratedFor( OfficeBuildingValidated.class );
 

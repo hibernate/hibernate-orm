@@ -9,7 +9,7 @@ import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
 
 import java.lang.reflect.Field;
@@ -24,11 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-public class ArrayTest extends CompilationTest {
+@CompilationTest
+class ArrayTest {
 
 	@Test
 	@WithClasses({Competitor.class, Contest.class})
-	public void testOneToMany() throws NoSuchFieldException, IllegalAccessException {
+	void testOneToMany() throws NoSuchFieldException, IllegalAccessException {
 		System.out.println( getMetaModelSourceAsString( Competitor.class ) );
 		assertValidMetamodelField( Competitor.class, "id" );
 		assertValidMetamodelField( Competitor.class, "name" );

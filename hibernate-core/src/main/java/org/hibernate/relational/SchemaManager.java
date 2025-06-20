@@ -71,6 +71,11 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 * <p>
+	 * This operation does not affect the {@linkplain org.hibernate.Cache second-level cache}.
+	 * Therefore, after calling {@code truncate()}, it might be necessary to also call
+	 * {@link org.hibernate.Cache#evictAllRegions} to clean up data held in the second-level
+	 * cache.
 	 *
 	 * @apiNote This operation is a synonym for {@link #truncate}.
 	 */

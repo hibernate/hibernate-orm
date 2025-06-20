@@ -80,6 +80,7 @@ dependencies {
     testRuntimeOnly jdbcLibs.mssql
     testRuntimeOnly jdbcLibs.informix
     testRuntimeOnly jdbcLibs.cockroachdb
+    testRuntimeOnly jdbcLibs.gaussdb
     testRuntimeOnly jdbcLibs.sybase
     testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 

@@ -42,6 +42,7 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -546,6 +547,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect
+					|| dialect instanceof GaussDBDialect
 					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) );
 		}
 	}
@@ -562,6 +564,7 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof H2Dialect
 				|| dialect instanceof SQLServerDialect
 				|| dialect instanceof PostgreSQLDialect
+				|| dialect instanceof GaussDBDialect
 				|| dialect instanceof DB2Dialect
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof SybaseDialect

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.typeoverride;
 import java.sql.Types;
 
 import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -58,6 +59,12 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 			);
 		}
 		else if ( PostgreSQLDialect.class.isInstance( dialect ) ) {
+			assertSame(
+					BlobJdbcType.BLOB_BINDING,
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
+			);
+		}
+		else if ( GaussDBDialect.class.isInstance( dialect ) ) {
 			assertSame(
 					BlobJdbcType.BLOB_BINDING,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )

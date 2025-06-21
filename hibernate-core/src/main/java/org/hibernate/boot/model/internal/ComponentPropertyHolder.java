@@ -221,23 +221,21 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
-		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
+		//AnnotatedColumn.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
-		if ( columns != null ) {
-			final Table table = columns.getTable();
-			if ( !table.equals( getTable() ) ) {
-				if ( component.getPropertySpan() == 0 ) {
-					component.setTable( table );
-				}
-				else {
-					throw new AnnotationException(
-							"Embeddable class '" + component.getComponentClassName()
-									+ "' has properties mapped to two different tables"
-									+ " (all properties of the embeddable class must map to the same table)"
-					);
-				}
+		final Table table = property.getValue().getTable();
+		if ( !table.equals( getTable() ) ) {
+			if ( component.getPropertySpan() == 0 ) {
+				component.setTable( table );
+			}
+			else {
+				throw new AnnotationException(
+						"Embeddable class '" + component.getComponentClassName()
+								+ "' has properties mapped to two different tables"
+								+ " (all properties of the embeddable class must map to the same table)"
+				);
 			}
 		}
 		addProperty( property, attributeMemberDetails, declaringClass );

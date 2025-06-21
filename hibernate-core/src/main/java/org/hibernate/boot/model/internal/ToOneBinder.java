@@ -259,6 +259,7 @@ public class ToOneBinder {
 							notFoundAction,
 							value
 					) );
+			value.markAsJoinTable();
 			return value;
 		}
 		else {
@@ -270,7 +271,9 @@ public class ToOneBinder {
 				join.disableForeignKeyCreation();
 			}
 			// All FK columns should be in the same table
-			return new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
+			var manyToOne = new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
+			manyToOne.markAsJoinTable();
+			return manyToOne;
 		}
 	}
 

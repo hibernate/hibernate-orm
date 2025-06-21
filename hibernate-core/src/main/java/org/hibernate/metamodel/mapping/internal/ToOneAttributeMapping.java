@@ -2091,10 +2091,12 @@ public class ToOneAttributeMapping
 							creationState
 					) );
 
+					final EntityMappingType associatedEntityMappingType = getAssociatedEntityMappingType();
+
 					// Note specifically we only apply `@Filter` restrictions that are applyToLoadByKey = true
 					// to make the behavior consistent with lazy loading of an association
-					if ( getAssociatedEntityMappingType().getEntityPersister().hasFilterForLoadByKey() ) {
-						getAssociatedEntityMappingType().applyBaseRestrictions(
+					if ( associatedEntityMappingType.getEntityPersister().hasFilterForLoadByKey() ) {
+						associatedEntityMappingType.applyBaseRestrictions(
 								join::applyPredicate,
 								tableGroup,
 								true,
@@ -2104,22 +2106,28 @@ public class ToOneAttributeMapping
 								creationState
 						);
 					}
-					getAssociatedEntityMappingType().applyWhereRestrictions(
-							join::applyPredicate,
-							tableGroup,
-							true,
-							creationState
-					);
-					if ( getAssociatedEntityMappingType().getSuperMappingType() != null && !creationState.supportsEntityNameUsage() ) {
-						getAssociatedEntityMappingType().applyDiscriminator( null, null, tableGroup, creationState );
+					// @SQLRestriction should not be applied when joining FK association,
+					// because that would result in us setting the FK to null when the
+					// owning entity is updated, that is, to data loss.
+					// But we'll let it apply on the TARGET side of a @OneToOne
+					if ( sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+						associatedEntityMappingType.applyWhereRestrictions(
+								join::applyPredicate,
+								tableGroup,
+								true,
+								creationState
+						);
+					}
+					if ( associatedEntityMappingType.getSuperMappingType() != null && !creationState.supportsEntityNameUsage() ) {
+						associatedEntityMappingType.applyDiscriminator( null, null, tableGroup, creationState );
 					}
 
-					final SoftDeleteMapping softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
+					final SoftDeleteMapping softDeleteMapping = associatedEntityMappingType.getSoftDeleteMapping();
 					if ( softDeleteMapping != null ) {
 						// add the restriction
 						final TableReference tableReference = lazyTableGroup.resolveTableReference(
 								navigablePath,
-								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
+								associatedEntityMappingType.getSoftDeleteTableDetails().getTableName()
 						);
 						join.applyPredicate( softDeleteMapping.createNonDeletedRestriction(
 								tableReference,

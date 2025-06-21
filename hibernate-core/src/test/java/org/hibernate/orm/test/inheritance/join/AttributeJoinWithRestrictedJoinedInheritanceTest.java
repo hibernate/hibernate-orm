@@ -66,7 +66,8 @@ public class AttributeJoinWithRestrictedJoinedInheritanceTest {
 			).getResultList();
 			assertEquals( 2, resultList.size() );
 			assertResult( resultList.get( 0 ), 1, 11, 11, "child_a_1", SubChildEntityA1.class );
-			assertResult( resultList.get( 1 ), 2, 21, null, null, null );
+			// @SQLRestriction should not be applied when joining FK association
+			assertResult( resultList.get( 1 ), 2, 21, 21, "child_a_2", SubChildEntityA2.class );
 		} );
 	}
 

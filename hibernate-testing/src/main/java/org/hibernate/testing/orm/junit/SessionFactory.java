@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
@@ -56,4 +57,10 @@ public @interface SessionFactory {
 	boolean useCollectingStatementInspector() default false;
 
 	boolean applyCollectionsInDefaultFetchGroup() default true;
+
+	@Incubating
+	ClearMode dropData() default ClearMode.NEVER;
+	@Incubating
+	ClearMode clearCache() default ClearMode.NEVER;
+
 }

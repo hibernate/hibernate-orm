@@ -28,6 +28,8 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGroup
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -46,7 +48,8 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SessionFactoryExtension
-		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler {
+		implements TestInstancePostProcessor, BeforeEachCallback, TestExecutionExceptionHandler,
+		AfterEachCallback, AfterAllCallback {
 
 	private static final Logger log = Logger.getLogger( SessionFactoryExtension.class );
 	private static final String SESSION_FACTORY_KEY = SessionFactoryScope.class.getName();
@@ -92,6 +95,7 @@ public class SessionFactoryExtension
 		if ( sfAnnRef.isEmpty() ) {
 			// assume the annotations are defined on the class-level...
 			// will be validated by the parameter-resolver or SFS-extension
+			cleanup( context, ClearMode.BEFORE_EACH );
 			return;
 		}
 
@@ -99,6 +103,8 @@ public class SessionFactoryExtension
 		final SessionFactoryScope created = createSessionFactoryScope( context.getRequiredTestInstance(), sfAnnRef, domainModelScope, context );
 		final ExtensionContext.Store extensionStore = locateExtensionStore( context.getRequiredTestInstance(), context );
 		extensionStore.put( SESSION_FACTORY_KEY, created );
+
+		cleanup( context, ClearMode.BEFORE_EACH );
 	}
 
 	private static ExtensionContext.Store locateExtensionStore(Object testInstance, ExtensionContext context) {
@@ -111,6 +117,8 @@ public class SessionFactoryExtension
 			DomainModelScope domainModelScope,
 			ExtensionContext context) {
 		SessionFactoryProducer producer = null;
+		ClearMode dropDataMode = ClearMode.NEVER;
+		ClearMode clearCacheMode = ClearMode.NEVER;
 
 		if ( testInstance instanceof SessionFactoryProducer ) {
 			producer = (SessionFactoryProducer) testInstance;
@@ -122,6 +130,8 @@ public class SessionFactoryExtension
 
 			if ( sfAnnRef.isPresent() ) {
 				final SessionFactory sessionFactoryConfig = sfAnnRef.get();
+				dropDataMode = sessionFactoryConfig.dropData();
+				clearCacheMode = sessionFactoryConfig.clearCache();
 
 				producer = model -> {
 					try {
@@ -166,7 +176,7 @@ public class SessionFactoryExtension
 			throw new IllegalStateException( "Could not determine SessionFactory producer" );
 		}
 
-		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl( domainModelScope, producer );
+		final SessionFactoryScopeImpl sfScope = new SessionFactoryScopeImpl( domainModelScope, producer, dropDataMode, clearCacheMode );
 
 		if ( testInstance instanceof SessionFactoryScopeAware ) {
 			( (SessionFactoryScopeAware) testInstance ).injectSessionFactoryScope( sfScope );
@@ -232,18 +242,42 @@ public class SessionFactoryExtension
 		throw throwable;
 	}
 
+	@Override
+	public void afterAll(ExtensionContext context) {
+		cleanup( context, ClearMode.AFTER_ALL );
+	}
+
+	@Override
+	public void afterEach(ExtensionContext context) {
+		cleanup( context, ClearMode.AFTER_EACH );
+	}
+
+	private void cleanup(ExtensionContext context, ClearMode dropDataMode) {
+		final Object testInstance = context.getRequiredTestInstance();
+		final ExtensionContext.Store store = locateExtensionStore( testInstance, context );
+		final SessionFactoryScopeImpl scope = (SessionFactoryScopeImpl) store.get( SESSION_FACTORY_KEY );
+		if (scope != null ) {
+			scope.dropData( dropDataMode );
+			scope.clearCache( dropDataMode );
+		}
+	}
+
 	private static class SessionFactoryScopeImpl implements SessionFactoryScope, ExtensionContext.Store.CloseableResource {
 		private final DomainModelScope modelScope;
 		private final SessionFactoryProducer producer;
+		private final ClearMode dropDataMode;
+		private final ClearMode clearCacheMode;
 
 		private SessionFactoryImplementor sessionFactory;
 		private boolean active = true;
 
 		private SessionFactoryScopeImpl(
 				DomainModelScope modelScope,
-				SessionFactoryProducer producer) {
+				SessionFactoryProducer producer, ClearMode dropDataMode, ClearMode clearCacheMode) {
 			this.modelScope = modelScope;
 			this.producer = producer;
+			this.dropDataMode = dropDataMode;
+			this.clearCacheMode = clearCacheMode;
 		}
 
 		@Override
@@ -414,6 +448,18 @@ public class SessionFactoryExtension
 		public void dropData() {
 			if ( sessionFactory != null ) {
 				sessionFactory.getSchemaManager().truncateMappedObjects();
+			}
+		}
+
+		void dropData(ClearMode dropDataMode) {
+			if ( this.dropDataMode == dropDataMode ) {
+				dropData();
+			}
+		}
+
+		void clearCache(ClearMode clearCacheMode) {
+			if ( this.clearCacheMode == clearCacheMode ) {
+				sessionFactory.getCache().evictAllRegions();
 			}
 		}
 	}

@@ -24,7 +24,7 @@ import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
 import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY;
 
 /**
- * A concrete implementation of the {@link MultiTenantConnectionProvider} contract bases on
+ * A concrete implementation of the {@link MultiTenantConnectionProvider} contract based on
  * a number of reasonable assumptions. We assume that:<ul>
  *     <li>
  *         The {@link DataSource} instances are all available from JNDI named by the tenant
@@ -70,8 +70,8 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.requireService( ConfigurationService.class );
-		final Object dataSourceConfigValue = configurationService.getSettings().get( DATASOURCE );
+		final var settings = serviceRegistry.requireService( ConfigurationService.class ).getSettings();
+		final Object dataSourceConfigValue = settings.get( DATASOURCE );
 		if ( !(dataSourceConfigValue instanceof String configuredJndiName) ) {
 			throw new HibernateException( "illegal value for configuration setting '" + DATASOURCE + "'" );
 		}
@@ -82,21 +82,21 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 			throw new HibernateException( "Could not locate JndiService from DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
 
-		final Object namedObject = jndiService.locate( this.jndiName );
+		final Object namedObject = jndiService.locate( jndiName );
 		if ( namedObject == null ) {
-			throw new HibernateException( "JNDI name [" + this.jndiName + "] could not be resolved" );
+			throw new HibernateException( "JNDI name [" + jndiName + "] could not be resolved" );
 		}
 		else if ( namedObject instanceof DataSource datasource ) {
-			final int loc = this.jndiName.lastIndexOf( '/' );
-			baseJndiNamespace = this.jndiName.substring( 0, loc );
-			final String prefix = this.jndiName.substring( loc + 1);
+			final int loc = jndiName.lastIndexOf( '/' );
+			baseJndiNamespace = jndiName.substring( 0, loc );
+			final String prefix = jndiName.substring( loc + 1);
 			tenantIdentifierForAny = (T) prefix;
 			dataSourceMap().put( tenantIdentifierForAny, datasource );
 		}
 		else if ( namedObject instanceof Context ) {
-			baseJndiNamespace = this.jndiName;
+			baseJndiNamespace = jndiName;
 			final Object configuredTenantId =
-					configurationService.getSettings().get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
+					settings.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
 			tenantIdentifierForAny = (T) configuredTenantId;
 			if ( tenantIdentifierForAny == null ) {
 				throw new HibernateException( "JNDI name named a Context, but tenant identifier to use for ANY was not specified" );
@@ -105,7 +105,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		else {
 			throw new HibernateException(
 					"Unknown object type [" + namedObject.getClass().getName() +
-					"] found in JNDI location [" + this.jndiName + "]"
+					"] found in JNDI location [" + jndiName + "]"
 			);
 		}
 	}

@@ -7,17 +7,18 @@ package org.hibernate.processor.test.superdao;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Gavin King
  */
-public class SuperDaoTest extends CompilationTest {
+@CompilationTest
+class SuperDaoTest {
 	@Test
 	@WithClasses({ Book.class, SuperDao.class, Dao.class })
-	public void testQueryMethod() {
+	void testQueryMethod() {
 //		System.out.println( TestUtil.getMetaModelSourceAsString( SuperDao.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );

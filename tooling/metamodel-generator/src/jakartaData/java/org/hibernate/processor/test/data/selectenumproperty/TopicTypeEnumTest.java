@@ -6,15 +6,16 @@ package org.hibernate.processor.test.data.selectenumproperty;
 
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class TopicTypeEnumTest extends CompilationTest {
+@CompilationTest
+class TopicTypeEnumTest {
 	@Test
 	@WithClasses({Topic.class, TopicRepository.class})
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( Topic.class ) );
 		System.out.println( getMetaModelSourceAsString( Topic.class, true ) );
 		System.out.println( getMetaModelSourceAsString( TopicRepository.class ) );

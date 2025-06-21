@@ -7,16 +7,17 @@ package org.hibernate.processor.test.data.fqcninquery;
 import jakarta.persistence.EntityManager;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class FqcnInQueryTest extends CompilationTest {
+@CompilationTest
+class FqcnInQueryTest {
 	@Test
 	@WithClasses({MyEntity.class, MyRepository.class})
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( MyRepository.class ) );
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
 

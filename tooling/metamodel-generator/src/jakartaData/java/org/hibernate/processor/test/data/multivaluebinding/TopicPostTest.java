@@ -7,7 +7,7 @@ package org.hibernate.processor.test.data.multivaluebinding;
 import jakarta.persistence.EntityManager;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -21,10 +21,11 @@ import static org.hibernate.processor.test.util.TestUtil.getMethodFromMetamodelF
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class TopicPostTest extends CompilationTest {
+@CompilationTest
+class TopicPostTest {
 	@Test
 	@WithClasses({Post.class, PostRepository.class})
-	public void test() {
+	void test() {
 		assertMetamodelClassGeneratedFor( Post.class, true );
 		assertMetamodelClassGeneratedFor( Post.class );
 		assertMetamodelClassGeneratedFor( PostRepository.class );

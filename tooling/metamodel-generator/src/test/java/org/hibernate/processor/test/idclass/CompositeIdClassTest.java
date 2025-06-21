@@ -8,17 +8,18 @@ import jakarta.persistence.EntityManager;
 import org.hibernate.processor.test.idclass.MyEntity.MyEntityId;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfNameFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsString;
 
-public class CompositeIdClassTest extends CompilationTest {
+@CompilationTest
+class CompositeIdClassTest {
 	@Test
 	@WithClasses(MyEntity.class)
-	public void test() {
+	void test() {
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
 		assertMetamodelClassGeneratedFor( MyEntity.class );
 		assertPresenceOfNameFieldInMetamodelFor(

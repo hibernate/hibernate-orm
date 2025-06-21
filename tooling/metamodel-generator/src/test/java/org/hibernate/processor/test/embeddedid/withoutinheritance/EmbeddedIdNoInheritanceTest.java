@@ -7,7 +7,7 @@ package org.hibernate.processor.test.embeddedid.withoutinheritance;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithMappingFiles;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -15,11 +15,12 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 /**
  * @author Hardy Ferentschik
  */
-public class EmbeddedIdNoInheritanceTest extends CompilationTest {
+@CompilationTest
+class EmbeddedIdNoInheritanceTest {
 	@Test
 	@WithClasses({ Person.class, XmlPerson.class, PersonId.class })
 	@WithMappingFiles("orm.xml")
-	public void testGeneratedAnnotationNotGenerated() {
+	void testGeneratedAnnotationNotGenerated() {
 		assertMetamodelClassGeneratedFor( Person.class );
 		assertPresenceOfFieldInMetamodelFor(
 				Person.class, "id", "Property id should be in metamodel"

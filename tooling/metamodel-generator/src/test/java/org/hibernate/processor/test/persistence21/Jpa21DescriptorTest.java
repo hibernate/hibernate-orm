@@ -9,7 +9,7 @@ import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
 import org.hibernate.processor.test.util.WithProcessorOption;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
@@ -18,14 +18,15 @@ import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGen
  *
  * @author Hardy Ferentschik
  */
-public class Jpa21DescriptorTest extends CompilationTest {
+@CompilationTest
+class Jpa21DescriptorTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-92")
 	@WithClasses(Snafu.class)
 	@WithProcessorOption(key = HibernateProcessor.PERSISTENCE_XML_OPTION,
 			value = "org/hibernate/processor/test/persistence21/persistence.xml")
-	public void testMetaModelGeneratedForXmlConfiguredEntity() {
+	void testMetaModelGeneratedForXmlConfiguredEntity() {
 		assertMetamodelClassGeneratedFor( Snafu.class );
 	}
 }

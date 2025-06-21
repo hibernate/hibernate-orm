@@ -7,17 +7,18 @@ package org.hibernate.processor.test.hqlsql;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Gavin King
  */
-public class QueryMethodTest extends CompilationTest {
+@CompilationTest
+class QueryMethodTest {
 	@Test
 	@WithClasses({ Book.class, Publisher.class, Dao.class, Books.class })
-	public void testQueryMethod() {
+	void testQueryMethod() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( Books.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );

@@ -7,18 +7,19 @@ package org.hibernate.processor.test.rawtypes;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.WithClasses;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Emmanuel Bernard
  */
-public class RawTypesTest extends CompilationTest {
+@CompilationTest
+class RawTypesTest {
 
 	@Test
 	@WithClasses({ DeskWithRawType.class, EmployeeWithRawType.class })
-	public void testGenerics() {
+	void testGenerics() {
 		assertMetamodelClassGeneratedFor( DeskWithRawType.class );
 		assertMetamodelClassGeneratedFor( EmployeeWithRawType.class );
 	}

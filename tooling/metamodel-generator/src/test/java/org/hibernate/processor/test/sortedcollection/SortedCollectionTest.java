@@ -7,7 +7,7 @@ package org.hibernate.processor.test.sortedcollection;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestForIssue;
 import org.hibernate.processor.test.util.WithClasses;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -15,12 +15,13 @@ import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldIn
 /**
  * @author Hardy Ferentschik
  */
-public class SortedCollectionTest extends CompilationTest {
+@CompilationTest
+class SortedCollectionTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-62")
 	@WithClasses({ Printer.class, PrintJob.class })
-	public void testGenerics() {
+	void testGenerics() {
 		assertMetamodelClassGeneratedFor( Printer.class );
 		assertMetamodelClassGeneratedFor( PrintJob.class );
 		assertPresenceOfFieldInMetamodelFor( Printer.class, "printQueue", "There sorted set attribute is missing" );

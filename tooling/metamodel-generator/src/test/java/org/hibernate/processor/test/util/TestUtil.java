@@ -4,11 +4,11 @@
  */
 package org.hibernate.processor.test.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -48,13 +48,13 @@ public class TestUtil {
 	}
 
 	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
-		assertNotNull( "Class parameter cannot be null", clazz );
+		assertNotNull( clazz, "Class parameter cannot be null" );
 		File sourceFile = getMetaModelSourceFileFor( clazz, false );
-		assertFalse( "There should be no source file: " + sourceFile.getName(), sourceFile.exists() );
+		assertFalse( sourceFile.exists(), "There should be no source file: " + sourceFile.getName() );
 	}
 
 	public static void assertAbsenceOfNonDefaultConstructorInMetamodelFor(Class<?> clazz, String errorString) {
-		assertFalse(buildErrorString( errorString, clazz ), hasNonDefaultConstructorInMetamodelFor( clazz ) );
+		assertFalse( hasNonDefaultConstructorInMetamodelFor( clazz ), buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
@@ -66,7 +66,7 @@ public class TestUtil {
 	}
 
 	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		assertFalse( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+		assertFalse( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
@@ -104,35 +104,36 @@ public class TestUtil {
 	}
 
 	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+		assertTrue( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertPresenceOfFieldInMetamodelFor(String className, String fieldName, String errorString) {
-		assertTrue( buildErrorString( errorString, className ), hasFieldInMetamodelFor( className, fieldName ) );
+		assertTrue( hasFieldInMetamodelFor( className, fieldName ), buildErrorString( errorString, className ) );
 	}
 
 	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String fieldName, String errorString,
 			Class<?>... params) {
-		assertTrue( buildErrorString( errorString, clazz ), hasMethodInMetamodelFor( clazz, fieldName, params ) );
+		assertTrue( hasMethodInMetamodelFor( clazz, fieldName, params ), buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertPresenceOfMethodInMetamodelFor(String className, String fieldName, String errorString,
 			Class<?>... params) {
-		assertTrue( buildErrorString( errorString, className ), hasMethodInMetamodelFor( className, fieldName, params ) );
+		assertTrue( hasMethodInMetamodelFor( className, fieldName, params ), buildErrorString( errorString, className ) );
 	}
 
 	public static void assertPresenceOfNameFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+		assertTrue( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
 		assertEquals(
-				buildErrorString( errorString, clazz ), getFieldFromMetamodelFor( clazz, fieldName ).getType(),
-				String.class
+				getFieldFromMetamodelFor( clazz, fieldName ).getType(),
+				String.class,
+				buildErrorString( errorString, clazz )
 		);
 	}
 
 	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType,
 			String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
-		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
+		assertNotNull( field, "Cannot find field '" + fieldName + "' in " + clazz.getName() );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
 		Type actualType = type.getActualTypeArguments()[1];
 		if ( expectedType.isArray() ) {
@@ -140,9 +141,9 @@ public class TestUtil {
 			actualType = getComponentType( actualType );
 		}
 		assertEquals(
-				"Types do not match: " + buildErrorString( errorString, clazz ),
 				expectedType,
-				actualType
+				actualType,
+				"Types do not match: " + buildErrorString( errorString, clazz )
 		);
 	}
 
@@ -162,19 +163,19 @@ public class TestUtil {
 		assertNotNull( field );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
 		Type actualMapKeyType = type.getActualTypeArguments()[1];
-		assertEquals( buildErrorString( errorString, clazz ), expectedMapKey, actualMapKeyType );
+		assertEquals( expectedMapKey, actualMapKeyType, buildErrorString( errorString, clazz ) );
 
 		Type actualMapKeyValue = type.getActualTypeArguments()[2];
-		assertEquals( buildErrorString( errorString, clazz ), expectedMapValue, actualMapKeyValue );
+		assertEquals( expectedMapValue, actualMapKeyValue, buildErrorString( errorString, clazz ) );
 	}
 
 	public static void assertSuperclassRelationshipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
 		Class<?> clazz = getMetamodelClassFor( entityClass );
 		Class<?> superClazz = getMetamodelClassFor( superEntityClass );
 		assertEquals(
-				"Entity " + superClazz.getName() + " should be the superclass of " + clazz.getName(),
 				superClazz.getName(),
-				clazz.getSuperclass().getName()
+				clazz.getSuperclass().getName(),
+				"Entity " + superClazz.getName() + " should be the superclass of " + clazz.getName()
 		);
 	}
 
@@ -288,7 +289,7 @@ public class TestUtil {
 	 * @return the static metamodel class for the specified entity.
 	 */
 	public static Class<?> getMetamodelClassFor(Class<?> entityClass, boolean prefix) {
-		assertNotNull( "Class parameter cannot be null", entityClass );
+		assertNotNull( entityClass, "Class parameter cannot be null" );
 		String metaModelClassName = getMetaModelClassName( entityClass, prefix );
 		try {
 			URL outDirUrl = getOutBaseDir( entityClass ).toURI().toURL();
@@ -553,22 +554,22 @@ public class TestUtil {
 			Class<?> expectedType,
 			String errorString) {
 		Field field = getFieldFromMetamodelFor( clazz, fieldName );
-		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
+		assertNotNull( field, "Cannot find field '" + fieldName + "' in " + clazz.getName() );
 		ParameterizedType type = (ParameterizedType) field.getGenericType();
 		Type rawType = type.getRawType();
 
 		assertEquals(
-				"Types do not match: " + buildErrorString( errorString, clazz ),
 				collectionType,
-				rawType
+				rawType,
+				"Types do not match: " + buildErrorString( errorString, clazz )
 		);
 
 		Type genericType = type.getActualTypeArguments()[1];
 
 		assertEquals(
-				"Types do not match: " + buildErrorString( errorString, clazz ),
 				expectedType,
-				genericType
+				genericType,
+				"Types do not match: " + buildErrorString( errorString, clazz )
 		);
 	}
 

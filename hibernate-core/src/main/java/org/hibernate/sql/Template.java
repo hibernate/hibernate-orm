@@ -164,6 +164,8 @@ public final class Template {
 		boolean inFromClause = false;
 		boolean afterFromTable = false;
 		boolean inExtractOrTrim = false;
+		boolean inCast = false;
+		boolean afterCastAs = false;
 
 		boolean hasMore = tokens.hasMoreTokens();
 		String nextToken = hasMore ? tokens.nextToken() : null;
@@ -237,6 +239,14 @@ public final class Template {
 				result.append(token);
 				inExtractOrTrim = true;
 			}
+			else if ( "cast".equals( lcToken ) ) {
+				result.append( token );
+				inCast = true;
+			}
+			else if ( inCast && ("as".equals( lcToken ) || afterCastAs) ) {
+				result.append( token );
+				afterCastAs = true;
+			}
 			else if ( !inFromClause // don't want to append alias to tokens inside the FROM clause
 					&& isIdentifier( token )
 					&& !isFunctionOrKeyword( lcToken, nextToken, dialect, typeConfiguration )
@@ -248,6 +258,8 @@ public final class Template {
 			else {
 				if ( ")".equals( lcToken) ) {
 					inExtractOrTrim = false;
+					inCast = false;
+					afterCastAs = false;
 				}
 				else if ( !inExtractOrTrim
 						&& BEFORE_TABLE_KEYWORDS.contains(lcToken) ) {

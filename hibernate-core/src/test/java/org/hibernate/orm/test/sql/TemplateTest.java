@@ -74,7 +74,10 @@ public class TemplateTest {
 				"where {@}.foo>10 and {@}.bar is not null", factory );
 		assertWhereStringTemplate("select t.foo, o.bar from table as t left join other as o on t.id = o.id where t.foo>10 and o.bar is not null order by o.bar",
 				"select t.foo, o.bar from table as t left join other as o on t.id = o.id where t.foo>10 and o.bar is not null order by o.bar", factory );
-
+		assertWhereStringTemplate( "CAST(foo AS unsigned)",
+				"CAST({@}.foo AS unsigned)", factory );
+		assertWhereStringTemplate( "CAST(foo AS signed)",
+				"CAST({@}.foo AS signed)", factory );
 	}
 
 	private static void assertWhereStringTemplate(String sql, SessionFactoryImplementor sf) {

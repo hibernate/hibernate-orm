@@ -12,7 +12,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -46,7 +45,7 @@ import java.util.Locale;
  *
  * @author Christian Beikov
  */
-public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithOnDuplicateKeyUpdate<T> {
 
 	/**
 	 * On MySQL, 1GB or {@code 2^30 - 1} is the maximum size that a char value can be casted.

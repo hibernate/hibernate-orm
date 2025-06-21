@@ -82,7 +82,7 @@ public class MutationQueryOptions implements QueryOptions {
 
 	@Override
 	public LockOptions getLockOptions() {
-		return LockOptions.NONE;
+		return null;
 	}
 
 	@Override

@@ -407,7 +407,7 @@ public class LoaderSelectBuilder {
 				cachedDomainResult,
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
-				lockOptions != null ? lockOptions : LockOptions.NONE,
+				lockOptions != null ? lockOptions : new LockOptions(),
 				determineGraphTraversalState( loadQueryInfluencers, creationContext.getJpaMetamodel() ),
 				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
 				jdbcParameterConsumer

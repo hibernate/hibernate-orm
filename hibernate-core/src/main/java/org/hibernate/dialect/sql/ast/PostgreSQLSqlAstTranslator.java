@@ -187,15 +187,8 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 		appendSql( "materialized " );
 	}
 
-	@Override
 	protected String getForUpdate() {
 		return getDialect().getForUpdateString();
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		// Note that `for key share` is inappropriate as that only means "prevent PK changes"
-		return " for share";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

@@ -704,14 +704,6 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 */
 	NativeQuery<T> setLockScope(PessimisticLockScope lockScope);
 
-	/**
-	 * Not applicable to native SQL queries.
-	 *
-	 * @throws IllegalStateException for consistency with JPA
-	 */
-	@Override
-	NativeQuery<T> setLockMode(String alias, LockMode lockMode);
-
 	@Override
 	<R> NativeQuery<R> setTupleTransformer(TupleTransformer<R> transformer);
 

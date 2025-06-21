@@ -2794,11 +2794,11 @@ public abstract class AbstractEntityPersister
 			}
 
 			if ( softDeleteMapping != null ) {
-				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final Predicate softDeletePredicate = softDeleteMapping.createNonDeletedRestriction(
-						tableReference,
-						creationState.getSqlExpressionResolver()
-				);
+				final TableReference tableReference =
+						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+				final Predicate softDeletePredicate =
+						softDeleteMapping.createNonDeletedRestriction( tableReference,
+								creationState.getSqlExpressionResolver() );
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
 				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
 					// Register entity name usage for the hierarchy root table to avoid pruning
@@ -2818,9 +2818,9 @@ public abstract class AbstractEntityPersister
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
 			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
-			final Map<String, EntityNameUse> entityNameUseMap;
 			final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
-			entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
+			final Map<String, EntityNameUse> entityNameUseMap =
+					new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
 			if ( subMappingTypes.isEmpty() ) {
 				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
 			}
@@ -3081,16 +3081,16 @@ public abstract class AbstractEntityPersister
 	protected boolean shouldInnerJoinSubclassTable(int subclassTableNumber, Set<String> treatAsDeclarations) {
 		if ( isClassOrSuperclassJoin( subclassTableNumber ) ) {
 			// the table is either this persister's driving table or (one of) its superclass persister's driving
-			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
+			// tables which can be inner-joined as long as the 'shouldInnerJoin' condition resolves to true
 			return !isInverseTable( subclassTableNumber )
 				&& !isNullableTable( subclassTableNumber );
 		}
 
 		// otherwise we have a subclass table and need to look a little deeper...
 
-		// IMPL NOTE : By default includeSubclasses indicates that all subclasses should be joined and that each
-		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
-		// so we give TREAT-AS higher precedence...
+		// IMPL NOTE: By default, 'includeSubclasses' indicates that all subclasses should be joined and that each
+		// subclass ought to be joined by outer join. However, 'TREAT AS' always requires that an inner join be used,
+		// so we give 'TREAT AS' higher precedence...
 
 		return isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations );
 	}

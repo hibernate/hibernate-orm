@@ -725,8 +725,7 @@ public class PropertyBinder {
 						isComponentEmbedded,
 						inSecondPass,
 						context,
-						inheritanceStatePerClass,
-						property
+						inheritanceStatePerClass
 				);
 			}
 		}
@@ -756,8 +755,9 @@ public class PropertyBinder {
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
 			MetadataBuildingContext context,
-			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			MemberDetails property) {
+			Map<ClassDetails, InheritanceState> inheritanceStatePerClass) {
+
+		final MemberDetails property = inferredData.getAttributeMember();
 
 		if ( isPropertyOfRegularEmbeddable( propertyHolder, isComponentEmbedded )
 				&& property.hasDirectAnnotationUsage(Id.class)) {
@@ -777,7 +777,6 @@ public class PropertyBinder {
 				isIdentifierMapper,
 				context,
 				inheritanceStatePerClass,
-				property,
 				attributeTypeDetails
 		);
 
@@ -798,7 +797,6 @@ public class PropertyBinder {
 				isIdentifierMapper,
 				isComponentEmbedded,
 				inSecondPass,
-				property,
 				attributeTypeDetails.determineRawClass(),
 				columnsBuilder
 		);
@@ -812,8 +810,8 @@ public class PropertyBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			MemberDetails property,
 			TypeDetails attributeTypeDetails) {
+		final MemberDetails property = inferredData.getAttributeMember();
 		final PropertyBinder propertyBinder = new PropertyBinder();
 		propertyBinder.setName( inferredData.getPropertyName() );
 		propertyBinder.setReturnedClassName( inferredData.getTypeName() );
@@ -847,9 +845,9 @@ public class PropertyBinder {
 			boolean isIdentifierMapper,
 			boolean isComponentEmbedded,
 			boolean inSecondPass,
-			MemberDetails property,
 			ClassDetails returnedClass,
 			ColumnsBuilder columnsBuilder) {
+		final MemberDetails property = inferredData.getAttributeMember();
 		if ( isVersion( property ) ) {
 			bindVersionProperty(
 					propertyHolder,
@@ -865,7 +863,6 @@ public class PropertyBinder {
 					isIdentifierMapper,
 					inSecondPass,
 					buildingContext,
-					property,
 					columnsBuilder.getJoinColumns(),
 					this
 			);
@@ -877,7 +874,6 @@ public class PropertyBinder {
 					isIdentifierMapper,
 					inSecondPass,
 					buildingContext,
-					property,
 					columnsBuilder.getJoinColumns(),
 					this
 			);
@@ -890,7 +886,6 @@ public class PropertyBinder {
 					entityBinder,
 					isIdentifierMapper,
 					buildingContext,
-					property,
 					columnsBuilder.getJoinColumns()
 			);
 		}
@@ -903,7 +898,6 @@ public class PropertyBinder {
 					isIdentifierMapper,
 					buildingContext,
 					inheritanceStatePerClass,
-					property,
 					columnsBuilder.getJoinColumns()
 			);
 		}
@@ -917,7 +911,6 @@ public class PropertyBinder {
 					entityBinder,
 					isIdentifierMapper,
 					isComponentEmbedded,
-					property,
 					columnsBuilder,
 					columnsBuilder.getColumns(),
 					returnedClass
@@ -1002,10 +995,10 @@ public class PropertyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			boolean isComponentEmbedded,
-			MemberDetails property,
 			ColumnsBuilder columnsBuilder,
 			AnnotatedColumns columns,
 			ClassDetails returnedClass) {
+		final MemberDetails property = inferredData.getAttributeMember();
 
 		// overrides from @MapsId or @IdClass if needed
 		final PropertyData overridingProperty =
@@ -1030,7 +1023,6 @@ public class PropertyBinder {
 				isComposite,
 				isIdentifierMapper,
 				isComponentEmbedded,
-				property,
 				columns,
 				returnedClass,
 				actualColumns,
@@ -1075,7 +1067,6 @@ public class PropertyBinder {
 			boolean isComposite,
 			boolean isIdentifierMapper,
 			boolean isComponentEmbedded,
-			MemberDetails property,
 			AnnotatedColumns columns,
 			ClassDetails returnedClass,
 			AnnotatedColumns actualColumns,
@@ -1084,6 +1075,7 @@ public class PropertyBinder {
 		final Class<? extends CompositeUserType<?>> compositeUserType =
 				resolveCompositeUserType( inferredData, buildingContext );
 
+		final MemberDetails property = inferredData.getAttributeMember();
 		if ( isComposite || compositeUserType != null ) {
 			if ( property.isArray() && property.getElementType() != null
 					&& isEmbedded( property, property.getElementType() ) ) {

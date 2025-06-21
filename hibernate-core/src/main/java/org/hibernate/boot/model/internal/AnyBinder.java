@@ -44,8 +44,8 @@ public class AnyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
-			MemberDetails property,
 			AnnotatedJoinColumns joinColumns) {
+		final MemberDetails property = inferredData.getAttributeMember();
 
 		//check validity
 		if ( property.hasDirectAnnotationUsage( Columns.class ) ) {

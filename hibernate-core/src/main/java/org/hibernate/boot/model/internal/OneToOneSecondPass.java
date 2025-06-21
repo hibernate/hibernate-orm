@@ -232,7 +232,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 	private Property targetProperty(OneToOne oneToOne, PersistentClass targetEntity) {
 		try {
-			Property targetProperty = findPropertyByName( targetEntity, mappedBy );
+			final Property targetProperty = findPropertyByName( targetEntity, mappedBy );
 			if ( targetProperty != null ) {
 				return targetProperty;
 			}
@@ -272,13 +272,14 @@ public class OneToOneSecondPass implements SecondPass {
 	 * the owning side.
 	 */
 	private Join buildJoinFromMappedBySide(PersistentClass persistentClass, Property otherSideProperty, Join originalJoin) {
-		Join join = new Join();
+		final Join join = new Join();
 		join.setPersistentClass( persistentClass );
 
 		//no check constraints available on joins
 		join.setTable( originalJoin.getTable() );
 		join.setInverse( true );
-		DependantValue key = new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
+		final DependantValue key =
+				new DependantValue( buildingContext, join.getTable(), persistentClass.getIdentifier() );
 
 		if ( notFoundAction != null ) {
 			join.disableForeignKeyCreation();

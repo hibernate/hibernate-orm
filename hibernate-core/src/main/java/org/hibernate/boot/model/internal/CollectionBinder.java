@@ -214,9 +214,9 @@ public abstract class CollectionBinder {
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
 			Map<ClassDetails, InheritanceState> inheritanceStatePerClass,
-			MemberDetails property,
 			AnnotatedJoinColumns joinColumns) {
 		final ModelsContext modelsContext = context.getBootstrapContext().getModelsContext();
+		final MemberDetails property = inferredData.getAttributeMember();
 
 		final OneToMany oneToManyAnn = property.getAnnotationUsage( OneToMany.class, modelsContext );
 		final ManyToMany manyToManyAnn = property.getAnnotationUsage( ManyToMany.class, modelsContext );
@@ -224,7 +224,7 @@ public abstract class CollectionBinder {
 		checkAnnotations( propertyHolder, inferredData, property, oneToManyAnn, manyToManyAnn, elementCollectionAnn );
 
 		final CollectionBinder collectionBinder = getCollectionBinder( property, hasMapKeyAnnotation( property ), context );
-		collectionBinder.setIndexColumn( getIndexColumn( propertyHolder, inferredData, entityBinder, context, property ) );
+		collectionBinder.setIndexColumn( getIndexColumn( propertyHolder, inferredData, entityBinder, context ) );
 		collectionBinder.setMapKey( property.getAnnotationUsage( MapKey.class, modelsContext ) );
 		collectionBinder.setPropertyName( inferredData.getPropertyName() );
 		collectionBinder.setJpaOrderBy( property.getAnnotationUsage( OrderBy.class, modelsContext ) );
@@ -423,8 +423,8 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			EntityBinder entityBinder,
-			MetadataBuildingContext context,
-			MemberDetails property) {
+			MetadataBuildingContext context) {
+		final MemberDetails property = inferredData.getAttributeMember();
 		return IndexColumn.fromAnnotations(
 				property.getDirectAnnotationUsage( OrderColumn.class ),
 				property.getDirectAnnotationUsage( ListIndexBase.class ),

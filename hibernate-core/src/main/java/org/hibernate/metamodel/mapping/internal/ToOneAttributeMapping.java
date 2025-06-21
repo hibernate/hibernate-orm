@@ -307,7 +307,7 @@ public class ToOneAttributeMapping
 					this.hasJoinTable = hasJoinTable;
 				}
 				else {
-					this.hasJoinTable = false;
+					this.hasJoinTable = manyToOne.hasJoinTable();
 					bidirectionalAttributeName = findBidirectionalOneToManyAttributeName(
 							propertyPath,
 							declaringType,
@@ -361,7 +361,7 @@ public class ToOneAttributeMapping
 				}
 			}
 			isOptional = manyToOne.isIgnoreNotFound();
-			isInternalLoadNullable = ( isNullable && bootValue.isForeignKeyEnabled() ) || hasNotFoundAction();
+			isInternalLoadNullable = isNullable && bootValue.isForeignKeyEnabled() || hasNotFoundAction();
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -412,12 +412,10 @@ public class ToOneAttributeMapping
 				so in order to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
 			 */
 			final OneToOne oneToOne = (OneToOne) bootValue;
-			if ( oneToOne.getMappedByProperty() == null ) {
-				this.bidirectionalAttributePath = SelectablePath.parse( referencedPropertyName );
-			}
-			else {
-				this.bidirectionalAttributePath = SelectablePath.parse( oneToOne.getMappedByProperty() );
-			}
+			this.bidirectionalAttributePath =
+					oneToOne.getMappedByProperty() == null
+							? SelectablePath.parse( referencedPropertyName )
+							: SelectablePath.parse( oneToOne.getMappedByProperty() );
 			notFoundAction = null;
 			isKeyTableNullable = isNullable();
 			isOptional = !bootValue.isConstrained();
@@ -628,10 +626,9 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	private static FetchTiming adjustFetchTiming(
-			FetchTiming mappedFetchTiming,
-			ToOne bootValue) {
-		return bootValue instanceof ManyToOne manyToOne && manyToOne.getNotFoundAction() != null
+	private static FetchTiming adjustFetchTiming(FetchTiming mappedFetchTiming, ToOne bootValue) {
+		return bootValue instanceof ManyToOne manyToOne
+			&& manyToOne.getNotFoundAction() != null
 				? FetchTiming.IMMEDIATE
 				: mappedFetchTiming;
 	}
@@ -641,9 +638,8 @@ public class ToOneAttributeMapping
 		NavigableRole parentRole = navigableRole.getParent();
 		String collectionRole = null;
 		do {
-			final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact(
-					parentRole.getLocalName()
-			);
+			final CollectionPart.Nature nature =
+					CollectionPart.Nature.fromNameExact( parentRole.getLocalName() );
 			if (nature != null) {
 				collectionRole = parentRole.getParent().getFullPath();
 				break;
@@ -1175,11 +1171,10 @@ public class ToOneAttributeMapping
 					// If the parent is null, this is a simple collection fetch of a root, in which case the types must match
 					if ( parentPath.getParent() == null ) {
 						final String entityName = entityMappingType.getPartName();
-						return parentPath.getFullPath().startsWith( entityName ) && (
-								parentPath.getFullPath().length() == entityName.length()
-										// Ignore a possible alias
-										|| parentPath.getFullPath().charAt( entityName.length() ) == '('
-						);
+						return parentPath.getFullPath().startsWith( entityName )
+							&& ( parentPath.getFullPath().length() == entityName.length()
+								// Ignore a possible alias
+								|| parentPath.getFullPath().charAt( entityName.length() ) == '(' );
 					}
 					// If we have a parent, we ensure that the parent is the same as the attribute name
 					else {
@@ -2109,8 +2104,9 @@ public class ToOneAttributeMapping
 					// @SQLRestriction should not be applied when joining FK association,
 					// because that would result in us setting the FK to null when the
 					// owning entity is updated, that is, to data loss.
-					// But we'll let it apply on the TARGET side of a @OneToOne
-					if ( sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
+					// But we let it apply on the TARGET side of a @OneToOne, and we apply
+					// it whenever there is a dedicated join table.
+					if ( hasJoinTable || sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
 						associatedEntityMappingType.applyWhereRestrictions(
 								join::applyPredicate,
 								tableGroup,

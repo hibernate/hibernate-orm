@@ -3,10 +3,18 @@ name: GH Actions CI
 on:
   push:
     branches:
+      # Pattern order matters: the last matching inclusion/exclusion wins
       - 'main'
+      # We don't want to run CI on branches for dependabot, just on the PR.
+      - '!dependabot/**'
   pull_request:
     branches:
       - 'main'
+      # Ignore dependabot PRs that are not just about build dependencies or workflows;
+      # we'll reject such PRs and send one ourselves.
+      - '!dependabot/**'
+      - 'dependabot/maven/build-dependencies-**'
+      - 'dependabot/github_actions/workflow-actions-**'
 
 permissions: { } # none
 

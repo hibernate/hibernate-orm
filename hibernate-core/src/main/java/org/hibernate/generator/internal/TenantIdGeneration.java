@@ -9,7 +9,6 @@ import java.util.EnumSet;
 
 import org.hibernate.PropertyValueException;
 import org.hibernate.annotations.TenantId;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -51,8 +50,7 @@ public class TenantIdGeneration implements BeforeExecutionGenerator {
 		final SessionFactoryImplementor sessionFactory = session.getSessionFactory();
 		final Object tenantId = session.getTenantIdentifierValue();
 		if ( currentValue != null ) {
-			final CurrentTenantIdentifierResolver<Object> resolver =
-					sessionFactory.getCurrentTenantIdentifierResolver();
+			final var resolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( resolver != null && resolver.isRoot( tenantId ) ) {
 				// the "root" tenant is allowed to set the tenant id explicitly
 				return currentValue;

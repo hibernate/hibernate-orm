@@ -305,6 +305,17 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isMultiTenancyEnabled();
 
 	/**
+	 * Should the schema be {@linkplain java.sql.Connection#setSchema set} to the
+	 * {@linkplain CurrentTenantIdentifierResolver#schemaName schema belonging to
+	 * the current tenant} each time a connection is obtained?
+	 *
+	 * @see org.hibernate.cfg.MultiTenancySettings#SET_TENANT_SCHEMA
+	 *
+	 * @since 7.1
+	 */
+	boolean isSetTenantSchemaEnabled();
+
+	/**
 	 * Obtain a reference to the
 	 * {@linkplain CurrentTenantIdentifierResolver current tenant identifier resolver},
 	 * if any, or return {@code null} is there is no resolver configured.

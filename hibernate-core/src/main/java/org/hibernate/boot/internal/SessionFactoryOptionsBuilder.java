@@ -187,6 +187,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// multi-tenancy
 	private boolean multiTenancyEnabled;
 	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
+	private boolean setTenantSchemaEnabled;
 
 	// Queries
 	private SqmFunctionRegistry sqmFunctionRegistry;
@@ -371,6 +372,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				null
 			);
 		}
+		setTenantSchemaEnabled = configurationService.getSetting( SET_TENANT_SCHEMA, BOOLEAN, false );
 
 		delayBatchFetchLoaderCreations =
 				configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
@@ -1004,6 +1006,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isSetTenantSchemaEnabled() {
+		return setTenantSchemaEnabled;
+	}
+
+	@Override
 	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
@@ -1448,6 +1455,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		//noinspection unchecked
 		this.currentTenantIdentifierResolver = (CurrentTenantIdentifierResolver<Object>) resolver;
+	}
+
+	public void applySetTenantSchema(boolean enabled) {
+		this.setTenantSchemaEnabled = enabled;
 	}
 
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {

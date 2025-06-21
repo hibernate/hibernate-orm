@@ -458,7 +458,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
-		final CurrentTenantIdentifierResolver<Object> tenantIdResolver = getCurrentTenantIdentifierResolver();
+		final var tenantIdResolver = getCurrentTenantIdentifierResolver();
 		if ( tenantIdResolver == null ) {
 			return withOptions();
 		}
@@ -1154,7 +1154,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
 			identifierRollback = sessionFactoryOptions.isIdentifierRollbackEnabled();
 
-			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver =
+			final var currentTenantIdentifierResolver =
 					sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();

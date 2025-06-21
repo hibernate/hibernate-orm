@@ -34,7 +34,7 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 
 	protected SessionBuilder baseSessionBuilder() {
 		final SessionBuilderImplementor builder = factory.withOptions();
-		final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
+		final var resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null ) {
 			builder.tenantIdentifier( resolver.resolveCurrentTenantIdentifier() );
 		}
@@ -42,7 +42,7 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 	}
 
 	protected void validateExistingSession(Session existingSession) {
-		final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
+		final var resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null && resolver.validateExistingCurrentSessions() ) {
 			final Object currentValue = resolver.resolveCurrentTenantIdentifier();
 			final JavaType<Object> tenantIdentifierJavaType = factory.getTenantIdentifierJavaType();

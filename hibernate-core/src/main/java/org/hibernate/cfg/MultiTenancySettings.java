@@ -26,7 +26,7 @@ public interface MultiTenancySettings {
 	 * either:
 	 * <ul>
 	 *     <li>an instance of {@code CurrentTenantIdentifierResolver},
-	 *     <li>a {@link Class} representing an class that implements {@code CurrentTenantIdentifierResolver}, or
+	 *     <li>a {@link Class} representing a class that implements {@code CurrentTenantIdentifierResolver}, or
 	 *     <li>the name of a class that implements {@code CurrentTenantIdentifierResolver}.
 	 * </ul>
 	 *
@@ -42,4 +42,17 @@ public interface MultiTenancySettings {
 	 * This setting configures the name of the DataSource to use for this access
 	 */
 	String TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY = "hibernate.multi_tenant.datasource.identifier_for_any";
+
+	/**
+	 * Specifies that {@link java.sql.Connection#setSchema(String)}}
+	 * should be called with the current tenant id, or with the schema name
+	 * returned by {@link CurrentTenantIdentifierResolver#schemaName}.
+	 *
+	 * @settingDefault false
+	 *
+	 * @see CurrentTenantIdentifierResolver#schemaName
+	 *
+	 * @since 7.1
+	 */
+	String SET_TENANT_SCHEMA = "hibernate.multi_tenant.set_schema";
 }

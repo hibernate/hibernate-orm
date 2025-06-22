@@ -23,6 +23,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	private final EntityMetamodel entityMetamodel;
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
+	private final LazyAttributeLoadingInterceptor.EntityRelatedState loadingInterceptorState;
 
 	public AbstractEntityInstantiatorPojo(
 			EntityMetamodel entityMetamodel,
@@ -34,17 +35,25 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 		//TODO this PojoEntityInstantiator appears to not be reused ?!
 		this.applyBytecodeInterception =
 				isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
+		if ( applyBytecodeInterception ) {
+			this.loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
+					entityMetamodel.getName(),
+					entityMetamodel.getBytecodeEnhancementMetadata()
+						.getLazyAttributesMetadata()
+						.getLazyAttributeNames()
+			);
+		}
+		else {
+			this.loadingInterceptorState = null;
+		}
 	}
 
 	protected Object applyInterception(Object entity) {
 		if ( applyBytecodeInterception ) {
 			asPersistentAttributeInterceptable( entity )
 					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
-							entityMetamodel.getName(),
+							loadingInterceptorState,
 							null,
-							entityMetamodel.getBytecodeEnhancementMetadata()
-									.getLazyAttributesMetadata()
-									.getLazyAttributeNames(),
 							null
 					) );
 		}

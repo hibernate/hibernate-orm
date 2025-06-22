@@ -72,6 +72,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	private final CompositeType nonAggregatedCidMapper;
 	private final boolean enhancedForLazyLoading;
 	private final LazyAttributesMetadata lazyAttributesMetadata;
+	private final LazyAttributeLoadingInterceptor.EntityRelatedState loadingInterceptorState;
 
 	BytecodeEnhancementMetadataPojoImpl(
 			String entityName,
@@ -89,6 +90,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		this.identifierAttributeNames = identifierAttributeNames;
 		this.enhancedForLazyLoading = enhancedForLazyLoading;
 		this.lazyAttributesMetadata = lazyAttributesMetadata;
+		this.loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
+				getEntityName(), lazyAttributesMetadata.getLazyAttributeNames() );
 	}
 
 	@Override
@@ -217,9 +220,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			);
 		}
 		final LazyAttributeLoadingInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				getEntityName(),
+				this.loadingInterceptorState,
 				identifier,
-				lazyAttributesMetadata.getLazyAttributeNames(),
 				session
 		);
 

@@ -28,28 +28,23 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTra
  * @author Steve Ebersole
  */
 public class LazyAttributeLoadingInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
-	private final Object identifier;
-	private final String entityName;
 
-	//N.B. this Set needs to be treated as immutable
-	private Set<String> lazyFields;
+	private final Object identifier;
+	private EntityRelatedState entityMeta;
 	private Set<String> initializedLazyFields;
-	private Set<String> mutableLazyFields;
 
 	public LazyAttributeLoadingInterceptor(
-			String entityName,
+			EntityRelatedState entityMeta,
 			Object identifier,
-			Set<String> lazyFields,
 			SharedSessionContractImplementor session) {
-		this.entityName = entityName;
 		this.identifier = identifier;
-		this.lazyFields = lazyFields;
+		this.entityMeta = entityMeta;
 		setSession( session );
 	}
 
 	@Override
 	public String getEntityName() {
-		return entityName;
+		return entityMeta.entityName;
 	}
 
 	@Override
@@ -130,7 +125,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 	}
 
 	private boolean isLazyAttribute(String fieldName) {
-		return lazyFields.contains( fieldName );
+		return entityMeta.lazyFields.contains( fieldName );
 	}
 
 	private boolean isInitializedLazyField(String fieldName) {
@@ -138,7 +133,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 	}
 
 	public boolean hasAnyUninitializedAttributes() {
-		if ( lazyFields.isEmpty() ) {
+		if ( entityMeta.lazyFields.isEmpty() ) {
 			return false;
 		}
 
@@ -146,7 +141,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 			return true;
 		}
 
-		for ( String fieldName : lazyFields ) {
+		for ( String fieldName : entityMeta.lazyFields ) {
 			if ( !initializedLazyFields.contains( fieldName ) ) {
 				return true;
 			}
@@ -157,7 +152,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(entityName=" + getEntityName() + " ,lazyFields=" + lazyFields + ')';
+		return getClass().getSimpleName() + "(entityName=" + getEntityName() + " ,lazyFields=" + entityMeta.lazyFields + ')';
 	}
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
@@ -197,14 +192,43 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 	}
 
 	public void addLazyFieldByGraph(String fieldName) {
-		if ( mutableLazyFields == null ) {
-			mutableLazyFields = new HashSet<>( lazyFields );
-			lazyFields = mutableLazyFields;
+		if ( entityMeta.shared ) {
+			//We need to make a defensive copy first to not affect other entities of the same type;
+			//as we create a copy we lose some of the efficacy of using a separate class to track this state,
+			//but this is a corner case so we prefer to optimise for the common case.
+			entityMeta = entityMeta.toNonSharedMutableState();
 		}
-		mutableLazyFields.add( fieldName );
+		entityMeta.lazyFields.add( fieldName );
 	}
 
 	public void clearInitializedLazyFields() {
 		initializedLazyFields = null;
+	}
+
+	/**
+	 * This is an helper object to group all state which relates to a particular entity type,
+	 * and which is needed for this interceptor.
+	 * Grouping such state allows for upfront construction as a per-entity singleton:
+	 * this reduces processing work on creation of an interceptor instance and is more
+	 * efficient from a point of view of memory usage and memory layout.
+	 */
+	public static class EntityRelatedState {
+		private final String entityName;
+		private final Set<String> lazyFields;
+		private final boolean shared;
+
+		public EntityRelatedState(String entityName, Set<String> lazyFields) {
+			this.entityName = entityName;
+			this.lazyFields = lazyFields; //N.B. this is an immutable, compact set
+			this.shared = true;
+		}
+		private EntityRelatedState(String entityName, Set<String> lazyFields, boolean shared) {
+			this.entityName = entityName;
+			this.lazyFields = lazyFields;
+			this.shared = shared;
+		}
+		private EntityRelatedState toNonSharedMutableState() {
+			return new EntityRelatedState( entityName, new HashSet<>( lazyFields ), false );
+		}
 	}
 }

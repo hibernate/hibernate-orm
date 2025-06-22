@@ -25,10 +25,9 @@ import static org.hibernate.internal.util.ReflectHelper.getDefaultConstructor;
 public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPojo {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityInstantiatorPojoStandard.class );
 
-	private final EntityMetamodel entityMetamodel;
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
-
+	private final LazyAttributeLoadingInterceptor.EntityRelatedState loadingInterceptorState;
 	private final Constructor<?> constructor;
 
 	public EntityInstantiatorPojoStandard(
@@ -36,10 +35,20 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 			PersistentClass persistentClass,
 			JavaType<?> javaType) {
 		super( entityMetamodel, persistentClass, javaType );
-		this.entityMetamodel = entityMetamodel;
 		proxyInterface = persistentClass.getProxyInterface();
 		constructor = isAbstract() ? null : resolveConstructor( getMappedPojoClass() );
 		applyBytecodeInterception = isPersistentAttributeInterceptableType( persistentClass.getMappedClass() );
+		if ( applyBytecodeInterception ) {
+			this.loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
+					entityMetamodel.getName(),
+					entityMetamodel.getBytecodeEnhancementMetadata()
+							.getLazyAttributesMetadata()
+							.getLazyAttributeNames()
+			);
+		}
+		else {
+			this.loadingInterceptorState = null;
+		}
 	}
 
 	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
@@ -62,11 +71,8 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 		if ( applyBytecodeInterception ) {
 			asPersistentAttributeInterceptable( entity )
 					.$$_hibernate_setInterceptor( new LazyAttributeLoadingInterceptor(
-							entityMetamodel.getName(),
+							loadingInterceptorState,
 							null,
-							entityMetamodel.getBytecodeEnhancementMetadata()
-									.getLazyAttributesMetadata()
-									.getLazyAttributeNames(),
 							null
 					) );
 		}

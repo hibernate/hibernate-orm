@@ -28,6 +28,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTra
 public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
 	private final Set<String> identifierAttributeNames;
 	private final CompositeType nonAggregatedCidMapper;
+	private final String entityName;
 
 	private final EntityKey entityKey;
 
@@ -45,7 +46,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 			CompositeType nonAggregatedCidMapper,
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {
-		super( entityName );
+		this.entityName = entityName;
 
 		this.identifierAttributeNames = identifierAttributeNames;
 		assert identifierAttributeNames != null;
@@ -81,6 +82,11 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractInterceptor i
 						|| !entityPersister.getEntityMetamodel().isDynamicUpdate()
 						|| entityPersister.isVersioned();
 		status = Status.UNINITIALIZED;
+	}
+
+	@Override
+	public String getEntityName() {
+		return entityName;
 	}
 
 	public EntityKey getEntityKey() {

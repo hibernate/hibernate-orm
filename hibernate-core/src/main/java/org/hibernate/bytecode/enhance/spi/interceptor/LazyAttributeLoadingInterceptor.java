@@ -29,6 +29,7 @@ import static org.hibernate.engine.internal.ManagedTypeHelper.isSelfDirtinessTra
  */
 public class LazyAttributeLoadingInterceptor extends AbstractInterceptor implements BytecodeLazyAttributeInterceptor {
 	private final Object identifier;
+	private final String entityName;
 
 	//N.B. this Set needs to be treated as immutable
 	private Set<String> lazyFields;
@@ -40,10 +41,15 @@ public class LazyAttributeLoadingInterceptor extends AbstractInterceptor impleme
 			Object identifier,
 			Set<String> lazyFields,
 			SharedSessionContractImplementor session) {
-		super( entityName );
+		this.entityName = entityName;
 		this.identifier = identifier;
 		this.lazyFields = lazyFields;
 		setSession( session );
+	}
+
+	@Override
+	public String getEntityName() {
+		return entityName;
 	}
 
 	@Override

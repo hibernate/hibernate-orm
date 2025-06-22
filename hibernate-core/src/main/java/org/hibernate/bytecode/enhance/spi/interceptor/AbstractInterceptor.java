@@ -11,15 +11,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public abstract class AbstractInterceptor implements SessionAssociableInterceptor {
 
-	private final String entityName;
 	private SessionAssociationMarkers sessionAssociation;
 
-	public AbstractInterceptor(String entityName) {
-		this.entityName = entityName;
-	}
-
-	public String getEntityName() {
-		return entityName;
+	protected AbstractInterceptor() {
 	}
 
 	@Override

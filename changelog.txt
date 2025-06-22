@@ -3,6 +3,19 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.3.Final (June 22, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/33936
+
+** Bug
+    * [HHH-18774] - two bad bugs in cascade refresh
+
+** Task
+    * [HHH-19548] - Upgrade to ByteBuddy 1.17.5
+    * [HHH-19519] - Document breaking changes in new Hibernate Maven Plugin
+
+
 Changes in 7.0.2.Final (June 12, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

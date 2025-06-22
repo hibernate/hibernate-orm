@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
@@ -14,8 +14,11 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.type.CompositeType;
+
+import static org.hibernate.generator.EventType.INSERT;
 
 /**
  * For composite identifiers, defines a number of "nested" generations that
@@ -71,7 +74,6 @@ public class CompositeNestedGeneratedValueGenerator
 	 * determined {@linkplain GenerationContextLocator#locateGenerationContext context}
 	 */
 	public interface GenerationPlan extends ExportableProducer {
-
 		/**
 		 * Initializes this instance, in particular pre-generates SQL as necessary.
 		 * <p>
@@ -82,12 +84,9 @@ public class CompositeNestedGeneratedValueGenerator
 		void initialize(SqlStringGenerationContext context);
 
 		/**
-		 * Execute the value generation.
-		 *
-		 * @param session The current session
-		 * @param incomingObject The entity for which we are generating id
+		 * Retrieve the generator for this generation plan
 		 */
-		Object execute(SharedSessionContractImplementor session, Object incomingObject);
+		BeforeExecutionGenerator getGenerator();
 
 		/**
 		 * Returns the {@link Setter injector} for the generated property.
@@ -117,6 +116,16 @@ public class CompositeNestedGeneratedValueGenerator
 		this.compositeType = compositeType;
 	}
 
+	// Used by Hibernate Reactive
+	public CompositeNestedGeneratedValueGenerator(
+			GenerationContextLocator generationContextLocator,
+			CompositeType compositeType,
+			List<GenerationPlan> generationPlans) {
+		this.generationContextLocator = generationContextLocator;
+		this.compositeType = compositeType;
+		this.generationPlans.addAll( generationPlans );
+	}
+
 	public void addGeneratedValuePlan(GenerationPlan plan) {
 		generationPlans.add( plan );
 	}
@@ -129,7 +138,17 @@ public class CompositeNestedGeneratedValueGenerator
 				null :
 				new ArrayList<>( generationPlans.size() );
 		for ( GenerationPlan generationPlan : generationPlans ) {
-			final Object generated = generationPlan.execute( session, object );
+			final BeforeExecutionGenerator generator = generationPlan.getGenerator();
+			final Object generated;
+			if ( generator.generatedBeforeExecution( object, session ) ) {
+				final Object currentValue = generator.allowAssignedIdentifiers()
+						? compositeType.getPropertyValue( context, generationPlan.getPropertyIndex(), session )
+						: null;
+				generated = generator.generate( session, object, currentValue, INSERT );
+			}
+			else {
+				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
+			}
 			if ( generatedValues != null ) {
 				generatedValues.add( generated );
 			}
@@ -162,5 +181,20 @@ public class CompositeNestedGeneratedValueGenerator
 		for ( GenerationPlan plan : generationPlans ) {
 			plan.initialize( context );
 		}
+	}
+
+	// Used by Hibernate Reactive
+	public List<GenerationPlan> getGenerationPlans() {
+		return generationPlans;
+	}
+
+	// Used by Hibernate Reactive
+	public GenerationContextLocator getGenerationContextLocator() {
+		return generationContextLocator;
+	}
+
+	// Used by Hibernate Reactive
+	public CompositeType getCompositeType() {
+		return compositeType;
 	}
 }

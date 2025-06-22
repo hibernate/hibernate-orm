@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
@@ -8,12 +8,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmOrderedSetAggregateFunction;
@@ -133,40 +134,43 @@ public class SelfRenderingSqmOrderedSetAggregateFunction<T> extends SelfRenderin
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		final List<? extends SqmTypedNode<?>> arguments = getArguments();
-		sb.append( getFunctionName() );
-		sb.append( '(' );
-		int i = 1;
-		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
-			arguments.get( 0 ).appendHqlString( sb );
-			if ( arguments.size() > 1 ) {
-				sb.append( ' ' );
-				arguments.get( 1 ).appendHqlString( sb );
-				i = 2;
+		hql.append( getFunctionName() );
+		hql.append( '(' );
+		if ( !arguments.isEmpty() ) {
+			int i = 1;
+			if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
+				arguments.get( 0 ).appendHqlString( hql, context );
+				if ( arguments.size() > 1 ) {
+					hql.append( ' ' );
+					arguments.get( 1 ).appendHqlString( hql, context );
+					i = 2;
+				}
+			}
+			for ( ; i < arguments.size(); i++ ) {
+				hql.append( ", " );
+				arguments.get( i ).appendHqlString( hql, context );
 			}
 		}
-		for ( ; i < arguments.size(); i++ ) {
-			sb.append(", ");
-			arguments.get( i ).appendHqlString( sb );
-		}
-
-		sb.append( ')' );
+		hql.append( ')' );
 		if ( withinGroup != null ) {
-			sb.append( " within group (order by " );
+			hql.append( " within group (order by " );
 			final List<SqmSortSpecification> sortSpecifications = withinGroup.getSortSpecifications();
-			sortSpecifications.get( 0 ).appendHqlString( sb );
-			for ( int j = 1; j < sortSpecifications.size(); j++ ) {
-				sb.append( ", " );
-				sortSpecifications.get( j ).appendHqlString( sb );
+			if ( !sortSpecifications.isEmpty() ) {
+				sortSpecifications.get( 0 ).appendHqlString( hql, context );
+				for ( int j = 1; j < sortSpecifications.size(); j++ ) {
+					hql.append( ", " );
+					sortSpecifications.get( j ).appendHqlString( hql, context );
+				}
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
 
 		if ( getFilter() != null ) {
-			sb.append( " filter (where " );
-			getFilter().appendHqlString( sb );
-			sb.append( ')' );
+			hql.append( " filter (where " );
+			getFilter().appendHqlString( hql, context );
+			hql.append( ')' );
 		}
 	}
 }

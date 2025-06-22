@@ -1,14 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+
+import java.util.Objects;
 
 /**
  * Represents the {@code SIZE()} function.
@@ -23,7 +26,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 		this( pluralPath, nodeBuilder.getIntegerType(), nodeBuilder );
 	}
 
-	public SqmCollectionSize(SqmPath<?> pluralPath, SqmExpressible<Integer> sizeType, NodeBuilder nodeBuilder) {
+	public SqmCollectionSize(SqmPath<?> pluralPath, SqmBindableType<Integer> sizeType, NodeBuilder nodeBuilder) {
 		super( sizeType, nodeBuilder );
 		this.pluralPath = pluralPath;
 	}
@@ -61,10 +64,20 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "size(" );
-		pluralPath.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "size(" );
+		pluralPath.appendHqlString( hql, context );
+		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCollectionSize that
+			&& Objects.equals( this.pluralPath, that.pluralPath );
+	}
+
+	@Override
+	public int hashCode() {
+		return pluralPath.hashCode();
+	}
 }

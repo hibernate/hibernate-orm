@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -47,6 +47,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+
+import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -107,11 +109,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -130,11 +127,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return false;
 	}
 
 	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
@@ -336,7 +328,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		append( '(' );
 		visitValuesListEmulateSelectUnion( tableReference.getValuesList() );
 		append( ')' );
-		renderDerivedTableReference( tableReference );
+		renderDerivedTableReferenceIdentificationVariable( tableReference );
 	}
 
 	@Override
@@ -371,9 +363,57 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		// In Sybase ASE, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+		final boolean isLob = isLob( lhs.getExpressionType() );
+		if ( isLob ) {
+			switch ( operator ) {
+				case EQUAL:
+					lhs.accept( this );
+					appendSql( " like " );
+					rhs.accept( this );
+					return;
+				case NOT_EQUAL:
+					lhs.accept( this );
+					appendSql( " not like " );
+					rhs.accept( this );
+					return;
+				default:
+					// Fall through
+					break;
+			}
+		}
 		// I think intersect is only supported in 16.0 SP3
-		if ( getDialect().isAnsiNullOn() ) {
-			if ( supportsDistinctFromPredicate() ) {
+		if ( ( (SybaseASELegacyDialect) getDialect() ).isAnsiNullOn() ) {
+			if ( isLob ) {
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "case when " );
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 else 1 end=1" );
+						return;
+					case NOT_DISTINCT_FROM:
+						appendSql( "case when " );
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 else 1 end=0" );
+						return;
+					default:
+						// Fall through
+						break;
+				}
+			}
+			if ( getDialect().supportsDistinctFromPredicate() ) {
 				renderComparisonEmulateIntersect( lhs, operator, rhs );
 			}
 			else {
@@ -393,10 +433,20 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				lhs.accept( this );
 				switch ( operator ) {
 					case DISTINCT_FROM:
-						appendSql( "<>" );
+						if ( isLob ) {
+							appendSql( " not like " );
+						}
+						else {
+							appendSql( "<>" );
+						}
 						break;
 					case NOT_DISTINCT_FROM:
-						appendSql( '=' );
+						if ( isLob ) {
+							appendSql( " like " );
+						}
+						else {
+							appendSql( '=' );
+						}
 						break;
 					case LESS_THAN:
 					case GREATER_THAN:
@@ -422,7 +472,7 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 			else {
-				if ( supportsDistinctFromPredicate() ) {
+				if ( getDialect().supportsDistinctFromPredicate() ) {
 					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				else {
@@ -430,12 +480,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				}
 			}
 		}
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		// At least the version that
-		return false;
 	}
 
 	@Override
@@ -510,21 +554,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	@Override
 	protected boolean needsMaxRows() {
 		return !supportsTopClause();
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	private boolean supportsTopClause() {

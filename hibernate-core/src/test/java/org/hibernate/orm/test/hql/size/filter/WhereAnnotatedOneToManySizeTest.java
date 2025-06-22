@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql.size.filter;
@@ -11,8 +11,8 @@ import java.util.List;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -95,7 +95,7 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase db does not support subqueries in the ORDER BY clause")
 	public void orderBy_sizeOf() {
 		inSession( session -> {
-			QueryImplementor<Object[]> query = session.createQuery(
+			Query<Object[]> query = session.createQuery(
 					"select r, size(r.cities) from Region r order by size(r.cities) desc" );
 			List<Object[]> result = query.getResultList();
 			assertThat( result ).extracting( f -> f[0] ).extracting( "name" ).containsExactly( "Lombardy", "Lazio" );
@@ -106,7 +106,7 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 	@Test
 	public void project_sizeOf() {
 		inSession( session -> {
-			QueryImplementor<Integer> query = session.createQuery(
+			Query<Integer> query = session.createQuery(
 					"SELECT size(r.cities) FROM Region r", Integer.class );
 			List<Integer> cityCounts = query.getResultList();
 			assertThat( cityCounts ).containsExactlyInAnyOrder( 1, 2 );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -9,7 +9,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -26,7 +25,7 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * as {@link jakarta.persistence.EnumType#STRING}.
  *
  * @see org.hibernate.type.SqlTypes#ENUM
- * @see MySQLDialect#getEnumTypeDeclaration(String, String[])
+ * @see org.hibernate.dialect.MySQLDialect#getEnumTypeDeclaration(String, String[])
  *
  * @author Gavin King
  */
@@ -55,6 +54,11 @@ public class EnumJdbcType implements JdbcType {
 	}
 
 	@Override
+	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
+		return String.class;
+	}
+
+	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
@@ -67,6 +71,11 @@ public class EnumJdbcType implements JdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				st.setString( name, getJavaType().unwrap( value, String.class, options ) );
+			}
+
+			@Override
+			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
+				return getJavaType().unwrap( value, String.class, options );
 			}
 		};
 	}

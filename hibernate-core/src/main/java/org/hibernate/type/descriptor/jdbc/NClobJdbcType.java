@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,7 +46,12 @@ public abstract class NClobJdbcType implements JdbcType {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( rs.getNClob( paramIndex ), options );
+					try {
+						return javaType.wrap( rs.getNClob( paramIndex ), options );
+					}
+					catch (AbstractMethodError e) {
+						return javaType.wrap( rs.getClob( paramIndex ), options );
+					}
 				}
 				else {
 					return javaType.wrap( rs.getClob( paramIndex ), options );
@@ -115,15 +121,15 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					getDescriptor( value, options ).getNClobBinder( javaType ).doBind( st, value, index, options );
-					}
+				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
 					getDescriptor( value, options ).getNClobBinder( javaType ).doBind( st, value, name, options );
-					}
-			};
 				}
+			};
+		}
 	};
 
 	public static final NClobJdbcType STRING_BINDING = new NClobJdbcType() {
@@ -219,7 +225,12 @@ public abstract class NClobJdbcType implements JdbcType {
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						st.setNClob( index, javaType.unwrap( value, NClob.class, options ) );
+						try {
+							st.setNClob( index, javaType.unwrap( value, NClob.class, options ) );
+						}
+						catch (AbstractMethodError e) {
+							st.setClob( index, javaType.unwrap( value, Clob.class, options ) );
+						}
 					}
 					else {
 						st.setClob( index, javaType.unwrap( value, NClob.class, options ) );

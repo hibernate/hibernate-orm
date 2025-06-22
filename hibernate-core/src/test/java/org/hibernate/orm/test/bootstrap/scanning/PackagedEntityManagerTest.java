@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
@@ -302,9 +302,8 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		emf = Persistence.createEntityManagerFactory( "manager1", ServiceRegistryUtil.createBaseSettings() );
 		EntityManager em = emf.createEntityManager();
 		try {
-			EventListenerRegistry listenerRegistry = em.unwrap( SharedSessionContractImplementor.class ).getFactory()
-					.getServiceRegistry()
-					.getService( EventListenerRegistry.class );
+			EventListenerRegistry listenerRegistry =
+					em.unwrap( SharedSessionContractImplementor.class ).getFactory().getEventListenerRegistry();
 			assertEquals(
 					listenerRegistry.getEventListenerGroup( EventType.PRE_INSERT ).count(),
 					listenerRegistry.getEventListenerGroup( EventType.PRE_UPDATE ).count() + 1,

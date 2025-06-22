@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic.bitset;
@@ -12,7 +12,7 @@ import java.sql.Types;
 import java.util.BitSet;
 import java.util.Objects;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
@@ -47,7 +47,7 @@ public class BitSetUserType implements UserType<BitSet> {
 
 	@Override
 	public BitSet nullSafeGet(ResultSet rs, int position,
-							SharedSessionContractImplementor session)
+							WrapperOptions options)
 			throws SQLException {
 		String columnValue = rs.getString(position);
 		if (rs.wasNull()) {
@@ -60,7 +60,7 @@ public class BitSetUserType implements UserType<BitSet> {
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, BitSet value, int index,
-							SharedSessionContractImplementor session)
+							WrapperOptions options)
 			throws SQLException {
 		if (value == null) {
 			log.debugv("Binding null to parameter {0} ",index);

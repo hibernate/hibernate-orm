@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
@@ -47,14 +47,7 @@ public class DeleteWhereFunctionCallTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope){
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from supert" ).executeUpdate();
-					session.createQuery( "delete from subt" ).executeUpdate();
-					session.createQuery( "delete from tpc_supert" ).executeUpdate();
-					session.createQuery( "delete from tpc_subt" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

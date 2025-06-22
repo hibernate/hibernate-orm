@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
@@ -115,7 +115,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		return mutatingTableGroup;
 	}
 
-	@Override
+	@Override // promote protected to public
 	public Stack<SqlAstProcessingState> getProcessingStateStack() {
 		return super.getProcessingStateStack();
 	}

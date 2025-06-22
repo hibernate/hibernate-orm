@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
@@ -16,7 +16,7 @@ public final class ExceptionHelper {
 	 * @param e The throwable to throw.
 	 */
 	public static void doThrow(Throwable e) {
-		ExceptionHelper.<RuntimeException>doThrow0(e);
+		ExceptionHelper.doThrow0(e);
 	}
 
 	public static Throwable getRootCause(Throwable error) {

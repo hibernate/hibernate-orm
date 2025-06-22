@@ -1,15 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
 
 import java.time.LocalDate;
 
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -20,6 +24,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +52,6 @@ import static org.hamcrest.core.Is.is;
 )
 @DomainModel(annotatedClasses = DateArrayTest.TableWithDateArrays.class)
 @SessionFactory
-@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase or the driver are trimming trailing zeros in byte arrays")
 public class DateArrayTest {
 
 	private LocalDate date1;
@@ -55,9 +59,12 @@ public class DateArrayTest {
 	private LocalDate date3;
 	private LocalDate date4;
 
+	private BasicType<LocalDate[]> arrayType;
+
 	@BeforeAll
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
+			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( LocalDate[].class );
 			// I can't believe anyone ever thought this Date API is a good idea
 			date1 = LocalDate.now();
 			date2 = date1.plusDays( 5 );
@@ -132,12 +139,19 @@ public class DateArrayTest {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "Seems that comparing date[] through JDBC is buggy. ERROR: operator does not exist: timestamp without time zone[] = date[]")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			TypedQuery<TableWithDateArrays> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_date_arrays t WHERE the_array " + op + " :data",
+					"SELECT * FROM table_with_date_arrays t WHERE the_array " + op + " " + param,
 					TableWithDateArrays.class
 			);
 			tq.setParameter( "data", new LocalDate[]{ date1, date2, date3 } );
@@ -147,7 +161,7 @@ public class DateArrayTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "The 'date' type is a synonym for timestamp on Oracle and PostgresPlus, so untyped reading produces Timestamps")
 	public void testNativeQueryUntyped(SessionFactoryScope scope) {
 		scope.inSession( em -> {

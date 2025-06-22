@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +24,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static java.util.Collections.singletonMap;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -57,13 +56,11 @@ public class LegacyParameterTests {
 
 		scope.inTransaction(
 				(s) -> {
-					Map<String,String> parameters = toMap( "nickName", null );
-
 					Query<Human> q = s.createQuery(
 							"from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)",
 							Human.class
 					);
-					q.setProperties( (parameters) );
+					q.setProperties( singletonMap( "nickName", null ) );
 					assertThat( q.list().size(), is( 0 ) );
 
 					Human human1 = new Human();
@@ -71,20 +68,14 @@ public class LegacyParameterTests {
 					human1.setNickName( null );
 					s.persist( human1 );
 
-					parameters = new HashMap<>();
-
-					parameters.put( "nickName", null );
 					q = s.createQuery( "from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)", Human.class );
-					q.setProperties( (parameters) );
+					q.setProperties( singletonMap( "nickName", null ) );
 					assertThat( q.list().size(), is( 1 ) );
 					Human found = q.list().get( 0 );
 					assertThat( found.getId(), is( human1.getId() ) );
 
-					parameters = new HashMap<>();
-					parameters.put( "nickName", "nick" );
-
 					q = s.createQuery( "from Human h where h.nickName = :nickName or (h.nickName is null and :nickName is null)", Human.class );
-					q.setProperties( (parameters) );
+					q.setProperties( singletonMap( "nickName", "nick" ) );
 					assertThat( q.list().size(), is( 1 ) );
 					found = q.list().get( 0 );
 					assertThat( found.getId(), is( 1L ) );
@@ -97,8 +88,6 @@ public class LegacyParameterTests {
 	public void testSetPropertiesMapNotContainingAllTheParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					Map<String,String> parameters = toMap( "nickNames", "nick" );
-
 					List<Integer> intValues = new ArrayList<>();
 					intValues.add( 1 );
 					//noinspection unchecked
@@ -106,7 +95,7 @@ public class LegacyParameterTests {
 							"from Human h where h.nickName in (:nickNames) and h.intValue in (:intValues)"
 					);
 					q.setParameterList( "intValues" , intValues);
-					q.setProperties( (parameters) );
+					q.setProperties( Map.of( "nickNames", "nick" ) );
 					assertThat( q.list().size(), is( 1 ) );
 				}
 		);
@@ -240,10 +229,6 @@ public class LegacyParameterTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(s) -> {
-					s.createQuery( "delete Human" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

@@ -1,16 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph;
 
-import java.util.List;
-import jakarta.persistence.AttributeNode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.Subgraph;
-import jakarta.persistence.metamodel.Attribute;
-
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * Extends the JPA-defined {@link EntityGraph} with additional operations.
@@ -19,69 +14,31 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * @author Andrea Boriero
  *
  * @see SubGraph
+ * @see org.hibernate.Session#createEntityGraph(Class)
+ * @see org.hibernate.Session#createEntityGraph(String)
+ * @see org.hibernate.Session#createEntityGraph(Class, String)
+ * @see org.hibernate.SessionFactory#findEntityGraphByName(String)
+ * @see org.hibernate.SessionFactory#createGraphForDynamicEntity(String)
+ * @see EntityGraphs#createGraph(EntityType)
+ * @see EntityGraphs#createGraphForDynamicEntity(EntityType)
  */
 public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
 	@Override
+	RootGraph<J> makeCopy(boolean mutable);
+
+	@Override @Deprecated(forRemoval = true)
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
 
+	@Override @Deprecated(forRemoval = true)
 	SubGraph<J> makeSubGraph(boolean mutable);
 
-	@Override
-	<T1> SubGraph<? extends T1> addSubclassSubgraph(Class<? extends T1> type);
-
-	@Override
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	default List<AttributeNode<?>> getAttributeNodes() {
-		return (List) getAttributeNodeList();
-	}
-
-	@Override
-	default void addAttributeNodes(String... names) {
-		if ( names != null ) {
-			for ( String name : names ) {
-				addAttributeNode( name );
-			}
-		}
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
-		return addSubGraph( (PersistentAttribute<? super J,X>)  attribute );
-	}
-
-	@Override
-	default <X> Subgraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addSubGraph( (PersistentAttribute<? super J,X>) attribute, type );
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(String name) {
-		return addSubGraph( name );
-	}
-
-	@Override
-	default <X> SubGraph<X> addSubgraph(String name, Class<X> type) {
-		return addSubGraph( name, type );
-	}
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
-		return addKeySubGraph( (PersistentAttribute<? super J,X>) attribute );
-	}
-
-	@Override
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( (PersistentAttribute<? super J,X>) attribute, type );
-	}
-
-	@Override
-	default <X> SubGraph<X> addKeySubgraph(String name) {
-		return addKeySubGraph( name );
-	}
-
-	@Override
-	default <X> Subgraph<X> addKeySubgraph(String name, Class<X> type) {
-		return addKeySubGraph( name, type );
+	/**
+	 * @deprecated Planned for removal in JPA 4
+	 */
+	@Override @Deprecated(forRemoval = true)
+	@SuppressWarnings("unchecked") // The JPA method was defined with an incorrect generic signature
+	default <T> SubGraph<? extends T> addSubclassSubgraph(Class<? extends T> type) {
+		return (SubGraph<? extends T>) addTreatedSubgraph( (Class<? extends J>) type );
 	}
 }

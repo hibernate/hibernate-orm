@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.namedquery;
@@ -23,6 +23,8 @@ import jakarta.persistence.NamedQuery;
 		query = "select book from Book book where book.title like :titlePattern and book.type = :type")
 @NamedQuery(name = "#getTitles",
 		query = "select title from Book")
+@NamedQuery(name = "titlesAndIsbnsAsRecord",
+		query = "select new org.hibernate.processor.test.namedquery.TitleAndIsbn(title,isbn) from Book")
 @NamedQuery(name = "#getUpperLowerTitles",
 		query = "select upper(title), lower(title), length(title) from Book")
 @NamedQuery(name = "#typeOfBook",

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.classloading.spi;
@@ -35,26 +35,17 @@ public interface ClassLoaderService extends ResourceLocator, ResourceStreamLocat
 
 	@SuppressWarnings("unchecked")
 	default <T> Class<T> classForTypeName(String className) {
-		switch ( className ) {
-			case "boolean":
-				return (Class<T>) boolean.class;
-			case "byte":
-				return (Class<T>) byte.class;
-			case "char":
-				return (Class<T>) char.class;
-			case "short":
-				return (Class<T>) short.class;
-			case "int":
-				return (Class<T>) int.class;
-			case "float":
-				return (Class<T>) float.class;
-			case "long":
-				return (Class<T>) long.class;
-			case "double":
-				return (Class<T>) double.class;
-			default:
-				return classForName( className );
-		}
+		return (Class<T>) switch ( className ) {
+			case "boolean" -> boolean.class;
+			case "byte" -> byte.class;
+			case "char" -> char.class;
+			case "short" -> short.class;
+			case "int" -> int.class;
+			case "float" -> float.class;
+			case "long" -> long.class;
+			case "double" -> double.class;
+			default -> classForName( className );
+		};
 	}
 
 	/**

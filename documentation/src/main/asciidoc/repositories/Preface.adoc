@@ -16,4 +16,9 @@ On the other hand, the programming model for interacting with the database is qu
 Therefore, this document will show you a different way to use Hibernate.
 
 The coverage of Jakarta Data is intentionally inexhaustive.
-If exhaustion is sought, this document should be read in conjunction with the specification, which we've worked hard to keep readable.
+If exhaustion is sought, this document should be read in conjunction with https://jakarta.ee/specifications/data/1.0/jakarta-data-1.0[the specification], which we've worked hard to keep readable.
+
+If you are unfamiliar with Hibernate, this document should be read in conjunction with:
+
+- the link:{doc-introduction-url}[Short Guide to Hibernate], and
+- the link:{doc-query-language-url}[Guide to Hibernate Query Language].

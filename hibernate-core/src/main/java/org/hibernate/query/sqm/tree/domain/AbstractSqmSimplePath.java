@@ -1,13 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
+
 
 /**
  * @author Steve Ebersole
@@ -29,35 +31,33 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
-
 		setExplicitAlias( explicitAlias );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( getLhs() != null ) {
-			getLhs().appendHqlString( sb );
-			sb.append( '.' );
+			getLhs().appendHqlString( hql, context );
+			hql.append( '.' );
 		}
-		sb.append( getReferencedPathSource().getPathName() );
+		hql.append( getReferencedPathSource().getPathName() );
 	}
 
 	@Override
-	public SqmPathSource<T> getNodeType() {
-		return getReferencedPathSource();
+	public SqmBindableType<T> getNodeType() {
+		return getReferencedPathSource().getExpressible();
 	}
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		final SqmPathSource<T> pathSource = super.getNodeType();
-		if ( pathSource instanceof SingularPersistentAttribute ) {
-			return ( (SingularPersistentAttribute<?, T>) pathSource ).getPathSource();
-		}
-		return pathSource;
+		final SqmPathSource<T> pathSource = super.getReferencedPathSource();
+		return pathSource instanceof SqmSingularPersistentAttribute<?, T> attribute
+				? attribute.getSqmPathSource()
+				: pathSource;
 	}
 
 	@Override
 	public SqmPathSource<T> getModel() {
-		return super.getNodeType();
+		return super.getReferencedPathSource();
 	}
 }

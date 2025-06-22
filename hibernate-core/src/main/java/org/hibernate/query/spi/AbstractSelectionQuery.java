@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -16,8 +16,13 @@ import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.Internal;
+import org.hibernate.ScrollableResults;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -25,14 +30,12 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
@@ -49,6 +52,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static org.hibernate.CacheMode.fromJpaModes;
@@ -64,8 +68,15 @@ import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
 
 /**
+ * Base implementation of {@link SelectionQuery}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractSelectionQuery<R>
 		extends AbstractCommonQueryContract
 		implements SelectionQuery<R>, DomainQueryExecutionContext {
@@ -74,7 +85,7 @@ public abstract class AbstractSelectionQuery<R>
 	 */
 	public static final String CRITERIA_HQL_STRING = "<criteria>";
 
-	private Callback callback;
+	private transient Callback callback;
 
 	public AbstractSelectionQuery(SharedSessionContractImplementor session) {
 		super( session );
@@ -146,7 +157,7 @@ public abstract class AbstractSelectionQuery<R>
 			throw new IllegalStateException( e );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
+			throw getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
 		finally {
 			afterQueryHandlingFetchProfiles( success, fetchProfiles );
@@ -173,9 +184,9 @@ public abstract class AbstractSelectionQuery<R>
 		assert sessionCacheMode == null;
 
 		final FlushMode effectiveFlushMode = getQueryOptions().getFlushMode();
-		if ( effectiveFlushMode != null ) {
-			sessionFlushMode = session.getHibernateFlushMode();
-			session.setHibernateFlushMode( effectiveFlushMode );
+		if ( effectiveFlushMode != null && session instanceof SessionImplementor statefulSession ) {
+			sessionFlushMode = statefulSession.getHibernateFlushMode();
+			statefulSession.setHibernateFlushMode( effectiveFlushMode );
 		}
 
 		final CacheMode effectiveCacheMode = getCacheMode();
@@ -212,8 +223,9 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	protected void afterQuery() {
-		if ( sessionFlushMode != null ) {
-			getSession().setHibernateFlushMode( sessionFlushMode );
+		if ( sessionFlushMode != null
+				&& getSession() instanceof SessionImplementor statefulSession ) {
+			statefulSession.setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
 		}
 		if ( sessionCacheMode != null ) {
@@ -251,15 +263,12 @@ public abstract class AbstractSelectionQuery<R>
 		return stream();
 	}
 
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	@Override
-	public Stream stream() {
-		final ScrollableResultsImplementor scrollableResults = scroll( ScrollMode.FORWARD_ONLY );
-		final ScrollableResultsIterator iterator = new ScrollableResultsIterator<>( scrollableResults );
-		final Spliterator spliterator = spliteratorUnknownSize( iterator, Spliterator.NONNULL );
-
-		final Stream stream = StreamSupport.stream( spliterator, false );
-		return (Stream) stream.onClose( scrollableResults::close );
+	public Stream<R> stream() {
+		final ScrollableResults<R> results = scroll( ScrollMode.FORWARD_ONLY );
+		final Spliterator<R> spliterator =
+				spliteratorUnknownSize( new ScrollableResultsIterator<>( results ), Spliterator.NONNULL );
+		return StreamSupport.stream( spliterator, false ).onClose( results::close );
 	}
 
 	@Override
@@ -272,19 +281,17 @@ public abstract class AbstractSelectionQuery<R>
 		try {
 			final List<R> list = list();
 			if ( list.isEmpty() ) {
-				throw new NoResultException(
-						String.format( "No result found for query [%s]", getQueryString() )
-				);
+				throw new NoResultException( "No result found for query [" + getQueryString() + "]" );
 			}
 			return uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
+			throw getExceptionConverter().convert( e, getQueryOptions().getLockOptions() );
 		}
 	}
 
 	protected static <T> T uniqueElement(List<T> list) throws NonUniqueResultException {
-		int size = list.size();
+		final int size = list.size();
 		if ( size == 0 ) {
 			return null;
 		}
@@ -311,7 +318,7 @@ public abstract class AbstractSelectionQuery<R>
 			return uniqueElement( list() );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
+			throw getExceptionConverter().convert( e, getLockOptions() );
 		}
 	}
 
@@ -350,12 +357,12 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setMaxResults(int maxResult) {
-		if ( maxResult < 0 ) {
+	public SelectionQuery<R> setMaxResults(int maxResults) {
+		if ( maxResults < 0 ) {
 			throw new IllegalArgumentException( "Max results cannot be negative" );
 		}
 		getSession().checkOpen();
-		getQueryOptions().getLimit().setMaxRows(maxResult);
+		getQueryOptions().getLimit().setMaxRows( maxResults );
 		return this;
 	}
 
@@ -376,18 +383,20 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
-		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+	public SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic) {
+		applyGraph( (RootGraphImplementor<? super R>) graph, semantic );
 		return this;
 	}
 
 	@Override
 	public SelectionQuery<R> enableFetchProfile(String profileName) {
-		if ( !getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+		if ( this.getSessionFactory().containsFetchProfileDefinition( profileName ) ) {
+			getQueryOptions().enableFetchProfile( profileName );
+			return this;
+		}
+		else {
 			throw new UnknownProfileException( profileName );
 		}
-		getQueryOptions().enableFetchProfile( profileName );
-		return this;
 	}
 
 	@Override
@@ -396,7 +405,7 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public LockOptions getLockOptions() {
 		return getQueryOptions().getLockOptions();
 	}
@@ -437,6 +446,18 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setHibernateLockMode(LockMode lockMode) {
 		getLockOptions().setLockMode( lockMode );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setTimeout(Timeout timeout) {
+		getLockOptions().setTimeOut( timeout.milliseconds() );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> setLockScope(PessimisticLockScope lockScope) {
+		getLockOptions().setLockScope( lockScope );
 		return this;
 	}
 
@@ -609,12 +630,12 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameter(String name, P value, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameter(String name, P value, Type<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
@@ -633,12 +654,12 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameter(int position, P value, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameter(int position, P value, Type<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -657,7 +678,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
@@ -668,37 +689,37 @@ public abstract class AbstractSelectionQuery<R>
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType) {
 		super.setParameter( name, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType) {
 		super.setParameter( position, value, temporalType );
 		return this;
@@ -717,7 +738,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -735,7 +756,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(String name, P[] values, Type<P> type) {
 		super.setParameterList( name, values, type );
 		return this;
 	}
@@ -753,7 +774,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -771,7 +792,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameterList(int position, P[] values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(int position, P[] values, Type<P> type) {
 		super.setParameterList( position, values, type );
 		return this;
 	}
@@ -789,7 +810,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -807,7 +828,7 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
+	public <P> SelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
 		super.setParameterList( parameter, values, type );
 		return this;
 	}
@@ -822,9 +843,5 @@ public abstract class AbstractSelectionQuery<R>
 	public SelectionQuery<R> setProperties(Object bean) {
 		super.setProperties( bean );
 		return this;
-	}
-
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
 	}
 }

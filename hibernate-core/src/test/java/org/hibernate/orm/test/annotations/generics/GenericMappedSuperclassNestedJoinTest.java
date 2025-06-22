@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.generics;
@@ -120,7 +120,7 @@ public class GenericMappedSuperclassNestedJoinTest {
 			final Join<Object, Object> p2 = p1.join( "parent" );
 			assertThat( p2.getJavaType() ).isEqualTo( SimpleObject.class );
 			final ManagedDomainType<?> joinType = (ManagedDomainType<?>) ( (SqmPath<?>) p1 ).getReferencedPathSource()
-					.getSqmPathType();
+					.getPathType();
 			assertThat( p2.getModel() ).isSameAs( joinType.getAttribute( "parent" ) );
 			assertThat( ( (SqmPath<?>) p2 ).getResolvedModel().getBindableJavaType() )
 					.isEqualTo( Selection.class );

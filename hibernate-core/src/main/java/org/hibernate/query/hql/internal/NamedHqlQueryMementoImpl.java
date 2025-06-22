@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -15,7 +15,7 @@ import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmSelectionQuery;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -137,11 +137,7 @@ public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 
 	@Override
 	public <T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session) {
-		return new SqmSelectionQueryImpl<>(
-				this,
-				resultType,
-				session
-		);
+		return new SqmSelectionQueryImpl<>( this, resultType, session );
 	}
 
 	@Override
@@ -151,6 +147,6 @@ public class NamedHqlQueryMementoImpl<R> extends AbstractNamedQueryMemento<R>
 
 	@Override
 	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		return new QuerySqmImpl<>( this, resultType, session );
+		return new SqmQueryImpl<>( this, resultType, session );
 	}
 }

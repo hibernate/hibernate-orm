@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -268,6 +268,10 @@ public interface JavaType<T> extends Serializable {
 		return fromString( CharSequenceHelper.subSequence( charSequence, start, end ) );
 	}
 
+	default T fromEncodedString(CharSequence charSequence) {
+		return fromEncodedString( charSequence, 0, charSequence.length()  );
+	}
+
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.
 	 * <p>
@@ -349,7 +353,7 @@ public interface JavaType<T> extends Serializable {
 	 * @since 6.2
 	 */
 	@Incubating
-	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<T, ?> converter, Dialect dialect) {
 		return null;
 	}
 }

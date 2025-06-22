@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_DELETES;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -25,7 +25,7 @@ public class OverriddenSQLDeletesAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenSQLDeletesAnnotation(SourceModelBuildingContext modelContext) {
+	public OverriddenSQLDeletesAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -33,7 +33,7 @@ public class OverriddenSQLDeletesAnnotation
 	 */
 	public OverriddenSQLDeletesAnnotation(
 			DialectOverride.SQLDeletes annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, DIALECT_OVERRIDE_SQL_DELETES, "value", modelContext );
 	}
 
@@ -42,7 +42,7 @@ public class OverriddenSQLDeletesAnnotation
 	 */
 	public OverriddenSQLDeletesAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (DialectOverride.SQLDelete[]) attributeValues.get( "value" );
 	}
 

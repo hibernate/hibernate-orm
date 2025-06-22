@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.identifier;
@@ -100,7 +100,7 @@ public class NaiveEqualsHashCodeEntityTest extends BaseEntityManagerFunctionalTe
 	}
 
 	//tag::entity-pojo-naive-equals-hashcode-example[]
-	@Entity(name = "Library")
+	@Entity(name = "MyLibrary")
 	public static class Library {
 
 		@Id

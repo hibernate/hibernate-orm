@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -150,7 +150,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	public Object getIdentifier(Object entity) {
 		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
 		if ( lazyInitializer != null ) {
-			return lazyInitializer.getIdentifier();
+			return lazyInitializer.getInternalIdentifier();
 		}
 		return propertyAccess.getGetter().get( entity );
 	}
@@ -162,9 +162,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	@Override
 	public Object instantiate() {
-		return entityPersister.getRepresentationStrategy()
-				.getInstantiator()
-				.instantiate( sessionFactory );
+		return entityPersister.getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
 	@Override

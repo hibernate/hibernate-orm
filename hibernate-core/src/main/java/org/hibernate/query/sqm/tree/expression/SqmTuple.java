@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -7,14 +7,16 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 
 /**
@@ -36,7 +38,7 @@ public class SqmTuple<T>
 		this( Arrays.asList( groupedExpressions ), nodeBuilder );
 	}
 
-	public SqmTuple(NodeBuilder nodeBuilder, SqmExpressible<T> type, SqmExpression<?>... groupedExpressions) {
+	public SqmTuple(NodeBuilder nodeBuilder, SqmBindableType<T> type, SqmExpression<?>... groupedExpressions) {
 		this( Arrays.asList( groupedExpressions ), type, nodeBuilder );
 	}
 
@@ -44,7 +46,7 @@ public class SqmTuple<T>
 		this( groupedExpressions, null, nodeBuilder );
 	}
 
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressible<T> type, NodeBuilder nodeBuilder) {
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmBindableType<T> type, NodeBuilder nodeBuilder) {
 		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new SemanticException( "Tuple constructor must have at least one element" );
@@ -83,14 +85,25 @@ public class SqmTuple<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( '(' );
-		groupedExpressions.get( 0 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( '(' );
+		groupedExpressions.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < groupedExpressions.size(); i++ ) {
-			sb.append(", ");
-			groupedExpressions.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			groupedExpressions.get( i ).appendHqlString( hql, context );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmTuple<?> that
+			&& Objects.equals( this.groupedExpressions, that.groupedExpressions );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode( groupedExpressions );
 	}
 
 	@Override

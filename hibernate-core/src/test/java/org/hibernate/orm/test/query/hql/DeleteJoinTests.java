@@ -1,16 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
 
+import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
@@ -51,10 +51,7 @@ public class DeleteJoinTests {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Contact" ).executeUpdate();
-			session.createMutationQuery( "delete from BasicEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -80,7 +77,7 @@ public class DeleteJoinTests {
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					final JpaCriteriaDelete<BasicEntity> criteriaDelete = cb.createCriteriaDelete( BasicEntity.class );
 					final JpaRoot<BasicEntity> b = criteriaDelete.from( BasicEntity.class );
-					final JpaEntityJoin<BasicEntity, Contact> c = b.join( Contact.class, SqmJoinType.LEFT );
+					final JpaEntityJoin<BasicEntity, Contact> c = b.join( Contact.class, JoinType.LEFT );
 					c.on( b.get( "id" ).equalTo( c.get( "id" ) ) );
 					criteriaDelete.where( c.get( "id" ).isNotNull() );
 					int updated = session.createMutationQuery( criteriaDelete ).executeUpdate();

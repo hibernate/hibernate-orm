@@ -1,73 +1,51 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria.internal.hhh13151;
 
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static junit.framework.TestCase.assertTrue;
-
-public class TreatedEntityFetchTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{
-				SubEntity.class,
-				SuperEntity.class,
-				SideEntity.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, true );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, true );
-		// configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
-
-	@Before
-	public void prepareEntities() {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		s.persist( new SubEntity().setSubField( new SideEntity( "testName" ) ) );
-		tx.commit();
-		s.close();
-	}
-
+@DomainModel( annotatedClasses = {SubEntity.class, SuperEntity.class, SideEntity.class} )
+@SessionFactory
+@JiraKey( "HHH-13151" )
+@SuppressWarnings("JUnitMalformedDeclaration")
+public class TreatedEntityFetchTest {
 	@Test
-	public void hhh13151Test() throws Exception {
-		Session s = openSession();
+	public void testTreatedFetching(SessionFactoryScope sessions) throws Exception {
+		final SubEntity result = (SubEntity) sessions.fromTransaction( (session) -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<SuperEntity> criteria = cb.createQuery( SuperEntity.class );
+			final Root<SuperEntity> root = criteria.from( SuperEntity.class );
+			cb.treat( root, SubEntity.class ).fetch( "subField" );
 
-		// Prepare Query
-		CriteriaBuilder cb = s.getCriteriaBuilder();
-		CriteriaQuery<SuperEntity> criteria = cb.createQuery( SuperEntity.class );
-		Root<SuperEntity> root = criteria.from( SuperEntity.class );
-		cb.treat( root, SubEntity.class ).fetch( "subField" );
+			return session.createQuery( criteria ).getResultList().get( 0 );
+		} );
 
-		// Execute
-		Transaction tx = s.beginTransaction();
-		List<SuperEntity> result = s.createQuery( criteria ).getResultList();
-		tx.commit();
-		s.close();
+		final SideEntity subField = result.getSubField();
+		assertThat( subField.getName() ).isNotNull();
+	}
 
-		// Check results
-		SideEntity subField = ( (SubEntity) result.get( 0 ) ).getSubField();
-		String name = subField.getName();
-		assertTrue( name != null );
+	@BeforeEach
+	public void createTestData(SessionFactoryScope sessions) {
+		sessions.inTransaction( (session) -> {
+			session.persist( new SubEntity().setSubField( new SideEntity( "testName" ) ) );
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope sessions) {
+		sessions.dropData();
 	}
 }

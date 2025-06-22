@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.sql.spi;
@@ -267,7 +267,6 @@ public class DdlTypeRegistry implements Serializable {
 				return true;
 			}
 		}
-
 		return false;
 	}
 }

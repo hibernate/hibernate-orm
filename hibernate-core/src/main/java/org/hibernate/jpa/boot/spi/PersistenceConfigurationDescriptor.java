@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.spi;
@@ -12,6 +12,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import jakarta.persistence.PersistenceConfiguration;
@@ -59,8 +60,9 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	@Override
 	public boolean isExcludeUnlistedClasses() {
-		// because we do not know the root url nor jar files we cannot do scanning
-		return true;
+		// if we do not know the root url nor jar files we cannot do scanning
+		return !(persistenceConfiguration instanceof HibernatePersistenceConfiguration configuration)
+			|| configuration.rootUrl() == null && configuration.jarFileUrls().isEmpty();
 	}
 
 	@Override @SuppressWarnings("removal")
@@ -125,11 +127,15 @@ public class PersistenceConfigurationDescriptor implements PersistenceUnitDescri
 
 	@Override
 	public URL getPersistenceUnitRootUrl() {
-		return null;
+		return persistenceConfiguration instanceof HibernatePersistenceConfiguration configuration
+				? configuration.rootUrl()
+				: null;
 	}
 
 	@Override
 	public List<URL> getJarFileUrls() {
-		return null;
+		return persistenceConfiguration instanceof HibernatePersistenceConfiguration configuration
+				? configuration.jarFileUrls()
+				: null;
 	}
 }

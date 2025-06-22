@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
@@ -48,9 +48,8 @@ public abstract class AbstractSqlAstQueryNodeProcessingStateImpl
 	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
 		if ( !( sqmFrom instanceof SqmTreatedPath<?, ?> ) ) {
 			if ( !sqmFromRegistrations.containsKey( sqmFrom ) ) {
-				final SqlAstProcessingState parentState = getParentState();
-				if ( parentState instanceof SqlAstQueryPartProcessingState ) {
-					( (SqlAstQueryPartProcessingState) parentState ).registerFromUsage( sqmFrom, downgradeTreatUses );
+				if ( getParentState() instanceof SqlAstQueryPartProcessingState parentState ) {
+					parentState.registerFromUsage( sqmFrom, downgradeTreatUses );
 				}
 			}
 			else {

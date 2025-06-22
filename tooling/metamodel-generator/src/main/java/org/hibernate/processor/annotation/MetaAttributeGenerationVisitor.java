@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -9,7 +9,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
 import org.hibernate.processor.util.AccessTypeInformation;
 import org.hibernate.processor.util.Constants;
-import org.hibernate.processor.util.NullnessUtil;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -27,6 +26,7 @@ import javax.tools.Diagnostic;
 import java.util.List;
 
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
+import static org.hibernate.processor.util.Constants.LIST_ATTRIBUTE;
 import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
 import static org.hibernate.processor.util.Constants.MANY_TO_MANY;
 import static org.hibernate.processor.util.Constants.MAP_KEY_CLASS;
@@ -70,7 +70,13 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 
 	@Override
 	public @Nullable AnnotationMetaAttribute visitArray(ArrayType arrayType, Element element) {
-		return new AnnotationMetaSingleAttribute( entity, element, toArrayTypeString( arrayType, context ) );
+		if ( hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
+			return new AnnotationMetaCollection( entity, element, LIST_ATTRIBUTE,
+					toTypeString(arrayType.getComponentType()) );
+		}
+		else {
+			return new AnnotationMetaSingleAttribute( entity, element, toArrayTypeString( arrayType, context ) );
+		}
 	}
 
 	@Override
@@ -85,7 +91,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
 		assert returnedElement != null;
 		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String returnTypeName = NullnessUtil.castNonNull( returnedElement ).getQualifiedName().toString();
+		final String returnTypeName = castNonNull( returnedElement ).getQualifiedName().toString();
 		final String collection = Constants.COLLECTIONS.get( returnTypeName );
 		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
 		if ( collection != null ) {
@@ -109,7 +115,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Nullable
 					getCollectionElementType( declaredType, returnTypeName, explicitTargetEntity, context );
 			if ( collectionElementType.getKind() == TypeKind.DECLARED ) {
 				final TypeElement collectionElement = (TypeElement) typeUtils().asElement( collectionElementType );
-				setAccessType( collectionElementType, NullnessUtil.castNonNull( collectionElement ) );
+				setAccessType( collectionElementType, castNonNull( collectionElement ) );
 			}
 		}
 		return createMetaAttribute( declaredType, element, collection, targetEntity );

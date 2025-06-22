@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -16,7 +16,6 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.CacheHelper;
-import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -36,7 +35,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.spi.NavigablePath;
@@ -62,6 +60,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Steve Ebersole
@@ -273,7 +273,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			FetchParent fetchParent,
 			DomainResultCreationState creationState) {
 		assert fromSide == Nature.TARGET
-				? targetTableGroup.getTableReference( navigablePath, associationKey.getTable(), false ) != null
+				? targetTableGroup.getTableReference( navigablePath, associationKey.table(), false ) != null
 				: isTargetTableGroup( targetTableGroup );
 		return createDomainResult(
 				navigablePath.append( ForeignKeyDescriptor.PART_NAME ),
@@ -318,14 +318,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	private boolean isTargetTableGroup(TableGroup tableGroup) {
 		tableGroup = getUnderlyingTableGroup( tableGroup );
-		final TableGroupProducer tableGroupProducer;
-		if ( tableGroup instanceof OneToManyTableGroup ) {
-			tableGroupProducer = (TableGroupProducer) ( (OneToManyTableGroup) tableGroup ).getElementTableGroup()
-					.getModelPart();
-		}
-		else {
-			tableGroupProducer = (TableGroupProducer) tableGroup.getModelPart();
-		}
+		final TableGroupProducer tableGroupProducer =
+				tableGroup instanceof OneToManyTableGroup oneToManyTableGroup
+						? (TableGroupProducer) oneToManyTableGroup.getElementTableGroup().getModelPart()
+						: (TableGroupProducer) tableGroup.getModelPart();
 		return tableGroupProducer.containsTableReference( targetSide.getModelPart().getContainingTableExpression() );
 	}
 
@@ -386,7 +382,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping ),
 				javaType,
 				fetchParent,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		final JdbcMappingContainer selectionType = sqlSelection.getExpressionType();
@@ -432,24 +428,26 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public boolean isSimpleJoinPredicate(Predicate predicate) {
-		if ( !( predicate instanceof ComparisonPredicate ) ) {
+		if ( !(predicate instanceof ComparisonPredicate comparisonPredicate) ) {
 			return false;
 		}
-		final ComparisonPredicate comparisonPredicate = (ComparisonPredicate) predicate;
 		if ( comparisonPredicate.getOperator() != ComparisonOperator.EQUAL ) {
 			return false;
 		}
 		final Expression lhsExpr = comparisonPredicate.getLeftHandExpression();
 		final Expression rhsExpr = comparisonPredicate.getRightHandExpression();
-		if ( !( lhsExpr instanceof ColumnReference ) || !( rhsExpr instanceof ColumnReference ) ) {
+		if ( lhsExpr instanceof ColumnReference lhsColumnRef
+				&& rhsExpr instanceof ColumnReference rhsColumnRef ) {
+			final String lhs = lhsColumnRef.getColumnExpression();
+			final String rhs = rhsColumnRef.getColumnExpression();
+			final String keyExpression = keySide.getModelPart().getSelectionExpression();
+			final String targetExpression = targetSide.getModelPart().getSelectionExpression();
+			return lhs.equals( keyExpression ) && rhs.equals( targetExpression )
+				|| lhs.equals( targetExpression ) && rhs.equals( keyExpression );
+		}
+		else {
 			return false;
 		}
-		final String lhs = ( (ColumnReference) lhsExpr ).getColumnExpression();
-		final String rhs = ( (ColumnReference) rhsExpr ).getColumnExpression();
-		final String keyExpression = keySide.getModelPart().getSelectionExpression();
-		final String targetExpression = targetSide.getModelPart().getSelectionExpression();
-		return ( lhs.equals( keyExpression ) && rhs.equals( targetExpression ) )
-				|| ( lhs.equals( targetExpression ) && rhs.equals( keyExpression ) );
 	}
 
 	@Override
@@ -496,10 +494,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( targetObject == null ) {
 			return null;
 		}
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( targetObject );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( targetObject );
 		if ( lazyInitializer != null ) {
 			if ( refersToPrimaryKey ) {
-				return lazyInitializer.getIdentifier();
+				return lazyInitializer.getInternalIdentifier();
 			}
 			else {
 				targetObject = lazyInitializer.getImplementation();
@@ -510,10 +508,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return ( (EntityIdentifierMapping) modelPart ).getIdentifierIfNotUnsaved( targetObject, session );
 		}
 
-		if ( lazyInitializer == null && ManagedTypeHelper.isPersistentAttributeInterceptable( targetObject ) ) {
+		if ( lazyInitializer == null && isPersistentAttributeInterceptable( targetObject ) ) {
 			final PersistentAttributeInterceptor interceptor =
 					asPersistentAttributeInterceptable( targetObject ).$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor && !( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized() ) {
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor
+					&& !lazinessInterceptor.isInitialized() ) {
 				Hibernate.initialize( targetObject );
 			}
 		}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -115,12 +115,17 @@ public class UnresolvedEntityInsertActions {
 			final Object firstTransientDependency =
 					nonNullableTransientDependencies.getNonNullableTransientEntities().iterator().next();
 			final String firstPropertyPath =
-					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency ).iterator().next();
-
+					nonNullableTransientDependencies.getNonNullableTransientPropertyPaths( firstTransientDependency )
+							.iterator().next();
+			final String entityName = firstDependentAction.getEntityName();
+			final String transientEntityName =
+					firstDependentAction.getSession().guessEntityName( firstTransientDependency );
 			throw new TransientPropertyValueException(
-					"Not-null property references a transient value - transient instance must be saved before current operation",
-					firstDependentAction.getSession().guessEntityName( firstTransientDependency ),
-					firstDependentAction.getEntityName(),
+					"Instance of '" + entityName
+						+ "' references an unsaved transient instance of '" + transientEntityName
+						+ "' (persist the transient instance)",
+					transientEntityName,
+					entityName,
 					firstPropertyPath
 			);
 		}
@@ -130,11 +135,10 @@ public class UnresolvedEntityInsertActions {
 		for ( Map.Entry<Object,Set<AbstractEntityInsertAction>> entry : dependentActionsByTransientEntity.entrySet() ) {
 			final Object transientEntity = entry.getKey();
 			final String transientEntityName = session.guessEntityName( transientEntity );
-			final Object transientEntityId = session.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( transientEntityName )
-					.getIdentifier( transientEntity, session );
+			final Object transientEntityId =
+					session.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( transientEntityName )
+							.getIdentifier( transientEntity, session );
 			final String transientEntityString = infoString( transientEntityName, transientEntityId );
 			final Set<String> dependentEntityStrings = new TreeSet<>();
 			final Set<String> nonNullableTransientPropertyPaths = new TreeSet<>();

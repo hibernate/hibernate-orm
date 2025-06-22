@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple.entity;
@@ -70,16 +70,7 @@ class CompositeGeneratorBuilder {
 			return createCompositeOnExecutionGenerator();
 		}
 		else {
-			return new Generator() {
-				@Override
-				public EnumSet<EventType> getEventTypes() {
-					return NONE;
-				}
-				@Override
-				public boolean generatedOnExecution() {
-					return false;
-				}
-			};
+			return DummyGenerator.INSTANCE;
 		}
 	}
 
@@ -89,6 +80,8 @@ class CompositeGeneratorBuilder {
 		// the base-line values for the aggregated OnExecutionGenerator we will build here.
 		final EnumSet<EventType> eventTypes = EnumSet.noneOf(EventType.class);
 		boolean referenceColumns = false;
+		boolean writable = false;
+		boolean mutable = false;
 		final String[] columnValues = new String[composite.getColumnSpan()];
 
 		// start building the aggregate values
@@ -120,31 +113,16 @@ class CompositeGeneratorBuilder {
 					columnIndex += span;
 				}
 			}
+			if ( generator.writePropertyValue() ) {
+				writable = true;
+			}
+			if ( generator.allowMutation() ) {
+				mutable = true;
+			}
 		}
-		final boolean referenceColumnsInSql = referenceColumns;
 
 		// then use the aggregated values to build an OnExecutionGenerator
-		return new OnExecutionGenerator() {
-			@Override
-			public EnumSet<EventType> getEventTypes() {
-				return eventTypes;
-			}
-
-			@Override
-			public boolean referenceColumnsInSql(Dialect dialect) {
-				return referenceColumnsInSql;
-			}
-
-			@Override
-			public String[] getReferencedColumnValues(Dialect dialect) {
-				return columnValues;
-			}
-
-			@Override
-			public boolean writePropertyValue() {
-				return false;
-			}
-		};
+		return new CompositeOnExecutionGenerator( eventTypes, referenceColumns, columnValues, writable, mutable );
 	}
 
 	private BeforeExecutionGenerator createCompositeBeforeExecutionGenerator() {
@@ -157,45 +135,97 @@ class CompositeGeneratorBuilder {
 				eventTypes.addAll( generator.getEventTypes() );
 			}
 		}
-		return new BeforeExecutionGenerator() {
-			@Override
-			public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-				final EntityPersister persister = session.getEntityPersister( entityName, owner );
-				final int index = persister.getPropertyIndex( mappingProperty.getName() );
-				final EmbeddableMappingType descriptor =
-						persister.getAttributeMapping(index).asEmbeddedAttributeMapping()
-								.getEmbeddableTypeDescriptor();
-				final int size = properties.size();
-				if ( currentValue == null ) {
-					final Object[] generatedValues = new Object[size];
-					for ( int i = 0; i < size; i++ ) {
-						final Generator generator = generators.get(i);
-						if ( generator != null ) {
-							generatedValues[i] = ((BeforeExecutionGenerator) generator)
-									.generate( session, owner, null, eventType );
-						}
-					}
-					return descriptor.getRepresentationStrategy().getInstantiator()
-							.instantiate( () -> generatedValues, session.getFactory() );
-				}
-				else {
-					for ( int i = 0; i < size; i++ ) {
-						final Generator generator = generators.get(i);
-						if ( generator != null ) {
-							final Object value = descriptor.getValue( currentValue, i );
-							final Object generatedValue = ((BeforeExecutionGenerator) generator)
-									.generate( session, owner, value, eventType );
-							descriptor.setValue( currentValue, i, generatedValue );
-						}
-					}
-					return currentValue;
-				}
-			}
+		return new CompositeBeforeExecutionGenerator( entityName, generators, mappingProperty, properties, eventTypes );
+	}
 
-			@Override
-			public EnumSet<EventType> getEventTypes() {
-				return eventTypes;
+	private record CompositeOnExecutionGenerator(
+			EnumSet<EventType> eventTypes,
+			boolean referenceColumnsInSql,
+			String[] columnValues,
+			boolean writePropertyValue,
+			boolean allowMutation)
+				implements OnExecutionGenerator {
+		@Override
+		public boolean referenceColumnsInSql(Dialect dialect) {
+			return referenceColumnsInSql;
+		}
+		@Override
+		public String[] getReferencedColumnValues(Dialect dialect) {
+			return columnValues;
+		}
+
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return eventTypes;
+		}
+	}
+
+	private record CompositeBeforeExecutionGenerator(
+			String entityName,
+			List<Generator> generators,
+			Property mappingProperty,
+			List<Property> properties,
+			EnumSet<EventType> eventTypes)
+				implements BeforeExecutionGenerator {
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return eventTypes;
+		}
+		@Override
+		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
+			final EntityPersister persister = session.getEntityPersister( entityName, owner );
+			final int index = persister.getPropertyIndex( mappingProperty.getName() );
+			final EmbeddableMappingType descriptor =
+					persister.getAttributeMapping( index ).asEmbeddedAttributeMapping()
+							.getEmbeddableTypeDescriptor();
+			final int size = properties.size();
+			if ( currentValue == null ) {
+				final Object[] generatedValues = new Object[size];
+				for ( int i = 0; i < size; i++ ) {
+					final Generator generator = generators.get( i );
+					if ( generator != null && generator.getEventTypes().contains( eventType ) ) {
+						generatedValues[i] = ((BeforeExecutionGenerator) generator)
+								.generate( session, owner, null, eventType );
+					}
+				}
+				return descriptor.getRepresentationStrategy().getInstantiator().instantiate( () -> generatedValues );
 			}
-		};
+			else {
+				for ( int i = 0; i < size; i++ ) {
+					final Generator generator = generators.get( i );
+					if ( generator != null && generator.getEventTypes().contains( eventType ) ) {
+						final Object value = descriptor.getValue( currentValue, i );
+						final Object generatedValue = ((BeforeExecutionGenerator) generator)
+								.generate( session, owner, value, eventType );
+						descriptor.setValue( currentValue, i, generatedValue );
+					}
+				}
+				return currentValue;
+			}
+		}
+	}
+
+	private record DummyGenerator() implements Generator {
+		private static final Generator INSTANCE = new DummyGenerator();
+
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return NONE;
+		}
+
+		@Override
+		public boolean generatedOnExecution() {
+			return false;
+		}
+
+		@Override
+		public boolean allowMutation() {
+			return true;
+		}
+
+		@Override
+		public boolean allowAssignedIdentifiers() {
+			return true;
+		}
 	}
 }

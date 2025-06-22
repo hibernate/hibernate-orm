@@ -1,52 +1,20 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.lang.invoke.MethodHandles;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.NClob;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-import java.util.regex.Pattern;
-
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
@@ -66,9 +34,10 @@ import org.hibernate.dialect.function.ExtractFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.LocatePositionEmulation;
 import org.hibernate.dialect.function.LpadRpadPadEmulation;
-import org.hibernate.dialect.function.SqlFunction;
-import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.function.OrdinalFunction;
+import org.hibernate.dialect.function.SqlFunction;
+import org.hibernate.dialect.function.StringFunction;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -105,7 +74,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.MathHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.MultiKeyLoadSizingStrategy;
@@ -117,23 +85,24 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.UserDefinedType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.Query;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
@@ -164,10 +133,10 @@ import org.hibernate.tool.schema.internal.StandardTableExporter;
 import org.hibernate.tool.schema.internal.StandardTableMigrator;
 import org.hibernate.tool.schema.internal.StandardUniqueKeyExporter;
 import org.hibernate.tool.schema.internal.StandardUserDefinedTypeExporter;
-import org.hibernate.tool.schema.internal.TableMigrator;
 import org.hibernate.tool.schema.spi.Cleaner;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.hibernate.tool.schema.spi.TableMigrator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SqlTypes;
@@ -194,58 +163,62 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.TemporalType;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.lang.invoke.MethodHandles;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static java.lang.String.join;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
+import static org.hibernate.internal.util.MathHelper.ceilingPowerOfTwo;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.splitAtCommas;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
-import static org.hibernate.type.SqlTypes.ARRAY;
-import static org.hibernate.type.SqlTypes.BIGINT;
-import static org.hibernate.type.SqlTypes.BINARY;
-import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
-import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.CLOB;
-import static org.hibernate.type.SqlTypes.DATE;
-import static org.hibernate.type.SqlTypes.DECIMAL;
-import static org.hibernate.type.SqlTypes.DOUBLE;
-import static org.hibernate.type.SqlTypes.FLOAT;
-import static org.hibernate.type.SqlTypes.INTEGER;
-import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
-import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
-import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
-import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NCLOB;
-import static org.hibernate.type.SqlTypes.NUMERIC;
-import static org.hibernate.type.SqlTypes.NVARCHAR;
-import static org.hibernate.type.SqlTypes.REAL;
-import static org.hibernate.type.SqlTypes.ROWID;
-import static org.hibernate.type.SqlTypes.SMALLINT;
-import static org.hibernate.type.SqlTypes.TIME;
-import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_UTC;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TINYINT;
-import static org.hibernate.type.SqlTypes.VARBINARY;
-import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.SqlTypes.isCharacterType;
-import static org.hibernate.type.SqlTypes.isEnumType;
-import static org.hibernate.type.SqlTypes.isFloatOrRealOrDouble;
-import static org.hibernate.type.SqlTypes.isIntegral;
-import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
-import static org.hibernate.type.SqlTypes.isVarbinaryType;
-import static org.hibernate.type.SqlTypes.isVarcharType;
+import static org.hibernate.type.SqlTypes.*;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
 import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
@@ -313,6 +286,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
+	private static final Pattern QUERY_PATTERN = Pattern.compile(
+		"^\\s*(select\\b.+?\\bfrom\\b.+?)(\\b(?:natural )?(?:left |right |full )?(?:inner |outer |cross )?join.+?\\b)?(\\bwhere\\b.+?)$");
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, Dialect.class.getName() );
 
@@ -614,6 +589,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect strip trailing spaces from values stored
+	 * in columns of type {@code char(n)}?
+	 * MySQL and Sybase are the main offenders here.
+	 */
+	public boolean stripsTrailingSpacesFromChar() {
+		return false;
+	}
+
+	/**
 	 * The SQL type to use in {@code cast( ... as ... )} expressions when
 	 * casting to the target type represented by the given JDBC type code.
 	 *
@@ -630,11 +614,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see AnsiSqlKeywords
 	 */
 	protected void registerDefaultKeywords() {
-		AnsiSqlKeywords keywords = new AnsiSqlKeywords();
-		//Not using #registerKeyword as:
-		// # these are already lowercase
-		// # better efficiency of addAll as it can pre-size the collections
-		sqlKeywords.addAll( keywords.sql2003() );
+		// Not using #registerKeyword() since these are already lowercase,
+		// better efficiency with addAll() as it can pre-size the collection
+		sqlKeywords.addAll( new AnsiSqlKeywords().sql2003() );
 	}
 
 	/**
@@ -671,13 +653,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
 		final int parenthesisIndex = columnTypeName.lastIndexOf( '(' );
-		final String baseTypeName;
-		if ( parenthesisIndex == -1 ) {
-			baseTypeName = columnTypeName;
-		}
-		else {
-			baseTypeName = columnTypeName.substring( 0, parenthesisIndex ).trim();
-		}
+		final String baseTypeName =
+				parenthesisIndex == -1
+						? columnTypeName
+						: columnTypeName.substring( 0, parenthesisIndex ).trim();
 		return resolveSqlTypeCode( columnTypeName, baseTypeName, typeConfiguration );
 	}
 
@@ -791,7 +770,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, String[] values) {
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -833,7 +812,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	@Deprecated(since="6.5", forRemoval = true)
 	public String getCheckCondition(String columnName, long[] values) {
-		Long[] boxedValues = new Long[values.length];
+		final Long[] boxedValues = new Long[values.length];
 		for ( int i = 0; i<values.length; i++ ) {
 			boxedValues[i] = values[i];
 		}
@@ -848,7 +827,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return a SQL expression that will occur in a {@code check} constraint
 	 */
 	public String getCheckCondition(String columnName, Long[] values) {
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -868,15 +847,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Generate a check condition for column with the given set of values.
+	 * Generate a SQL {@code check} condition for the given column,
+	 * constraining to the given values.
 	 *
-	 * @apiNote Only supports TINYINT, SMALLINT and (VAR)CHAR
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 *
+	 * @apiNote Only supports {@code TINYINT}, {@code SMALLINT}, {@code CHAR},
+	 *          and {@code VARCHAR}
+	 *
+	 * @since 7.0
 	 */
-	public String getCheckCondition(String columnName, Set<?> valueSet, JdbcType jdbcType) {
+	public String getCheckCondition(String columnName, Collection<?> valueSet, JdbcType jdbcType) {
 		final boolean isCharacterJdbcType = isCharacterType( jdbcType.getJdbcTypeCode() );
 		assert isCharacterJdbcType || isIntegral( jdbcType.getJdbcTypeCode() );
 
-		StringBuilder check = new StringBuilder();
+		final StringBuilder check = new StringBuilder();
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		boolean nullIsValid = false;
@@ -885,11 +870,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				nullIsValid = true;
 				continue;
 			}
+			check.append( separator );
 			if ( isCharacterJdbcType ) {
-				check.append( separator ).append('\'').append( value ).append('\'');
+				check.append('\'').append( value ).append('\'');
 			}
 			else {
-				check.append( separator ).append( value );
+				check.append( value );
 			}
 			separator = ",";
 		}
@@ -1042,6 +1028,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>ifnull(arg0, arg1)</code>				- synonym of <code>coalesce(a, b)</code>
 	 * </ul>
 	 *
+	 * <ul>
+	 * <li> <code>ordinal(arg)</code>
+	 * <li> <code>string(arg)</code>
+	 * </ul>
+	 *
 	 * Finally, the following functions are defined as abbreviations for
 	 * <code>extract()</code>, and desugared by the parser:
 	 *
@@ -1072,7 +1063,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
 		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		//standard aggregate functions count(), sum(), max(), min(), avg(),
 		//supported on every database
@@ -1232,6 +1223,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 		functionContributions.getFunctionRegistry().register( "ordinal",
 				new OrdinalFunction( typeConfiguration ) );
+
+		// Function to convert enum mapped as String to their string value
+
+		functionContributions.getFunctionRegistry().register( "string",
+				new StringFunction( typeConfiguration ) );
 
 		//format() function for datetimes, emulated on many databases using the
 		//Oracle-style to_char() function, and on others using their native
@@ -1677,18 +1673,24 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * for the trim character if {@code isWhitespace}
 	 * was false.
 	 *
-	 * @param specification {@linkplain TrimSpec#LEADING leading}, {@linkplain TrimSpec#TRAILING trailing}
+	 * @param specification
+	 * {@linkplain TrimSpec#LEADING leading},
+	 * {@linkplain TrimSpec#TRAILING trailing},
 	 * or {@linkplain TrimSpec#BOTH both}
-	 * @param isWhitespace {@code true} if the trim character is a whitespace and can be omitted,
-	 * {@code false} if it must be explicit and a ?2 placeholder should be included in the pattern
+	 *
+	 * @param isWhitespace
+	 * {@code true} if trimming whitespace, and the ?2
+	 * placeholder for the trim character should be omitted,
+	 * {@code false} if the trim character is explicit and
+	 * the ?2 placeholder must be included in the pattern
 	 */
 	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		return "trim(" + specification + ( isWhitespace ? "" : " ?2" ) + " from ?1)";
 	}
 
 	/**
-	 * Whether the database supports adding a fractional interval to a timestamp,
-	 * for example {@code timestamp + 0.5 second}.
+	 * Whether the database supports adding a fractional interval
+	 * to a timestamp, for example {@code timestamp + 0.5 second}.
 	 */
 	public boolean supportsFractionalTimestampArithmetic() {
 		return true;
@@ -1871,7 +1873,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( supportsStandardArrays() ) {
-			jdbcTypeRegistry.addTypeConstructor( ArrayJdbcTypeConstructor.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( ArrayJdbcTypeConstructor.INSTANCE );
 		}
 		if ( supportsMaterializedLobAccess() ) {
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
@@ -1987,7 +1989,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -2004,7 +2006,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -2021,7 +2023,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			if ( original == null && target == null ) {
 				return null;
 			}
-			final JdbcServices jdbcServices = session.getFactory().getFastSessionServices().jdbcServices;
+			final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 			try {
 				final LobCreator lobCreator = jdbcServices.getLobCreator( session );
 				return original == null
@@ -2054,6 +2056,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The name identifying the native generator strategy.
 	 *
 	 * @deprecated Use {@linkplain #getNativeValueGenerationStrategy()} instead
+	 *
+	 * @implNote Only used with {@code hbm.xml} and {@linkplain org.hibernate.annotations.GenericGenerator},
+	 * both of which have been deprecated
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	public String getNativeIdentifierGeneratorStrategy() {
@@ -2062,7 +2067,11 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * The native type of generation supported by this Dialect.
+	 *
+	 * @see org.hibernate.annotations.NativeGenerator
+	 * @since 7.0
 	 */
+	@Incubating
 	public GenerationType getNativeValueGenerationStrategy() {
 		return getIdentityColumnSupport().supportsIdentityColumns()
 				? GenerationType.IDENTITY
@@ -2204,7 +2213,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate {@code for update} fragment.
 	 */
 	public String getForUpdateString(LockOptions lockOptions) {
-		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeOut() );
+		return getForUpdateString( lockOptions.getLockMode(), lockOptions.getTimeout() );
 	}
 
 	/**
@@ -2216,7 +2225,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param timeout the timeout
 	 * @return The appropriate {@code for update} fragment.
 	 */
-	private String getForUpdateString(LockMode lockMode, int timeout) {
+	public String getForUpdateString(LockMode lockMode, Timeout timeout) {
+		return switch (lockMode) {
+			case PESSIMISTIC_READ -> getReadLockString( timeout );
+			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
+			case UPGRADE_NOWAIT, PESSIMISTIC_FORCE_INCREMENT -> getForUpdateNowaitString();
+			case UPGRADE_SKIPLOCKED -> getForUpdateSkipLockedString();
+			default -> "";
+		};
+	}
+
+	/**
+	 * Given a {@linkplain LockMode lock level} and timeout,
+	 * determine the appropriate {@code for update} fragment to
+	 * use to obtain the lock.
+	 *
+	 * @param lockMode the lock mode to apply.
+	 * @param timeout the timeout
+	 * @return The appropriate {@code for update} fragment.
+	 *
+	 * @deprecated Use {@linkplain #getForUpdateString(LockMode,Timeout)} instead
+	 */
+	@Deprecated(since = "7.0")
+	public String getForUpdateString(LockMode lockMode, int timeout) {
 		return switch (lockMode) {
 			case PESSIMISTIC_READ -> getReadLockString( timeout );
 			case PESSIMISTIC_WRITE -> getWriteLockString( timeout );
@@ -2234,7 +2265,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The appropriate for update fragment.
 	 */
 	public String getForUpdateString(LockMode lockMode) {
-		return getForUpdateString( lockMode, LockOptions.WAIT_FOREVER );
+		return getForUpdateString( lockMode, Timeouts.WAIT_FOREVER );
 	}
 
 	/**
@@ -2250,33 +2281,108 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * Get the string to append to {@code SELECT} statements to
 	 * acquire pessimistic WRITE locks for this dialect.
+	 *
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate lock clause.
+	 */
+	public String getWriteLockString(Timeout timeout) {
+		if ( timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked() ) {
+			return getForUpdateSkipLockedString();
+		}
+		else if ( timeout.milliseconds() == Timeouts.NO_WAIT_MILLI && supportsNoWait() ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire pessimistic WRITE locks for this dialect.
 	 * <p>
 	 * Location of the returned string is treated the same as
 	 * {@link #getForUpdateString()}.
 	 *
-	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @param timeout How long, in milliseconds, the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
 	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getWriteLockString(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0")
 	public String getWriteLockString(int timeout) {
-		return getForUpdateString();
+		if ( timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked() ) {
+			return getForUpdateSkipLockedString();
+		}
+		else if ( timeout == Timeouts.NO_WAIT_MILLI && supportsNoWait() ) {
+			return getForUpdateNowaitString();
+		}
+		else {
+			return getForUpdateString();
+		}
 	}
 
 	/**
 	 * Get the string to append to {@code SELECT} statements to
 	 * acquire WRITE locks for this dialect, given the aliases of
-	 * the columns to be write locked.
+	 * the columns to be WRITE locked.
+	 * 	 *
+	 * 	 * @param timeout How long the database should wait to acquire the lock.
 	 * <p>
 	 * Location of the returned string is treated the same as
 	 * {@link #getForUpdateString()}.
 	 *
 	 * @param aliases The columns to be read locked.
-	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
 	 * @return The appropriate {@code LOCK} clause string.
 	 */
-	public String getWriteLockString(String aliases, int timeout) {
-		// by default we simply return the getWriteLockString(timeout) result since
-		// the default is to say no support for "FOR UPDATE OF ..."
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		// by default, we simply return getWriteLockString(timeout),
+		// since the default is no support for "FOR UPDATE OF ..."
 		return getWriteLockString( timeout );
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire WRITE locks for this dialect, given the aliases of
+	 * the columns to be WRITE locked.
+	 * <p>
+	 * Location of the returned string is treated the same as
+	 * {@link #getForUpdateString()}.
+	 *
+	 * @param aliases The columns to be read locked.
+	 *
+	 * @param timeout How long, in milliseconds, the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getWriteLockString(String, Timeout)} instead.
+	 */
+	@Deprecated(since = "7.0")
+	public String getWriteLockString(String aliases, int timeout) {
+		// by default, we simply return getWriteLockString(timeout),
+		// since the default is no support for "FOR UPDATE OF ..."
+		return getWriteLockString( timeout );
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire READ locks for this dialect.
+	 *
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate {@code LOCK} clause string.
+	 */
+	public String getReadLockString(Timeout timeout) {
+		return getForUpdateString();
 	}
 
 	/**
@@ -2288,9 +2394,30 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
 	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getReadLockString(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0")
 	public String getReadLockString(int timeout) {
 		return getForUpdateString();
+	}
+
+	/**
+	 * Get the string to append to {@code SELECT} statements to
+	 * acquire READ locks for this dialect, given the aliases of
+	 * the columns to be read locked.
+	 *
+	 * @param aliases The columns to be read locked.
+	 * @param timeout How long the database should wait to acquire the lock.
+	 * 		See {@linkplain Timeouts} for some "magic values".
+	 *
+	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @implNote By default, simply returns the {@linkplain #getReadLockString(Timeout)}
+	 * result since the default is to say no support for "FOR UPDATE OF ...".
+	 */
+	public String getReadLockString(String aliases, Timeout timeout) {
+		return getReadLockString( timeout );
 	}
 
 	/**
@@ -2303,8 +2430,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @param aliases The columns to be read locked.
 	 * @param timeout in milliseconds, -1 for indefinite wait and 0 for no wait.
+	 *
 	 * @return The appropriate {@code LOCK} clause string.
+	 *
+	 * @deprecated Use {@linkplain #getReadLockString(String, Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0")
 	public String getReadLockString(String aliases, int timeout) {
 		// by default we simply return the getReadLockString(timeout) result since
 		// the default is to say no support for "FOR UPDATE OF ..."
@@ -2443,8 +2574,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
+	/**
+	 * @deprecated Use {@linkplain Timeouts#getTimeoutInSeconds(int)} instead.
+	 */
+	@Deprecated
 	protected int getTimeoutInSeconds(int millis) {
-		return millis == 0 ? 0 : Math.max( 1, Math.round( millis / 1e3f ) );
+		return Timeouts.getTimeoutInSeconds( millis );
 	}
 
 
@@ -2744,13 +2879,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		res.append( " add constraint " )
 				.append( quote( constraintName ) )
 				.append( " foreign key (" )
-				.append( String.join( ", ", foreignKey ) )
+				.append( join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );
 
 		if ( !referencesPrimaryKey ) {
 			res.append( " (" )
-					.append( String.join( ", ", primaryKey ) )
+					.append( join( ", ", primaryKey ) )
 					.append( ')' );
 		}
 
@@ -3092,9 +3227,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param sqlType The {@link Types} type code.
 	 * @param typeConfiguration The type configuration
 	 * @return The appropriate select clause value fragment.
+	 * @deprecated Use {@link #getSelectClauseNullString(SqlTypedMapping, TypeConfiguration)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		return "null";
+	}
+
+	/**
+	 * Given a type mapping, return the expression
+	 * for a literal null value of that type, to use in a {@code select}
+	 * clause.
+	 * <p>
+	 * The {@code select} query will be an element of a {@code UNION}
+	 * or {@code UNION ALL}.
+	 *
+	 * @implNote Some databases require an explicit type cast.
+	 *
+	 * @param sqlTypeMapping The type mapping.
+	 * @param typeConfiguration The type configuration
+	 * @return The appropriate select clause value fragment.
+	 */
+	public String getSelectClauseNullString(SqlTypedMapping sqlTypeMapping, TypeConfiguration typeConfiguration) {
+		return getSelectClauseNullString( sqlTypeMapping.getJdbcMapping().getJdbcType().getDdlTypeCode(), typeConfiguration );
 	}
 
 	/**
@@ -3301,8 +3456,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * </ul>
 	 *
 	 * @param builder A partially-configured {@link IdentifierHelperBuilder}.
-	 * @param dbMetaData Access to the metadata returned from the driver if needed and if available.
-	 *                   <em>WARNING:</em> it may be {@code null}.
+	 * @param metadata Access to the metadata returned from the driver if needed and if available.
+	 *                 <em>WARNING:</em> it may be {@code null}.
 	 *
 	 * @return The {@link IdentifierHelper} instance to use,
 	 *         or {@code null} to indicate Hibernate should use its fallback path
@@ -3314,8 +3469,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
-			@Nullable DatabaseMetaData dbMetaData) throws SQLException {
-		builder.applyIdentifierCasing( dbMetaData );
+			@Nullable DatabaseMetaData metadata) throws SQLException {
+		builder.applyIdentifierCasing( metadata );
 		builder.applyReservedWords( sqlKeywords );
 		builder.setNameQualifierSupport( getNameQualifierSupport() );
 		return builder.build();
@@ -3546,7 +3701,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The sort of {@linkplain TempTableDdlTransactionHandling transaction handling}
 	 * to use when creating or dropping temporary tables.
+	 *
+	 * @deprecated No dialect currently overrides this, so it's obsolete
 	 */
+	@Deprecated(since = "7.0")
 	public TempTableDdlTransactionHandling getTemporaryTableDdlTransactionHandling() {
 		return TempTableDdlTransactionHandling.NONE;
 	}
@@ -3638,7 +3796,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * make use of the Java 1.7 {@link Connection#getSchema()} method.
 	 *
 	 * @return The current schema retrieval SQL
+	 *
+	 * @deprecated Since Hibernate now baselines on Java 17,
+	 * {@link Connection#getSchema()} is always available directly.
+	 * Never used internally.
 	 */
+	@Deprecated
 	public String getCurrentSchemaCommand() {
 		return null;
 	}
@@ -3794,12 +3957,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Should BLOB, CLOB, and NCLOB be created solely using respectively
-	 * {@link Connection#createBlob()}, {@link Connection#createClob()},
-	 * and {@link Connection#createNClob()}.
+	 * Should {@link Blob}, {@link Clob}, and {@link NClob} be created solely
+	 * using {@link Connection#createBlob()}, {@link Connection#createClob()},
+	 * and {@link Connection#createNClob()}, instead of allowing the use of
+	 * our own implementations.
 	 *
-	 * @return True if BLOB, CLOB, and NCLOB should be created using JDBC
-	 * {@link Connection}.
+	 * @return True if these types should be instantiated using {@link Connection}.
 	 *
 	 * @since 6.6
 	 */
@@ -3834,17 +3997,6 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Does this dialect support {@code nulls first} and {@code nulls last}?
 	 */
 	public boolean supportsNullPrecedence() {
-		return true;
-	}
-
-	/**
-	 * A setting specific to {@link SybaseASEDialect}.
-	 *
-	 * @deprecated This is only called from {@link SybaseASESqlAstTranslator}
-	 *             so it doesn't need to be declared here.
-	 */
-	@Deprecated(since = "6")
-	public boolean isAnsiNullOn() {
 		return true;
 	}
 
@@ -4152,7 +4304,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         {@code false} (the default) indicates that locking
 	 *                      should be applied to the main SQL statement.
 	 *
-	 * @since 5.2
+	 * @since 6.0
 	 */
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return false;
@@ -4180,8 +4332,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @return The modified SQL
 	 */
 	public String getQueryHintString(String query, List<String> hintList) {
-		final String hints = String.join( ", ", hintList );
-		return StringHelper.isEmpty( hints ) ? query : getQueryHintString( query, hints);
+		if ( hintList.isEmpty() ) {
+			return query;
+		}
+		else {
+			final String hints = join( ", ", hintList );
+			return isEmpty( hints ) ? query : getQueryHintString( query, hints );
+		}
 	}
 
 	/**
@@ -4259,8 +4416,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <p>
 	 * Support for identity columns is insufficient here, we require something like:
 	 * <ol>
-	 * <li>{@code insert ... returning ...}
-	 * <li>{@code select from final table (insert ... )}
+	 * <li>{@code insert ... returning ...}, or
+	 * <li>{@code select from final table (insert ... )}.
 	 * </ol>
 	 *
 	 * @return {@code true} if {@link org.hibernate.id.insert.InsertReturningDelegate}
@@ -4411,21 +4568,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return getMultiKeyLoadSizingStrategy();
 	}
 
-	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = (numberOfColumns, numberOfKeys, pad) -> {
-		numberOfKeys = pad ? MathHelper.ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+	private int calculateBatchSize(int numberOfColumns, int numberOfKeys, boolean padToPowerOfTwo) {
+		final int batchSize = padToPowerOfTwo ? ceilingPowerOfTwo( numberOfKeys ) : numberOfKeys;
+		final int maxBatchSize = getParameterCountLimit() / numberOfColumns;
+		return maxBatchSize > 0 && batchSize > maxBatchSize ? maxBatchSize : batchSize;
+	}
 
-		final long parameterCount = (long) numberOfColumns * numberOfKeys;
-		final int limit = getParameterCountLimit();
-
-		if ( limit > 0 ) {
-			// the Dialect reported a limit -  see if the parameter count exceeds the limit
-			if ( parameterCount >= limit ) {
-				return limit / numberOfColumns;
-			}
-		}
-
-		return numberOfKeys;
-	};
+	protected final MultiKeyLoadSizingStrategy STANDARD_MULTI_KEY_LOAD_SIZING_STRATEGY = this::calculateBatchSize;
 
 	/**
 	 * Is JDBC statement warning logging enabled by default?
@@ -4494,6 +4643,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public AggregateSupport getAggregateSupport() {
 		return AggregateSupportImpl.INSTANCE;
+	}
+
+	/**
+	 * Does the database support user defined types?
+	 *
+	 * @see org.hibernate.annotations.Struct
+	 *
+	 * @since 7.1
+	 */
+	public boolean supportsUserDefinedTypes() {
+		return false;
 	}
 
 	/**
@@ -4772,12 +4932,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Modify the SQL, adding hints or comments, if necessary
+	 * Modify the SQL, adding hints or comments, if necessary.
+	 *
+	 * @see #getQueryHintString(String,List)
+	 * @see #prependComment
 	 */
-	public String addSqlHintOrComment(
-			String sql,
-			QueryOptions queryOptions,
-			boolean commentsEnabled) {
+	public String addSqlHintOrComment(String sql, QueryOptions queryOptions, boolean commentsEnabled) {
 		// Keep this here, rather than moving to Select.
 		// Some Dialects may need the hint to be appended to the very end or beginning
 		// of the finalized SQL statement, so wait until everything is processed.
@@ -4788,6 +4948,32 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			sql = prependComment( sql, queryOptions.getComment() );
 		}
 		return sql;
+	}
+
+	/**
+	 * Adds an {@code INDEX} query hint as follows:
+	 *
+	 * <pre>
+	 * SELECT *
+	 * FROM TEST
+	 * USE INDEX (hint1, hint2)
+	 * WHERE X=1
+	 * </pre>
+	 *
+	 * @since 7.0
+	 */
+	public static String addUseIndexQueryHint(String query, String hints) {
+		final Matcher matcher = QUERY_PATTERN.matcher( query );
+		if ( matcher.matches() && matcher.groupCount() > 1 ) {
+			final String startToken = matcher.group(1);
+			// Null if there is no join in the query
+			final String joinToken = Objects.toString( matcher.group(2), "" );
+			final String endToken = matcher.group(3);
+			return startToken + " use index (" + hints + ") " + joinToken + endToken;
+		}
+		else {
+			return query;
+		}
 	}
 
 	/**
@@ -5291,6 +5477,14 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Returns the default name of the ordinality column for a set-returning function
+	 * if it supports that, otherwise returns {@code null}.
+	 */
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return null;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>
@@ -5612,11 +5806,102 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * {@link Duration}.
 	 */
 	public void appendIntervalLiteral(SqlAppender appender, Duration literal) {
+		final int nano = literal.getNano();
+		final int secondsPart = literal.toSecondsPart();
+		final int minutesPart = literal.toMinutesPart();
+		final int hoursPart = literal.toHoursPart();
+		final long daysPart = literal.toDaysPart();
+		enum Unit { day, hour, minute }
+		final Unit unit;
+		if ( daysPart != 0 ) {
+			unit = hoursPart == 0 && minutesPart == 0 && secondsPart == 0 && nano == 0
+					? Unit.day
+					: null;
+		}
+		else if ( hoursPart != 0 ) {
+			unit = minutesPart == 0 && secondsPart == 0 && nano == 0
+					? Unit.hour
+					: null;
+		}
+		else if ( minutesPart != 0 ) {
+			unit = secondsPart == 0 && nano == 0
+					? Unit.minute
+					: null;
+		}
+		else {
+			unit = null;
+		}
 		appender.appendSql( "interval '" );
-		appender.appendSql( literal.getSeconds() );
-		appender.appendSql( '.' );
-		appender.appendSql( literal.getNano() );
-		appender.appendSql( "' second" );
+		if ( unit != null ) {
+			appender.appendSql( switch( unit ) {
+				case day -> daysPart;
+				case hour -> hoursPart;
+				case minute -> minutesPart;
+			});
+			appender.appendSql( "' " );
+			appender.appendSql( unit.toString() );
+		}
+		else {
+			appender.appendSql( "interval '" );
+			appender.appendSql( literal.getSeconds() );
+			if ( nano > 0 ) {
+				appender.appendSql( '.' );
+				appender.appendSql( nano );
+			}
+			appender.appendSql( "' second" );
+		}
+	}
+
+	/**
+	 * Append a literal SQL {@code interval} representing the given Java
+	 * {@link TemporalAmount}.
+	 */
+	public void appendIntervalLiteral(SqlAppender appender, TemporalAmount literal) {
+		if ( literal instanceof Duration duration ) {
+			appendIntervalLiteral( appender, duration );
+		}
+		else if ( literal instanceof Period period ) {
+			final int years = period.getYears();
+			final int months = period.getMonths();
+			final int days = period.getDays();
+			final boolean parenthesis = years != 0 && months != 0
+					|| years != 0 && days != 0
+					|| months != 0 && days != 0;
+			if ( parenthesis ) {
+				appender.appendSql( '(' );
+			}
+			boolean first = true;
+			for ( java.time.temporal.TemporalUnit unit : literal.getUnits() ) {
+				final long value = literal.get( unit );
+				if ( value != 0 ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appender.appendSql( "+" );
+					}
+					appender.appendSql( "interval '" );
+					appender.appendSql( value );
+					appender.appendSql( "' " );
+					if ( unit == ChronoUnit.YEARS ) {
+						appender.appendSql( "year" );
+					}
+					else if ( unit == ChronoUnit.MONTHS ) {
+						appender.appendSql( "month" );
+					}
+					else {
+						assert unit == ChronoUnit.DAYS;
+						appender.appendSql( "day" );
+					}
+				}
+			}
+			if ( parenthesis ) {
+				appender.appendSql( ')' );
+			}
+		}
+		else {
+			throw new IllegalArgumentException( "Unsupported temporal amount type: " + literal );
+		}
 	}
 
 	/**
@@ -5709,7 +5994,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		final String constraint = constraintName == null
+		final String constraint = isBlank( constraintName )
 				? " check (" + checkConstraint.getConstraint() + ")"
 				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
 		return appendCheckConstraintOptions( checkConstraint, constraint );
@@ -5756,6 +6041,182 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsBindingNullForSetObject() {
 		return false;
+	}
+
+	/**
+	 * Whether the FILTER clause for aggregate functions is supported.
+	 */
+	public boolean supportsFilterClause() {
+		// By default, we report false because not many dialects support this
+		return false;
+	}
+
+	/**
+	 * Whether the SQL row constructor is supported.
+	 */
+	public boolean supportsRowConstructor() {
+		return false;
+	}
+
+	/**
+	 * Whether the SQL array constructor is supported.
+	 */
+	public boolean supportsArrayConstructor() {
+		return false;
+	}
+
+	public boolean supportsDuplicateSelectItemsInQueryGroup() {
+		return true;
+	}
+
+	public boolean supportsIntersect() {
+		return true;
+	}
+
+	/**
+	 * If the dialect supports using joins in mutation statement subquery
+	 * that could also use columns from the mutation target table
+	 */
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return true;
+	}
+
+	public boolean supportsJoinsInDelete() {
+		return false;
+	}
+
+	public boolean supportsNestedSubqueryCorrelation() {
+		return true;
+	}
+
+	/**
+	 * Whether the SQL cycle clause is supported, which can be used for recursive CTEs.
+	 */
+	public boolean supportsRecursiveCycleClause() {
+		return false;
+	}
+
+	/**
+	 * Whether the SQL cycle clause supports the using sub-clause.
+	 */
+	public boolean supportsRecursiveCycleUsingClause() {
+		return false;
+	}
+
+	/**
+	 * Whether the SQL search clause is supported, which can be used for recursive CTEs.
+	 */
+	public boolean supportsRecursiveSearchClause() {
+		return false;
+	}
+
+	public boolean supportsSimpleQueryGrouping() {
+		return true;
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntax() {
+		return true;
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>&lt;</code>, <code>&gt;</code>, <code>&le;</code>
+	 * and <code>&ge;</code> operators.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) &lt; ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with relational comparison operators; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorGtLtSyntax() {
+		return supportsRowValueConstructorSyntax();
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with <code>is distinct from</code>
+	 * and <code>is not distinct from</code> operators.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) is distinct from ('Steve', 'Ebersole') ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with distinct from comparison operators; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return supportsRowValueConstructorSyntax() && supportsDistinctFromPredicate();
+	}
+
+	/**
+	 * Whether the SQL with clause is supported.
+	 */
+	public boolean supportsWithClause() {
+		return true;
+	}
+
+	/**
+	 * Whether the SQL with clause is supported within a subquery.
+	 */
+	public boolean supportsWithClauseInSubquery() {
+		return supportsWithClause();
+	}
+
+	/**
+	 * Whether the SQL with clause is supported within a CTE.
+	 */
+	public boolean supportsNestedWithClause() {
+		return supportsWithClauseInSubquery();
+	}
+
+	/**
+	 * Is this dialect known to support what ANSI-SQL terms "row value
+	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
+	 * <p>
+	 * Basically, does it support syntax like
+	 * {@code ... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax with quantified predicates; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return true;
+	}
+
+	/**
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
+	 * does it offer such support in IN lists as well?
+	 * <p>
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax in the IN list; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return true;
+	}
+
+	/**
+	 * If the dialect supports {@link org.hibernate.dialect.Dialect#supportsRowValueConstructorSyntax() row values},
+	 * does it offer such support in IN subqueries as well?
+	 * <p>
+	 * For example, {@code ... where (FIRST_NAME, LAST_NAME) IN ( select ... ) ...}
+	 *
+	 * @return True if this SQL dialect is known to support "row value
+	 * constructor" syntax in the IN subqueries; false otherwise.
+	 */
+	public boolean supportsRowValueConstructorSyntaxInInSubQuery() {
+		return supportsRowValueConstructorSyntaxInInList();
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -16,13 +16,14 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
-import org.hibernate.query.results.BasicValuedFetchBuilder;
+import org.hibernate.query.results.FetchBuilderBasicValued;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
-import org.hibernate.query.results.complete.CompleteResultBuilderEntityJpa;
-import org.hibernate.query.results.complete.DelayedFetchBuilderBasicPart;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderEntityJpa;
+import org.hibernate.query.results.internal.complete.DelayedFetchBuilderBasicPart;
+import org.hibernate.query.results.internal.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.Fetchable;
 
 /**
  * @author Steve Ebersole
@@ -56,27 +57,27 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		final BasicValuedFetchBuilder discriminatorFetchBuilder;
+		final FetchBuilderBasicValued discriminatorFetchBuilder;
 		if ( discriminatorMapping == null || !entityDescriptor.hasSubclasses() ) {
 			assert discriminatorMemento == null;
 			discriminatorFetchBuilder = null;
 		}
 		else {
 			if ( discriminatorMemento != null ) {
-				discriminatorFetchBuilder = (BasicValuedFetchBuilder) discriminatorMemento.resolve( this, querySpaceConsumer, context );
+				discriminatorFetchBuilder = (FetchBuilderBasicValued) discriminatorMemento.resolve( this, querySpaceConsumer, context );
 			}
 			else {
 				discriminatorFetchBuilder = new ImplicitFetchBuilderBasic( navigablePath, discriminatorMapping );
 			}
 		}
 
-		final HashMap<String, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
+		final HashMap<Fetchable, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
 
 		// If there are no explicit fetches, we don't register DELAYED builders to get implicit fetching of all basic fetchables
 		if ( !explicitFetchMementoMap.isEmpty() ) {
 			explicitFetchMementoMap.forEach(
 					(relativePath, fetchMemento) -> explicitFetchBuilderMap.put(
-							relativePath,
+							(Fetchable) entityDescriptor.findByPath( relativePath ),
 							fetchMemento.resolve( this, querySpaceConsumer, context )
 					)
 			);
@@ -87,13 +88,13 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 					attributeMapping -> {
 						final BasicValuedModelPart basicPart = attributeMapping.asBasicValuedModelPart();
 						if ( basicPart != null ) {
-							final Function<String, FetchBuilder> fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
-									navigablePath.append( k ),
+							final Function<Fetchable, FetchBuilder> fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
+									navigablePath.append( k.getFetchableName() ),
 									basicPart,
 									isEnhancedForLazyLoading
 							);
 							explicitFetchBuilderMap.computeIfAbsent(
-									attributeMapping.getFetchableName(),
+									attributeMapping,
 									fetchBuilderCreator
 							);
 						}

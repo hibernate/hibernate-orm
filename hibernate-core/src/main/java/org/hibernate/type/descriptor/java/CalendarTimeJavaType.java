@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -117,27 +117,25 @@ public class CalendarTimeJavaType extends AbstractTemporalJavaType<Calendar> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Calendar) {
-			return (Calendar) value;
+		else if (value instanceof Calendar calendar) {
+			return calendar;
 		}
-
-		if ( !(value instanceof Date)) {
+		else if ( value instanceof Date date) {
+			final Calendar cal = new GregorianCalendar();
+			cal.setTime( date );
+			return cal;
+		}
+		else {
 			throw unknownWrap( value.getClass() );
 		}
-
-		Calendar cal = new GregorianCalendar();
-		cal.setTime( (Date) value );
-		return cal;
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Time":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Time" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

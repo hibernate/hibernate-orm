@@ -1,12 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.xml;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.type.descriptor.jdbc.XmlHelper;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -21,9 +23,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import static java.lang.Character.isLetter;
-import static java.lang.Character.isLetterOrDigit;
 
 /**
  * Standard xmlforest function.
@@ -41,10 +40,9 @@ public class XmlForestFunction extends AbstractSqmSelfRenderingFunctionDescripto
 							public void validate(
 									List<? extends SqmTypedNode<?>> arguments,
 									String functionName,
-									TypeConfiguration typeConfiguration) {
+									BindingContext bindingContext) {
 								for ( int i = 0; i < arguments.size(); i++ ) {
-									SqmTypedNode<?> argument = arguments.get( i );
-									if ( !( argument instanceof SqmNamedExpression<?> namedExpression ) ) {
+									if ( !( arguments.get( i ) instanceof SqmNamedExpression<?> namedExpression ) ) {
 										throw new FunctionArgumentException(
 												String.format(
 														"Parameter %d of function 'xmlforest()' is not named",
@@ -52,7 +50,7 @@ public class XmlForestFunction extends AbstractSqmSelfRenderingFunctionDescripto
 												)
 										);
 									}
-									if ( !isValidXmlName( namedExpression.getName() ) ) {
+									if ( !XmlHelper.isValidXmlName( namedExpression.getName() ) ) {
 										throw new FunctionArgumentException(
 												String.format(
 														"Invalid XML element name passed to 'xmlforest()': %s",
@@ -61,28 +59,6 @@ public class XmlForestFunction extends AbstractSqmSelfRenderingFunctionDescripto
 										);
 									}
 								}
-							}
-
-							private static boolean isValidXmlName(String name) {
-								if ( name.isEmpty()
-										|| !isValidXmlNameStart( name.charAt( 0 ) )
-										|| name.regionMatches( true, 0, "xml", 0, 3 ) ) {
-									return false;
-								}
-								for ( int i = 1; i < name.length(); i++ ) {
-									if ( !isValidXmlNameChar( name.charAt( i ) ) ) {
-										return false;
-									}
-								}
-								return true;
-							}
-
-							private static boolean isValidXmlNameStart(char c) {
-								return isLetter( c ) || c == '_' || c == ':';
-							}
-
-							private static boolean isValidXmlNameChar(char c) {
-								return isLetterOrDigit( c ) || c == '_' || c == ':' || c == '-' || c == '.';
 							}
 
 						}

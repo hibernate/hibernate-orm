@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
@@ -10,11 +10,19 @@ import java.util.List;
 
 /**
  * Identifies a page of query results by {@linkplain #size page size}
- * and {@linkplain #number page number}.
+ * and {@linkplain #number page number}. This is an alternative to the
+ * use of the JPA-defined operations {@link SelectionQuery#setFirstResult}
+ * and {@link SelectionQuery#setMaxResults}.
+ * <pre>
+ * session.createSelectionQuery("from Book b join b.authors a where a.name = :name", Book.class)
+ *         .setParameter("name", authorName)
+ *         .setPage(Page.first(100))
+ *         .getResultList();
+ * </pre>
  * <p>
  * This is a convenience class which allows a reference to a page of
- * results to be passed around the system before being applied to
- * a {@link Query} by calling {@link Query#setPage(Page)}.
+ * results to be passed around the system before being applied to a
+ * {@link Query} by calling {@link Query#setPage(Page)}.
  * <p>
  * A parameter of a {@linkplain org.hibernate.annotations.processing.Find
  * finder method} or {@linkplain org.hibernate.annotations.processing.HQL
@@ -22,6 +30,10 @@ import java.util.List;
  * <p>
  * For key-based pagination, call {@link #keyedBy(Order)} to obtain a
  * {@link KeyedPage}.
+ *
+ * @apiNote This class is similar to {@code jakarta.data.page.PageRequest},
+ *          and is used by Hibernate Data Repositories to implement
+ *          Jakarta Data query methods.
  *
  * @see SelectionQuery#setPage(Page)
  *

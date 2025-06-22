@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.results;
@@ -7,10 +7,8 @@ package org.hibernate.query.results;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that a column defined as part of a SQL ResultSet mapping was not part
- * of the query's ResultSet
- *
- * @see ResultSetMapping
+ * Indicates that a column defined as part of a {@linkplain ResultSetMapping SQL ResultSet mapping} was not part
+ * of the query's {@linkplain java.sql.ResultSet}
  *
  * @author Steve Ebersole
  */

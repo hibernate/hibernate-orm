@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
@@ -107,18 +107,16 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( expression instanceof FunctionExpression ) {
-			final FunctionExpression functionExpression = (FunctionExpression) expression;
+		if ( expression instanceof FunctionExpression functionExpression ) {
 			for ( SqlAstNode argument : functionExpression.getArguments() ) {
 				argument.accept( this );
 			}
-			if ( expression instanceof AggregateFunctionExpression ) {
-				final AggregateFunctionExpression aggregateFunctionExpression = (AggregateFunctionExpression) expression;
+			if ( expression instanceof AggregateFunctionExpression aggregateFunctionExpression ) {
 				if ( aggregateFunctionExpression.getFilter() != null ) {
 					aggregateFunctionExpression.getFilter().accept( this );
 				}
-				if ( expression instanceof OrderedSetAggregateFunctionExpression ) {
-					for ( SortSpecification specification : ( (OrderedSetAggregateFunctionExpression) expression ).getWithinGroup() ) {
+				if ( expression instanceof OrderedSetAggregateFunctionExpression orderedSetAggregateFunctionExpression ) {
+					for ( SortSpecification specification : orderedSetAggregateFunctionExpression.getWithinGroup() ) {
 						specification.accept( this );
 					}
 				}

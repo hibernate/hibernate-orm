@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -7,9 +7,11 @@ package org.hibernate.event.spi;
 import org.hibernate.ReplicationMode;
 
 /**
- *  Defines an event class for the replication of an entity.
+ * Event class for {@link org.hibernate.Session#replicate}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#replicate
  */
 public class ReplicateEvent extends AbstractEvent {
 	private Object object;
@@ -25,14 +27,10 @@ public class ReplicateEvent extends AbstractEvent {
 		this.entityName = entityName;
 
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null entity"
-			);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		if ( replicationMode == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null replication mode"
-			);
+			throw new IllegalArgumentException( "ReplicationMode may not be null" );
 		}
 
 		this.object = object;

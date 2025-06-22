@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -97,15 +98,18 @@ public class ConnectionProviderDelegate implements
 
 	@Override
 	public boolean supportsAggressiveRelease() {
-		if ( forceSupportsAggressiveRelease ) {
-			return true;
-		}
-		return connectionProvider.supportsAggressiveRelease();
+		return forceSupportsAggressiveRelease
+			|| connectionProvider.supportsAggressiveRelease();
 	}
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
 		return connectionProvider.getDatabaseConnectionInfo( dialect );
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+		return connectionProvider.getDatabaseConnectionInfo( dialect, metaData );
 	}
 
 	@Override

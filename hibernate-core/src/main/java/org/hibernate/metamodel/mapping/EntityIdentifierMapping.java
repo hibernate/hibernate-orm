@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -8,10 +8,12 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import org.hibernate.sql.results.graph.Fetchable;
 
 
 /**
@@ -21,7 +23,7 @@ import jakarta.persistence.IdClass;
  * @see EmbeddedId
  * @see Nature
  */
-public interface EntityIdentifierMapping extends ValuedModelPart {
+public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 
 	String ID_ROLE_NAME = "{id}";
 	String LEGACY_ID_NAME = "id";
@@ -67,21 +69,32 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 	Object getIdentifier(Object entity);
 
 	/**
-	 * Return the identifier of the persistent or transient object, or throw
-	 * an exception if the instance is "unsaved"
-	 * <p>
-	 * Used by OneToOneType and ManyToOneType to determine what id value should
-	 * be used for an object that may or may not be associated with the session.
-	 * This does a "best guess" using any/all info available to use (not just the
-	 * EntityEntry).
+	 * Extract the identifier from an instance of the entity
+	 *
+	 * @apiNote Intended for use during the merging process
+	 */
+	default Object getIdentifier(Object entity, MergeContext mergeContext){
+		return getIdentifier( entity );
+	}
+
+	/**
+	 * Return the identifier of the persistent or transient object, or throw an
+	 * exception if the instance is "unsaved"
+	 *
+	 * @apiNote This method is called by {@link org.hibernate.type.OneToOneType}
+	 * and {@link org.hibernate.type.ManyToOneType} to determine the id value
+	 * which should be used for an object that may or may not be associated with
+	 * the session. This does a "best guess" using any/all info available to use
+	 * (not just the {@link org.hibernate.engine.spi.EntityEntry}).
 	 *
 	 * @param entity The entity instance
 	 * @param session The session
 	 *
 	 * @return The identifier
 	 *
-	 * @throws TransientObjectException if the entity is transient (does not yet have an identifier)
-	 * @see org.hibernate.engine.internal.ForeignKeys#getEntityIdentifierIfNotUnsaved(String, Object, SharedSessionContractImplementor)
+	 * @throws TransientObjectException if the entity is transient
+	 *                                  (does not yet have an identifier)
+	 * @see org.hibernate.engine.internal.ForeignKeys#getEntityIdentifierIfNotUnsaved
 	 * @since 6.1.1
 	 */
 	default Object getIdentifierIfNotUnsaved(Object entity, SharedSessionContractImplementor session) {
@@ -92,20 +105,23 @@ public interface EntityIdentifierMapping extends ValuedModelPart {
 			// If we have no session available, just return the identifier
 			return getIdentifier( entity );
 		}
-		Object id = session.getContextEntityIdentifier( entity );
+		final Object id = session.getContextEntityIdentifier( entity );
 		if ( id == null ) {
-			// context-entity-identifier returns null explicitly if the entity
-			// is not associated with the persistence context; so make some
-			// deeper checks...
+			// getContextEntityIdentifier() returned null, indicating that
+			// the entity is not associated with the persistence context,
+			// so look deeper for its id
 			final String entityName = findContainingEntityMapping().getEntityName();
 			if ( ForeignKeys.isTransient( entityName, entity, Boolean.FALSE, session ) ) {
+				// TODO should be a TransientPropertyValueException
 				throw new TransientObjectException( "object references an unsaved transient instance of '"
 						+ (entityName == null ? session.guessEntityName( entity ) : entityName)
-						+ "' save the transient instance before flushing" );
+						+ "' (persist the transient instance before flushing)" );
 			}
-			id = getIdentifier( entity );
+			return getIdentifier( entity );
 		}
-		return id;
+		else {
+			return id;
+		}
 	}
 
 	/**

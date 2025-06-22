@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -17,17 +17,16 @@ import java.util.Properties;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
-import org.hibernate.boot.model.Caching;
+import org.hibernate.boot.model.source.spi.*;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.internal.FkSecondPass;
-import org.hibernate.boot.model.internal.SimpleToOneFkSecondPass;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -41,51 +40,6 @@ import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.source.internal.ImplicitColumnNamingSecondPass;
-import org.hibernate.boot.model.source.spi.AnyMappingSource;
-import org.hibernate.boot.model.source.spi.AttributePath;
-import org.hibernate.boot.model.source.spi.AttributeRole;
-import org.hibernate.boot.model.source.spi.AttributeSource;
-import org.hibernate.boot.model.source.spi.CascadeStyleSource;
-import org.hibernate.boot.model.source.spi.CollectionIdSource;
-import org.hibernate.boot.model.source.spi.ColumnSource;
-import org.hibernate.boot.model.source.spi.CompositeIdentifierSource;
-import org.hibernate.boot.model.source.spi.EmbeddableSource;
-import org.hibernate.boot.model.source.spi.EntitySource;
-import org.hibernate.boot.model.source.spi.FilterSource;
-import org.hibernate.boot.model.source.spi.HibernateTypeSource;
-import org.hibernate.boot.model.source.spi.IdentifiableTypeSource;
-import org.hibernate.boot.model.source.spi.IdentifierSourceAggregatedComposite;
-import org.hibernate.boot.model.source.spi.IdentifierSourceNonAggregatedComposite;
-import org.hibernate.boot.model.source.spi.IdentifierSourceSimple;
-import org.hibernate.boot.model.source.spi.InLineViewSource;
-import org.hibernate.boot.model.source.spi.LocalMetadataBuildingContext;
-import org.hibernate.boot.model.source.spi.NaturalIdMutability;
-import org.hibernate.boot.model.source.spi.Orderable;
-import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceBasic;
-import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceEmbedded;
-import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToAny;
-import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceManyToMany;
-import org.hibernate.boot.model.source.spi.PluralAttributeElementSourceOneToMany;
-import org.hibernate.boot.model.source.spi.PluralAttributeKeySource;
-import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToAnySource;
-import org.hibernate.boot.model.source.spi.PluralAttributeMapKeyManyToManySource;
-import org.hibernate.boot.model.source.spi.PluralAttributeMapKeySourceBasic;
-import org.hibernate.boot.model.source.spi.PluralAttributeMapKeySourceEmbedded;
-import org.hibernate.boot.model.source.spi.PluralAttributeSequentialIndexSource;
-import org.hibernate.boot.model.source.spi.PluralAttributeSource;
-import org.hibernate.boot.model.source.spi.RelationalValueSource;
-import org.hibernate.boot.model.source.spi.RelationalValueSourceContainer;
-import org.hibernate.boot.model.source.spi.SecondaryTableSource;
-import org.hibernate.boot.model.source.spi.SingularAttributeSource;
-import org.hibernate.boot.model.source.spi.SingularAttributeSourceAny;
-import org.hibernate.boot.model.source.spi.SingularAttributeSourceBasic;
-import org.hibernate.boot.model.source.spi.SingularAttributeSourceEmbedded;
-import org.hibernate.boot.model.source.spi.SingularAttributeSourceManyToOne;
-import org.hibernate.boot.model.source.spi.SingularAttributeSourceOneToOne;
-import org.hibernate.boot.model.source.spi.Sortable;
-import org.hibernate.boot.model.source.spi.TableSource;
-import org.hibernate.boot.model.source.spi.TableSpecificationSource;
-import org.hibernate.boot.model.source.spi.VersionAttributeSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -140,7 +94,6 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -265,8 +218,8 @@ public class ModelBinder {
 
 		applyCaching( mappingDocument, hierarchySource.getCaching(), rootEntityDescriptor );
 
-		if ( rootEntityDescriptor.getIdentifier() instanceof SortableValue ) {
-			( (SortableValue) rootEntityDescriptor.getIdentifier() ).sortProperties();
+		if ( rootEntityDescriptor.getIdentifier() instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
 		}
 		// Primary key constraint
 		rootEntityDescriptor.createPrimaryKey();
@@ -278,7 +231,7 @@ public class ModelBinder {
 		);
 
 		if ( hierarchySource.getNaturalIdCaching() != null ) {
-			if ( hierarchySource.getNaturalIdCaching().getRequested() == TruthValue.TRUE ) {
+			if ( hierarchySource.getNaturalIdCaching().isRequested() ) {
 				rootEntityDescriptor.setNaturalIdCacheRegionName( hierarchySource.getNaturalIdCaching().getRegion() );
 			}
 		}
@@ -303,7 +256,7 @@ public class ModelBinder {
 		return switch ( mappingDocument.getBuildingOptions().getSharedCacheMode() ) {
 			case UNSPECIFIED, ENABLE_SELECTIVE ->
 				// this is default behavior for hbm.xml
-					caching != null && caching.getRequested().toBoolean(false);
+					caching != null && caching.isRequested(false);
 			case NONE ->
 				// this option is actually really useful
 					false;
@@ -314,7 +267,7 @@ public class ModelBinder {
 			case DISABLE_SELECTIVE ->
 				// makes no sense for hbm.xml, and also goes against our
 				// ideology, and so it hurts me to support it here
-					caching == null || caching.getRequested().toBoolean(true);
+					caching == null || caching.isRequested(true);
 		};
 	}
 
@@ -364,6 +317,10 @@ public class ModelBinder {
 		entityDescriptor.setEntityName( entitySource.getEntityNamingSource().getEntityName() );
 		entityDescriptor.setJpaEntityName( entitySource.getEntityNamingSource().getJpaEntityName() );
 		entityDescriptor.setClassName( entitySource.getEntityNamingSource().getClassName() );
+		if ( entityDescriptor.getJpaEntityName() != null && entityDescriptor.getClassName() != null ) {
+			metadataBuildingContext.getMetadataCollector()
+					.addImport( entityDescriptor.getJpaEntityName(), entityDescriptor.getClassName() );
+		}
 
 		entityDescriptor.setDiscriminatorValue(
 				entitySource.getDiscriminatorMatchValue() != null
@@ -559,7 +516,7 @@ public class ModelBinder {
 			keyBinding.makeNationalized();
 		}
 		entityDescriptor.setKey( keyBinding );
-		keyBinding.setCascadeDeleteEnabled( entitySource.isCascadeDeleteEnabled() );
+		keyBinding.setOnDeleteAction( getOnDeleteAction( entitySource.isCascadeDeleteEnabled() ) );
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
 				entitySource.getPrimaryKeyColumnSources(),
@@ -590,7 +547,6 @@ public class ModelBinder {
 
 		bindJoinedSubclassEntities( entitySource, entityDescriptor );
 	}
-
 	private void bindUnionSubclassEntities(
 			EntitySource entitySource,
 			PersistentClass superEntityDescriptor) {
@@ -919,7 +875,7 @@ public class ModelBinder {
 			versionValue.setNullValue( versionAttributeSource.getUnsavedValue() );
 		}
 		else {
-			versionValue.setNullValue( "undefined" );
+			versionValue.setNullValueUndefined();
 		}
 		if ( versionAttributeSource.getSource().equals("db") ) {
 			property.setValueGeneratorCreator(
@@ -1003,11 +959,11 @@ public class ModelBinder {
 		}
 
 		for ( AttributeSource attributeSource : entitySource.attributeSources() ) {
-			if ( attributeSource instanceof PluralAttributeSource ) {
+			if ( attributeSource instanceof PluralAttributeSource pluralAttributeSource) {
 				// plural attribute
 				final Property attribute = createPluralAttribute(
 						mappingDocument,
-						(PluralAttributeSource) attributeSource,
+						pluralAttributeSource,
 						entityDescriptor
 				);
 				attribute.setOptional( true );
@@ -1234,7 +1190,7 @@ public class ModelBinder {
 			);
 		}
 		else if ( attributeSource instanceof PluralAttributeSourceMapImpl pluralAttributeSourceMap ) {
-			org.hibernate.mapping.Map map = new org.hibernate.mapping.Map(sourceDocument, entityDescriptor);
+			org.hibernate.mapping.Map map = new org.hibernate.mapping.Map( sourceDocument, entityDescriptor );
 			collectionBinding = map;
 			bindCollectionMetadata( sourceDocument, attributeSource, collectionBinding );
 
@@ -1324,7 +1280,7 @@ public class ModelBinder {
 
 		// bind the collection type info
 		String typeName = source.getTypeInformation().getName();
-		Map<Object,Object> typeParameters = new HashMap<>();
+		final Map<String,String> typeParameters = new HashMap<>();
 		if ( typeName != null ) {
 			// see if there is a corresponding type-def
 			final TypeDefinition typeDef = mappingDocument.getMetadataCollector().getTypeDefinition( typeName );
@@ -1388,30 +1344,30 @@ public class ModelBinder {
 		binding.setLoaderName( source.getCustomLoaderName() );
 		if ( source.getCustomSqlInsert() != null ) {
 			binding.setCustomSQLInsert(
-					source.getCustomSqlInsert().getSql(),
-					source.getCustomSqlInsert().isCallable(),
-					source.getCustomSqlInsert().getCheckStyle()
+					source.getCustomSqlInsert().sql(),
+					source.getCustomSqlInsert().callable(),
+					source.getCustomSqlInsert().checkStyle()
 			);
 		}
 		if ( source.getCustomSqlUpdate() != null ) {
 			binding.setCustomSQLUpdate(
-					source.getCustomSqlUpdate().getSql(),
-					source.getCustomSqlUpdate().isCallable(),
-					source.getCustomSqlUpdate().getCheckStyle()
+					source.getCustomSqlUpdate().sql(),
+					source.getCustomSqlUpdate().callable(),
+					source.getCustomSqlUpdate().checkStyle()
 			);
 		}
 		if ( source.getCustomSqlDelete() != null ) {
 			binding.setCustomSQLDelete(
-					source.getCustomSqlDelete().getSql(),
-					source.getCustomSqlDelete().isCallable(),
-					source.getCustomSqlDelete().getCheckStyle()
+					source.getCustomSqlDelete().sql(),
+					source.getCustomSqlDelete().callable(),
+					source.getCustomSqlDelete().checkStyle()
 			);
 		}
 		if ( source.getCustomSqlDeleteAll() != null ) {
 			binding.setCustomSQLDeleteAll(
-					source.getCustomSqlDeleteAll().getSql(),
-					source.getCustomSqlDeleteAll().isCallable(),
-					source.getCustomSqlDeleteAll().getCheckStyle()
+					source.getCustomSqlDeleteAll().sql(),
+					source.getCustomSqlDeleteAll().callable(),
+					source.getCustomSqlDeleteAll().checkStyle()
 			);
 		}
 
@@ -1477,22 +1433,22 @@ public class ModelBinder {
 		Identifier tableName = null;
 		for ( AttributeSource attributeSource : embeddedAttributeSource.getEmbeddableSource().attributeSources() ) {
 			final Identifier determinedName;
-			if ( attributeSource instanceof RelationalValueSourceContainer ) {
+			if ( attributeSource instanceof RelationalValueSourceContainer relationalValueSourceContainer ) {
 				determinedName = determineTable(
 						mappingDocument,
 						embeddedAttributeSource.getAttributeRole().getFullPath(),
-						(RelationalValueSourceContainer) attributeSource
+						relationalValueSourceContainer
 
 				);
 			}
-			else if ( attributeSource instanceof SingularAttributeSourceEmbedded ) {
-				determinedName = determineTable( mappingDocument, (SingularAttributeSourceEmbedded) attributeSource );
+			else if ( attributeSource instanceof SingularAttributeSourceEmbedded singularAttributeSourceEmbedded ) {
+				determinedName = determineTable( mappingDocument, singularAttributeSourceEmbedded );
 			}
-			else if ( attributeSource instanceof SingularAttributeSourceAny ) {
+			else if ( attributeSource instanceof SingularAttributeSourceAny singularAttributeSourceAny ) {
 				determinedName = determineTable(
 						mappingDocument,
 						attributeSource.getAttributeRole().getFullPath(),
-						( (SingularAttributeSourceAny) attributeSource ).getKeySource().getRelationalValueSources()
+						singularAttributeSourceAny.getKeySource().getRelationalValueSources()
 				);
 			}
 			else {
@@ -1619,7 +1575,7 @@ public class ModelBinder {
 		}
 		secondaryTableJoin.setKey( keyBinding );
 
-		keyBinding.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
+		keyBinding.setOnDeleteAction( getOnDeleteAction( secondaryTableSource.isCascadeDeleteEnabled() ) );
 
 		// NOTE : no Type info to bind...
 
@@ -1786,8 +1742,8 @@ public class ModelBinder {
 		// if this maps to CLOB/NCLOB/BLOB then the value will be marked as lob.
 		if ( !value.isLob() ) {
 			for ( RelationalValueSource relationalValueSource : attributeSource.getRelationalValueSources() ) {
-				if ( relationalValueSource instanceof ColumnSource ) {
-					if ( isLob( null, ( (ColumnSource) relationalValueSource ).getSqlType() ) ) {
+				if ( relationalValueSource instanceof ColumnSource columnSource ) {
+					if ( isLob( null, columnSource.getSqlType() ) ) {
 						value.makeLob();
 					}
 				}
@@ -1838,17 +1794,12 @@ public class ModelBinder {
 
 		// Defer the creation of the foreign key as we need the associated entity persister to be initialized
 		// so that we can observe the properties/columns of a possible component in the correct order
-		metadataBuildingContext.getMetadataCollector().addSecondPass( new SimpleToOneFkSecondPass( oneToOneBinding ) );
+		metadataBuildingContext.getMetadataCollector().addSecondPass( new OneToOneFkSecondPass( oneToOneBinding ) );
 
-		Property prop = new Property();
-		prop.setValue( oneToOneBinding );
-		bindProperty(
-				sourceDocument,
-				oneToOneSource,
-				prop
-		);
-
-		return prop;
+		final Property property = new Property();
+		property.setValue( oneToOneBinding );
+		bindProperty( sourceDocument, oneToOneSource, property );
+		return property;
 	}
 
 	private void handlePropertyReference(
@@ -1969,7 +1920,7 @@ public class ModelBinder {
 			setForeignKeyName( oneToOneBinding, oneToOneSource.getExplicitForeignKeyName() );
 		}
 
-		oneToOneBinding.setCascadeDeleteEnabled( oneToOneSource.isCascadeDeleteEnabled() );
+		oneToOneBinding.setOnDeleteAction( getOnDeleteAction( oneToOneSource.isCascadeDeleteEnabled() ) );
 	}
 
 	private Property createManyToOneAttribute(
@@ -2118,7 +2069,7 @@ public class ModelBinder {
 			}
 		}
 
-		manyToOneBinding.setCascadeDeleteEnabled( manyToOneSource.isCascadeDeleteEnabled() );
+		manyToOneBinding.setOnDeleteAction( getOnDeleteAction( manyToOneSource.isCascadeDeleteEnabled() ) );
 	}
 
 	private static void setForeignKeyName(SimpleValue manyToOneBinding, String foreignKeyName) {
@@ -2145,15 +2096,10 @@ public class ModelBinder {
 
 		anyBinding.createForeignKey();
 
-		Property prop = new Property();
-		prop.setValue( anyBinding );
-		bindProperty(
-				sourceDocument,
-				anyMapping,
-				prop
-		);
-
-		return prop;
+		final Property property = new Property();
+		property.setValue( anyBinding );
+		bindProperty( sourceDocument, anyMapping, property );
+		return property;
 	}
 
 	private void bindAny(
@@ -2273,21 +2219,20 @@ public class ModelBinder {
 			return resolution.getLegacyResolvedBasicType();
 		}
 		else {
-			final ClassLoaderService classLoaderService =
-					bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
+			final ClassLoaderService classLoaderService = bootstrapContext.getClassLoaderService();
 			try {
 				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
 
-				if ( typeInstance instanceof ParameterizedType ) {
+				if ( typeInstance instanceof ParameterizedType parameterizedType ) {
 					if ( parameters != null ) {
-						Properties properties = new Properties();
+						final Properties properties = new Properties();
 						properties.putAll( parameters );
-						( (ParameterizedType) typeInstance ).setParameterValues( properties );
+						parameterizedType.setParameterValues( properties );
 					}
 				}
 
-				if ( typeInstance instanceof UserType ) {
-					return new CustomType<>( (UserType<?>) typeInstance, typeConfiguration);
+				if ( typeInstance instanceof UserType<?> userType ) {
+					return new CustomType<>( userType, typeConfiguration);
 				}
 
 				return (BasicType<?>) typeInstance;
@@ -2312,8 +2257,7 @@ public class ModelBinder {
 		}
 		else {
 			final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
-			return metadataBuildingContext.getBootstrapContext()
-					.getServiceRegistry().requireService( ManagedBeanRegistry.class )
+			return metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry()
 					.getBean( beanName, typeJavaType ).getBeanInstance();
 		}
 	}
@@ -2422,8 +2366,8 @@ public class ModelBinder {
 			GenerationTiming timing) {
 		if ( timing != null ) {
 			if ( (timing == GenerationTiming.INSERT || timing == GenerationTiming.UPDATE)
-					&& property.getValue() instanceof SimpleValue
-					&& ((SimpleValue) property.getValue()).isVersion() ) {
+					&& property.getValue() instanceof SimpleValue simpleValue
+					&& simpleValue.isVersion() ) {
 				// this is enforced by DTD, but just make sure
 				throw new MappingException(
 						"'generated' attribute cannot be 'insert' or 'update' for version/timestamp property",
@@ -2540,8 +2484,7 @@ public class ModelBinder {
 						}
 						else {
 							compositeUserType = (CompositeUserType<?>) sourceDocument.getBootstrapContext()
-									.getServiceRegistry()
-									.requireService( ManagedBeanRegistry.class )
+									.getManagedBeanRegistry()
 									.getBean( componentClass )
 									.getBeanInstance();
 						}
@@ -2590,8 +2533,8 @@ public class ModelBinder {
 		if ( embeddableSource.isUnique() ) {
 			final ArrayList<Column> cols = new ArrayList<>();
 			for ( Selectable selectable: componentBinding.getSelectables() ) {
-				if ( selectable instanceof Column) {
-					cols.add( (Column) selectable );
+				if ( selectable instanceof Column column ) {
+					cols.add( column );
 				}
 			}
 			// todo : we may need to delay this
@@ -2607,50 +2550,50 @@ public class ModelBinder {
 		for ( AttributeSource attributeSource : embeddableSource.attributeSources() ) {
 			Property attribute;
 
-			if ( attributeSource instanceof SingularAttributeSourceBasic ) {
+			if ( attributeSource instanceof SingularAttributeSourceBasic singularAttributeSourceBasic ) {
 				attribute = createBasicAttribute(
 						sourceDocument,
-						(SingularAttributeSourceBasic) attributeSource,
+						singularAttributeSourceBasic,
 						new BasicValue( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
-			else if ( attributeSource instanceof SingularAttributeSourceEmbedded ) {
+			else if ( attributeSource instanceof SingularAttributeSourceEmbedded singularAttributeSourceEmbedded ) {
 				attribute = createEmbeddedAttribute(
 						sourceDocument,
-						(SingularAttributeSourceEmbedded) attributeSource,
+						singularAttributeSourceEmbedded,
 						new Component( sourceDocument, component ),
 						component.getComponentClassName()
 				);
 			}
-			else if ( attributeSource instanceof SingularAttributeSourceManyToOne ) {
+			else if ( attributeSource instanceof SingularAttributeSourceManyToOne singularAttributeSourceManyToOne ) {
 				attribute = createManyToOneAttribute(
 						sourceDocument,
-						(SingularAttributeSourceManyToOne) attributeSource,
+						singularAttributeSourceManyToOne,
 						new ManyToOne( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
-			else if ( attributeSource instanceof SingularAttributeSourceOneToOne ) {
+			else if ( attributeSource instanceof SingularAttributeSourceOneToOne singularAttributeSourceOneToOne ) {
 				attribute = createOneToOneAttribute(
 						sourceDocument,
-						(SingularAttributeSourceOneToOne) attributeSource,
+						singularAttributeSourceOneToOne,
 						new OneToOne( sourceDocument, component.getTable(), component.getOwner() ),
 						component.getComponentClassName()
 				);
 			}
-			else if ( attributeSource instanceof SingularAttributeSourceAny ) {
+			else if ( attributeSource instanceof SingularAttributeSourceAny singularAttributeSourceAny ) {
 				attribute = createAnyAssociationAttribute(
 						sourceDocument,
-						(SingularAttributeSourceAny) attributeSource,
+						singularAttributeSourceAny,
 						new Any( sourceDocument, component.getTable() ),
 						component.getComponentClassName()
 				);
 			}
-			else if ( attributeSource instanceof PluralAttributeSource ) {
+			else if ( attributeSource instanceof PluralAttributeSource pluralAttributeSource ) {
 				attribute = createPluralAttribute(
 						sourceDocument,
-						(PluralAttributeSource) attributeSource,
+						pluralAttributeSource,
 						component.getOwner()
 				);
 			}
@@ -2658,7 +2601,7 @@ public class ModelBinder {
 				throw new AssertionFailure(
 						String.format(
 								Locale.ENGLISH,
-								"Unexpected AttributeSource sub-type [%s] as part of composite [%s]",
+								"Unexpected AttributeSource subtype [%s] as part of composite [%s]",
 								attributeSource.getClass().getName(),
 								attributeSource.getAttributeRole().getFullPath()
 						)
@@ -2688,8 +2631,8 @@ public class ModelBinder {
 
 		if ( CollectionHelper.isNotEmpty( typeResolution.parameters ) ) {
 			simpleValue.setTypeParameters( typeResolution.parameters );
-			if ( simpleValue instanceof BasicValue ) {
-				( (BasicValue) simpleValue ).setExplicitTypeParams( typeResolution.parameters );
+			if ( simpleValue instanceof BasicValue basicValue ) {
+				basicValue.setExplicitTypeParams( typeResolution.parameters );
 			}
 		}
 
@@ -2880,25 +2823,25 @@ public class ModelBinder {
 			PersistentClass entityDescriptor) {
 		if ( entitySource.getCustomSqlInsert() != null ) {
 			entityDescriptor.setCustomSQLInsert(
-					entitySource.getCustomSqlInsert().getSql(),
-					entitySource.getCustomSqlInsert().isCallable(),
-					entitySource.getCustomSqlInsert().getCheckStyle()
+					entitySource.getCustomSqlInsert().sql(),
+					entitySource.getCustomSqlInsert().callable(),
+					entitySource.getCustomSqlInsert().checkStyle()
 			);
 		}
 
 		if ( entitySource.getCustomSqlUpdate() != null ) {
 			entityDescriptor.setCustomSQLUpdate(
-					entitySource.getCustomSqlUpdate().getSql(),
-					entitySource.getCustomSqlUpdate().isCallable(),
-					entitySource.getCustomSqlUpdate().getCheckStyle()
+					entitySource.getCustomSqlUpdate().sql(),
+					entitySource.getCustomSqlUpdate().callable(),
+					entitySource.getCustomSqlUpdate().checkStyle()
 			);
 		}
 
 		if ( entitySource.getCustomSqlDelete() != null ) {
 			entityDescriptor.setCustomSQLDelete(
-					entitySource.getCustomSqlDelete().getSql(),
-					entitySource.getCustomSqlDelete().isCallable(),
-					entitySource.getCustomSqlDelete().getCheckStyle()
+					entitySource.getCustomSqlDelete().sql(),
+					entitySource.getCustomSqlDelete().callable(),
+					entitySource.getCustomSqlDelete().checkStyle()
 			);
 		}
 
@@ -2910,25 +2853,25 @@ public class ModelBinder {
 			Join secondaryTable) {
 		if ( secondaryTableSource.getCustomSqlInsert() != null ) {
 			secondaryTable.setCustomSQLInsert(
-					secondaryTableSource.getCustomSqlInsert().getSql(),
-					secondaryTableSource.getCustomSqlInsert().isCallable(),
-					secondaryTableSource.getCustomSqlInsert().getCheckStyle()
+					secondaryTableSource.getCustomSqlInsert().sql(),
+					secondaryTableSource.getCustomSqlInsert().callable(),
+					secondaryTableSource.getCustomSqlInsert().checkStyle()
 			);
 		}
 
 		if ( secondaryTableSource.getCustomSqlUpdate() != null ) {
 			secondaryTable.setCustomSQLUpdate(
-					secondaryTableSource.getCustomSqlUpdate().getSql(),
-					secondaryTableSource.getCustomSqlUpdate().isCallable(),
-					secondaryTableSource.getCustomSqlUpdate().getCheckStyle()
+					secondaryTableSource.getCustomSqlUpdate().sql(),
+					secondaryTableSource.getCustomSqlUpdate().callable(),
+					secondaryTableSource.getCustomSqlUpdate().checkStyle()
 			);
 		}
 
 		if ( secondaryTableSource.getCustomSqlDelete() != null ) {
 			secondaryTable.setCustomSQLDelete(
-					secondaryTableSource.getCustomSqlDelete().getSql(),
-					secondaryTableSource.getCustomSqlDelete().isCallable(),
-					secondaryTableSource.getCustomSqlDelete().getCheckStyle()
+					secondaryTableSource.getCustomSqlDelete().sql(),
+					secondaryTableSource.getCustomSqlDelete().callable(),
+					secondaryTableSource.getCustomSqlDelete().checkStyle()
 			);
 		}
 	}
@@ -2999,7 +2942,6 @@ public class ModelBinder {
 			}
 		}
 	}
-
 
 	private abstract class AbstractPluralAttributeSecondPass implements SecondPass {
 		private final MappingDocument mappingDocument;
@@ -3200,8 +3142,8 @@ public class ModelBinder {
 					keyVal
 			);
 			setForeignKeyName( key, keySource.getExplicitForeignKeyName() );
-			key.setCascadeDeleteEnabled( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() );
-//
+			key.setOnDeleteAction( getOnDeleteAction( getPluralAttributeSource().getKeySource().isCascadeDeleteEnabled() ) );
+
 //			final ImplicitJoinColumnNameSource.Nature implicitNamingNature;
 //			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany
 //					|| getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany ) {
@@ -3265,14 +3207,15 @@ public class ModelBinder {
 		}
 
 		protected void bindCollectionElement() {
+			final PluralAttributeElementSource pluralElementSource = getPluralAttributeSource().getElementSource();
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Binding [%s] element type for a [%s]",
-						getPluralAttributeSource().getElementSource().getNature(),
+						pluralElementSource.getNature(),
 						getPluralAttributeSource().getNature()
 				);
 			}
-			if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceBasic elementSource ) {
+			if ( pluralElementSource instanceof PluralAttributeElementSourceBasic elementSource ) {
 				final BasicValue elementBinding = new BasicValue(
 						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
@@ -3298,7 +3241,7 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceEmbedded elementSource ) {
+			else if ( pluralElementSource instanceof PluralAttributeElementSourceEmbedded elementSource ) {
 				final Component elementBinding = new Component(
 						getMappingDocument(),
 						getCollectionBinding()
@@ -3320,14 +3263,15 @@ public class ModelBinder {
 				// This "where" clause comes from the collection mapping; e.g., <set name="..." ... where="..." .../>
 				getCollectionBinding().setWhere( getPluralAttributeSource().getWhere() );
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceOneToMany elementSource ) {
+			else if ( pluralElementSource instanceof PluralAttributeElementSourceOneToMany elementSource ) {
 				final OneToMany elementBinding = new OneToMany(
 						getMappingDocument(),
 						getCollectionBinding().getOwner()
 				);
 				collectionBinding.setElement( elementBinding );
 
-				final PersistentClass referencedEntityBinding = getReferencedEntityBinding( elementSource.getReferencedEntityName() );
+				final PersistentClass referencedEntityBinding =
+						getReferencedEntityBinding( elementSource.getReferencedEntityName() );
 
 				collectionBinding.setWhere(
 						getNonEmptyOrConjunctionIfBothNonEmpty(
@@ -3340,7 +3284,7 @@ public class ModelBinder {
 				elementBinding.setAssociatedClass( referencedEntityBinding );
 				elementBinding.setIgnoreNotFound( elementSource.isIgnoreNotFound() );
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToMany elementSource ) {
+			else if ( pluralElementSource instanceof PluralAttributeElementSourceManyToMany elementSource ) {
 				final ManyToOne elementBinding = new ManyToOne(
 						getMappingDocument(),
 						getCollectionBinding().getCollectionTable()
@@ -3451,7 +3395,7 @@ public class ModelBinder {
 					);
 				}
 			}
-			else if ( getPluralAttributeSource().getElementSource() instanceof PluralAttributeElementSourceManyToAny elementSource ) {
+			else if ( pluralElementSource instanceof PluralAttributeElementSourceManyToAny elementSource ) {
 				final Any elementBinding = new Any( getMappingDocument(), getCollectionBinding().getCollectionTable() );
 				bindAny(
 						mappingDocument,
@@ -3751,7 +3695,8 @@ public class ModelBinder {
 			final MappingDocument mappingDocument,
 			final IndexedPluralAttributeSource pluralAttributeSource,
 			final org.hibernate.mapping.Map collectionBinding) {
-		if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeySourceBasic mapKeySource ) {
+		final PluralAttributeIndexSource indexSource = pluralAttributeSource.getIndexSource();
+		if ( indexSource instanceof PluralAttributeMapKeySourceBasic mapKeySource ) {
 			final BasicValue value = new BasicValue( mappingDocument, collectionBinding.getCollectionTable() );
 			bindSimpleValueType(
 					mappingDocument,
@@ -3776,7 +3721,7 @@ public class ModelBinder {
 
 			collectionBinding.setIndex( value );
 		}
-		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeySourceEmbedded mapKeySource ) {
+		else if ( indexSource instanceof PluralAttributeMapKeySourceEmbedded mapKeySource ) {
 			final Component componentBinding = new Component( mappingDocument, collectionBinding );
 			bindComponent(
 					mappingDocument,
@@ -3788,7 +3733,7 @@ public class ModelBinder {
 			);
 			collectionBinding.setIndex( componentBinding );
 		}
-		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeyManyToManySource mapKeySource ) {
+		else if ( indexSource instanceof PluralAttributeMapKeyManyToManySource mapKeySource ) {
 			final ManyToOne mapKeyBinding = new ManyToOne( mappingDocument, collectionBinding.getCollectionTable() );
 
 			mapKeyBinding.setReferencedEntityName( mapKeySource.getReferencedEntityName() );
@@ -3814,7 +3759,7 @@ public class ModelBinder {
 			);
 			collectionBinding.setIndex( mapKeyBinding );
 		}
-		else if ( pluralAttributeSource.getIndexSource() instanceof PluralAttributeMapKeyManyToAnySource mapKeySource) {
+		else if ( indexSource instanceof PluralAttributeMapKeyManyToAnySource mapKeySource) {
 			final Any mapKeyBinding = new Any( mappingDocument, collectionBinding.getCollectionTable() );
 			bindAny(
 					mappingDocument,
@@ -3932,21 +3877,18 @@ public class ModelBinder {
 		}
 	}
 
-	private static class ManyToOneFkSecondPass extends FkSecondPass {
+	private static class ManyToOneFkSecondPass implements FkSecondPass {
 		private final MappingDocument mappingDocument;
 		private final ManyToOne manyToOneBinding;
 
 		private final String referencedEntityName;
 		private final String referencedEntityAttributeName;
 
-
-		public ManyToOneFkSecondPass(
+		private ManyToOneFkSecondPass(
 				MappingDocument mappingDocument,
 				SingularAttributeSourceManyToOne manyToOneSource,
 				ManyToOne manyToOneBinding,
 				String referencedEntityName) {
-			super( manyToOneBinding, null );
-
 			if ( referencedEntityName == null ) {
 				throw new MappingException(
 						"entity name referenced by many-to-one required [" + manyToOneSource.getAttributeRole().getFullPath() + "]",
@@ -3956,8 +3898,12 @@ public class ModelBinder {
 			this.mappingDocument = mappingDocument;
 			this.manyToOneBinding = manyToOneBinding;
 			this.referencedEntityName = referencedEntityName;
-
 			this.referencedEntityAttributeName = manyToOneSource.getReferencedEntityAttributeName();
+		}
+
+		@Override
+		public Value getValue() {
+			return manyToOneBinding;
 		}
 
 		@Override
@@ -3990,6 +3936,34 @@ public class ModelBinder {
 					mappingDocument.getMetadataCollector().getEntityBinding( referencedEntityName );
 			return referencedEntityBinding != null && referencedEntityAttributeName != null;
 
+		}
+	}
+
+	private static class OneToOneFkSecondPass implements FkSecondPass {
+		private final OneToOne oneToOneBinding;
+
+		private OneToOneFkSecondPass(OneToOne oneToOneBinding) {
+			this.oneToOneBinding = oneToOneBinding;
+		}
+
+		@Override
+		public Value getValue() {
+			return oneToOneBinding;
+		}
+
+		@Override
+		public String getReferencedEntityName() {
+			return oneToOneBinding.getReferencedEntityName();
+		}
+
+		@Override
+		public boolean isInPrimaryKey() {
+			return false;
+		}
+
+		@Override
+		public void doSecondPass(Map<String, PersistentClass> persistentClasses) {
+			oneToOneBinding.createForeignKey();
 		}
 	}
 
@@ -4065,5 +4039,9 @@ public class ModelBinder {
 			builder.append( selectable.getText() );
 		}
 		return builder.toString();
+	}
+
+	private static OnDeleteAction getOnDeleteAction(boolean entitySource) {
+		return entitySource ? OnDeleteAction.CASCADE : OnDeleteAction.NO_ACTION;
 	}
 }

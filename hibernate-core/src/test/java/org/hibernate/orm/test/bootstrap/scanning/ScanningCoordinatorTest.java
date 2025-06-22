@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
@@ -9,13 +9,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
+import org.hibernate.boot.archive.scan.internal.DisabledScanner;
+import org.hibernate.archive.scan.internal.MappingFileDescriptorImpl;
+import org.hibernate.archive.scan.internal.PackageDescriptorImpl;
+import org.hibernate.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
-import org.hibernate.boot.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.DisabledScanner;
-import org.hibernate.boot.archive.scan.internal.MappingFileDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.PackageDescriptorImpl;
-import org.hibernate.boot.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
@@ -25,7 +25,7 @@ import org.hibernate.boot.archive.scan.spi.ScanParameters;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
@@ -90,6 +90,7 @@ public class ScanningCoordinatorTest {
 		when( bootstrapContext.getMetadataBuildingOptions() ).thenReturn( metadataBuildingOptions );
 
 		when( serviceRegistry.requireService( ClassLoaderService.class ) ).thenReturn( classLoaderService );
+		when( bootstrapContext.getClassLoaderService() ).thenReturn( classLoaderService );
 
 		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 
@@ -190,10 +191,8 @@ public class ScanningCoordinatorTest {
 
 		when( bootstrapContext.getScanner() ).thenReturn( scanner );
 
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline(
-				new MetadataSources(),
-				bootstrapContext
-		);
+		final ManagedResourcesImpl managedResources =
+				ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
 
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 
@@ -214,7 +213,8 @@ public class ScanningCoordinatorTest {
 	private void assertManagedResourcesAfterCoordinateScanWithScanner(final Scanner scanner, final boolean expectedIsManagedResourcesEmpty) {
 		when( bootstrapContext.getScanner() ).thenReturn( scanner );
 
-		final ManagedResourcesImpl managedResources = ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
+		final ManagedResourcesImpl managedResources =
+				ManagedResourcesImpl.baseline( new MetadataSources(), bootstrapContext );
 
 		ScanningCoordinator.INSTANCE.coordinateScan( managedResources, bootstrapContext, xmlMappingBinderAccess );
 

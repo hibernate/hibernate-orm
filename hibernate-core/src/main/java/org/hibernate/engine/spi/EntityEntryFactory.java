@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -13,7 +13,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * Contract to build {@link EntityEntry}
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated No longer used
  */
+@Deprecated(since = "7", forRemoval = true)
 public interface EntityEntryFactory extends Serializable {
 
 	/**

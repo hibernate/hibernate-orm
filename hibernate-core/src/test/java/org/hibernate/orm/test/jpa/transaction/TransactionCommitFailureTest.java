@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.transaction;
@@ -31,6 +31,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -73,7 +74,7 @@ public class TransactionCommitFailureTest {
 			em.getTransaction().commit();
 		}
 		catch (RollbackException e) {
-			assertEquals( COMMIT_FAILURE, e.getLocalizedMessage() );
+			assertTrue( e.getLocalizedMessage().startsWith( COMMIT_FAILURE ) );
 		}
 		finally {
 			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {

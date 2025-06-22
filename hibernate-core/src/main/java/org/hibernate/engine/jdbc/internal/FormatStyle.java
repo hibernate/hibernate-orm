@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
@@ -30,7 +30,7 @@ public enum FormatStyle {
 	private final String name;
 	private final Formatter formatter;
 
-	private FormatStyle(String name, Formatter formatter) {
+	FormatStyle(String name, Formatter formatter) {
 		this.name = name;
 		this.formatter = formatter;
 	}

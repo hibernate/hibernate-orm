@@ -1,15 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -18,6 +11,13 @@ import org.hibernate.metamodel.mapping.internal.EmbeddableDiscriminatorValueDeta
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Handles conversion of discriminator values for embeddable subtype classes
@@ -79,13 +79,13 @@ public class EmbeddableDiscriminatorConverter<O, R> extends DiscriminatorConvert
 	}
 
 	@Override
-	public EmbeddableDiscriminatorValueDetailsImpl getDetailsForDiscriminatorValue(Object value) {
-		final EmbeddableDiscriminatorValueDetailsImpl valueMatch = discriminatorValueToDetailsMap.get( value );
+	public EmbeddableDiscriminatorValueDetailsImpl getDetailsForDiscriminatorValue(Object relationalValue) {
+		final EmbeddableDiscriminatorValueDetailsImpl valueMatch = discriminatorValueToDetailsMap.get( relationalValue );
 		if ( valueMatch != null ) {
 			return valueMatch;
 		}
 
-		throw new HibernateException( "Unrecognized discriminator value: " + value );
+		throw new HibernateException( "Unrecognized discriminator value: " + relationalValue );
 	}
 
 	@Override

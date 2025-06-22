@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
 /**
@@ -29,25 +30,21 @@ public class GlobalTemporaryTableStrategy {
 	public static final String SHORT_NAME = "global_temporary";
 
 	public static final String CREATE_ID_TABLES = "hibernate.query.mutation_strategy.global_temporary.create_tables";
-
 	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.global_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;
-
 	private final SessionFactoryImplementor sessionFactory;
 
 	private boolean prepared;
-
 	private boolean dropIdTables;
 
-	public GlobalTemporaryTableStrategy(
-			TemporaryTable temporaryTable,
-			SessionFactoryImplementor sessionFactory) {
+	public GlobalTemporaryTableStrategy(TemporaryTable temporaryTable, SessionFactoryImplementor sessionFactory) {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
 
 		if ( sessionFactory.getJdbcServices().getDialect().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
-			throw new IllegalArgumentException( "Global-temp ID tables cannot use AfterUseAction.DROP : " + temporaryTable.getTableExpression() );
+			throw new IllegalArgumentException( "Global-temp ID tables cannot use AfterUseAction.DROP : "
+												+ temporaryTable.getTableExpression() );
 		}
 	}
 
@@ -55,9 +52,7 @@ public class GlobalTemporaryTableStrategy {
 		return temporaryTable.getEntityDescriptor();
 	}
 
-	public void prepare(
-			MappingModelCreationProcess mappingModelCreationProcess,
-			JdbcConnectionAccess connectionAccess) {
+	public void prepare(MappingModelCreationProcess mappingModelCreationProcess, JdbcConnectionAccess connectionAccess) {
 		if ( prepared ) {
 			return;
 		}
@@ -68,56 +63,41 @@ public class GlobalTemporaryTableStrategy {
 				mappingModelCreationProcess.getCreationContext()
 						.getBootstrapContext().getServiceRegistry()
 						.requireService( ConfigurationService.class );
-		boolean createIdTables = configService.getSetting(
-				CREATE_ID_TABLES,
-				StandardConverters.BOOLEAN,
-				true
-		);
 
-		if ( !createIdTables ) {
-			return;
-		}
+		if ( configService.getSetting( CREATE_ID_TABLES, StandardConverters.BOOLEAN, true ) ) {
+			log.debugf( "Creating global-temp ID table: %s", getTemporaryTable().getTableExpression() );
 
-		log.debugf( "Creating global-temp ID table : %s", getTemporaryTable().getTableExpression() );
-
-		final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork = new TemporaryTableHelper.TemporaryTableCreationWork(
-				getTemporaryTable(),
-				sessionFactory
-		);
-		Connection connection;
-		try {
-			connection = connectionAccess.obtainConnection();
-		}
-		catch (UnsupportedOperationException e) {
-			// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
-			log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
-			return;
-		}
-		catch (SQLException e) {
-			log.error( "Unable obtain JDBC Connection", e );
-			return;
-		}
-
-		try {
-			temporaryTableCreationWork.execute( connection );
-			this.dropIdTables = configService.getSetting(
-					DROP_ID_TABLES,
-					StandardConverters.BOOLEAN,
-					false
-			);
-		}
-		finally {
+			final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork =
+					new TemporaryTableHelper.TemporaryTableCreationWork( getTemporaryTable(), sessionFactory );
+			final Connection connection;
 			try {
-				connectionAccess.releaseConnection( connection );
+				connection = connectionAccess.obtainConnection();
 			}
-			catch (SQLException ignore) {
+			catch (UnsupportedOperationException e) {
+				// assume this comes from org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl
+				log.debug( "Unable to obtain JDBC connection; assuming ID tables already exist or wont be needed" );
+				return;
+			}
+			catch (SQLException e) {
+				log.error( "Unable obtain JDBC Connection", e );
+				return;
+			}
+
+			try {
+				temporaryTableCreationWork.execute( connection );
+				dropIdTables = configService.getSetting( DROP_ID_TABLES, StandardConverters.BOOLEAN, false );
+			}
+			finally {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException ignore) {
+				}
 			}
 		}
 	}
 
-	public void release(
-			SessionFactoryImplementor sessionFactory,
-			JdbcConnectionAccess connectionAccess) {
+	public void release(SessionFactoryImplementor sessionFactory, JdbcConnectionAccess connectionAccess) {
 		if ( !dropIdTables ) {
 			return;
 		}
@@ -126,10 +106,8 @@ public class GlobalTemporaryTableStrategy {
 
 		log.debugf( "Dropping global-temp ID table : %s", getTemporaryTable().getTableExpression() );
 
-		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork = new TemporaryTableHelper.TemporaryTableDropWork(
-				getTemporaryTable(),
-				sessionFactory
-		);
+		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
+				new TemporaryTableHelper.TemporaryTableDropWork( getTemporaryTable(), sessionFactory );
 		Connection connection;
 		try {
 			connection = connectionAccess.obtainConnection();

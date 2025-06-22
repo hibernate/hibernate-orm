@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid;
@@ -23,7 +23,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -41,8 +40,7 @@ public class ValidationTests {
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {
-			assertThat( expected.getMessage() )
-					.startsWith( "Attribute marked as natural-id can not also be a not-found association - " );
+			// expected
 		}
 	}
 
@@ -57,8 +55,7 @@ public class ValidationTests {
 			fail( "Expecting an exception" );
 		}
 		catch (MappingException expected) {
-			assertThat( expected.getMessage() )
-					.startsWith( "Attribute marked as natural-id can not also be a not-found association - " );
+			// expected
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cut;
@@ -13,7 +13,6 @@ public class Transaction {
 	private Long id;
 	private String description;
 	private MonetoryAmount value;
-	private CompositeDateTime timestamp;
 
 	public String getDescription() {
 		return description;
@@ -37,14 +36,6 @@ public class Transaction {
 
 	public void setValue(MonetoryAmount value) {
 		this.value = value;
-	}
-
-	public CompositeDateTime getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(CompositeDateTime timestamp) {
-		this.timestamp = timestamp;
 	}
 
 }

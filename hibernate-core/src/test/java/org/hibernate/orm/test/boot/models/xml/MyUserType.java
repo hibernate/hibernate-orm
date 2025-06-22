@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml;
@@ -10,7 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.UUID;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -39,13 +39,13 @@ public class MyUserType implements UserType<UUID> {
 	}
 
 	@Override
-	public UUID nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public UUID nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		return null;
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, UUID value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, UUID value, int index, WrapperOptions options)
 			throws SQLException {
 
 	}

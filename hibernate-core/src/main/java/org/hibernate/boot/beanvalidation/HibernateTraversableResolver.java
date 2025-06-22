@@ -1,13 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
 
 import java.lang.annotation.ElementType;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;
@@ -30,32 +31,27 @@ import jakarta.validation.TraversableResolver;
  * @author Emmanuel Bernard
  */
 public class HibernateTraversableResolver implements TraversableResolver {
-	private Set<String> associations;
+	private final Map<Class<?>, Set<String>> associationsPerEntityClass = new HashMap<>();
 
-	public HibernateTraversableResolver(
-			EntityPersister persister,
-			ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister,
-			SessionFactoryImplementor factory) {
-		associations = associationsPerEntityPersister.get( persister );
-		if ( associations == null ) {
-			associations = new HashSet<>();
-			addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory );
-			associationsPerEntityPersister.put( persister, associations );
-		}
+	public void addPersister(EntityPersister persister, SessionFactoryImplementor factory) {
+		Class<?> javaTypeClass = persister.getEntityMappingType().getMappedJavaType().getJavaTypeClass();
+		Set<String> associations = new HashSet<>();
+		addAssociationsToTheSetForAllProperties( persister.getPropertyNames(), persister.getPropertyTypes(), "", factory, associations );
+		associationsPerEntityClass.put( javaTypeClass, associations );
 	}
 
-	private void addAssociationsToTheSetForAllProperties(
-			String[] names, Type[] types, String prefix, SessionFactoryImplementor factory) {
+	private static void addAssociationsToTheSetForAllProperties(
+			String[] names, Type[] types, String prefix, SessionFactoryImplementor factory, Set<String> associations) {
 		final int length = names.length;
 		for( int index = 0 ; index < length; index++ ) {
-			addAssociationsToTheSetForOneProperty( names[index], types[index], prefix, factory );
+			addAssociationsToTheSetForOneProperty( names[index], types[index], prefix, factory, associations );
 		}
 	}
 
-	private void addAssociationsToTheSetForOneProperty(
-			String name, Type type, String prefix, SessionFactoryImplementor factory) {
+	private static void addAssociationsToTheSetForOneProperty(
+			String name, Type type, String prefix, SessionFactoryImplementor factory, Set<String> associations) {
 		if ( type instanceof CollectionType collectionType ) {
-			addAssociationsToTheSetForOneProperty( name, collectionType.getElementType( factory ), prefix, factory );
+			addAssociationsToTheSetForOneProperty( name, collectionType.getElementType( factory ), prefix, factory, associations );
 		}
 		//ToOne association
 		else if ( type instanceof EntityType || type instanceof AnyType ) {
@@ -66,7 +62,8 @@ public class HibernateTraversableResolver implements TraversableResolver {
 					componentType.getPropertyNames(),
 					componentType.getSubtypes(),
 					( prefix.isEmpty() ? name : prefix + name ) + '.',
-					factory
+					factory,
+					associations
 			);
 		}
 	}
@@ -102,6 +99,6 @@ public class HibernateTraversableResolver implements TraversableResolver {
 			Class<?> rootBeanType,
 			Path pathToTraversableObject,
 			ElementType elementType) {
-		return !associations.contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
+		return !associationsPerEntityClass.getOrDefault( rootBeanType, Set.of() ).contains( getStringBasedPath( traversableProperty, pathToTraversableObject ) );
 	}
 }

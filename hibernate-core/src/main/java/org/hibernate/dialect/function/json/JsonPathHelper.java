@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -64,6 +65,27 @@ public class JsonPathHelper {
 		appendJsonPathConcatenatedPassingClause( sqlAppender, jsonPathExpression, passingClause, walker, "", "||" );
 	}
 
+	public static String inlinedJsonPathIncludingPassingClause(
+			Expression jsonPathExpression,
+			JsonPathPassingClause passingClause,
+			SqlAstTranslator<?> walker) {
+		return inlinedJsonPathIncludingPassingClause(
+				walker.<String>getLiteralValue( jsonPathExpression ),
+				passingClause,
+				walker
+		);
+	}
+
+	public static String inlinedJsonPathIncludingPassingClause(
+			String jsonPath,
+			JsonPathPassingClause passingClause,
+			SqlAstTranslator<?> walker) {
+		for ( Map.Entry<String, Expression> entry : passingClause.getPassingExpressions().entrySet() ) {
+			jsonPath = jsonPath.replace( "$" + entry.getKey(), walker.getLiteralValue( entry.getValue() ).toString() );
+		}
+		return jsonPath;
+	}
+
 	public static void appendInlinedJsonPathIncludingPassingClause(
 			SqlAppender sqlAppender,
 			String prefix,
@@ -92,9 +114,9 @@ public class JsonPathHelper {
 			if ( expression == null ) {
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
-			Object literalValue = walker.getLiteralValue( expression );
-			if ( literalValue instanceof String ) {
-				appendLiteral( sqlAppender, 0, (String) literalValue );
+			final Object literalValue = walker.getLiteralValue( expression );
+			if ( literalValue instanceof String string ) {
+				appendLiteral( sqlAppender, 0, string );
 			}
 			else {
 				sqlAppender.appendSql( String.valueOf( literalValue ) );

@@ -1,38 +1,31 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import org.hibernate.query.ReturnableType;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.query.criteria.JpaCastTarget;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+
+import java.util.Objects;
 
 
 /**
  * @author Gavin King
  */
-public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T> {
+public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>, JpaCastTarget<T> {
 	private final ReturnableType<T> type;
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
-
-	public Long getLength() {
-		return length;
-	}
-
-	public Integer getPrecision() {
-		return precision;
-	}
-
-	public Integer getScale() {
-		return scale;
-	}
 
 	public SqmCastTarget(
 			ReturnableType<T> type,
@@ -69,6 +62,21 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
+	public @Nullable Long getLength() {
+		return length;
+	}
+
+	@Override
+	public @Nullable Integer getPrecision() {
+		return precision;
+	}
+
+	@Override
+	public @Nullable Integer getScale() {
+		return scale;
+	}
+
+	@Override
 	public SqmCastTarget<T> copy(SqmCopyContext context) {
 		return this;
 	}
@@ -83,26 +91,40 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	}
 
 	@Override
-	public SqmExpressible<T> getNodeType() {
-		return type;
+	public SqmBindableType<T> getNodeType() {
+		return nodeBuilder().resolveExpressible( type );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( type.getTypeName() );
-		if ( length != null ) {
-			sb.append( '(' );
-			sb.append( length );
-			sb.append( ')' );
-		}
-		else if ( precision != null ) {
-			sb.append( '(' );
-			sb.append( precision );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( type.getTypeName() );
+		if ( precision != null ) {
+			hql.append( '(' );
+			hql.append( precision );
 			if ( scale != null ) {
-				sb.append( ", " );
-				sb.append( scale );
+				hql.append( ", " );
+				hql.append( scale );
 			}
-			sb.append( ')' );
+			hql.append( ')' );
 		}
+		else if ( length != null ) {
+			hql.append( '(' );
+			hql.append( length );
+			hql.append( ')' );
+		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCastTarget<?> that
+			&& Objects.equals( type, that.type )
+			&& Objects.equals( length, that.length )
+			&& Objects.equals( precision, that.precision )
+			&& Objects.equals( scale, that.scale );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( type, length, precision, scale );
 	}
 }

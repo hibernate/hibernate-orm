@@ -1,27 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-
-import java.util.List;
-
-import org.hibernate.LockMode;
-import org.hibernate.Session;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.NativeQuery;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,6 +14,20 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.hibernate.Session;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.NativeQuery;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * @author Andrea Boriero
@@ -268,18 +263,6 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 					.asInstanceOf( InstanceOfAssertFactories.type( Game.class ) )
 					.returns( "Halo", Game::getTitle );
 		} );
-	}
-
-	@Test
-	@JiraKey(value = "HHH-14816")
-	public void testQueryHintLockMode() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					query.setHint( HINT_NATIVE_LOCK_MODE, "none" );
-					query.setParameter( 1, GAME_TITLES[0] );
-					assertEquals( LockMode.NONE, query.getHints().get( HINT_NATIVE_LOCK_MODE ) );
-				}
-		);
 	}
 
 	@Entity(name = "Game")

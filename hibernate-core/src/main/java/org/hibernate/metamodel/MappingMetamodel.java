@@ -1,21 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
-import org.hibernate.graph.RootGraph;
-import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.query.BindableType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -29,6 +25,8 @@ import jakarta.persistence.metamodel.Metamodel;
 /**
  * Access to information about the runtime relational O/R mapping model.
  *
+ * @apiNote This is an incubating SPI. Its name and package may change.
+ *
  * @author Steve Ebersole
  */
 @Incubating
@@ -39,28 +37,14 @@ public interface MappingMetamodel extends Metamodel {
 	TypeConfiguration getTypeConfiguration();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// SQM model -> Mapping model
-
-	// todo (6.0) : POC intended for use in SQM to SQL translation
-	MappingModelExpressible<?> resolveMappingExpressible(
-			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath,
-			TableGroup> tableGroupLocator);
-
-	/**
-	 * Given a Java type, determine the corresponding BindableType to
-	 * use implicitly
-	 */
-	<T> BindableType<T> resolveQueryParameterType(Class<T> javaType);
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity descriptors
 
 	/**
 	 * Visit all entity mapping descriptors defined in the model
 	 */
 	void forEachEntityDescriptor(Consumer<EntityPersister> action);
+
+	@Deprecated(forRemoval = true, since = "7")
 	Stream<EntityPersister> streamEntityDescriptors();
 
 	/**
@@ -123,30 +107,11 @@ public interface MappingMetamodel extends Metamodel {
 	 * direct entity name.
 	 *
 	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(forRemoval = true, since = "7")
 	EntityPersister locateEntityDescriptor(Class<?> byClass);
-
-	/**
-	 * @see #locateEntityDescriptor
-	 *
-	 * @deprecated use {@link #locateEntityDescriptor(Class)} instead
-	 */
-	@Deprecated(since = "6.0")
-	default EntityPersister locateEntityPersister(Class<?> byClass) {
-		return locateEntityDescriptor( byClass );
-	}
-
-	/**
-	 * Locate the entity persister by name.
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 *
-	 * @deprecated - use {@link #getEntityDescriptor(String)} instead
-	 */
-	@Deprecated(since = "6.0")
-	EntityPersister locateEntityPersister(String byName);
 
 	String getImportedName(String name);
 
@@ -158,6 +123,8 @@ public interface MappingMetamodel extends Metamodel {
 	 * Visit the mapping descriptors for all collections defined in the model
 	 */
 	void forEachCollectionDescriptor(Consumer<CollectionPersister> action);
+
+	@Deprecated(forRemoval = true, since = "7")
 	Stream<CollectionPersister> streamCollectionDescriptors();
 
 	/**
@@ -194,19 +161,13 @@ public interface MappingMetamodel extends Metamodel {
 	 */
 	CollectionPersister findCollectionDescriptor(String role);
 
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA entity graphs
+	// SQM model -> Mapping model
 
-	RootGraph<?> findNamedGraph(String name);
-	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
-	void forEachNamedGraph(Consumer<RootGraph<?>> action);
-	RootGraph<?> defaultGraph(String entityName);
-	RootGraph<?> defaultGraph(Class<?> entityJavaType);
-	RootGraph<?> defaultGraph(EntityPersister entityDescriptor);
-	RootGraph<?> defaultGraph(EntityDomainType<?> entityDomainType);
-
-	List<RootGraph<?>> findRootGraphsForType(Class<?> baseEntityJavaType);
-	List<RootGraph<?>> findRootGraphsForType(String baseEntityName);
-	List<RootGraph<?>> findRootGraphsForType(EntityPersister baseEntityDescriptor);
+	// TODO Layer breaker used in SQM to SQL translation.
+	//      Consider moving to QueryEngine or collaborators.
+	@Internal
+	MappingModelExpressible<?> resolveMappingExpressible(
+			SqmExpressible<?> sqmExpressible,
+			Function<NavigablePath, TableGroup> tableGroupLocator);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor;
@@ -92,6 +92,7 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean quarkusInjection;
+	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
 	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
@@ -104,6 +105,8 @@ public final class Context {
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
+
+	private boolean indexing = true;
 
 	private final Map<String, String> entityNameMappings = new HashMap<>();
 	private final Map<String, Set<String>> enumTypesByValue = new HashMap<>();
@@ -222,6 +225,14 @@ public final class Context {
 		this.quarkusInjection = quarkusInjection;
 	}
 
+	public boolean isDataEventPackageAvailable() {
+		return dataEventPackageAvailable;
+	}
+
+	public void setDataEventPackageAvailable(boolean dataEventPackageAvailable) {
+		this.dataEventPackageAvailable = dataEventPackageAvailable;
+	}
+
 	public Elements getElementUtils() {
 		return processingEnvironment.getElementUtils();
 	}
@@ -300,6 +311,15 @@ public final class Context {
 
 	public Collection<Metamodel> getDataMetaEmbeddables() {
 		return dataMetaEmbeddables.values();
+	}
+
+	public @Nullable Metamodel getMetamodel(String qualifiedName) {
+		if ( metaEntities.containsKey( qualifiedName ) ) {
+			return metaEntities.get( qualifiedName );
+		}
+		else {
+			return metaEmbeddables.get( qualifiedName );
+		}
 	}
 
 	public @Nullable Metamodel getMetaAuxiliary(String qualifiedName) {
@@ -502,7 +522,29 @@ public final class Context {
 		return enumTypesByValue;
 	}
 
-	public void addEnumValue(String type, String value) {
-		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( type );
+	public void addEnumValue(
+			String qualifiedTypeName, String shortTypeName,
+			@Nullable String outerTypeQualifiedName, @Nullable String outerShortTypeName,
+			String value) {
+		addEnumValue( qualifiedTypeName, value );
+		addEnumValue( qualifiedTypeName, qualifiedTypeName + '.' + value );
+		addEnumValue( qualifiedTypeName, shortTypeName + '.' + value );
+		if ( outerShortTypeName != null ) {
+			addEnumValue( qualifiedTypeName, outerShortTypeName + '.' + shortTypeName + '.' + value );
+			addEnumValue( qualifiedTypeName, outerShortTypeName + '$' + shortTypeName + '.' + value );
+			addEnumValue( qualifiedTypeName, outerTypeQualifiedName + '$' + shortTypeName + '.' + value );
+		}
+	}
+
+	private void addEnumValue(String qualifiedTypeName, String value) {
+		enumTypesByValue.computeIfAbsent( value, s -> new TreeSet<>() ).add( qualifiedTypeName );
+	}
+
+	public void setIndexing(boolean index) {
+		this.indexing = index;
+	}
+
+	public boolean isIndexing() {
+		return indexing;
 	}
 }

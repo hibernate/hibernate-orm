@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.result.internal;
@@ -14,10 +14,11 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.hibernate.JDBCException;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.query.results.ResultSetMapping;
@@ -68,8 +69,9 @@ public class OutputsImpl implements Outputs {
 		if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
-		final EventManager eventManager = context.getSession().getEventManager();
-		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = context.getSession().getEventMonitor();
+		final DiagnosticEvent jdbcPreparedStatementExecutionEvent =
+				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
 			currentReturnState = buildCurrentReturnState( isResultSet );
@@ -78,7 +80,7 @@ public class OutputsImpl implements Outputs {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, this.context.getSession().getJdbcSessionContext() );
 		}
 	}
@@ -102,19 +104,13 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-				e,
-				message,
-				jdbcStatement.toString()
-		);
+		return context.getSession().getJdbcServices().getSqlExceptionHelper()
+				.convert( e, message, jdbcStatement.toString() );
 	}
 
 	@Override
 	public Output getCurrent() {
-		if ( currentReturnState == null ) {
-			return null;
-		}
-		return currentReturnState.getOutput();
+		return currentReturnState == null ? null : currentReturnState.getOutput();
 	}
 
 	@Override
@@ -140,7 +136,9 @@ public class OutputsImpl implements Outputs {
 
 	@Override
 	public void release() {
-		context.getSession().getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( jdbcStatement );
+		final JdbcCoordinator jdbcCoordinator = context.getSession().getJdbcCoordinator();
+		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( jdbcStatement );
+		jdbcCoordinator.afterStatementExecution();
 	}
 
 	private List<?> extractCurrentResults() {
@@ -154,11 +152,8 @@ public class OutputsImpl implements Outputs {
 
 	protected List<Object> extractResults(ResultSet resultSet) {
 
-		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess(
-				context.getSession(),
-				jdbcStatement,
-				resultSet
-		);
+		final DirectResultSetAccess resultSetAccess =
+				new DirectResultSetAccess( context.getSession(), jdbcStatement, resultSet );
 
 		final ProcedureCallImpl<?> procedureCall = (ProcedureCallImpl<?>) context;
 		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
@@ -178,8 +173,7 @@ public class OutputsImpl implements Outputs {
 
 		try {
 
-			//noinspection unchecked
-			final RowReader<Object> rowReader = (RowReader<Object>) ResultsHelper.createRowReader(
+			final RowReader<?> rowReader = ResultsHelper.createRowReader(
 					getSessionFactory(),
 					RowTransformerStandardImpl.instance(),
 					null,

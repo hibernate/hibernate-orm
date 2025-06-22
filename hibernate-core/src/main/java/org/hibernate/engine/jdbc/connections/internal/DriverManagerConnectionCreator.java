@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -34,7 +34,7 @@ public class DriverManagerConnectionCreator extends BasicConnectionCreator {
 			return DriverManager.getConnection( url, connectionProps );
 		}
 		catch (SQLException e) {
-			throw convertSqlException( "Error calling DriverManager.getConnection()", e );
+			throw convertSqlException( "Error calling JDBC 'DriverManager.getConnection()'", e );
 		}
 	}
 }

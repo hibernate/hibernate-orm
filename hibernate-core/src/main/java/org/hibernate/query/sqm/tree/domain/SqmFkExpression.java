@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -12,7 +13,10 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * Reference to the key-side (as opposed to the target-side) of the
@@ -21,15 +25,14 @@ import org.hibernate.spi.NavigablePath;
  * @author Steve Ebersole
  */
 public class SqmFkExpression<T> extends AbstractSqmPath<T> {
-
-	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath) {
+	public SqmFkExpression(SqmPath<?> toOnePath) {
 		this( toOnePath.getNavigablePath().append( ForeignKeyDescriptor.PART_NAME ), toOnePath );
 	}
 
 	@SuppressWarnings("unchecked")
 	private SqmFkExpression(
 			NavigablePath navigablePath,
-			SqmEntityValuedSimplePath<?> toOnePath) {
+			SqmPath<?> toOnePath) {
 		super(
 				navigablePath,
 				(SqmPathSource<T>) pathDomainType( toOnePath ).getIdentifierDescriptor(),
@@ -38,12 +41,14 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		);
 	}
 
-	private static IdentifiableDomainType<?> pathDomainType(SqmEntityValuedSimplePath<?> toOnePath) {
-		return (IdentifiableDomainType<?>) toOnePath.getNodeType();
-	}
-
-	public SqmEntityValuedSimplePath<?> getToOnePath() {
-		return (SqmEntityValuedSimplePath<?>) getLhs();
+	private static IdentifiableDomainType<?> pathDomainType(SqmPath<?> toOnePath) {
+		final DomainType<?> domainType = toOnePath.getReferencedPathSource().getPathType();
+		if ( domainType instanceof IdentifiableDomainType<?> identifiableDomainType ) {
+			return identifiableDomainType;
+		}
+		else {
+			throw new IllegalArgumentException( "Invalid path provided to 'fk()' function: " + toOnePath.getNavigablePath() );
+		}
 	}
 
 	@Override
@@ -52,10 +57,22 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "fk(" );
-		getLhs().appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "fk(" );
+		getLhs().appendHqlString( hql, context );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmFkExpression<?> that
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
+			&& Objects.equals( this.getLhs(), that.getLhs() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getLhs().hashCode();
 	}
 
 	@Override
@@ -67,7 +84,7 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 		final SqmEntityValuedSimplePath<?> lhsCopy = (SqmEntityValuedSimplePath<?>) getLhs().copy( context );
 		return context.registerCopy(
 				this,
-				new SqmFkExpression<T>( getNavigablePathCopy( lhsCopy ), lhsCopy )
+				new SqmFkExpression<>( getNavigablePathCopy( lhsCopy ), lhsCopy )
 		);
 	}
 
@@ -83,7 +100,7 @@ public class SqmFkExpression<T> extends AbstractSqmPath<T> {
 
 	@Override
 	public SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

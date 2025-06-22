@@ -1,21 +1,23 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
@@ -35,13 +37,13 @@ public class SqmCaseSimple<T, R>
 		this( fixture, null, estimatedWhenSize, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressible<R> inherentType, NodeBuilder nodeBuilder) {
+	public SqmCaseSimple(SqmExpression<T> fixture, SqmBindableType<R> inherentType, NodeBuilder nodeBuilder) {
 		this( fixture, inherentType, 10, nodeBuilder );
 	}
 
 	private SqmCaseSimple(
 			SqmExpression<T> fixture,
-			SqmExpressible<R> inherentType,
+			SqmBindableType<R> inherentType,
 			int estimatedWhenSize,
 			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
@@ -101,10 +103,10 @@ public class SqmCaseSimple<T, R>
 		applyInferableResultType( result.getNodeType() );
 	}
 
-	private void applyInferableResultType(SqmExpressible<?> type) {
+	private void applyInferableResultType(SqmBindableType<?> type) {
 		if ( type != null ) {
-			final SqmExpressible<?> oldType = getExpressible();
-			final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
+			final SqmBindableType<?> oldType = getExpressible();
+			final SqmBindableType<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
 			if ( newType != null && newType != oldType ) {
 				internalApplyInferableType( newType );
 			}
@@ -112,7 +114,7 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressible<?> newType) {
+	protected void internalApplyInferableType(SqmBindableType<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {
@@ -153,23 +155,35 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "case " );
-		fixture.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "case " );
+		fixture.appendHqlString( hql, context );
 		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
-			sb.append( " when " );
-			whenFragment.checkValue.appendHqlString( sb );
-			sb.append( " then " );
-			whenFragment.result.appendHqlString( sb );
+			hql.append( " when " );
+			whenFragment.checkValue.appendHqlString( hql, context );
+			hql.append( " then " );
+			whenFragment.result.appendHqlString( hql, context );
 		}
 
 		if ( otherwise != null ) {
-			sb.append( " else " );
-			otherwise.appendHqlString( sb );
+			hql.append( " else " );
+			otherwise.appendHqlString( hql, context );
 		}
-		sb.append( " end" );
+		hql.append( " end" );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmCaseSimple<?, ?> that
+			&& Objects.equals( this.fixture, that.fixture )
+			&& Objects.equals( this.whenFragments, that.whenFragments )
+			&& Objects.equals( this.otherwise, that.otherwise );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( fixture, whenFragments, otherwise );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

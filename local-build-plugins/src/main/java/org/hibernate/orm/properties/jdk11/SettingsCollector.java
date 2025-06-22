@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.properties.jdk11;
 
@@ -259,7 +257,7 @@ public class SettingsCollector {
 		if ( !isValidFieldJavadocStructure( fieldJavadocElement ) ) {
 			throw new IllegalStateException(
 					"Javadoc's DOM doesn't match the expected structure. " +
-							"This may lead to unexpected results in rendered configuration properties in the User Guide." 
+							"This may lead to unexpected results in rendered configuration properties in the User Guide."
 			);
 		}
 
@@ -313,7 +311,7 @@ public class SettingsCollector {
 		//   <li class="blockList">
 		//     <h4>DIALECT</h4>
 		//     <pre>
-		//         <!-- might have @Incubating, @Deprecated or @Remove 
+		//         <!-- might have @Incubating, @Deprecated or @Remove
 		//     </pre>
 		//     ...
 		//     <div class="block">{COMMENT}</div>
@@ -322,11 +320,11 @@ public class SettingsCollector {
 		//     </dl>
 		//   </li>
 		// </ul>
-		
+
 		if ( !"li".equals( fieldJavadocElement.tagName() ) ) {
 			return false;
 		}
-		
+
 		if ( !fieldJavadocElement.hasClass( "blockList" ) ) {
 			return false;
 		}

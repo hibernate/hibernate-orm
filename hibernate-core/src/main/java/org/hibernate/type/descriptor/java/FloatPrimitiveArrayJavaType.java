@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,9 +12,9 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -24,6 +23,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Christian Beikov
  */
+@AllowReflection // Needed for arbitrary array wrapping/unwrapping
 public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], Float> {
 
 	public static final FloatPrimitiveArrayJavaType INSTANCE = new FloatPrimitiveArrayJavaType();
@@ -34,6 +34,11 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 
 	protected FloatPrimitiveArrayJavaType(JavaType<Float> baseDescriptor) {
 		super( float[].class, baseDescriptor, new ArrayMutabilityPlan() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof float[];
 	}
 
 	@Override
@@ -76,7 +81,7 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 		final char lastChar = charSequence.charAt( charSequence.length() - 1 );
 		final char firstChar = charSequence.charAt( 0 );
 		if ( firstChar != '{' || lastChar != '}' ) {
-			throw new IllegalArgumentException( "Cannot parse given string into array of strings. First and last character must be { and }" );
+			throw new IllegalArgumentException( "Cannot parse given string into array of Floats. First and last character must be { and }" );
 		}
 		final int len = charSequence.length();
 		int elementStart = 1;
@@ -118,7 +123,7 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 		else if ( type == BinaryStream.class ) {
 			// BinaryStream can only be requested if the value should be serialized
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( SerializationHelper.serialize( value ) );
+			return (X) new ArrayBackedBinaryStream( SerializationHelper.serialize( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -138,10 +143,10 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -149,16 +154,16 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 			}
 		}
 
-		if ( value instanceof float[] ) {
-			return (float[]) value;
+		if ( value instanceof float[] floats ) {
+			return floats;
 		}
-		else if ( value instanceof byte[] ) {
+		else if ( value instanceof byte[] bytes ) {
 			// When the value is a byte[], this is a deserialization request
-			return (float[]) SerializationHelper.deserialize( (byte[]) value );
+			return (float[]) SerializationHelper.deserialize( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return (float[]) SerializationHelper.deserialize( ( (BinaryStream) value ).getBytes() );
+			return (float[]) SerializationHelper.deserialize( binaryStream.getBytes() );
 		}
 		else if ( value.getClass().isArray() ) {
 			final float[] wrapped = new float[Array.getLength( value )];
@@ -167,12 +172,11 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 			}
 			return wrapped;
 		}
-		else if ( value instanceof Float ) {
+		else if ( value instanceof Float floatValue) {
 			// Support binding a single element as parameter value
-			return new float[]{ (float) value };
+			return new float[]{ floatValue };
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			final float[] wrapped = new float[collection.size()];
 			int i = 0;
 			for ( Object e : collection ) {
@@ -184,27 +188,10 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 		throw unknownWrap( value.getClass() );
 	}
 
-	private static class ArrayMutabilityPlan implements MutabilityPlan<float[]> {
-
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<float[]> {
 		@Override
-		public boolean isMutable() {
-			return true;
+		protected float[] deepCopyNotNull(float[] value) {
+			return value.clone();
 		}
-
-		@Override
-		public float[] deepCopy(float[] value) {
-			return value == null ? null : value.clone();
-		}
-
-		@Override
-		public Serializable disassemble(float[] value, SharedSessionContract session) {
-			return deepCopy( value );
-		}
-
-		@Override
-		public float[] assemble(Serializable cached, SharedSessionContract session) {
-			return deepCopy( (float[]) cached );
-		}
-
 	}
 }

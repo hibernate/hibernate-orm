@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -137,16 +137,13 @@ public class EntityHierarchyBuilder {
 			MappingDocument mappingDocument,
 			JaxbHbmEntityBaseDefinition entityBinding,
 			AbstractEntitySourceImpl container) {
-		if ( entityBinding instanceof JaxbHbmDiscriminatorSubclassEntityType ) {
-			final JaxbHbmDiscriminatorSubclassEntityType jaxbSubclass = (JaxbHbmDiscriminatorSubclassEntityType) entityBinding;
+		if ( entityBinding instanceof JaxbHbmDiscriminatorSubclassEntityType jaxbSubclass ) {
 			processElements( mappingDocument, jaxbSubclass.getSubclass(), container );
 		}
-		else if ( entityBinding instanceof JaxbHbmJoinedSubclassEntityType ) {
-			final JaxbHbmJoinedSubclassEntityType jaxbJoinedSubclass = (JaxbHbmJoinedSubclassEntityType) entityBinding;
+		else if ( entityBinding instanceof JaxbHbmJoinedSubclassEntityType jaxbJoinedSubclass ) {
 			processElements( mappingDocument, jaxbJoinedSubclass.getJoinedSubclass(), container );
 		}
-		else if ( entityBinding instanceof JaxbHbmUnionSubclassEntityType ) {
-			final JaxbHbmUnionSubclassEntityType jaxbUnionSubclass = (JaxbHbmUnionSubclassEntityType) entityBinding;
+		else if ( entityBinding instanceof JaxbHbmUnionSubclassEntityType jaxbUnionSubclass ) {
 			processElements( mappingDocument, jaxbUnionSubclass.getUnionSubclass(), container );
 		}
 	}

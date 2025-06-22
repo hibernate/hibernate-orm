@@ -1,221 +1,49 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 import java.nio.charset.StandardCharsets
-import java.util.function.Function
 
 import groovy.json.JsonSlurper
 
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-apply from: rootProject.file( 'gradle/module.gradle' )
 
-apply plugin: 'org.hibernate.orm.build.doc-pub'
-apply plugin: 'org.hibernate.orm.build.jdks'
-apply plugin: 'idea'
+
+plugins {
+    id "local.module"
+    id "org.hibernate.orm.build.doc-pub"
+    id "org.hibernate.orm.build.jdks"
+
+    id "idea"
+}
 
 idea.module {
 }
 
 // skip building this when `build` task is run from root, as many of our CI jobs do
 tasks.build.dependsOn.clear()
+tasks.build.enabled false
 
 
-def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) {
-    group "documentation"
-    description "Stages the Integration Guide as part of preparing for release"
-    dependsOn ":documentation:renderIntegrationGuides"
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/integrationguide" ) }
-    into layout.buildDirectory.dir( "documentation/integrationguide" )
-}
-
-def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
-    group 'documentation'
-    description "Stages the Getting Started Guide as part of preparing for release"
-    dependsOn ':documentation:renderGettingStartedGuides'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/quickstart" ) }
-    into layout.buildDirectory.dir( "documentation/quickstart" )
-}
-
-def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Topical Guide as part of preparing for release"
-    dependsOn ':documentation:renderTopicalGuides'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/topical" ) }
-    into layout.buildDirectory.dir( "documentation/topical" )
-
-}
-
-def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Introduction Guide as part of preparing for release"
-    dependsOn ':documentation:renderIntroductionGuides'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/introduction" ) }
-    into layout.buildDirectory.dir( "documentation/introduction" )
-}
-
-def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Query Language Guide as part of preparing for release"
-    dependsOn ':documentation:renderQueryLanguageGuides'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
-    into layout.buildDirectory.dir( "documentation/querylanguage" )
-}
-
-def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Repositories Guide as part of preparing for release"
-    dependsOn ':documentation:renderRepositories'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/repositories" ) }
-    into layout.buildDirectory.dir( "documentation/repositories" )
-}
-
-def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
-    group 'documentation'
-    description "Stages the User Guide as part of preparing for release"
-    dependsOn ':documentation:renderUserGuides'
-    description "Stages the User Guide as part of preparing for release"
-    dependsOn ':documentation:renderUserGuides'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/userguide" ) }
-    into layout.buildDirectory.dir( "documentation/userguide" )
-}
-
-
-def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
-    group 'documentation'
-    description "Stages the Migration Guide as part of preparing for release"
-    dependsOn ':documentation:renderMigrationGuide'
-
-    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/migration-guide" ) }
-    into layout.buildDirectory.dir( "documentation/migration-guide" )
-}
-
-tasks.named( "publishMigrationGuide" ).configure {
-    dependsOn stageMigrationGuide
-}
-
-def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages ORM @Incubating report"
-    dependsOn ':documentation:generateIncubationReport'
-
-    tasks.stageOrmReports.dependsOn task
-
-    from project( ":documentation" ).tasks.generateIncubationReport
-    into layout.buildDirectory.dir( "documentation/incubating" )
-}
-
-def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the @Internal report"
-    dependsOn ':documentation:generateInternalsReport'
-
-    from project( ":documentation" ).tasks.generateInternalsReport
-    into layout.buildDirectory.dir( "documentation/internals" )
-}
-
-def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
-    group 'documentation'
-    description "Stages the @Deprecated/@Remove report"
-
-    dependsOn ':documentation:generateDeprecationReport'
-
-    from project( ":documentation" ).tasks.generateDeprecationReport
-    into layout.buildDirectory.dir( "documentation/deprecated" )
-}
-
-def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the logging report"
-
-    dependsOn ':documentation:renderLoggingReport'
-
-    from project( ":documentation" ).tasks.renderLoggingReport
-    into layout.buildDirectory.dir( "documentation/logging" )
-}
-
-def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
-    group 'documentation'
-    description "Stages the supported Dialects report"
-    dependsOn ':documentation:renderDialectReport'
-
-    from project( ":documentation" ).tasks.renderDialectReport
-    into "${buildDir}/documentation/dialect"
-}
-
-def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
-    group 'documentation'
-    description "Stages all ORM reports as part of preparing for release"
-
-    dependsOn ':documentation:generateReports'
-    dependsOn stageIncubationReportTask
-    dependsOn stageInternalsReportTask
-    dependsOn stageDeprecationReportTask
-    dependsOn stageLoggingReportTask
-    dependsOn stageDialectReportTask
-}
-
-def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
-    group 'documentation'
-    description "Stages the aggregated Javadocs"
-    dependsOn ':documentation:javadoc'
-
-    from project( ":documentation" ).tasks.javadoc
-    into "${buildDir}/documentation/javadocs"
-}
-
-/**
- * Assembles all documentation into the {buildDir}/documentation directory.
- *
- * Depends on building the docs
- */
-def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
-    group 'documentation'
-    description 'Assembles all documentation into the {buildDir}/documentation directory'
-
-    dependsOn ':documentation:buildDocsForPublishing'
-    dependsOn stageJavadocsTask
-    dependsOn stageQuickstartTask
-    dependsOn stageIntroductionGuideTask
-    dependsOn stageUserGuideTask
-    dependsOn stageQueryGuideTask
-    dependsOn stageRepositoriesGuideTask
-    dependsOn stageIntegrationGuideTask
-    dependsOn stageTopicalGuideTask
-    dependsOn stageMigrationGuideTask
-    dependsOn stageOrmReportsTask
-}
-
-tasks.named( "uploadDocumentation" ) {
-    group = "documentation"
-    description = "Uploads assembled documentation to the doc server"
-    dependsOn assembleDocumentationTask
-
-    doFirst {
-        if ( rootProject.ormVersion.isSnapshot ) {
-            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
-            throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
-        }
-        else {
-            logger.lifecycle( "Uploading documentation ..." )
-        }
-    }
-
-    doLast {
-        logger.lifecycle( 'Done uploading documentation' )
-    }
-}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Stage - Release Prepare : see `releasePrepare`
+//
+// This coordinates:
+//      1. some pre-release checks
+//		2. updating the changelog
+//		3. update version.properties to RELEASE_VERSION
+//		4. assemble documentation (we want this to run here as a "check")
+//		5. git commit (changelog and RELEASE_VERSION)
+//		6. update version.properties to DEVELOPMENT_VERSION
+//		7. git tag
+//		8. git commit (DEVELOPMENT_VERSION)
+//
+// and at some point in these steps, it assembles documentation.  the order is unimportant
+//
+//	NOTE : ideally we'd switch (6) and (7).  it works out as-is, but confusing
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def releaseChecksTask = tasks.register( "releaseChecks" ) {
-    group 'Release'
+    group 'release-prepare'
     description 'Checks and preparation for release'
 
     doFirst {
@@ -271,94 +99,337 @@ def releaseChecksTask = tasks.register( "releaseChecks" ) {
     }
 }
 
-def preVerifyReleaseTask = tasks.register( "preVerifyRelease" ) {
-    group 'Release'
-    description 'Pre-verifies a release job execution (Run locally before a CI release)'
-
-    dependsOn tasks.clean
-    dependsOn assembleDocumentationTask
-}
-
 def changeLogFileTask = tasks.register( "changeLogFile" ) {
-    group 'Release'
+    group 'release-prepare'
     description 'Updates the changelog.txt file based on the change-log report from Jira'
     dependsOn releaseChecksTask
 
     doFirst {
         logger.lifecycle( "Appending version `${project.releaseVersion}` to changelog..." )
-        ChangeLogFile.update( ormVersion.fullName );
+        ChangeLogFile.update( ormBuildDetails.hibernateVersion.fullName );
     }
 }
 
 def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
-    group 'Release'
+    group 'release-prepare'
     description 'Updates `gradle/version.properties` file to the specified release-version'
 
     dependsOn releaseChecksTask
 
     doFirst {
-        logger.lifecycle( "Updating version-file to release-version : `${project.releaseVersion}`" )
-        updateVersionFile( project.releaseVersion )
+        def releaseVersion = ormBuildDetails.releaseDetails.releaseVersion
+        logger.lifecycle( "Updating version-file to release-version : `${releaseVersion}`" )
+        updateVersionFile( releaseVersion.toString() )
     }
 }
 
-def gitPreparationForReleaseTask = tasks.register( 'gitPreparationForRelease' ) {
+def gitPreStepsTask = tasks.register( 'gitPreSteps' ) {
+    group "release-prepare"
+    description "update changelog, update version file and commit"
+
     dependsOn releaseChecksTask
     dependsOn changeLogFileTask
     dependsOn changeToReleaseVersionTask
 
     doLast {
-        logger.lifecycle( "Performing pre-steps Git commit : `${project.releaseVersion}`" )
+        def releaseVersion = ormBuildDetails.releaseDetails.releaseVersion
+        logger.lifecycle( "Performing pre-steps Git commit : `${releaseVersion}`" )
         executeGitCommand( 'add', '.' )
-        executeGitCommand( 'commit', '-m', "Pre-steps for release : `${project.ormVersion.fullName}`" )
+        executeGitCommand( 'commit', '-m', "Pre-steps for release : `${releaseVersion.fullName}`" )
     }
 }
 
-def changeToDevelopmentVersionTask = tasks.register( 'changeToDevelopmentVersion' ) {
-    group 'Release'
-    description 'Updates `gradle/version.properties` file to the specified development-version'
-
-    dependsOn releaseChecksTask
+def gitPostStepsTask = tasks.register( 'gitPostSteps' ) {
+    group "release-prepare"
+    description "possibly create tag. update version-file and commit "
 
     doFirst {
-        logger.lifecycle( "Updating version-file to development-version : `${project.developmentVersion}`" )
-        updateVersionFile( project.developmentVersion )
     }
-}
-
-def releasePreparePostGitTask = tasks.register( 'gitTasksAfterRelease' ) {
-    dependsOn changeToDevelopmentVersionTask
 
     doLast {
-        if ( project.createTag ) {
-            logger.lifecycle( "Tagging release : `${project.releaseTag}`..." )
-            executeGitCommand( 'tag', '-a', project.releaseTag, '-m', "Release $project.ormVersion.fullName" )
+        def releaseDetails = ormBuildDetails.releaseDetails
+        def releaseVersion = releaseDetails.releaseVersion
+        def developmentVersion = releaseDetails.developmentVersion
+
+        if ( releaseDetails.shouldCreateTag() ) {
+            logger.lifecycle( "Tagging release : `${releaseDetails.tagNameToUse}`..." )
+            executeGitCommand( 'tag', '-a', releaseDetails.tagNameToUse, '-m', "Release $releaseVersion.fullName" )
         }
 
-        logger.lifecycle( "Performing post-steps Git commit : `${project.releaseVersion}`" )
+        logger.lifecycle( "Updating version-file to development-version : `${developmentVersion.fullName}`" )
+        updateVersionFile( developmentVersion.toString() )
+
+        logger.lifecycle( "Performing post-steps Git commit : `${releaseVersion}`" )
         executeGitCommand( 'add', '.' )
-        executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
+        executeGitCommand( 'commit', '-m', "Post-steps for release : `${releaseVersion.fullName}`" )
     }
 }
 
 void updateVersionFile(String version) {
     logger.lifecycle( "Updating `gradle/version.properties` version to `${version}`" )
-    project.ormVersionFile.text = "hibernateVersion=${version}"
+    ormBuildDetails.versionFileAccess.get().text = "hibernateVersion=${version}"
 }
 
-def publishReleaseArtifactsTask = tasks.register( 'publishReleaseArtifacts' ) {
-    mustRunAfter gitPreparationForReleaseTask
+tasks.register("releasePrepare") {
+    group "release-prepare"
+    description "Scripted release 'Release Prepare' stage"
 
-    dependsOn uploadDocumentation
-    dependsOn uploadDocumentationDescriptor
+    dependsOn releaseChecksTask
+    dependsOn "assembleDocumentation"
+    dependsOn gitPreStepsTask
+
+    finalizedBy gitPostStepsTask
 }
 
-def releasePerformPostGitTask = tasks.register( 'gitTasksAfterReleasePerform' ) {
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Assemble documentation as part of Release Prepare
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) {
+    group "documentation"
+    description "Stages the Integration Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ":documentation:renderIntegrationGuides"
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/integrationguide" ) }
+    into layout.buildDirectory.dir( "documentation/integrationguide" )
+}
+
+def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
+    group 'documentation'
+    description "Stages the Getting Started Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderGettingStartedGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/quickstart" ) }
+    into layout.buildDirectory.dir( "documentation/quickstart" )
+}
+
+def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Topical Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderTopicalGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/topical" ) }
+    into layout.buildDirectory.dir( "documentation/topical" )
+
+}
+
+def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Introduction Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderIntroductionGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/introduction" ) }
+    into layout.buildDirectory.dir( "documentation/introduction" )
+}
+
+def stageQueryGuideTask = tasks.register( "stageQueryGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Query Language Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderQueryLanguageGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
+    into layout.buildDirectory.dir( "documentation/querylanguage" )
+}
+
+def stageRepositoriesGuideTask = tasks.register( "stageRepositoriesGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Repositories Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderRepositories'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/repositories" ) }
+    into layout.buildDirectory.dir( "documentation/repositories" )
+}
+
+def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
+    group 'documentation'
+    description "Stages the User Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderUserGuides'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/userguide" ) }
+    into layout.buildDirectory.dir( "documentation/userguide" )
+}
+
+
+def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Migration Guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderMigrationGuide'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/migration-guide" ) }
+    into layout.buildDirectory.dir( "documentation/migration-guide" )
+}
+
+def stageWhatsNewGuideTask = tasks.register( "stageWhatsNewGuide", Copy ) {
+    group 'documentation'
+    description "Stages the What's New guide as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderWhatsNew'
+
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/whats-new" ) }
+    into layout.buildDirectory.dir( "documentation/whats-new" )
+}
+
+tasks.named( "publishMigrationGuide" ).configure {
+    dependsOn stageMigrationGuideTask
+}
+
+def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages ORM @Incubating report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateIncubationReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.generateIncubationReport
+    into layout.buildDirectory.dir( "documentation/incubating" )
+}
+
+def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages the @Internal report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateInternalsReport'
+
+    from project( ":documentation" ).tasks.generateInternalsReport
+    into layout.buildDirectory.dir( "documentation/internals" )
+}
+
+def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
+    group 'documentation'
+    description "Stages the @Deprecated/@Remove report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateDeprecationReport'
+
+    from project( ":documentation" ).tasks.generateDeprecationReport
+    into layout.buildDirectory.dir( "documentation/deprecated" )
+}
+
+def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages the logging report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderLoggingReport'
+
+    from project( ":documentation" ).tasks.renderLoggingReport
+    into layout.buildDirectory.dir( "documentation/logging" )
+}
+
+def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages the supported Dialects report as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:renderDialectReport'
+
+    from project( ":documentation" ).tasks.renderDialectReport
+    into project.layout.buildDirectory.dir("documentation/dialect")
+}
+
+def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
+    group 'documentation'
+    description "Stages all ORM reports as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:generateReports'
+    dependsOn stageIncubationReportTask
+    dependsOn stageInternalsReportTask
+    dependsOn stageDeprecationReportTask
+    dependsOn stageLoggingReportTask
+    dependsOn stageDialectReportTask
+}
+
+def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
+    group 'documentation'
+    description "Stages the aggregated Javadocs as part of assembling documentation in preparation for release"
+
+    dependsOn ':documentation:javadoc'
+
+    from project( ":documentation" ).tasks.javadoc
+    into project.layout.buildDirectory.dir("documentation/javadocs")
+}
+
+/**
+ * Assembles all documentation into the {buildDir}/documentation directory.
+ *
+ * Depends on building the docs
+ */
+def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
+    group 'documentation'
+    description 'Assembles all documentation into the {buildDir}/documentation directory'
+
+    dependsOn ':documentation:buildDocsForPublishing'
+    dependsOn stageJavadocsTask
+    dependsOn stageQuickstartTask
+    dependsOn stageIntroductionGuideTask
+    dependsOn stageUserGuideTask
+    dependsOn stageQueryGuideTask
+    dependsOn stageRepositoriesGuideTask
+    dependsOn stageIntegrationGuideTask
+    dependsOn stageTopicalGuideTask
+    dependsOn stageMigrationGuideTask
+    dependsOn stageWhatsNewGuideTask
+    dependsOn stageOrmReportsTask
+}
+
+
+
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Stage - Release Perform : see `releasePerform`
+//
+// This stage is all about publishing artifacts -
+//      * On the `:release` project, this means uploading documentation
+//      * On the `:hibernate-gradle-plugin` project, this means publishing to the Plugin Portal
+//      * On the published java modules, this means publishing its artifacts to Sonatype
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def uploadDocumentationTask = tasks.named( "uploadDocumentation" ) {
+    group = "release-perform"
+    description = "Uploads assembled documentation to the doc server"
+    dependsOn assembleDocumentationTask
+
+    doFirst {
+        if ( ormBuildDetails.hibernateVersion.isSnapshot ) {
+            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
+            throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
+        }
+        else {
+            logger.lifecycle( "Uploading documentation ..." )
+        }
+    }
 
     doLast {
-        if ( project.createTag ) {
+        logger.lifecycle( 'Done uploading documentation' )
+    }
+}
+
+tasks.register( 'releasePerform' ) {
+    group = "release-perform"
+    description "Scripted release 'Release Perform' stage"
+
+    dependsOn uploadDocumentationTask
+    dependsOn uploadDocumentationDescriptor
+
+    doFirst {
+        if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {
+            assert project.gitRemote != null
+            assert project.gitBranch != null
+            assert project.ormBuildDetails.releaseDetails.tagNameToUse != null
+        }
+    }
+
+    doLast {
+        if ( ormBuildDetails.releaseDetails.shouldCreateTag() ) {
             logger.lifecycle( "Pushing branch and tag to remote `${project.gitRemote}`..." )
-            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.releaseTag )
+            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.ormBuildDetails.releaseDetails.tagNameToUse )
         }
         else {
             logger.lifecycle( "Pushing branch to remote `${project.gitRemote}`..." )
@@ -367,40 +438,14 @@ def releasePerformPostGitTask = tasks.register( 'gitTasksAfterReleasePerform' ) 
     }
 }
 
-def releasePrepareTask = tasks.register( 'releasePrepare' ) {
-    group 'Release'
-    description 'Performs release preparations on local check-out, including updating changelog'
 
-    // we want to assemble the docs here so that we catch problems early (and even during "dry run" for CI releases)
-    dependsOn assembleDocumentationTask
-    dependsOn gitPreparationForReleaseTask
 
-    finalizedBy releasePreparePostGitTask
-}
 
-def releasePerformTask = tasks.register( 'releasePerform' ) {
-    group 'Release'
-    description 'Performs a release on local check-out, including updating changelog and '
 
-    dependsOn publishReleaseArtifactsTask
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Utilities
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    finalizedBy releasePerformPostGitTask
-}
-
-def releaseTask = tasks.register( 'release' ) {
-    group 'Release'
-    description 'Performs a release on local check-out, including updating changelog and '
-
-    dependsOn releasePrepareTask
-    dependsOn releasePerformTask
-}
-
-def ciReleaseTask = tasks.register( 'ciRelease' ) {
-    group 'Release'
-    description 'Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one.'
-
-    dependsOn releaseTask
-}
 
 static String executeGitCommand(Object ... subcommand){
     List<Object> command = ['git']
@@ -480,15 +525,15 @@ class ChangeLogFile {
         return releaseNotes.notes
     }
 
-    private static getVersionId(jsonReleaseNotes, String restReleaseVersion) {
-        def fixVersions = jsonReleaseNotes.issues.get( 0 ).fields.fixVersions
-
-        for ( def fixVersion : fixVersions ) {
-            if ( fixVersion.name.equals( restReleaseVersion ) ) {
-                return fixVersion.id
+    private static String getVersionId(jsonReleaseNotes, String restReleaseVersion) {
+        for ( def issue : jsonReleaseNotes.issues ) {
+            for ( def fixVersion : issue.fields.fixVersions ) {
+                if ( fixVersion.name == restReleaseVersion ) {
+                    return fixVersion.id
+                }
             }
         }
-        throw new GradleException( "Unable to determine the version id of the current release." )
+        throw new GradleException("No issues found for current release version (" + restReleaseVersion + "), aborting.")
     }
 }
 
@@ -522,62 +567,3 @@ class ReleaseNote {
     }
 }
 
-
-gradle.getTaskGraph().whenReady {tg->
-
-    if ( ( tg.hasTask( project.tasks.releasePrepare ) || tg.hasTask( project.tasks.releasePerform ) )
-            && ! project.getGradle().getStartParameter().isDryRun() ) {
-        String releaseVersionLocal
-        String developmentVersionLocal
-
-        def console = tg.hasTask( project.tasks.release ) && !tg.hasTask( project.tasks.ciRelease )
-                ? System.console()
-                : null
-
-        if (project.hasProperty('releaseVersion')) {
-            releaseVersionLocal = project.property('releaseVersion')
-        }
-        else {
-            if (console) {
-                // prompt for `releaseVersion`
-                releaseVersionLocal = console.readLine('> Enter the release version: ')
-            }
-            else {
-                throw new GradleException(
-                        "`release`-related tasks require the following properties: 'releaseVersion', 'developmentVersion'"
-                )
-            }
-        }
-
-        if (project.hasProperty('developmentVersion')) {
-            developmentVersionLocal = project.property('developmentVersion')
-        }
-        else {
-            if (console) {
-                // prompt for `developmentVersion`
-                developmentVersionLocal = console.readLine('> Enter the next development version: ')
-            }
-            else {
-                throw new GradleException(
-                        "`release`-related tasks require the following properties: 'releaseVersion', 'developmentVersion'"
-                )
-            }
-        }
-
-        assert releaseVersionLocal != null && developmentVersionLocal != null;
-
-        // set up information for the release-related tasks
-        project.ext {
-            releaseVersion = releaseVersionLocal;
-            developmentVersion = developmentVersionLocal;
-            createTag = !project.hasProperty('noTag')
-            releaseTag = project.createTag ? determineReleaseTag(releaseVersionLocal) : ''
-        }
-    }
-}
-
-static String determineReleaseTag(String releaseVersion) {
-    return releaseVersion.endsWith( '.Final' )
-            ? releaseVersion.replace( ".Final", "" )
-            : releaseVersion;
-}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -18,7 +18,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Looks for the configuration property {@value AvailableSettings#MERGE_ENTITY_COPY_OBSERVER} and registers
- * the matching {@link EntityCopyObserverFactory} based on the configuration value.
+ * the matching {@link EntityCopyObserverFactory} based on the configuration observerClass.
  * <p>
  * For known implementations some optimisations are possible, such as reusing a singleton for the stateless
  * implementations. When a user plugs in a custom {@link EntityCopyObserver} we take a defensive approach.
@@ -32,7 +32,10 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 	@Override
 	public EntityCopyObserverFactory initiateService(final Map<String, Object> configurationValues, final ServiceRegistryImplementor registry) {
 		final Object value = getConfigurationValue( configurationValues );
-		if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME )
+		if ( value instanceof EntityCopyObserverFactory factory ) {
+			return factory;
+		}
+		else if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
 			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyNotAllowedObserver.SHORT_NAME );
 			return EntityCopyNotAllowedObserver.FACTORY_OF_SELF;
@@ -48,15 +51,16 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 			return EntityCopyAllowedLoggedObserver.FACTORY_OF_SELF;
 		}
 		else {
-			//We load an "example instance" just to get its Class;
-			//this might look excessive, but it also happens to test eagerly (at boot) that we can actually construct these
-			//and that they are indeed of the right type.
-			EntityCopyObserver exampleInstance =
+			// We load an "example instance" just to get its Class;
+			// this might look excessive, but it also happens to test eagerly
+			// (at boot) that we can actually construct these and that they
+			// are indeed of the right type.
+			final EntityCopyObserver exampleInstance =
 					registry.requireService( StrategySelector.class )
 							.resolveStrategy( EntityCopyObserver.class, value );
-			Class<?> observerType = exampleInstance.getClass();
-			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type %s", observerType.getName() );
-			return new EntityObserversFactoryFromClass( observerType );
+			final Class<? extends EntityCopyObserver> observerType = exampleInstance.getClass();
+			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type '%s'", observerType.getName() );
+			return new EntityCopyObserverFactoryFromClass( observerType );
 		}
 	}
 
@@ -65,8 +69,8 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		if ( value == null ) {
 			return EntityCopyNotAllowedObserver.SHORT_NAME; //default
 		}
-		else if ( value instanceof String ) {
-			return value.toString().trim();
+		else if ( value instanceof String string ) {
+			return string.trim();
 		}
 		else {
 			return value;
@@ -78,23 +82,17 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		return EntityCopyObserverFactory.class;
 	}
 
-	private static class EntityObserversFactoryFromClass implements EntityCopyObserverFactory {
-
-		private final Class<?> value;
-
-		public EntityObserversFactoryFromClass(Class<?> value) {
-			this.value = value;
-		}
+	private record EntityCopyObserverFactoryFromClass(Class<? extends EntityCopyObserver> observerClass)
+			implements EntityCopyObserverFactory {
 
 		@Override
-		public EntityCopyObserver createEntityCopyObserver() {
-			try {
-				return (EntityCopyObserver) value.newInstance();
-			}
-			catch (Exception e) {
-				throw new HibernateException( "Could not instantiate class of type " + value.getName() );
+			public EntityCopyObserver createEntityCopyObserver() {
+				try {
+					return observerClass.newInstance();
+				}
+				catch (Exception e) {
+					throw new HibernateException( "Could not instantiate class of type " + observerClass.getName() );
+				}
 			}
 		}
-	}
-
 }

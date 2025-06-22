@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idgen.userdefined;
@@ -306,8 +306,13 @@ public class MixedTimingGeneratorsTest {
 		}
 
 		@Override
-		public boolean generatedOnExecution(Object owner, SharedSessionContractImplementor session) {
-			return !( (RandomEntity) owner ).getName().contains( "random" );
+		public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
+			return !generatedBeforeExecution( entity, session );
+		}
+
+		@Override
+		public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
+			return ( (RandomEntity) entity ).getName().contains( "random" );
 		}
 	}
 
@@ -333,8 +338,13 @@ public class MixedTimingGeneratorsTest {
 		}
 
 		@Override
-		public boolean generatedOnExecution(Object owner, SharedSessionContractImplementor session) {
-			return !( (StringGeneratedEntity) owner ).getName().contains( "generated" );
+		public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
+			return !generatedBeforeExecution( entity, session );
+		}
+
+		@Override
+		public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
+			return ( (StringGeneratedEntity) entity ).getName().contains( "generated" );
 		}
 
 		@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -7,6 +7,7 @@ package org.hibernate.dialect;
 import java.util.Date;
 import java.util.Map;
 
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleObjectStateException;
@@ -21,11 +22,12 @@ import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
@@ -34,7 +36,7 @@ import org.hibernate.mapping.UniqueKey;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -191,7 +193,8 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
+
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<byte[]> byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
 		final BasicType<Long> longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
@@ -224,7 +227,7 @@ public class SpannerDialect extends Dialect {
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		// Mathematical Functions
 		functionFactory.log();
@@ -733,6 +736,30 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		throw new UnsupportedOperationException(
+				"Cloud Spanner does not support selecting for lock acquisition." );
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
 		throw new UnsupportedOperationException(
 				"Cloud Spanner does not support selecting for lock acquisition." );
@@ -846,6 +873,21 @@ public class SpannerDialect extends Dialect {
 		return LimitOffsetLimitHandler.INSTANCE;
 	}
 
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 	/* Type conversion and casting */
 
 	/**
@@ -876,7 +918,7 @@ public class SpannerDialect extends Dialect {
 
 		@Override
 		public void lock(
-				Object id, Object version, Object object, int timeout, EventSource session)
+				Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
 				throws StaleObjectStateException, LockingStrategyException {
 			// Do nothing. Cloud Spanner doesn't have have locking strategies.
 		}

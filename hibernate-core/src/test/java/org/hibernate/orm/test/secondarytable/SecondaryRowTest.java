@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.secondarytable;
@@ -75,9 +75,7 @@ public class SecondaryRowTest {
 
 	@AfterEach
 	void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createSelectionQuery( "from Record" ).stream().forEach( session::remove );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private static void verifySecondaryRows(String table, int expectedCount, SessionFactoryScope sfScope) {

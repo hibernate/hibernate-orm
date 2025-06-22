@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.spi.QueryEngine;
@@ -25,6 +25,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.util.Collections;
 import java.util.List;
 
 import jakarta.persistence.criteria.Expression;
@@ -115,7 +116,7 @@ public class InsertSubstringOverlayEmulation
 										startPlusLength,
 										ComparisonOperator.GREATER_THAN,
 										lengthFunction.generateSqmExpression(
-												asList( string ),
+												Collections.singletonList( string ),
 												intType,
 												queryEngine
 										),

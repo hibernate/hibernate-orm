@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
 
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +27,13 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NONE = new ArgumentsValidator() {
 		@Override
+		public void validate(
+				List<? extends SqmTypedNode<?>> arguments,
+				String functionName,
+				BindingContext bindingContext) {
+			// nothing to do
+		}
+		@Override
 		public String getSignature() {
 			return "([arg0[, ...]])";
 		}
@@ -40,7 +47,7 @@ public final class StandardArgumentsValidators {
 		public void validate(
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
-				TypeConfiguration typeConfiguration) {
+				BindingContext bindingContext) {
 			if ( !arguments.isEmpty() ) {
 				throw new FunctionArgumentException(
 						String.format(
@@ -68,7 +75,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					TypeConfiguration typeConfiguration) {
+					BindingContext bindingContext) {
 				if ( arguments.size() < minNumOfArgs ) {
 					throw new FunctionArgumentException(
 							String.format(
@@ -105,7 +112,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					TypeConfiguration typeConfiguration) {
+					BindingContext bindingContext) {
 				if ( arguments.size() != number ) {
 					throw new FunctionArgumentException(
 							String.format(
@@ -144,7 +151,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					TypeConfiguration typeConfiguration) {
+					BindingContext bindingContext) {
 				if ( arguments.size() > maxNumOfArgs ) {
 					throw new FunctionArgumentException(
 							String.format(
@@ -179,7 +186,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					TypeConfiguration typeConfiguration) {
+					BindingContext bindingContext) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
 					throw new FunctionArgumentException(
 							String.format(
@@ -218,7 +225,7 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					TypeConfiguration typeConfiguration) {
+					BindingContext bindingContext) {
 				for ( SqmTypedNode<?> argument : arguments ) {
 					Class<?> argType = argument.getNodeJavaType().getJavaTypeClass();
 					if ( !javaType.isAssignableFrom( argType ) ) {
@@ -247,11 +254,11 @@ public final class StandardArgumentsValidators {
 			public void validate(
 					List<? extends SqmTypedNode<?>> arguments,
 					String functionName,
-					TypeConfiguration typeConfiguration) {
+					BindingContext bindingContext) {
 				validators.forEach( individualValidator -> individualValidator.validate(
 						arguments,
 						functionName,
-						typeConfiguration
+						bindingContext
 				) );
 			}
 		};

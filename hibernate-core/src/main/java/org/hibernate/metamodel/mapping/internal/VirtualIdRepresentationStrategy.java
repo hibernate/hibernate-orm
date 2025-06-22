@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
@@ -85,8 +84,8 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		}
 
 		@Override
-		public Object instantiate(ValueAccess valuesAccess, SessionFactoryImplementor sessionFactory) {
-			final Object instantiated = entityInstantiator.instantiate( sessionFactory );
+		public Object instantiate(ValueAccess valuesAccess) {
+			final Object instantiated = entityInstantiator.instantiate();
 			if ( valuesAccess != null ) {
 				final Object[] values = valuesAccess.getValues();
 				if ( values != null ) {
@@ -97,13 +96,13 @@ public class VirtualIdRepresentationStrategy implements EmbeddableRepresentation
 		}
 
 		@Override
-		public boolean isInstance(Object object, SessionFactoryImplementor sessionFactory) {
-			return entityInstantiator.isInstance( object, sessionFactory );
+		public boolean isInstance(Object object) {
+			return entityInstantiator.isInstance( object );
 		}
 
 		@Override
-		public boolean isSameClass(Object object, SessionFactoryImplementor sessionFactory) {
-			return entityInstantiator.isSameClass( object, sessionFactory );
+		public boolean isSameClass(Object object) {
+			return entityInstantiator.isSameClass( object );
 		}
 	}
 }

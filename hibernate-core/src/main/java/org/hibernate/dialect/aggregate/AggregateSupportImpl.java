@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
@@ -12,7 +12,14 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.JSON_ARRAY;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 public class AggregateSupportImpl implements AggregateSupport {
 
@@ -24,8 +31,9 @@ public class AggregateSupportImpl implements AggregateSupport {
 			String placeholder,
 			String aggregateParentReadExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
-			Column column) {
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 
@@ -33,7 +41,7 @@ public class AggregateSupportImpl implements AggregateSupport {
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
-			AggregateColumn aggregateColumn,
+			int aggregateColumnTypeCode,
 			Column column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentAssignmentExpression: " + getClass().getName() );
 	}
@@ -81,7 +89,11 @@ public class AggregateSupportImpl implements AggregateSupport {
 
 	@Override
 	public int aggregateComponentSqlTypeCode(int aggregateColumnSqlTypeCode, int columnSqlTypeCode) {
-		return columnSqlTypeCode;
+		return switch (aggregateColumnSqlTypeCode) {
+			case JSON -> columnSqlTypeCode == ARRAY ? JSON_ARRAY : columnSqlTypeCode;
+			case SQLXML -> columnSqlTypeCode == ARRAY ? XML_ARRAY : columnSqlTypeCode;
+			default -> columnSqlTypeCode;
+		};
 	}
 
 	@Override

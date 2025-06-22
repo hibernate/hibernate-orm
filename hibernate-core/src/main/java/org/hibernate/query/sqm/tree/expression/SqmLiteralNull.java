@@ -1,27 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmLiteralNull<T> extends SqmLiteral<T> {
 
-	private static final SqmExpressible<Object> NULL_TYPE = NullSqmExpressible.NULL_SQM_EXPRESSIBLE;
-
 	public SqmLiteralNull(NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		this( (SqmExpressible<T>) NULL_TYPE, nodeBuilder );
+		this( (SqmBindableType<T>) NullSqmExpressible.NULL_SQM_EXPRESSIBLE, nodeBuilder );
 	}
 
-	public SqmLiteralNull(SqmExpressible<T> expressibleType, NodeBuilder nodeBuilder) {
+	public SqmLiteralNull(SqmBindableType<T> expressibleType, NodeBuilder nodeBuilder) {
 		super( expressibleType, nodeBuilder );
 	}
 
@@ -53,7 +52,17 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "null" );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "null" );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmLiteralNull;
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;
 	}
 }

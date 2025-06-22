@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.fromcore;
@@ -23,10 +23,10 @@ public class Customer implements java.io.Serializable {
 	private Address work;
 	private Country country;
 	private Spouse spouse;
-	private Collection<CreditCard> creditCards = new java.util.ArrayList<CreditCard>();
-	private Collection<Order> orders = new java.util.ArrayList<Order>();
-	private Collection<Alias> aliases = new java.util.ArrayList<Alias>();
-	private Collection<Alias> aliasesNoop = new java.util.ArrayList<Alias>();
+	private Collection<CreditCard> creditCards = new java.util.ArrayList<>();
+	private Collection<Order> orders = new java.util.ArrayList<>();
+	private Collection<Alias> aliases = new java.util.ArrayList<>();
+	private Collection<Alias> aliasesNoop = new java.util.ArrayList<>();
 
 	public Customer() {
 	}

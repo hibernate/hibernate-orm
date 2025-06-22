@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.jfr.cache;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.jfr.internal.CachePutEvent;
 import org.hibernate.event.jfr.internal.JdbcBatchExecutionEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.jfr.internal.JfrEventMonitor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -89,7 +89,7 @@ public class EntityUpdateCachePutEventTests {
 					assertThat( event.getBoolean( "cacheChanged" ) ).isFalse();
 					assertThat( event.getBoolean( "isNaturalId" ) ).isFalse();
 					assertThat( event.getString( "regionName" ) ).isNotNull();
-					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventManager.CacheActionDescription.ENTITY_UPDATE.getText() );
+					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventMonitor.CacheActionDescription.ENTITY_UPDATE.getText() );
 
 					jfrEvents.reset();
 
@@ -119,7 +119,7 @@ public class EntityUpdateCachePutEventTests {
 					assertThat( event.getBoolean( "cacheChanged" ) ).isTrue();
 					assertThat( event.getString( "regionName" ) ).isNotNull();
 					assertThat( event.getBoolean( "isNaturalId" ) ).isFalse();
-					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventManager.CacheActionDescription.ENTITY_UPDATE.getText() );
+					assertThat( event.getString( "description" ) ).isEqualTo( JfrEventMonitor.CacheActionDescription.ENTITY_UPDATE.getText() );
 				}
 		);
 

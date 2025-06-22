@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util;
 
-import java.beans.Introspector;
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -23,11 +23,15 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
+import org.hibernate.property.access.internal.PropertyAccessStrategyGetterImpl;
 import org.hibernate.property.access.spi.Getter;
 
 import jakarta.persistence.Transient;
+
+import static java.beans.Introspector.decapitalize;
+import static java.lang.Thread.currentThread;
 
 /**
  * Utility class for various reflection operations.
@@ -117,12 +121,15 @@ public final class ReflectHelper {
 	 * @return True if clazz defines an equals override.
 	 */
 	public static boolean overridesEquals(Class<?> clazz) {
-		Method equals;
+		if ( clazz.isRecord() || clazz.isEnum() ) {
+			return true;
+		}
+		final Method equals;
 		try {
 			equals = extractEqualsMethod( clazz );
 		}
 		catch ( NoSuchMethodException nsme ) {
-			return false; //its an interface so we can't really tell anything...
+			return false; //it's an interface so we can't really tell anything
 		}
 		return !OBJECT_EQUALS.equals( equals );
 	}
@@ -134,12 +141,15 @@ public final class ReflectHelper {
 	 * @return True if clazz defines an hashCode override.
 	 */
 	public static boolean overridesHashCode(Class<?> clazz) {
-		Method hashCode;
+		if ( clazz.isRecord() || clazz.isEnum() ) {
+			return true;
+		}
+		final Method hashCode;
 		try {
 			hashCode = extractHashCodeMethod( clazz );
 		}
 		catch ( NoSuchMethodException nsme ) {
-			return false; //its an interface so we can't really tell anything...
+			return false; //it's an interface so we can't really tell anything
 		}
 		return !OBJECT_HASHCODE.equals( hashCode );
 	}
@@ -150,7 +160,10 @@ public final class ReflectHelper {
 	 * @param clazz The class to check
 	 * @param intf The interface to check it against.
 	 * @return True if the class does implement the interface, false otherwise.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public static boolean implementsInterface(Class<?> clazz, Class<?> intf) {
 		assert intf.isInterface() : "Interface to check was not an interface";
 		return intf.isAssignableFrom( clazz );
@@ -169,7 +182,7 @@ public final class ReflectHelper {
 	 */
 	public static Class<?> classForName(String name, Class<?> caller) throws ClassNotFoundException {
 		try {
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			final ClassLoader classLoader = currentThread().getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass( name );
 			}
@@ -196,7 +209,7 @@ public final class ReflectHelper {
 	@Deprecated
 	public static Class<?> classForName(String name) throws ClassNotFoundException {
 		try {
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			final ClassLoader classLoader = currentThread().getContextClassLoader();
 			if ( classLoader != null ) {
 				return classLoader.loadClass(name);
 			}
@@ -214,7 +227,8 @@ public final class ReflectHelper {
 	 * @return True if the member is publicly accessible, false otherwise.
 	 */
 	public static boolean isPublic(Class<?> clazz, Member member) {
-		return Modifier.isPublic( member.getModifiers() ) && Modifier.isPublic( clazz.getModifiers() );
+		return Modifier.isPublic( member.getModifiers() )
+			&& Modifier.isPublic( clazz.getModifiers() );
 	}
 
 	/**
@@ -233,7 +247,7 @@ public final class ReflectHelper {
 			String name,
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
-			Class<?> clazz = classLoaderService.classForName( className );
+			final Class<?> clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnTypeClass();
 		}
 		catch ( ClassLoadingException e ) {
@@ -246,7 +260,7 @@ public final class ReflectHelper {
 			String name,
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
-			Class<?> clazz = classLoaderService.classForName( className );
+			final Class<?> clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
 		catch ( ClassLoadingException e ) {
@@ -267,7 +281,7 @@ public final class ReflectHelper {
 	}
 
 	private static Getter getter(Class<?> clazz, String name) throws MappingException {
-		return PropertyAccessStrategyMixedImpl.INSTANCE.buildPropertyAccess( clazz, name, true ).getGetter();
+		return PropertyAccessStrategyGetterImpl.INSTANCE.buildPropertyAccess( clazz, name, true ).getGetter();
 	}
 
 	/**
@@ -283,7 +297,7 @@ public final class ReflectHelper {
 		}
 
 		try {
-			Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			final Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 			ensureAccessibility( constructor );
 			return constructor;
 		}
@@ -330,7 +344,7 @@ public final class ReflectHelper {
 	 * @return True if the class is abstract, false otherwise.
 	 */
 	public static boolean isAbstractClass(Class<?> clazz) {
-		int modifier = clazz.getModifiers();
+		final int modifier = clazz.getModifiers();
 		return Modifier.isAbstract(modifier) || Modifier.isInterface(modifier);
 	}
 
@@ -397,23 +411,21 @@ public final class ReflectHelper {
 		else if ( containerClass == Object.class ) {
 			throw new IllegalArgumentException( "Illegal attempt to locate field [" + propertyName + "] on Object.class" );
 		}
-
-		Field field = locateField( containerClass, propertyName );
-
-		if ( field == null ) {
-			throw new PropertyNotFoundException(
-					String.format(
-							Locale.ROOT,
-							"Could not locate field name [%s] on class [%s]",
-							propertyName,
-							containerClass.getName()
-					)
-			);
+		else {
+			final Field field = locateField( containerClass, propertyName );
+			if ( field == null ) {
+				throw new PropertyNotFoundException(
+						String.format(
+								Locale.ROOT,
+								"Could not locate field name [%s] on class [%s]",
+								propertyName,
+								containerClass.getName()
+						)
+				);
+			}
+			ensureAccessibility( field );
+			return field;
 		}
-
-		ensureAccessibility( field );
-
-		return field;
 	}
 
 	public static void ensureAccessibility(AccessibleObject accessibleObject) {
@@ -428,11 +440,10 @@ public final class ReflectHelper {
 		}
 
 		try {
-			Field field = clazz.getDeclaredField( propertyName );
-			if ( !isStaticField( field ) ) {
-				return field;
-			}
-			return locateField( clazz.getSuperclass(), propertyName );
+			final Field field = clazz.getDeclaredField( propertyName );
+			return !isStaticField( field )
+					? field
+					: locateField( clazz.getSuperclass(), propertyName );
 		}
 		catch ( NoSuchFieldException nsfe ) {
 			return locateField( clazz.getSuperclass(), propertyName );
@@ -461,17 +472,15 @@ public final class ReflectHelper {
 			if ( checkClass.equals( Object.class ) ) {
 				break;
 			}
-
-			getter = getGetterOrNull( checkClass, propertyName );
-
-			// if no getter found yet, check all implemented interfaces
-			if ( getter == null ) {
-				getter = getGetterOrNull( checkClass.getInterfaces(), propertyName );
+			else {
+				getter = getGetterOrNull( checkClass, propertyName );
+				// if no getter found yet, check all implemented interfaces
+				if ( getter == null ) {
+					getter = getGetterOrNull( checkClass.getInterfaces(), propertyName );
+				}
+				checkClass = checkClass.getSuperclass();
 			}
-
-			checkClass = checkClass.getSuperclass();
 		}
-
 
 		if ( getter == null ) {
 			throw new PropertyNotFoundException(
@@ -493,13 +502,12 @@ public final class ReflectHelper {
 		Method getter = null;
 		for ( int i = 0; getter == null && i < interfaces.length; ++i ) {
 			final Class<?> anInterface = interfaces[i];
-			if ( shouldSkipInterfaceCheck( anInterface ) ) {
-				continue;
-			}
-			getter = getGetterOrNull( anInterface, propertyName );
-			if ( getter == null ) {
-				// if no getter found yet, check all implemented interfaces of interface
-				getter = getGetterOrNull( anInterface.getInterfaces(), propertyName );
+			if ( !shouldSkipInterfaceCheck( anInterface ) ) {
+				getter = getGetterOrNull( anInterface, propertyName );
+				if ( getter == null ) {
+					// if no getter found yet, check all implemented interfaces of interface
+					getter = getGetterOrNull( anInterface.getInterfaces(), propertyName );
+				}
 			}
 		}
 		return getter;
@@ -526,46 +534,34 @@ public final class ReflectHelper {
 		}
 
 		for ( Method method : containerClass.getDeclaredMethods() ) {
-			// if the method has parameters, skip it
-			if ( method.getParameterCount() != 0 ) {
-				continue;
-			}
+			if ( method.getParameterCount() == 0 // if the method has parameters, skip it
+					&& !Modifier.isStatic( method.getModifiers() )
+					&& !method.isBridge()
+					&& method.getAnnotation( Transient.class ) == null ) {
 
-			// if the method is a "bridge", skip it
-			if ( method.isBridge() ) {
-				continue;
-			}
+				final String methodName = method.getName();
 
-			if ( method.getAnnotation( Transient.class ) != null ) {
-				continue;
-			}
+				// try "get"
+				if ( methodName.startsWith( "get" ) ) {
+					final String stemName = methodName.substring( 3 );
+					if ( stemName.equals( propertyName )
+							|| decapitalize( stemName ).equals( propertyName ) ) {
+						verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
+						return method;
+					}
 
-			if ( Modifier.isStatic( method.getModifiers() ) ) {
-				continue;
-			}
-
-			final String methodName = method.getName();
-
-			// try "get"
-			if ( methodName.startsWith( "get" ) ) {
-				final String stemName = methodName.substring( 3 );
-				final String decapitalizedStemName = Introspector.decapitalize( stemName );
-				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					verifyNoIsVariantExists( containerClass, propertyName, method, stemName );
-					return method;
 				}
 
-			}
-
-			// if not "get", then try "is"
-			if ( methodName.startsWith( "is" ) ) {
-				final String stemName = methodName.substring( 2 );
-				String decapitalizedStemName = Introspector.decapitalize( stemName );
-				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					// not sure that this can ever really happen given the handling of "get" above.
-					// but be safe
-					verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
-					return method;
+				// if not "get", then try "is"
+				if ( methodName.startsWith( "is" ) ) {
+					final String stemName = methodName.substring( 2 );
+					if ( stemName.equals( propertyName )
+							|| decapitalize( stemName ).equals( propertyName ) ) {
+						// not sure that this can ever really happen given the handling of "get" above.
+						// but be safe
+						verifyNoGetVariantExists( containerClass, propertyName, method, stemName );
+						return method;
+					}
 				}
 			}
 		}
@@ -623,7 +619,8 @@ public final class ReflectHelper {
 			final Method getMethod = containerClass.getDeclaredMethod( "get" + stemName );
 			// No such method should throw the caught exception.  So if we get here, there was
 			// such a method.
-			if ( !Modifier.isStatic( getMethod.getModifiers() ) && getMethod.getAnnotation( Transient.class ) == null ) {
+			if ( !Modifier.isStatic( getMethod.getModifiers() )
+					&& getMethod.getAnnotation( Transient.class ) == null ) {
 				checkGetAndIsVariants( containerClass, propertyName, getMethod, isMethod );
 			}
 		}
@@ -666,18 +663,17 @@ public final class ReflectHelper {
 			if ( checkClass.equals( Object.class ) ) {
 				break;
 			}
-
-			setter = setterOrNull( checkClass, propertyName, propertyType, likelyMethodName );
-
-			// if no setter found yet, check all implemented interfaces
-			if ( setter == null ) {
-				setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType, likelyMethodName );
-			}
 			else {
-				ensureAccessibility( setter );
+				setter = setterOrNull( checkClass, propertyName, propertyType, likelyMethodName );
+				// if no setter found yet, check all implemented interfaces
+				if ( setter == null ) {
+					setter = setterOrNull( checkClass.getInterfaces(), propertyName, propertyType, likelyMethodName );
+				}
+				else {
+					ensureAccessibility( setter );
+				}
+				checkClass = checkClass.getSuperclass();
 			}
-
-			checkClass = checkClass.getSuperclass();
 		}
 		return setter; // might be null
 	}
@@ -691,18 +687,17 @@ public final class ReflectHelper {
 			if ( checkClass.equals( Object.class ) ) {
 				break;
 			}
-
-			setter = setterOrNullBySetterName( checkClass, setterName, propertyType );
-
-			// if no setter found yet, check all implemented interfaces
-			if ( setter == null ) {
-				setter = setterOrNullBySetterName( checkClass.getInterfaces(), setterName, propertyType );
-			}
 			else {
-				ensureAccessibility( setter );
+				setter = setterOrNullBySetterName( checkClass, setterName, propertyType );
+				// if no setter found yet, check all implemented interfaces
+				if ( setter == null ) {
+					setter = setterOrNullBySetterName( checkClass.getInterfaces(), setterName, propertyType );
+				}
+				else {
+					ensureAccessibility( setter );
+				}
+				checkClass = checkClass.getSuperclass();
 			}
-
-			checkClass = checkClass.getSuperclass();
 		}
 		return setter; // might be null
 	}
@@ -711,22 +706,21 @@ public final class ReflectHelper {
 		Method setter = null;
 		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
 			final Class<?> anInterface = interfaces[i];
-			if ( shouldSkipInterfaceCheck( anInterface ) ) {
-				continue;
-			}
-			setter = setterOrNullBySetterName( anInterface, setterName, propertyType );
-			if ( setter == null ) {
-				// if no setter found yet, check all implemented interfaces of interface
-				setter = setterOrNullBySetterName( anInterface.getInterfaces(), setterName, propertyType );
+			if ( !shouldSkipInterfaceCheck( anInterface ) ) {
+				setter = setterOrNullBySetterName( anInterface, setterName, propertyType );
+				if ( setter == null ) {
+					// if no setter found yet, check all implemented interfaces of interface
+					setter = setterOrNullBySetterName( anInterface.getInterfaces(), setterName, propertyType );
+				}
 			}
 		}
 		return setter;
 	}
 
-	private static boolean shouldSkipInterfaceCheck(final Class anInterface) {
+	private static boolean shouldSkipInterfaceCheck(final Class<?> anInterface) {
 		final String interfaceName = anInterface.getName();
-		//Skip checking any interface that we've added ourself via bytecode enhancement:
-		//there's many of those and it's pointless to look there.
+		//Skip checking any interface that we've added via bytecode enhancement:
+		//there's many of those, and it's pointless to look there.
 		if ( interfaceName.startsWith( "org.hibernate.engine." ) ) {
 			return true;
 		}
@@ -773,19 +767,18 @@ public final class ReflectHelper {
 		Method setter = null;
 		for ( int i = 0; setter == null && i < interfaces.length; ++i ) {
 			final Class<?> anInterface = interfaces[i];
-			if ( shouldSkipInterfaceCheck( anInterface ) ) {
-				continue;
-			}
-			setter = setterOrNull( anInterface, propertyName, propertyType, likelyMethodName );
-			if ( setter == null ) {
-				// if no setter found yet, check all implemented interfaces of interface
-				setter = setterOrNull( anInterface.getInterfaces(), propertyName, propertyType, likelyMethodName );
+			if ( !shouldSkipInterfaceCheck( anInterface ) ) {
+				setter = setterOrNull( anInterface, propertyName, propertyType, likelyMethodName );
+				if ( setter == null ) {
+					// if no setter found yet, check all implemented interfaces of interface
+					setter = setterOrNull( anInterface.getInterfaces(), propertyName, propertyType, likelyMethodName );
+				}
 			}
 		}
 		return setter;
 	}
 
-	private static Method setterOrNull(Class<?> theClass, String propertyName, Class propertyType, String likelyMethodName) {
+	private static Method setterOrNull(Class<?> theClass, String propertyName, Class<?> propertyType, String likelyMethodName) {
 		try {
 			return theClass.getDeclaredMethod( likelyMethodName, propertyType );
 		}
@@ -797,7 +790,7 @@ public final class ReflectHelper {
 			final String methodName = method.getName();
 			if ( method.getParameterCount() == 1 && methodName.startsWith( "set" ) ) {
 				final String testOldMethod = methodName.substring( 3 );
-				final String testStdMethod = Introspector.decapitalize( testOldMethod );
+				final String testStdMethod = decapitalize( testOldMethod );
 				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
 					potentialSetter = method;
 					if ( propertyType == null || method.getParameterTypes()[0].equals( propertyType ) ) {
@@ -812,12 +805,9 @@ public final class ReflectHelper {
 
 	private static String likelySetterMethodNameForProperty(final String propertyName) {
 		final char firstCharacter = propertyName.charAt( 0 );
-		if ( Character.isLowerCase( firstCharacter ) ) {
-			return "set" + Character.toUpperCase( firstCharacter ) + propertyName.substring( 1 );
-		}
-		else {
-			return "set" + propertyName;
-		}
+		return Character.isLowerCase( firstCharacter )
+				? "set" + Character.toUpperCase( firstCharacter ) + propertyName.substring( 1 )
+				: "set" + propertyName;
 	}
 
 	/**
@@ -829,37 +819,29 @@ public final class ReflectHelper {
 	 */
 	public static Method findGetterMethodForFieldAccess(Field field, String propertyName) {
 		for ( Method method : field.getDeclaringClass().getDeclaredMethods() ) {
-			// if the method has parameters, skip it
-			if ( method.getParameterCount() != 0 ) {
-				continue;
-			}
+			if ( method.getParameterCount() == 0 // if the method has parameters, skip it
+					&& !Modifier.isStatic( method.getModifiers() )
+					&& method.getReturnType().isAssignableFrom( field.getType() ) ) {
 
-			if ( Modifier.isStatic( method.getModifiers() ) ) {
-				continue;
-			}
+				final String methodName = method.getName();
 
-			if ( ! method.getReturnType().isAssignableFrom( field.getType() ) ) {
-				continue;
-			}
+				// try "get"
+				if ( methodName.startsWith( "get" ) ) {
+					final String stemName = methodName.substring( 3 );
+					if ( stemName.equals( propertyName )
+							|| decapitalize( stemName ).equals( propertyName ) ) {
+						return method;
+					}
 
-			final String methodName = method.getName();
-
-			// try "get"
-			if ( methodName.startsWith( "get" ) ) {
-				final String stemName = methodName.substring( 3 );
-				final String decapitalizedStemName = Introspector.decapitalize( stemName );
-				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					return method;
 				}
 
-			}
-
-			// if not "get", then try "is"
-			if ( methodName.startsWith( "is" ) ) {
-				final String stemName = methodName.substring( 2 );
-				String decapitalizedStemName = Introspector.decapitalize( stemName );
-				if ( stemName.equals( propertyName ) || decapitalizedStemName.equals( propertyName ) ) {
-					return method;
+				// if not "get", then try "is"
+				if ( methodName.startsWith( "is" ) ) {
+					final String stemName = methodName.substring( 2 );
+					if ( stemName.equals( propertyName )
+							|| decapitalize( stemName ).equals( propertyName ) ) {
+						return method;
+					}
 				}
 			}
 		}
@@ -920,24 +902,24 @@ public final class ReflectHelper {
 		else if ( type instanceof Class<?> ) {
 			return (Class<T>) type;
 		}
-		else if ( type instanceof ParameterizedType ) {
-			return (Class<T>) ( (ParameterizedType) type ).getRawType();
+		else if ( type instanceof ParameterizedType parameterizedType ) {
+			return (Class<T>) parameterizedType.getRawType();
 		}
-		else if ( type instanceof TypeVariable ) {
-			return getClass( ( (TypeVariable<?>) type ).getBounds()[0] );
+		else if ( type instanceof TypeVariable<?> typeVariable ) {
+			return getClass( typeVariable.getBounds()[0] );
 		}
-		else if ( type instanceof WildcardType ) {
-			return getClass( ( (WildcardType) type ).getUpperBounds()[0] );
+		else if ( type instanceof WildcardType wildcardType ) {
+			return getClass( wildcardType.getUpperBounds()[0] );
 		}
 		throw new UnsupportedOperationException( "Can't get java type class from type: " + type );
 	}
 
 	public static Class<?> getPropertyType(Member member) {
-		if (member instanceof Field) {
-			return ( (Field) member ).getType();
+		if (member instanceof Field field) {
+			return field.getType();
 		}
-		else if (member instanceof Method) {
-			return ( (Method) member ).getReturnType();
+		else if (member instanceof Method method) {
+			return method.getReturnType();
 		}
 		else {
 			throw new AssertionFailure("member should have been a method or field");
@@ -949,5 +931,23 @@ public final class ReflectHelper {
 			&& !resultClass.isPrimitive()
 			&& !resultClass.isEnum()
 			&& !resultClass.isInterface();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> getClass(T instance) {
+		return (Class<T>) instance.getClass();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends Enum<T>> Class<T> getClass(Enum<T> value) {
+		return (Class<T>) value.getClass();
+	}
+
+	@AllowReflection
+	public static <T> Class<T[]> arrayClass(Class<T> clazz) {
+		final Object instance = Array.newInstance( clazz, 0 );
+		@SuppressWarnings("unchecked")
+		final T[] array = (T[]) instance;
+		return getClass( array );
 	}
 }

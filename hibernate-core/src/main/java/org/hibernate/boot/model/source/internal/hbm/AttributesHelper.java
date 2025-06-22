@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -71,150 +71,150 @@ public class AttributesHelper {
 			Object attributeJaxbMapping,
 			String logicalTableName,
 			NaturalIdMutability naturalIdMutability) {
-		if ( attributeJaxbMapping instanceof JAXBElement ) {
+		if ( attributeJaxbMapping instanceof JAXBElement<?> element ) {
 			processAttribute(
 					mappingDocument,
 					callback,
-					( (JAXBElement) attributeJaxbMapping ).getValue(),
+					element.getValue(),
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmCompositeKeyBasicAttributeType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmCompositeKeyBasicAttributeType compositeKeyBasicAttributeType ) {
 			callback.addAttributeSource(
 					new CompositeIdentifierSingularAttributeSourceBasicImpl(
 							mappingDocument,
 							callback.getAttributeSourceContainer(),
-							(JaxbHbmCompositeKeyBasicAttributeType) attributeJaxbMapping
+							compositeKeyBasicAttributeType
 					)
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmCompositeKeyManyToOneType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmCompositeKeyManyToOneType  compositeKeyManyToOneType) {
 			callback.addAttributeSource(
 					new CompositeIdentifierSingularAttributeSourceManyToOneImpl(
 							mappingDocument,
 							callback.getAttributeSourceContainer(),
-							(JaxbHbmCompositeKeyManyToOneType) attributeJaxbMapping
+							compositeKeyManyToOneType
 					)
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmPropertiesType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmPropertiesType propertiesType ) {
 			processPropertiesGroup(
 					mappingDocument,
 					callback,
-					(JaxbHbmPropertiesType) attributeJaxbMapping,
+					propertiesType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmBasicAttributeType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmBasicAttributeType basicAttributeType ) {
 			processBasicAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmBasicAttributeType) attributeJaxbMapping,
+					basicAttributeType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmCompositeAttributeType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmCompositeAttributeType compositeAttributeType ) {
 			processEmbeddedAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmCompositeAttributeType) attributeJaxbMapping,
+					compositeAttributeType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmDynamicComponentType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmDynamicComponentType dynamicComponentType ) {
 			processDynamicComponentAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmDynamicComponentType) attributeJaxbMapping,
+					dynamicComponentType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmManyToOneType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmManyToOneType manyToOneType ) {
 			processManyToOneAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmManyToOneType) attributeJaxbMapping,
+					manyToOneType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmOneToOneType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmOneToOneType oneToOneType ) {
 			processOneToOneAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmOneToOneType) attributeJaxbMapping,
+					oneToOneType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmAnyAssociationType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmAnyAssociationType anyAssociationType ) {
 			processAnyAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmAnyAssociationType) attributeJaxbMapping,
+					anyAssociationType,
 					logicalTableName,
 					naturalIdMutability
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmMapType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmMapType mapType ) {
 			processMapAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmMapType) attributeJaxbMapping
+					mapType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmListType) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmListType listType) {
 			processListAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmListType) attributeJaxbMapping
+					listType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmArrayType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmArrayType arrayType ) {
 			processArrayAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmArrayType) attributeJaxbMapping
+					arrayType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmPrimitiveArrayType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmPrimitiveArrayType primitiveArrayType ) {
 			processPrimitiveArrayAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmPrimitiveArrayType) attributeJaxbMapping
+					primitiveArrayType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmSetType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmSetType setType ) {
 			processSetAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmSetType) attributeJaxbMapping
+					setType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmBagCollectionType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmBagCollectionType bagCollectionType ) {
 			processBagAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmBagCollectionType) attributeJaxbMapping
+					bagCollectionType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmIdBagCollectionType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmIdBagCollectionType idBagCollectionType ) {
 			processIdBagAttribute(
 					mappingDocument,
 					callback,
-					(JaxbHbmIdBagCollectionType) attributeJaxbMapping
+					idBagCollectionType
 			);
 		}
-		else if ( attributeJaxbMapping instanceof JaxbHbmNestedCompositeElementType ) {
+		else if ( attributeJaxbMapping instanceof JaxbHbmNestedCompositeElementType nestedCompositeElementType ) {
 			processNestedEmbeddedElement(
 					mappingDocument,
 					callback,
-					(JaxbHbmNestedCompositeElementType) attributeJaxbMapping,
+					nestedCompositeElementType,
 					logicalTableName,
 					naturalIdMutability
 			);
@@ -232,21 +232,21 @@ public class AttributesHelper {
 			Callback callback,
 			List<?> jaxbAttributeMappings) {
 		for ( Object jaxbAttributeMapping : jaxbAttributeMappings ) {
-			if (jaxbAttributeMapping instanceof JaxbHbmCompositeKeyBasicAttributeType) {
+			if (jaxbAttributeMapping instanceof JaxbHbmCompositeKeyBasicAttributeType compositeKeyBasicAttributeType) {
 				callback.addAttributeSource(
 						new CompositeIdentifierSingularAttributeSourceBasicImpl(
 								mappingDocument,
 								callback.getAttributeSourceContainer(),
-								(JaxbHbmCompositeKeyBasicAttributeType) jaxbAttributeMapping
+								compositeKeyBasicAttributeType
 						)
 				);
 			}
-			else if (jaxbAttributeMapping instanceof JaxbHbmCompositeKeyManyToOneType) {
+			else if (jaxbAttributeMapping instanceof JaxbHbmCompositeKeyManyToOneType compositeKeyManyToOneType) {
 				callback.addAttributeSource(
 						new CompositeIdentifierSingularAttributeSourceManyToOneImpl(
 								mappingDocument,
 								callback.getAttributeSourceContainer(),
-								(JaxbHbmCompositeKeyManyToOneType) jaxbAttributeMapping
+								compositeKeyManyToOneType
 						)
 				);
 			}

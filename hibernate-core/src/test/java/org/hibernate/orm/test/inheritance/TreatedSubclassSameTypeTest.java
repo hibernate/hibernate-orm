@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance;
@@ -59,11 +59,6 @@ public class TreatedSubclassSameTypeTest {
 	@Test
 	public void testJoinOnTreat(SessionFactoryScope scope) {
 		executeQuery( scope, criteria -> criteria.from( MyEntity1.class ), true );
-	}
-
-	@Test
-	public void testJoin(SessionFactoryScope scope) {
-		executeQuery( scope, criteria -> criteria.from( MyEntity1.class ), false );
 	}
 
 	@Test

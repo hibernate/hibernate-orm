@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.generated.sqldefault;
@@ -44,19 +44,19 @@ public class DefaultTest {
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
 			assertEquals( "new", entity.status );
-			entity.status = "old"; //should be ignored when fetch=true
+			entity.status = "old";
 		} );
 		scope.inTransaction( session -> {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();
 			assertEquals( unitPrice, entity.unitPrice );
 			assertEquals( 5, entity.quantity );
-			assertEquals( "new", entity.status );
+			assertEquals( "old", entity.status );
 		} );
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createQuery( "delete WithDefault" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name="WithDefault")

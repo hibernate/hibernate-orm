@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -10,10 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
@@ -92,8 +91,6 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			CteContainer cteContainer,
 			QuerySpec querySpec,
 			SqmToSqlAstConverter converter) {
-		final SessionFactoryImplementor factory = converter.getCreationContext()
-				.getSessionFactory();
 		final QuerySpec outerQuerySpec = new QuerySpec( querySpec.isRoot() );
 		final String identifierVariable = "hhh_";
 		final NavigablePath navigablePath = new NavigablePath(
@@ -125,7 +122,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			final Expression expression = subSelections.get( i ).getExpression();
 			final Expression finalExpression;
 			if ( expression == windowFunction ) {
-				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
+				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression<>(
 						"min",
 						(sqlAppender, sqlAstArguments, returnType, walker1) -> {
 							sqlAppender.appendSql( "min(" );
@@ -160,16 +157,16 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 		for ( Expression groupByClauseExpression : subQuerySpec.getGroupByClauseExpressions() ) {
 			final Expression realExpression;
 			final Expression outerGroupByExpression;
-			if ( groupByClauseExpression instanceof SqlSelectionExpression ) {
-				final SqlSelection selection = ( (SqlSelectionExpression) groupByClauseExpression ).getSelection();
+			if ( groupByClauseExpression instanceof SqlSelectionExpression selectionExpression ) {
+				final SqlSelection selection = selectionExpression.getSelection();
 				outerGroupByExpression = new SqlSelectionExpression(
 						selectClause.getSqlSelections().get( selection.getValuesArrayPosition() )
 				);
 				realExpression = selection.getExpression();
 			}
 			else {
-				if ( groupByClauseExpression instanceof SqmPathInterpretation<?> ) {
-					realExpression = ( (SqmPathInterpretation<?>) groupByClauseExpression ).getSqlExpression();
+				if ( groupByClauseExpression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+					realExpression = pathInterpretation.getSqlExpression();
 				}
 				else {
 					realExpression = groupByClauseExpression;
@@ -220,16 +217,16 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 						return expression;
 					}
 					final Expression outerExpression;
-					if ( expression instanceof SqlSelectionExpression ) {
-						final SqlSelection selection = ( (SqlSelectionExpression) expression ).getSelection();
+					if ( expression instanceof SqlSelectionExpression selectionExpression ) {
+						final SqlSelection selection = selectionExpression.getSelection();
 						outerExpression = selectClause.getSqlSelections()
 								.get( selection.getValuesArrayPosition() )
 								.getExpression();
 					}
 					else {
 						final Expression realExpression;
-						if ( expression instanceof SqmPathInterpretation<?> ) {
-							realExpression = ( (SqmPathInterpretation<?>) expression ).getSqlExpression();
+						if ( expression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+							realExpression = pathInterpretation.getSqlExpression();
 						}
 						else {
 							realExpression = (Expression) expression;
@@ -276,8 +273,8 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			for ( SortSpecification sortSpecification : subQuerySpec.getSortSpecifications() ) {
 				final Expression sortExpression = sortSpecification.getSortExpression();
 				final Expression outerSortExpression;
-				if ( sortExpression instanceof SqlSelectionExpression ) {
-					final SqlSelection selection = ( (SqlSelectionExpression) sortExpression ).getSelection();
+				if ( sortExpression instanceof SqlSelectionExpression selectionExpression ) {
+					final SqlSelection selection = selectionExpression.getSelection();
 					outerSortExpression = new SqlSelectionExpression(
 							selectClause.getSqlSelections()
 									.get( selection.getValuesArrayPosition() )
@@ -285,8 +282,8 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				}
 				else {
 					final Expression realExpression;
-					if ( sortExpression instanceof SqmPathInterpretation<?> ) {
-						realExpression = ( (SqmPathInterpretation<?>) sortExpression ).getSqlExpression();
+					if ( sortExpression instanceof SqmPathInterpretation<?> pathInterpretation ) {
+						realExpression = pathInterpretation.getSqlExpression();
 					}
 					else {
 						realExpression = sortExpression;
@@ -400,7 +397,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 				columnNames,
 				false,
 				true,
-				factory
+				converter.getCreationContext().getSessionFactory()
 		);
 		outerQuerySpec.getFromClause().addRoot( queryPartTableGroup );
 

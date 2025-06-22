@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -7,9 +7,12 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
@@ -35,7 +38,7 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 		assertComparable( expression, lowerBound, nodeBuilder );
 		assertComparable( expression, upperBound, nodeBuilder );
 
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType(
 				expression.getExpressible(),
 				lowerBound.getExpressible(),
 				upperBound.getExpressible()
@@ -84,15 +87,29 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		expression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		expression.appendHqlString( hql, context );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " between " );
-		lowerBound.appendHqlString( sb );
-		sb.append( " and " );
-		upperBound.appendHqlString( sb );
+		hql.append( " between " );
+		lowerBound.appendHqlString( hql, context );
+		hql.append( " and " );
+		upperBound.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmBetweenPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( expression, that.expression )
+			&& Objects.equals( lowerBound, that.lowerBound )
+			&& Objects.equals( upperBound, that.upperBound );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), expression, lowerBound, upperBound );
 	}
 
 	@Override

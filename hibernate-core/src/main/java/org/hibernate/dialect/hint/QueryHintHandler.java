@@ -1,14 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.hint;
 
 /**
- * Contract defining how query hints get applied.
- *
- * @author Vlad Mihalcea
+ * @deprecated Moved to {@link org.hibernate.dialect.Dialect}
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public interface QueryHintHandler {
 
 	/**

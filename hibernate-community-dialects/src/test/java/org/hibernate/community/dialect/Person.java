@@ -1,12 +1,23 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.sql.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
+import java.sql.Date;
+import java.sql.Blob;
+import java.sql.Clob;
+
+@Entity
 public class Person {
+	@Id
+	@GeneratedValue
+	@SequenceGenerator(sequenceName = "PERSON_SEQ")
 	private int id;
 	private String name;
 	private Date birthDate;

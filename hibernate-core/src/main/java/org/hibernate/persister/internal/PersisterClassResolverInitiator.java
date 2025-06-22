@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.internal;
@@ -31,13 +31,15 @@ public class PersisterClassResolverInitiator implements StandardServiceInitiator
 			return new StandardPersisterClassResolver();
 		}
 
-		if ( customImpl instanceof PersisterClassResolver ) {
-			return (PersisterClassResolver) customImpl;
+		if ( customImpl instanceof PersisterClassResolver persisterClassResolver ) {
+			return persisterClassResolver;
 		}
 
-		final Class<? extends PersisterClassResolver> customImplClass = customImpl instanceof Class
-				? (Class<? extends PersisterClassResolver>) customImpl
-				: locate( registry, customImpl.toString() );
+		@SuppressWarnings("unchecked")
+		final Class<? extends PersisterClassResolver> customImplClass =
+				customImpl instanceof Class
+						? (Class<? extends PersisterClassResolver>) customImpl
+						: locate( registry, customImpl.toString() );
 
 		try {
 			return customImplClass.newInstance();

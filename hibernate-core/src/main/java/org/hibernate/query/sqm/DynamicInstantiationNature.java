@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -9,6 +9,8 @@ import java.util.Map;
 
 /**
  * Represents the type of instantiation to be performed.
+ *
+ * @see org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationTarget#getNature
  *
  * @author Steve Ebersole
  */

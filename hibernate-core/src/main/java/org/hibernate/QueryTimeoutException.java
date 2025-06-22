@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -7,9 +7,14 @@ package org.hibernate;
 import java.sql.SQLException;
 
 /**
- * Thrown when a database query timeout occurs.
+ * A {@link JDBCException} indicating that a database query timed
+ * out on the database.
  *
  * @author Scott Marlow
+ *
+ * @see jakarta.persistence.Query#setTimeout
+ * @see org.hibernate.query.CommonQueryContract#setTimeout
+ * @see jakarta.persistence.QueryTimeoutException
  */
 public class QueryTimeoutException extends JDBCException {
 	/**

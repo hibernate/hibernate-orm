@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement;
@@ -15,7 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,7 +38,7 @@ public class EmbeddableElementCollectionMemberOfTest {
 				session -> {
 					Address a = new Address();
 					a.setStreet( "Lollard Street" );
-					QueryImplementor query = session.createQuery( "from Person p where :address member of p.addresses" );
+					Query query = session.createQuery( "from Person p where :address member of p.addresses" );
 					query.setParameter( "address", a );
 					query.list();
 				}

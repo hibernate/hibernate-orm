@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -16,7 +16,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -32,11 +31,10 @@ import org.hibernate.sql.model.TableMapping;
  *
  * @author Steve Ebersole
  */
-public class PreparedStatementGroupStandard implements PreparedStatementGroup {
+public class PreparedStatementGroupStandard extends AbstractPreparedStatementGroup {
 	private final MutationType mutationType;
 	private final MutationTarget<?> mutationTarget;
 	private final List<PreparableMutationOperation> jdbcMutations;
-	private final SharedSessionContractImplementor session;
 
 	private final SortedMap<String, PreparedStatementDetails> statementMap;
 
@@ -47,11 +45,11 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 			GeneratedValuesMutationDelegate generatedValuesDelegate,
 			List<PreparableMutationOperation> jdbcMutations,
 			SharedSessionContractImplementor session) {
+		super( session );
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
 		this.jdbcMutations = jdbcMutations;
 
-		this.session = session;
 
 		this.statementMap = createStatementDetailsMap( jdbcMutations, mutationType, generatedValuesDelegate, session );
 	}
@@ -143,9 +141,10 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 
 	@Override
 	public void release() {
-		statementMap.forEach( (tableName, statementDetails) -> statementDetails.releaseStatement( session ) );
+		statementMap.forEach( (tableName, statementDetails) -> {
+			release( statementDetails );
+		} );
 	}
-
 
 	private static SortedMap<String, PreparedStatementDetails> createStatementDetailsMap(
 			List<PreparableMutationOperation> jdbcMutations,

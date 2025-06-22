@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.collectionelement.ordered;
@@ -43,9 +43,7 @@ public class ElementCollectionSortingTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from Person" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -133,7 +131,6 @@ public class ElementCollectionSortingTest {
 
 	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortDirection order) {
 		String roleName = entityName + "." + propertyName;
-		String alias = "alias1";
 		BasicCollectionPersister collectionPersister = (BasicCollectionPersister) session
 				.unwrap( SessionImplementor.class )
 				.getFactory()

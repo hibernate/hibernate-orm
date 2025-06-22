@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
@@ -82,7 +82,7 @@ public class UniqueKeySelectingDelegate extends AbstractSelectingDelegate {
 		int index = 1;
 		for ( int i = 0; i < uniqueKeyPropertyNames.length; i++ ) {
 			uniqueKeyTypes[i].nullSafeSet( ps, persister.getPropertyValue( entity, uniqueKeyPropertyNames[i] ), index, session );
-			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory() );
+			index += uniqueKeyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -47,43 +47,36 @@ public class DefaultCacheKeysFactory implements CacheKeysFactory {
 		final Type keyType = persister.getKeyType();
 		final Serializable disassembledKey = keyType.disassemble( id, factory );
 		final boolean idIsArray = disassembledKey.getClass().isArray();
-		if ( tenantIdentifier == null && ! idIsArray ) {
-			return new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRole() );
-		}
-		else {
-			return new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRole(), tenantIdentifier );
-		}
+		return tenantIdentifier == null && !idIsArray
+				? new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRole() )
+				: new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRole(), tenantIdentifier );
 	}
 
 	public static Object staticCreateEntityKey(Object id, EntityPersister persister, SessionFactoryImplementor factory, String tenantIdentifier) {
 		final Type keyType = persister.getIdentifierType();
 		final Serializable disassembledKey = keyType.disassemble( id, factory );
 		final boolean idIsArray = disassembledKey.getClass().isArray();
-		if ( tenantIdentifier == null && ! idIsArray ) {
-			return new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName() );
-		}
-		else {
-			return new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName(), tenantIdentifier );
-		}
+		return tenantIdentifier == null && !idIsArray
+				? new BasicCacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName() )
+				: new CacheKeyImplementation( id, disassembledKey, keyType, persister.getRootEntityName(), tenantIdentifier );
 	}
 
 	public static Object staticCreateNaturalIdKey(
 			Object naturalIdValues,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
-		return NaturalIdCacheKey.from(
-				naturalIdValues,
-				persister,
-				session
-		);
+		return NaturalIdCacheKey.from( naturalIdValues, persister, session );
 	}
 
-	public static Object staticGetEntityId(Object cacheKey) {
-		if ( cacheKey.getClass() == BasicCacheKeyImplementation.class ) {
-			return ( (BasicCacheKeyImplementation) cacheKey ).id;
+	public static Object staticGetEntityId(Object cacheKeyObject) {
+		if ( cacheKeyObject instanceof BasicCacheKeyImplementation basicCacheKey ) {
+			return basicCacheKey.id;
+		}
+		else if ( cacheKeyObject instanceof CacheKeyImplementation cacheKey) {
+			return cacheKey.getId();
 		}
 		else {
-			return ( (CacheKeyImplementation) cacheKey ).getId();
+			throw new IllegalArgumentException( "Not an instance of CacheKeyImplementation" + cacheKeyObject );
 		}
 	}
 

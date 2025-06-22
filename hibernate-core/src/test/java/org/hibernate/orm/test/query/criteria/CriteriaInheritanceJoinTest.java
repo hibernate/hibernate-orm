@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -92,7 +92,7 @@ public class CriteriaInheritanceJoinTest {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<Address> cq = cb.createQuery( Address.class );
 			final Root<Address> addressRoot = cq.from( Address.class );
-			final Join<Address, Street> join = addressRoot.join( "street" );
+			final Join<Address, Street> join = cb.treat( addressRoot, StreetAddress.class ).join( "street" );
 			cq.select( addressRoot ).where( cb.equal( join.get( "name" ), "Via Roma" ) );
 			final Address result = session.createQuery( cq ).getSingleResult();
 			assertThat( result ).isInstanceOf( StreetAddress.class );

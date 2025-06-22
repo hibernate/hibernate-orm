@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations.processing;
@@ -133,6 +133,17 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>return type {@link org.hibernate.query.KeyedResultList}, and
  * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
  * </ul>
+ * <p>
+ * Finally, a method might have a parameter of type
+ * {@link org.hibernate.query.restriction.Restriction Restriction&lt;? super E&gt;},
+ * allowing the caller to apply an arbitrary filtering criterion to
+ * the query results.
+ * <p>
+ * For example:
+ * <pre>
+ * &#064;HQL("from Book")
+ * List&lt;Book&gt; findBooks(Restriction&lt;Book&gt; filter, List&lt;Order&lt;Book&gt;&gt; order);
+ * </pre>
  * <p>
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the

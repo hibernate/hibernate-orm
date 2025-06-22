@@ -1,18 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.spi;
 
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
-import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
@@ -32,7 +32,7 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
 
 /**
  * JPA-style event listener with support for resolving callback methods from
- * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl, SourceModelBuildingContext) XML}
+ * {@linkplain #from(JpaEventListenerStyle, ClassDetails, JaxbEntityListenerImpl, ModelsContext) XML}
  * or from {@linkplain #from(JpaEventListenerStyle, ClassDetails) annotation}.
  * <p/>
  * Represents a global entity listener defined in the persistence unit
@@ -40,6 +40,14 @@ import static org.hibernate.boot.models.JpaAnnotations.PRE_UPDATE;
  * @see JaxbPersistenceUnitDefaultsImpl#getEntityListenerContainer()
  * @see JaxbEntityListenerImpl
  * @see GlobalRegistrations#getEntityListenerRegistrations()
+ *
+ * @see jakarta.persistence.PostLoad
+ * @see jakarta.persistence.PostPersist
+ * @see jakarta.persistence.PostRemove
+ * @see jakarta.persistence.PostUpdate
+ * @see jakarta.persistence.PrePersist
+ * @see jakarta.persistence.PreRemove
+ * @see jakarta.persistence.PreUpdate
  *
  * @author Steve Ebersole
  */
@@ -127,7 +135,7 @@ public class JpaEventListener {
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
 			JaxbEntityListenerImpl jaxbMapping,
-			SourceModelBuildingContext modelsContext) {
+			ModelsContext modelsContext) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> preRemoveMethod = new MutableObject<>();
@@ -205,12 +213,12 @@ public class JpaEventListener {
 
 	private static boolean isImplicitMethodMappings(JaxbEntityListenerImpl jaxbMapping) {
 		return jaxbMapping.getPrePersist() == null
-				&& jaxbMapping.getPreUpdate() == null
-				&& jaxbMapping.getPreRemove() == null
-				&& jaxbMapping.getPostLoad() == null
-				&& jaxbMapping.getPostPersist() == null
-				&& jaxbMapping.getPostUpdate() == null
-				&& jaxbMapping.getPostRemove() == null;
+			&& jaxbMapping.getPreUpdate() == null
+			&& jaxbMapping.getPreRemove() == null
+			&& jaxbMapping.getPostLoad() == null
+			&& jaxbMapping.getPostPersist() == null
+			&& jaxbMapping.getPostUpdate() == null
+			&& jaxbMapping.getPostRemove() == null;
 	}
 
 	private static void errorIfEmpty(JpaEventListener jpaEventListener) {
@@ -286,27 +294,17 @@ public class JpaEventListener {
 		return jpaEventListener;
 	}
 
-	public static JpaEventListener tryAsCallback(ClassDetails classDetails) {
-		try {
-			return from( JpaEventListenerStyle.CALLBACK, classDetails );
-		}
-		catch ( ModelsException e ) {
-			return null;
-		}
-	}
-
 	public static boolean matchesSignature(JpaEventListenerStyle callbackType, MethodDetails methodDetails) {
-		if ( callbackType == JpaEventListenerStyle.CALLBACK ) {
-			// should have no arguments.  and technically (spec) have a void return
-			return methodDetails.getArgumentTypes().isEmpty()
-					&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
-		}
-		else {
-			assert callbackType == JpaEventListenerStyle.LISTENER;
-			// should have 1 argument.  and technically (spec) have a void return
-			return methodDetails.getArgumentTypes().size() == 1
-					&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
-		}
+		return switch ( callbackType ) {
+			case CALLBACK ->
+				// should have no arguments, and technically (spec) have a void return
+					methodDetails.getArgumentTypes().isEmpty()
+						&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
+			case LISTENER ->
+				// should have 1 argument, and technically (spec) have a void return
+					methodDetails.getArgumentTypes().size() == 1
+						&& methodDetails.getReturnType() == ClassDetails.VOID_CLASS_DETAILS;
+		};
 	}
 
 }

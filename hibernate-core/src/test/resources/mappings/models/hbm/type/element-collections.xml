@@ -1,47 +1,58 @@
 <?xml version="1.0"?>
+
 <!--
-  ~ Hibernate, Relational Persistence for Idiomatic Java
-  ~
-  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
-  ~ See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
   -->
-<!DOCTYPE hibernate-mapping PUBLIC
-        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping default-access="field">
-    <class name="org.hibernate.orm.test.boot.models.hbm.type.EntityWithElementCollections">
-        <id type="integer"/>
-        <property name="name" type="string"/>
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <access>FIELD</access>
+    <entity class="org.hibernate.orm.test.boot.models.hbm.type.EntityWithElementCollections" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
 
-        <list name="listOfStrings">
-            <key column="fk"/>
-            <index column="position"/>
-            <element column="strings" type="string"/>
-        </list>
+            <element-collection name="listOfStrings" target-class="java.lang.String">
+                <order-column name="position"/>
+                <column name="strings"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
 
-        <list name="listOfIntegers">
-            <key column="fk"/>
-            <index column="position"/>
-            <element column="numbers" type="integer"/>
-        </list>
+            <element-collection name="listOfIntegers" target-class="java.lang.Integer">
+                <order-column name="position"/>
+                <column name="numbers"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
 
-        <list name="listOfDoubles">
-            <key column="fk"/>
-            <index column="position"/>
-            <element column="numbers" type="double"/>
-        </list>
+            <element-collection name="listOfDoubles" target-class="java.lang.Double">
+                <order-column name="position"/>
+                <column name="numbers"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
 
-        <list name="listOfUrls">
-            <key column="fk"/>
-            <index column="position"/>
-            <element column="numbers" type="url"/>
-        </list>
+            <element-collection name="listOfUrls" target-class="java.net.URL">
+                <order-column name="position"/>
+                <column name="urls"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
 
-        <list name="listOfUuids">
-            <key column="fk"/>
-            <index column="position"/>
-            <element column="numbers" type="uuid"/>
-        </list>
-    </class>
-</hibernate-mapping>
+            <element-collection name="listOfUuids" target-class="java.util.UUID">
+                <order-column name="position"/>
+                <column name="uuids"/>
+                <collection-table>
+                    <join-column name="fk"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+</entity-mappings>

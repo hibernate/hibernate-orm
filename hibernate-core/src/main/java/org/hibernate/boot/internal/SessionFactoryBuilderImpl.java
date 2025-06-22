@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.internal;
@@ -192,7 +192,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder applyTempTableDdlTransactionHandling(TempTableDdlTransactionHandling handling) {
 		this.optionsBuilder.applyTempTableDdlTransactionHandling( handling );
 		return this;
@@ -319,12 +319,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyJdbcBatchingForVersionedEntities(boolean enabled) {
-		this.optionsBuilder.enableJdbcBatchingForVersionedEntities( enabled );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyScrollableResultsSupport(boolean enabled) {
 		this.optionsBuilder.enableScrollableResultSupport( enabled );
 		return this;
@@ -378,7 +372,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SessionFactoryBuilder enableReleaseResourcesOnCloseEnabled(boolean enable) {
 		this.optionsBuilder.enableReleaseResourcesOnClose( enable );
 		return this;

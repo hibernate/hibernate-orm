@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -11,10 +11,11 @@ import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Uniquely identifies a collection instance in a particular session.
@@ -70,10 +71,10 @@ public final class CollectionKey implements Serializable {
 
 	@Override
 	public String toString() {
-		final CollectionPersister collectionDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getCollectionDescriptor( role );
-		return "CollectionKey" + MessageHelper.collectionInfoString( collectionDescriptor, key, factory );
+		final CollectionPersister collectionDescriptor =
+				factory.getMappingMetamodel()
+						.getCollectionDescriptor( role );
+		return "CollectionKey" + collectionInfoString( collectionDescriptor, key, factory );
 	}
 
 	@Override

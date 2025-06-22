@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.legacy;
@@ -7,12 +7,11 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.CallbackException;
+import jakarta.persistence.PostLoad;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.classic.Lifecycle;
 
-public class Qux implements Lifecycle {
+public class Qux {
 
 	boolean created;
 	boolean deleted;
@@ -35,31 +34,7 @@ public class Qux implements Lifecycle {
 		stuff=s;
 	}
 
-	public boolean onSave(Session session) throws CallbackException {
-		created=true;
-		try {
-			foo = new Foo();
-			session.persist(foo);
-		}
-		catch (Exception e) {
-			throw new CallbackException(e);
-		}
-		foo.setString("child of a qux");
-		return NO_VETO;
-	}
-
-	public boolean onDelete(Session session) throws CallbackException {
-		deleted=true;
-		try {
-			session.remove(foo);
-		}
-		catch (Exception e) {
-			throw new CallbackException(e);
-		}
-		//if (child!=null) session.remove(child);
-		return NO_VETO;
-	}
-
+	@PostLoad
 	public void onLoad(Session session, Object id) {
 		loaded=true;
 		this.session=session;
@@ -155,10 +130,6 @@ public class Qux implements Lifecycle {
 
 	private void setChildKey(Long childKey) {
 		this.childKey = childKey;
-	}
-
-	public boolean onUpdate(Session s) throws CallbackException {
-		return NO_VETO;
 	}
 
 	protected void finalize() { }

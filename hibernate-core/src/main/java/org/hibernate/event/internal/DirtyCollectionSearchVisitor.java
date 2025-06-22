@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -37,8 +37,8 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		if ( isPersistentAttributeInterceptable( entity ) ) {
 			PersistentAttributeInterceptor attributeInterceptor =
 					asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				interceptor = (EnhancementAsProxyLazinessInterceptor) attributeInterceptor;
+			if ( attributeInterceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				interceptor = lazinessInterceptor;
 			}
 		}
 		this.interceptor = interceptor;
@@ -49,6 +49,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
+	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection != null ) {
 			final SessionImplementor session = getSession();
@@ -74,6 +75,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return null;
 	}
 
+	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
 		return propertyVersionability[i] && super.includeEntityProperty( values, i );
 	}

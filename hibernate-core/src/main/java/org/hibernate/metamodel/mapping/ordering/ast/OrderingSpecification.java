@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.query.NullPrecedence;
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 
 /**
@@ -17,7 +17,7 @@ public class OrderingSpecification implements Node {
 
 	private String collation;
 	private SortDirection sortOrder = SortDirection.ASCENDING;
-	private NullPrecedence nullPrecedence = NullPrecedence.NONE;
+	private Nulls nullPrecedence = Nulls.NONE;
 	private String orderByValue;
 
 	public OrderingSpecification(OrderingExpression orderingExpression, String orderByValue) {
@@ -45,11 +45,11 @@ public class OrderingSpecification implements Node {
 		this.sortOrder = sortOrder;
 	}
 
-	public NullPrecedence getNullPrecedence() {
+	public Nulls getNullPrecedence() {
 		return nullPrecedence;
 	}
 
-	public void setNullPrecedence(NullPrecedence nullPrecedence) {
+	public void setNullPrecedence(Nulls nullPrecedence) {
 		this.nullPrecedence = nullPrecedence;
 	}
 

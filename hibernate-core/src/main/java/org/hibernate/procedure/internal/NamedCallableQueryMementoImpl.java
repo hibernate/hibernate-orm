@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
@@ -12,7 +12,7 @@ import jakarta.persistence.ParameterMode;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
@@ -121,13 +121,6 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento<Obj
 			SharedSessionContractImplementor session,
 			String... resultSetMappingNames) {
 		return new ProcedureCallImpl<>( session, this, resultSetMappingNames );
-	}
-
-	@Override
-	public ProcedureCall makeProcedureCall(
-			SharedSessionContractImplementor session,
-			Class<?>... resultSetJavaTypes) {
-		return null;
 	}
 
 	@Override

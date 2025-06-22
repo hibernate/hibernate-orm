@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -87,14 +87,14 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( functionName );
 		sqlAppender.appendSql( '(' );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;
-		if ( firstArg instanceof Distinct ) {
+		if ( firstArg instanceof Distinct distinct ) {
 			sqlAppender.appendSql( "distinct " );
-			arg = ( (Distinct) firstArg ).getExpression();
+			arg = distinct.getExpression();
 		}
 		else {
 			arg = (Expression) firstArg;
@@ -114,8 +114,8 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 		if ( sqlAstArguments.size() != 1 ) {
 			SqlAstNode separator = sqlAstArguments.get( 1 );
 			// string_agg doesn't support the overflow clause, so we just omit it
-			if ( separator instanceof Overflow ) {
-				separator = ( (Overflow) separator ).getSeparatorExpression();
+			if ( separator instanceof Overflow overflow ) {
+				separator = overflow.getSeparatorExpression();
 			}
 			sqlAppender.appendSql( ',' );
 			separator.accept( translator );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -51,7 +51,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -65,8 +64,8 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -77,6 +76,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.SQLXML;
@@ -135,8 +135,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				creationContext
 		);
 
-		if ( compositeType instanceof CompositeTypeImplementor ) {
-			( (CompositeTypeImplementor) compositeType ).injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
+		if ( compositeType instanceof CompositeTypeImplementor compositeTypeImplementor ) {
+			compositeTypeImplementor.injectMappingModelPart( mappingType.getEmbeddedValueMapping(), creationProcess );
 		}
 
 		creationProcess.registerInitializationCallback(
@@ -236,8 +236,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					null,
 					creationContext
 			);
+			final int defaultSqlTypeCode = aggregateMapping.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 			final AggregateSupport aggregateSupport = dialect.getAggregateSupport();
-			final int sqlTypeCode = aggregateColumn.getSqlTypeCode();
+			final int sqlTypeCode = defaultSqlTypeCode == ARRAY ? aggregateColumn.getTypeCode() : defaultSqlTypeCode;
 			this.aggregateMappingRequiresColumnWriter = aggregateSupport
 					.requiresAggregateCustomWriteExpressionRenderer( sqlTypeCode );
 			this.preferSelectAggregateMapping = aggregateSupport.preferSelectAggregateMapping( sqlTypeCode );
@@ -263,13 +264,18 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 		final Column aggregateColumn = bootDescriptor.getAggregateColumn();
-		Integer aggregateSqlTypeCode = aggregateColumn.getSqlTypeCode();
+		final BasicValue basicValue = (BasicValue) aggregateColumn.getValue();
+		final BasicValue.Resolution<?> resolution = basicValue.getResolution();
+		final int aggregateColumnSqlTypeCode = resolution.getJdbcType().getDefaultSqlTypeCode();
+		final int aggregateSqlTypeCode;
 		boolean isArray = false;
 		String structTypeName = null;
-		switch ( aggregateSqlTypeCode ) {
+		switch ( aggregateColumnSqlTypeCode ) {
 			case STRUCT:
+				aggregateSqlTypeCode = STRUCT;
 				structTypeName = aggregateColumn.getSqlType( creationContext.getMetadata() );
 				break;
+			case ARRAY:
 			case STRUCT_ARRAY:
 			case STRUCT_TABLE:
 				isArray = true;
@@ -290,6 +296,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				isArray = true;
 				aggregateSqlTypeCode = SQLXML;
 				break;
+			default:
+				aggregateSqlTypeCode = aggregateColumnSqlTypeCode;
+				break;
 		}
 		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
 		final AggregateJdbcType aggregateJdbcType = jdbcTypeRegistry.resolveAggregateDescriptor(
@@ -307,15 +316,14 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			basicTypeRegistry.register( basicType, bootDescriptor.getStructName().render() );
 			basicTypeRegistry.register( basicType, getMappedJavaType().getJavaTypeClass().getName() );
 		}
-		final BasicValue basicValue = (BasicValue) aggregateColumn.getValue();
 		final BasicType<?> resolvedJdbcMapping;
 		if ( isArray ) {
-			final JdbcTypeConstructor arrayConstructor = jdbcTypeRegistry.getConstructor( SqlTypes.ARRAY );
+			final JdbcTypeConstructor arrayConstructor = jdbcTypeRegistry.getConstructor( aggregateColumnSqlTypeCode );
 			if ( arrayConstructor == null ) {
-				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes.ARRAY" );
+				throw new IllegalArgumentException( "No JdbcTypeConstructor registered for SqlTypes." + JdbcTypeNameMapper.getTypeName( aggregateColumnSqlTypeCode ) );
 			}
 			//noinspection rawtypes,unchecked
-			final BasicType<?> arrayType = ( (BasicPluralJavaType) basicValue.getResolution().getDomainJavaType() ).resolveType(
+			final BasicType<?> arrayType = ( (BasicPluralJavaType) resolution.getDomainJavaType() ).resolveType(
 					typeConfiguration,
 					creationContext.getDialect(),
 					basicType,
@@ -328,7 +336,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		else {
 			resolvedJdbcMapping = basicType;
 		}
-		basicValue.getResolution().updateResolution( resolvedJdbcMapping );
+		resolution.updateResolution( resolvedJdbcMapping );
 		return resolvedJdbcMapping;
 	}
 
@@ -444,8 +452,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					if ( selectable.isFormula() ) {
 						columnExpression = selectable.getTemplate(
 								dialect,
-								creationProcess.getCreationContext().getTypeConfiguration(),
-								creationProcess.getSqmFunctionRegistry()
+								creationProcess.getCreationContext().getTypeConfiguration()
 						);
 					}
 					else {
@@ -606,9 +613,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						creationProcess
 				);
 			}
-			else if ( subtype instanceof EntityType ) {
-				final EntityPersister entityPersister = creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() );
-
+			else if ( subtype instanceof EntityType subentityType ) {
 				attributeMapping = MappingModelCreationHelper.buildSingularAssociationAttributeMapping(
 						bootPropertyDescriptor.getName(),
 						valueMapping.getNavigableRole().append( bootPropertyDescriptor.getName() ),
@@ -616,8 +621,8 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						attributeIndex,
 						bootPropertyDescriptor,
 						this,
-						entityPersister,
-						(EntityType) subtype,
+						creationProcess.getEntityPersister( bootDescriptor.getOwner().getEntityName() ),
+						subentityType,
 						representationStrategy.resolvePropertyAccess( bootPropertyDescriptor ),
 						compositeType.getCascadeStyle( attributeIndex ),
 						creationProcess
@@ -717,8 +722,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final Formula formula = (Formula) selectable;
 			discriminatorColumnExpression = name = formula.getTemplate(
 					creationContext.getDialect(),
-					creationContext.getTypeConfiguration(),
-					creationContext.getFunctionRegistry()
+					creationContext.getTypeConfiguration()
 			);
 			columnDefinition = null;
 			length = null;
@@ -739,7 +743,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		return new ExplicitColumnDiscriminatorMappingImpl(
 				this,
 				name,
-				bootDescriptor.getTable().getName(),
+				bootDescriptor.getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 				discriminatorColumnExpression,
 				isFormula,
 				!isFormula,
@@ -867,7 +871,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 						? getValue( compositeInstance, i )
 						: null;
 			}
-			results[i] = compositeInstance.getClass().getName();
+			results[i] = compositeInstance.getClass();
 			return results;
 		}
 	}
@@ -897,11 +901,10 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
-			return discriminatorMapping;
-		}
+		return EntityDiscriminatorMapping.matchesRoleName( name )
+				? discriminatorMapping
+				: super.findSubPart( name, treatTargetType );
 
-		return super.findSubPart( name, treatTargetType );
 	}
 
 	@Override
@@ -975,10 +978,9 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 		if ( value == null ) {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 				}
-				span += attributeMapping.forEachJdbcValue( null, span + offset, x, y, valuesConsumer, session );
 			}
 			if ( isPolymorphic() ) {
 				span += discriminatorMapping.forEachJdbcValue( null, offset + span, x, y, valuesConsumer, session );
@@ -988,13 +990,15 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 			final ConcreteEmbeddableType concreteEmbeddableType = findSubtypeBySubclass( value.getClass().getName() );
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				if ( attributeMapping instanceof PluralAttributeMapping ) {
-					continue;
+				if ( !(attributeMapping instanceof PluralAttributeMapping) ) {
+					final Object attributeValue =
+							concreteEmbeddableType == null
+								|| !concreteEmbeddableType.declaresAttribute( attributeMapping )
+									? null
+									: getValue( value, i );
+					span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer,
+							session );
 				}
-				final Object attributeValue = concreteEmbeddableType == null || !concreteEmbeddableType.declaresAttribute( attributeMapping )
-						? null
-						: getValue( value, i );
-				span += attributeMapping.forEachJdbcValue( attributeValue, span + offset, x, y, valuesConsumer, session );
 			}
 			if ( isPolymorphic() ) {
 				final Object d = concreteEmbeddableType == null ? null : concreteEmbeddableType.getDiscriminatorValue();

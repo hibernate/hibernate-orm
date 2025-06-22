@@ -1,27 +1,25 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.NullnessUtil;
+import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -35,6 +33,7 @@ import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
@@ -42,12 +41,13 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  */
 public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implements SqmPath<T> {
 	private final NavigablePath navigablePath;
+	private final SqmPathSource<T> referencedPathSource;
 	private final SqmPath<?> lhs;
 
 	/**
 	 * For HQL and Criteria processing - used to track reusable paths relative to this path.
-	 * E.g., given `p.mate.mate` the SqmRoot identified by `p` would
-	 * have a reusable path for the `p.mate` path.
+	 * E.g., given {@code p.mate.mate} the {@code SqmRoot} identified by {@code p} would
+	 * have a reusable path for the {@code p.mate} path.
 	 */
 	private Map<String, SqmPath<?>> reusablePaths;
 
@@ -56,9 +56,11 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			SqmPathSource<T> referencedPathSource,
 			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
-		super( referencedPathSource, nodeBuilder );
+		super( referencedPathSource.getSqmType(), nodeBuilder );
 		this.navigablePath = navigablePath;
+		this.referencedPathSource = referencedPathSource;
 		this.lhs = lhs;
+//		assert super.getNodeType() == referencedPathSource;
 	}
 
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
@@ -70,8 +72,9 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	private boolean navigablePathsMatch(AbstractSqmPath<T> target) {
 		final SqmPath<?> lhs = getLhs() != null ? getLhs() : findRoot();
 		final SqmPath<?> targetLhs = target.getLhs() != null ? target.getLhs() : target.findRoot();
-		return lhs == null || lhs.getNavigablePath() == targetLhs.getNavigablePath()
-				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
+		return lhs == null
+			|| lhs.getNavigablePath() == targetLhs.getNavigablePath()
+			|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 	}
 
 	private SqmPath<?> getRoot(SqmPath<?> lhs) {
@@ -79,13 +82,13 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public SqmPathSource<T> getNodeType() {
-		return (SqmPathSource<T>) NullnessUtil.castNonNull( super.getNodeType() );
+	public SqmBindableType<T> getNodeType() {
+		return referencedPathSource.getPathType();
 	}
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		return (SqmPathSource<T>) NullnessUtil.castNonNull( super.getNodeType() );
+		return referencedPathSource;
 	}
 
 	@Override
@@ -100,11 +103,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public List<SqmPath<?>> getReusablePaths() {
-		if ( reusablePaths == null ) {
-			return Collections.emptyList();
-		}
-
-		return new ArrayList<>( reusablePaths.values() );
+		return reusablePaths == null ? emptyList() : new ArrayList<>( reusablePaths.values() );
 	}
 
 	@Override
@@ -117,13 +116,10 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	public void registerReusablePath(SqmPath<?> path) {
 		assert path.getLhs() == this;
-
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
 		}
-
 		final String relativeName = path.getNavigablePath().getLocalName();
-
 		final SqmPath<?> previous = reusablePaths.put( relativeName, path );
 		if ( previous != null && previous != path ) {
 			throw new IllegalStateException( "Implicit-join path registration unexpectedly overrode previous registration - " + relativeName );
@@ -132,10 +128,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	@Override
 	public SqmPath<?> getReusablePath(String name) {
-		if ( reusablePaths == null ) {
-			return null;
-		}
-		return reusablePaths.get( name );
+		return reusablePaths == null ? null : reusablePaths.get( name );
 	}
 
 	@Override
@@ -154,32 +147,28 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
-		final DomainType<?> lhsType;
+	public SqmPathSource<T> getResolvedModel() {
 		final SqmPathSource<T> pathSource = getReferencedPathSource();
-		if ( pathSource.isGeneric() && ( lhsType = getLhs().getResolvedModel().getSqmPathType() ) instanceof ManagedDomainType ) {
-			final PersistentAttribute<?, ?> concreteAttribute = ( (ManagedDomainType<?>) lhsType ).findConcreteGenericAttribute(
-					pathSource.getPathName()
-			);
+		if ( pathSource.isGeneric()
+				&& getLhs().getResolvedModel().getPathType() instanceof SqmManagedDomainType<?> lhsType ) {
+			final var concreteAttribute = lhsType.findConcreteGenericAttribute( pathSource.getPathName() );
 			if ( concreteAttribute != null ) {
-				return (SqmPathSource<?>) concreteAttribute;
+				return (SqmPathSource<T>) concreteAttribute;
 			}
 		}
 		return getModel();
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
-		//noinspection unchecked
-		return (SqmExpressible<T>) getResolvedModel();
+	public SqmBindableType<T> getExpressible() {
+		return getResolvedModel().getExpressible();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
 		final SqmPathSource<T> referencedPathSource = getReferencedPathSource();
-		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
-
+		final SqmPathSource<?> subPathSource =
+				referencedPathSource.findSubPathSource( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
 		if ( subPathSource == null ) {
 			return new SqmLiteral<>(
 					referencedPathSource.getBindableJavaType(),
@@ -187,15 +176,26 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 					nodeBuilder()
 			);
 		}
-		return (SqmExpression<Class<? extends T>>) resolvePath( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME, subPathSource );
+		else {
+			@SuppressWarnings("unchecked")
+			final var discriminatorSource = (SqmPathSource<Class<? extends T>>) subPathSource;
+			return resolvePath( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME, discriminatorSource );
+		}
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmPath<?> get(String attributeName) {
-		final SqmPathSource<?> subNavigable =
-				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
+	public <Y> SqmPath<Y> get(String attributeName) {
+		@SuppressWarnings("unchecked")
+		final SqmPathSource<Y> subNavigable = (SqmPathSource<Y>) getResolvedModel().getSubPathSource( attributeName );
 		return resolvePath( attributeName, subNavigable );
+	}
+
+	@Override
+	public <Y> SqmPath<Y> get(String attributeName, boolean includeSubtypes) {
+		@SuppressWarnings("unchecked")
+		final SqmPathSource<Y> subPathSource = (SqmPathSource<Y>)
+				getResolvedModel().getSubPathSource( attributeName, includeSubtypes );
+		return resolvePath( attributeName, subPathSource );
 	}
 
 	protected <X> SqmPath<X> resolvePath(PersistentAttribute<?, X> attribute) {
@@ -204,35 +204,45 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
+		final SqmPathSource<?> intermediatePathSource =
+				getResolvedModel().getIntermediatePathSource( pathSource );
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
-			final SqmPath<X> path = pathSource.createSqmPath( this, getResolvedModel().getIntermediatePathSource( pathSource ) );
+			final SqmPath<X> path = pathSource.createSqmPath( this, intermediatePathSource );
 			reusablePaths.put( attributeName, path );
 			return path;
 		}
 		else {
 			//noinspection unchecked
-			return (SqmPath<X>) reusablePaths.computeIfAbsent(
-					attributeName,
-					name -> pathSource.createSqmPath( this, getResolvedModel().getIntermediatePathSource( pathSource ) )
-			);
+			return (SqmPath<X>)
+					reusablePaths.computeIfAbsent( attributeName,
+							name -> pathSource.createSqmPath( this, intermediatePathSource ) );
 		}
 	}
 
 	protected <S extends T> SqmTreatedPath<T, S> getTreatedPath(ManagedDomainType<S> treatTarget) {
 		final NavigablePath treat = getNavigablePath().treatAs( treatTarget.getTypeName() );
-		//noinspection unchecked
-		SqmTreatedPath<T, S> path = (SqmTreatedPath<T, S>) getLhs().getReusablePath( treat.getLocalName() );
+		final SqmPath<?> reusablePath = getLhs().getReusablePath( treat.getLocalName() );
+		//TODO: check this cast
+		@SuppressWarnings("unchecked")
+		final SqmTreatedPath<T, S> path = (SqmTreatedPath<T, S>) reusablePath;
 		if ( path == null ) {
-			if ( treatTarget instanceof EntityDomainType<?> ) {
-				path = new SqmTreatedEntityValuedSimplePath<>( this, (EntityDomainType<S>) treatTarget, nodeBuilder() );
+			final SqmTreatedPath<T, S> treatedPath;
+			if ( treatTarget instanceof SqmEntityDomainType<S> entityDomainType ) {
+				treatedPath = new SqmTreatedEntityValuedSimplePath<>( this, entityDomainType, nodeBuilder() );
+			}
+			else if ( treatTarget instanceof SqmEmbeddableDomainType<S> embeddableDomainType ) {
+				treatedPath = new SqmTreatedEmbeddedValuedSimplePath<>( this, embeddableDomainType );
 			}
 			else {
-				path = new SqmTreatedEmbeddedValuedSimplePath<>( this, (EmbeddableDomainType<S>) treatTarget );
+				throw new AssertionFailure( "Unrecognized treat target type: " + treatTarget.getTypeName() );
 			}
-			getLhs().registerReusablePath( path );
+			getLhs().registerReusablePath( treatedPath );
+			return treatedPath;
 		}
-		return path;
+		else {
+			return path;
+		}
 	}
 
 	@Override
@@ -284,12 +294,12 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		if ( parent == realParent ) {
 			return null;
 		}
-		else if ( realParent instanceof EntityIdentifierNavigablePath ) {
+		else if ( realParent instanceof EntityIdentifierNavigablePath entityIdentifierNavigablePath ) {
 			parent = getRealParentPath( castNonNull( realParent.getRealParent() ), parent );
 			if ( parent != null ) {
 				parent = new EntityIdentifierNavigablePath(
 						parent,
-						( (EntityIdentifierNavigablePath) realParent ).getIdentifierAttributeName()
+						entityIdentifierNavigablePath.getIdentifierAttributeName()
 				);
 			}
 		}
@@ -329,6 +339,22 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AbstractSqmPath<?> that
+			&& this.getClass() == that.getClass()
+			&& Objects.equals( this.navigablePath, that.navigablePath )
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() );
+//			&& Objects.equals( this.lhs, that.lhs );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( navigablePath, getExplicitAlias() );
+//		return lhs == null ? 0 : lhs.hashCode();
+//		return navigablePath.hashCode();
+//		return Objects.hash( navigablePath, lhs );
+	}
 
 	@Override
 	public String toString() {

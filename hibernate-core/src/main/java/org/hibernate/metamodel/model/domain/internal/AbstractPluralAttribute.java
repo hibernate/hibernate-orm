@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -10,11 +10,8 @@ import java.util.Collection;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPersistentAttribute;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -35,7 +32,7 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePat
  */
 public abstract class AbstractPluralAttribute<D, C, E>
 		extends AbstractAttribute<D, C, E>
-		implements PluralPersistentAttribute<D, C, E>, Serializable {
+		implements SqmPluralPersistentAttribute<D, C, E>, Serializable {
 
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
@@ -49,8 +46,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 				builder.getCollectionJavaType(),
 				builder.getAttributeClassification(),
 				builder.getValueType(),
-				builder.getMember(),
-				metadataContext
+				builder.getMember()
 		);
 
 		this.classification = builder.getCollectionClassification();
@@ -87,11 +83,10 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
-		if ( CollectionPart.Nature.ELEMENT.getName().equals( name ) ) {
-			return elementPathSource;
-		}
-		return elementPathSource.findSubPathSource( name, metamodel );
+	public SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
+		return CollectionPart.Nature.ELEMENT.getName().equals( name )
+				? elementPathSource
+				: elementPathSource.findSubPathSource( name, includeSubtypes );
 	}
 
 	@Override
@@ -151,9 +146,12 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		return getElementType().getJavaType();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		return new SqmPluralValuedSimplePath<>(
+		// We need an unchecked cast here : PluralPersistentAttribute implements path source with its element type
+		//  but resolving paths from it must produce collection-typed expressions.
+		return (SqmPath<E>) new SqmPluralValuedSimplePath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				this,
 				lhs,
@@ -168,19 +166,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 					"`lhs` cannot be null for a sub-navigable reference - " + getName()
 			);
 		}
-		final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
-		NavigablePath navigablePath = parent.getNavigablePath();
-		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
-			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
-		}
-		final DomainType<?> parentType = parentPathSource.getSqmPathType();
-		if ( parentType != getDeclaringType() && parentType instanceof EntityDomainType &&
-				( (EntityDomainType<?>) parentType ).findPluralAttribute( getName() ) == null ) {
-			// If the parent path is an entity type which does not contain the joined attribute
-			// add an implicit treat to the parent's navigable path
-			navigablePath = navigablePath.treatAs( getDeclaringType().getTypeName() );
-		}
-		return buildSubNavigablePath( navigablePath, getName(), alias );
+		return buildSubNavigablePath( getParentNavigablePath( parent ), getName(), alias );
 	}
 
 	@Override

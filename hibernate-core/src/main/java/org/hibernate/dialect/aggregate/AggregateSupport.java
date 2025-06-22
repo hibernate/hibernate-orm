@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.aggregate;
@@ -13,14 +13,17 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A set of operations providing support for aggregate column types
- * in a certain {@link Dialect SQL dialect}.
+ * in a certain {@linkplain Dialect SQL dialect}.
  *
  * @since 6.2
  */
@@ -39,13 +42,56 @@ public interface AggregateSupport {
 	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the read expression
 	 */
-	String aggregateComponentCustomReadExpression(
+	default String aggregateComponentCustomReadExpression(
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
 			String columnExpression,
 			AggregateColumn aggregateColumn,
-			Column column);
+			Column column) {
+		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				columnExpression,
+				// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
+				// which we can easily get from the type code of the aggregate column
+				sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode,
+				new SqlTypedMappingImpl(
+						column.getTypeName(),
+						column.getLength(),
+						column.getPrecision(),
+						column.getScale(),
+						column.getTemporalPrecision(),
+						column.getType()
+				),
+				aggregateColumn.getComponent().getMetadata().getTypeConfiguration()
+		);
+	}
+
+	/**
+	 * Returns the custom read expression to use for {@code column}.
+	 * Replaces the given {@code placeholder} in the given {@code template}
+	 * by the custom read expression to use for {@code column}.
+	 *
+	 * @param template The custom read expression template of the column
+	 * @param placeholder The placeholder to replace with the actual read expression
+	 * @param aggregateParentReadExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the read expression
+	 * @param aggregateColumnTypeCode The SQL type code of the aggregate column
+	 * @param column The column within the aggregate type, for which to return the read expression
+	 * @param typeConfiguration The type configuration
+	 * @since 7.0
+	 */
+	String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
+			SqlTypedMapping column,
+			TypeConfiguration typeConfiguration);
 
 	/**
 	 * Returns the assignment expression to use for {@code column},
@@ -56,10 +102,37 @@ public interface AggregateSupport {
 	 * @param aggregateColumn The type information for the aggregate column
 	 * @param column The column within the aggregate type, for which to return the assignment expression
 	 */
-	String aggregateComponentAssignmentExpression(
+	default String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
 			String columnExpression,
 			AggregateColumn aggregateColumn,
+			Column column) {
+		final int sqlTypeCode = aggregateColumn.getType().getJdbcType().getDefaultSqlTypeCode();
+		return aggregateComponentAssignmentExpression(
+				aggregateParentAssignmentExpression,
+				columnExpression,
+				// We need to know what array this is STRUCT_ARRAY/JSON_ARRAY/XML_ARRAY,
+				// which we can easily get from the type code of the aggregate column
+				sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode,
+				column
+		);
+	}
+
+	/**
+	 * Returns the assignment expression to use for {@code column},
+	 * which is part of the aggregate type of {@code aggregatePath}.
+	 *
+	 * @param aggregateParentAssignmentExpression The expression to the aggregate column, which contains the column
+	 * @param columnExpression The column within the aggregate type, for which to return the assignment expression
+	 * @param aggregateColumnTypeCode The SQL type code of the aggregate column
+	 * @param column The column within the aggregate type, for which to return the assignment expression
+	 *
+	 * @since 7.0
+	 */
+	String aggregateComponentAssignmentExpression(
+			String aggregateParentAssignmentExpression,
+			String columnExpression,
+			int aggregateColumnTypeCode,
 			Column column);
 
 	/**

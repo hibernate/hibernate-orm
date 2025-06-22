@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -21,7 +21,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.EnumType;
 
 /**
- * Access to a JDBC ResultSet and information about it.
+ * Access to a JDBC {@link ResultSet} and information about it.
  *
  * @author Steve Ebersole
  */

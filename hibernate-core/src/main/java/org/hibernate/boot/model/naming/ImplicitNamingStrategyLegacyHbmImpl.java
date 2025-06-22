@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * Implements the original legacy naming behavior.
@@ -19,7 +19,7 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 
 	@Override
 	protected String transformEntityName(EntityNaming entityNaming) {
-		return StringHelper.unqualify( entityNaming.getEntityName() );
+		return unqualify( entityNaming.getEntityName() );
 	}
 
 	@Override
@@ -37,10 +37,10 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 					source.getBuildingContext()
 			);
 		}
-
-		return super.determineJoinColumnName( source );
+		else {
+			return super.determineJoinColumnName( source );
+		}
 	}
-
 
 	@Override
 	public Identifier determineJoinTableName(ImplicitJoinTableNameSource source) {
@@ -48,10 +48,10 @@ public class ImplicitNamingStrategyLegacyHbmImpl extends ImplicitNamingStrategyJ
 			final String name = source.getOwningPhysicalTableName()
 					+ '_'
 					+ transformAttributePath( source.getAssociationOwningAttributePath() );
-
 			return toIdentifier( name, source.getBuildingContext() );
 		}
-
-		return super.determineJoinTableName( source );
+		else {
+			return super.determineJoinTableName( source );
+		}
 	}
 }

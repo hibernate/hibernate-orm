@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 
 /**
- * Standard implementation of QualifiedObjectNameFormatter which uses information reported
+ * Standard implementation of {@link QualifiedObjectNameFormatter} which uses information reported
  * by {@link DatabaseMetaData} to render qualified names.
  *
  * @author Steve Ebersole

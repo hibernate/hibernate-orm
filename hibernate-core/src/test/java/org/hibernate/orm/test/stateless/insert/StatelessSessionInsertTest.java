@@ -1,58 +1,84 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless.insert;
 
-import org.hibernate.cfg.MappingSettings;
-
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import org.hibernate.StatelessSession;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * @author mukhanov@gmail.com
+ * Simple "smoke" test of {@linkplain StatelessSession#insert} with associations
  */
-@ServiceRegistry(settings = @Setting(name = MappingSettings.TRANSFORM_HBM_XML, value = "true"))
-@DomainModel(xmlMappings = "org/hibernate/orm/test/stateless/insert/Mappings.hbm.xml")
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(annotatedClasses = {
+		StatelessSessionInsertTest.Department.class,
+		StatelessSessionInsertTest.Employee.class,
+})
 @SessionFactory
 public class StatelessSessionInsertTest {
 
 	@Test
 	public void testInsertWithForeignKey(SessionFactoryScope scope) {
-		Message msg = new Message();
-		scope.inTransaction(
-				session -> {
-					final String messageId = "message_id";
-					msg.setId( messageId );
-					msg.setContent( "message_content" );
-					msg.setSubject( "message_subject" );
-					session.persist( msg );
-				}
-		);
+		final Department department = scope.fromTransaction( (session) -> {
+			final Department dept = new Department( 1, "Marketing" );
+			session.persist( dept );
+			return dept;
+		} );
 
-		scope.inStatelessTransaction(
-				statelessSession -> {
-					MessageRecipient signature = new MessageRecipient();
-					signature.setId( "recipient" );
-					signature.setEmail( "recipient@hibernate.org" );
-					signature.setMessage( msg );
-					statelessSession.insert( signature );
-				}
-		);
+		scope.inStatelessTransaction( (statelessSession) -> {
+			final Employee employee = new Employee( 1, "John Jacobs", department );
+			statelessSession.insert( employee );
+		} );
 	}
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete MessageRecipient" ).executeUpdate();
-					session.createQuery( "delete Message" ).executeUpdate();
-				}
-		);
+		scope.dropData();
+	}
+
+	@Entity
+	@Table(name = "departments")
+	public static class Department {
+		@Id
+		private Integer id;
+		private String name;
+
+		public Department() {
+		}
+
+		public Department(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+	}
+
+	@Entity
+	@Table(name = "employees")
+	public static class Employee {
+		@Id
+		private Integer id;
+		private String name;
+		@ManyToOne
+		@JoinColumn(name = "msg_fk")
+		private Department department;
+
+		public Employee() {
+		}
+
+		public Employee(Integer id, String name, Department department) {
+			this.id = id;
+			this.name = name;
+			this.department = department;
+		}
 	}
 }

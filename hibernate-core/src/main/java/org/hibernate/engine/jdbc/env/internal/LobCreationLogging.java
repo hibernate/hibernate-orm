@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.engine.jdbc.JdbcLogging;
 import org.hibernate.internal.log.SubSystemLogging;
@@ -28,6 +29,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 )
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10010001, max = 10010050 )
+@Internal
 public interface LobCreationLogging extends BasicLogger {
 	String NAME = JdbcLogging.NAME + ".lob";
 

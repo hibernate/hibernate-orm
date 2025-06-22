@@ -1,45 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.hint;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.hibernate.dialect.Dialect;
 
 /**
- * Adds an INDEX query hint as follows:
- *
- * <code>
- * SELECT *
- * FROM TEST
- * USE INDEX (hint1, hint2)
- * WHERE X=1
- * </code>
- *
- * @author Vlad Mihalcea
+ * @deprecated Moved to {@link org.hibernate.dialect.Dialect}
  */
+@Deprecated(since = "7.0", forRemoval = true)
 public class IndexQueryHintHandler implements QueryHintHandler {
-
-	public static final IndexQueryHintHandler INSTANCE = new IndexQueryHintHandler();
-
-	private static final Pattern QUERY_PATTERN = Pattern.compile( "^\\s*(select\\b.+?\\bfrom\\b.+?)(\\bwhere\\b.+?)$" );
 
 	@Override
 	public String addQueryHints(String query, String hints) {
-		Matcher matcher = QUERY_PATTERN.matcher( query );
-		if ( matcher.matches() && matcher.groupCount() > 1 ) {
-			String startToken = matcher.group( 1 );
-			String endToken = matcher.group( 2 );
-
-			return startToken +
-					" use index (" +
-					hints +
-					") " +
-					endToken;
-		}
-		else {
-			return query;
-		}
+		return Dialect.addUseIndexQueryHint( query, hints);
 	}
 }

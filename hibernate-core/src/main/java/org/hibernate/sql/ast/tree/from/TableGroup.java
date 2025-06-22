@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
@@ -124,13 +124,10 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	@Override
 	default void applySqlSelections(DomainResultCreationState creationState) {
 		final ModelPartContainer modelPart = getModelPart();
-		final ModelPart modelPartToApply;
-		if ( modelPart instanceof EntityValuedModelPart ) {
-			modelPartToApply = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
-		}
-		else {
-			modelPartToApply = modelPart;
-		}
+		final ModelPart modelPartToApply =
+				modelPart instanceof EntityValuedModelPart entityValuedModelPart
+						? entityValuedModelPart.getEntityMappingType()
+						: modelPart;
 		modelPartToApply.applySqlSelections(
 				getNavigablePath(),
 				creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( getNavigablePath() ),
@@ -225,5 +222,20 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	 */
 	default boolean isVirtual() {
 		return false;
+	}
+
+	default TableReference findTableReference(String identificationVariable) {
+		final TableReference primaryTableReference = getPrimaryTableReference();
+		if ( identificationVariable.equals( primaryTableReference.getIdentificationVariable() ) ) {
+			return primaryTableReference;
+		}
+		for ( TableReferenceJoin tableReferenceJoin : getTableReferenceJoins() ) {
+			final NamedTableReference joinedTableReference = tableReferenceJoin.getJoinedTableReference();
+			if ( identificationVariable.equals( joinedTableReference.getIdentificationVariable() ) ) {
+				return joinedTableReference;
+			}
+		}
+
+		return null;
 	}
 }

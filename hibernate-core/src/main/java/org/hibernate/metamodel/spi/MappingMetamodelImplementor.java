@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.spi;
@@ -50,14 +50,9 @@ public interface MappingMetamodelImplementor extends MappingMetamodel, QueryPara
 	 *
 	 * @return All the entity names
 	 */
-	default String[] getAllCollectionRoles(){
+	default String[] getAllCollectionRoles() {
 		return streamCollectionDescriptors()
 				.map( CollectionPersister::getRole )
 				.toArray( String[]::new );
 	}
-
-	default void close() {
-
-	}
-
 }

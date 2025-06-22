@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -61,8 +61,8 @@ public class NamedQueryBinder {
 		boolean foundQuery = false;
 
 		for ( Object content : namedQueryBinding.getContent() ) {
-			if ( content instanceof String ) {
-				final String hqlString = nullIfEmpty( ( (String) content ).trim() );
+			if ( content instanceof String string ) {
+				final String hqlString = nullIfEmpty( string.trim() );
 				if ( isNotEmpty( hqlString ) ) {
 					queryBuilder.setHqlString( hqlString );
 					foundQuery = true;
@@ -201,22 +201,22 @@ public class NamedQueryBinder {
 			ImplicitHbmResultSetMappingDescriptorBuilder implicitResultSetMappingBuilder,
 			JaxbHbmNamedNativeQueryType namedQueryBinding,
 			HbmLocalMetadataBuildingContext context) {
-		if ( content instanceof String ) {
+		if ( content instanceof String string ) {
 			// Especially when the query string is wrapped in CDATA we will get
 			// "extra" Strings here containing just spaces and/or newlines.  This
 			// bit tries to account for them.
-			final String contentString = nullIfEmpty( ( (String) content ).trim() );
+			final String contentString = nullIfEmpty( string.trim() );
 			if ( contentString != null ) {
-				queryBuilder.setSqlString( (String) content );
+				queryBuilder.setSqlString( string );
 				return true;
 			}
 			else {
 				return false;
 			}
 		}
-		else if ( content instanceof JAXBElement ) {
+		else if ( content instanceof JAXBElement<?> element ) {
 			return processNamedQueryContentItem(
-					( (JAXBElement<?>) content ).getValue(),
+					element.getValue(),
 					queryBuilder,
 					implicitResultSetMappingBuilder,
 					namedQueryBinding,
@@ -230,17 +230,17 @@ public class NamedQueryBinder {
 		else if ( content instanceof JaxbHbmSynchronizeType synchronizedSpace ) {
 			queryBuilder.addSynchronizedQuerySpace( synchronizedSpace.getTable() );
 		}
-		else if ( content instanceof JaxbHbmNativeQueryScalarReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryScalarReturnType) content );
+		else if ( content instanceof JaxbHbmNativeQueryScalarReturnType scalarReturnType ) {
+			implicitResultSetMappingBuilder.addReturn( scalarReturnType );
 		}
-		else if ( content instanceof JaxbHbmNativeQueryReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryReturnType) content );
+		else if ( content instanceof JaxbHbmNativeQueryReturnType returnType ) {
+			implicitResultSetMappingBuilder.addReturn( returnType );
 		}
-		else if ( content instanceof JaxbHbmNativeQueryJoinReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryJoinReturnType) content );
+		else if ( content instanceof JaxbHbmNativeQueryJoinReturnType jaxbHbmNativeQueryJoinReturnType ) {
+			implicitResultSetMappingBuilder.addReturn( jaxbHbmNativeQueryJoinReturnType );
 		}
-		else if ( content instanceof JaxbHbmNativeQueryCollectionLoadReturnType ) {
-			implicitResultSetMappingBuilder.addReturn( (JaxbHbmNativeQueryCollectionLoadReturnType) content );
+		else if ( content instanceof JaxbHbmNativeQueryCollectionLoadReturnType collectionLoadReturnType ) {
+			implicitResultSetMappingBuilder.addReturn( collectionLoadReturnType );
 		}
 		else {
 			throw new org.hibernate.boot.MappingException(

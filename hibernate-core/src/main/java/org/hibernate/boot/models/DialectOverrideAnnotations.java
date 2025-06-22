@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models;
@@ -27,8 +27,6 @@ import org.hibernate.boot.models.annotations.internal.OverriddenGeneratedColumnA
 import org.hibernate.boot.models.annotations.internal.OverriddenGeneratedColumnsAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenJoinFormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenJoinFormulasAnnotation;
-import org.hibernate.boot.models.annotations.internal.OverriddenOrderByAnnotation;
-import org.hibernate.boot.models.annotations.internal.OverriddenOrderBysAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLDeleteAllAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLDeleteAllsAnnotation;
 import org.hibernate.boot.models.annotations.internal.OverriddenSQLDeleteAnnotation;
@@ -60,15 +58,6 @@ public interface DialectOverrideAnnotations {
 			DialectOverride.Check.class,
 			OverriddenCheckAnnotation.class,
 			DIALECT_OVERRIDE_CHECKS
-	);
-	OrmAnnotationDescriptor<DialectOverride.OrderBys, OverriddenOrderBysAnnotation> DIALECT_OVERRIDE_ORDER_BYS = new OrmAnnotationDescriptor<>(
-			DialectOverride.OrderBys.class,
-			OverriddenOrderBysAnnotation.class
-	);
-	OrmAnnotationDescriptor<DialectOverride.OrderBy, OverriddenOrderByAnnotation> DIALECT_OVERRIDE_ORDER_BY = new OrmAnnotationDescriptor<>(
-			DialectOverride.OrderBy.class,
-			OverriddenOrderByAnnotation.class,
-			DIALECT_OVERRIDE_ORDER_BYS
 	);
 	OrmAnnotationDescriptor<DialectOverride.ColumnDefaults, OverriddenColumnDefaultsAnnotation> DIALECT_OVERRIDE_COLUMN_DEFAULTS = new OrmAnnotationDescriptor<>(
 			DialectOverride.ColumnDefaults.class,

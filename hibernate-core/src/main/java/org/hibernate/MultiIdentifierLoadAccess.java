@@ -1,13 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
 import java.util.List;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 /**
  * Loads multiple instances of a given entity type at once, by
@@ -30,6 +33,38 @@ import org.hibernate.graph.RootGraph;
  * @author Steve Ebersole
  */
 public interface MultiIdentifierLoadAccess<T> {
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 * @return {@code this}, for method chaining
+	 */
+	default MultiIdentifierLoadAccess<T> with(LockMode lockMode) {
+		return with( lockMode, PessimisticLockScope.NORMAL );
+	}
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MultiIdentifierLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope);
+
+	/**
+	 * Specify the {@linkplain Timeout timeout} to use when
+	 * querying the database.
+	 *
+	 * @param timeout The timeout to apply to the database operation
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	MultiIdentifierLoadAccess<T> with(Timeout timeout);
+
 	/**
 	 * Specify the {@linkplain LockOptions lock options} to use when
 	 * querying the database.
@@ -37,7 +72,12 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * @param lockOptions The lock options to use
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use one of {@linkplain #with(LockMode)},
+	 * {@linkplain #with(LockMode, PessimisticLockScope)}
+	 * and/or {@linkplain #with(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	MultiIdentifierLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
@@ -65,7 +105,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default MultiIdentifierLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -76,7 +116,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default MultiIdentifierLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -84,7 +124,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
-	default MultiIdentifierLoadAccess<T> with(RootGraph<T> graph) {
+	default MultiIdentifierLoadAccess<T> with(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -93,7 +133,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
-	MultiIdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	MultiIdentifierLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a
@@ -133,6 +173,18 @@ public interface MultiIdentifierLoadAccess<T> {
 	 * If an explicit batch size is set manually, care should be taken
 	 * to not exceed the capabilities of the underlying database.
 	 * <p>
+	 * The performance impact of setting a batch size depends on whether
+	 * a SQL array may be used to pass the list of identifiers to the
+	 * database:
+	 * <ul>
+	 * <li>for databases which support standard SQL arrays, a smaller
+	 *     batch size might be extremely inefficient compared to a very
+	 *     large batch size or no batching at all, but
+	 * <li>on the other hand, for databases with no SQL array type, a
+	 *     large batch size results in long SQL statements with many JDBC
+	 *     parameters.
+	 * </ul>
+	 * <p>
 	 * A batch size is considered a hint.
 	 *
 	 * @param batchSize The batch size
@@ -158,7 +210,7 @@ public interface MultiIdentifierLoadAccess<T> {
 	/**
 	 * Should {@link #multiLoad} return entity instances that have been
 	 * {@linkplain Session#remove(Object) marked for removal} in the
-	 * current session, but not yet {@code delete}d in the database?
+	 * current session, but not yet deleted in the database?
 	 * <p>
 	 * By default, instances marked for removal are replaced by null in
 	 * the returned list of entities when {@link #enableOrderedReturn}

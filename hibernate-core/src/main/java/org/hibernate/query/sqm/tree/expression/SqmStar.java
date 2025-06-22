@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Gavin King
@@ -31,8 +32,17 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 		return walker.visitStar( this );
 	}
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "*" );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "*" );
 	}
 
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmStar;
+	}
+
+	@Override
+	public int hashCode() {
+		return 1;
+	}
 }

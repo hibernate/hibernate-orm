@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -19,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * @author Emmanuel Bernard
  */
-public class BasicTypeImpl<J> implements BasicDomainType<J>, JdbcMapping, Serializable {
+public class BasicTypeImpl<J> implements BasicDomainType<J>, SqmDomainType<J>, JdbcMapping, Serializable {
 	private final JavaType<J> javaType;
 	private final JdbcType jdbcType;
 
@@ -28,18 +29,24 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, JdbcMapping, Serial
 		this.jdbcType = jdbcType;
 	}
 
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+	@Override
+	public Class<J> getJavaType() {
+		return BasicDomainType.super.getJavaType();
+	}
+
+	@Override
+	public String getTypeName() {
+		return javaType.getTypeName();
+	}
+
+	@Override
+	public SqmDomainType<J> getSqmType() {
+		return this;
 	}
 
 	@Override
 	public JavaType<J> getExpressibleJavaType() {
 		return javaType;
-	}
-
-	@Override
-	public Class<J> getJavaType() {
-		return this.getExpressibleJavaType().getJavaTypeClass();
 	}
 
 	@Override
@@ -69,17 +76,17 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, JdbcMapping, Serial
 	}
 
 	@Override
-	public JavaType getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public ValueExtractor<?> getJdbcValueExtractor() {
+	public ValueExtractor<J> getJdbcValueExtractor() {
 		return jdbcType.getExtractor( javaType );
 	}
 
 	@Override
-	public ValueBinder getJdbcValueBinder() {
+	public ValueBinder<J> getJdbcValueBinder() {
 		return jdbcType.getBinder( javaType );
 	}
 }

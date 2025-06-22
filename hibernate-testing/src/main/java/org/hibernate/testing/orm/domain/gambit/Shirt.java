@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.domain.gambit;
@@ -62,7 +62,7 @@ public class Shirt {
 		@Override
 		public String convertToEntityAttribute(Integer dbData) {
 			if ( dbData != null ) {
-				switch ( Integer.valueOf( dbData ) ) {
+				switch ( dbData ) {
 					case 1:
 						return "X";
 					case 2:

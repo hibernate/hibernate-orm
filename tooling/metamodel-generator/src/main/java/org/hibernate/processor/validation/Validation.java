@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.validation;
@@ -21,6 +21,7 @@ import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
@@ -29,7 +30,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
-import static org.hibernate.processor.validation.ProcessorSessionFactory.getEntityName;
+import static org.hibernate.processor.validation.ProcessorSessionFactory.getHibernateEntityName;
 import static org.hibernate.processor.validation.ProcessorSessionFactory.isEntity;
 
 
@@ -103,27 +104,28 @@ public class Validation {
 
 	private static SemanticQueryBuilder<?> createSemanticQueryBuilder(
 			@Nullable TypeMirror returnType, String hql, SessionFactoryImplementor factory) {
+		final SqmCreationContext context = factory.getQueryEngine().getCriteriaBuilder();
 		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final String typeName = typeElement.getQualifiedName().toString();
 			final String shortName = typeElement.getSimpleName().toString();
 			return isEntity( typeElement )
-					? new SemanticQueryBuilder<>( typeName, shortName, getEntityName(typeElement), CREATION_OPTIONS, factory, hql )
-					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, CREATION_OPTIONS, factory, hql );
+					? new SemanticQueryBuilder<>( typeName, shortName, getHibernateEntityName(typeElement), CREATION_OPTIONS, context, hql )
+					: new SemanticQueryBuilder<>( typeName, shortName, Object[].class, CREATION_OPTIONS, context, hql );
 		}
 		else {
-			return new SemanticQueryBuilder<>( Object[].class, CREATION_OPTIONS, factory, hql );
+			return new SemanticQueryBuilder<>( Object[].class, CREATION_OPTIONS, context, hql );
 		}
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {
 		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
 		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
-		hqlLexer.addErrorListener( handler );
+
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
 		hqlParser.removeErrorListeners();
-		hqlParser.addErrorListener( handler );
+
 		hqlParser.setErrorHandler( new BailErrorStrategy() );
 
 		try {
@@ -137,6 +139,7 @@ public class Validation {
 			// fall back to LL(k)-based parsing
 			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
 			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+			hqlParser.addErrorListener( handler );
 
 			return hqlParser.statement();
 		}

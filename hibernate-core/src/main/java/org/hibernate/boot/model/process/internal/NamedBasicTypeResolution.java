@@ -1,12 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
 
-import java.util.function.Function;
-
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -14,7 +11,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -22,32 +18,21 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	private final JavaType<J> domainJtd;
 
-	private final BasicType basicType;
+	private final BasicType<J> basicType;
 
-	private final BasicValueConverter valueConverter;
+	private final BasicValueConverter<J,?> valueConverter;
 	private final MutabilityPlan<J> mutabilityPlan;
 
 	public NamedBasicTypeResolution(
 			JavaType<J> domainJtd,
-			BasicType basicType,
-			BasicValueConverter valueConverter,
-			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
-			MetadataBuildingContext context) {
+			BasicType<J> basicType,
+			BasicValueConverter<J,?> valueConverter,
+			MutabilityPlan<J> explicitPlan) {
 		this.domainJtd = domainJtd;
-
 		this.basicType = basicType;
-
-		// named type cannot have converter applied
-//		this.valueConverter = null;
 		// todo (6.0) : does it even make sense to allow a combo of explicit Type and a converter?
 		this.valueConverter = valueConverter;
-
-		final MutabilityPlan explicitPlan = explicitMutabilityPlanAccess != null
-				? explicitMutabilityPlanAccess.apply( context.getBootstrapContext().getTypeConfiguration() )
-				: null;
-		this.mutabilityPlan = explicitPlan != null
-				? explicitPlan
-				: domainJtd.getMutabilityPlan();
+		this.mutabilityPlan = explicitPlan != null ? explicitPlan : domainJtd.getMutabilityPlan();
 	}
 
 	@Override
@@ -56,7 +41,7 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public BasicType getLegacyResolvedBasicType() {
+	public BasicType<J> getLegacyResolvedBasicType() {
 		return basicType;
 	}
 
@@ -78,7 +63,7 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public BasicValueConverter getValueConverter() {
+	public BasicValueConverter<J,?> getValueConverter() {
 		return valueConverter;
 	}
 

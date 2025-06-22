@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import org.hibernate.Incubating;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
+import org.hibernate.query.sqm.internal.SqmInterpretationsKey;
+import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 
 /**
  * Cache for various parts of translating or interpreting queries.
@@ -31,10 +33,16 @@ public interface QueryInterpretationCache {
 		String getQueryString();
 	}
 
+	// Used by Hibernate Reactive
+	static Key createInterpretationsKey(InterpretationsKeySource keySource) {
+		return SqmInterpretationsKey.createInterpretationsKey(keySource);
+	}
+
 	int getNumberOfCachedHqlInterpretations();
 	int getNumberOfCachedQueryPlans();
 
 	<R> HqlInterpretation<R> resolveHqlInterpretation(String queryString, Class<R> expectedResultType, HqlTranslator translator);
+	<R> void cacheHqlInterpretation(Object cacheKey, HqlInterpretation<R> hqlInterpretation);
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
 

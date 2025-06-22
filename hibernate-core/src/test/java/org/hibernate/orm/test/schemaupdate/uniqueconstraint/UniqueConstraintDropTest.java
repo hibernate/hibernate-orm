@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.uniqueconstraint;
@@ -33,7 +33,6 @@ import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
@@ -73,7 +72,7 @@ public class UniqueConstraintDropTest {
 		metadata.validate();
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -81,18 +80,13 @@ public class UniqueConstraintDropTest {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
@@ -20,6 +20,7 @@ import org.hibernate.mapping.Property;
 
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Collections.unmodifiableSet;
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallSet;
 
 /**
  * Information about the bytecode lazy attributes for an entity
@@ -103,8 +104,8 @@ public class LazyAttributesMetadata implements Serializable {
 		this.entityName = entityName;
 		this.lazyAttributeDescriptorMap = lazyAttributeDescriptorMap;
 		this.fetchGroupToAttributeMap = fetchGroupToAttributeMap;
-		this.fetchGroupNames = unmodifiableSet( fetchGroupToAttributeMap.keySet() );
-		this.lazyAttributeNames = unmodifiableSet( lazyAttributeDescriptorMap.keySet() );
+		this.fetchGroupNames = toSmallSet( unmodifiableSet( fetchGroupToAttributeMap.keySet() ) );
+		this.lazyAttributeNames = toSmallSet( unmodifiableSet( lazyAttributeDescriptorMap.keySet() ) );
 	}
 
 	public String getEntityName() {

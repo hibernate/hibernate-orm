@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
@@ -36,9 +35,14 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 	@Override
 	public Character fromString(CharSequence string) {
 		if ( string.length() != 1 ) {
-			throw new HibernateException( "multiple or zero characters found parsing string" );
+			throw new CoercionException( "value must contain exactly one character: '" + string + "'" );
 		}
 		return string.charAt( 0 );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Character;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -64,21 +68,32 @@ public class CharacterJavaType extends AbstractClassJavaType<Character> implemen
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Character) {
-			return (Character) value;
+		else if (value instanceof Character character) {
+			return character;
 		}
-		if ( value instanceof String ) {
-			if ( value.equals( "" ) ) {
-				return ' ';
+		else if (value instanceof String string) {
+			switch ( string.length() ) {
+				case 1:
+					return string.charAt( 0 );
+				case 0:
+					if ( options.getDialect().stripsTrailingSpacesFromChar() ) {
+						// we previously stored char values in char(1) columns on MySQL
+						// but MySQL strips trailing spaces from the value when read
+						return ' ';
+					}
+					else {
+						throw new CoercionException( "value does not contain a character: '" + string + "'" );
+					}
+				default:
+					throw new CoercionException( "value contains more than one character: '" + string + "'" );
 			}
-			final String str = (String) value;
-			return str.charAt( 0 );
 		}
-		if (value instanceof Number) {
-			final Number nbr = (Number) value;
-			return (char) nbr.shortValue();
+		else if (value instanceof Number number) {
+			return (char) number.shortValue();
 		}
-		throw unknownWrap( value.getClass() );
+		else {
+			throw unknownWrap( value.getClass() );
+		}
 	}
 
 	@Override

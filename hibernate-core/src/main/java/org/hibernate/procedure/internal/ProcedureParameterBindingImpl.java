@@ -1,14 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterBinding;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.internal.QueryParameterBindingImpl;
-import org.hibernate.query.procedure.ProcedureParameterBinding;
 
 /**
  * Implementation of the {@link ProcedureParameterBinding} contract.
@@ -17,7 +16,7 @@ import org.hibernate.query.procedure.ProcedureParameterBinding;
  */
 public class ProcedureParameterBindingImpl<T>
 		extends QueryParameterBindingImpl<T>
-		implements ProcedureParameterBindingImplementor<T> {
+		implements ProcedureParameterBinding<T> {
 	public ProcedureParameterBindingImpl(
 			ProcedureParameterImplementor<T> queryParameter,
 			SessionFactoryImplementor sessionFactory) {

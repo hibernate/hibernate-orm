@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.access;
@@ -11,8 +11,8 @@ import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
- * Base contract for accessing the underlying cached data for a particular
- * Navigable of the user's domain model in a transactionally ACID manner.
+ * Base contract for accessing the cached data for a particular element of
+ * the domain model in a transactionally ACID manner.
  *
  * @apiNote Note that the following methods are not considered "transactional"
  * in this sense: {@link #contains}, {@link #lockRegion}, {@link #unlockRegion},
@@ -21,8 +21,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @implSpec The "non-transactional" methods noted in the {@code @apiNote}
  * should be implemented to ignore any locking. That is, when {@link #evict}
- * is called, the item should be forcibly removed from the cache regardless of
- * whether anything has locked it.
+ * is called, the item should be forcibly removed from the cache regardless
+ * of whether anything has locked it.
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -43,8 +43,9 @@ public interface CachedDomainDataAccess {
 	// Transactional
 
 	/**
-	 * Attempt to retrieve an object from the cache. Mainly used in attempting
-	 * to resolve entities/collections from the second level cache.
+	 * Attempt to retrieve an object from the cache. Usually used when
+	 * attempting to resolve an entity or collection from the second-level
+	 * cache.
 	 *
 	 * @param session Current session.
 	 * @param key The key of the item to be retrieved.
@@ -56,7 +57,7 @@ public interface CachedDomainDataAccess {
 	Object get(SharedSessionContractImplementor session, Object key);
 
 	/**
-	 * Attempt to cache an object, afterQuery loading from the database.
+	 * Attempt to cache an object, after loading it from the database.
 	 *
 	 * @param session Current session.
 	 * @param key The item key
@@ -74,8 +75,8 @@ public interface CachedDomainDataAccess {
 			Object version);
 
 	/**
-	 * Attempt to cache an object, afterQuery loading from the database, explicitly
-	 * specifying the minimalPut behavior.
+	 * Attempt to cache an object, after loading from the database,
+	 * explicitly specifying the {@code minimalPut} behavior.
 	 *
 	 * @param session Current session.
 	 * @param key The item key
@@ -95,12 +96,12 @@ public interface CachedDomainDataAccess {
 			boolean minimalPutOverride);
 
 	/**
-	 * We are going to attempt to update/delete the keyed object. This
-	 * method is used by "asynchronous" concurrency strategies.
+	 * Notify before an attempt to update or delete the keyed object.
+	 * This operation is used by "asynchronous" concurrency strategies.
 	 * <p>
-	 * The returned object must be passed back to {@link #unlockItem}, to release the
-	 * lock. Concurrency strategies which do not support client-visible
-	 * locks may silently return null.
+	 * The returned object must be passed back to {@link #unlockItem},
+	 * to release the lock. Concurrency strategies which do not support
+	 * client-visible locks may silently return null.
 	 *
 	 * @param session Current session.
 	 * @param key The key of the item to lock
@@ -113,9 +114,9 @@ public interface CachedDomainDataAccess {
 	SoftLock lockItem(SharedSessionContractImplementor session, Object key, Object version);
 
 	/**
-	 * Called when we have finished the attempted update/delete (which may or
-	 * may not have been successful), after transaction completion.  This method
-	 * is used by "asynchronous" concurrency strategies.
+	 * Notify that an attempt to update or delete the keyed object has
+	 * completed, with or without success, after transaction completion.
+	 * This operation is used by "asynchronous" concurrency strategies.
 	 *
 	 * @param session Current session.
 	 * @param key The item key
@@ -126,8 +127,9 @@ public interface CachedDomainDataAccess {
 	void unlockItem(SharedSessionContractImplementor session, Object key, SoftLock lock);
 
 	/**
-	 * Called afterQuery an item has become stale (beforeQuery the transaction completes).
-	 * This method is used by "synchronous" concurrency strategies.
+	 * Notify that an item has become stale, before completion of the
+	 * transaction. This operation is used by "synchronous" concurrency
+	 * strategies.
 	 *
 	 * @param session Current session.
 	 * @param key The key of the item to remove
@@ -137,7 +139,7 @@ public interface CachedDomainDataAccess {
 	void remove(SharedSessionContractImplementor session, Object key);
 
 	/**
-	 * Remove all data for this accessed type
+	 * Remove all data for this accessed type.
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */

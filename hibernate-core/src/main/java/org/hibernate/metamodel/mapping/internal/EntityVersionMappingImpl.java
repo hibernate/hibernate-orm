@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -245,7 +245,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				fetchParent,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -318,7 +318,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 				sqlExpressionResolver.resolveSqlExpression( columnTableReference, this ),
 				versionBasicType.getJdbcJavaType(),
 				null,
-				sqlAstCreationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

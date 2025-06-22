@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -117,12 +117,7 @@ public class JsonFunctionTests {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				em -> {
-					em.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate();
-					em.createMutationQuery( "delete from JsonHolder" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -172,6 +167,20 @@ public class JsonFunctionTests {
 							Tuple.class
 					).setParameter( "idx", 0 ).getSingleResult();
 					assertEquals( "1", tuple.get( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonValue.class)
+	public void testJsonValueBoolean(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Tuple tuple = session.createQuery(
+							"select json_value(e.json, '$.theBoolean' returning boolean) from JsonHolder e where json_value(e.json, '$.theBoolean' returning boolean) = true",
+							Tuple.class
+					).getSingleResult();
+					assertEquals( true, tuple.get( 0 ) );
 				}
 		);
 	}

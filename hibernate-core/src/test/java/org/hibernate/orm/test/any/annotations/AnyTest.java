@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.any.annotations;
@@ -7,7 +7,7 @@ package org.hibernate.orm.test.any.annotations;
 import java.util.List;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -112,20 +112,7 @@ public class AnyTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete StringProperty" ).executeUpdate();
-					session.createMutationQuery( "delete IntegerProperty" ).executeUpdate();
-					session.createMutationQuery( "delete LongProperty" ).executeUpdate();
-					session.createMutationQuery( "delete CharProperty" ).executeUpdate();
-
-					session.createMutationQuery( "delete PropertyHolder" ).executeUpdate();
-					session.createMutationQuery( "delete PropertyList" ).executeUpdate();
-					session.createMutationQuery( "delete PropertyMap" ).executeUpdate();
-					session.createMutationQuery( "delete PropertySet" ).executeUpdate();
-					session.createMutationQuery( "delete LazyPropertySet" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -259,7 +246,7 @@ public class AnyTest {
 	public void testDefaultAnyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<PropertySet> query = session.createQuery(
+					final Query<PropertySet> query = session.createQuery(
 							"select s from PropertySet s where name = :name",
 							PropertySet.class
 					);

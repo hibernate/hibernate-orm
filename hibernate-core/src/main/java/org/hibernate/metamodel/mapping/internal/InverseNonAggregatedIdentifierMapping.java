@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -194,11 +195,13 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 
 	@Override
 	public Object getIdentifier(Object entity) {
+		return getIdentifier( entity, null );
+	}
+
+	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
 		if ( hasContainingClass() ) {
-			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
-					null,
-					null//sessionFactory
-			);
+			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate( null );
 			final EmbeddableMappingType embeddableTypeDescriptor = getEmbeddableTypeDescriptor();
 			final Object[] propertyValues = new Object[embeddableTypeDescriptor.getNumberOfAttributeMappings()];
 			for ( int i = 0; i < propertyValues.length; i++ ) {
@@ -214,18 +217,18 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 					}
 				}
 				//JPA 2 @MapsId + @IdClass points to the pk of the entity
-				else if ( attributeMapping instanceof ToOneAttributeMapping
+				else if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping
 						&& !( identifierValueMapper.getAttributeMapping( i ) instanceof ToOneAttributeMapping ) ) {
-					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+					final Object toOne = getIfMerged( o, mergeContext );
 					final ModelPart targetPart = toOneAttributeMapping.getForeignKeyDescriptor().getPart(
 							toOneAttributeMapping.getSideNature().inverse()
 					);
 					if ( targetPart.isEntityIdentifierMapping() ) {
-						propertyValues[i] = ( (EntityIdentifierMapping) targetPart ).getIdentifier( o );
+						propertyValues[i] = ( (EntityIdentifierMapping) targetPart )
+								.getIdentifier( toOne, mergeContext );
 					}
 					else {
-						propertyValues[i] = o;
-						assert false;
+						propertyValues[i] = toOne;
 					}
 				}
 				else {
@@ -240,6 +243,16 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 		}
 	}
 
+	private static Object getIfMerged(Object o, MergeContext mergeContext) {
+		if ( mergeContext != null ) {
+			final Object merged = mergeContext.get( o );
+			if ( merged != null ) {
+				return merged;
+			}
+		}
+		return o;
+	}
+
 	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		final Object[] propertyValues = new Object[identifierValueMapper.getNumberOfAttributeMappings()];
@@ -248,10 +261,10 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 			final AttributeMapping attribute = embeddableTypeDescriptor.getAttributeMapping( position );
 			final AttributeMapping mappedIdAttributeMapping = identifierValueMapper.getAttributeMapping( position );
 			Object o = mappedIdAttributeMapping.getValue( id );
-			if ( attribute instanceof ToOneAttributeMapping && !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
-				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attribute;
-				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
-						.getEntityPersister();
+			if ( attribute instanceof ToOneAttributeMapping toOneAttributeMapping
+					&& !( mappedIdAttributeMapping instanceof ToOneAttributeMapping ) ) {
+				final EntityPersister entityPersister =
+						toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );

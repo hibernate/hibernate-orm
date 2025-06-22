@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -161,13 +161,7 @@ public class SubselectTest {
 
 	@AfterEach
 	public void dropTestData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				(entityManager) -> {
-					entityManager.createQuery("delete AccountTransaction").executeUpdate();
-					entityManager.createQuery("delete Account").executeUpdate();
-					entityManager.createQuery("delete Client").executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	//tag::mapping-Subselect-example[]

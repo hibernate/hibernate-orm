@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -7,7 +7,8 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.Incubating;
+import org.hibernate.query.common.FetchClauseType;
 
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -33,6 +34,14 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	 * @see org.hibernate.query.SelectionQuery#getResultCount()
 	 */
 	JpaCriteriaQuery<Long> createCountQuery();
+
+	/**
+	 * A query that returns {@code true} if this query has any results.
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	JpaCriteriaQuery<Boolean> createExistsQuery();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
@@ -61,13 +70,33 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	/**
 	 * Return the {@linkplain #getRoots() roots} as a list.
 	 */
-	List<Root<?>> getRootList();
+	List<? extends JpaRoot<?>> getRootList();
 
-	@Override
-	@SuppressWarnings("unchecked")
-	default List<Order> getOrderList() {
-		return (List) getQueryPart().getSortSpecifications();
-	}
+	/**
+	 * Get a {@linkplain Root query root} element at the given position
+	 * with the given type.
+	 *
+	 * @param position the position of this root element
+	 * @param type the type of the root entity
+	 *
+	 * @throws IllegalArgumentException if the root entity at the given
+	 *         position is not of the given type, or if there are not
+	 *         enough root entities in the query
+	 */
+	<E> JpaRoot<? extends E> getRoot(int position, Class<E> type);
+
+	/**
+	 * Get a {@linkplain Root query root} element with the given alias
+	 * and the given type.
+	 *
+	 * @param alias the identification variable of the root element
+	 * @param type the type of the root entity
+	 *
+	 * @throws IllegalArgumentException if the root entity with the
+	 *         given alias is not of the given type, or if there is
+	 *         no root entities with the given alias
+	 */
+	<E> JpaRoot<? extends E> getRoot(String alias, Class<E> type);
 
 	/**
 	 * {@inheritDoc}
@@ -94,10 +123,10 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	@Override
 	JpaCriteriaQuery<T> select(Selection<? extends T> selection);
 
-	@Override
+	@Override @Deprecated
 	JpaCriteriaQuery<T> multiselect(Selection<?>... selections);
 
-	@Override
+	@Override @Deprecated
 	JpaCriteriaQuery<T> multiselect(List<Selection<?>> selectionList);
 
 	@Override
@@ -132,4 +161,6 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 
 	@Override
 	<U> JpaSubQuery<U> subquery(EntityType<U> type);
+
+	HibernateCriteriaBuilder getCriteriaBuilder();
 }

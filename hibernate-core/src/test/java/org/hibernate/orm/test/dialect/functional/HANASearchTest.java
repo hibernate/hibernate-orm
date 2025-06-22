@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect.functional;
@@ -78,9 +78,7 @@ public class HANASearchTest {
 
 	@AfterEach
 	protected void cleanupTestData(SessionFactoryScope scope) throws Exception {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from " + ENTITY_NAME ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

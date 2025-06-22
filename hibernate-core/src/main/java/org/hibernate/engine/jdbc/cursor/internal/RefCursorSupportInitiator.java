@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.cursor.internal;
@@ -12,7 +12,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Service initiator for RefCursorSupport service
+ * Service initiator for the {@link RefCursorSupport} service
  *
  * @author Steve Ebersole
  */

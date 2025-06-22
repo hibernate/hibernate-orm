@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -14,7 +14,9 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.query.BindingContext;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -51,27 +53,75 @@ public class QueryEngineImpl implements QueryEngine {
 
 	private static final Logger LOG_HQL_FUNCTIONS = CoreLogging.logger("org.hibernate.HQL_FUNCTIONS");
 
-	public static QueryEngineImpl from(
+	private final TypeConfiguration typeConfiguration;
+	private final NamedObjectRepository namedObjectRepository;
+	private final NativeQueryInterpreter nativeQueryInterpreter;
+	private final BindingContext bindingContext;
+	private final ClassLoaderService classLoaderService;
+	private final QueryInterpretationCache interpretationCache;
+	private final NodeBuilder nodeBuilder;
+	private final HqlTranslator hqlTranslator;
+	private final SqmTranslatorFactory sqmTranslatorFactory;
+	private final SqmFunctionRegistry sqmFunctionRegistry;
+	private final Dialect dialect;
+
+	public QueryEngineImpl(
 			MetadataImplementor metadata,
 			QueryEngineOptions options,
-			SqmCreationContext sqmCreationContext,
+			BindingContext context,
 			ServiceRegistryImplementor serviceRegistry,
 			Map<String,Object> properties,
 			String name) {
-		final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
-		return new QueryEngineImpl(
-				metadata.getTypeConfiguration(),
-				resolveHqlTranslator( options, dialect, sqmCreationContext, new SqmCreationOptionsStandard( options ) ),
-				resolveSqmTranslatorFactory( options, dialect ),
-				createFunctionRegistry( serviceRegistry, metadata, options, dialect ),
-				metadata.buildNamedQueryRepository(),
-				buildInterpretationCache( serviceRegistry, properties ),
-				serviceRegistry.getService(NativeQueryInterpreter.class),
-				sqmCreationContext,
-				options,
-				options.getUuid(),
-				name
-		);
+		this.dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+		this.bindingContext = context;
+		this.typeConfiguration = metadata.getTypeConfiguration();
+		this.sqmFunctionRegistry = createFunctionRegistry( serviceRegistry, metadata, options, dialect );
+		this.sqmTranslatorFactory = resolveSqmTranslatorFactory( options, dialect );
+		this.namedObjectRepository = metadata.buildNamedQueryRepository();
+		this.interpretationCache = buildInterpretationCache( serviceRegistry, properties );
+		this.nativeQueryInterpreter = serviceRegistry.getService( NativeQueryInterpreter.class );
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		// here we have something nasty: we need to pass a reference to the current object to
+		// create the NodeBuilder, but then we need the NodeBuilder to create the HqlTranslator
+		// and that's only because we're using the NodeBuilder as the SqmCreationContext
+		this.nodeBuilder = createCriteriaBuilder( context, this, options, options.getUuid(), name );
+		this.hqlTranslator = resolveHqlTranslator( options, dialect, nodeBuilder );
+	}
+
+	private static SqmCriteriaNodeBuilder createCriteriaBuilder(
+			BindingContext context, QueryEngine engine, QueryEngineOptions options,
+			String uuid, String name) {
+		return new SqmCriteriaNodeBuilder( uuid, name, engine, options, context );
+	}
+
+	private static HqlTranslator resolveHqlTranslator(
+			QueryEngineOptions options,
+			Dialect dialect,
+			SqmCreationContext sqmCreationContext) {
+		final SqmCreationOptions sqmCreationOptions = new SqmCreationOptionsStandard( options );
+		if ( options.getCustomHqlTranslator() != null ) {
+			return options.getCustomHqlTranslator();
+		}
+		else if ( dialect.getHqlTranslator() != null ) {
+			return dialect.getHqlTranslator();
+		}
+		else {
+			return new StandardHqlTranslator( sqmCreationContext, sqmCreationOptions );
+		}
+	}
+
+	private static SqmTranslatorFactory resolveSqmTranslatorFactory(
+			QueryEngineOptions runtimeOptions,
+			Dialect dialect) {
+		if ( runtimeOptions.getCustomSqmTranslatorFactory() != null ) {
+			return runtimeOptions.getCustomSqmTranslatorFactory();
+		}
+		else if ( dialect.getSqmTranslatorFactory() != null ) {
+			return dialect.getSqmTranslatorFactory();
+		}
+		else {
+			return new StandardSqmTranslatorFactory();
+		}
 	}
 
 	private static SqmFunctionRegistry createFunctionRegistry(
@@ -103,72 +153,6 @@ public class QueryEngineImpl implements QueryEngine {
 		}
 
 		return sqmFunctionRegistry;
-	}
-
-	private final TypeConfiguration typeConfiguration;
-	private final NamedObjectRepository namedObjectRepository;
-	private final NativeQueryInterpreter nativeQueryInterpreter;
-	private final QueryInterpretationCache interpretationCache;
-	private final NodeBuilder criteriaBuilder;
-	private final HqlTranslator hqlTranslator;
-	private final SqmTranslatorFactory sqmTranslatorFactory;
-	private final SqmFunctionRegistry sqmFunctionRegistry;
-
-	private QueryEngineImpl(
-			TypeConfiguration typeConfiguration,
-			HqlTranslator hqlTranslator,
-			SqmTranslatorFactory sqmTranslatorFactory,
-			SqmFunctionRegistry functionRegistry,
-			NamedObjectRepository namedObjectRepository,
-			QueryInterpretationCache interpretationCache,
-			NativeQueryInterpreter nativeQueryInterpreter,
-			BindingContext context,
-			QueryEngineOptions options,
-			String uuid, String name) {
-		this.typeConfiguration = typeConfiguration;
-		this.sqmFunctionRegistry = functionRegistry;
-		this.sqmTranslatorFactory = sqmTranslatorFactory;
-		this.hqlTranslator = hqlTranslator;
-		this.namedObjectRepository = namedObjectRepository;
-		this.interpretationCache = interpretationCache;
-		this.nativeQueryInterpreter = nativeQueryInterpreter;
-		this.criteriaBuilder = createCriteriaBuilder( context, options, uuid, name );
-	}
-
-	private SqmCriteriaNodeBuilder createCriteriaBuilder(
-			BindingContext context, QueryEngineOptions options,
-			String uuid, String name) {
-		return new SqmCriteriaNodeBuilder( uuid, name, this, options, context );
-	}
-
-	private static HqlTranslator resolveHqlTranslator(
-			QueryEngineOptions runtimeOptions,
-			Dialect dialect,
-			SqmCreationContext sqmCreationContext,
-			SqmCreationOptions sqmCreationOptions) {
-		if ( runtimeOptions.getCustomHqlTranslator() != null ) {
-			return runtimeOptions.getCustomHqlTranslator();
-		}
-		else if ( dialect.getHqlTranslator() != null ) {
-			return dialect.getHqlTranslator();
-		}
-		else {
-			return new StandardHqlTranslator( sqmCreationContext, sqmCreationOptions );
-		}
-	}
-
-	private static SqmTranslatorFactory resolveSqmTranslatorFactory(
-			QueryEngineOptions runtimeOptions,
-			Dialect dialect) {
-		if ( runtimeOptions.getCustomSqmTranslatorFactory() != null ) {
-			return runtimeOptions.getCustomSqmTranslatorFactory();
-		}
-		else if ( dialect.getSqmTranslatorFactory() != null ) {
-			return dialect.getSqmTranslatorFactory();
-		}
-		else {
-			return new StandardSqmTranslatorFactory();
-		}
 	}
 
 	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
@@ -227,7 +211,12 @@ public class QueryEngineImpl implements QueryEngine {
 
 	@Override
 	public NodeBuilder getCriteriaBuilder() {
-		return criteriaBuilder;
+		return nodeBuilder;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
 	}
 
 	@Override
@@ -253,6 +242,21 @@ public class QueryEngineImpl implements QueryEngine {
 	@Override
 	public SqmFunctionRegistry getSqmFunctionRegistry() {
 		return sqmFunctionRegistry;
+	}
+
+	@Override
+	public JpaMetamodel getJpaMetamodel() {
+		return bindingContext.getJpaMetamodel();
+	}
+
+	@Override
+	public MappingMetamodel getMappingMetamodel() {
+		return bindingContext.getMappingMetamodel();
+	}
+
+	@Override
+	public Dialect getDialect() {
+		return dialect;
 	}
 
 	@Override

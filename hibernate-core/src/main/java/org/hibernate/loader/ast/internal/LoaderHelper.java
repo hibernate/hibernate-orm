@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -18,7 +18,11 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.internal.OptimisticLockHelper;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -51,7 +55,8 @@ public class LoaderHelper {
 	 * @param lockOptions Contains the requested lock mode.
 	 * @param session The session which is the source of the event being processed.
 	 */
-	public static void upgradeLock(Object object, EntityEntry entry, LockOptions lockOptions, EventSource session) {
+	public static void upgradeLock(
+			Object object, EntityEntry entry, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		final LockMode requestedLockMode = lockOptions.getLockMode();
 		if ( requestedLockMode.greaterThan( entry.getLockMode() ) ) {
 			// Request is for a more restrictive lock than the lock already held
@@ -101,16 +106,25 @@ public class LoaderHelper {
 
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
-					final Object nextVersion =
-							persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
-					entry.forceLocked( object, nextVersion );
+					OptimisticLockHelper.forceVersionIncrement( object, entry, session );
+				}
+				else if ( entry.isExistsInDatabase() ) {
+					final EventMonitor eventMonitor = session.getEventMonitor();
+					final DiagnosticEvent entityLockEvent = eventMonitor.beginEntityLockEvent();
+					boolean success = false;
+					try {
+						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
+						success = true;
+					}
+					finally {
+						eventMonitor.completeEntityLockEvent( entityLockEvent, entry.getId(),
+								persister.getEntityName(), lockOptions.getLockMode(), success, session );
+					}
 				}
 				else {
-					if ( entry.isExistsInDatabase() ) {
-						persister.lock( entry.getId(), entry.getVersion(), object, lockOptions, session );
-					}
-					else {
-						session.forceFlush( entry );
+					// should only be possible for a stateful session
+					if ( session instanceof EventSource eventSource ) {
+						eventSource.forceFlush( entry );
 					}
 				}
 				entry.setLockMode(requestedLockMode);
@@ -135,11 +149,8 @@ public class LoaderHelper {
 	/**
 	 * Determine if given influencers indicate read-only
 	 */
-	public static Boolean getReadOnlyFromLoadQueryInfluencers(LoadQueryInfluencers loadQueryInfluencers) {
-		if ( loadQueryInfluencers == null ) {
-			return null;
-		}
-		return loadQueryInfluencers.getReadOnly();
+	public static Boolean getReadOnlyFromLoadQueryInfluencers(LoadQueryInfluencers influencers) {
+		return influencers == null ? null : influencers.getReadOnly();
 	}
 
 	/**
@@ -172,7 +183,7 @@ public class LoaderHelper {
 		}
 
 		final K[] typedArray = createTypedArray( keyClass, keys.length );
-		final boolean coerce = !sessionFactory.getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
+		final boolean coerce = !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled();
 		if ( !coerce ) {
 			System.arraycopy( keys, 0, typedArray, 0, keys.length );
 		}
@@ -190,6 +201,7 @@ public class LoaderHelper {
 	 * @param elementClass The type of the array elements.  See {@link Class#getComponentType()}
 	 * @param length The length to which the array should be created.  This is usually zero for Hibernate uses
 	 */
+	@AllowReflection
 	public static <X> X[] createTypedArray(Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
 		return (X[]) Array.newInstance( elementClass, length );
@@ -218,29 +230,23 @@ public class LoaderHelper {
 		assert jdbcOperation != null;
 		assert jdbcParameter != null;
 
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( 1);
-		jdbcParameterBindings.addBinding(
-				jdbcParameter,
-				new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize )
-		);
-
-		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
-				session.getPersistenceContext().getBatchFetchQueue(),
-				sqlAst,
-				JdbcParametersList.singleton( jdbcParameter ),
-				jdbcParameterBindings
-		);
-
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( 1);
+		bindings.addBinding( jdbcParameter, new JdbcParameterBindingImpl( arrayJdbcMapping, idsToInitialize ) );
 		return session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcOperation,
-				jdbcParameterBindings,
+				bindings,
 				new SingleIdExecutionContext(
 						entityId,
 						entityInstance,
 						rootEntityDescriptor,
 						readOnly,
 						lockOptions,
-						subSelectFetchableKeysHandler,
+						SubselectFetch.createRegistrationHandler(
+								session.getPersistenceContext().getBatchFetchQueue(),
+								sqlAst,
+								JdbcParametersList.singleton( jdbcParameter ),
+								bindings
+						),
 						session
 				),
 				RowTransformerStandardImpl.instance(),

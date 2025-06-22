@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -21,11 +21,13 @@ public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
 	@Override
 	default @Nullable Class<? extends T> getJavaType() {
 		// todo (6.0) : can this signature just return `Class<T>`?
-		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getJavaTypeClass();
+		final JavaType<T> javaType = getJavaTypeDescriptor();
+		return javaType == null ? null : javaType.getJavaTypeClass();
 	}
 
 	default String getJavaTypeName() {
-		return getJavaTypeDescriptor() == null ? null : getJavaTypeDescriptor().getTypeName();
+		final JavaType<T> javaType = getJavaTypeDescriptor();
+		return javaType == null ? null : javaType.getTypeName();
 	}
 
 	default boolean isEnum() {

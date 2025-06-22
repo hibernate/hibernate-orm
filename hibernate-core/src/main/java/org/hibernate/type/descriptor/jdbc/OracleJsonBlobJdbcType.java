@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -37,6 +37,11 @@ public class OracleJsonBlobJdbcType extends JsonJdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
+		return SqlTypes.BLOB;
+	}
+
+	@Override
+	public int getDdlTypeCode() {
 		return SqlTypes.BLOB;
 	}
 

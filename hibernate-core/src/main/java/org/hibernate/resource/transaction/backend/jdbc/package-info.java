@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 /**
@@ -10,7 +8,7 @@
  * "data store" specific notion of a transaction.  In Hibernate ORM uses this
  * correlates to the JDBC notion of a transaction, which (unfortunately) is
  * not modeled by an actual contract.  Instead, JDBC models transaction control
- * via its Connection contract.
+ * via its {@link java.sql.Connection} contract.
  * <p>
  * Here we use
  * {@link org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
@@ -14,13 +14,13 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 
 /**
- * Standard implementation of the ResultSetReturn contract
+ * Standard implementation of the {@link ResultSetReturn} contract
  *
  * @author Brett Meyer
  */
@@ -50,15 +50,15 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent executionEvent =
-					eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventMonitor eventMonitor = getEventManager();
+			final DiagnosticEvent executionEvent =
+					eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+				eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
 				endSlowQueryLogging(sql, executeStartNanos);
 			}
@@ -70,8 +70,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 	}
 
-	private EventManager getEventManager() {
-		return jdbcCoordinator.getJdbcSessionOwner().getEventManager();
+	private EventMonitor getEventManager() {
+		return jdbcCoordinator.getJdbcSessionOwner().getEventMonitor();
 	}
 
 	private JdbcEventHandler getEventHandler() {
@@ -96,15 +96,15 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent executionEvent =
-					eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventMonitor eventMonitor = getEventManager();
+			final DiagnosticEvent executionEvent =
+					eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery( sql );
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+				eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
 				endSlowQueryLogging( sql, executeStartNanos );
 			}
@@ -122,9 +122,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent executionEvent =
-					eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventMonitor eventMonitor = getEventManager();
+			final DiagnosticEvent executionEvent =
+					eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
@@ -135,7 +135,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+				eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
 				endSlowQueryLogging( sql, executeStartNanos );
 			}
@@ -153,9 +153,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final ResultSet rs;
-			final EventManager eventManager = getEventManager();
-			final HibernateMonitoringEvent executionEvent =
-					eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventMonitor eventMonitor = getEventManager();
+			final DiagnosticEvent executionEvent =
+					eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute( sql ) ) {
@@ -166,7 +166,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
-				eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+				eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 				jdbcExecuteStatementEnd();
 				endSlowQueryLogging( sql, executeStartNanos );
 			}
@@ -182,9 +182,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	public int executeUpdate(PreparedStatement statement, String sql) {
 		assert statement != null;
 		long executeStartNanos = beginSlowQueryLogging();
-		final EventManager eventManager = getEventManager();
-		final HibernateMonitoringEvent executionEvent =
-				eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = getEventManager();
+		final DiagnosticEvent executionEvent =
+				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
@@ -193,7 +193,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			jdbcExecuteStatementEnd();
 			endSlowQueryLogging( sql, executeStartNanos );
 		}
@@ -203,9 +203,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	public int executeUpdate(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
 		long executeStartNanos = beginSlowQueryLogging();
-		final EventManager eventManager = getEventManager();
-		final HibernateMonitoringEvent executionEvent =
-				eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = getEventManager();
+		final DiagnosticEvent executionEvent =
+				eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate( sql );
@@ -214,7 +214,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			jdbcExecuteStatementEnd();
 			endSlowQueryLogging( sql, executeStartNanos );
 		}

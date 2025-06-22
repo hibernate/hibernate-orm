@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.mapping.spi;
@@ -26,6 +26,8 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbCollectionIdImpl getCollectionId();
 	void setCollectionId(JaxbCollectionIdImpl id);
 
+	Integer getBatchSize();
+	void setBatchSize(Integer size);
 
 	LimitedCollectionClassification getClassification();
 	void setClassification(LimitedCollectionClassification value);
@@ -35,6 +37,9 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 
 	JaxbOrderColumnImpl getOrderColumn();
 	void setOrderColumn(JaxbOrderColumnImpl value);
+
+	Integer getListIndexBase();
+	void setListIndexBase(Integer value);
 
 	String getSort();
 	void setSort(String value);

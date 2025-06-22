@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -15,17 +15,19 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.jboss.logging.Logger;
 
 /**
- * A help for dealing with BLOB and CLOB data
+ * A helper for dealing with {@code BLOB} and {@code CLOB} data
  *
  * @author Steve Ebersole
  */
+@Internal
 public final class DataHelper {
 	private DataHelper() {
 	}
@@ -34,10 +36,6 @@ public final class DataHelper {
 	private static final int BUFFER_SIZE = 1024 * 4;
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, DataHelper.class.getName() );
-
-	public static boolean isNClob(final Class type) {
-		return java.sql.NClob.class.isAssignableFrom( type );
-	}
 
 	/**
 	 * Extract the contents of the given reader/stream as a string.
@@ -65,7 +63,7 @@ public final class DataHelper {
 		final int bufferSize = getSuggestedBufferSize( lengthHint );
 		final StringBuilder stringBuilder = new StringBuilder( bufferSize );
 		try {
-			char[] buffer = new char[bufferSize];
+			final char[] buffer = new char[bufferSize];
 			while (true) {
 				int amountRead = reader.read( buffer, 0, bufferSize );
 				if ( amountRead == -1 ) {
@@ -101,17 +99,17 @@ public final class DataHelper {
 		if ( length == 0 ) {
 			return "";
 		}
-		StringBuilder stringBuilder = new StringBuilder( length );
+		final StringBuilder stringBuilder = new StringBuilder( length );
 		try {
-			long skipped = characterStream.skip( start );
+			final long skipped = characterStream.skip( start );
 			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
 			final int bufferSize = getSuggestedBufferSize( length );
-			char[] buffer = new char[bufferSize];
+			final char[] buffer = new char[bufferSize];
 			int charsRead = 0;
 			while ( true ) {
-				int amountRead = characterStream.read( buffer, 0, bufferSize );
+				final int amountRead = characterStream.read( buffer, 0, bufferSize );
 				if ( amountRead == -1 ) {
 					break;
 				}
@@ -141,7 +139,7 @@ public final class DataHelper {
 	 *
 	 * @return The content portion as a reader
 	 */
-	public static Object subStream(Reader characterStream, long start, int length) {
+	public static Reader subStream(Reader characterStream, long start, int length) {
 		return new StringReader( extractString( characterStream, start, length ) );
 	}
 
@@ -153,16 +151,16 @@ public final class DataHelper {
 	 * @return The contents as a {@code byte[]}
 	 */
 	public static byte[] extractBytes(InputStream inputStream) {
-		if ( inputStream instanceof BinaryStream ) {
-			return ( (BinaryStream ) inputStream ).getBytes();
+		if ( inputStream instanceof BinaryStream binaryStream ) {
+			return binaryStream.getBytes();
 		}
 
 		// read the stream contents into a buffer and return the complete byte[]
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
+		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(BUFFER_SIZE);
 		try {
-			byte[] buffer = new byte[BUFFER_SIZE];
+			final byte[] buffer = new byte[BUFFER_SIZE];
 			while (true) {
-				int amountRead = inputStream.read( buffer );
+				final int amountRead = inputStream.read( buffer );
 				if ( amountRead == -1 ) {
 					break;
 				}
@@ -199,24 +197,25 @@ public final class DataHelper {
 	 * @return The extracted bytes
 	 */
 	public static byte[] extractBytes(InputStream inputStream, long start, int length) {
-		if ( inputStream instanceof BinaryStream && Integer.MAX_VALUE > start ) {
-			byte[] data = ( (BinaryStream ) inputStream ).getBytes();
-			int size = Math.min( length, data.length );
-			byte[] result = new byte[size];
+		if ( inputStream instanceof BinaryStream binaryStream
+				&& Integer.MAX_VALUE > start ) {
+			final byte[] data = binaryStream.getBytes();
+			final int size = Math.min( length, data.length );
+			final byte[] result = new byte[size];
 			System.arraycopy( data, (int) start, result, 0, size );
 			return result;
 		}
 
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream( length );
+		final ByteArrayOutputStream outputStream = new ByteArrayOutputStream( length );
 		try {
-			long skipped = inputStream.skip( start );
+			final long skipped = inputStream.skip( start );
 			if ( skipped != start ) {
 				throw new HibernateException( "Unable to skip needed bytes" );
 			}
-			byte[] buffer = new byte[BUFFER_SIZE];
+			final byte[] buffer = new byte[BUFFER_SIZE];
 			int bytesRead = 0;
 			while ( true ) {
-				int amountRead = inputStream.read( buffer );
+				final int amountRead = inputStream.read( buffer );
 				if ( amountRead == -1 ) {
 					break;
 				}
@@ -247,7 +246,7 @@ public final class DataHelper {
 	 * @return The extracted bytes as a stream
 	 */
 	public static InputStream subStream(InputStream inputStream, long start, int length) {
-		return new BinaryStreamImpl( extractBytes( inputStream, start, length ) );
+		return new ArrayBackedBinaryStream( extractBytes( inputStream, start, length ) );
 	}
 
 	/**

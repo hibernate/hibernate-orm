@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.Logger;
@@ -25,6 +26,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
 )
 @ValidIdRange( min = 35001, max = 36000)
 @MessageLogger(projectCode = "HHH")
+@Internal
 public interface DialectLogging {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".dialect";
 	Logger DIALECT_LOGGER = Logger.getLogger(LOGGER_NAME);

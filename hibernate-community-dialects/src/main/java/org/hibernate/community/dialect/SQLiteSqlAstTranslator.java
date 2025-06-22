@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -52,16 +52,6 @@ public class SQLiteSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			}
 			appendSql( "materialized " );
 		}
-	}
-
-	@Override
-	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 3, 3 );
-	}
-
-	@Override
-	protected boolean supportsQuantifiedPredicates() {
-		return false;
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

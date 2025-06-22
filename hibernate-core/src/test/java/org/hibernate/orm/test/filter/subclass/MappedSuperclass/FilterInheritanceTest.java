@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.subclass.MappedSuperclass;
@@ -50,10 +50,7 @@ public class FilterInheritanceTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	public void tearDown() throws Exception {
-		scope.inTransaction( session -> {
-			session.createQuery( "delete from Mammal" ).executeUpdate();
-			session.createQuery( "delete from Human" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

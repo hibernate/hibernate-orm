@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -9,9 +9,11 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
 /**
- *  Defines an event class for the refreshing of an object.
+ * Event class for {@link org.hibernate.Session#refresh}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#refresh
  */
 public class RefreshEvent extends AbstractEvent {
 
@@ -23,7 +25,7 @@ public class RefreshEvent extends AbstractEvent {
 	public RefreshEvent(Object object, EventSource source) {
 		super(source);
 		if (object == null) {
-			throw new IllegalArgumentException("Attempt to generate refresh event with null object");
+			throw new IllegalArgumentException("Entity may not be null");
 		}
 		this.object = object;
 	}
@@ -36,7 +38,7 @@ public class RefreshEvent extends AbstractEvent {
 	public RefreshEvent(Object object, LockMode lockMode, EventSource source) {
 		this(object, source);
 		if (lockMode == null) {
-			throw new IllegalArgumentException("Attempt to generate refresh event with null lock mode");
+			throw new IllegalArgumentException("LockMode may not be null");
 		}
 		this.lockOptions.setLockMode(lockMode);
 	}
@@ -44,7 +46,7 @@ public class RefreshEvent extends AbstractEvent {
 	public RefreshEvent(Object object, LockOptions lockOptions, EventSource source) {
 		this(object, source);
 		if (lockOptions == null) {
-			throw new IllegalArgumentException("Attempt to generate refresh event with null lock request");
+			throw new IllegalArgumentException("LockMode may not be null");
 		}
 		this.lockOptions = lockOptions;
 	}

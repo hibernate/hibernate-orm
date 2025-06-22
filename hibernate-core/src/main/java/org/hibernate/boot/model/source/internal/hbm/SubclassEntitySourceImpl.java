@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -11,6 +11,8 @@ import org.hibernate.boot.model.source.spi.EntitySource;
 import org.hibernate.boot.model.source.spi.IdentifiableTypeSource;
 import org.hibernate.boot.model.source.spi.SubclassEntitySource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
+
+import static org.hibernate.boot.model.source.internal.hbm.Helper.createTableSource;
 
 /**
  * @author Steve Ebersole
@@ -26,8 +28,8 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 		super( sourceMappingDocument, entityElement );
 		this.container = container;
 
-		this.primaryTable = entityElement instanceof TableInformationContainer
-				? Helper.createTableSource( sourceMappingDocument(), (TableInformationContainer) entityElement, this )
+		this.primaryTable = entityElement instanceof TableInformationContainer informationContainer
+				? createTableSource( sourceMappingDocument(), informationContainer, this )
 				: null;
 
 		afterInstantiation();
@@ -40,8 +42,8 @@ public class SubclassEntitySourceImpl extends AbstractEntitySourceImpl implement
 
 	@Override
 	public String getDiscriminatorMatchValue() {
-		return JaxbHbmDiscriminatorSubclassEntityType.class.isInstance( jaxbEntityMapping() )
-				? ( (JaxbHbmDiscriminatorSubclassEntityType) jaxbEntityMapping() ).getDiscriminatorValue()
+		return jaxbEntityMapping() instanceof JaxbHbmDiscriminatorSubclassEntityType discriminatorSubclassEntityType
+				? discriminatorSubclassEntityType.getDiscriminatorValue()
 				: null;
 	}
 

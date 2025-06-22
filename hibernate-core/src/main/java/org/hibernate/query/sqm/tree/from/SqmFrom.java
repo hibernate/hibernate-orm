@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.from;
@@ -19,6 +19,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -48,7 +49,16 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	@Override
 	SqmPathSource<R> getReferencedPathSource();
 
+	/**
+	 * Retrieve the explicit alias, if one, otherwise return a generated one.
+	 */
+	default String resolveAlias(SqmRenderContext context) {
+		return context.resolveAlias( this );
+	}
+
 	boolean hasJoins();
+
+	int getNumberOfJoins();
 
 	/**
 	 * The joins associated with this SqmFrom

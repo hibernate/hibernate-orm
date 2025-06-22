@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
@@ -13,60 +13,64 @@ import jakarta.persistence.metamodel.Attribute.PersistentAttributeType;
  *
  * @since 6.0
  *
+ * @see PersistentAttributeType
  */
 @Incubating
 public enum AttributeClassification {
 	/**
 	 * @see jakarta.persistence.Basic
 	 */
-	BASIC( PersistentAttributeType.BASIC ),
+	BASIC,
 
 	/**
 	 * @see jakarta.persistence.Embedded
 	 */
 
-	EMBEDDED( PersistentAttributeType.EMBEDDED ),
+	EMBEDDED,
 
 	/**
 	 * @see org.hibernate.annotations.Any
 	 */
-	ANY( null ),
+	ANY,
 
 	/**
 	 * @see jakarta.persistence.OneToOne
 	 */
-	ONE_TO_ONE( PersistentAttributeType.ONE_TO_ONE ),
+	ONE_TO_ONE,
 
 	/**
 	 * @see jakarta.persistence.ManyToOne
 	 */
-	MANY_TO_ONE( PersistentAttributeType.MANY_TO_ONE ),
+	MANY_TO_ONE,
 
 	/**
 	 * @see jakarta.persistence.ElementCollection
 	 */
-	ELEMENT_COLLECTION( PersistentAttributeType.ELEMENT_COLLECTION ),
+	ELEMENT_COLLECTION,
 
 	/**
 	 * @see jakarta.persistence.OneToMany
 	 */
-	ONE_TO_MANY( PersistentAttributeType.ONE_TO_MANY ),
+	ONE_TO_MANY,
 
 	/**
 	 * @see jakarta.persistence.ManyToMany
 	 */
-	MANY_TO_MANY( PersistentAttributeType.MANY_TO_MANY );
-
-	private final PersistentAttributeType jpaClassification;
-
-	AttributeClassification(PersistentAttributeType jpaClassification) {
-		this.jpaClassification = jpaClassification;
-	}
+	MANY_TO_MANY;
 
 	/**
 	 * The associated {@link PersistentAttributeType}, if one
 	 */
 	public PersistentAttributeType getJpaClassification() {
-		return jpaClassification;
+		return switch ( this ) {
+			case BASIC -> PersistentAttributeType.BASIC;
+			case EMBEDDED -> PersistentAttributeType.EMBEDDED;
+			case ONE_TO_ONE -> PersistentAttributeType.ONE_TO_ONE;
+			case MANY_TO_ONE -> PersistentAttributeType.MANY_TO_ONE;
+			case ELEMENT_COLLECTION -> PersistentAttributeType.ELEMENT_COLLECTION;
+			case ONE_TO_MANY -> PersistentAttributeType.ONE_TO_MANY;
+			case MANY_TO_MANY -> PersistentAttributeType.MANY_TO_MANY;
+			case ANY -> null;
+		};
 	}
 }

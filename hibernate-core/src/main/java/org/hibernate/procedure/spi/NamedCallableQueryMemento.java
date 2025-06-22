@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.spi;
@@ -76,21 +76,12 @@ public interface NamedCallableQueryMemento extends NamedQueryMemento<Object> {
 	 */
 	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session, String... resultSetMappingNames);
 
-	/**
-	 * Convert the memento back into an executable (connected) form.
-	 *
-	 * @param session The session to connect the procedure call to
-	 *
-	 * @return The executable call
-	 */
-	ProcedureCall makeProcedureCall(SharedSessionContractImplementor session, Class<?>... resultSetJavaTypes);
-
 	interface ParameterMemento extends NamedQueryMemento.ParameterMemento {
 		ProcedureParameterImplementor<?> resolve(SharedSessionContractImplementor session);
 	}
 
 	@Override
-	default Class<?> getResultType() {
+	default Class<Object> getResultType() {
 		return Object.class;
 	}
 }

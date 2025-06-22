@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.uuid.rfc9562;
@@ -123,12 +123,8 @@ public class UuidGeneratorAnnotationTests {
 	}
 
 	@AfterEach
-	void dropTestData(final SessionFactoryScope sessionFactoryScope) {
-		sessionFactoryScope.inTransaction( session -> {
-			session.createMutationQuery( "delete EntitySeven" ).executeUpdate();
-			session.createMutationQuery( "delete OtherEntitySeven" ).executeUpdate();
-			session.createMutationQuery( "delete EntitySix" ).executeUpdate();
-		} );
+	void dropTestData(final SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static Instant uuid6Instant(final UUID uuid) {

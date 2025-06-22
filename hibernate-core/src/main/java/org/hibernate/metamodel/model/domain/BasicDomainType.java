@@ -1,16 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
 
-import java.util.Objects;
 import jakarta.persistence.metamodel.BasicType;
 
-import org.hibernate.HibernateException;
-import org.hibernate.query.ReturnableType;
-import org.hibernate.query.OutputableType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.OutputableType;
+
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 
 /**
  * Hibernate extension to the JPA {@link BasicType} contract.
@@ -18,13 +16,14 @@ import org.hibernate.query.sqm.SqmExpressible;
  * @author Steve Ebersole
  */
 public interface BasicDomainType<J>
-		extends SimpleDomainType<J>, BasicType<J>, SqmExpressible<J>, OutputableType<J>, ReturnableType<J> {
+		extends ReturnableType<J>, BasicType<J>, OutputableType<J> {
 	@Override
 	default PersistenceType getPersistenceType() {
-		return PersistenceType.BASIC;
+		return BASIC;
 	}
 
-	default boolean areEqual(J x, J y) throws HibernateException {
-		return Objects.equals( x, y );
+	@Override
+	default Class<J> getJavaType() {
+		return ReturnableType.super.getJavaType();
 	}
 }

@@ -1,25 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models;
 
 import java.util.EnumSet;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
+import org.hibernate.AnnotationException;
+import org.hibernate.Incubating;
 
 /**
- * Condition where an attribute indicates multiple {@linkplain AttributeMetadata.AttributeNature natures}
+ * Condition where an attribute indicates multiple {@linkplain AttributeNature natures}
  *
  * @author Steve Ebersole
  */
-public class MultipleAttributeNaturesException extends MappingException {
+@Incubating
+public class MultipleAttributeNaturesException extends AnnotationException {
 	private final String attributeName;
 
 	public MultipleAttributeNaturesException(
 			String attributeName,
-			EnumSet<AttributeMetadata.AttributeNature> natures) {
+			EnumSet<AttributeNature> natures) {
 		super( craftMessage( attributeName, natures ) );
 		this.attributeName = attributeName;
 	}
@@ -28,12 +29,12 @@ public class MultipleAttributeNaturesException extends MappingException {
 		return attributeName;
 	}
 
-	private static String craftMessage(String attributeName, EnumSet<AttributeMetadata.AttributeNature> natures) {
+	private static String craftMessage(String attributeName, EnumSet<AttributeNature> natures) {
 		final StringBuilder buffer = new StringBuilder( "Attribute `" )
 				.append( attributeName )
 				.append( "` expressed multiple natures [" );
 		String separator = "";
-		for ( AttributeMetadata.AttributeNature nature : natures ) {
+		for ( AttributeNature nature : natures ) {
 			buffer.append( separator );
 			buffer.append( nature.name() );
 			separator = ",";

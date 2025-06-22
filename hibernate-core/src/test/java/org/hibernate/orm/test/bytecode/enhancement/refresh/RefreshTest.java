@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.refresh;
@@ -47,14 +47,7 @@ public class RefreshTest {
 
 	@AfterEach
 	public void trearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					RealmEntity find = session.find( RealmEntity.class, "id" );
-					if(find != null) {
-						session.remove( find );
-					}
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

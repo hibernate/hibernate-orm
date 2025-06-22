@@ -1,22 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Occurs after the datastore is updated
+ * Occurs after the datastore is updated via a SQL {@code merge}
  *
  * @author Gavin King
  */
-public class PostUpsertEvent extends AbstractEvent {
-	private Object entity;
-	private EntityPersister persister;
-	private Object[] state;
-	private Object id;
+public class PostUpsertEvent extends AbstractPostDatabaseOperationEvent {
+	private final Object[] state;
 	//list of dirty properties as computed by Hibernate during a FlushEntityEvent
 	private final int[] dirtyProperties;
 
@@ -26,31 +22,10 @@ public class PostUpsertEvent extends AbstractEvent {
 			Object[] state,
 			int[] dirtyProperties,
 			EntityPersister persister,
-			EventSource source
-	) {
-		super(source);
-		this.entity = entity;
-		this.id = id;
+			EventSource source) {
+		super( source, entity, id, persister );
 		this.state = state;
 		this.dirtyProperties = dirtyProperties;
-		this.persister = persister;
-	}
-
-	public Object getEntity() {
-		return entity;
-	}
-
-	public Object getId() {
-		return id;
-	}
-
-	public EntityPersister getPersister() {
-		return persister;
-	}
-
-	@Override
-	public SessionFactoryImplementor getFactory() {
-		return persister.getFactory();
 	}
 
 	public Object[] getState() {

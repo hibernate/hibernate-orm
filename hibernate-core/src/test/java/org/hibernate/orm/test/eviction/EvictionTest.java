@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.eviction;
@@ -55,9 +55,9 @@ public class EvictionTest extends BaseCoreFunctionalTestCase {
 		session.beginTransaction();
 		try {
 			session.evict( null );
-			fail( "Expecting evict(null) to throw NPE" );
+			fail( "Expecting evict(null) to throw IAE" );
 		}
-		catch (NullPointerException expected) {
+		catch (IllegalArgumentException expected) {
 		}
 		session.getTransaction().commit();
 		session.close();

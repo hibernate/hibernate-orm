@@ -1,14 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
@@ -16,8 +10,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
-import org.hibernate.boot.internal.ClassmateContext;
-import org.hibernate.boot.model.TypeBeanInstanceProducer;
+import org.hibernate.boot.internal.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -25,6 +18,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -32,14 +26,23 @@ import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
-
 import org.jboss.jandex.IndexView;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.hibernate.boot.internal.BootstrapContextImpl.createModelBuildingContext;
 
 /**
  * BootstrapContext impl to be able to inject a Jandex index
@@ -57,8 +60,11 @@ public class BootstrapContextTesting implements BootstrapContext {
 	private final SqmFunctionRegistry sqmFunctionRegistry;
 	private final MutableJpaCompliance jpaCompliance;
 
+	private final ClassLoaderService classLoaderService;
 	private final ClassLoaderAccessImpl classLoaderAccess;
 	private final BeanInstanceProducer beanInstanceProducer;
+	private final ManagedBeanRegistry managedBeanRegistry;
+	private final ConfigurationService configurationService;
 
 	private boolean isJpaBootstrap;
 
@@ -69,13 +75,12 @@ public class BootstrapContextTesting implements BootstrapContext {
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
-	private IndexView jandexIndex;
-
 	private HashMap<String, SqmFunctionDescriptor> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorMap;
+	private HashMap<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 	private final ManagedTypeRepresentationResolver representationStrategySelector;
+	private ModelsContext modelsContext;
 
 	public BootstrapContextTesting(
 			IndexView jandexIndex,
@@ -85,7 +90,8 @@ public class BootstrapContextTesting implements BootstrapContext {
 		this.classmateContext = new ClassmateContext();
 		this.metadataBuildingOptions = metadataBuildingOptions;
 
-		this.classLoaderAccess = new ClassLoaderAccessImpl( serviceRegistry.getService( ClassLoaderService.class ) );
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		this.classLoaderAccess = new ClassLoaderAccessImpl( classLoaderService );
 
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
@@ -106,8 +112,13 @@ public class BootstrapContextTesting implements BootstrapContext {
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
 		this.typeConfiguration = new TypeConfiguration();
-		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService );
+		this.beanInstanceProducer = new TypeBeanInstanceProducer( configService, serviceRegistry );
 		this.sqmFunctionRegistry = new SqmFunctionRegistry();
+
+		this.managedBeanRegistry = serviceRegistry.requireService( ManagedBeanRegistry.class );
+		this.configurationService = serviceRegistry.requireService( ConfigurationService.class );
+
+		this.modelsContext = createModelBuildingContext( classLoaderService, configService );
 	}
 
 	@Override
@@ -126,6 +137,11 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
+	public ModelsContext getModelsContext() {
+		return modelsContext;
+	}
+
+	@Override
 	public SqmFunctionRegistry getFunctionRegistry() {
 		return sqmFunctionRegistry;
 	}
@@ -138,6 +154,21 @@ public class BootstrapContextTesting implements BootstrapContext {
 	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return metadataBuildingOptions;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return managedBeanRegistry;
+	}
+
+	@Override
+	public ConfigurationService getConfigurationService() {
+		return configurationService;
 	}
 
 	@Override
@@ -187,7 +218,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 	@Override
 	public IndexView getJandexView() {
-		return jandexIndex;
+		return null;
 	}
 
 	@Override
@@ -201,7 +232,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverters() {
+	public Collection<ConverterDescriptor<?, ?>> getAttributeConverters() {
 		return attributeConverterDescriptorMap != null
 				? attributeConverterDescriptorMap.values()
 				: Collections.emptyList();
@@ -234,7 +265,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 		scanEnvironment = null;
 		scannerSetting = null;
 		archiveDescriptorFactory = null;
-		jandexIndex = null;
 
 		if ( sqlFunctionMap != null ) {
 			sqlFunctionMap.clear();

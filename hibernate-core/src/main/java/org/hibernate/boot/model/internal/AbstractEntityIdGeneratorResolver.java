@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -64,7 +64,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	@Override
 	public final void doSecondPass(Map<String, PersistentClass> persistentClasses) throws MappingException {
 		switch ( generatedValue.strategy() ) {
-			case UUID -> GeneratorAnnotationHelper.handleUuidStrategy( idValue, idMember, buildingContext );
+			case UUID -> handleUuidStrategy();
 			case IDENTITY -> GeneratorAnnotationHelper.handleIdentityStrategy( idValue );
 			case SEQUENCE -> handleSequenceStrategy();
 			case TABLE -> handleTableStrategy();
@@ -72,8 +72,18 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 		}
 	}
 
+	private void handleUuidStrategy() {
+		GeneratorAnnotationHelper.handleUuidStrategy(
+				idValue,
+				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
+				buildingContext
+		);
+	}
+
 	private void handleSequenceStrategy() {
-		if ( generatedValue.generator().isEmpty() ) {
+		if ( generatedValue.generator().isBlank() ) {
 			handleUnnamedSequenceGenerator();
 		}
 		else {
@@ -86,7 +96,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected abstract void handleNamedSequenceGenerator();
 
 	private void handleTableStrategy() {
-		if ( generatedValue.generator().isEmpty() ) {
+		if ( generatedValue.generator().isBlank() ) {
 			handleUnnamedTableGenerator();
 		}
 		else {
@@ -99,7 +109,7 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected abstract void handleNamedTableGenerator();
 
 	private void handleAutoStrategy() {
-		if ( generatedValue.generator().isEmpty() ) {
+		if ( generatedValue.generator().isBlank() ) {
 			handleUnnamedAutoGenerator();
 		}
 		else {
@@ -137,7 +147,9 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	}
 
 	private Annotation findGeneratorAnnotation(AnnotationTarget annotationTarget) {
-		final List<? extends Annotation> metaAnnotated = annotationTarget.getMetaAnnotated( IdGeneratorType.class, buildingContext.getMetadataCollector().getSourceModelBuildingContext() );
+		final List<? extends Annotation> metaAnnotated =
+				annotationTarget.getMetaAnnotated( IdGeneratorType.class,
+						buildingContext.getBootstrapContext().getModelsContext() );
 		if ( CollectionHelper.size( metaAnnotated ) > 0 ) {
 			return metaAnnotated.get( 0 );
 		}
@@ -148,13 +160,15 @@ public abstract class AbstractEntityIdGeneratorResolver implements IdGeneratorRe
 	protected boolean handleAsLegacyGenerator() {
 		// Handle a few legacy Hibernate generators...
 		final String nameFromGeneratedValue = generatedValue.generator();
-		if ( !nameFromGeneratedValue.isEmpty() ) {
-			final Class<? extends Generator> legacyNamedGenerator = mapLegacyNamedGenerator( nameFromGeneratedValue, idValue );
+		if ( !nameFromGeneratedValue.isBlank() ) {
+			final Class<? extends Generator> legacyNamedGenerator =
+					mapLegacyNamedGenerator( nameFromGeneratedValue, idValue );
 			if ( legacyNamedGenerator != null ) {
 				final Map<String,String> configuration = buildLegacyGeneratorConfig();
 				//noinspection unchecked,rawtypes
 				GeneratorBinder.createGeneratorFrom(
-						new IdentifierGeneratorDefinition( nameFromGeneratedValue, legacyNamedGenerator.getName(), configuration ),
+						new IdentifierGeneratorDefinition( nameFromGeneratedValue,
+								legacyNamedGenerator.getName(), configuration ),
 						idValue,
 						(Map) configuration,
 						buildingContext

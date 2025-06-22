@@ -1,91 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.naming;
 
-import java.util.Locale;
-
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-
 /**
- * Originally copied from Spring Boot as this strategy is popular there
- * (original name is SpringPhysicalNamingStrategy).
- *
- * @author Phillip Webb
- * @author Madhura Bhave
+ * @deprecated Use {@link PhysicalNamingStrategySnakeCaseImpl}.
  */
-public class CamelCaseToUnderscoresNamingStrategy implements PhysicalNamingStrategy {
-
-	@Override
-	public Identifier toPhysicalCatalogName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return apply( logicalName, jdbcEnvironment );
-	}
-
-	@Override
-	public Identifier toPhysicalSchemaName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return apply( logicalName, jdbcEnvironment );
-	}
-
-	@Override
-	public Identifier toPhysicalTableName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return apply( logicalName, jdbcEnvironment );
-	}
-
-	@Override
-	public Identifier toPhysicalSequenceName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return apply( logicalName, jdbcEnvironment );
-	}
-
-	@Override
-	public Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {
-		return apply( logicalName, jdbcEnvironment );
-	}
-
-	private Identifier apply(final Identifier name, final JdbcEnvironment jdbcEnvironment) {
-		if ( name == null ) {
-			return null;
-		}
-		StringBuilder builder = new StringBuilder( name.getText().replace( '.', '_' ) );
-		for ( int i = 1; i < builder.length() - 1; i++ ) {
-			if ( isUnderscoreRequired( builder.charAt( i - 1 ), builder.charAt( i ), builder.charAt( i + 1 ) ) ) {
-				builder.insert( i++, '_' );
-			}
-		}
-		return getIdentifier( builder.toString(), name.isQuoted(), jdbcEnvironment );
-	}
-
-	/**
-	 * Get an identifier for the specified details. By default this method will return an identifier
-	 * with the name adapted based on the result of {@link #isCaseInsensitive(JdbcEnvironment)}
-	 *
-	 * @param name the name of the identifier
-	 * @param quoted if the identifier is quoted
-	 * @param jdbcEnvironment the JDBC environment
-	 *
-	 * @return an identifier instance
-	 */
-	protected Identifier getIdentifier(String name, final boolean quoted, final JdbcEnvironment jdbcEnvironment) {
-		if ( isCaseInsensitive( jdbcEnvironment ) ) {
-			name = name.toLowerCase( Locale.ROOT );
-		}
-		return new Identifier( name, quoted );
-	}
-
-	/**
-	 * Specify whether the database is case sensitive.
-	 *
-	 * @param jdbcEnvironment the JDBC environment which can be used to determine case
-	 *
-	 * @return true if the database is case insensitive sensitivity
-	 */
-	protected boolean isCaseInsensitive(JdbcEnvironment jdbcEnvironment) {
-		return true;
-	}
-
-	private boolean isUnderscoreRequired(final char before, final char current, final char after) {
-		return ( Character.isLowerCase( before ) || Character.isDigit( before ) ) && Character.isUpperCase( current ) && ( Character.isLowerCase(
-				after ) || Character.isDigit( after ) );
-	}
-
+@Deprecated(since = "7", forRemoval = true)
+public class CamelCaseToUnderscoresNamingStrategy extends PhysicalNamingStrategySnakeCaseImpl {
 }

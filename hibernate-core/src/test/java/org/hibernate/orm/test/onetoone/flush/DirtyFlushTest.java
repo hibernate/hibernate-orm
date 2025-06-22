@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetoone.flush;
@@ -74,10 +74,7 @@ public class DirtyFlushTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from Profile" ).executeUpdate();
-			em.createQuery( "delete from User" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "User")

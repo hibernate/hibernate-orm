@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.sql;
@@ -14,7 +14,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NamedNativeQuery;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -108,7 +108,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 
 		checkUseCase(
 				tableName,
-				query -> ( (NativeQueryImplementor<?>) query ).addSynchronizedQuerySpace( tableName ),
+				query -> ( (NativeQuery<?>) query ).addSynchronizedQuerySpace( tableName ),
 				// the 2 CachedEntity entries should not be there
 				false
 		);
@@ -154,7 +154,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 
 		checkUseCase(
 				tableName,
-				query -> ( (NativeQueryImplementor<?>) query ).addSynchronizedQuerySpace( tableName ),
+				query -> ( (NativeQuery<?>) query ).addSynchronizedQuerySpace( tableName ),
 				// the 2 CachedEntity entries should still be there
 				true
 		);

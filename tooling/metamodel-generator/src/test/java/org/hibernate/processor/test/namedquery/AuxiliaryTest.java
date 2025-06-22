@@ -1,18 +1,24 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.namedquery;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQueryReference;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
 import org.junit.Test;
 
+import java.lang.reflect.ParameterizedType;
+
 import static org.hibernate.processor.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.processor.test.util.TestUtil.assertPresenceOfNameFieldInMetamodelFor;
+import static org.hibernate.processor.test.util.TestUtil.getFieldFromMetamodelFor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gavin King
@@ -129,5 +135,31 @@ public class AuxiliaryTest extends CompilationTest {
 				Object.class,
 				Object.class
 		);
+
+		checkTypedQueryReference( "QUERY_TITLES_WITH_ISBNS", "_titlesWithIsbns_", Object[].class );
+		checkTypedQueryReference( "QUERY_TITLES_AND_ISBNS_AS_RECORD", "_titlesAndIsbnsAsRecord_", TitleAndIsbn.class );
+		checkTypedQueryReference( "QUERY_TYPE_OF_BOOK", "__typeOfBook_", Type.class );
+		checkTypedQueryReference( "QUERY_GET_TITLES", "__getTitles_", String.class );
+		checkTypedQueryReference( "QUERY_GET_UPPER_LOWER_TITLES", "__getUpperLowerTitles_", Object[].class );
+		checkTypedQueryReference( "QUERY_BOOKS_BY_TITLE", "_booksByTitle_", Book.class );
+		checkTypedQueryReference( "QUERY_BOOKS_BY_TITLE_VERBOSE", "_booksByTitleVerbose_", Book.class );
+	}
+
+	private static void checkTypedQueryReference(String NAME, String name, Class<?> type) {
+		assertPresenceOfNameFieldInMetamodelFor(
+				Book.class,
+				NAME,
+				"Missing named query attribute."
+		);
+		assertPresenceOfFieldInMetamodelFor(
+				Book.class,
+				name,
+				"Missing typed query reference."
+		);
+		ParameterizedType fieldType = (ParameterizedType)
+				getFieldFromMetamodelFor( Book.class, name )
+						.getGenericType();
+		assertEquals(TypedQueryReference.class, fieldType.getRawType());
+		assertEquals( type, fieldType.getActualTypeArguments()[0]);
 	}
 }

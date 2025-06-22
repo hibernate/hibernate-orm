@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -22,9 +22,9 @@ public abstract class AbstractEntityBatchLoader<T>
 
 	private final SingleIdEntityLoaderStandardImpl<T> singleIdLoader;
 
-	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers loadQueryInfluencers) {
-		super( entityDescriptor, loadQueryInfluencers.getSessionFactory() );
-		this.singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, loadQueryInfluencers );
+	public AbstractEntityBatchLoader(EntityMappingType entityDescriptor, LoadQueryInfluencers influencers) {
+		super( entityDescriptor, influencers.getSessionFactory() );
+		this.singleIdLoader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, influencers );
 	}
 
 	protected abstract void initializeEntities(
@@ -49,7 +49,6 @@ public abstract class AbstractEntityBatchLoader<T>
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
-
 		return load( id, ids, hasSingleId( ids ), entityInstance, lockOptions, readOnly, session );
 	}
 
@@ -65,9 +64,7 @@ public abstract class AbstractEntityBatchLoader<T>
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
 		final boolean hasSingleId = hasSingleId( ids );
-
 		final T entity = load( id, ids, hasSingleId, entityInstance, lockOptions, null, session );
-
 		if ( hasSingleId ) {
 			return entity;
 		}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -60,8 +60,8 @@ class NaturalIdBinder {
 		final Property property = columns.resolveProperty();
 		if ( property.isComposite() ) {
 			for ( Selectable selectable : property.getValue().getSelectables() ) {
-				if ( selectable instanceof org.hibernate.mapping.Column) {
-					uniqueKey.addColumn( tableColumn( (org.hibernate.mapping.Column) selectable, table, collector ) );
+				if ( selectable instanceof org.hibernate.mapping.Column column) {
+					uniqueKey.addColumn( tableColumn( column, table, collector ) );
 				}
 			}
 		}

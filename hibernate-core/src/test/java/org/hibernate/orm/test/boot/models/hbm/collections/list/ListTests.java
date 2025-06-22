@@ -1,23 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.hbm.collections.list;
 
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,25 +25,13 @@ import static org.assertj.core.api.Assertions.fail;
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class ListTests {
 	@Test
-	@DomainModel( xmlMappings = "mappings/models/hbm/list/hbm.xml" )
-
-	void testHbmXml(DomainModelScope domainModelScope) {
+	@DomainModel( xmlMappings = "mappings/models/hbm/list/mapping.xml" )
+	void testXml(DomainModelScope domainModelScope) {
 		final PersistentClass rootBinding = domainModelScope.getDomainModel().getEntityBinding( Root.class.getName() );
 		validateTags( rootBinding.getProperty( "tags" ) );
 		validateCategories( rootBinding.getProperty( "categories" ) );
-		Property admins = rootBinding.getProperty( "admins" );
-		Table collectionTable = ( (List) admins.getValue() ).getCollectionTable();
-//		collectionTable.getColumns().
-		Property admins2 = rootBinding.getProperty( "admins2" );
-	}
-
-	@Test
-	@ServiceRegistry( settings = @Setting( name = MappingSettings.TRANSFORM_HBM_XML, value = "true" ) )
-	@DomainModel( xmlMappings = "mappings/models/hbm/list/hbm.xml" )
-	void testTransformation(DomainModelScope domainModelScope) {
-		final PersistentClass rootBinding = domainModelScope.getDomainModel().getEntityBinding( Root.class.getName() );
-		validateTags( rootBinding.getProperty( "tags" ) );
-		validateCategories( rootBinding.getProperty( "categories" ) );
+		validateAdmins( rootBinding.getProperty( "admins" ) );
+		validateAdmins2( rootBinding.getProperty( "admins2" ) );
 	}
 
 	private void validateTags(Property tags) {
@@ -77,9 +61,6 @@ public class ListTests {
 			else if ( "owner".equals( subProperty.getName() ) ) {
 				validateCategoryOwner( subProperty );
 			}
-			else if ( "admins".equals( subProperty.getName() ) ) {
-				validateAdmins( subProperty );
-			}
 			else {
 				fail( "Unexpected Category property :" + subProperty.getName() );
 			}
@@ -99,16 +80,41 @@ public class ListTests {
 
 	}
 
-	private void validateAdmins(Property adminsProperty) {
-		assertThat( adminsProperty.getColumns() ).hasSize( 1 );
-		assertThat( adminsProperty.getColumns().get( 0 ).getName() ).isEqualTo( "root_fk" );
+	private void validateAdmins(Property property) {
+		// mapped as many-to-many
+		assertThat( property.getColumns() ).isEmpty();
 
-		final List listValue = (List) adminsProperty.getValue();
+		final List listValue = (List) property.getValue();
 		assertThat( listValue.getCollectionTable().getName() ).isEqualTo( "root_admins" );
+
+		final KeyValue foreignKey = listValue.getKey();
+		assertThat( foreignKey.getColumns() ).hasSize( 1 );
+		assertThat( foreignKey.getColumns().get( 0 ).getName() ).isEqualTo( "root_fk" );
 
 		final BasicValue indexValue = (BasicValue) listValue.getIndex();
 		assertThat( indexValue.getColumns() ).hasSize( 1 );
 
 		final ManyToOne element = (ManyToOne) listValue.getElement();
+		assertThat( element.getReferencedEntityName() ).isEqualTo( User.class.getName() );
+	}
+
+	private void validateAdmins2(Property property) {
+		// mapped as one-to-many
+		assertThat( property.getColumns() ).isEmpty();
+
+		final List listValue = (List) property.getValue();
+		assertThat( listValue.getColumns() ).isEmpty();
+		assertThat( listValue.getCollectionTable().getName() ).isEqualTo( "root_admins2" );
+
+		// key
+		final KeyValue foreignKey = listValue.getKey();
+		assertThat( foreignKey.getColumns() ).hasSize( 1 );
+		assertThat( foreignKey.getColumns().get( 0 ).getName() ).isEqualTo( "root_fk" );
+
+		final BasicValue indexValue = (BasicValue) listValue.getIndex();
+		assertThat( indexValue.getColumns() ).hasSize( 1 );
+
+		final ManyToOne element = (ManyToOne) listValue.getElement();
+		assertThat( element.getReferencedEntityName() ).isEqualTo( User.class.getName() );
 	}
 }

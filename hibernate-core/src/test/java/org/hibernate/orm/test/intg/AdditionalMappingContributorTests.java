@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.intg;
@@ -24,7 +24,7 @@ import org.hibernate.models.internal.jdk.JdkClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MutableMemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
@@ -299,31 +299,29 @@ public class AdditionalMappingContributorTests {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			SourceModelBuildingContext sourceModelBuildingContext = buildingContext.getMetadataCollector()
-					.getSourceModelBuildingContext();
-			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext
-					.getClassDetailsRegistry();
+			final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+			final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 
-			contributeEntity4Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
-			contributeEntity5Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
+			contributeEntity4Details( contributions, modelsContext, classDetailsRegistry );
+			contributeEntity5Details( contributions, modelsContext, classDetailsRegistry );
 		}
 
 		private static void contributeEntity4Details(
 				AdditionalMappingContributions contributions,
-				SourceModelBuildingContext sourceModelBuildingContext,
+				ModelsContext ModelsContext,
 				ClassDetailsRegistry classDetailsRegistry) {
 			final ClassDetails entity4Details = ModelsHelper.resolveClassDetails(
 					Entity4.class.getName(),
 					classDetailsRegistry,
 					() ->
-							new JdkClassDetails( Entity4.class, sourceModelBuildingContext )
+							new JdkClassDetails( Entity4.class, ModelsContext )
 			);
 			contributions.contributeManagedClass( entity4Details );
 		}
 
 		private static void contributeEntity5Details(
 				AdditionalMappingContributions contributions,
-				SourceModelBuildingContext modelBuildingContext,
+				ModelsContext modelBuildingContext,
 				ClassDetailsRegistry classDetailsRegistry) {
 			final ClassDetails entity5Details = ModelsHelper.resolveClassDetails(
 					Entity5.class.getName(),
@@ -358,15 +356,14 @@ public class AdditionalMappingContributorTests {
 				InFlightMetadataCollector metadata,
 				ResourceStreamLocator resourceStreamLocator,
 				MetadataBuildingContext buildingContext) {
-			final SourceModelBuildingContext sourceModelBuildingContext = buildingContext.getMetadataCollector()
-					.getSourceModelBuildingContext();
-			final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
-			contributeEntity6Details( contributions, sourceModelBuildingContext, classDetailsRegistry );
+			final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
+			final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
+			contributeEntity6Details( contributions, modelsContext, classDetailsRegistry );
 		}
 
 		private void contributeEntity6Details(
 				AdditionalMappingContributions contributions,
-				SourceModelBuildingContext modelBuildingContext,
+				ModelsContext modelBuildingContext,
 				ClassDetailsRegistry classDetailsRegistry) {
 			final ClassDetails entity6Details = ModelsHelper.resolveClassDetails(
 					"Entity6",

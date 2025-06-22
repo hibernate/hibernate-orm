@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.spi;
@@ -37,7 +37,8 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -75,6 +76,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.internal.ParameterizedTypeImpl;
 
@@ -250,7 +252,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	/**
 	 * Obtain the {@link JpaCompliance} setting.
+	 *
+	 * @deprecated No longer used
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	public JpaCompliance getJpaCompliance() {
 		return scope.getJpaCompliance();
 	}
@@ -363,7 +368,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				}
 
 				try {
-					final Class<?> javaTypeClass = getClassLoaderService().classForName( name );
+					final Class<?> javaTypeClass = scope.getClassLoaderService().classForName( name );
 					final JavaType<?> jtd = javaTypeRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
@@ -486,6 +491,31 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		public boolean preferJdbcDatetimeTypes() {
 			return sessionFactory != null
 				&& sessionFactory.getSessionFactoryOptions().isPreferJdbcDatetimeTypesInNativeQueriesEnabled();
+		}
+
+		@Override
+		public boolean isXmlFormatMapperLegacyFormatEnabled() {
+			if ( metadataBuildingContext != null ) {
+				return metadataBuildingContext.getBuildingOptions().isXmlFormatMapperLegacyFormatEnabled();
+			}
+			else if ( sessionFactory != null ) {
+				return sessionFactory.getSessionFactoryOptions().isXmlFormatMapperLegacyFormatEnabled();
+			}
+			else {
+				return false;
+			}
+		}
+
+		public ClassLoaderService getClassLoaderService() {
+			return sessionFactory == null
+					? metadataBuildingContext.getBootstrapContext().getClassLoaderService()
+					: sessionFactory.getClassLoaderService();
+		}
+
+		public ManagedBeanRegistry getManagedBeanRegistry() {
+			return sessionFactory == null
+					? metadataBuildingContext.getBootstrapContext().getManagedBeanRegistry()
+					: sessionFactory.getManagedBeanRegistry();
 		}
 
 		private Scope(TypeConfiguration typeConfiguration) {
@@ -612,11 +642,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
 
-	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
-		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
+	public SqmBindableType<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
+		final SqmBindableType<?>[] components = new SqmBindableType<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			SqmTypedNode<?> tupleElement = typedNodes.get(i);
-			final SqmExpressible<?> sqmExpressible = tupleElement.getNodeType();
+			final SqmTypedNode<?> tupleElement = typedNodes.get(i);
+			final SqmBindableType<?> sqmExpressible = tupleElement.getNodeType();
 			// keep null value for Named Parameters
 			if ( tupleElement instanceof SqmParameter<?> && sqmExpressible == null ) {
 				components[i] = QueryParameterJavaObjectType.INSTANCE;
@@ -627,22 +657,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 						: getBasicTypeForJavaType( Object.class );
 			}
 		}
-		return arrayTuples.computeIfAbsent(
-				new ArrayCacheKey( components ),
-				key -> new ArrayTupleType( key.components )
-		);
+		return arrayTuples.computeIfAbsent( new ArrayCacheKey( components ),
+				key -> new ArrayTupleType( key.components ) );
 	}
 
 	private static class ArrayCacheKey {
-		final SqmExpressible<?>[] components;
+		final SqmBindableType<?>[] components;
 
-		public ArrayCacheKey(SqmExpressible<?>[] components) {
+		public ArrayCacheKey(SqmBindableType<?>[] components) {
 			this.components = components;
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			return o instanceof ArrayCacheKey key
+		public boolean equals(Object object) {
+			return object instanceof ArrayCacheKey key
 				&& Arrays.equals( components, key.components );
 		}
 
@@ -712,8 +740,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( isNumberArray( expressible ) ) {
 			return (BasicType<?>) expressible.getSqmType();
 		}
-		// Use the relational java type to account for possible converters
-		return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
+		else {
+			// Use the relational java type to account for possible converters
+			return getBasicTypeForJavaType( expressible.getRelationalJavaType().getJavaTypeClass() );
+		}
 	}
 
 	private static boolean matchesJavaType(SqmExpressible<?> type, Class<?> javaType) {
@@ -811,10 +841,10 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@SuppressWarnings("deprecation")
 	public TemporalType getSqlTemporalType(SqmExpressible<?> type) {
-		if ( type == null ) {
-			return null;
-		}
-		return getSqlTemporalType( type.getRelationalJavaType().getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+		return type == null ? null
+			: getSqlTemporalType( type.getRelationalJavaType()
+					.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() ) );
+
 	}
 
 	@SuppressWarnings("deprecation")
@@ -895,14 +925,16 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
 		return !scope.allowExtensionsInCdi
 				? (MutabilityPlan<J>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass )
-				: (MutabilityPlan<J>) getManagedBeanRegistry().getBean( planClass ).getBeanInstance();
+				: (MutabilityPlan<J>) scope.getManagedBeanRegistry().getBean( planClass ).getBeanInstance();
 	}
 
-	private ClassLoaderService getClassLoaderService() {
-		return scope.getServiceRegistry().requireService( ClassLoaderService.class );
+	@Internal @Incubating // find a new home for this operation
+	public final FormatMapper getJsonFormatMapper() {
+		return getSessionFactory().getSessionFactoryOptions().getJsonFormatMapper();
 	}
 
-	private ManagedBeanRegistry getManagedBeanRegistry() {
-		return scope.getServiceRegistry().requireService( ManagedBeanRegistry.class );
+	@Internal @Incubating // find a new home for this operation
+	public final FormatMapper getXmlFormatMapper() {
+		return getSessionFactory().getSessionFactoryOptions().getXmlFormatMapper();
 	}
 }

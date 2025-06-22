@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -410,14 +410,15 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 		final List<Object> deletes = new ArrayList<>();
 		final List<?> sn = (List<?>) getSnapshot();
 		int end;
-		if ( sn.size() > list.size() ) {
-			for ( int i=list.size(); i<sn.size(); i++ ) {
+		final int snSize = sn.size();
+		if ( snSize > list.size() ) {
+			for ( int i = list.size(); i < snSize; i++ ) {
 				deletes.add( indexIsFormula ? sn.get( i ) : i );
 			}
 			end = list.size();
 		}
 		else {
-			end = sn.size();
+			end = snSize;
 		}
 		for ( int i=0; i<end; i++ ) {
 			final Object item = list.get( i );
@@ -427,6 +428,21 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 			}
 		}
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final List<?> sn = (List<?>) getSnapshot();
+		int snSize = sn.size();
+		if ( snSize > list.size() ) {
+			return true;
+		}
+		for ( int i=0; i<snSize; i++ ) {
+			if ( list.get( i ) == null && sn.get( i ) != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

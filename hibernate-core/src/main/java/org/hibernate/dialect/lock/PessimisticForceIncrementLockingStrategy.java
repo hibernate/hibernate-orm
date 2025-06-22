@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.lock;
@@ -7,7 +7,8 @@ package org.hibernate.dialect.lock;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.event.spi.EventSource;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -39,14 +40,12 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 	}
 
 	@Override
-	public void lock(Object id, Object version, Object object, int timeout, EventSource session) {
+	public void lock(Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session) {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
-		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
-		entry.forceLocked( object, nextVersion );
+		OptimisticLockHelper.forceVersionIncrement( object, entry, session );
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
@@ -78,8 +78,13 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 		verifyContainsBatches(
 				new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
-				new Batch( "insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ),
-				new Batch( "insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)", 3 )
+				new Batch( List.of(
+						"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
+						"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ) ),
+				new Batch( List.of(
+						"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
+						"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)" ),
+						3 )
 		);
 	}
 

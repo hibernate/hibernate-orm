@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -30,6 +30,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @IdGeneratorType(org.hibernate.id.NativeGenerator.class)
 @Incubating
 public @interface NativeGenerator {
+	/**
+	 * Configures the sequence generation when the dialect reports
+	 * {@linkplain jakarta.persistence.GenerationType#SEQUENCE} as
+	 * its native generator
+	 */
 	SequenceGenerator sequenceForm() default @SequenceGenerator();
+
+	/**
+	 * Configures the table generation when the dialect reports
+	 * {@linkplain jakarta.persistence.GenerationType#TABLE} as
+	 * its native generator
+	 */
 	TableGenerator tableForm() default @TableGenerator();
 }

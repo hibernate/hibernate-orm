@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -170,7 +170,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	@Override
 	public int getPosition() {
 		try {
-			return resultSet.getRow() - 1;
+			return resultSet.getRow();
 		}
 		catch (SQLException e) {
 			throw makeExecutionException( "Error calling ResultSet#getRow", e );

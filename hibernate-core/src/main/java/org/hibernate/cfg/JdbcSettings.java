@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -19,7 +19,7 @@ import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
  *
  * @author Steve Ebersole
  */
-public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSettings, HikariCPSettings {
+public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSettings {
 
 	/**
 	 * Specifies a JTA {@link javax.sql.DataSource} to use for Connections.
@@ -105,6 +105,9 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 * </ul>
 	 * <p>
 	 * See section 8.2.1.9
+	 *
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	String JAKARTA_JDBC_USER = "jakarta.persistence.jdbc.user";
 
@@ -115,6 +118,9 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 * and {@link #JAKARTA_JDBC_USER} to specify how to connect to the database.
 	 * <p>
 	 * See JPA 2 section 8.2.1.9
+	 *
+	 * @see java.sql.DriverManager#getConnection(String, String, String)
+	 * @see javax.sql.DataSource#getConnection(String, String)
 	 */
 	String JAKARTA_JDBC_PASSWORD = "jakarta.persistence.jdbc.password";
 
@@ -225,53 +231,87 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 
 	/**
-	 * Specifies a {@link ConnectionProvider}
-	 * to use for obtaining JDBC connections, either:
+	 * Specifies a {@link ConnectionProvider} to use for obtaining JDBC connections,
+	 * either:
 	 * <ul>
+	 *     <li>a short strategy name like {@code agroal}, {@code hikaricp},
+	 *         {@code c3p0},
 	 *     <li>an instance of {@code ConnectionProvider},
-	 *     <li>a {@link Class} representing a class that implements
+	 *     <li>a {@link Class} object representing a class that implements
 	 *         {@code ConnectionProvider}, or
 	 *     <li>the name of a class that implements {@code ConnectionProvider}.
 	 * </ul>
 	 * <p>
-	 * The term {@code "class"} appears in the setting name due to legacy reasons;
-	 * however it can accept instances.
+	 * If this property is not explicitly set, a connection provider is chosen
+	 * automatically:
+	 * <ul>
+	 * <li>if {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_NON_JTA_DATASOURCE}
+	 *     is set, {@linkplain org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl
+	 *     a datasource-based implementation} is used;
+	 * <li>otherwise, a {@code ConnectionProvider} is loaded automatically as a
+	 *     {@linkplain java.util.ServiceLoader Java service};
+	 * <li>but if no service is found, or if more than one service is available,
+	 *     {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
+	 *     a default implementation} is used as a fallback.
+	 * </ul>
+	 * <p>
+	 * The default implementation is not recommended for use in production.
+	 *
+	 * @apiNote The term {@code "class"} appears in the setting name due to legacy reasons;
+	 *          however it can accept instances.
 	 */
 	String CONNECTION_PROVIDER = "hibernate.connection.provider_class";
 
 	/**
-	 * Specifies the maximum number of inactive connections for the built-in
-	 * {@linkplain org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl
-	 * connection pool}.
-	 *
-	 * @settingDefault 20
+	 * Specifies the maximum number of inactive connections for any
+	 * {@linkplain ConnectionProvider connection pool} which respects this
+	 * setting, including every built-in implementation except for
+	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 * <p>
+	 * The default pool size depends on the connection provider.
 	 */
 	String POOL_SIZE = "hibernate.connection.pool_size";
 
 	/**
-	 * Specified the JDBC transaction isolation level.
+	 * Specifies the JDBC transaction isolation level for connections obtained
+	 * from any {@link ConnectionProvider} implementation which respects this
+	 * setting, including every built-in implementation except for
+	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 * <p>
+	 * Possible values are enumerated by {@link java.sql.Connection}:
+	 * {@code READ_UNCOMMITTED}, {@code READ_COMMITTED},
+	 * {@code REPEATABLE_READ}, {@code SERIALIZABLE}.
+	 * <p>
+	 * If this setting is not explicitly specified, Hibernate does not modify
+	 * the transaction isolation level of the JDBC connection.
+	 *
+	 * @see java.sql.Connection#setTransactionIsolation(int)
 	 */
 	String ISOLATION = "hibernate.connection.isolation";
 
 	/**
 	 * Controls the autocommit mode of JDBC connections obtained from any
-	 * {@link ConnectionProvider} implementation
-	 * which respects this setting, which the built-in implementations do, except for
+	 * {@link ConnectionProvider} implementation which respects this setting,
+	 * including every built-in implementation except for
 	 * {@link org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl}.
+	 *
+	 * @see java.sql.Connection#setAutoCommit(boolean)
+	 *
+	 * @settingDefault {@code false}
 	 */
 	String AUTOCOMMIT = "hibernate.connection.autocommit";
 
 	/**
-	 * Indicates that Connections obtained from the configured {@link ConnectionProvider} have
+	 * Indicates that connections obtained from the configured {@link ConnectionProvider} have
 	 * auto-commit already disabled when they are acquired.
 	 * <p>
-	 * It is inappropriate to set this value to {@code true} when the Connections returned by
-	 * the provider do not, in fact, have auto-commit disabled.  Doing so may lead to Hibernate
+	 * It is inappropriate to set this value to {@code true} when the connections returned by
+	 * the provider do not, in fact, have auto-commit disabled. Doing so may lead to Hibernate
 	 * executing SQL operations outside the scope of any transaction.
 	 *
-	 * @apiNote By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)} on
-	 * newly-obtained connections.  This setting allows to circumvent that call (as well as other
-	 * operations) in the interest of performance.
+	 * @apiNote By default, Hibernate calls {@link java.sql.Connection#setAutoCommit(boolean)}
+	 * on newly-obtained connections. With this setting enabled, that call is skipped, along
+	 * with some other operations, in the interest of performance.
 	 *
 	 * @settingDefault {@code false}
 	 *
@@ -279,7 +319,7 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 *
 	 * @since 5.2.10
 	 */
-	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT= "hibernate.connection.provider_disables_autocommit";
+	String CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT = "hibernate.connection.provider_disables_autocommit";
 
 	/**
 	 * A prefix for properties specifying arbitrary JDBC connection properties. These
@@ -287,7 +327,11 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 * <p>
 	 * For example, declaring {@code hibernate.connection.foo=bar} tells Hibernate to
 	 * append {@code foo=bar} to the JDBC connection URL.
+	 *
+	 * @deprecated This setting is only supported by {@code C3P0ConnectionProvider}
+	 * and {@link org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl}.
 	 */
+	@Deprecated(since="7")
 	String CONNECTION_PREFIX = "hibernate.connection";
 
 	/**
@@ -361,21 +405,24 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 
 	/**
-	 * Controls how Hibernate should handle scrollable results - <ul>
-	 * 	 <li>
-	 * 	     {@code true} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE insensitive} scrolling can be used
-	 * 	 </li>
-	 * 	 <li>
-	 * 	     {@code false} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_SENSITIVE sensitive} scrolling must be used
-	 * 	 </li>
+	 * Controls how Hibernate should handle scrollable results:
+	 * <ul>
+	 * <li>{@code true} indicates that {@linkplain java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE insensitive}
+	 *     scrolling can be used;
+	 * <li>{@code false} indicates that {@linkplain java.sql.ResultSet#TYPE_FORWARD_ONLY forward-only}
+	 *     scrolling must be used.
 	 * </ul>
 	 *
-	 * @settingDefault {@code true} if the underlying driver supports scrollable results
+	 * @settingDefault {@code true} if the underlying driver supports scrollable results,
+	 *                 {@code false} otherwise
 	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyScrollableResultsSupport(boolean)
 	 * @see Query#scroll
 	 * @see ExtractedDatabaseMetaData#supportsScrollableResults()
+	 *
+	 * @deprecated It's not necessary to set this explicitly
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 
 	/**
@@ -405,6 +452,9 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	/**
 	 * When enabled, specifies that JDBC statement warnings should be logged.
 	 * <p>
+	 * Logging of JDBC warnings may also be controlled via the log category
+	 * {@value org.hibernate.engine.jdbc.spi.SQLExceptionLogging#WARN_NAME}.
+	 * <p>
 	 * The default is determined by
 	 * {@link org.hibernate.dialect.Dialect#isJdbcLogWarningsEnabledByDefault()}.
 	 *
@@ -413,6 +463,19 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 * @since 5.1
 	 */
 	String LOG_JDBC_WARNINGS = "hibernate.jdbc.log.warnings";
+
+	/**
+	 * When enabled, specifies that JDBC errors should be logged before being rethrown.
+	 * <p>
+	 * Logging of JDBC errors may also be controlled via the log category
+	 * {@value org.hibernate.engine.jdbc.spi.SQLExceptionLogging#ERROR_NAME}.
+	 *
+	 * @settingDefault {@code true}
+	 *
+	 * @since 7
+	 */
+	@Incubating // this was added for symmetry with LOG_JDBC_WARNINGS
+	String LOG_JDBC_ERRORS = "hibernate.jdbc.log.errors";
 
 	/**
 	 * Specifies the {@linkplain java.util.TimeZone time zone} to use in the JDBC driver,
@@ -444,6 +507,9 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings, AgroalSetti
 	 * <p>
 	 * Usually, performance will be improved if this behavior is enabled, assuming
 	 * the JDBC driver supports {@code getGeneratedKeys()}.
+	 *
+	 * @settingDefault {@code true} if the underlying driver supports
+	 *                 {@code getGeneratedKeys()}, {@code false} otherwise
 	 *
 	 * @see java.sql.PreparedStatement#getGeneratedKeys
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyGetGeneratedKeysSupport(boolean)

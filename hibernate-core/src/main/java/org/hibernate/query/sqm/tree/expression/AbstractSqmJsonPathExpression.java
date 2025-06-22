@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -11,7 +11,7 @@ import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.QuotingHelper;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
@@ -113,11 +114,11 @@ public abstract class AbstractSqmJsonPathExpression<T> extends SelfRenderingSqmF
 		return new JsonPathPassingClause( converted );
 	}
 
-	protected void appendPassingExpressionHqlString(StringBuilder sb) {
+	protected void appendPassingExpressionHqlString(StringBuilder sb, SqmRenderContext context) {
 		if ( passingExpressions != null && !passingExpressions.isEmpty() ) {
 			sb.append( " passing " );
 			for ( Map.Entry<String, SqmExpression<?>> entry : passingExpressions.entrySet() ) {
-				entry.getValue().appendHqlString( sb );
+				entry.getValue().appendHqlString( sb, context );
 				sb.append( " as " );
 				QuotingHelper.appendDoubleQuoteEscapedString( sb, entry.getKey() );
 			}

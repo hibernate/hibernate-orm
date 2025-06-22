@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.superdao.generic;
@@ -26,7 +26,7 @@ public interface SuperRepo<T,K> {
 	<S extends T> List<S> saveAll(List<S> entities);
 
 	@Find
-	Optional<T> findById(@By("#id") K id);
+	Optional<T> findById(@By("id(this)") K id);
 
 	@Find
 	Optional<T> findById2(@By("id(this)") K id);
@@ -37,8 +37,8 @@ public interface SuperRepo<T,K> {
 	@Find
 	Page<T> findAll(PageRequest pageRequest, Order<T> order);
 
-//    @Delete
-//    void deleteById(@By("#id") K id);
+//	@Delete
+//	void deleteById(@By("id(this)") K id);
 
 	@Delete
 	void delete(T entity);

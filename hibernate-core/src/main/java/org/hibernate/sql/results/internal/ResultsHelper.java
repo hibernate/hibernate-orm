@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.internal;
@@ -16,8 +16,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -77,14 +77,18 @@ public class ResultsHelper {
 		}
 
 		if ( collectionDescriptor.getCollectionType().hasHolder() ) {
-			// in case of PersistentArrayHolder we have to realign the EntityEntry loaded state with
-			// the entity values
+			// in case of PersistentArrayHolder we have to realign
+			// the EntityEntry loaded state with the entity values
 			final Object owner = collectionInstance.getOwner();
 			final EntityEntry entry = persistenceContext.getEntry( owner );
-			final PluralAttributeMapping mapping = collectionDescriptor.getAttributeMapping();
-			final int propertyIndex = mapping.getStateArrayPosition();
 			final Object[] loadedState = entry.getLoadedState();
-			loadedState[propertyIndex] = mapping.getValue( owner );
+			if ( loadedState != null ) {
+				final PluralAttributeMapping mapping = collectionDescriptor.getAttributeMapping();
+				final int propertyIndex = mapping.getStateArrayPosition();
+				loadedState[propertyIndex] = mapping.getValue( owner );
+			}
+			// else it must be an immutable entity or loaded in read-only mode,
+			// but unfortunately we have no way to reliably determine that here
 			persistenceContext.addCollectionHolder( collectionInstance );
 		}
 
@@ -199,8 +203,8 @@ public class ResultsHelper {
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
 		if ( isPutFromLoad ) {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventManager eventManager = session.getEventManager();
-			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final EventMonitor eventMonitor = session.getEventMonitor();
+			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
@@ -214,13 +218,13 @@ public class ResultsHelper {
 				);
 			}
 			finally {
-				eventManager.completeCachePutEvent(
+				eventMonitor.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						collectionDescriptor,
 						put,
-						EventManager.CacheActionDescription.COLLECTION_INSERT
+						EventMonitor.CacheActionDescription.COLLECTION_INSERT
 				);
 				eventListenerManager.cachePutEnd();
 

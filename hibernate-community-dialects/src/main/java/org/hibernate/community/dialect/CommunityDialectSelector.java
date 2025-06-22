@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -43,13 +43,12 @@ public class CommunityDialectSelector implements DialectSelector {
 				return MaxDBDialect.class;
 			case "SybaseAnywhere":
 				return SybaseAnywhereDialect.class;
-			case "Teradata14":
-			case "Teradata":
-				return TeradataDialect.class;
 			case "TimesTen":
 				return TimesTenDialect.class;
 			case "SingleStore":
 				return SingleStoreDialect.class;
+			case "Derby":
+				return DerbyDialect.class;
 		}
 		return null;
 	}

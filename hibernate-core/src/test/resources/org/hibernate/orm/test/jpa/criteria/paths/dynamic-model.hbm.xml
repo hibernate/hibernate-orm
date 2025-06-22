@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.orm.test.jpa.criteria.paths">
+    <class entity-name="Policy" table="policies">
+        <id name="id" type="int" column="id"/>
+    </class>
+
+    <class entity-name="Distribution" table="distributions">
+        <id name="id" type="int" column="id"/>
+        <many-to-one name="policy" entity-name="Policy" column="policy_fk"/>
+    </class>
+</hibernate-mapping>

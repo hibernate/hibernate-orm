@@ -1,27 +1,110 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
-import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
-
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 
 /**
- * Contract for things that can produce instances of {@link Query} and {@link NativeQuery}.
+ * An object which can produce instances of {@link SelectionQuery} and {@link MutationQuery}.
  * Implementors include {@link org.hibernate.Session} and {@link org.hibernate.StatelessSession}.
  * Many operations of the interface have the same or very similar signatures to operations of
  * {@link jakarta.persistence.EntityManager}. They are declared here to allow reuse by
  * {@code StatelessSession}.
  * <p>
- * Unlike the corresponding operations of {@code EntityManager}, operations for creating untyped
- * instances of {@code Query} are all marked as deprecated. Clients must migrate to the use of
- * the equivalent operations which accept a {@link Class} and return a typed {@code Query}.
+ * There are three fundamental ways to express a query:
+ * <ul>
+ * <li>in <em>Hibernate Query Language</em>, an object-oriented query dialect of SQL which is
+ *     a superset of the <em>Jakarta Persistence Query Language</em>,
+ * <li>in the native SQL dialect of the database, or
+ * <li>using the {@linkplain jakarta.persistence.criteria.CriteriaBuilder Criteria API} defined
+ *     by JPA, along with {@linkplain org.hibernate.query.criteria.HibernateCriteriaBuilder
+ *     extensions} defined by Hibernate.
+ * </ul>
+ * <p>
+ * In each case, the object used to execute the query depends on whether the query is a
+ * selection query or a mutation query.
+ * <ul>
+ * <li>selection queries are executed via an instance of {@link SelectionQuery}, while
+ * <li>mutation queries are executed via an instance of {@link MutationQuery}, but
+ * <li>since JPA makes no such distinction within its API, the type {@link Query} is a mixin of
+ *     {@code SelectionQuery}, {@code MutationQuery}, and {@link jakarta.persistence.TypedQuery}.
+ * </ul>
+ * This interface declares operations for creating instances of these objects.
+ * <table style="width:100%;margin:10px">
+ *     <tr>
+ *         <th style="width:10%"></th>
+ *         <th style="text-align:left;width:45%">Selection</th>
+ *         <th style="text-align:left;width:45%">Mutation</th>
+ *     </tr>
+ *     <tr>
+ *         <td>HQL</td>
+ *         <td>{@link #createSelectionQuery(String,Class)} and
+ *             {@link #createSelectionQuery(String,EntityGraph)}</td>
+ *         <td>{@link #createMutationQuery(String)}</td>
+ *     </tr>
+ *     <tr>
+ *         <td>SQL</td>
+ *         <td>{@link #createNativeQuery(String,Class)} and
+ *             {@link #createNativeQuery(String,String,Class)}</td>
+ *         <td>{@link #createNativeMutationQuery(String)}</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Criteria</td>
+ *         <td>{@link #createSelectionQuery(CriteriaQuery)}</td>
+ *         <td>{@link #createMutationQuery(CriteriaUpdate)},
+ *             {@link #createMutationQuery(CriteriaDelete)}, and
+ *             {@link #createMutationQuery(JpaCriteriaInsert)}</td>
+ *     </tr>
+ *     <tr>
+ *         <td>Named queries</td>
+ *         <td>{@link #createNamedSelectionQuery(String,Class)}</td>
+ *         <td>{@link #createNamedMutationQuery(String)}</td>
+ *     </tr>
+ * </table>
+ * <p>
+ * Operations like {@link #createSelectionQuery(String, Class) createSelectionQuery()},
+ * {@link #createNamedSelectionQuery(String, Class) createNamedSelectionQuery()}, and
+ * {@link #createNativeQuery(String, Class) createNativeQuery()} accept a Java
+ * {@linkplain Class class object} indicating the <em>result type</em> of the query.
+ * <ul>
+ * <li>The result type might be an {@linkplain jakarta.persistence.Entity entity} class, when
+ *     the query returns an entity:
+ * <pre>
+ * List&lt;Book&gt; allBooks =
+ *         session.createNativeQuery("select * from books order by title", Book.class)
+ *                 .getResultList();
+ * </pre>
+ * <li>It might be a {@linkplain org.hibernate.type.descriptor.java.JavaType basic type} like
+ *     {@code String} or {@code Long}:
+ * <pre>
+ * List&lt;String&gt; allTitles =
+ *         session.createNativeQuery("select distinct title from books order by title", String.class)
+ *                 .getResultList();
+ * </pre>
+ * <li>Finally, the result type might be a class used to package the elements of a {@code select}
+ *     list, such as a Java record with an appropriate constructor, {@code Map}, {@code List}, or
+ *     {@code Object[]}:
+ * <pre>
+ * record IsbnAndTitle(String isbn, String title) {}
+ *
+ * List&lt;IsbnAndTitle&gt; allBooks =
+ *         session.createNativeQuery("select isbn, title from books order by title", IsbnAndTitle.class)
+ *                 .getResultList();
+ * </pre>
+ * </ul>
+ * For a {@linkplain #createQuery(CriteriaQuery) criteria query}, the result type is already
+ * determined by {@link CriteriaQuery#getResultType()}.
+ *
+ * @apiNote Unlike the corresponding operations of {@code EntityManager}, operations for creating
+ * untyped instances of {@code Query} are all marked as deprecated. Clients must migrate to the
+ * use of the equivalent operations which accept a {@link Class} and return a typed {@code Query}.
  *
  * @author Steve Ebersole
  */
@@ -192,8 +275,6 @@ public interface QueryProducer {
 	 * @return The {@link NativeQuery} instance for manipulation and execution
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
-	 *
-	 * @apiNote Changes in JPA 3.2 required de-typing this to be compilable with their changes
 	 */
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
@@ -339,6 +420,45 @@ public interface QueryProducer {
 	<R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType);
 
 	/**
+	 * Create a {@link SelectionQuery} instance for the given HQL query
+	 * string and given {@link EntityGraph}, which is interpreted as a
+	 * {@linkplain org.hibernate.graph.GraphSemantic#LOAD load graph}.
+	 * The query result type is the root entity of the given graph.
+	 * <ul>
+	 * <li>If the query has an explicit {@code select} clause, there must
+	 *     be a single item in the {@code select} list, and the select
+	 *     item must be assignable to the root type of the given graph.
+	 * <li>Otherwise, if a query has no explicit {@code select} list, the
+	 *     select list is inferred from the given entity graph. The query
+	 *     must have exactly one root entity in the {@code from} clause,
+	 *     it must be assignable to the root type of the given graph, and
+	 *     the inferred select list will contain just that entity.
+	 * </ul>
+	 * <p>
+	 * If a query has no explicit {@code from} clause, and the given
+	 * result type is an entity type, the root entity is inferred to
+	 * be the result type.
+	 * <p>
+	 * The returned {@code Query} may be executed by calling
+	 * {@link Query#getResultList()} or {@link Query#getSingleResult()}.
+
+	 * @param hqlString The HQL {@code select} query as a string
+	 * @param resultGraph An {@link EntityGraph} whose root type is the
+	 *                    query result type, which is interpreted as a
+	 *                    {@linkplain org.hibernate.graph.GraphSemantic#LOAD
+	 *                    load graph}
+	 *
+	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 *
+	 * @throws IllegalSelectQueryException if the given HQL query
+	 *         is an {@code insert}, {@code update} or {@code delete}
+	 *         statement
+	 *
+	 * @since 7.0
+	 */
+	<R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph);
+
+	/**
 	 * Create a {@link SelectionQuery} reference for the given
 	 * {@link CriteriaQuery}.
 	 *
@@ -369,14 +489,9 @@ public interface QueryProducer {
 	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") CriteriaDelete deleteQuery);
 
 	/**
-	 * Create a {@link MutationQuery} from the given insert-select criteria tree
-	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect);
-
-	/**
 	 * Create a {@link MutationQuery} from the given insert criteria tree
 	 */
-	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect);
+	MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL statement.

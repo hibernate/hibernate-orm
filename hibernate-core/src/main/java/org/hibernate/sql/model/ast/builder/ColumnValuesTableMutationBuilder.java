@@ -1,11 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
 
+import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.TableMutation;
 
 /**
  * Common operations of {@link TableUpdateBuilder} and {@link TableInsertBuilder}.
@@ -13,7 +17,17 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface ColumnValuesTableMutationBuilder {
+public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> extends TableMutationBuilder<M> {
+	/**
+	 * Adds a restriction, which is assumed to be based on a table key.
+	 *
+	 * @apiNote Be sure you know what you are doing before using this method.  Generally
+	 * prefer any of the other methods here for adding key restrictions.
+	 */
+	@Internal
+	@Incubating
+	void addValueColumn(ColumnValueBinding valueBinding);
+
 	/**
 	 * Add a column as part of the values list
 	 */

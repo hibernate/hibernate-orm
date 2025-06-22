@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
-
-import java.util.List;
 
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -14,6 +12,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(annotatedClasses = {
@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @SessionFactory
 @Jira("https://hibernate.atlassian.net/browse/HHH-16861")
+@Jira("https://hibernate.atlassian.net/browse/HHH-18708")
 public class EnumTest {
 
 
@@ -76,17 +77,75 @@ public class EnumTest {
 	@Test
 	public void testOrdinalFunctionOnStringEnum(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			//tag::hql-ordinal-function-example[]
+			// enum Gender {
+			//	MALE,
+			//	FEMALE,
+			//	OTHER
+			//}
 			List<Integer> femaleOrdinalFromString = session.createQuery(
-							"select ordinal(gender)" +
-									"from EntityOfBasics e " +
-									"where e.gender = :gender",
-							Integer.class
+					"select ordinal(gender)" +
+					"from EntityOfBasics e " +
+					"where e.gender = :gender",
+					Integer.class )
+					.setParameter( "gender", EntityOfBasics.Gender.FEMALE )
+					.getResultList();
+			//	This will return List.of(1)
+			//end::hql-ordinal-function-example[]
+			assertThat( femaleOrdinalFromString ).hasSize( 1 );
+			assertThat( femaleOrdinalFromString ).hasSameElementsAs( List.of( 1 ) );
+		} );
+
+	}
+
+	@Test
+	public void testStringFunctionOnStringEnum(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+
+			List<String> femaleStringFunction = session.createQuery(
+							"select string(gender) " +
+							"from EntityOfBasics e " +
+							"where e.gender = :gender",
+							String.class
 					)
 					.setParameter( "gender", EntityOfBasics.Gender.FEMALE )
 					.getResultList();
 
-			assertThat( femaleOrdinalFromString ).hasSize( 1 );
-			assertThat( femaleOrdinalFromString ).hasSameElementsAs( List.of( 1 ) );
+			List<String> femaleWithCast = session.createQuery(
+							"select cast(e.gender as String) " +
+							"from EntityOfBasics e " +
+							"where e.gender = :gender",
+							String.class
+					)
+					.setParameter( "gender", EntityOfBasics.Gender.FEMALE )
+					.getResultList();
+
+			assertThat( femaleStringFunction ).hasSize( 1 );
+			assertThat( femaleStringFunction ).hasSameElementsAs( femaleWithCast );
+		} );
+
+	}
+
+	@Test
+	public void testStringFunctionOnOrdinalEnum(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			//tag::hql-string-function-example[]
+			// enum Gender {
+			//	MALE,
+			//	FEMALE,
+			//	OTHER
+			//}
+			List<String> femaleStringFromString = session.createQuery(
+							"select string(ordinalGender)" +
+							"from EntityOfBasics e " +
+							"where e.ordinalGender = :gender",
+							String.class )
+					.setParameter( "gender", EntityOfBasics.Gender.FEMALE )
+					.getResultList();
+			//	This will return List.of(1)
+			//end::hql-string-function-example[]
+			assertThat( femaleStringFromString ).hasSize( 1 );
+			assertThat( femaleStringFromString ).hasSameElementsAs( List.of( "FEMALE" ) );
 		} );
 
 	}

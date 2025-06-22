@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -99,25 +99,13 @@ public interface AvailableSettings
 	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
-	 * Controls how {@linkplain org.hibernate.loader.ast.spi.Loader entity loaders}
-	 * are created.
-	 * <p>
-	 * When {@code true}, the default, the loaders are only created on first
-	 * access; this ensures that all access patterns which are not useful
-	 * to the application are never instantiated, possibly saving a
-	 * substantial amount of memory for applications having many entities.
-	 * The only exception is the loader for {@link org.hibernate.LockMode#NONE},
-	 * which will always be eagerly initialized; this is necessary to
-	 * detect mapping errors.
-	 * <p>
-	 * {@code false} indicates that all loaders should be created up front;
-	 * this will consume more memory but ensures all necessary memory is
-	 * allocated right away.
-	 *
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDelayedEntityLoaderCreations(boolean)
+	 *
+	 * @deprecated This setting no longer has any effect.
 	 *
 	 * @since 5.3
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String DELAY_ENTITY_LOADER_CREATIONS = "hibernate.loader.delay_entity_loader_creations";
 
 	/**
@@ -159,17 +147,22 @@ public interface AvailableSettings
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 	/**
-	 * When enabled, specifies that the persistent context should be discarded when either
-	 * {@link org.hibernate.Session#close()} or {@link jakarta.persistence.EntityManager#close()}
-	 * is called.
+	 * When enabled, specifies that all transactional resources should be immediately
+	 * released when {@link org.hibernate.Session#close()} is called.
 	 *
-	 * @settingDefault {@code false} (not discarded) per the JPA specification.
+	 * @settingDefault {@code false} (not released), as per the JPA specification.
+	 *
+	 * @apiNote The legacy name of this setting is extremely misleading;
+	 *          it has little to do with persistence contexts.
+	 * @deprecated This is no longer useful and will be removed.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
 
 	/**
 	 * When enabled, specifies that the generated identifier of an entity is unset
 	 * when the entity is {@linkplain org.hibernate.Session#remove(Object) deleted}.
+	 * If the entity is versioned, the version is also reset to its default value.
 	 *
 	 * @settingDefault {@code false} - generated identifiers are not unset
 	 *

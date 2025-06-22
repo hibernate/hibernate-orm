@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.expression.SqmSelfRenderingExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 /**
  * A function for producing an {@link Expression} from a {@link NavigablePath} for a {@link TableGroup} and {@link SelectableMapping}.
  */
-public class SelectableMappingExpressionConverter implements Function<SemanticQueryWalker, Expression> {
+public class SelectableMappingExpressionConverter implements Function<SemanticQueryWalker<?>, Expression> {
 
 	private final NavigablePath navigablePath;
 	private final SelectableMapping selectableMapping;
@@ -30,11 +30,11 @@ public class SelectableMappingExpressionConverter implements Function<SemanticQu
 		this.selectableMapping = selectableMapping;
 	}
 
-	public static SqmSelection<Object> forSelectableMapping(SqmFrom<?, ?> from, SelectableMapping selectableMapping) {
+	public static <T> SqmSelection<T> forSelectableMapping(SqmFrom<?, T> from, SelectableMapping selectableMapping) {
 		return new SqmSelection<>(
 				new SqmSelfRenderingExpression<>(
 						new SelectableMappingExpressionConverter( from.getNavigablePath(), selectableMapping ),
-						(SqmExpressible) selectableMapping.getJdbcMapping(),
+						(SqmBindableType<T>) selectableMapping.getJdbcMapping(),
 						from.nodeBuilder()
 				),
 				from.nodeBuilder()

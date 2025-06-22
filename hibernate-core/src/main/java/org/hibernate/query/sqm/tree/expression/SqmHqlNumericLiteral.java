@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -9,12 +9,12 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -33,12 +33,16 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	private final String literalValue;
 	private final NumericTypeCategory typeCategory;
+	private BasicDomainType<N> type;
 
 	public SqmHqlNumericLiteral(
 			String literalValue,
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
-		this( literalValue, interpretCategory( literalValue, type ), type, criteriaBuilder );
+		this( literalValue,
+				interpretCategory( literalValue, criteriaBuilder.resolveExpressible( type ) ),
+				type, criteriaBuilder );
+		this.type = type;
 	}
 
 	public SqmHqlNumericLiteral(
@@ -46,9 +50,10 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 			NumericTypeCategory typeCategory,
 			BasicDomainType<N> type,
 			NodeBuilder criteriaBuilder) {
-		super( type, criteriaBuilder );
+		super( criteriaBuilder.resolveExpressible( type ), criteriaBuilder );
 		this.literalValue = literalValue;
 		this.typeCategory = typeCategory;
+		this.type = type;
 	}
 
 	public String getUnparsedLiteralValue() {
@@ -65,57 +70,32 @@ public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	}
 
 	@Override
-	public BasicDomainType<N> getNodeType() {
-		return (BasicDomainType<N>) NullnessUtil.castNonNull( super.getNodeType() );
-	}
-
-	@Override
-	public BasicDomainType<N> getExpressible() {
-		return getNodeType();
-	}
-
-	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitHqlNumericLiteral( this );
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( literalValue );
-
-		switch ( typeCategory ) {
-			case BIG_DECIMAL: {
-				sb.append( "bd" );
-				break;
-			}
-			case FLOAT: {
-				sb.append( "f" );
-				break;
-			}
-			case BIG_INTEGER: {
-				sb.append( "bi" );
-				break;
-			}
-			case LONG: {
-				sb.append( "l" );
-				break;
-			}
-			default: {
-				// nothing to do for double/integer
-			}
-		}
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( literalValue )
+			.append( switch ( typeCategory ) {
+				case BIG_DECIMAL -> "bd";
+				case FLOAT -> "f";
+				case BIG_INTEGER -> "bi";
+				case LONG -> "l";
+				case INTEGER, DOUBLE -> "";
+			} );
 	}
 
 	@Override
 	public String asLoggableText() {
 		final StringBuilder stringBuilder = new StringBuilder();
-		appendHqlString( stringBuilder );
+		appendHqlString( stringBuilder, SqmRenderContext.simpleContext() );
 		return stringBuilder.toString();
 	}
 
 	@Override
 	public SqmHqlNumericLiteral<N> copy(SqmCopyContext context) {
-		return new SqmHqlNumericLiteral<>( literalValue, typeCategory, getExpressible(), nodeBuilder() );
+		return new SqmHqlNumericLiteral<>( literalValue, typeCategory, type, nodeBuilder() );
 	}
 
 	private static <N extends Number> NumericTypeCategory interpretCategory(String literalValue, SqmExpressible<N> type) {

@@ -1,0 +1,378 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+ext {
+    // this `db` property is defined in gradle.properties and so we assume it is always available
+    assert project.hasProperty('db')
+    db = project.getProperty('db')
+    dbHost = System.getProperty( 'dbHost', 'localhost' )
+    dbService = System.getProperty( 'dbService', '' )
+    runID = System.getProperty( 'runID', '' )
+
+    dbBundle = [
+            h2 : [
+                    'db.dialect' : 'org.hibernate.dialect.H2Dialect',
+                    'jdbc.driver': 'org.h2.Driver',
+                    'jdbc.user'  : 'sa',
+                    'jdbc.pass'  : '',
+                    'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE',
+                    'jdbc.datasource' : 'org.h2.Driver',
+//                        'jdbc.datasource' : 'org.h2.jdbcx.JdbcDataSource',
+                    'connection.init_sql' : '',
+                    'hibernate.dialect.native_param_markers' : 'true'
+            ],
+            hsqldb : [
+                    'db.dialect' : 'org.hibernate.dialect.HSQLDialect',
+                    'jdbc.driver': 'org.hsqldb.jdbc.JDBCDriver',
+                    'jdbc.user'  : 'sa',
+                    'jdbc.pass'  : '',
+                    'jdbc.url'   : 'jdbc:hsqldb:mem:test',
+                    'jdbc.datasource' : 'org.hsqldb.jdbc.JDBCDriver',
+//                        'jdbc.datasource' : 'org.hsqldb.jdbc.JDBCDataSource',
+                    'connection.init_sql' : ''
+            ],
+            derby : [
+                    'db.dialect' : 'org.hibernate.dialect.DerbyDialect',
+                    'jdbc.driver': 'org.apache.derby.iapi.jdbc.AutoloadedDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:derby:memory:;databaseName=hibernate_orm_test;create=true',
+                    'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDriver',
+//                        'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDataSource',
+                    'connection.init_sql' : ''
+            ],
+            derby_old : [
+                    'db.dialect' : 'org.hibernate.dialect.DerbyDialect',
+                    'jdbc.driver': 'org.apache.derby.jdbc.EmbeddedDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:derby:memory:;databaseName=hibernate_orm_test;create=true',
+                    'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDriver',
+//                        'jdbc.datasource' : 'org.apache.derby.jdbc.EmbeddedDataSource',
+                    'connection.init_sql' : ''
+            ],
+            pgsql : [
+                    'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
+                    'jdbc.driver': 'org.postgresql.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                    'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
+                    'jdbc.datasource' : 'org.postgresql.Driver',
+//                        'jdbc.datasource' : 'org.postgresql.ds.PGSimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            pgsql_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
+                    'jdbc.driver': 'org.postgresql.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                    'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
+                    'jdbc.datasource' : 'org.postgresql.Driver',
+//                        'jdbc.datasource' : 'org.postgresql.ds.PGSimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            edb_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.PostgresPlusDialect',
+                    'jdbc.driver': 'org.postgresql.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                    'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
+                    'jdbc.datasource' : 'org.postgresql.Driver',
+//                        'jdbc.datasource' : 'org.postgresql.ds.PGSimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            sybase_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.SybaseASEDialect',
+                    'jdbc.driver': 'net.sourceforge.jtds.jdbc.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // Disable prepared statement caching to avoid issues with changing schemas
+                    'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':9000/hibernate_orm_test;maxStatements=0;cacheMetaData=false',
+                    'jdbc.datasource' : 'net.sourceforge.jtds.jdbc.Driver',
+//                        'jdbc.datasource' : 'net.sourceforge.jtds.jdbcx.JtdsDataSource',
+                    'connection.init_sql' : 'set ansinull on'
+            ],
+            sybase_jconn_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.SybaseASEDialect',
+                    'jdbc.driver': 'com.sybase.jdbc4.jdbc.SybDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // Disable prepared statement caching to avoid issues with changing schemas
+                    'jdbc.url'   : 'jdbc:sybase:Tds:' + dbHost + ':9000/hibernate_orm_test',
+                    'jdbc.datasource' : 'com.sybase.jdbc4.jdbc.SybDriver',
+//                        'jdbc.datasource' : 'com.sybase.jdbc4.jdbc.SybDataSource',
+                    'connection.init_sql' : 'set ansinull on set quoted_identifier on'
+            ],
+            mysql : [
+                    'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
+                    'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
+                    'jdbc.user'  : 'hibernateormtest',
+                    'jdbc.pass'  : 'hibernateormtest',
+                    'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test',
+                    'jdbc.datasource' : 'com.mysql.jdbc.Driver',
+//                        'jdbc.datasource' : 'com.mysql.cj.jdbc.MysqlDataSource',
+                    'connection.init_sql' : ''
+            ],
+            mysql_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
+                    'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true',
+                    'jdbc.datasource' : 'com.mysql.jdbc.Driver',
+//                        'jdbc.datasource' : 'com.mysql.cj.jdbc.MysqlDataSource',
+                    'connection.init_sql' : ''
+            ],
+            mariadb : [
+                    'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
+                    'jdbc.driver': 'org.mariadb.jdbc.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test',
+                    'jdbc.datasource' : 'org.mariadb.jdbc.Driver',
+//                        'jdbc.datasource' : 'org.mariadb.jdbc.MariaDbDataSource',
+                    'connection.init_sql' : ''
+            ],
+            mariadb_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
+                    'jdbc.driver': 'org.mariadb.jdbc.Driver',
+                    'jdbc.user'  : 'root',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test',
+                    'jdbc.datasource' : 'org.mariadb.jdbc.Driver',
+//                        'jdbc.datasource' : 'org.mariadb.jdbc.MariaDbDataSource',
+                    'connection.init_sql' : ''
+            ],
+            tidb : [
+                    'db.dialect' : 'org.hibernate.dialect.TiDBDialect',
+                    'jdbc.driver': 'com.mysql.jdbc.Driver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:mysql://' + dbHost + ':4000/hibernate_orm_test',
+                    'jdbc.datasource' : 'com.mysql.jdbc.Driver',
+//                        'jdbc.datasource' : 'com.mysql.cj.jdbc.MysqlDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/freepdb1',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_xe_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_legacy_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    // For 11 version that doesn't have any XEPDB1 database service
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_cloud_autonomous_tls : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                    'jdbc.pass'  : 'Oracle_19_Password',
+                    // Requires dbHost (pointing to the right cloud region) AND dbService (unique database name).
+                    //
+                    // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
+                    // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
+                    'jdbc.url'   : 'jdbc:oracle:thin:@(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcps)(port=1521)(host=' + dbHost + '.oraclecloud.com))(connect_data=(USE_TCP_FAST_OPEN=ON)(service_name=' + dbService + '_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))?oracle.jdbc.enableQueryResultCache=false&oracle.jdbc.thinForceDNSLoadBalancing=true&tcp.nodelay=yes',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_cloud_autonomous : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                    'jdbc.pass'  : 'Oracle_19_Password',
+                    // Requires dbHost (pointing to the right cloud region) AND dbService (unique database name).
+                    // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
+                    // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
+                    'jdbc.url'   : 'jdbc:oracle:thin:@(description=(retry_count=5)(retry_delay=1)(address=(protocol=tcp)(port=1521)(host=' + dbHost + '.oraclevcn.com))(connect_data=(service_name=' + dbService + '_tp.adb.oraclecloud.com))(security=(ssl_server_dn_match=no)))?oracle.jdbc.enableQueryResultCache=false&oracle.jdbc.thinForceDNSLoadBalancing=true&tcp.nodelay=yes',
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_cloud_db19c : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                    'jdbc.pass'  : 'Oracle_19_Password',
+                    // Requires dbHost (pointing to the right cloud region) AND dbService (unique database name).
+                    //
+                    // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
+                    // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/' + dbService,
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_cloud_db21c : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                    'jdbc.pass'  : 'Oracle_21_Password',
+                    // Requires dbHost (pointing to the right cloud region) AND dbService (unique database name).
+                    //
+                    // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
+                    // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/' + dbService,
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            oracle_cloud_db23c : [
+                    'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                    'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                    'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                    'jdbc.pass'  : 'Oracle_23_Password',
+                    // Requires dbHost (pointing to the right cloud region) AND dbService (unique database name).
+                    //
+                    // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
+                    // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
+                    'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/' + dbService,
+                    'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
+//                        'jdbc.datasource' : 'oracle.jdbc.datasource.impl.OracleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            mssql : [
+                    'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
+                    'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';instance=SQLEXPRESS;databaseName=hibernate_orm_test;trustServerCertificate=true',
+                    'jdbc.datasource' : 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+//                        'jdbc.datasource' : 'com.microsoft.sqlserver.jdbc.SQLServerDataSource',
+                    'connection.init_sql' : ''
+            ],
+            mssql_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.SQLServerDialect',
+                    'jdbc.driver': 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+                    'jdbc.user'  : 'sa',
+                    'jdbc.pass'  : 'Hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:sqlserver://' + dbHost + ';databaseName=hibernate_orm_test;sendTimeAsDatetime=false;trustServerCertificate=true',
+                    'jdbc.datasource' : 'com.microsoft.sqlserver.jdbc.SQLServerDriver',
+//                        'jdbc.datasource' : 'com.microsoft.sqlserver.jdbc.SQLServerDataSource',
+                    'connection.init_sql' : ''
+            ],
+            informix : [
+                    'db.dialect' : 'org.hibernate.community.dialect.InformixDialect',
+                    'jdbc.driver': 'com.informix.jdbc.IfxDriver',
+                    'jdbc.user'  : 'informix',
+                    'jdbc.pass'  : 'in4mix',
+                    'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DBDATE=Y4MD-;DELIMIDENT=Y;DB_LOCALE=en_US.utf8',
+                    'jdbc.datasource' : 'com.informix.jdbc.IfxDriver',
+//                        'jdbc.datasource' : 'com.informix.jdbcx.IfxDataSource',
+                    'connection.init_sql' : ''
+            ],
+            db2 : [
+                    'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                    'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                    'jdbc.user'  : 'db2inst1',
+                    'jdbc.pass'  : 'db2inst1-pwd',
+                    'jdbc.url'   : 'jdbc:db2://' + dbHost + ':50000/orm_test',
+                    'jdbc.datasource' : 'com.ibm.db2.jcc.DB2Driver',
+//                        'jdbc.datasource' : 'com.ibm.db2.jcc.DB2SimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            db2_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.DB2Dialect',
+                    'jdbc.driver': 'com.ibm.db2.jcc.DB2Driver',
+                    'jdbc.user'  : 'orm_test',
+                    'jdbc.pass'  : 'orm_test',
+                    'jdbc.url'   : 'jdbc:db2://' + dbHost + ':50000/orm_test',
+                    'jdbc.datasource' : 'com.ibm.db2.jcc.DB2Driver',
+//                        'jdbc.datasource' : 'com.ibm.db2.jcc.DB2SimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            hana_cloud : [
+                    'db.dialect' : 'org.hibernate.dialect.HANADialect',
+                    'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                    'jdbc.user'  : 'HIBERNATE_TEST',
+                    'jdbc.pass'  : 'H1bernate_test',
+                    // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                    'jdbc.url'   : 'jdbc:sap://' + dbHost + ':443/?encrypt=true&validateCertificate=false&statementCacheSize=0',
+                    'jdbc.datasource' : 'com.sap.db.jdbc.Driver',
+//                        'jdbc.datasource' : 'com.sap.db.jdbcext.HanaDataSource',
+                    'connection.init_sql' : ''
+            ],
+            hana_ci : [
+                    'db.dialect' : 'org.hibernate.dialect.HANADialect',
+                    'jdbc.driver': 'com.sap.db.jdbc.Driver',
+                    'jdbc.user'  : 'SYSTEM',
+                    'jdbc.pass'  : 'H1bernate_test',
+                    // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
+                    'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39017/?statementCacheSize=0',
+                    'jdbc.datasource' : 'com.sap.db.jdbc.Driver',
+//                        'jdbc.datasource' : 'com.sap.db.jdbcext.HanaDataSource',
+                    'connection.init_sql' : ''
+            ],
+            cockroachdb : [
+                    'db.dialect' : 'org.hibernate.dialect.CockroachDialect',
+                    // CockroachDB uses the same pgwire protocol as PostgreSQL, so the driver is the same.
+                    'jdbc.driver': 'org.postgresql.Driver',
+                    'jdbc.user'  : 'root',
+                    'jdbc.pass'  : '',
+                    // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                    'jdbc.url'   : 'jdbc:postgresql://' + dbHost + ':26257/defaultdb?sslmode=disable&preparedStatementCacheQueries=0&escapeSyntaxCallMode=callIfNoReturn',
+                    'jdbc.datasource' : 'org.postgresql.Driver',
+//                        'jdbc.datasource' : 'org.postgresql.ds.PGSimpleDataSource',
+                    'connection.init_sql' : ''
+            ],
+            firebird : [
+                    'db.dialect' : 'org.hibernate.community.dialect.FirebirdDialect',
+                    'jdbc.driver': 'org.firebirdsql.jdbc.FBDriver',
+                    'jdbc.user'  : 'sysdba',
+                    'jdbc.pass'  : 'masterkey',
+                    // Overriding default transaction definition (5 seconds instead of infinite wait) to prevent problems in test cleanup
+                    // Expects alias 'hibernate_orm_test' in aliases.conf (FB2.5 and earlier) or databases.conf (FB3.0 and later)
+                    // Created database must either use default character set NONE, or UTF8 with page size 16384 or higher (to prevent issues with indexes due to keysize)
+                    'jdbc.url'   : 'jdbc:firebirdsql://' + dbHost +'/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5',
+                    'jdbc.datasource' : 'org.firebirdsql.jdbc.FBDriver',
+//                        'jdbc.datasource' : 'org.firebirdsql.jdbc.FBDataSource',
+                    'connection.init_sql' : ''
+            ],
+            altibase : [
+                    'db.dialect' : 'org.hibernate.community.dialect.AltibaseDialect',
+                    'jdbc.driver': 'Altibase.jdbc.driver.AltibaseDriver',
+                    'jdbc.user'  : 'sys',
+                    'jdbc.pass'  : 'manager',
+                    'connection.init_sql' : '',
+                    'jdbc.url'   : 'jdbc:Altibase://' + dbHost + ':20300/mydb?force_clob_bind=true',
+                    'jdbc.datasource' : 'Altibase.jdbc.driver.AltibaseDriver'
+            ],
+    ]
+}

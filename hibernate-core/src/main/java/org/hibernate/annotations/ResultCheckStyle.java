@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -24,12 +24,12 @@ import org.hibernate.jdbc.Expectation;
  *
  * @deprecated Use an {@link Expectation} class instead.
  */
-@Deprecated(since = "6.5")
+@Deprecated(since = "6.5", forRemoval = true)
 public enum ResultCheckStyle {
 	/**
 	 * No return code checking. Might mean that no checks are required, or that
 	 * failure is indicated by a {@link java.sql.SQLException} being thrown, for
-	 * example, by a {@link java.sql.CallableStatement stored procedure} which
+	 * example, by a {@linkplain java.sql.CallableStatement stored procedure} which
 	 * performs explicit checks.
 	 *
 	 * @see org.hibernate.jdbc.Expectation.None
@@ -47,7 +47,7 @@ public enum ResultCheckStyle {
 	COUNT,
 	/**
 	 * Essentially identical to {@link #COUNT} except that the row count is
-	 * obtained via an output parameter of a {@link java.sql.CallableStatement
+	 * obtained via an output parameter of a {@linkplain java.sql.CallableStatement
 	 * stored procedure}.
 	 * <p>
 	 * Statement batching is disabled when {@code PARAM} is selected.

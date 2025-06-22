@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -14,6 +14,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
@@ -26,15 +27,17 @@ import static org.hibernate.internal.util.StringHelper.qualify;
  *
  * @author Emmanuel Bernard
  */
-public class ToOneFkSecondPass extends FkSecondPass {
+class ToOneFkSecondPass implements FkSecondPass {
 	private final PersistentClass persistentClass;
 	private final MetadataBuildingContext buildingContext;
 	private final boolean unique;
 	private final String path;
 	private final String entityClassName;
 	private final boolean annotatedEntity;
+	private final ToOne value;
+	private final AnnotatedJoinColumns columns;
 
-	public ToOneFkSecondPass(
+	ToOneFkSecondPass(
 			ToOne value,
 			AnnotatedJoinColumns columns,
 			boolean unique,
@@ -42,7 +45,8 @@ public class ToOneFkSecondPass extends FkSecondPass {
 			PersistentClass persistentClass,
 			String path,
 			MetadataBuildingContext buildingContext) {
-		super( value, columns );
+		this.value = value;
+		this.columns = columns;
 		this.persistentClass = persistentClass;
 		this.buildingContext = buildingContext;
 		this.unique = unique;
@@ -52,8 +56,13 @@ public class ToOneFkSecondPass extends FkSecondPass {
 	}
 
 	@Override
+	public SimpleValue getValue() {
+		return value;
+	}
+
+	@Override
 	public String getReferencedEntityName() {
-		return ( (ToOne) value ).getReferencedEntityName();
+		return value.getReferencedEntityName();
 	}
 
 	@Override

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
@@ -7,11 +7,11 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.AbstractPostgreSQLStructJdbcType;
+import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.OutputableType;
+import org.hibernate.type.OutputableType;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
@@ -157,9 +157,10 @@ public class PostgreSQLCallableStatementSupport extends AbstractStandardCallable
 				if ( parameter.getName() != null ) {
 					buffer.append( parameter.getName() ).append( " => " );
 				}
-				if ( type != null && type.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
+				if ( type != null
+					&& type.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType structJdbcType ) {
 					// We have to cast struct type parameters so that PostgreSQL understands nulls
-					castType = ( (AbstractPostgreSQLStructJdbcType) type.getJdbcType() ).getStructTypeName();
+					castType = structJdbcType.getStructTypeName();
 					buffer.append( "cast(" );
 				}
 				else {

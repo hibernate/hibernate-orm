@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -11,13 +11,14 @@ import java.lang.annotation.Target;
 
 /**
  * Specifies whether mutating the annotated attribute should trigger an increment
- * to the {@link jakarta.persistence.Version version} of the entity instance. Or,
- * if {@link OptimisticLockType#ALL} or {@link OptimisticLockType#DIRTY} are used,
- * specifies whether the attribute should be included or excluded from the list of
- * checked attributes.
+ * to the {@linkplain jakarta.persistence.Version version} of the entity instance.
+ * Or, when {@link OptimisticLockType#ALL @OptimisticLocking(type = ALL)} or
+ * {@link OptimisticLockType#DIRTY @OptimisticLocking(type = DIRTY)} is used,
+ * specifies whether the annotated attribute should be included or excluded from
+ * the list of checked attributes.
  * <p>
- * If this annotation is not present, mutating an attribute <em>does</em> cause the
- * version to be incremented.
+ * If this annotation is not present, mutating an attribute <em>does</em> cause
+ * the version to be incremented.
  *
  * @author Logi Ragnarsson
  */

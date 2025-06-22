@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hhh12076;
@@ -35,7 +35,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -720,7 +719,6 @@ public class AnnotationMappingJoinClassTest {
 		private SettlementStatus status = SettlementStatus.RESERVED;
 
 		@OneToMany(mappedBy = "settlement", cascade = CascadeType.ALL, orphanRemoval = true)
-		@OrderColumn(name = "orderindex")
 		private Set<SettlementExtension> extensions = new HashSet<>();
 
 		private transient Map<Class<?>, SettlementExtension> extensionMap;

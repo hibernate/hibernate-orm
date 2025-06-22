@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
@@ -22,6 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.pool.TypePool;
+import org.hibernate.bytecode.enhance.spi.UnsupportedEnhancementStrategy;
 
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
@@ -92,6 +93,10 @@ class ByteBuddyEnhancementContext {
 
 	public void registerDiscoveredType(TypeDescription typeDescription, Type.PersistenceType type) {
 		enhancementContext.registerDiscoveredType( new UnloadedTypeDescription( typeDescription ), type );
+	}
+
+	public UnsupportedEnhancementStrategy getUnsupportedEnhancementStrategy() {
+		return enhancementContext.getUnsupportedEnhancementStrategy();
 	}
 
 	public void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool) {

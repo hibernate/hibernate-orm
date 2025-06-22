@@ -1,31 +1,32 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -35,12 +36,12 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.type.format.FormatMapper;
 
 import java.util.List;
 import java.util.Set;
@@ -97,15 +98,9 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
 		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
-	}
-
-	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
-		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
+		return delegate().createMutationQuery( insert );
 	}
 
 	@Override
@@ -113,33 +108,33 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor getNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
 		return queryDelegate().getNamedQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
 		return queryDelegate().getNamedNativeQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
 		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(String queryString) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(String queryString) {
 		return queryDelegate().createQuery( queryString );
 	}
 
@@ -151,6 +146,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, Class<R> resultType) {
 		return queryDelegate().createSelectionQuery( hqlString, resultType );
+	}
+
+	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
 	}
 
 	@Override
@@ -168,8 +168,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
 		return queryDelegate().createNamedQuery( name );
 	}
 
@@ -190,8 +190,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString) {
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
@@ -207,8 +207,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
@@ -328,8 +328,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return delegate.getEventManager();
+	public EventMonitor getEventMonitor() {
+		return delegate.getEventMonitor();
 	}
 
 	@Override
@@ -418,11 +418,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setAutoClear(boolean enabled) {
-		delegate.setAutoClear( enabled );
-	}
-
-	@Override
 	public void initializeCollection(PersistentCollection<?> collection, boolean writing) throws HibernateException {
 		delegate.initializeCollection( collection, writing );
 	}
@@ -462,7 +457,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate.guessEntityName( entity );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
 	}
@@ -483,8 +478,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cm) {
-		delegate.setCacheMode( cm );
+	public void setCacheMode(CacheMode cacheMode) {
+		delegate.setCacheMode( cacheMode );
 	}
 
 	@Override
@@ -498,6 +493,16 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled) {
+		delegate.setCriteriaPlanCacheEnabled( jpaCriteriaCacheEnabled );
+	}
+
+	@Override
 	public boolean getNativeJdbcParametersIgnored() {
 		return delegate.getNativeJdbcParametersIgnored();
 	}
@@ -505,16 +510,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
 		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
-	}
-
-	@Override
-	public FlushModeType getFlushMode() {
-		return delegate.getFlushMode();
-	}
-
-	@Override
-	public void setHibernateFlushMode(FlushMode flushMode) {
-		delegate.setHibernateFlushMode( flushMode );
 	}
 
 	@Override
@@ -530,16 +525,6 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void afterScrollOperation() {
 		delegate.afterScrollOperation();
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return delegate.shouldAutoClose();
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return delegate.isAutoCloseSessionEnabled();
 	}
 
 	@Override
@@ -681,5 +666,35 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public void disableFilter(String filterName) {
 		delegate.disableFilter( filterName );
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
+	}
+
+	@Override
+	public void lock(String entityName, Object child, LockOptions lockOptions) {
+		delegate.lock( entityName, child, lockOptions );
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		delegate.registerProcess( process );
+	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
+	}
+
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		return delegate.isIdentifierRollbackEnabled();
 	}
 }

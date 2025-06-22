@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
@@ -49,7 +49,7 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 	}
 
 	@Test
-	public void testUseOfDirectReferencesInCache() throws Exception {
+	public void testUseOfDirectReferencesInCache() {
 		EntityPersister persister = sessionFactory().getMappingMetamodel().getEntityDescriptor( MyEnhancedReferenceData.class );
 		assertFalse( persister.isMutable() );
 		assertTrue( persister.buildCacheEntry( null, null, null, null ).isReferenceEntry() );
@@ -75,17 +75,20 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		s.close();
 
 		// the 2 instances should be the same (==)
-		assertTrue( "The two instances were different references", myReferenceData == loaded );
+		assertSame( "The two instances were different references", myReferenceData, loaded );
 
 		// now try query caching
 		s = openSession();
 		s.beginTransaction();
-		MyEnhancedReferenceData queried = (MyEnhancedReferenceData) s.createQuery( "from MyEnhancedReferenceData" ).setCacheable( true ).list().get( 0 );
+		MyEnhancedReferenceData queried = (MyEnhancedReferenceData)
+				s.createQuery( "from MyEnhancedReferenceData" )
+						.setCacheable( true )
+						.list().get( 0 );
 		s.getTransaction().commit();
 		s.close();
 
 		// the 2 instances should be the same (==)
-		assertTrue( "The two instances were different references", myReferenceData == queried );
+		assertSame( "The two instances were different references", myReferenceData, queried );
 
 		// cleanup
 		s = openSession();
@@ -238,6 +241,8 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		private transient ManagedEntity previous;
 		@Transient
 		private transient ManagedEntity next;
+		@Transient
+		private transient int instanceId;
 
 		public MyEnhancedReferenceData(Integer id, String name, String theValue) {
 			this.id = id;
@@ -315,6 +320,16 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest extends BaseCoreFunctio
 		@Override
 		public boolean $$_hibernate_useTracker() {
 			return false;
+		}
+
+		@Override
+		public int $$_hibernate_getInstanceId() {
+			return instanceId;
+		}
+
+		@Override
+		public void $$_hibernate_setInstanceId(int id) {
+			this.instanceId = id;
 		}
 	}
 }

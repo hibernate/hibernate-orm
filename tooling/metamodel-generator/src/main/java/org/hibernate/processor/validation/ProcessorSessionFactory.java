@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.validation;
@@ -8,6 +8,7 @@ import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -57,7 +58,6 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.root;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.StringHelper.unroot;
-import static org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl.addAllowedEnumLiteralsToEnumTypesMap;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 
 /**
@@ -73,8 +73,9 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	public static MockSessionFactory create(
 			ProcessingEnvironment environment,
 			Map<String,String> entityNameMappings,
-			Map<String, Set<String>> enumTypesByValue) {
-		return instance.make(environment, entityNameMappings, enumTypesByValue);
+			Map<String, Set<String>> enumTypesByValue,
+			boolean indexing) {
+		return instance.make(environment, indexing, entityNameMappings, enumTypesByValue);
 	}
 
 	static final Mocker<ProcessorSessionFactory> instance = Mocker.variadic(ProcessorSessionFactory.class);
@@ -89,56 +90,43 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Elements elementUtil;
 	private final Types typeUtil;
 	private final Filer filer;
+	private final boolean indexing;
 	private final Map<String, String> entityNameMappings;
-	private final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames;
+	private final Map<String, Set<String>> enumTypesByValue;
 
 	public ProcessorSessionFactory(
 			ProcessingEnvironment processingEnvironment,
+			boolean indexing,
 			Map<String,String> entityNameMappings,
 			Map<String, Set<String>> enumTypesByValue) {
 		elementUtil = processingEnvironment.getElementUtils();
 		typeUtil = processingEnvironment.getTypeUtils();
 		filer = processingEnvironment.getFiler();
+		this.indexing = indexing;
 		this.entityNameMappings = entityNameMappings;
-		final Map<String, Set<String>> allowedEnumLiteralsToEnumTypeNames = new HashMap<>( enumTypesByValue.size() << 2 );
-		for ( Map.Entry<String, Set<String>> entry : enumTypesByValue.entrySet() ) {
-			final String enumConstantName = entry.getKey();
-			for ( String enumClassName : entry.getValue() ) {
-				final TypeElement enumTypeElement = elementUtil.getTypeElement( enumClassName );
-				if ( enumTypeElement != null ) {
-					addAllowedEnumLiteralsToEnumTypesMap(
-							allowedEnumLiteralsToEnumTypeNames,
-							enumConstantName,
-							enumTypeElement.getSimpleName().toString(),
-							elementUtil.getBinaryName( enumTypeElement ).toString(),
-							enumClassName
-					);
-				}
-			}
-		}
-		this.allowedEnumLiteralsToEnumTypeNames = allowedEnumLiteralsToEnumTypeNames;
+		this.enumTypesByValue = enumTypesByValue;
 	}
 
 	@Override
 	MockEntityPersister createMockEntityPersister(String entityName) {
-		TypeElement type = findEntityClass(entityName);
+		final TypeElement type = findEntityClass(entityName);
 		return type == null ? null : entityPersister.make(entityName, type, this);
 	}
 
 	@Override
 	MockCollectionPersister createMockCollectionPersister(String role) {
-		String entityName = root(role); //only works because entity names don't contain dots
-		String propertyPath = unroot(role);
-		TypeElement entityClass = findEntityClass(entityName);
-		AccessType defaultAccessType = getDefaultAccessType(entityClass);
-		Element property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
-		CollectionType collectionType = collectionType(memberType(property), role);
+		final String entityName = root(role); //only works because entity names don't contain dots
+		final String propertyPath = unroot(role);
+		final TypeElement entityClass = findEntityClass(entityName);
+		final AccessType defaultAccessType = getDefaultAccessType(entityClass);
+		final Element property = findPropertyByPath(entityClass, propertyPath, defaultAccessType);
+		final CollectionType collectionType = collectionType(memberType(property), role);
 		if (isToManyAssociation(property)) {
 			return toManyPersister.make(role, collectionType,
 					getToManyTargetEntityName(property), this);
 		}
 		else if (isElementCollectionProperty(property)) {
-			Element elementType = asElement(getElementCollectionElementType(property));
+			final Element elementType = asElement(getElementCollectionElementType(property));
 			return collectionPersister.make(role, collectionType,
 					elementType, propertyPath, defaultAccessType, this);
 		}
@@ -147,12 +135,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
-
 	@Override
 	Type propertyType(String typeName, String propertyPath) {
-		TypeElement type = findClassByQualifiedName(typeName);
-		AccessType accessType = getAccessType(type, AccessType.FIELD);
-		Element propertyByPath = findPropertyByPath(type, propertyPath, accessType);
+		final TypeElement type = findClassByQualifiedName(typeName);
+		final AccessType accessType = getAccessType(type, AccessType.FIELD);
+		final Element propertyByPath = findPropertyByPath(type, propertyPath, accessType);
 		return propertyByPath == null ? null
 				: propertyType(propertyByPath, typeName, propertyPath, accessType);
 	}
@@ -171,9 +158,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return null;
 		}
 		else {
-			Element element = asElement(symbol.asType());
-			return element instanceof TypeElement
-					? findProperty((TypeElement) element, segment, defaultAccessType)
+			return asElement(symbol.asType()) instanceof TypeElement element
+					? findProperty(element, segment, defaultAccessType)
 					: null;
 		}
 	}
@@ -181,7 +167,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private Type propertyType(Element member, String entityName, String path, AccessType defaultAccessType) {
 		final TypeMirror memberType = memberType(member);
 		if (isEmbeddedProperty(member)) {
-			return component.make(asElement(memberType), entityName, path, defaultAccessType, this);
+			return componentType( entityName, path, defaultAccessType, memberType );
 		}
 		else if (isToOneAssociation(member)) {
 			return new ManyToOneType(getTypeConfiguration(), getToOneTargetEntity(member));
@@ -199,6 +185,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return getTypeConfiguration().getBasicTypeRegistry()
 					.getRegisteredType(qualifiedName(memberType));
 		}
+	}
+
+	private Component componentType(String entityName, String path, AccessType defaultAccessType, TypeMirror memberType) {
+		return component.make( asElement( memberType ), entityName, path, defaultAccessType, this );
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
@@ -223,32 +213,45 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static JdbcType enumJdbcType(Element member) {
-		VariableElement mapping = (VariableElement)
+		final VariableElement mapping = (VariableElement)
 				getAnnotationMember(getAnnotation(member,"Enumerated"), "value");
 		return mapping != null && mapping.getSimpleName().contentEquals("STRING")
 				? VarcharJdbcType.INSTANCE
 				: IntegerJdbcType.INSTANCE;
 	}
 
+	// dupe of HibernateProcessor.ENTITY_INDEX for reasons of modularity
 	public static final String ENTITY_INDEX = "entity.index";
 
 	@Override @Nullable
 	Set<String> getEnumTypesForValue(String value) {
-		Set<String> result = allowedEnumLiteralsToEnumTypeNames.get( value);
+		final Set<String> result = enumTypesByValue.get(value);
 		if ( result != null ) {
 			return result;
 		}
-		try (Reader reader = filer.getResource(StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(split(" ", buffered.readLine()));
+		if ( indexing ) {
+			final Set<String> indexed = getIndexedEnumTypesByValue(value);
+			if ( indexed != null ) {
+				enumTypesByValue.put(value, indexed);
+				return indexed;
+			}
 		}
-		catch (IOException e) {
+		//TODO: else do a full scan like in findEntityByUnqualifiedName()
+		return null;
+	}
+
+	private @Nullable Set<String> getIndexedEnumTypesByValue(String value) {
+		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, value )
+				.openReader( true ); BufferedReader buffered = new BufferedReader( reader )) {
+			return Set.of( split( " ", buffered.readLine() ) );
 		}
-		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			return Set.of(split(" ", buffered.readLine()));
+		catch (IOException ignore) {
 		}
-		catch (IOException e) {
+		try (Reader reader = filer.getResource( StandardLocation.CLASS_PATH, ENTITY_INDEX, '.' + value )
+				.openReader( true ); BufferedReader buffered = new BufferedReader( reader )) {
+			return Set.of( split( " ", buffered.readLine() ) );
+		}
+		catch (IOException ignore) {
 		}
 		return null;
 	}
@@ -282,16 +285,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				ProcessorSessionFactory factory) {
 			this.type = type;
 
-			List<String> names = new ArrayList<>();
-			List<Type> types = new ArrayList<>();
+			final List<String> names = new ArrayList<>();
+			final List<Type> types = new ArrayList<>();
 
 			while (type!=null) {
 				if (isMappedClass(type)) { //ignore unmapped intervening classes
-					AccessType accessType = getAccessType(type, defaultAccessType);
+					final AccessType accessType = getAccessType(type, defaultAccessType);
 					for (Element member: type.getEnclosedElements()) {
 						if (isPersistable(member, accessType)) {
-							String name = propertyName(member);
-							Type propertyType =
+							final String name = propertyName(member);
+							final Type propertyType =
 									factory.propertyType(member, entityName,
 											qualify(path, name), defaultAccessType);
 							if (propertyType != null) {
@@ -310,7 +313,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		public int getPropertyIndex(String name) {
-			String[] names = getPropertyNames();
+			final String[] names = getPropertyNames();
 			for ( int i = 0, max = names.length; i < max; i++ ) {
 				if ( names[i].equals( name ) ) {
 					return i;
@@ -382,24 +385,24 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 				}
 				superclass = typeElement.getSuperclass();
 			}
-			return ProcessorSessionFactory.getEntityName(result);
+			return getHibernateEntityName(result);
 		}
 
 		@Override
 		boolean isSamePersister(MockEntityPersister entityPersister) {
-			EntityPersister persister = (EntityPersister) entityPersister;
+			final EntityPersister persister = (EntityPersister) entityPersister;
 			return typeUtil.isSameType( persister.type.asType(), type.asType() );
 		}
 
 		@Override
 		boolean isSubclassPersister(MockEntityPersister entityPersister) {
-			EntityPersister persister = (EntityPersister) entityPersister;
+			final EntityPersister persister = (EntityPersister) entityPersister;
 			return typeUtil.isSubtype( persister.type.asType(), type.asType() );
 		}
 
 		@Override
 		Type createPropertyType(String propertyPath) {
-			Element symbol = findPropertyByPath(type, propertyPath, defaultAccessType);
+			final Element symbol = findPropertyByPath(type, propertyPath, defaultAccessType);
 			return symbol == null ? null :
 					factory.propertyType(symbol, getEntityName(), propertyPath, defaultAccessType);
 		}
@@ -416,6 +419,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		public Type identifierType() {
+			if (hasAnnotation( type, "IdClass" )) {
+				final TypeMirror annotationMember = (TypeMirror)getAnnotationMember( getAnnotation( type, "IdClass" ), "value" );
+				if (annotationMember != null) {
+					return factory.componentType( getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType, annotationMember );
+				}
+			}
 			for (Element element : type.getEnclosedElements()) {
 				if ( hasAnnotation(element, "Id")|| hasAnnotation(element, "EmbeddedId") ) {
 					return factory.propertyType(element, getEntityName(), EntityIdentifierMapping.ID_ROLE_NAME, defaultAccessType);
@@ -428,7 +437,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		public BasicType<?> versionType() {
 			for (Element element : type.getEnclosedElements()) {
 				if ( hasAnnotation(element, "Version") ) {
-					return (BasicType<?>) factory.propertyType(element, getEntityName(), "{version}", defaultAccessType);
+					return (BasicType<?>) factory.propertyType(element, getEntityName(),
+							EntityVersionMapping.VERSION_ROLE_NAME, defaultAccessType);
 				}
 			}
 			return null;
@@ -471,44 +481,37 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 		@Override
 		Type getElementPropertyType(String propertyPath) {
-			Element symbol = findPropertyByPath(elementType, propertyPath, defaultAccessType);
+			final Element symbol = findPropertyByPath(elementType, propertyPath, defaultAccessType);
 			return symbol == null ? null :
 					factory.propertyType(symbol, getOwnerEntityName(), propertyPath, defaultAccessType);
 		}
 	}
 
 	@Override
-	boolean isEntityDefined(String entityName) {
-		return findEntityClass(entityName) != null;
+	boolean isEntityDefined(String jpaEntityName) {
+		return findEntityByUnqualifiedName(jpaEntityName) != null;
 	}
 
 	@Override
-	String qualifyName(String entityName) {
-		TypeElement entityClass = findEntityClass(entityName);
+	String qualifyName(String jpaEntityName) {
+		final TypeElement entityClass = findEntityByUnqualifiedName(jpaEntityName);
 		return entityClass == null ? null : entityClass.getQualifiedName().toString();
 	}
 
 	@Override
 	boolean isAttributeDefined(String entityName, String fieldName) {
-		TypeElement entityClass = findEntityClass(entityName);
+		final TypeElement entityClass = findEntityClass(entityName);
 		return entityClass != null
-			&& findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null;
+			&& (findPropertyByPath(entityClass, fieldName, getDefaultAccessType(entityClass)) != null
+				|| "id".equals( fieldName ) && hasAnnotation( entityClass, "IdClass" ));
 	}
 
-	private TypeElement findEntityClass(String entityName) {
-		if (entityName == null) {
-			return null;
-		}
-		else if (entityName.indexOf('.')>0) {
-			return findEntityByQualifiedName(entityName);
-		}
-		else {
-			return findEntityByUnqualifiedName(entityName);
-		}
+	public TypeElement findEntityClass(String entityName) {
+		return entityName == null ? null : findEntityByQualifiedName( entityName );
 	}
 
 	private TypeElement findEntityByQualifiedName(String entityName) {
-		TypeElement type = findClassByQualifiedName(entityName);
+		final TypeElement type = findClassByQualifiedName(entityName);
 		return type != null && isEntity(type) ? type : null;
 	}
 
@@ -516,32 +519,17 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	private final Map<String,TypeElement> entityCache = new HashMap<>();
 
 	private TypeElement findEntityByUnqualifiedName(String entityName) {
-		TypeElement cached = entityCache.get(entityName);
+		final TypeElement cached = entityCache.get(entityName);
 		if ( cached != null ) {
 			return cached;
 		}
-		String qualifiedName = entityNameMappings.get(entityName);
-		if ( qualifiedName != null ) {
-			TypeElement result = elementUtil.getTypeElement(qualifiedName);
-			entityCache.put(entityName, result);
-			return result;
-		}
-		StandardLocation location = StandardLocation.SOURCE_OUTPUT;
-		try (Reader reader = filer.getResource(location, ENTITY_INDEX, entityName)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
-			entityCache.put(entityName, result);
-			return result;
-		}
-		catch (IOException e) {
-		}
-		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
-				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
-			TypeElement result = elementUtil.getTypeElement(buffered.readLine());
-			entityCache.put(entityName, result);
-			return result;
-		}
-		catch (IOException e) {
+
+		if ( indexing ) {
+			final TypeElement indexedEntity = findIndexedEntityByUnqualifiedName( entityName );
+			if ( indexedEntity != null ) {
+				entityCache.put(entityName, indexedEntity);
+				return indexedEntity;
+			}
 		}
 
 		TypeElement symbol =
@@ -561,10 +549,30 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
-	public static TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
+	private @Nullable TypeElement findIndexedEntityByUnqualifiedName(String entityName) {
+		final String qualifiedName = entityNameMappings.get(entityName);
+		if ( qualifiedName != null ) {
+			return elementUtil.getTypeElement(qualifiedName);
+		}
+		try (Reader reader = filer.getResource( StandardLocation.SOURCE_OUTPUT, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return elementUtil.getTypeElement(buffered.readLine());
+		}
+		catch (IOException ignore) {
+		}
+		try (Reader reader = filer.getResource(StandardLocation.CLASS_PATH, ENTITY_INDEX, entityName)
+				.openReader(true); BufferedReader buffered = new BufferedReader(reader) ) {
+			return elementUtil.getTypeElement(buffered.readLine());
+		}
+		catch (IOException ignore) {
+		}
+		return null;
+	}
+
+	private static @Nullable TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
 		for (Element element: module.getEnclosedElements()) {
 			if (element.getKind() == ElementKind.PACKAGE) {
-				PackageElement pack = (PackageElement) element;
+				final PackageElement pack = (PackageElement) element;
 				try {
 					for (Element member : pack.getEnclosedElements()) {
 						if (isMatchingEntity(member, entityName)) {
@@ -572,7 +580,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 						}
 					}
 				}
-				catch (Exception e) {
+				catch (Exception ignore) {
 				}
 			}
 		}
@@ -581,9 +589,10 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private static boolean isMatchingEntity(Element symbol, String entityName) {
 		if (symbol.getKind() == ElementKind.CLASS) {
-			TypeElement type = (TypeElement) symbol;
+			final TypeElement type = (TypeElement) symbol;
 			return isEntity(type)
-				&& getEntityName(type).equals(entityName);
+				&& ( getJpaEntityName(type).equals(entityName)
+					|| type.getQualifiedName().contentEquals(entityName) );
 		}
 		else {
 			return false;
@@ -594,7 +603,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		//iterate up the superclass hierarchy
 		while (type!=null) {
 			if (isMappedClass(type)) { //ignore unmapped intervening classes
-				AccessType accessType = getAccessType(type, defaultAccessType);
+				final AccessType accessType = getAccessType(type, defaultAccessType);
 				for (Element member: type.getEnclosedElements()) {
 					if (isMatchingProperty(member, propertyName, accessType)) {
 						return member;
@@ -634,11 +643,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private static AnnotationMirror getAnnotation(Element member, String annotationName) {
 		for (AnnotationMirror mirror : member.getAnnotationMirrors()) {
-			TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
+			final TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
 			if ( annotationType.getSimpleName().contentEquals(annotationName)
 					&& annotationType.getNestingKind() == NestingKind.TOP_LEVEL ) {
-				PackageElement pack = (PackageElement) annotationType.getEnclosingElement();
-				Name packageName = pack.getQualifiedName();
+				final PackageElement pack = (PackageElement) annotationType.getEnclosingElement();
+				final Name packageName = pack.getQualifiedName();
 				if (packageName.contentEquals(jakartaPersistence)
 						|| packageName.contentEquals(javaxPersistence)) {
 					return mirror;
@@ -665,6 +674,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return hasAnnotation(type, "Entity")
 			|| hasAnnotation(type, "Embeddable")
 			|| hasAnnotation(type, "MappedSuperclass");
+	}
+
+	@Override
+	protected boolean isEntity(String entityName) {
+		return isEntity(elementUtil.getTypeElement(entityName));
 	}
 
 	static boolean isEntity(TypeElement member) {
@@ -705,7 +719,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isEnum(String className) {
-		TypeElement typeElement = elementUtil.getTypeElement( className );
+		final TypeElement typeElement = elementUtil.getTypeElement( className );
 		return typeElement != null && typeElement.getKind() == ElementKind.ENUM;
 	}
 
@@ -727,36 +741,28 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		if ( typeElement == null ) {
 			return null;
 		}
-		final TypeMirror typeMirror = typeElement.getEnclosedElements()
-				.stream()
-				.filter( e -> fieldName.equals( e.getSimpleName().toString() ) )
-				.filter( ProcessorSessionFactory::isStaticFinalField )
-				.findFirst().map( Element::asType )
-				.orElse( null );
+		final TypeMirror typeMirror =
+				typeElement.getEnclosedElements()
+						.stream()
+						.filter( e -> fieldName.equals( e.getSimpleName().toString() ) )
+						.filter( ProcessorSessionFactory::isStaticFinalField )
+						.findFirst().map( Element::asType )
+						.orElse( null );
 		if ( typeMirror == null ) {
 			return null;
 		}
 		try {
-			switch ( typeMirror.getKind() ) {
-				case BYTE:
-					return byte.class;
-				case SHORT:
-					return short.class;
-				case INT:
-					return int.class;
-				case LONG:
-					return long.class;
-				case FLOAT:
-					return float.class;
-				case DOUBLE:
-					return double.class;
-				case BOOLEAN:
-					return boolean.class;
-				case CHAR:
-					return char.class;
-				default:
-					return Class.forName( typeMirror.toString() );
-			}
+			return switch ( typeMirror.getKind() ) {
+				case BYTE -> byte.class;
+				case SHORT -> short.class;
+				case INT -> int.class;
+				case LONG -> long.class;
+				case FLOAT -> float.class;
+				case DOUBLE -> double.class;
+				case BOOLEAN -> boolean.class;
+				case CHAR -> char.class;
+				default -> Class.forName( typeMirror.toString() );
+			};
 		}
 		catch (ClassNotFoundException ignored) {
 			return null;
@@ -765,8 +771,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	private static boolean isStaticFinalField(Element e) {
 		return e.getKind() == ElementKind.FIELD
-				&& e.getModifiers().contains( Modifier.STATIC )
-				&& e.getModifiers().contains( Modifier.FINAL );
+			&& e.getModifiers().contains( Modifier.STATIC )
+			&& e.getModifiers().contains( Modifier.FINAL );
 	}
 
 	private static boolean isEmbeddableType(TypeElement type) {
@@ -799,12 +805,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static AnnotationMirror toOneAnnotation(Element member) {
-		AnnotationMirror manyToOne =
+		final AnnotationMirror manyToOne =
 				getAnnotation(member, "ManyToOne");
 		if (manyToOne!=null) {
 			return manyToOne;
 		}
-		AnnotationMirror oneToOne =
+		final AnnotationMirror oneToOne =
 				getAnnotation(member, "OneToOne");
 		if (oneToOne!=null) {
 			return oneToOne;
@@ -813,12 +819,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static AnnotationMirror toManyAnnotation(Element member) {
-		AnnotationMirror manyToMany =
+		final AnnotationMirror manyToMany =
 				getAnnotation(member, "ManyToMany");
 		if (manyToMany!=null) {
 			return manyToMany;
 		}
-		AnnotationMirror oneToMany =
+		final AnnotationMirror oneToMany =
 				getAnnotation(member, "OneToMany");
 		if (oneToMany!=null) {
 			return oneToMany;
@@ -843,14 +849,14 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static String qualifiedName(Element type) {
-		if ( type instanceof PackageElement ) {
-			return ((PackageElement) type).getQualifiedName().toString();
+		if ( type instanceof PackageElement packageElement ) {
+			return packageElement.getQualifiedName().toString();
 		}
-		else if ( type instanceof TypeElement ) {
-			return ((TypeElement) type).getQualifiedName().toString();
+		else if ( type instanceof TypeElement typeElement ) {
+			return typeElement.getQualifiedName().toString();
 		}
 		else {
-			Element enclosingElement = type.getEnclosingElement();
+			final Element enclosingElement = type.getEnclosingElement();
 			return enclosingElement != null
 					? qualifiedName(enclosingElement) + '.' + simpleName(type)
 					: simpleName(type);
@@ -858,89 +864,106 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static AccessType getAccessType(TypeElement type, AccessType defaultAccessType) {
-		AnnotationMirror annotation =
+		final AnnotationMirror annotation =
 				getAnnotation(type, "Access");
 		if (annotation==null) {
 			return defaultAccessType;
 		}
 		else {
-			VariableElement member = (VariableElement)
+			final VariableElement member = (VariableElement)
 					getAnnotationMember(annotation, "value");
 			if (member==null) {
 				return defaultAccessType; //does not occur
 			}
-			switch (member.getSimpleName().toString()) {
-				case "PROPERTY":
-					return AccessType.PROPERTY;
-				case "FIELD":
-					return AccessType.FIELD;
-				default:
-					throw new IllegalStateException();
-			}
+			return switch (member.getSimpleName().toString()) {
+				case "PROPERTY" -> AccessType.PROPERTY;
+				case "FIELD" -> AccessType.FIELD;
+				default -> throw new IllegalStateException();
+			};
 		}
 	}
 
-	static String getEntityName(TypeElement type) {
+	@Override
+	protected String getJpaEntityName(String typeName) {
+		return getJpaEntityName(findClassByQualifiedName(typeName));
+	}
+
+	static String getJpaEntityName(TypeElement type) {
 		if ( type == null ) {
 			return null;
 		}
-		AnnotationMirror entityAnnotation =
+		final AnnotationMirror entityAnnotation =
 				getAnnotation(type, "Entity");
 		if (entityAnnotation==null) {
 			//not an entity!
 			return null;
 		}
 		else {
-			String name = (String)
+			final String name = (String)
 					getAnnotationMember(entityAnnotation, "name");
-			//entity names are unqualified class names
+			//JPA entity names are unqualified class names
 			return name==null ? simpleName(type) : name;
 		}
 	}
 
+	static String getHibernateEntityName(TypeElement type) {
+		if ( type == null ) {
+			return null;
+		}
+		final AnnotationMirror entityAnnotation =
+				getAnnotation(type, "Entity");
+		if (entityAnnotation==null) {
+			//not an entity!
+			return null;
+		}
+		else {
+			//entity names are qualified class names
+			return qualifiedName(type);
+		}
+	}
+
 	private TypeMirror getCollectionElementType(Element property) {
-		DeclaredType declaredType = (DeclaredType) memberType(property);
-		List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-		TypeMirror elementType = typeArguments.get(typeArguments.size()-1);
+		final DeclaredType declaredType = (DeclaredType) memberType(property);
+		final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
+		final TypeMirror elementType = typeArguments.get(typeArguments.size()-1);
 		return elementType==null
 				? elementUtil.getTypeElement(JAVA_OBJECT).asType()
 				: elementType;
 	}
 
 	private static String getToOneTargetEntity(Element property) {
-		AnnotationMirror annotation = toOneAnnotation(property);
-		TypeMirror classType = (TypeMirror)
+		final AnnotationMirror annotation = toOneAnnotation(property);
+		final TypeMirror classType = (TypeMirror)
 				getAnnotationMember(annotation, "targetEntity");
-		TypeMirror targetType =
+		final TypeMirror targetType =
 				classType == null || classType.getKind() == TypeKind.VOID
 						? memberType(property)
 						: classType;
-		Element element = asElement(targetType);
+		final Element element = asElement(targetType);
 		return element != null && element.getKind() == ElementKind.CLASS
-				//entity names are unqualified class names
-				? getEntityName((TypeElement) element)
+				//entity names are qualified class names
+				? getHibernateEntityName((TypeElement) element)
 				: null;
 	}
 
 	private String getToManyTargetEntityName(Element property) {
-		AnnotationMirror annotation = toManyAnnotation(property);
-		TypeMirror classType = (TypeMirror)
+		final AnnotationMirror annotation = toManyAnnotation(property);
+		final TypeMirror classType = (TypeMirror)
 				getAnnotationMember(annotation, "targetEntity");
-		TypeMirror targetType =
+		final TypeMirror targetType =
 				classType == null || classType.getKind() == TypeKind.VOID
 						? getCollectionElementType(property)
 						: classType;
-		Element element = asElement(targetType);
+		final Element element = asElement(targetType);
 		return element != null && element.getKind() == ElementKind.CLASS
-				//entity names are unqualified class names
-				? getEntityName((TypeElement) element)
+				//entity names are qualified class names
+				? getHibernateEntityName((TypeElement) element)
 				: null;
 	}
 
 	private TypeMirror getElementCollectionElementType(Element property) {
-		AnnotationMirror annotation = getAnnotation(property,
-				"ElementCollection");
-		TypeMirror classType = (TypeMirror)
+		final AnnotationMirror annotation = getAnnotation(property, "ElementCollection");
+		final TypeMirror classType = (TypeMirror)
 				getAnnotationMember(annotation, "getElementCollectionClass");
 		return classType == null
 			|| classType.getKind() == TypeKind.VOID
@@ -967,7 +990,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isFieldDefined(String qualifiedClassName, String fieldName) {
-		TypeElement type = findClassByQualifiedName(qualifiedClassName);
+		final TypeElement type = findClassByQualifiedName(qualifiedClassName);
 		return type != null
 			&& type.getEnclosedElements().stream()
 				.anyMatch(element -> element.getKind() == ElementKind.FIELD
@@ -976,21 +999,21 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 
 	@Override
 	boolean isConstructorDefined(String qualifiedClassName, List<Type> argumentTypes) {
-		TypeElement symbol = findClassByQualifiedName(qualifiedClassName);
+		final TypeElement symbol = findClassByQualifiedName(qualifiedClassName);
 		if (symbol==null) {
 			return false;
 		}
 		for (Element cons: symbol.getEnclosedElements()) {
 			if ( cons.getKind() == ElementKind.CONSTRUCTOR ) {
-				ExecutableElement constructor = (ExecutableElement) cons;
-				List<? extends VariableElement> parameters = constructor.getParameters();
+				final ExecutableElement constructor = (ExecutableElement) cons;
+				final List<? extends VariableElement> parameters = constructor.getParameters();
 				if (parameters.size()==argumentTypes.size()) {
 					boolean argumentsCheckOut = true;
 					for (int i=0; i<argumentTypes.size(); i++) {
-						Type type = argumentTypes.get(i);
-						VariableElement param = parameters.get(i);
+						final Type type = argumentTypes.get(i);
+						final VariableElement param = parameters.get(i);
 						if (param.asType().getKind().isPrimitive()) {
-							Class<?> primitive;
+							final Class<?> primitive;
 							try {
 								primitive = toPrimitiveClass( type.getReturnedClass() );
 							}
@@ -1003,18 +1026,16 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 							}
 						}
 						else {
-							TypeElement typeClass;
-							if (type instanceof EntityType) {
-								EntityType entityType = (EntityType) type;
-								String entityName = entityType.getAssociatedEntityName();
-								typeClass = findEntityClass(entityName);
+							final TypeElement typeClass;
+							if ( type instanceof EntityType entityType ) {
+								typeClass = findEntityClass(entityType.getAssociatedEntityName());
 							}
 							//TODO:
 	//						else if (type instanceof CompositeCustomType) {
 	//							typeClass = ((Component) ((CompositeCustomType) type).getUserType()).type;
 	//						}
 							else if (type instanceof BasicType) {
-								String className;
+								final String className;
 								//TODO: custom impl of getReturnedClassName()
 								//      for many more Hibernate types!
 								try {
@@ -1047,26 +1068,17 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static Class<?> toPrimitiveClass(VariableElement param) {
-		switch (param.asType().getKind()) {
-			case BOOLEAN:
-				return boolean.class;
-			case CHAR:
-				return char.class;
-			case INT:
-				return int.class;
-			case SHORT:
-				return short.class;
-			case BYTE:
-				return byte.class;
-			case LONG:
-				return long.class;
-			case FLOAT:
-				return float.class;
-			case DOUBLE:
-				return double.class;
-			default:
-				return Object.class;
-		}
+		return switch ( param.asType().getKind() ) {
+			case BOOLEAN -> boolean.class;
+			case CHAR -> char.class;
+			case INT -> int.class;
+			case SHORT -> short.class;
+			case BYTE -> byte.class;
+			case LONG -> long.class;
+			case FLOAT -> float.class;
+			case DOUBLE -> double.class;
+			default -> Object.class;
+		};
 	}
 
 	private TypeElement findClassByQualifiedName(String path) {
@@ -1125,8 +1137,8 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	private static TypeMirror memberType(Element member) {
-		if (member instanceof ExecutableElement) {
-			return ((ExecutableElement) member).getReturnType();
+		if (member instanceof ExecutableElement executableElement) {
+			return executableElement.getReturnType();
 		}
 		else if (member instanceof VariableElement) {
 			return member.asType();
@@ -1141,14 +1153,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return null;
 		}
 		else {
-			switch (type.getKind()) {
-				case DECLARED:
-					return ((DeclaredType)type).asElement();
-				case TYPEVAR:
-					return ((TypeVariable)type).asElement();
-				default:
-					return null;
-			}
+			return switch ( type.getKind() ) {
+				case DECLARED -> ((DeclaredType) type).asElement();
+				case TYPEVAR -> ((TypeVariable) type).asElement();
+				default -> null;
+			};
 		}
 	}
 }

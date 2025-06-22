@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -8,8 +8,8 @@ package org.hibernate.query.sqm;
  * Defines the set of basic types which should be
  * accepted by the {@code cast()} function on every
  * platform.
- * <p>
- * Note that while almost every database supports
+ *
+ * @implNote While almost every database supports
  * the ANSI {@code cast()} function, the actual type
  * conversions supported vary widely. Therefore, it
  * is sometimes necessary to emulate certain type
@@ -18,6 +18,11 @@ package org.hibernate.query.sqm;
  * don't have a proper {@link java.sql.Types#BOOLEAN}
  * type, and so type conversions to and from
  * {@link Boolean} must be emulated.
+ *
+ * @apiNote This is an SPI type allowing collaboration
+ * between {@code org.hibernate.dialect} and
+ * {@code org.hibernate.sqm}. It should never occur in
+ * APIs visible to the application program.
  *
  * @see org.hibernate.dialect.Dialect#castPattern(CastType, CastType)
  *
@@ -29,20 +34,15 @@ public enum CastType {
 	INTEGER, LONG, FLOAT, DOUBLE, FIXED,
 	DATE, TIME, TIMESTAMP,
 	OFFSET_TIMESTAMP, ZONE_TIMESTAMP,
+	JSON,
+	XML,
 	NULL,
 	OTHER;
 
 	public boolean isNumeric() {
-		switch (this) {
-			case INTEGER:
-			case LONG:
-			case INTEGER_BOOLEAN:
-			case FLOAT:
-			case DOUBLE:
-			case FIXED:
-				return true;
-			default:
-				return false;
-		}
+		return switch ( this ) {
+			case INTEGER, LONG, INTEGER_BOOLEAN, FLOAT, DOUBLE, FIXED -> true;
+			default -> false;
+		};
 	}
 }

@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.Incubating;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 
 /**
@@ -20,12 +20,12 @@ public interface JpaSearchOrder extends JpaCriteriaNode {
 	/**
 	 * Set the precedence of nulls for this search order element
 	 */
-	JpaSearchOrder nullPrecedence(NullPrecedence precedence);
+	JpaSearchOrder nullPrecedence(Nulls precedence);
 
 	/**
 	 * The precedence for nulls for this search order element
 	 */
-	NullPrecedence getNullPrecedence();
+	Nulls getNullPrecedence();
 
 	/**
 	 * Whether ascending ordering is in effect.

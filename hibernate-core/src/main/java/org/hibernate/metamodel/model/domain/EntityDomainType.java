@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain;
@@ -18,9 +18,4 @@ public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityTy
 
 	@Override
 	Collection<? extends EntityDomainType<? extends J>> getSubTypes();
-
-	@Override
-	default EntityDomainType<J> getSqmType() {
-		return this;
-	}
 }

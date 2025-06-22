@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.collection;
@@ -22,9 +22,7 @@ import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.FilterAliasGenerator;
-import org.hibernate.internal.util.NullnessHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.jdbc.Expectations;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -53,8 +51,9 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
-import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -74,13 +73,15 @@ import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
+import static org.hibernate.internal.util.NullnessHelper.areAllNonNull;
+import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 
 /**
- * A {@link CollectionPersister} for {@link jakarta.persistence.OneToMany one-to-one
- * associations}.
+ * A {@link CollectionPersister} for {@linkplain jakarta.persistence.OneToMany
+ * one-to-many associations}.
  *
  * @see BasicCollectionPersister
  *
@@ -99,6 +100,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final boolean keyIsNullable;
 	private final MutationExecutorService mutationExecutorService;
 
+	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
+
 	public OneToManyPersister(
 			Collection collectionBinding,
 			CollectionDataAccess cacheAccessStrategy,
@@ -106,13 +109,19 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
 		keyIsNullable = collectionBinding.getKey().isNullable();
 
-		this.rowMutationOperations = buildRowMutationOperations();
+		doWriteEvenWhenInverse = isInverse
+				&& hasIndex()
+				&& !indexContainsFormula
+				&& isAnyTrue( indexColumnIsSettable )
+				&& !getElementPersisterInternal().managesColumns( indexColumnNames );
 
-		this.insertRowsCoordinator = buildInsertCoordinator();
-		this.updateRowsCoordinator = buildUpdateCoordinator();
-		this.deleteRowsCoordinator = buildDeleteCoordinator();
-		this.removeCoordinator = buildDeleteAllCoordinator();
-		this.mutationExecutorService = creationContext.getServiceRegistry().getService(	MutationExecutorService.class );
+		rowMutationOperations = buildRowMutationOperations();
+
+		insertRowsCoordinator = buildInsertCoordinator();
+		updateRowsCoordinator = buildUpdateCoordinator();
+		deleteRowsCoordinator = buildDeleteCoordinator();
+		removeCoordinator = buildDeleteAllCoordinator();
+		mutationExecutorService = creationContext.getServiceRegistry().getService(	MutationExecutorService.class );
 	}
 
 	@Override
@@ -179,66 +188,59 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			Object key,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
-		if ( !entries.hasNext() ) {
-			// no entries to update
-			return;
-		}
+		// See HHH-5732 and HHH-18830.
+		// Claim: "If one-to-many and inverse, still need to create the index."
+		// In fact this is wrong: JPA is very clear that bidirectional associations
+		// are persisted from the owning side. However, since this is a very ancient
+		// mistake, I have fixed it in a backward-compatible way, by writing to the
+		// order column if there is no mapping at all for it on the other side.
+		// But if the owning entity does have a mapping for the order column, don't
+		// do superfluous SQL UPDATEs here from the unowned side, no matter how many
+		// users complain.
+		if ( doWriteEvenWhenInverse && entries.hasNext() ) {
 
-		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
-		final boolean doWrite = isInverse
-				&& hasIndex()
-				&& !indexContainsFormula
-				&& ArrayHelper.countTrue( indexColumnIsSettable ) > 0;
-		if ( !doWrite ) {
-			return;
-		}
+			final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
+			final RowMutationOperations.Values updateRowValues = rowMutationOperations.getUpdateRowValues();
+			final RowMutationOperations.Restrictions updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
+			assert areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
 
-		final JdbcMutationOperation updateRowOperation = rowMutationOperations.getUpdateRowOperation();
-		final RowMutationOperations.Values updateRowValues = rowMutationOperations.getUpdateRowValues();
-		final RowMutationOperations.Restrictions updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
-		assert NullnessHelper.areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
+			final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
+					() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
+					MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
+					session
+			);
 
-		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
-				() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
-				MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
-				session
-		);
-
-		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-
-		try {
-			int nextIndex = ( resetIndex ? 0 : getSize( key, session ) ) +
-					Math.max( getAttributeMapping().getIndexMetadata().getListIndexBase(), 0 );
-
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-
-				if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
-					updateRowValues.applyValues(
-							collection,
-							key,
-							entry,
-							nextIndex,
-							session,
-							jdbcValueBindings
-					);
-
-					updateRowRestrictions.applyRestrictions(
-							collection,
-							key,
-							entry,
-							nextIndex,
-							session,
-							jdbcValueBindings
-					);
-
-					mutationExecutor.execute( collection, null, null, null, session );
-					nextIndex++;
+			final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+			try {
+				int nextIndex = ( resetIndex ? 0 : getSize( key, session ) ) +
+						Math.max( getAttributeMapping().getIndexMetadata().getListIndexBase(), 0 );
+				while ( entries.hasNext() ) {
+					final Object entry = entries.next();
+					if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
+						updateRowValues.applyValues(
+								collection,
+								key,
+								entry,
+								nextIndex,
+								session,
+								jdbcValueBindings
+						);
+						updateRowRestrictions.applyRestrictions(
+								collection,
+								key,
+								entry,
+								nextIndex,
+								session,
+								jdbcValueBindings
+						);
+						mutationExecutor.execute( collection, null, null, null, session );
+						nextIndex++;
+					}
 				}
 			}
-		}
-		finally {
-			mutationExecutor.release();
+			finally {
+				mutationExecutor.release();
+			}
 		}
 
 	}
@@ -348,7 +350,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				null,
 				parameterBinders,
 				sqlWhereString,
-				Expectations.NONE
+				Expectation.None.INSTANCE
 		);
 	}
 
@@ -368,11 +370,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final OperationProducer writeIndexOperationProducer;
 		final RowMutationOperations.Values writeIndexValues;
 		final RowMutationOperations.Restrictions writeIndexRestrictions;
-		final boolean needsWriteIndex = isInverse
-				&& hasIndex()
-				&& !indexContainsFormula
-				&& !ArrayHelper.isAllFalse( indexColumnIsSettable );
-		if ( needsWriteIndex ) {
+		if ( doWriteEvenWhenInverse ) {
 			writeIndexOperationProducer = this::generateWriteIndexOperation;
 			writeIndexValues = this::applyWriteIndexValues;
 			writeIndexRestrictions = this::applyWriteIndexRestrictions;
@@ -410,101 +408,81 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private InsertRowsCoordinator buildInsertCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
 			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection (re)creation - %s",
-						getRolePath()
-				);
+				MODEL_MUTATION_LOGGER.debugf( "Skipping collection (re)creation - %s", getRolePath() );
 			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
-
-		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
-				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new InsertRowsCoordinatorTablePerSubclass( this, rowMutationOperations, getFactory().getServiceRegistry() );
+		else {
+			final ServiceRegistryImplementor serviceRegistry = getFactory().getServiceRegistry();
+			final EntityPersister elementPersister = getElementPersisterInternal();
+			return elementPersister != null && elementPersister.hasSubclasses()
+						&& elementPersister instanceof UnionSubclassEntityPersister
+					? new InsertRowsCoordinatorTablePerSubclass( this, rowMutationOperations, serviceRegistry )
+					: new InsertRowsCoordinatorStandard( this, rowMutationOperations, serviceRegistry );
 		}
-		return new InsertRowsCoordinatorStandard( this, rowMutationOperations, getFactory().getServiceRegistry() );
 	}
 
 	private UpdateRowsCoordinator buildUpdateCoordinator() {
 		if ( !isRowDeleteEnabled() && !isRowInsertEnabled() ) {
 			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection row updates - %s",
-						getRolePath()
-				);
+				MODEL_MUTATION_LOGGER.debugf( "Skipping collection row updates - %s", getRolePath() );
 			}
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
-
-		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
-				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new UpdateRowsCoordinatorTablePerSubclass( this, rowMutationOperations, getFactory() );
+		else {
+			final EntityPersister elementPersister = getElementPersisterInternal();
+			return elementPersister != null && elementPersister.hasSubclasses()
+						&& elementPersister instanceof UnionSubclassEntityPersister
+					? new UpdateRowsCoordinatorTablePerSubclass( this, rowMutationOperations, getFactory() )
+					: new UpdateRowsCoordinatorOneToMany( this, rowMutationOperations, getFactory() );
 		}
-		return new UpdateRowsCoordinatorOneToMany( this, getRowMutationOperations(), getFactory() );
 	}
 
 	private DeleteRowsCoordinator buildDeleteCoordinator() {
 		if ( !needsRemove() ) {
 			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection row deletions - %s",
-						getRolePath()
-				);
+				MODEL_MUTATION_LOGGER.debugf( "Skipping collection row deletions - %s", getRolePath() );
 			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
-
-
-		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
-				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new DeleteRowsCoordinatorTablePerSubclass( this, rowMutationOperations, false, getFactory().getServiceRegistry() );
+		else {
+			final EntityPersister elementPersister = getElementPersisterInternal();
+			final ServiceRegistryImplementor serviceRegistry = getFactory().getServiceRegistry();
+			return elementPersister != null && elementPersister.hasSubclasses()
+						&& elementPersister instanceof UnionSubclassEntityPersister
+					// never delete by index for one-to-many
+					? new DeleteRowsCoordinatorTablePerSubclass( this, rowMutationOperations, false, serviceRegistry )
+					: new DeleteRowsCoordinatorStandard( this, rowMutationOperations, false, serviceRegistry );
 		}
-		return new DeleteRowsCoordinatorStandard(
-				this,
-				rowMutationOperations,
-				// never delete by index for one-to-many
-				false,
-				getFactory().getServiceRegistry()
-		);
 	}
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
 			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Skipping collection removals - %s",
-						getRolePath()
-				);
+				MODEL_MUTATION_LOGGER.debugf( "Skipping collection removals - %s", getRolePath() );
 			}
 			return new RemoveCoordinatorNoOp( this );
 		}
-
-		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
-				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new RemoveCoordinatorTablePerSubclass( this, this::buildDeleteAllOperation, getFactory().getServiceRegistry() );
+		else {
+			final ServiceRegistryImplementor serviceRegistry = getFactory().getServiceRegistry();
+			final EntityPersister elementPersister = getElementPersisterInternal();
+			return elementPersister != null && elementPersister.hasSubclasses()
+						&& elementPersister instanceof UnionSubclassEntityPersister
+					? new RemoveCoordinatorTablePerSubclass( this, this::buildDeleteAllOperation, serviceRegistry )
+					: new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation, serviceRegistry );
 		}
-		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation, getFactory().getServiceRegistry() );
 	}
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
-		final RestrictedTableMutation<JdbcMutationOperation> sqlAst = generateDeleteRowAst( tableReference );
-
-		final SqlAstTranslator<JdbcMutationOperation> translator = getFactory().getJdbcServices()
-				.getDialect()
-				.getSqlAstTranslatorFactory()
-				.buildModelMutationTranslator( sqlAst, getFactory() );
-
-		return translator.translate( null, MutationQueryOptions.INSTANCE );
+		return getFactory().getJdbcServices().getDialect().getSqlAstTranslatorFactory()
+				.buildModelMutationTranslator( generateDeleteRowAst( tableReference ), getFactory() )
+				.translate( null, MutationQueryOptions.INSTANCE );
 	}
 
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
 		// note that custom sql delete row details are handled by CollectionRowUpdateBuilder
-		final CollectionRowDeleteByUpdateSetNullBuilder<MutationOperation> updateBuilder = new CollectionRowDeleteByUpdateSetNullBuilder<>(
-				this,
-				tableReference,
-				getFactory(),
-				sqlWhereString
-		);
+		final CollectionRowDeleteByUpdateSetNullBuilder<MutationOperation> updateBuilder =
+				new CollectionRowDeleteByUpdateSetNullBuilder<>( this, tableReference, getFactory(), sqlWhereString );
 
 		// for each key column -
 		// 		1) set the value to null
@@ -513,42 +491,36 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final int keyTypeCount = keyDescriptor.getJdbcTypeCount();
 		for ( int i = 0; i < keyTypeCount; i++ ) {
 			final SelectableMapping selectable = keyDescriptor.getSelectable( i );
-			if ( selectable.isFormula() ) {
-				continue;
+			if ( !selectable.isFormula() ) {
+				if ( selectable.isUpdateable() ) {
+					// set null
+					updateBuilder.addValueColumn(
+							selectable.getSelectionExpression(),
+							NULL,
+							selectable.getJdbcMapping(),
+							selectable.isLob()
+					);
+				}
+				// restrict
+				updateBuilder.addKeyRestrictionLeniently( selectable );
 			}
-
-			if ( selectable.isUpdateable() ) {
-				// set null
-				updateBuilder.addValueColumn(
-						selectable.getSelectionExpression(),
-						NULL,
-						selectable.getJdbcMapping(),
-						selectable.isLob()
-				);
-			}
-
-			// restrict
-			updateBuilder.addKeyRestrictionLeniently( selectable );
 		}
 
 		// set the value for each index column to null
 		if ( hasIndex() && !indexContainsFormula ) {
 			final CollectionPart indexDescriptor = getAttributeMapping().getIndexDescriptor();
 			assert indexDescriptor != null;
-
 			final int indexTypeCount = indexDescriptor.getJdbcTypeCount();
 			for ( int i = 0; i < indexTypeCount; i++ ) {
 				final SelectableMapping selectable = indexDescriptor.getSelectable( i );
-				if ( !selectable.isUpdateable() ) {
-					continue;
+				if ( selectable.isUpdateable() ) {
+					updateBuilder.addValueColumn(
+							selectable.getSelectionExpression(),
+							NULL,
+							selectable.getJdbcMapping(),
+							selectable.isLob()
+					);
 				}
-
-				updateBuilder.addValueColumn(
-						selectable.getSelectionExpression(),
-						NULL,
-						selectable.getJdbcMapping(),
-						selectable.isLob()
-				);
 			}
 		}
 
@@ -596,12 +568,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private TableUpdate<JdbcMutationOperation> buildTableUpdate(MutatingTableReference tableReference) {
-		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
-				this,
-				tableReference,
-				getFactory(),
-				sqlWhereString
-		);
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
+				new TableUpdateBuilderStandard<>( this, tableReference, getFactory(), sqlWhereString );
 
 		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder );
@@ -670,12 +638,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private JdbcMutationOperation generateWriteIndexOperation(MutatingTableReference tableReference) {
 		// note that custom sql update details are handled by TableUpdateBuilderStandard
-		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
-				this,
-				tableReference,
-				getFactory(),
-				sqlWhereString
-		);
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder =
+				new TableUpdateBuilderStandard<>( this, tableReference, getFactory(), sqlWhereString );
 
 		final OneToManyCollectionPart elementDescriptor = (OneToManyCollectionPart) getAttributeMapping().getElementDescriptor();
 		updateBuilder.addKeyRestrictionsLeniently( elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping() );
@@ -701,10 +665,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			int entryPosition,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		final Object index = collection.getIndex( entry, entryPosition, this );
-
 		getAttributeMapping().getIndexDescriptor().decompose(
-				index,
+				collection.getIndex( entry, entryPosition, this ),
 				0,
 				jdbcValueBindings,
 				null,

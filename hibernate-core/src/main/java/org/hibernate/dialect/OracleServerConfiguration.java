@@ -1,24 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.List;
+import java.util.Map;
 
+import org.hibernate.Internal;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_APPLICATION_CONTINUITY;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * Utility class that extract some initial configuration from the database for {@link OracleDialect}.
@@ -26,6 +28,7 @@ import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_S
  * @author Marco Belladelli
  * @author Loïc Lefèvre
  */
+@Internal
 public class OracleServerConfiguration {
 	private final boolean autonomous;
 	private final boolean extended;
@@ -62,7 +65,7 @@ public class OracleServerConfiguration {
 			boolean extended,
 			int driverMajorVersion,
 			int driverMinorVersion) {
-		this(autonomous, extended, false, driverMajorVersion, driverMinorVersion);
+		this( autonomous, extended, false, driverMajorVersion, driverMinorVersion );
 	}
 
 	public OracleServerConfiguration(
@@ -79,103 +82,26 @@ public class OracleServerConfiguration {
 	}
 
 	public static OracleServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
-		Boolean extended = null;
-		Boolean autonomous = null;
-		Boolean applicationContinuity = null;
-		Integer majorVersion = null;
-		Integer minorVersion = null;
-		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
-		if ( databaseMetaData != null ) {
-			majorVersion = databaseMetaData.getDriverMajorVersion();
-			minorVersion = databaseMetaData.getDriverMinorVersion();
 
-
-			try {
-				final Connection c = databaseMetaData.getConnection();
-
-				try (final Statement statement = c.createStatement()) {
-
-					// Use Oracle JDBC replay statistics information to determine if this
-					// connection is protected by Application Continuity
-					try {
-						final Class statisticReportTypeEnum = Class.forName("oracle.jdbc.replay.ReplayableConnection$StatisticsReportType",false, Thread.currentThread().getContextClassLoader());
-						final Field forCurrentConnection = statisticReportTypeEnum.getField("FOR_CURRENT_CONNECTION");
-
-						final Method getReplayStatistics = c.getClass().getMethod("getReplayStatistics", statisticReportTypeEnum);
-
-						Object stats = getReplayStatistics.invoke(c,forCurrentConnection.get(null));
-
-						final Method getTotalRequests = stats.getClass().getMethod("getTotalRequests");
-						final Method getTotalProtectedCalls = stats.getClass().getMethod("getTotalProtectedCalls");
-
-						final Long totalRequestsBefore = (Long)getTotalRequests.invoke(stats);
-						final Long protectedCallsBefore = (Long)getTotalProtectedCalls.invoke(stats);
-
-						try (ResultSet r = statement.executeQuery("select 1")) {
-							r.next();
-						}
-
-						stats = getReplayStatistics.invoke(c,forCurrentConnection.get(null));
-
-						final Long totalRequestsAfter = (Long)getTotalRequests.invoke(stats);
-						final Long protectedCallsAfter = (Long)getTotalProtectedCalls.invoke(stats);
-
-						// Application continuity is enabled on this database service if the number of
-						// total requests and the number of protected calls for this connection have
-						// both increased.
-						applicationContinuity = totalRequestsAfter > totalRequestsBefore && protectedCallsAfter > protectedCallsBefore;
-					}
-					catch(Exception e) {
-						// A ClassCastException or a NullPointerException are expected here in the case
-						// the Connection Factory is not the right one (not Replayable: ClassCastException)
-						// or if the database service has not been configured (server side) to enable
-						// application continuity (NullPointerException).
-						applicationContinuity = false;
-					}
-
-					// continue the checks...
-					final ResultSet rs = statement.executeQuery(
-							"select cast('string' as varchar2(32000)), " +
-									"sys_context('USERENV','CLOUD_SERVICE') from dual"
-					);
-					if (rs.next()) {
-						// succeeded, so MAX_STRING_SIZE == EXTENDED
-						extended = true;
-						autonomous = isAutonomous(rs.getString(2));
-					}
-				}
-			}
-			catch (SQLException ex) {
-				// failed, so MAX_STRING_SIZE == STANDARD, still need to check autonomous
-				extended = false;
-				autonomous = isAutonomous( databaseMetaData );
-			}
-		}
 		// default to the dialect-specific configuration settings
-		if ( extended == null ) {
-			extended = ConfigurationHelper.getBoolean(
-					ORACLE_EXTENDED_STRING_SIZE,
-					info.getConfigurationValues(),
-					false
-			);
-		}
-		if ( autonomous == null ) {
-			autonomous = ConfigurationHelper.getBoolean(
-					ORACLE_AUTONOMOUS_DATABASE,
-					info.getConfigurationValues(),
-					false
-			);
-		}
-		if ( applicationContinuity == null ) {
-			applicationContinuity = ConfigurationHelper.getBoolean(
-					ORACLE_APPLICATION_CONTINUITY,
-					info.getConfigurationValues(),
-					false
-			);
-		}
-		if ( majorVersion == null ) {
+		final Map<String, Object> configuration = info.getConfigurationValues();
+		final boolean defaultExtended = getBoolean( ORACLE_EXTENDED_STRING_SIZE, configuration, false );
+		final boolean defaultAutonomous =  getBoolean( ORACLE_AUTONOMOUS_DATABASE, configuration, false );
+		final boolean defaultContinuity = getBoolean( ORACLE_APPLICATION_CONTINUITY, configuration, false );
+
+		boolean extended;
+		boolean autonomous;
+		boolean applicationContinuity;
+
+		int majorVersion;
+		int minorVersion;
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		if ( databaseMetaData == null ) {
+			extended = defaultExtended;
+			autonomous = defaultAutonomous;
+			applicationContinuity = defaultContinuity;
 			try {
-				java.sql.Driver driver = java.sql.DriverManager.getDriver( "jdbc:oracle:thin:" );
+				final Driver driver = DriverManager.getDriver( "jdbc:oracle:thin:" );
 				majorVersion = driver.getMajorVersion();
 				minorVersion = driver.getMinorVersion();
 			}
@@ -183,25 +109,98 @@ public class OracleServerConfiguration {
 				majorVersion = 19;
 				minorVersion = 0;
 			}
-
 		}
+		else {
+			majorVersion = databaseMetaData.getDriverMajorVersion();
+			minorVersion = databaseMetaData.getDriverMinorVersion();
+			try {
+				final Connection connection = databaseMetaData.getConnection(); // we should not close this
+				try ( final Statement statement = connection.createStatement() ) {
+					applicationContinuity = determineApplicationContinuity( connection, statement );
+					autonomous = isAutonomous( statement );
+					extended = isExtended( statement );
+				}
+			}
+			catch (SQLException sqle) {
+				extended = defaultExtended;
+				autonomous = defaultAutonomous;
+				applicationContinuity = defaultContinuity;
+			}
+		}
+
 		return new OracleServerConfiguration( autonomous, extended, applicationContinuity, majorVersion, minorVersion );
 	}
 
-	private static boolean isAutonomous(String cloudServiceParam) {
-		return cloudServiceParam != null && List.of( "OLTP", "DWCS", "JDCS" ).contains( cloudServiceParam );
-	}
-
-	private static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
-		try (final Statement statement = databaseMetaData.getConnection().createStatement()) {
-			return statement.executeQuery(
-							"select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JDCS')" )
-					.next();
+	private static boolean isExtended(Statement statement) {
+		try ( final ResultSet resultSet =
+					statement.executeQuery( "select cast('string' as varchar2(32000)) from dual" ) ) {
+			resultSet.next();
+			// succeeded, so MAX_STRING_SIZE == EXTENDED
+			return true;
 		}
 		catch (SQLException ex) {
-			// Ignore
+			// failed, so MAX_STRING_SIZE == STANDARD, still need to check autonomous
+			return false;
 		}
-		return false;
 	}
 
+	private static Boolean determineApplicationContinuity(Connection connection, Statement statement) {
+		// Use Oracle JDBC replay statistics information to determine if this
+		// connection is protected by Application Continuity
+		try {
+			final Class<?> statisticReportTypeEnum =
+					Class.forName( "oracle.jdbc.replay.ReplayableConnection$StatisticsReportType",
+							false, Thread.currentThread().getContextClassLoader() );
+			final Object forCurrentConnection =
+					statisticReportTypeEnum.getField( "FOR_CURRENT_CONNECTION" ).get( null );
+			final Method getReplayStatistics =
+					connection.getClass().getMethod( "getReplayStatistics", statisticReportTypeEnum );
+			final Class<?> replayStatistics = getReplayStatistics.getReturnType();
+			final Method getTotalRequests = replayStatistics.getMethod("getTotalRequests");
+			final Method getTotalProtectedCalls = replayStatistics.getMethod("getTotalProtectedCalls");
+
+			final Object before = getReplayStatistics.invoke( connection, forCurrentConnection );
+			final Long totalRequestsBefore = (Long) getTotalRequests.invoke( before );
+			final Long protectedCallsBefore = (Long) getTotalProtectedCalls.invoke( before );
+
+			try ( final ResultSet resultSet = statement.executeQuery("select 1") ) {
+				resultSet.next();
+			}
+
+			final Object after = getReplayStatistics.invoke( connection, forCurrentConnection );
+			final Long totalRequestsAfter = (Long) getTotalRequests.invoke( after );
+			final Long protectedCallsAfter = (Long) getTotalProtectedCalls.invoke( after );
+
+			// Application continuity is enabled on this database service if the number of
+			// total requests and the number of protected calls for this connection have
+			// both increased.
+			return totalRequestsAfter > totalRequestsBefore
+				&& protectedCallsAfter > protectedCallsBefore;
+		}
+		catch (Exception e) {
+			// A ClassCastException or a NullPointerException are expected here in the case
+			// the Connection Factory is not the right one (not Replayable: ClassCastException)
+			// or if the database service has not been configured (server side) to enable
+			// application continuity (NullPointerException).
+			return false;
+		}
+	}
+
+	private static boolean isAutonomous(Statement statement) {
+		try ( final ResultSet resultSet =
+					statement.executeQuery( "select sys_context('USERENV','CLOUD_SERVICE') from dual" ) ) {
+			return resultSet.next()
+				&& isAutonomous( resultSet.getString(1) );
+		}
+		catch (SQLException ex) {
+			return false;
+		}
+	}
+
+	private static boolean isAutonomous(String type) {
+		return type != null && switch ( type ) {
+			case "OLTP", "DWCS", "JDCS" -> true;
+			default -> false;
+		};
+	}
 }

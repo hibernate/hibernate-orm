@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.jpa;
@@ -9,14 +9,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.query.BindableType;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.type.BindableType;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -25,6 +27,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
@@ -35,6 +38,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 /**
  * @author Steve Ebersole
@@ -102,10 +106,19 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		return sqmFunction;
 	}
 
+	@Override
+	public Object visitSetReturningFunction(SqmSetReturningFunction<?> sqmFunction) {
+		final SqmExpressibleAccessor<?> current = inferenceBasis;
+		inferenceBasis = null;
+		super.visitSetReturningFunction( sqmFunction );
+		inferenceBasis = current;
+		return sqmFunction;
+	}
+
 	private <T> BindableType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
 		BindableType<?> parameterType = null;
 		if ( inferenceBasis != null ) {
-			final SqmExpressible<?> expressible = inferenceBasis.getExpressible();
+			final SqmBindableType<?> expressible = inferenceBasis.getExpressible();
 			if ( expressible != null ) {
 				parameterType = expressible;
 			}
@@ -138,7 +151,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	private SqmExpressibleAccessor<?> inferenceBasis;
 
 	private <T> void withTypeInference(SqmExpressibleAccessor<T> inferenceBasis, SqmVisitableNode sqmVisitableNode) {
-		SqmExpressibleAccessor<?> original = this.inferenceBasis;
+		var original = this.inferenceBasis;
 		this.inferenceBasis = inferenceBasis;
 		try {
 			sqmVisitableNode.accept( this );
@@ -150,21 +163,23 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
-		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
+		final var inferenceSupplier = inferenceBasis;
 		withTypeInference(
 				() -> {
-					for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
-						final SqmExpressible<?> resolved = whenFragment.getCheckValue().getExpressible();
+					for ( var whenFragment : expression.getWhenFragments() ) {
+						final SqmBindableType<?> resolved = whenFragment.getCheckValue().getExpressible();
 						if ( resolved != null ) {
-							return (SqmExpressible<?>) resolved;
+							return resolved;
 						}
 					}
 					return null;
 				},
 				expression.getFixture()
 		);
-		SqmExpressibleAccessor<?> resolved = toExpressibleAccessor( expression );
-		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+
+		var resolved = toExpressibleAccessor( expression );
+
+		for ( var whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					expression.getFixture(),
 					whenFragment.getCheckValue()
@@ -188,10 +203,10 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
-		SqmExpressibleAccessor<?> resolved = toExpressibleAccessor( expression );
+		final var inferenceSupplier = inferenceBasis;
+		var resolved = toExpressibleAccessor( expression );
 
-		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
+		for ( var whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					null,
 					whenFragment.getPredicate()
@@ -239,14 +254,15 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	}
 
 	private <T> SqmExpressibleAccessor<T> toExpressibleAccessor(SqmExpression<T> expression) {
-		final SqmExpressible<T> expressible = expression.getExpressible();
+		final SqmBindableType<T> expressible = expression.getExpressible();
 		return expressible == null ? null : () -> expressible;
 	}
 
 	@Override
 	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
 		path.getLhs().accept( this );
-		withTypeInference( path.getPluralAttribute().getIndexPathSource(), path.getSelectorExpression() );
+		withTypeInference( (SqmPathSource<?>) path.getPluralAttribute().getIndexPathSource(),
+				path.getSelectorExpression() );
 		return path;
 	}
 
@@ -311,9 +327,9 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	@Override
 	public Object visitInListPredicate(SqmInListPredicate<?> predicate) {
-		final SqmExpression<?> firstListElement = predicate.getListExpressions().isEmpty()
-				? null
-				: predicate.getListExpressions().get( 0 );
+		final SqmExpression<?> firstListElement =
+				predicate.getListExpressions().isEmpty() ? null
+						: predicate.getListExpressions().get( 0 );
 		withTypeInference( firstListElement, predicate.getTestExpression() );
 		for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
 			withTypeInference( predicate.getTestExpression(), expression );
@@ -326,5 +342,16 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		withTypeInference( predicate.getSubQueryExpression(), predicate.getTestExpression() );
 		withTypeInference( predicate.getTestExpression(), predicate.getSubQueryExpression() );
 		return predicate;
+	}
+
+	@Override
+	public Object visitSortSpecification(SqmSortSpecification sortSpecification) {
+		if ( sortSpecification.getSortExpression() instanceof SqmAliasedNodeRef ) {
+			// Ignore aliases
+			return sortSpecification;
+		}
+		else {
+			return super.visitSortSpecification( sortSpecification );
+		}
 	}
 }

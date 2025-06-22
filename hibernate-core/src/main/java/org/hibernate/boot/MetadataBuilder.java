@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot;
@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
@@ -147,8 +146,11 @@ public interface MetadataBuilder {
 	 * @param jandexView The Jandex index to use.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Set the {@code hibernate-models} setting {@code hibernate.models.jandex.index} instead.  This method has no effect.
 	 */
-	MetadataBuilder applyIndexView(IndexView jandexView);
+	@Deprecated
+	MetadataBuilder applyIndexView(Object jandexView);
 
 	/**
 	 * Specify the options to be used in performing scanning.
@@ -246,7 +248,7 @@ public interface MetadataBuilder {
 
 	/**
 	 * For entities which do not explicitly say, should we force discriminators into
-	 * SQL selects?  The (historical) default is {@code false}
+	 * SQL selects?  The (historical) default is {@code false}.
 	 * <p>
 	 * Its default is defined by the {@value org.hibernate.cfg.AvailableSettings#FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT}
 	 * setting if using property-based configuration.
@@ -375,7 +377,7 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 *
 	 */
-	MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor);
+	MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor);
 
 	/**
 	 * Adds an AttributeConverter by its Class.

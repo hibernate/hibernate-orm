@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
@@ -28,10 +28,10 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 	public void onFlush(FlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
-		final EventManager eventManager = source.getEventManager();
+		final EventMonitor eventMonitor = source.getEventMonitor();
 		if ( persistenceContext.getNumberOfManagedEntities() > 0
 				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
-			final HibernateMonitoringEvent flushEvent = eventManager.beginFlushEvent();
+			final DiagnosticEvent flushEvent = eventMonitor.beginFlushEvent();
 			try {
 				source.getEventListenerManager().flushStart();
 
@@ -40,7 +40,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 				postFlush( source );
 			}
 			finally {
-				eventManager.completeFlushEvent( flushEvent, event );
+				eventMonitor.completeFlushEvent( flushEvent, event );
 				source.getEventListenerManager().flushEnd(
 						event.getNumberOfEntitiesProcessed(),
 						event.getNumberOfCollectionsProcessed()

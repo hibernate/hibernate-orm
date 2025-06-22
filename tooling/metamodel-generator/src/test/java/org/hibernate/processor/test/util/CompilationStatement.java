@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.util;
@@ -100,6 +100,9 @@ public class CompilationStatement extends Statement {
 	}
 
 	private String getPathToSource(Class<?> testClass) {
+		if ( testClass.isMemberClass() ) {
+			return getPathToSource( testClass.getDeclaringClass() );
+		}
 		return TestUtil.getSourceBaseDir( testClass ).getAbsolutePath() + File.separator + testClass.getName()
 				.replace( PACKAGE_SEPARATOR, File.separator ) + ".java";
 	}

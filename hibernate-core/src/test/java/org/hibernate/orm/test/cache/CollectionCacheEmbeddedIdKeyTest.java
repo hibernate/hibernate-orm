@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cache;
@@ -50,7 +50,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ServiceRegistry( settings = {
 		@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
 		@Setting( name = AvailableSettings.DEFAULT_BATCH_FETCH_SIZE, value = "30" ),
-		@Setting( name = AvailableSettings.BATCH_VERSIONED_DATA, value = "true" ),
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16845" )
 public class CollectionCacheEmbeddedIdKeyTest {

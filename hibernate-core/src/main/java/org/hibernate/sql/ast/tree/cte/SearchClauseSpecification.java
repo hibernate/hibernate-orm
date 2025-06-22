@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.cte;
@@ -26,7 +26,7 @@ public class SearchClauseSpecification {
 	/**
 	 * @deprecated Use {@link SearchClauseSpecification#SearchClauseSpecification(CteColumn,SortDirection,Nulls)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7", forRemoval = true)
 	public SearchClauseSpecification(CteColumn cteColumn, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		this( cteColumn, sortOrder, nullPrecedence.getJpaValue() );
 	}

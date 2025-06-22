@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedSubgraph;
 
@@ -24,14 +24,14 @@ public class NamedSubgraphJpaAnnotation implements NamedSubgraph {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedSubgraphJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedSubgraphJpaAnnotation(ModelsContext modelContext) {
 		this.type = void.class;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedSubgraphJpaAnnotation(NamedSubgraph annotation, SourceModelBuildingContext modelContext) {
+	public NamedSubgraphJpaAnnotation(NamedSubgraph annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.type = annotation.type();
 		this.attributeNodes = extractJdkValue( annotation, NAMED_SUBGRAPH, "attributeNodes", modelContext );
@@ -40,7 +40,7 @@ public class NamedSubgraphJpaAnnotation implements NamedSubgraph {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public NamedSubgraphJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public NamedSubgraphJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.type = (Class<?>) attributeValues.get( "type" );
 		this.attributeNodes = (jakarta.persistence.NamedAttributeNode[]) attributeValues.get( "attributeNodes" );

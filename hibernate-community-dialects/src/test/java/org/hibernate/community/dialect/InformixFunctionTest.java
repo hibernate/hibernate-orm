@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -175,6 +175,23 @@ public class InformixFunctionTest {
 
 						assertTrue( millis > 0 );
 					}
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( value = "HHH-18369" )
+	public void testMatches(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> {
+					String country = (String) session.createQuery(
+									"select e.country " +
+											"from Event e " +
+											"where e.id = :id and matches(e.country, :country) = 'T'" )
+							.setParameter( "id", event.id )
+							.setParameter( "country", "R*" )
+							.getSingleResult();
+					assertEquals( "Romania", country );
 				}
 		);
 	}

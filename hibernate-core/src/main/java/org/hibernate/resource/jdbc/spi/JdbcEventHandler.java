@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.spi;
@@ -80,6 +80,10 @@ public class JdbcEventHandler {
 		if ( sessionListener != null ) {
 			sessionListener.jdbcPrepareStatementStart();
 		}
+
+		if ( statistics != null && statistics.isStatisticsEnabled() ) {
+			statistics.prepareStatement();
+		}
 	}
 
 	public void jdbcPrepareStatementEnd() {
@@ -88,7 +92,7 @@ public class JdbcEventHandler {
 		}
 
 		if ( statistics != null && statistics.isStatisticsEnabled() ) {
-			statistics.prepareStatement();
+			statistics.closeStatement();
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
@@ -197,6 +197,40 @@ public class BatchFetchProxyTest {
 		);
 	}
 
+	@Test
+	@JiraKey("HHH-11147")
+	public void testBatchEntityRemoval(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Statistics statistics = scope.getSessionFactory().getStatistics();
+					statistics.clear();
+
+					List<Employer> employers = new ArrayList<>();
+					for ( int i = 0 ; i < 5 ; i++ ) {
+						employers.add( session.getReference( Employer.class, i + 1) );
+					}
+
+					assertEquals( 0, statistics.getPrepareStatementCount() );
+
+					session.find( Employer.class, 0 );
+					session.find( Employer.class, 1 );
+					session.find( Employer.class, 2 );
+					session.find( Employer.class, 5 );
+
+					assertEquals( 1, statistics.getPrepareStatementCount() );
+
+					session.find( Employer.class, 6 );
+					session.find( Employer.class, 7 );
+
+					assertEquals( 3, statistics.getPrepareStatementCount() );
+
+					for ( Employer employer : employers ) {
+						assertTrue( Hibernate.isInitialized( employer ) );
+					}
+				}
+		);
+	}
+
 	@BeforeEach
 	public void setUpData(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -217,12 +251,7 @@ public class BatchFetchProxyTest {
 
 	@AfterEach
 	public void cleanupDate(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Employee" ).executeUpdate();
-					session.createQuery( "delete from Employer" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Employee")

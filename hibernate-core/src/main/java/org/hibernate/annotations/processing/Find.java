@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations.processing;
@@ -39,11 +39,24 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * Notice that:
  * <ul>
  * <li>the types and names of the method parameters exactly match the
- *     types and names of the corresponding fields of the entity.
+ *     types and names of the corresponding fields of the entity, and
  * <li>there's no special naming convention for the {@code @Find}
  *     methods&mdash;they may be named arbitrarily, and their names
  *     encode no semantics.
  * </ul>
+ * <p>
+ * Alternatively, a method parameter may have the type
+ * {@link org.hibernate.query.range.Range Range&lt;T&gt;} where
+ * {@code T} is the type of the corresponding field in the entity.
+ * <pre>
+ * &#064;Find
+ * Book getBookForIsbn(Range&lt;String&gt; isbn);
+ *
+ * &#064;Find
+ * List&lt;Book&gt; getBooksWithTitle(Range&lt;String&gt; title);
+ * </pre>
+ * This allows the matching field to be restricted based on a variety
+ * of criteria expressed via the static factory methods of {@code Range}.
  * <p>
  * It's even possible to query by a field of an embedded object:
  * <pre>
@@ -154,6 +167,17 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>return type {@link org.hibernate.query.KeyedResultList}, and
  * <li>a parameter of type {@link org.hibernate.query.KeyedPage}.
  * </ul>
+ * <p>
+ * Finally, a method might have a parameter of type
+ * {@link org.hibernate.query.restriction.Restriction Restriction&lt;? super E&gt;},
+ * allowing the caller to apply an arbitrary filtering criterion to
+ * the query results.
+ * <p>
+ * For example:
+ * <pre>
+ * &#064;Find
+ * List&lt;Book&gt; getBooks(Restriction&lt;Book&gt; filter, List&lt;Order&lt;Book&gt;&gt; order);
+ * </pre>
  *
  * @see HQL
  * @see SQL

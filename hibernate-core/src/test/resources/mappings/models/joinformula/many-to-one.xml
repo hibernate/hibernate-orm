@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="7.0">
+
+    <package>org.hibernate.orm.test.unconstrained</package>
+
+    <entity class="Person" metadata-complete="true">
+        <attributes>
+            <id name="name"/>
+            <many-to-one name="employee" target-entity="Employee">
+                <join-formula>employeeId</join-formula>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+
+    </entity>
+
+    <entity class="Employee" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+        </attributes>
+
+    </entity>
+
+</entity-mappings>

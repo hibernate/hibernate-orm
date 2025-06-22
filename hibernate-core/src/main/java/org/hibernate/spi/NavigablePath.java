@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spi;
@@ -8,9 +8,11 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.hibernate.Incubating;
-import org.hibernate.internal.util.StringHelper;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
  * A compound name where the root path element is an entity name or a collection role
@@ -35,10 +37,9 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	public NavigablePath(String rootName, @Nullable String alias) {
 		this.parent = null;
-		this.alias = alias = StringHelper.nullIfEmpty( alias );
+		this.alias = alias = nullIfEmpty( alias );
 		this.localName = rootName;
 		this.identifierForTableGroup = rootName;
-
 		this.hashCode = localName.hashCode() + ( alias == null ? 0 : alias.hashCode() );
 	}
 
@@ -48,14 +49,12 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	public NavigablePath(NavigablePath parent, String localName, @Nullable String alias) {
 		assert parent != null;
-
 		this.parent = parent;
-		this.alias = alias = StringHelper.nullIfEmpty( alias );
-
-		final String aliasedLocalName = alias == null
-				? localName
-				: localName + '(' + alias + ')';
-
+		this.alias = alias = nullIfEmpty( alias );
+		final String aliasedLocalName =
+				alias == null
+						? localName
+						: localName + '(' + alias + ')';
 		this.hashCode = parent.hashCode() + aliasedLocalName.hashCode();
 
 		// the _identifierMapper is a "hidden property" on entities with composite keys.
@@ -68,9 +67,10 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		else {
 			this.localName = localName;
 			final String parentFullPath = parent.getFullPath();
-			this.identifierForTableGroup = StringHelper.isEmpty( parentFullPath )
-					? aliasedLocalName
-					: parentFullPath + "." + localName;
+			this.identifierForTableGroup =
+					isEmpty( parentFullPath )
+							? aliasedLocalName
+							: parentFullPath + "." + localName;
 		}
 	}
 
@@ -83,7 +83,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		this.parent = parent;
 		this.localName = localName;
 		this.hashCode = hashCode;
-		this.alias = StringHelper.nullIfEmpty( alias );
+		this.alias = nullIfEmpty( alias );
 		this.identifierForTableGroup = identifierForTableGroup;
 	}
 
@@ -119,32 +119,27 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		if ( this == other ) {
 			return true;
 		}
-
-		if ( other == null ) {
+		else if ( !(other instanceof DotIdentifierSequence otherPath) ) {
 			return false;
 		}
-
-		final DotIdentifierSequence otherPath = (DotIdentifierSequence) other;
-		if ( ! localNamesMatch( otherPath ) ) {
-			return false;
-		}
-
-		if ( otherPath instanceof NavigablePath otherNavigablePath ) {
-			if ( ! Objects.equals( getAlias(), otherNavigablePath.getAlias() ) ) {
+		else {
+			if ( !localNamesMatch( otherPath ) ) {
 				return false;
 			}
-			return Objects.equals( getRealParent(), otherNavigablePath.getRealParent() );
+			else if ( otherPath instanceof NavigablePath otherNavigablePath ) {
+				return Objects.equals( getAlias(), otherNavigablePath.getAlias() )
+					&& Objects.equals( getRealParent(), otherNavigablePath.getRealParent() );
+			}
+			else {
+				return Objects.equals( getParent(), otherPath.getParent() );
+			}
 		}
-
-		return Objects.equals( getParent(), otherPath.getParent() );
 	}
 
 	protected boolean localNamesMatch(DotIdentifierSequence other) {
-		if ( other instanceof EntityIdentifierNavigablePath ) {
-			return localNamesMatch( (EntityIdentifierNavigablePath) other );
-		}
-
-		return Objects.equals( getLocalName(), other.getLocalName() );
+		return other instanceof EntityIdentifierNavigablePath entityIdentifierNavigablePath
+				? localNamesMatch( entityIdentifierNavigablePath )
+				: Objects.equals( getLocalName(), other.getLocalName() );
 	}
 
 	protected boolean localNamesMatch(EntityIdentifierNavigablePath other) {
@@ -192,11 +187,14 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		if ( dotIdentifierSequence == null ) {
 			return true;
 		}
-		if ( !localNamesMatch( dotIdentifierSequence ) ) {
+		else if ( !localNamesMatch( dotIdentifierSequence ) ) {
 			return false;
 		}
-		NavigablePath parent = getParent();
-		return parent != null && parent.isSuffix( dotIdentifierSequence.getParent() );
+		else {
+			final NavigablePath parent = getParent();
+			return parent != null
+				&& parent.isSuffix( dotIdentifierSequence.getParent() );
+		}
 	}
 
 	/**
@@ -214,14 +212,15 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		if ( suffix == null ) {
 			return this;
 		}
-		if ( !getLocalName().equals( suffix.getLocalName() ) ) {
+		else if ( !getLocalName().equals( suffix.getLocalName() ) ) {
 			return null;
 		}
-		NavigablePath parent = getParent();
-		if ( parent != null ) {
-			return parent.trimSuffix( suffix.getParent() );
+		else {
+			final NavigablePath parent = getParent();
+			return parent != null
+					? parent.trimSuffix( suffix.getParent() )
+					: null;
 		}
-		return null;
 	}
 
 	/**
@@ -237,9 +236,13 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		return false;
 	}
 
-	public boolean pathsMatch(@Nullable NavigablePath p) {
-		return this == p || p != null && localName.equals( p.localName )
-				&& ( parent == null ? p.parent == null && Objects.equals( alias, p.alias ) : parent.pathsMatch( p.parent ) );
+	public boolean pathsMatch(@Nullable NavigablePath path) {
+		return this == path
+			|| path != null && localName.equals( path.localName ) && (
+				parent == null
+						? path.parent == null && Objects.equals( alias, path.alias )
+						: parent.pathsMatch( path.parent )
+			);
 	}
 
 	/**
@@ -255,7 +258,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		//	- this = Root.sub.leaf.terminal
 		//	- result = leaf.terminal
 
-		final RelativePathCollector pathCollector = new RelativePathCollector();
+		final var pathCollector = new RelativePathCollector();
 		relativize( base, pathCollector );
 		return pathCollector.resolve();
 	}
@@ -265,18 +268,16 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 		private StringBuilder buffer;
 
 		public void collectPath(String path) {
-			if ( !matchedBase ) {
-				return;
-			}
+			if ( matchedBase ) {
+				if ( buffer == null ) {
+					buffer = new StringBuilder();
+				}
+				else {
+					buffer.append( '.' );
+				}
 
-			if ( buffer == null ) {
-				buffer = new StringBuilder();
+				buffer.append( path );
 			}
-			else {
-				buffer.append( '.' );
-			}
-
-			buffer.append( path );
 		}
 
 		public @Nullable String resolve() {
@@ -284,28 +285,31 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 				// Return an empty string instead of null in case the two navigable paths are equal
 				return matchedBase ? "" : null;
 			}
-			return buffer.toString();
+			else {
+				return buffer.toString();
+			}
 		}
 	}
 
 	protected void relativize(NavigablePath base, RelativePathCollector collector) {
 		if ( this.equals( base ) ) {
 			collector.matchedBase = true;
-			return;
 		}
-
-		if ( ! collector.matchedBase ) {
-			if ( parent != null ) {
-				parent.relativize( base, collector );
+		else {
+			if ( !collector.matchedBase ) {
+				if ( parent != null ) {
+					parent.relativize( base, collector );
+				}
 			}
+			collector.collectPath( getLocalName() );
 		}
-
-		collector.collectPath( getLocalName() );
 	}
 
 	@Override
 	public String getFullPath() {
-		return alias == null ? identifierForTableGroup : identifierForTableGroup + "(" + alias + ")";
+		return alias == null
+				? identifierForTableGroup
+				: identifierForTableGroup + "(" + alias + ")";
 	}
 
 	@Override

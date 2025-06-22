@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.query.spi.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.spi.QueryPlan;
 
 import jakarta.persistence.criteria.CriteriaDelete;
@@ -14,12 +15,16 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 
 /**
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.query.spi.QueryEngineOptions
  */
 public interface QuerySettings {
 	/**
 	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
 	 *
 	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isJsonFunctionsEnabled
 	 *
 	 * @since 7.0
 	 */
@@ -30,6 +35,8 @@ public interface QuerySettings {
 	 * Boolean setting to control if the use of tech preview XML functions in HQL is enabled.
 	 *
 	 * @settingDefault {@code false} (disabled) since the functions are still incubating.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isXmlFunctionsEnabled
 	 *
 	 * @since 7.0
 	 */
@@ -43,6 +50,8 @@ public interface QuerySettings {
 	 *
 	 * @settingDefault {@code false}
 	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isPortableIntegerDivisionEnabled
+	 *
 	 * @since 6.5
 	 */
 	String PORTABLE_INTEGER_DIVISION = "hibernate.query.hql.portable_integer_division";
@@ -50,24 +59,32 @@ public interface QuerySettings {
 	/**
 	 * Specifies a {@link org.hibernate.query.hql.HqlTranslator} to use for HQL query
 	 * translation.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomHqlTranslator
 	 */
 	String SEMANTIC_QUERY_PRODUCER = "hibernate.query.hql.translator";
 
 	/**
 	 * Specifies a {@link org.hibernate.query.sqm.sql.SqmTranslatorFactory} to use for
 	 * HQL query translation.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmTranslatorFactory
 	 */
 	String SEMANTIC_QUERY_TRANSLATOR = "hibernate.query.sqm.translator";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria mutation queries.
-	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy}..
+	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy}.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableMutationStrategy
 	 */
 	String QUERY_MULTI_TABLE_MUTATION_STRATEGY = "hibernate.query.mutation_strategy";
 
 	/**
 	 * Defines the "global" strategy to use for handling HQL and Criteria insert queries.
 	 * Specifies a {@link org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy}.
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCustomSqmMultiTableInsertStrategy
 	 */
 	String QUERY_MULTI_TABLE_INSERT_STRATEGY = "hibernate.query.insert_strategy";
 
@@ -115,6 +132,7 @@ public interface QuerySettings {
 	 * @see jakarta.persistence.criteria.CriteriaBuilder#literal(Object)
 	 * @see jakarta.persistence.criteria.CriteriaBuilder#parameter(Class)
 	 * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#value(Object)
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getCriteriaValueHandlingMode
 	 */
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
@@ -155,6 +173,21 @@ public interface QuerySettings {
 	 * @since 6.0
 	 */
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
+
+	/**
+	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
+	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)} cache
+	 * their interpretations in the query plan cache.
+	 * <p>
+	 * If disabled, queries are interpreted on first access without caching.
+	 *
+	 * @settingDefault {@code false} (disabled) - criteria queries do not use query plan caching.
+	 *
+	 * @since 7.0
+	 */
+	String CRITERIA_PLAN_CACHE_ENABLED = "hibernate.criteria.plan_cache_enabled";
 
 	/**
 	 * When enabled, ordinal parameters (represented by the {@code ?} placeholder) in
@@ -198,23 +231,24 @@ public interface QuerySettings {
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 
 	/**
-	 * This setting defines how {@link org.hibernate.annotations.Immutable} entities
-	 * are handled when executing a bulk update query. Valid options are enumerated
-	 * by {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode}:
+	 * Controls how {@linkplain org.hibernate.annotations.Immutable immutable}
+	 * entities are handled when executing a bulk update or delete query. Valid
+	 * options are enumerated by {@link ImmutableEntityUpdateQueryHandlingMode}:
 	 * <ul>
-	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
-	 *     specifies that a warning log message is issued when an
-	 *     {@linkplain org.hibernate.annotations.Immutable immutable} entity is to be
-	 *     updated via a bulk update statement, and
-	 *     <li>{@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
-	 *     specifies that a {@link org.hibernate.HibernateException} should be thrown.
+	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#ALLOW "allow"} specifies
+	 *     that bulk updates and deletes of immutable entities are allowed, and
+	 *     <li>{@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
+	 *     specifies that a {@link org.hibernate.HibernateException} is thrown.
 	 * </ul>
 	 *
-	 * @settingDefault {@link org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode#WARNING "warning"}
+	 * @settingDefault {@link ImmutableEntityUpdateQueryHandlingMode#EXCEPTION "exception"}
 	 *
-	 * @since 5.2.17
+	 * @apiNote The default for this setting was inverted in Hibernate 7.
 	 *
-	 * @see org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode
+	 * @since 5.2
+	 *
+	 * @see ImmutableEntityUpdateQueryHandlingMode
+	 * @see org.hibernate.query.spi.QueryEngineOptions#getImmutableEntityUpdateQueryHandlingMode
 	 */
 	String IMMUTABLE_ENTITY_UPDATE_QUERY_HANDLING_MODE = "hibernate.query.immutable_entity_update_query_handling_mode";
 
@@ -252,9 +286,10 @@ public interface QuerySettings {
 	 * When enabled, specifies that {@linkplain QueryPlan query plans} should be
 	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache cached}.
 	 * <p>
-	 * By default, the query plan cache is disabled, unless one of the configuration
-	 * properties {@value #QUERY_PLAN_CACHE_MAX_SIZE} or
-	 * {@value #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE} is set.
+	 * By default, the query plan cache is enabled. It is also enabled if the configuration
+	 * property {@value #QUERY_PLAN_CACHE_MAX_SIZE} is set.
+	 *
+	 * @settingDefault {@code true} (enabled) - query plan cache is enabled.
 	 */
 	String QUERY_PLAN_CACHE_ENABLED = "hibernate.query.plan_cache_enabled";
 
@@ -285,5 +320,5 @@ public interface QuerySettings {
 	 * <p>
 	 * By default, this is set to false
 	 */
-	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_paramater_names";
+	String QUERY_PASS_PROCEDURE_PARAMETER_NAMES = "hibernate.query.pass_procedure_parameter_names";
 }

@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -24,10 +24,9 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	 *
 	 * @return The parameter descriptor
 	 */
-	public static <T> QueryParameterNamedImpl<T> fromSqm(SqmParameter<?> parameter) {
+	public static <T> QueryParameterNamedImpl<T> fromSqm(SqmParameter<T> parameter) {
 		assert parameter.getName() != null;
 		assert parameter.getPosition() == null;
-
 		return new QueryParameterNamedImpl<>(
 				parameter.getName(),
 				parameter.allowMultiValuedBinding(),
@@ -36,20 +35,12 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 	}
 
 	public static <T> QueryParameterNamedImpl<T> fromNativeQuery(String name) {
-		return new QueryParameterNamedImpl<>(
-				name,
-				true,
-				null
-		);
+		return new QueryParameterNamedImpl<>( name, true, null );
 	}
 
 	private final String name;
 
-	private QueryParameterNamedImpl(
-			String name,
-			boolean allowMultiValuedBinding,
-			BindableType anticipatedType) {
-		//noinspection unchecked
+	private QueryParameterNamedImpl(String name, boolean allowMultiValuedBinding, BindableType<T> anticipatedType) {
 		super( allowMultiValuedBinding, anticipatedType );
 		this.name = name;
 	}
@@ -69,11 +60,12 @@ public class QueryParameterNamedImpl<T> extends AbstractQueryParameter<T> {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(o instanceof QueryParameterNamedImpl<?> that) ) {
 			return false;
 		}
-		QueryParameterNamedImpl<?> that = (QueryParameterNamedImpl<?>) o;
-		return Objects.equals( name, that.name );
+		else {
+			return Objects.equals( name, that.name );
+		}
 	}
 
 	@Override

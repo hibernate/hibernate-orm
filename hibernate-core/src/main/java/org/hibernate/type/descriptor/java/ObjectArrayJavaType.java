@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -22,6 +22,11 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 				new ComponentArrayComparator( components )
 		);
 		this.components = components;
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Object[];
 	}
 
 	@Override
@@ -89,8 +94,8 @@ public class ObjectArrayJavaType extends AbstractClassJavaType<Object[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Object[]) {
-			return (Object[]) value;
+		if (value instanceof Object[] objects) {
+			return objects;
 		}
 		throw unknownWrap( value.getClass() );
 	}

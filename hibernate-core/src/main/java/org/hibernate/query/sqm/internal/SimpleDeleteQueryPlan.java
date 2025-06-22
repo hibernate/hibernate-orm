@@ -1,12 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.internal;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.action.internal.BulkOperationCleanupAction;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -32,9 +28,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
-import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -47,6 +41,10 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -194,14 +192,15 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	protected SqlAstTranslator<? extends JdbcOperationQueryMutation> createTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final SqmTranslator<? extends MutationStatement> translator = factory.getQueryEngine().getSqmTranslatorFactory().createMutationTranslator(
-				sqmDelete,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				factory
-		);
+		final SqmTranslator<? extends MutationStatement> translator =
+				factory.getQueryEngine().getSqmTranslatorFactory().createMutationTranslator(
+						sqmDelete,
+						executionContext.getQueryOptions(),
+						domainParameterXref,
+						executionContext.getQueryParameterBindings(),
+						executionContext.getSession().getLoadQueryInfluencers(),
+						factory.getSqlTranslationEngine()
+				);
 		//noinspection unchecked
 		sqmInterpretation = (SqmTranslation<? extends AbstractUpdateOrDeleteStatement>) translator.translate();
 
@@ -209,6 +208,14 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 				domainParameterXref,
 				sqmInterpretation::getJdbcParamsBySqmParam
 		);
+		final MutationStatement ast = createDeleteAst();
+		return factory.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildMutationTranslator( factory, ast );
+	}
+
+	private MutationStatement createDeleteAst() {
 		final MutationStatement ast;
 		if ( entityDescriptor.getSoftDeleteMapping() == null ) {
 			ast = sqmInterpretation.getSqlAst();
@@ -217,10 +224,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			final AbstractUpdateOrDeleteStatement sqlDeleteAst = sqmInterpretation.getSqlAst();
 			final NamedTableReference targetTable = sqlDeleteAst.getTargetTable();
 			final SoftDeleteMapping columnMapping = getEntityDescriptor().getSoftDeleteMapping();
-			final ColumnReference columnReference = new ColumnReference( targetTable, columnMapping );
-			//noinspection rawtypes,unchecked
-			final JdbcLiteral jdbcLiteral = new JdbcLiteral( columnMapping.getDeletedLiteralValue(), columnMapping.getJdbcMapping() );
-			final Assignment assignment = new Assignment( columnReference, jdbcLiteral );
+			final Assignment assignment = columnMapping.createSoftDeleteAssignment( targetTable );
 
 			ast = new UpdateStatement(
 					targetTable,
@@ -228,10 +232,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					sqlDeleteAst.getRestriction()
 			);
 		}
-		return factory.getJdbcServices()
-				.getJdbcEnvironment()
-				.getSqlAstTranslatorFactory()
-				.buildMutationTranslator( factory, ast );
+		return ast;
 	}
 
 }

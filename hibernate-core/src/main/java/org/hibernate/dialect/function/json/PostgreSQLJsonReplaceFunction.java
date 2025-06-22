@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -8,12 +8,12 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,7 +36,7 @@ public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 		final Expression jsonPath = (Expression) arguments.get( 1 );
 		final SqlAstNode value = arguments.get( 2 );
 		sqlAppender.appendSql( "jsonb_set(" );
-		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType( json ) && AbstractSqlAstTranslator.isParameter( json );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}
@@ -54,8 +54,8 @@ public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
+			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess jsonParameterIndexAccess ) {
+				final String parameterName = jsonParameterIndexAccess.parameterName();
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
 			else {
@@ -66,7 +66,7 @@ public class PostgreSQLJsonReplaceFunction extends AbstractJsonReplaceFunction {
 			separator = ',';
 		}
 		sqlAppender.appendSql( "]::text[]," );
-		if ( value instanceof Literal && ( (Literal) value ).getLiteralValue() == null ) {
+		if ( value instanceof Literal literal && literal.getLiteralValue() == null ) {
 			sqlAppender.appendSql( "null::jsonb" );
 		}
 		else {

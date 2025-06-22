@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -74,8 +74,10 @@ public class UnparsedNumericLiteral<N extends Number> implements Literal, Domain
 
 	@Override
 	public DomainResult<N> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
-		final TypeConfiguration typeConfiguration = creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration();
+		final SqlExpressionResolver sqlExpressionResolver =
+				creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final TypeConfiguration typeConfiguration =
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration();
 
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,

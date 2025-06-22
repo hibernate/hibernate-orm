@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.stat;
@@ -38,6 +38,11 @@ public interface CacheRegionStatistics extends Serializable {
 	 * last Statistics clearing
 	 */
 	long getMissCount();
+
+	/**
+	 * The number of removals since the last Statistics clearing
+	 */
+	long getRemoveCount();
 
 	/**
 	 * The number of elements currently in memory within the cache provider.

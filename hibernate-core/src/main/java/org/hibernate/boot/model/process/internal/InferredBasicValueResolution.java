@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.process.internal;
@@ -25,7 +25,7 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 	private final JdbcMapping jdbcMapping;
 
 	private final BasicType<J> legacyType;
-	private BasicType<?> updatedType;
+	private BasicType<J> updatedType;
 
 	public InferredBasicValueResolution(
 			JdbcMapping jdbcMapping,
@@ -49,7 +49,7 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 
 	@Override
 	public BasicType<J> getLegacyResolvedBasicType() {
-		return updatedType == null ? legacyType : (BasicType<J>) updatedType;
+		return updatedType == null ? legacyType : updatedType;
 	}
 
 	@Override
@@ -67,9 +67,8 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 		return updatedType == null ? jdbcType : updatedType.getJdbcType();
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public BasicValueConverter<J,T> getValueConverter() {
-		//noinspection unchecked
 		return updatedType == null
 				? (BasicValueConverter<J, T>) jdbcMapping.getValueConverter()
 				: (BasicValueConverter<J, T>) updatedType.getValueConverter();
@@ -80,8 +79,8 @@ public class InferredBasicValueResolution<J,T> implements BasicValue.Resolution<
 		return mutabilityPlan;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public void updateResolution(BasicType<?> type) {
-		this.updatedType = type;
+		updatedType = (BasicType<J>) type;
 	}
 }

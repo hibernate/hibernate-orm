@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Collection;
 
-import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
@@ -29,7 +28,7 @@ import jakarta.persistence.criteria.Predicate;
 public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> implements JpaCollectionJoin<O, E> {
 	public SqmBagJoin(
 			SqmFrom<?,O> lhs,
-			BagPersistentAttribute<O,E> attribute,
+			SqmBagPersistentAttribute<? super O,E> attribute,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -40,7 +39,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	protected SqmBagJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			BagPersistentAttribute<O,E> attribute,
+			SqmBagPersistentAttribute<O,E> attribute,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -72,8 +71,8 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public BagPersistentAttribute<O,E> getModel() {
-		return (BagPersistentAttribute<O, E>) super.getModel();
+	public SqmBagPersistentAttribute<O,E> getModel() {
+		return (SqmBagPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override
@@ -82,7 +81,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public BagPersistentAttribute<O,E> getAttribute() {
+	public SqmBagPersistentAttribute<O,E> getAttribute() {
 		return getModel();
 	}
 
@@ -139,7 +138,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 		final SqmTreatedBagJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedBagJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+				return addTreat( new SqmTreatedBagJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
@@ -152,7 +151,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedBagJoin<O,E,S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedBagJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedBagJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

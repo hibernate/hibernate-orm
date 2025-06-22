@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
@@ -18,7 +18,6 @@ import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
@@ -218,7 +217,7 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 					}
 
 					private void integrate(SessionFactoryImplementor sessionFactory) {
-						sessionFactory.getServiceRegistry().getService( EventListenerRegistry.class )
+						sessionFactory.getEventListenerRegistry()
 								.getEventListenerGroup( EventType.PRE_UPDATE )
 								.appendListener( InitializingPreUpdateEventListener.INSTANCE );
 					}

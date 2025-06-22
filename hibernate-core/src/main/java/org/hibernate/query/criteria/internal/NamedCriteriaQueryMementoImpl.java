@@ -1,26 +1,30 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria.internal;
 
 import java.io.Serializable;
+import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.named.AbstractNamedQueryMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.SqmSelectionQuery;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
+import org.hibernate.query.sqm.internal.SqmQueryImpl;
 import org.hibernate.query.sqm.internal.SqmSelectionQueryImpl;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<E>
 		implements NamedSqmQueryMemento<E>, Serializable {
@@ -60,12 +64,32 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 
 	@Override
 	public void validate(QueryEngine queryEngine) {
+		// nothing to do
+	}
 
+	private static <T> void checkResultType(Class<T> resultType, SqmSelectStatement<?> selectStatement) {
+		final Class<?> expectedResultType = selectStatement.getResultType();
+		if ( expectedResultType != null
+				&& !resultType.isAssignableFrom( expectedResultType ) ) {
+			throw new QueryTypeMismatchException(
+					String.format(
+							Locale.ROOT,
+							"Incorrect query result type: query produces '%s' but type '%s' was given",
+							expectedResultType.getName(),
+							resultType.getName()
+					)
+			);
+		}
 	}
 
 	@Override
 	public <T> SqmQueryImplementor<T> toQuery(SharedSessionContractImplementor session, Class<T> resultType) {
-		return new QuerySqmImpl<>( this, resultType, session );
+		if ( sqmStatement instanceof SqmSelectStatement<?> selectStatement ) {
+			checkResultType( resultType, selectStatement );
+		}
+		@SuppressWarnings("unchecked") // we just checked the result type
+		final SqmStatement<T> statement = (SqmStatement<T>) sqmStatement;
+		return new SqmQueryImpl<>( this, statement, resultType, session );
 	}
 
 	@Override
@@ -75,16 +99,18 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 
 	@Override
 	public <T> SqmSelectionQuery<T> toSelectionQuery(Class<T> resultType, SharedSessionContractImplementor session) {
-		return new SqmSelectionQueryImpl<>(
-				this,
-				resultType,
-				session
-		);
+		if ( !( sqmStatement instanceof SqmSelectStatement<?> selectStatement ) ) {
+			throw new IllegalSelectQueryException( "Named query is not a SELECT statement: " + getName() );
+		}
+		checkResultType( resultType, selectStatement );
+		@SuppressWarnings("unchecked") // we just checked the result type
+		final SqmSelectStatement<T> statement = (SqmSelectStatement<T>) selectStatement;
+		return new SqmSelectionQueryImpl<>( this, statement, resultType, session );
 	}
 
 	@Override
 	public String getHqlString() {
-		return QuerySqmImpl.CRITERIA_HQL_STRING;
+		return SqmQueryImpl.CRITERIA_HQL_STRING;
 	}
 
 	@Override
@@ -114,7 +140,7 @@ public class NamedCriteriaQueryMementoImpl<E> extends AbstractNamedQueryMemento<
 
 	@Override
 	public NamedSqmQueryMemento<E> makeCopy(String name) {
-		return new NamedCriteriaQueryMementoImpl<E>(
+		return new NamedCriteriaQueryMementoImpl<>(
 				name,
 				getResultType(),
 				sqmStatement,

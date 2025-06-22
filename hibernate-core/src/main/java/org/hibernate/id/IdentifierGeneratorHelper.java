@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
@@ -15,9 +15,12 @@ import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.Internal;
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.TransientObjectException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.id.enhanced.StandardNamingStrategy;
@@ -80,63 +83,13 @@ public final class IdentifierGeneratorHelper {
 		}
 	}
 
-	public static long extractLong(IntegralDataTypeHolder holder) {
-		if ( holder.getClass() == BasicHolder.class ) {
-			( (BasicHolder) holder ).checkInitialized();
-			return ( (BasicHolder) holder ).value;
-		}
-		else if ( holder.getClass() == BigIntegerHolder.class ) {
-			( (BigIntegerHolder) holder ).checkInitialized();
-			return ( (BigIntegerHolder) holder ).value.longValue();
-		}
-		else if ( holder.getClass() == BigDecimalHolder.class ) {
-			( (BigDecimalHolder) holder ).checkInitialized();
-			return ( (BigDecimalHolder) holder ).value.longValue();
-		}
-		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
-	}
-
-	public static BigInteger extractBigInteger(IntegralDataTypeHolder holder) {
-		if ( holder.getClass() == BasicHolder.class ) {
-			( (BasicHolder) holder ).checkInitialized();
-			return BigInteger.valueOf( ( (BasicHolder) holder ).value );
-		}
-		else if ( holder.getClass() == BigIntegerHolder.class ) {
-			( (BigIntegerHolder) holder ).checkInitialized();
-			return ( (BigIntegerHolder) holder ).value;
-		}
-		else if ( holder.getClass() == BigDecimalHolder.class ) {
-			( (BigDecimalHolder) holder ).checkInitialized();
-			// scale should already be set...
-			return ( (BigDecimalHolder) holder ).value.toBigInteger();
-		}
-		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
-	}
-
-	public static BigDecimal extractBigDecimal(IntegralDataTypeHolder holder) {
-		if ( holder.getClass() == BasicHolder.class ) {
-			( (BasicHolder) holder ).checkInitialized();
-			return BigDecimal.valueOf( ( (BasicHolder) holder ).value );
-		}
-		else if ( holder.getClass() == BigIntegerHolder.class ) {
-			( (BigIntegerHolder) holder ).checkInitialized();
-			return new BigDecimal( ( (BigIntegerHolder) holder ).value );
-		}
-		else if ( holder.getClass() == BigDecimalHolder.class ) {
-			( (BigDecimalHolder) holder ).checkInitialized();
-			// scale should already be set...
-			return ( (BigDecimalHolder) holder ).value;
-		}
-		throw new IdentifierGenerationException( "Unknown IntegralDataTypeHolder impl [" + holder + "]" );
-	}
-
 	public static Object getForeignId(
 			String entityName, String propertyName, SharedSessionContractImplementor sessionImplementor, Object object) {
 		final EntityPersister entityDescriptor =
 				sessionImplementor.getFactory().getMappingMetamodel()
 						.getEntityDescriptor( entityName );
-		if ( sessionImplementor.isSessionImplementor()
-				&& sessionImplementor.asSessionImplementor().contains( entityName, object ) ) {
+		if ( sessionImplementor instanceof SessionImplementor statefulSession
+				&& statefulSession.contains( entityName, object ) ) {
 			//abort the save (the object is already saved by a circular cascade)
 			return SHORT_CIRCUIT_INDICATOR;
 			//throw new IdentifierGenerationException("save associated object first, or disable cascade for inverse association");
@@ -166,12 +119,12 @@ public final class IdentifierGeneratorHelper {
 			return getEntityIdentifierIfNotUnsaved( associatedEntityName, associatedEntity, sessionImplementor );
 		}
 		catch (TransientObjectException toe) {
-			if ( sessionImplementor.isSessionImplementor() ) {
-				sessionImplementor.asSessionImplementor().persist( associatedEntityName, associatedEntity );
+			if ( sessionImplementor instanceof Session statefulSession ) {
+				statefulSession.persist( associatedEntityName, associatedEntity );
 				return sessionImplementor.getContextEntityIdentifier( associatedEntity );
 			}
-			else if ( sessionImplementor.isStatelessSession() ) {
-				return sessionImplementor.asStatelessSession().insert( associatedEntityName, associatedEntity );
+			else if ( sessionImplementor instanceof StatelessSession statelessSession ) {
+				return statelessSession.insert( associatedEntityName, associatedEntity );
 			}
 			else {
 				throw new IdentifierGenerationException("sessionImplementor is neither Session nor StatelessSession");
@@ -258,7 +211,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
-			return multiplyBy( extractLong( factor ) );
+			return multiplyBy( factor.toLong() );
 		}
 
 		public IntegralDataTypeHolder multiplyBy(long factor) {
@@ -268,7 +221,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public boolean eq(IntegralDataTypeHolder other) {
-			return eq( extractLong( other ) );
+			return eq( other.toLong() );
 		}
 
 		public boolean eq(long value) {
@@ -277,7 +230,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public boolean lt(IntegralDataTypeHolder other) {
-			return lt( extractLong( other ) );
+			return lt( other.toLong() );
 		}
 
 		public boolean lt(long value) {
@@ -286,7 +239,7 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		public boolean gt(IntegralDataTypeHolder other) {
-			return gt( extractLong( other ) );
+			return gt( other.toLong() );
 		}
 
 		public boolean gt(long value) {
@@ -327,6 +280,24 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
+		public long toLong() {
+			checkInitialized();
+			return value;
+		}
+
+		@Override
+		public BigDecimal toBigDecimal() {
+			checkInitialized();
+			return BigDecimal.valueOf( value );
+		}
+
+		@Override
+		public BigInteger toBigInteger() {
+			checkInitialized();
+			return BigInteger.valueOf( value );
+		}
+
+		@Override
 		public String toString() {
 			return "BasicHolder[" + exactType.getName() + "[" + value + "]]";
 		}
@@ -336,12 +307,9 @@ public final class IdentifierGeneratorHelper {
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if ( !(o instanceof BasicHolder that) ) {
 				return false;
 			}
-
-			BasicHolder that = (BasicHolder) o;
-
 			return value == that.value;
 		}
 
@@ -404,7 +372,7 @@ public final class IdentifierGeneratorHelper {
 
 		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
 			checkInitialized();
-			value = value.multiply( extractBigInteger( factor ) );
+			value = value.multiply( factor.toBigInteger() );
 			return this;
 		}
 
@@ -416,7 +384,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean eq(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigInteger( other ) ) == 0;
+			return value.compareTo( other.toBigInteger() ) == 0;
 		}
 
 		public boolean eq(long value) {
@@ -426,7 +394,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean lt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigInteger( other ) ) < 0;
+			return value.compareTo( other.toBigInteger() ) < 0;
 		}
 
 		public boolean lt(long value) {
@@ -436,7 +404,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean gt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigInteger( other ) ) > 0;
+			return value.compareTo( other.toBigInteger() ) > 0;
 		}
 
 		public boolean gt(long value) {
@@ -468,6 +436,24 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
+		public long toLong() {
+			checkInitialized();
+			return value.longValue();
+		}
+
+		@Override
+		public BigInteger toBigInteger() {
+			checkInitialized();
+			return value;
+		}
+
+		@Override
+		public BigDecimal toBigDecimal() {
+			checkInitialized();
+			return new BigDecimal( value );
+		}
+
+		@Override
 		public String toString() {
 			return "BigIntegerHolder[" + value + "]";
 		}
@@ -477,12 +463,9 @@ public final class IdentifierGeneratorHelper {
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if ( !(o instanceof BigIntegerHolder that) ) {
 				return false;
 			}
-
-			BigIntegerHolder that = (BigIntegerHolder) o;
-
 			return Objects.equals( value, that.value );
 		}
 
@@ -545,7 +528,7 @@ public final class IdentifierGeneratorHelper {
 
 		public IntegralDataTypeHolder multiplyBy(IntegralDataTypeHolder factor) {
 			checkInitialized();
-			value = value.multiply( extractBigDecimal( factor ) );
+			value = value.multiply( factor.toBigDecimal() );
 			return this;
 		}
 
@@ -557,7 +540,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean eq(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigDecimal( other ) ) == 0;
+			return value.compareTo( other.toBigDecimal() ) == 0;
 		}
 
 		public boolean eq(long value) {
@@ -567,7 +550,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean lt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigDecimal( other ) ) < 0;
+			return value.compareTo( other.toBigDecimal() ) < 0;
 		}
 
 		public boolean lt(long value) {
@@ -577,7 +560,7 @@ public final class IdentifierGeneratorHelper {
 
 		public boolean gt(IntegralDataTypeHolder other) {
 			checkInitialized();
-			return value.compareTo( extractBigDecimal( other ) ) > 0;
+			return value.compareTo( other.toBigDecimal() ) > 0;
 		}
 
 		public boolean gt(long value) {
@@ -609,6 +592,24 @@ public final class IdentifierGeneratorHelper {
 		}
 
 		@Override
+		public long toLong() {
+			checkInitialized();
+			return value.longValue();
+		}
+
+		@Override
+		public BigInteger toBigInteger() {
+			checkInitialized();
+			return value.toBigInteger();
+		}
+
+		@Override
+		public BigDecimal toBigDecimal() {
+			checkInitialized();
+			return value;
+		}
+
+		@Override
 		public String toString() {
 			return "BigDecimalHolder[" + value + "]";
 		}
@@ -618,12 +619,9 @@ public final class IdentifierGeneratorHelper {
 			if ( this == o ) {
 				return true;
 			}
-			if ( o == null || getClass() != o.getClass() ) {
+			if ( !(o instanceof BigDecimalHolder that) ) {
 				return false;
 			}
-
-			BigDecimalHolder that = (BigDecimalHolder) o;
-
 			return Objects.equals( this.value, that.value );
 		}
 

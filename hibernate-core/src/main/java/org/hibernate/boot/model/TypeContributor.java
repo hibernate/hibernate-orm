@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
@@ -8,7 +8,7 @@ import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * On object that contributes custom types and type descriptors, eventually to
+ * An object that contributes custom types and type descriptors, eventually to
  * a {@link org.hibernate.type.spi.TypeConfiguration}, via an instance of
  * {@link TypeContributions}.
  * <ul>

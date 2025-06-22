@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -17,7 +17,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
-import org.hibernate.boot.model.Caching;
+import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.model.source.spi.AttributeRole;
@@ -96,23 +96,21 @@ public abstract class AbstractPluralAttributeSourceImpl
 						.filter( (JaxbHbmRootEntityType entityType) -> childClass.equals( entityType.getName() ) )
 						.flatMap( jaxbHbmRootEntityType -> jaxbHbmRootEntityType.getAttributes().stream() )
 						.filter( attribute -> {
-							if ( attribute instanceof JaxbHbmManyToOneType ) {
-								JaxbHbmManyToOneType manyToOneType = (JaxbHbmManyToOneType) attribute;
-								String manyToOneTypeClass = manyToOneType.getClazz();
-								String containerClass = container.getAttributeRoleBase().getFullPath();
+							if ( attribute instanceof JaxbHbmManyToOneType manyToOneType ) {
+								final String manyToOneTypeClass = manyToOneType.getClazz();
+								final String containerClass = container.getAttributeRoleBase().getFullPath();
 								// Consider many to ones that have no class defined or equal the owner class of the one to many
 								if ( manyToOneTypeClass == null || manyToOneTypeClass.equals( containerClass ) ) {
 									if ( manyToOneType.getColumnAttribute() == null ) {
-										List<Serializable> columns = manyToOneType.getColumnOrFormula();
+										final List<Serializable> columns = manyToOneType.getColumnOrFormula();
 										if ( columns.size() != keyColumnNames.size() ) {
 											return false;
 										}
 										for ( int i = 0; i < columns.size(); i++ ) {
-											Serializable column = columns.get( i );
-											String keyColumn = keyColumnNames.get( i );
-											if ( !( column instanceof JaxbHbmColumnType ) || !( (JaxbHbmColumnType) column )
-													.getName()
-													.equals( keyColumn ) ) {
+											final Serializable column = columns.get( i );
+											final String keyColumn = keyColumnNames.get( i );
+											if ( !( column instanceof JaxbHbmColumnType columnType )
+													|| !columnType.getName().equals( keyColumn ) ) {
 												return false;
 											}
 										}

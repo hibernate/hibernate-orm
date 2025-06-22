@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -11,7 +11,6 @@ import java.util.Map;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 
 import static org.hibernate.engine.jdbc.env.internal.LobCreationHelper.NONE;
@@ -25,9 +24,11 @@ import static org.hibernate.engine.jdbc.env.internal.LobCreationLogging.LOB_MESS
  * @author Steve Ebersole
  */
 public class LobCreatorBuilderImpl implements LobCreatorBuilder {
+	private final boolean useConnectionToCreateLob;
 	private final EnumSet<LobTypes> supportedContextualLobTypes;
 
-	public LobCreatorBuilderImpl(EnumSet<LobTypes> supportedContextualLobTypes) {
+	public LobCreatorBuilderImpl(boolean useConnectionToCreateLob, EnumSet<LobTypes> supportedContextualLobTypes) {
+		this.useConnectionToCreateLob = useConnectionToCreateLob;
 		this.supportedContextualLobTypes = supportedContextualLobTypes;
 	}
 
@@ -46,27 +47,22 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 			Dialect dialect,
 			Map<String,Object> configValues,
 			Connection jdbcConnection) {
-		final EnumSet<LobTypes> supportedContextualLobTypes = getSupportedContextualLobTypes(
-				dialect,
-				configValues,
-				jdbcConnection
-		);
-
-		return new LobCreatorBuilderImpl( supportedContextualLobTypes );
+		return new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(),
+				getSupportedContextualLobTypes( dialect, configValues, jdbcConnection ) );
 	}
 
 	/**
-	 * For used when JDBC Connection is not available.
+	 * For use when JDBC {@link Connection} is not available.
 	 *
 	 * @return Appropriate LobCreatorBuilder
 	 */
-	public static LobCreatorBuilderImpl makeLobCreatorBuilder() {
+	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect) {
 		LOB_MESSAGE_LOGGER.disablingContextualLOBCreationSinceConnectionNull();
-		return new LobCreatorBuilderImpl( NONE );
+		return new LobCreatorBuilderImpl( dialect.useConnectionToCreateLob(), NONE );
 	}
 
 	/**
-	 * Build a LobCreator using the given context
+	 * Build a {@link LobCreator} using the given context
 	 *
 	 * @param lobCreationContext The LOB creation context
 	 *
@@ -76,17 +72,18 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 		if ( supportedContextualLobTypes.isEmpty() ) {
 			return NonContextualLobCreator.INSTANCE;
 		}
-
-		if ( supportedContextualLobTypes.contains( LobTypes.BLOB )
+		else if ( supportedContextualLobTypes.contains( LobTypes.BLOB )
 				&& supportedContextualLobTypes.contains( LobTypes.CLOB ) ){
 			if ( !supportedContextualLobTypes.contains( LobTypes.NCLOB ) ) {
-				return new BlobAndClobCreator( lobCreationContext );
+				return new BlobAndClobCreator( lobCreationContext, useConnectionToCreateLob );
 			}
-
-			return new StandardLobCreator( lobCreationContext );
+			else {
+				return new StandardLobCreator( lobCreationContext, useConnectionToCreateLob );
+			}
 		}
-
-		LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );
-		return NonContextualLobCreator.INSTANCE;
+		else {
+			LOB_LOGGER.debug( "Unexpected condition resolving type of LobCreator to use. Falling back to NonContextualLobCreator" );
+			return NonContextualLobCreator.INSTANCE;
+		}
 	}
 }

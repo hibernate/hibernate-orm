@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
 
 import java.util.List;
 
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -46,18 +46,14 @@ public class NativeQuerySchemaPlaceholderTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from TestEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQueryImplementor<Tuple> nativeQuery = session.createNativeQuery(
+					NativeQuery<Tuple> nativeQuery = session.createNativeQuery(
 							"UPDATE {h-schema}TestEntity SET name = 'updated_test'"
 					);
 					nativeQuery.executeUpdate();
@@ -74,7 +70,7 @@ public class NativeQuerySchemaPlaceholderTest {
 
 		scope.inTransaction(
 				session -> {
-					NativeQueryImplementor<Tuple> nativeQuery = session.createNativeQuery(
+					NativeQuery<Tuple> nativeQuery = session.createNativeQuery(
 							"UPDATE {h-schema}TestEntity SET name = '{updated_test'"
 					);
 					nativeQuery.executeUpdate();
@@ -94,7 +90,7 @@ public class NativeQuerySchemaPlaceholderTest {
 	public void testSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQueryImplementor<Long> nativeQuery = session.createNativeQuery(
+					NativeQuery<Long> nativeQuery = session.createNativeQuery(
 							"select id from {h-schema}TestEntity",
 							Long.class
 					);

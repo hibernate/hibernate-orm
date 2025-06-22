@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -29,7 +29,12 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 
 	@SuppressWarnings("unchecked")
 	public CharacterArrayJavaType() {
-		super( Character[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
+		super( Character[].class, ImmutableObjectArrayMutabilityPlan.get(), IncomparableComparator.INSTANCE );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Character[];
 	}
 
 	@Override
@@ -45,7 +50,7 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 	@Override
 	public boolean areEqual(Character[] one, Character[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals( one, another ) );
+			|| one != null && another != null && Arrays.equals( one, another );
 	}
 
 	@Override
@@ -97,17 +102,17 @@ public class CharacterArrayJavaType extends AbstractClassJavaType<Character[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Character[]) {
-			return (Character[]) value;
+		if (value instanceof Character[] characters) {
+			return characters;
 		}
-		if (value instanceof String) {
-			return wrapChars( ( (String) value ).toCharArray() );
+		if (value instanceof String string) {
+			return wrapChars( string.toCharArray() );
 		}
-		if (value instanceof Clob) {
-			return wrapChars( DataHelper.extractString( ( (Clob) value ) ).toCharArray() );
+		if (value instanceof Clob clob) {
+			return wrapChars( DataHelper.extractString( clob ).toCharArray() );
 		}
-		if (value instanceof Reader) {
-			return wrapChars( DataHelper.extractString( (Reader) value ).toCharArray() );
+		if (value instanceof Reader reader) {
+			return wrapChars( DataHelper.extractString( reader ).toCharArray() );
 		}
 		throw unknownWrap( value.getClass() );
 	}

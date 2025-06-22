@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -11,7 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Parent;
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -110,7 +110,7 @@ public class ParentTest extends BaseEntityManagerFunctionalTestCase {
 		private String name;
 
 		@Embedded
-		@Target(GPS.class)
+		@TargetEmbeddable(GPS.class)
 		private GPS coordinates;
 
 		//Getters and setters omitted for brevity

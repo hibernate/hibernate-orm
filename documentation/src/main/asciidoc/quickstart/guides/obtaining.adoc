@@ -52,9 +52,6 @@ transitive dependencies based on the features being used or not.
 |hibernate-agroal| Support for https://agroal.github.io/[Agroal] connection pooling
 |hibernate-c3p0| Support for https://www.mchange.com/projects/c3p0/[C3P0] connection pooling
 |hibernate-hikaricp| Support for https://github.com/brettwooldridge/HikariCP/[HikariCP] connection pooling
-|hibernate-vibur| Support for https://www.vibur.org/[Vibur DBCP] connection pooling
-|hibernate-proxool| Support for https://proxool.sourceforge.net/[Proxool] connection pooling
-|hibernate-ucp| Support for https://docs.oracle.com/en/database/oracle/oracle-database/23/jjucp/intro.html[Universal Connection Pool] connection pooling
 |hibernate-jcache| Integration with https://jcp.org/en/jsr/detail?id=107$$[JCache], allowing any compliant implementation as a second-level cache provider
 |hibernate-graalvm| Experimental extension to make it easier to compile applications as a https://www.graalvm.org/[GraalVM] native image
 |hibernate-micrometer| Integration with https://micrometer.io[Micrometer] metrics

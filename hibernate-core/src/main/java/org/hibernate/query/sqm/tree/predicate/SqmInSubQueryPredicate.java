@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -7,13 +7,16 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.Expression;
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
@@ -42,7 +45,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 
 		assertComparable( testExpression, subQueryExpression, nodeBuilder );
 
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType2(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType2(
 				testExpression.getExpressible(),
 				subQueryExpression.getExpressible()
 		);
@@ -105,13 +108,13 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		testExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		testExpression.appendHqlString( hql, context );
 		if ( isNegated() ) {
-			sb.append( " not" );
+			hql.append( " not" );
 		}
-		sb.append( " in " );
-		subQueryExpression.appendHqlString( sb );
+		hql.append( " in " );
+		subQueryExpression.appendHqlString( hql, context );
 	}
 
 	@Override
@@ -122,5 +125,18 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 				!isNegated(),
 				nodeBuilder()
 		);
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmInSubQueryPredicate<?> that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.testExpression, that.testExpression )
+			&& Objects.equals( this.subQueryExpression, that.subQueryExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( testExpression, subQueryExpression, isNegated() );
 	}
 }

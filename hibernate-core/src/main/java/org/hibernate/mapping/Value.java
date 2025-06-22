@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -13,7 +13,6 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.CompositeType;
@@ -72,15 +71,6 @@ public interface Value extends Serializable {
 
 	Type getType() throws MappingException;
 
-
-	/**
-	 * @deprecated use {@link #getSelectableType(MappingContext, int)}
-	 */
-	@Deprecated(since = "7.0")
-	default JdbcMapping getSelectableType(Mapping factory, int index) throws MappingException {
-		return getSelectableType( (MappingContext) factory, index );
-	}
-
 	@Incubating
 	default JdbcMapping getSelectableType(MappingContext mappingContext, int index) throws MappingException {
 		return getType( mappingContext, getType(), index );
@@ -91,13 +81,10 @@ public interface Value extends Serializable {
 			final Type[] subtypes = compositeType.getSubtypes();
 			for ( int i = 0; i < subtypes.length; i++ ) {
 				final Type subtype = subtypes[i];
-				final int columnSpan;
-				if ( subtype instanceof EntityType entityType ) {
-					columnSpan = getIdType( entityType ).getColumnSpan( factory );
-				}
-				else {
-					columnSpan = subtype.getColumnSpan( factory );
-				}
+				final int columnSpan =
+						subtype instanceof EntityType entityType
+								? getIdType( entityType ).getColumnSpan( factory )
+								: subtype.getColumnSpan( factory );
 				if ( columnSpan < index ) {
 					index -= columnSpan;
 				}
@@ -114,20 +101,18 @@ public interface Value extends Serializable {
 		else if ( elementType instanceof MetaType metaType ) {
 			return (JdbcMapping) metaType.getBaseType();
 		}
-		return (JdbcMapping) elementType;
+		else {
+			return (JdbcMapping) elementType;
+		}
 	}
 
 	private Type getIdType(EntityType entityType) {
-		final PersistentClass entityBinding = getBuildingContext().getMetadataCollector()
-				.getEntityBinding( entityType.getAssociatedEntityName() );
-		final Type idType;
-		if ( entityType.isReferenceToPrimaryKey() ) {
-			idType = entityBinding.getIdentifier().getType();
-		}
-		else {
-			idType = entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
-		}
-		return idType;
+		final PersistentClass entityBinding =
+				getBuildingContext().getMetadataCollector()
+						.getEntityBinding( entityType.getAssociatedEntityName() );
+		return entityType.isReferenceToPrimaryKey()
+				? entityBinding.getIdentifier().getType()
+				: entityBinding.getProperty( entityType.getRHSUniqueKeyPropertyName() ).getType();
 	}
 
 	FetchMode getFetchMode();
@@ -148,14 +133,6 @@ public interface Value extends Serializable {
 	void createUniqueKey(MetadataBuildingContext context);
 
 	boolean isSimpleValue();
-
-	/**
-	 * @deprecated use {@link #isValid(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	default boolean isValid(Mapping mapping) throws MappingException{
-		return isValid( (MappingContext) mapping );
-	}
 
 	boolean isValid(MappingContext mappingContext) throws MappingException;
 

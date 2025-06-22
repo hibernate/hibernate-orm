@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -33,7 +33,7 @@ public class MultiSelectTests {
 	@Test
 	public void simpleArrayTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery criteria = nodeBuilder.createQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -57,7 +57,7 @@ public class MultiSelectTests {
 	@Test
 	public void multiselectArrayTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery criteria = nodeBuilder.createQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -79,7 +79,7 @@ public class MultiSelectTests {
 	@Test
 	public void typedArrayTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery<Object[]> criteria = nodeBuilder.createQuery(Object[].class);
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -103,7 +103,7 @@ public class MultiSelectTests {
 	@Test
 	public void simpleTupleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery<Tuple> criteria = nodeBuilder.createTupleQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -127,7 +127,7 @@ public class MultiSelectTests {
 	@Test
 	public void typedTupleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery<Tuple> criteria = nodeBuilder.createQuery( Tuple.class );
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -151,7 +151,7 @@ public class MultiSelectTests {
 	@Test
 	public void multiSelectTupleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery<Tuple> criteria = nodeBuilder.createTupleQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -173,7 +173,7 @@ public class MultiSelectTests {
 	@Test
 	public void arrayTupleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery<Tuple> criteria = nodeBuilder.createTupleQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -197,7 +197,7 @@ public class MultiSelectTests {
 	@Test
 	public void singleSelectionTupleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery criteria = nodeBuilder.createTupleQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -217,7 +217,7 @@ public class MultiSelectTests {
 	@Test
 	public void tupleSelectionArrayTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final CriteriaBuilder nodeBuilder = session.getFactory().getNodeBuilder();
+			final CriteriaBuilder nodeBuilder = session.getFactory().getQueryEngine().getCriteriaBuilder();
 
 			final CriteriaQuery<Tuple> criteria = nodeBuilder.createTupleQuery();
 			final Root<BasicEntity> root = criteria.from( BasicEntity.class );
@@ -241,6 +241,6 @@ public class MultiSelectTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.createQuery( "delete BasicEntity" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

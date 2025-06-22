@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
@@ -11,16 +11,18 @@ import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import static org.hibernate.cfg.TransactionSettings.JTA_CACHE_TM;
+import static org.hibernate.cfg.TransactionSettings.JTA_CACHE_UT;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
  * @author Steve Ebersole
@@ -43,7 +45,7 @@ public abstract class AbstractJtaPlatform
 		@Override
 		public void registerSynchronization(Synchronization synchronization) {
 			try {
-				AbstractJtaPlatform.this.getTransactionManager().getTransaction().registerSynchronization( synchronization );
+				getTransactionManager().getTransaction().registerSynchronization( synchronization );
 			}
 			catch (Exception e) {
 				throw new JtaPlatformException( "Could not access JTA Transaction to register synchronization", e );
@@ -52,7 +54,7 @@ public abstract class AbstractJtaPlatform
 
 		@Override
 		public boolean canRegisterSynchronization() {
-			return JtaStatusHelper.isActive( AbstractJtaPlatform.this.getTransactionManager() );
+			return JtaStatusHelper.isActive( getTransactionManager() );
 		}
 	}
 
@@ -68,16 +70,8 @@ public abstract class AbstractJtaPlatform
 	protected abstract UserTransaction locateUserTransaction();
 
 	public void configure(Map<String, Object> configValues) {
-		cacheTransactionManager = ConfigurationHelper.getBoolean(
-				AvailableSettings.JTA_CACHE_TM,
-				configValues,
-				canCacheTransactionManagerByDefault()
-		);
-		cacheUserTransaction = ConfigurationHelper.getBoolean(
-				AvailableSettings.JTA_CACHE_UT,
-				configValues,
-				canCacheUserTransactionByDefault()
-		);
+		cacheTransactionManager = getBoolean( JTA_CACHE_TM, configValues, canCacheTransactionManagerByDefault() );
+		cacheUserTransaction = getBoolean( JTA_CACHE_UT, configValues, canCacheUserTransactionByDefault() );
 	}
 
 	protected boolean canCacheTransactionManagerByDefault() {
@@ -126,7 +120,9 @@ public abstract class AbstractJtaPlatform
 			}
 			return userTransaction;
 		}
-		return locateUserTransaction();
+		else {
+			return locateUserTransaction();
+		}
 	}
 
 	@Override

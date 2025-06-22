@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.ast.internal;
@@ -13,8 +13,6 @@ import java.util.function.Function;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,7 +25,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -87,7 +84,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Override
 	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 
 		final LockOptions lockOptions = options.getLockOptions() == null ? LockOptions.NONE : options.getLockOptions();
 
@@ -102,16 +99,16 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session.getLoadQueryInfluencers(),
 				lockOptions,
 				JdbcParametersList.newBuilder()::add,
-				sessionFactory
+				factory
 		);
 
 		// we have to add the restrictions ourselves manually because we want special null handling
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 		applyNaturalIdRestriction(
 				naturalIdMapping().normalizeInput( naturalIdValue ),
 				sqlSelect.getQuerySpec().getFromClause().getRoots().get(0),
 				sqlSelect.getQuerySpec()::applyPredicate,
-				jdbcParamBindings::addBinding,
+				bindings::addBinding,
 				new LoaderSqlAstCreationState(
 						sqlSelect.getQuerySpec(),
 						new SqlAliasBaseManager(),
@@ -119,23 +116,23 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						lockOptions,
 						(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 						true,
-						new LoadQueryInfluencers( sessionFactory ),
-						sessionFactory
+						new LoadQueryInfluencers( factory ),
+						factory.getSqlTranslationEngine()
 				),
 				session
 		);
 
 		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
 		final JdbcOperationQuerySelect jdbcSelect =
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqlSelect )
-						.translate( jdbcParamBindings, queryOptions );
+				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( factory, sqlSelect )
+						.translate( bindings, queryOptions );
 
-		final long startToken = sessionFactory.getStatistics().isStatisticsEnabled() ? System.nanoTime() : -1;
+		final long startToken = factory.getStatistics().isStatisticsEnabled() ? System.nanoTime() : -1;
 
 		final List<T> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
-				jdbcParamBindings,
+				bindings,
 				new NaturalIdLoaderWithOptionsExecutionContext( session, queryOptions ),
 				RowTransformerSingularReturnImpl.instance(),
 				null,
@@ -177,7 +174,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			Function<Boolean,Long> statementStartHandler,
 			BiConsumer<Object,Long> statementCompletionHandler,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 
 		final LockOptions lockOptions = options.getLockOptions() != null ? options.getLockOptions() : LockOptions.NONE;
 
@@ -191,8 +188,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				lockOptions,
 				fetchProcessor,
 				true,
-				new LoadQueryInfluencers( sessionFactory ),
-				sessionFactory
+				new LoadQueryInfluencers( factory ),
+				factory.getSqlTranslationEngine()
 		);
 
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
@@ -211,28 +208,28 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 		final SelectStatement sqlSelect = new SelectStatement( rootQuerySpec, singletonList( domainResult ) );
 
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 
 		applyNaturalIdRestriction(
 				bindValue,
 				rootTableGroup,
 				rootQuerySpec::applyPredicate,
-				jdbcParamBindings::addBinding,
+				bindings::addBinding,
 				sqlAstCreationState,
 				session
 		);
 
 		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
 		final JdbcOperationQuerySelect jdbcSelect =
-				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( sessionFactory, sqlSelect )
-						.translate( jdbcParamBindings, queryOptions );
+				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( factory, sqlSelect )
+						.translate( bindings, queryOptions );
 
-		final Long startToken = statementStartHandler.apply( sessionFactory.getStatistics().isStatisticsEnabled() );
+		final Long startToken = statementStartHandler.apply( factory.getStatistics().isStatisticsEnabled() );
 
-		final List<L> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+		final List<L> results = factory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
-				jdbcParamBindings,
+				bindings,
 				new NaturalIdLoaderWithOptionsExecutionContext( session, queryOptions ),
 				RowTransformerSingularReturnImpl.instance(),
 				null,
@@ -276,10 +273,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			SqlExpressionResolver sqlExpressionResolver,
 			@SuppressWarnings("unused") SessionFactoryImplementor sessionFactory) {
 		final TableReference tableReference =
-				rootTableGroup.getTableReference(
-						rootTableGroup.getNavigablePath(),
-						selectableMapping.getContainingTableExpression()
-				);
+				rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(),
+						selectableMapping.getContainingTableExpression() );
 		if ( tableReference == null ) {
 			throw new IllegalStateException(
 					String.format(
@@ -328,9 +323,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Override
 	public Object resolveIdToNaturalId(Object id, SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 
-		JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
+		final JdbcParametersList.Builder builder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor(),
 				singletonList( naturalIdMapping() ),
@@ -339,53 +334,47 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				1,
 				session.getLoadQueryInfluencers(),
 				LockOptions.NONE,
-				jdbcParametersBuilder::add,
-				sessionFactory
+				builder::add,
+				factory
 		);
-
-		final JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
-
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
-		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		int offset = jdbcParamBindings.registerParametersForEachJdbcValue(
+		final JdbcParametersList jdbcParameters = builder.build();
+		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
+		final int offset = bindings.registerParametersForEachJdbcValue(
 				id,
 				entityDescriptor().getIdentifierMapping(),
 				jdbcParameters,
 				session
 		);
 		assert offset == jdbcParameters.size();
+
 		final JdbcOperationQuerySelect jdbcSelect =
-				sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-						.translate( jdbcParamBindings, QueryOptions.NONE );
+				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( factory, sqlSelect )
+						.translate( bindings, QueryOptions.NONE );
 
-		final List<Object> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParamBindings,
-				new NoCallbackExecutionContext( session ),
-				// because we select the natural-id we want to "reduce" the result
-				RowTransformerSingularReturnImpl.instance(),
-				null,
-				ListResultsConsumer.UniqueSemantic.FILTER,
-				1
-		);
-
-		switch ( results.size() ) {
-			case 0:
-				return null;
-			case 1:
-				return results.get( 0 );
-			default:
-				throw new HibernateException(
-						String.format(
-								"Resolving id to natural-id returned more that one row : %s #%s",
-								entityDescriptor().getEntityName(),
-								id
-						)
-				);
-		}
+		final List<Object> results =
+				factory.getJdbcServices().getJdbcSelectExecutor()
+						.list(
+								jdbcSelect,
+								bindings,
+								new NoCallbackExecutionContext( session ),
+								// because we select the natural-id we want to "reduce" the result
+								RowTransformerSingularReturnImpl.instance(),
+								null,
+								ListResultsConsumer.UniqueSemantic.FILTER,
+								1
+						);
+		return switch ( results.size() ) {
+			case 0 -> null;
+			case 1 -> results.get( 0 );
+			default -> throw new HibernateException(
+					String.format(
+							"Resolving id to natural-id returned more that one row : %s #%s",
+							entityDescriptor().getEntityName(),
+							id
+					)
+			);
+		};
 	}
 
 

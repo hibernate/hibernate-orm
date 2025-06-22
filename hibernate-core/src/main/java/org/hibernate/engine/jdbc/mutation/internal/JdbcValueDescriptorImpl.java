@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -11,7 +11,7 @@ import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 /**
- * Standard JdbcValueDescriptor implementation
+ * Standard {@link JdbcValueDescriptor} implementation
  *
  * @author Steve Ebersole
  */

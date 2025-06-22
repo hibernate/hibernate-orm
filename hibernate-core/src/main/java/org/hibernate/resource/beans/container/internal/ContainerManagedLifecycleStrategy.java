@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.beans.container.internal;
@@ -70,6 +70,11 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 			this.beanType = beanType;
 			this.fallbackProducer = fallbackProducer;
 			this.beanManager = beanManager;
+		}
+
+		@Override
+		public Class<B> getBeanClass() {
+			return beanType;
 		}
 
 		@Override
@@ -199,7 +204,7 @@ public class ContainerManagedLifecycleStrategy implements BeanLifecycleStrategy 
 				return root.select( beanType, new NamedBeanQualifier( beanName ) );
 			}
 			catch (Exception e) {
-				throw new NoSuchBeanException( "Bean class not known to CDI : " + beanType.getName(), e );
+				throw new NoSuchBeanException( "Bean class not known to CDI: " + beanType.getName(), e );
 			}
 		}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
@@ -18,7 +18,7 @@ import java.util.Map;
  * @author Sanne Grinovero
  * @since 6.2
  */
-public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
+public final class MapBackedClassValue<V> implements ReadOnlyMap<Class<?>,V> {
 
 	private volatile Map<Class<?>, V> map;
 
@@ -44,7 +44,7 @@ public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
 	}
 
 	@Override
-	public V get(Class key) {
+	public V get(Class<?> key) {
 		return classValue.get( key );
 	}
 

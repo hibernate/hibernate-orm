@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -102,8 +102,8 @@ public class ConvertedBasicArrayType<T,S,E>
 	@Override
 	public boolean equals(Object o) {
 		return o == this || super.equals( o )
-				&& o instanceof ConvertedBasicArrayType<?, ?, ?>
-				&& Objects.equals( converter, ( (ConvertedBasicArrayType<?, ?, ?>) o ).converter );
+			&& o instanceof ConvertedBasicArrayType<?, ?, ?> that
+			&& Objects.equals( converter, that.converter );
 	}
 
 	@Override

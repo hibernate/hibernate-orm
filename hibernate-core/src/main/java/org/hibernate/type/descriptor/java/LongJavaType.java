@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -44,6 +44,11 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 		return Long.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Long;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Long value, Class<X> type, WrapperOptions options) {
@@ -85,31 +90,27 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Long ) {
-			return (Long) value;
+		if ( value instanceof Long longValue ) {
+			return longValue;
 		}
-		if ( value instanceof Number ) {
-			return ( (Number) value ).longValue();
+		if ( value instanceof Number number ) {
+			return number.longValue();
 		}
-		else if ( value instanceof String ) {
-			return Long.valueOf( ( (String) value ) );
+		else if ( value instanceof String string ) {
+			return Long.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -118,41 +119,41 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 			return null;
 		}
 
-		if ( value instanceof Long ) {
-			return ( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return longValue;
 		}
 
-		if ( value instanceof Byte ) {
-			return CoercionHelper.toLong( (Byte) value );
+		if ( value instanceof Byte byteValue ) {
+			return CoercionHelper.toLong( byteValue );
 		}
 
-		if ( value instanceof Short ) {
-			return CoercionHelper.toLong( (Short) value );
+		if ( value instanceof Short shortValue ) {
+			return CoercionHelper.toLong( shortValue );
 		}
 
-		if ( value instanceof Integer ) {
-			return CoercionHelper.toLong( (Integer) value );
+		if ( value instanceof Integer integerValue ) {
+			return CoercionHelper.toLong( integerValue );
 		}
 
-		if ( value instanceof Double ) {
-			return CoercionHelper.toLong( (Double) value );
+		if ( value instanceof Double doubleValue ) {
+			return CoercionHelper.toLong( doubleValue );
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toLong( (Float) value );
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toLong( floatValue );
 		}
 
-		if ( value instanceof BigInteger ) {
-			return CoercionHelper.toLong( (BigInteger) value );
+		if ( value instanceof BigInteger bigInteger ) {
+			return CoercionHelper.toLong( bigInteger );
 		}
 
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toLong( (BigDecimal) value );
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toLong( bigDecimal );
 		}
 
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> Long.parseLong( (String) value )
+					() -> Long.parseLong( string )
 			);
 		}
 

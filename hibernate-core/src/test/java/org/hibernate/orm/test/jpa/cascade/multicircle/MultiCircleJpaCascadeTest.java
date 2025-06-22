@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.cascade.multicircle;
 
 import jakarta.persistence.RollbackException;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TransientPropertyValueException;
 
@@ -123,8 +122,7 @@ public class MultiCircleJpaCascadeTest {
 
 	@AfterEach
 	public void cleanup(EntityManagerFactoryScope scope) {
-		scope.getEntityManagerFactory().unwrap(SessionFactory.class)
-				.getSchemaManager().truncateMappedObjects();
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

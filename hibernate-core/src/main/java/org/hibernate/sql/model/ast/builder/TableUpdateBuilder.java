@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
@@ -15,7 +15,9 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
  * @author Steve Ebersole
  */
 public interface TableUpdateBuilder<O extends MutationOperation>
-		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>, ColumnValuesTableMutationBuilder, SelectableConsumer {
+		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>,
+		ColumnValuesTableMutationBuilder<RestrictedTableMutation<O>>,
+		SelectableConsumer {
 
 	/**
 	 * Allows using the update builder as selectable consumer.

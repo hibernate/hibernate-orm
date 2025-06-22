@@ -1,33 +1,30 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.vector;
 
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
+import org.hibernate.query.sqm.produce.function.internal.AbstractFunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
  * A {@link FunctionArgumentTypeResolver} for {@link SqlTypes#VECTOR} functions.
  */
-public class VectorArgumentTypeResolver implements FunctionArgumentTypeResolver {
+public class VectorArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver INSTANCE = new VectorArgumentTypeResolver();
 
 	@Override
-	public MappingModelExpressible<?> resolveFunctionArgumentType(
-			SqmFunction<?> function,
-			int argumentIndex,
-			SqmToSqlAstConverter converter) {
-		final List<? extends SqmTypedNode<?>> arguments = function.getArguments();
+	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			if ( i != argumentIndex ) {
 				final SqmTypedNode<?> node = arguments.get( i );
@@ -40,10 +37,7 @@ public class VectorArgumentTypeResolver implements FunctionArgumentTypeResolver 
 			}
 		}
 
-		return converter.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration()
-				.getBasicTypeRegistry()
+		return converter.getCreationContext().getTypeConfiguration().getBasicTypeRegistry()
 				.resolve( StandardBasicTypes.VECTOR );
 	}
 }

@@ -1,12 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.array;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -17,10 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/array/A.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/array/A.xml")
 @SessionFactory
 public class ArrayTest {
 
@@ -37,7 +33,7 @@ public class ArrayTest {
 
 		scope.inTransaction(
 				session -> {
-					A retrieved = session.get( A.class, a.getId() );
+					A retrieved = session.find( A.class, a.getId() );
 					assertNotNull( retrieved );
 					assertNotNull( retrieved.getBs() );
 					assertEquals( 1, retrieved.getBs().length );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -78,7 +78,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				);
 			}
 
-			final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+			final MappingMetamodelImplementor mappingMetamodel = session.getFactory().getMappingMetamodel();
 			final Set<String> roles = mappingMetamodel.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
@@ -111,7 +111,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	public BulkOperationCleanupAction(SharedSessionContractImplementor session, Set<String> tableSpaces) {
 		final LinkedHashSet<String> spacesList = new LinkedHashSet<>( tableSpaces );
 
-		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		metamodel.forEachEntityDescriptor( (entityDescriptor) -> {
 			final String[] entitySpaces = (String[]) entityDescriptor.getQuerySpaces();
 			if ( affectedEntity( tableSpaces, entitySpaces ) ) {
@@ -143,15 +143,15 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 
 	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
 		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
-		final MappingMetamodelImplementor metamodel = session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		final MappingMetamodelImplementor metamodel = session.getFactory().getMappingMetamodel();
 		if ( !( statement instanceof InsertSelectStatement ) ) {
 			entityPersisters.add( metamodel.getEntityDescriptor( statement.getTarget().getEntityName() ) );
 		}
 		for ( SqmCteStatement<?> cteStatement : statement.getCteStatements() ) {
 			final SqmQuery<?> cteDefinition = cteStatement.getCteDefinition();
-			if ( cteDefinition instanceof SqmDmlStatement<?> ) {
+			if ( cteDefinition instanceof SqmDmlStatement<?> dmlStatement ) {
 				entityPersisters.add(
-						metamodel.getEntityDescriptor( ( (SqmDmlStatement<?>) cteDefinition ).getTarget().getEntityName() )
+						metamodel.getEntityDescriptor( dmlStatement.getTarget().getEntityName() )
 				);
 			}
 		}

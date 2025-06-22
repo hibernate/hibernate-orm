@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.basic;
@@ -80,14 +80,7 @@ public class ReloadAssociatedEntitiesTest {
 
 	@AfterEach
 	void after(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteOne.class ) )
-					.executeUpdate();
-			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteTwo.class ) )
-					.executeUpdate();
-			session.createMutationQuery( session.getCriteriaBuilder().createCriteriaDelete( ConcreteThree.class ) )
-					.executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

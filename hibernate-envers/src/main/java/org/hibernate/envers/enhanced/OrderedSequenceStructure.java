@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.enhanced;
@@ -9,7 +9,6 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.id.enhanced.SequenceStructure;
@@ -42,7 +41,7 @@ public class OrderedSequenceStructure extends SequenceStructure {
 			Class<?> numberType) {
 		super( "envers", qualifiedSequenceName, initialValue, incrementSize, numberType );
 		this.sequenceObject = new OrderedSequence();
-		final Dialect dialect = DialectDelegateWrapper.extractRealDialect( jdbcEnvironment.getDialect() );
+		final Dialect dialect = jdbcEnvironment.getDialect();
 		if ( dialect instanceof OracleDialect ) {
 			this.suffix = ( noCache ? " NOCACHE" : "" ) + " ORDER";
 		}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -10,7 +10,9 @@ import org.hibernate.internal.util.StringHelper;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
+import static org.hibernate.processor.util.Constants.BOOLEAN;
 import static org.hibernate.processor.util.Constants.QUERY;
+import static org.hibernate.processor.util.Constants.VOID;
 import static org.hibernate.processor.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -80,7 +82,7 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	@Override
 	boolean singleResult() {
-		return containerType == null;
+		return containerType == null && !isUpdate;
 	}
 
 	@Override
@@ -90,37 +92,81 @@ public class QueryMethod extends AbstractQueryMethod {
 		comment( declaration );
 		modifiers( paramTypes, declaration );
 		preamble( declaration, paramTypes );
-		collectOrdering( declaration, paramTypes );
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
+		collectOrdering( declaration, paramTypes, containerType );
 		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration );
 		createQuery( declaration );
 		setParameters( declaration, paramTypes, "");
 		handlePageParameters( declaration, paramTypes, containerType );
-		boolean unwrapped = !isUsingEntityManager();
-		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
-		execute( declaration, unwrapped );
+		execute( declaration, initiallyUnwrapped() );
 		convertExceptions( declaration );
 		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
 	}
 
+	String specificationType() {
+		return isUpdate
+				? "org.hibernate.query.specification.MutationSpecification"
+				: "org.hibernate.query.specification.SelectionSpecification";
+	}
+
 	@Override
 	void createQuery(StringBuilder declaration) {
-		declaration
-				.append(localSessionName())
-				.append('.')
-				.append(createQueryMethod())
-				.append("(")
-				.append(getConstantName());
-		if ( returnTypeClass != null && !isUpdate ) {
-			declaration
-					.append(", ")
-					.append(annotationMetaEntity.importType(returnTypeClass))
-					.append(".class");
+		final boolean specification = isUsingSpecification();
+		if ( specification ) {
+			if ( isReactive() ) {
+				declaration
+						.append(localSessionName())
+						.append(".createQuery(_spec.buildCriteria(")
+						.append(localSessionName())
+						.append(".getFactory().getCriteriaBuilder()))\n");
+			}
+			else {
+				declaration
+						.append("_spec.createQuery(")
+						.append(localSessionName())
+						.append(")\n");
+			}
 		}
-		declaration.append(")\n");
+		else {
+			declaration
+					.append(localSessionName())
+					.append('.')
+					.append(createQueryMethod())
+					.append("(")
+					.append(getConstantName());
+			if ( returnTypeClass != null && !isUpdate ) {
+				declaration
+						.append(", ")
+						.append(annotationMetaEntity.importType(returnTypeClass))
+						.append(".class");
+			}
+			declaration.append(")\n");
+		}
+	}
+
+	@Override
+	void createSpecification(StringBuilder declaration) {
+		if ( returnTypeClass != null && isUsingSpecification() ) {
+			declaration
+					.append( "\tvar _spec = " )
+					.append( annotationMetaEntity.importType( specificationType() ) )
+					.append( ".create(" )
+					.append( annotationMetaEntity.importType( returnTypeClass ) )
+					.append( ".class, " )
+					.append( getConstantName() )
+					.append( ");\n" );
+		}
+	}
+
+	@Override
+	boolean isUsingSpecification() {
+		return returnTypeClass != null
+			&& ( hasRestriction() || hasOrder() && !isJakartaCursoredPage(containerType) );
 	}
 
 	private String createQueryMethod() {
@@ -150,14 +196,23 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void execute(StringBuilder declaration, boolean unwrapped) {
 		if ( isUpdate ) {
 			declaration
-					.append("\t\t\t")
-					.append(".executeUpdate()");
-			if ( "boolean".equals(returnTypeName) ) {
-				declaration
-						.append(" > 0");
+					.append("\t\t\t.executeUpdate()");
+			if ( isReactive() ) {
+				if ( VOID.equals(returnTypeName) ) {
+					declaration
+							.append( "\n\t\t\t.replaceWithVoid()" );
+				}
+				else if ( BOOLEAN.equals(returnTypeName) ) {
+					declaration
+							.append( "\n\t\t\t.map(rows -> rows>0)" );
+				}
 			}
-			declaration
-					.append(";\n");
+			else {
+				if ( "boolean".equals( returnTypeName ) ) {
+					declaration
+							.append( " > 0" );
+				}
+			}
 		}
 		else {
 			final boolean mustUnwrap =

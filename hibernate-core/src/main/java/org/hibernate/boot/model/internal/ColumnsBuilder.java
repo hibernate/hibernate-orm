@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -15,9 +15,8 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -35,9 +34,9 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnFromN
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFromAnnotations;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
-import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Do the initial discovery of columns metadata and apply defaults.
@@ -134,7 +133,6 @@ class ColumnsBuilder {
 			OneToMany oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
 			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
-//					comment,
 					oneToMany == null ? null : nullIfEmpty( oneToMany.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -173,11 +171,9 @@ class ColumnsBuilder {
 			MemberDetails property,
 			PropertyData inferredData) {
 		final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
-//		final Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
-//					comment,
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -189,7 +185,6 @@ class ColumnsBuilder {
 			final OneToOne oneToOneAnn = property.getDirectAnnotationUsage( OneToOne.class );
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
-//					comment,
 					oneToOneAnn == null ? null : nullIfEmpty( oneToOneAnn.mappedBy() ),
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -240,12 +235,12 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumnOrFormula[] joinColumnOrFormulaAnnotations(MemberDetails property, PropertyData inferredData) {
-		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 		final JoinColumnOrFormula[] annotations = property.getRepeatedAnnotationUsages(
 				HibernateAnnotations.JOIN_COLUMN_OR_FORMULA,
-				sourceModelContext
+				modelsContext
 		);
-		if ( CollectionHelper.isNotEmpty( annotations ) ) {
+		if ( isNotEmpty( annotations ) ) {
 			return annotations;
 		}
 
@@ -253,13 +248,13 @@ class ColumnsBuilder {
 	}
 
 	private JoinColumn[] getJoinColumnAnnotations(MemberDetails property, PropertyData inferredData) {
-		final SourceModelBuildingContext sourceModelContext = buildingContext.getMetadataCollector().getSourceModelBuildingContext();
+		final ModelsContext modelsContext = buildingContext.getBootstrapContext().getModelsContext();
 
 		final JoinColumn[] joinColumns = property.getRepeatedAnnotationUsages(
 				JpaAnnotations.JOIN_COLUMN,
-				sourceModelContext
+				modelsContext
 		);
-		if ( CollectionHelper.isNotEmpty( joinColumns ) ) {
+		if ( isNotEmpty( joinColumns ) ) {
 			return joinColumns;
 		}
 
@@ -270,13 +265,13 @@ class ColumnsBuilder {
 			// spec-compliant to map the association with @PrimaryKeyJoinColumn)
 			final PrimaryKeyJoinColumn[] primaryKeyJoinColumns = property.getRepeatedAnnotationUsages(
 					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN,
-					sourceModelContext
+					modelsContext
 			);
-			if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumns ) ) {
+			if ( isNotEmpty( primaryKeyJoinColumns ) ) {
 				final JoinColumn[] adapters = new JoinColumn[primaryKeyJoinColumns.length];
 				for ( int i = 0; i < primaryKeyJoinColumns.length; i++ ) {
 					final PrimaryKeyJoinColumn primaryKeyJoinColumn = primaryKeyJoinColumns[i];
-					adapters[i] = JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumn, sourceModelContext );
+					adapters[i] = JoinColumnJpaAnnotation.toJoinColumn( primaryKeyJoinColumn, modelsContext );
 				}
 				return adapters;
 			}
@@ -288,9 +283,7 @@ class ColumnsBuilder {
 	/**
 	 * Useful to override a column either by {@code @MapsId} or by {@code @IdClass}
 	 */
-	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(boolean isId) {
-		final PropertyData override =
-				getPropertyOverriddenByMapperOrMapsId( isId, propertyHolder, property.resolveAttributeName(), buildingContext );
+	AnnotatedColumns overrideColumnFromMapperOrMapsIdProperty(PropertyData override) {
 		if ( override != null ) {
 			final AnnotatedJoinColumns joinColumns = buildExplicitJoinColumns( override.getAttributeMember(), override );
 			return joinColumns == null

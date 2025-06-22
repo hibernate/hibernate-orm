@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -8,7 +8,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -219,10 +218,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		final SqlExpressionResolver sqlExpressionResolver = creationState
 				.getSqlAstCreationState()
 				.getSqlExpressionResolver();
-		final SessionFactoryImplementor sessionFactory = creationState
-				.getSqlAstCreationState()
-				.getCreationContext()
-				.getSessionFactory();
 
 		final TableGroup tableGroup = fromClauseAccess.getTableGroup( fetchParent.getNavigablePath().getParent() );
 		final TableReference tableReference = tableGroup.resolveTableReference( fetchablePath, table );
@@ -236,7 +231,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				columnReference,
 				jdbcMapping.getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -371,7 +366,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 				),
 				jdbcMapping.getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

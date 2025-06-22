@@ -1,25 +1,23 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.Reader;
 import java.sql.NClob;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.engine.jdbc.NClobProxy;
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.engine.jdbc.proxy.NClobProxy;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -35,13 +33,14 @@ import static org.junit.Assert.fail;
 				"because we explicitly map this attribute to the `NClob` java type the database really" +
 				" has to support those types"
 )
+@SkipForDialect(dialectClass = SybaseASEDialect.class)
 public class NClobTest {
 	@Test
 	public void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				(entityManager) -> {
 					//tag::basic-nclob-persist-example[]
-					String warranty = "My product warranty";
+					String warranty = "My product®™ warranty 😍";
 
 					final Product product = new Product();
 					product.setId(1);
@@ -60,32 +59,16 @@ public class NClobTest {
 						//tag::basic-nclob-find-example[]
 						Product product = entityManager.find(Product.class, 1);
 
-						try (Reader reader = product.getWarranty().getCharacterStream()) {
-							assertEquals("My product warranty", toString(reader));
-						}
+						NClob warranty = product.getWarranty();
+						assertEquals("My product®™ warranty 😍", warranty.getSubString( 1, (int) warranty.length() ) );
 						//end::basic-nclob-find-example[]
 					}
 					catch (Exception e) {
 						fail(e.getMessage());
 					}
 				}
-	);
+		);
 	}
-
-	private String toString(Reader reader) throws IOException {
-		BufferedReader bufferedReader = new BufferedReader(reader);
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-		int result = bufferedReader.read();
-
-		while (result != -1) {
-			byteArrayOutputStream.write((byte) result);
-			result = bufferedReader.read();
-		}
-
-		return byteArrayOutputStream.toString();
-	}
-
 
 	//tag::basic-nclob-example[]
 	@Entity(name = "Product")

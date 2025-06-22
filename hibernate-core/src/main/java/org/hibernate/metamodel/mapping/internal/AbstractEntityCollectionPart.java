@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -7,11 +7,11 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
@@ -43,6 +43,9 @@ import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping.findMapsIdPropertyName;
 
 /**
  * Base support for EntityCollectionPart implementations
@@ -340,7 +343,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				creationContext.getSessionFactory()
 		);
 		// Make sure the association key's table is resolved in the table group
-		tableGroup.getTableReference( null, resolveFetchAssociationKey().getTable(), true );
+		tableGroup.getTableReference( null, resolveFetchAssociationKey().table(), true );
 		return tableGroup;
 	}
 
@@ -357,36 +360,34 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 		final Value bootModelValue = nature == Nature.INDEX
 				? ( (IndexedCollection) collectionBootDescriptor ).getIndex()
 				: collectionBootDescriptor.getElement();
-		final PersistentClass entityBinding = creationProcess.getCreationContext()
-				.getMetadata()
-				.getEntityBinding( elementTypeDescriptor.getEntityName() );
+		final PersistentClass entityBinding =
+				creationProcess.getCreationContext().getMetadata()
+						.getEntityBinding( elementTypeDescriptor.getEntityName() );
 
 		final String referencedPropertyName;
 		if ( bootModelValue instanceof OneToMany ) {
 			final String mappedByProperty = collectionDescriptor.getMappedByProperty();
-			referencedPropertyName = StringHelper.isEmpty( mappedByProperty )
+			referencedPropertyName = isEmpty( mappedByProperty )
 					? null
 					: mappedByProperty;
 		}
-		else {
-			final ToOne toOne = (ToOne) bootModelValue;
+		else if ( bootModelValue instanceof ToOne toOne ) {
 			referencedPropertyName = toOne.getReferencedPropertyName();
 		}
-
+		else {
+			throw new AssertionFailure( "Expected a OneToMany or ToOne" );
+		}
 
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
-			final Type propertyType;
-			if ( entityBinding.getIdentifierMapper() == null ) {
-				propertyType = entityBinding.getIdentifier().getType();
-			}
-			else {
-				propertyType = entityBinding.getIdentifierMapper().getType();
-			}
+			final Type propertyType =
+					entityBinding.getIdentifierMapper() == null
+							? entityBinding.getIdentifier().getType()
+							: entityBinding.getIdentifierMapper().getType();
 			if ( entityBinding.getIdentifierProperty() == null ) {
-				final ComponentType compositeType;
-				if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
+				if ( propertyType instanceof ComponentType compositeType
+						&& compositeType.isEmbedded()
 						&& compositeType.getPropertyNames().length == 1 ) {
 					ToOneAttributeMapping.addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
@@ -427,19 +428,18 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				targetKeyPropertyNames.add( referencedPropertyName.substring( 0, dotIndex ) );
 			}
 			// todo (PropertyMapping) : the problem here is timing.  this needs to be delayed.
-			final Type propertyType = elementTypeDescriptor.getEntityPersister().getPropertyType( referencedPropertyName );
 			ToOneAttributeMapping.addPrefixedPropertyPaths(
 					targetKeyPropertyNames,
 					referencedPropertyName,
-					propertyType,
+					elementTypeDescriptor.getEntityPersister().getPropertyType( referencedPropertyName ),
 					creationProcess.getCreationContext().getSessionFactory()
 			);
 			return targetKeyPropertyNames;
 		}
 		else {
 			final Type propertyType = entityBinding.getRecursiveProperty( referencedPropertyName ).getType();
-			final ComponentType compositeType;
-			if ( propertyType instanceof ComponentType && ( compositeType = (ComponentType) propertyType ).isEmbedded()
+			if ( propertyType instanceof ComponentType compositeType
+					&& compositeType.isEmbedded()
 					&& compositeType.getPropertyNames().length == 1 ) {
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 				ToOneAttributeMapping.addPrefixedPropertyPaths(
@@ -460,8 +460,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 				targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 				targetKeyPropertyNames.add( referencedPropertyName );
-				final String mapsIdAttributeName;
-				if ( ( mapsIdAttributeName = ToOneAttributeMapping.findMapsIdPropertyName( elementTypeDescriptor, referencedPropertyName ) ) != null ) {
+				final String mapsIdAttributeName =
+						findMapsIdPropertyName( elementTypeDescriptor, referencedPropertyName );
+				if ( mapsIdAttributeName != null ) {
 					ToOneAttributeMapping.addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							mapsIdAttributeName,

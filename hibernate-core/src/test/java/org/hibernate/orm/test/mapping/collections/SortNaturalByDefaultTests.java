@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections;
@@ -34,7 +34,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * <ul>
  *     <li>{@link org.hibernate.annotations.SortNatural @SortNatural}</li>
  *     <li>{@link org.hibernate.annotations.SortComparator @SortComparator}</li>
- *     <li>{@link org.hibernate.annotations.OrderBy @OrderBy(from hibernate)}</li>
  *     <li>{@link jakarta.persistence.OrderBy @OrderBy(from JPA)}</li>
  * </ul>
  *
@@ -98,11 +97,7 @@ public class SortNaturalByDefaultTests {
 
 	@AfterEach
 	void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-			session -> {
-				session.createQuery( "delete Person" ).executeUpdate();
-			}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Person")

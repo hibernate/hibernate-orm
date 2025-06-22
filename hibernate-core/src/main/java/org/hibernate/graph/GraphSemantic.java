@@ -1,12 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph;
 
 import java.util.Locale;
-
-import org.hibernate.AssertionFailure;
 
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_FETCH_GRAPH;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOAD_GRAPH;
@@ -49,14 +47,10 @@ public enum GraphSemantic {
 	 * @see org.hibernate.jpa.SpecHints#HINT_SPEC_LOAD_GRAPH
 	 */
 	public String getJakartaHintName() {
-		switch ( this ) {
-			case FETCH:
-				return HINT_SPEC_FETCH_GRAPH;
-			case LOAD:
-				return HINT_SPEC_LOAD_GRAPH;
-			default:
-				throw new AssertionFailure( "unknown GraphSemantic" );
-		}
+		return switch ( this ) {
+			case FETCH -> HINT_SPEC_FETCH_GRAPH;
+			case LOAD -> HINT_SPEC_LOAD_GRAPH;
+		};
 	}
 
 	/**
@@ -69,45 +63,28 @@ public enum GraphSemantic {
 	 */
 	@Deprecated(since = "6.0")
 	public String getJpaHintName() {
-		switch ( this ) {
-			case FETCH:
-				return HINT_JAVAEE_FETCH_GRAPH;
-			case LOAD:
-				return HINT_JAVAEE_LOAD_GRAPH;
-			default:
-				throw new AssertionFailure( "unknown GraphSemantic" );
-		}
+		return switch ( this ) {
+			case FETCH -> HINT_JAVAEE_FETCH_GRAPH;
+			case LOAD -> HINT_JAVAEE_LOAD_GRAPH;
+		};
 	}
 
 	public static GraphSemantic fromHintName(String hintName) {
-		switch ( hintName ) {
-			case HINT_SPEC_FETCH_GRAPH:
-			case HINT_JAVAEE_FETCH_GRAPH:
-				return FETCH;
-			case HINT_SPEC_LOAD_GRAPH:
-			case HINT_JAVAEE_LOAD_GRAPH:
-				return LOAD;
-			default:
-				throw new IllegalArgumentException(
-						String.format(
-								Locale.ROOT,
-								"Unknown EntityGraph hint name - `%s`.  " +
-										"Expecting `%s` or `%s` (or `%s` and `%s`).",
-								hintName,
-								HINT_SPEC_FETCH_GRAPH,
-								HINT_SPEC_LOAD_GRAPH,
-								HINT_JAVAEE_FETCH_GRAPH,
-								HINT_JAVAEE_LOAD_GRAPH
-						)
-				);
-		}
-	}
-
-	/**
-	 * @deprecated Use {@link #fromHintName} instead
-	 */
-	@Deprecated(since = "6.0")
-	public static GraphSemantic fromJpaHintName(String hintName) {
-		return fromHintName( hintName );
+		return switch ( hintName ) {
+			case HINT_SPEC_FETCH_GRAPH, HINT_JAVAEE_FETCH_GRAPH -> FETCH;
+			case HINT_SPEC_LOAD_GRAPH, HINT_JAVAEE_LOAD_GRAPH -> LOAD;
+			default -> throw new IllegalArgumentException(
+					String.format(
+							Locale.ROOT,
+							"Unknown EntityGraph hint name - `%s`.  "
+									+ "Expecting `%s` or `%s` (or `%s` and `%s`).",
+							hintName,
+							HINT_SPEC_FETCH_GRAPH,
+							HINT_SPEC_LOAD_GRAPH,
+							HINT_JAVAEE_FETCH_GRAPH,
+							HINT_JAVAEE_LOAD_GRAPH
+					)
+			);
+		};
 	}
 }

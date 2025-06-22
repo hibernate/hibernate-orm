@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -8,9 +8,8 @@ import java.util.Locale;
 
 import jakarta.persistence.metamodel.Bindable;
 
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.spi.NavigablePath;
+import org.hibernate.metamodel.model.domain.PathSource;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -24,44 +23,41 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J> {
-	/**
-	 * The name of this thing.
-	 *
-	 * @apiNote Mainly used in logging and when creating a {@link NavigablePath}.
-	 */
-	String getPathName();
+public interface SqmPathSource<J>
+		extends SqmExpressible<J>, Bindable<J>, SqmExpressibleAccessor<J>, PathSource<J> {
 
 	/**
 	 * The type of {@linkplain SqmPath path} this source creates.
-	 *
-	 * @apiNote Analogous to {@link Bindable#getBindableJavaType()}.
 	 */
-	DomainType<J> getSqmPathType();
+	@Override
+	SqmDomainType<J> getPathType();
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
 	 *
+	 * @param name the name of the path source to find
 	 * @return null if the subPathSource is not found
-	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
 	SqmPathSource<?> findSubPathSource(String name);
 
 	/**
-	 * Find a {@link SqmPathSource} by name relative to this source.
+	 * Find a {@link SqmPathSource} by name relative to this source. If {@code includeSubtypes} is set
+	 * to {@code true} and this path source is polymorphic, also try finding subtype attributes.
 	 *
+	 * @param name the name of the path source to find
+	 * @param includeSubtypes flag indicating whether to consider subtype attributes
 	 * @return null if the subPathSource is not found
-	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	default SqmPathSource<?> findSubPathSource(String name, JpaMetamodel metamodel) {
+	default SqmPathSource<?> findSubPathSource(String name, boolean includeSubtypes) {
 		return findSubPathSource( name );
 	}
 
 	/**
 	 * Find a {@link SqmPathSource} by name relative to this source.
 	 *
+	 * @param name the name of the path source to find
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 * @throws IllegalArgumentException if the subPathSource is not found
 	 */
@@ -81,13 +77,16 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	}
 
 	/**
-	 * Find a {@link SqmPathSource} by name relative to this source.
+	 * Find a {@link SqmPathSource} by name relative to this source. If {@code subtypes} is set
+	 * to {@code true} and this path source is polymorphic, also try finding subtype attributes.
 	 *
+	 * @param name the name of the path source to find
+	 * @param subtypes flag indicating whether to consider subtype attributes
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 * @throws IllegalArgumentException if the subPathSource is not found
 	 */
-	default SqmPathSource<?> getSubPathSource(String name, JpaMetamodel metamodel) {
-		final SqmPathSource<?> subPathSource = findSubPathSource( name, metamodel );
+	default SqmPathSource<?> getSubPathSource(String name, boolean subtypes) {
+		final SqmPathSource<?> subPathSource = findSubPathSource( name, subtypes );
 		if ( subPathSource == null ) {
 			throw new PathElementException(
 					String.format(
@@ -115,13 +114,13 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource);
 
 	@Override
-	default SqmExpressible<J> getExpressible() {
-		return getSqmPathType();
+	default SqmBindableType<J> getExpressible() {
+		return getPathType();
 	}
 
 	@Override
-	default DomainType<J> getSqmType() {
-		return getSqmPathType();
+	default SqmDomainType<J> getSqmType() {
+		return getPathType();
 	}
 
 	/**

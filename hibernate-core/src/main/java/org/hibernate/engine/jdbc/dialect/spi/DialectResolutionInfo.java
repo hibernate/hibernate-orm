@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.spi;
@@ -8,8 +8,9 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.config.spi.ConfigurationService;
 
 import java.sql.DatabaseMetaData;
-import java.util.Collections;
 import java.util.Map;
+
+import static java.util.Collections.emptyMap;
 
 /**
  * Exposes information about the database and JDBC driver that can be used in resolving the appropriate Dialect
@@ -95,6 +96,6 @@ public interface DialectResolutionInfo extends DatabaseVersion {
 	 * @return The immutable map of config settings.
 	 */
 	default Map<String, Object> getConfigurationValues() {
-		return Collections.emptyMap();
+		return emptyMap();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.envers.configuration.internal;
@@ -166,7 +166,7 @@ public class RevisionInfoConfiguration {
 				true,
 				false,
 				true,
-				revisionInfoEntityName
+				revisionInfoClass.getName()
 		);
 
 		attribute.setOnDelete( configuration.isCascadeDeleteRevision() ? "cascade" : null );
@@ -190,7 +190,7 @@ public class RevisionInfoConfiguration {
 		RootPersistentEntity mapping = new RootPersistentEntity(
 				new AuditTableData( null, null, configuration.getDefaultSchemaName(), configuration.getDefaultCatalogName() ),
 				revisionInfoClass,
-				revisionInfoEntityName,
+				useDefaultRevisionInfoMapping ? null : revisionInfoEntityName,
 				DEFAULT_REVISION_ENTITY_TABLE_NAME
 		);
 
@@ -283,7 +283,6 @@ public class RevisionInfoConfiguration {
 
 		public RevisionEntityResolver(InFlightMetadataCollector metadata) {
 			this.metadata = metadata;
-			this.revisionInfoEntityName = getDefaultEntityName();
 			this.revisionInfoIdData = createPropertyData( "id", "field" );
 			this.revisionInfoTimestampData = createPropertyData( "timestamp", "field" );
 			this.modifiedEntityNamesData = createPropertyData( "modifiedEntityNames", "field" );
@@ -292,15 +291,6 @@ public class RevisionInfoConfiguration {
 
 			// automatically initiates a revision entity search over metadata sources
 			locateRevisionEntityMapping();
-		}
-
-		private String getDefaultEntityName() {
-			if ( configuration.isNativeIdEnabled() ) {
-				return DefaultRevisionEntity.class.getName();
-			}
-			else {
-				return SequenceIdRevisionEntity.class.getName();
-			}
 		}
 
 		private void locateRevisionEntityMapping() {
@@ -390,13 +380,15 @@ public class RevisionInfoConfiguration {
 					revisionInfoClass = configuration.isNativeIdEnabled()
 							? DefaultTrackingModifiedEntitiesRevisionEntity.class
 							: SequenceIdTrackingModifiedEntitiesRevisionEntity.class;
-					revisionInfoEntityName = revisionInfoClass.getName();
 				}
 				else {
 					revisionInfoClass = configuration.isNativeIdEnabled()
 							? DefaultRevisionEntity.class
 							: SequenceIdRevisionEntity.class;
 				}
+
+				// Use the simple name of default revision entities as entity name
+				revisionInfoEntityName = revisionInfoClass.getSimpleName();
 
 				timestampValueResolver = createRevisionTimestampResolver(
 						revisionInfoClass,

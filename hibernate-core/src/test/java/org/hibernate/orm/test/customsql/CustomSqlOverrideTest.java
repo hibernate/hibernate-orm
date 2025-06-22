@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.customsql;
@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.dialect.H2Dialect;
@@ -82,7 +83,7 @@ public class CustomSqlOverrideTest {
 	static class Custom {
 		@Id @GeneratedValue(strategy = GenerationType.IDENTITY)
 		Long id;
-		@Generated
+		@Generated @Immutable
 		String uid;
 		String whatever;
 	}

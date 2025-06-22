@@ -1,18 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryException;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonQueryEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonQueryErrorBehavior;
@@ -42,8 +43,19 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 		if ( arguments.emptyBehavior() != null && arguments.emptyBehavior() != JsonQueryEmptyBehavior.NULL ) {
 			throw new QueryException( "Can't emulate on empty clause on PostgreSQL" );
 		}
-		final JsonQueryWrapMode wrapMode = arguments.wrapMode();
 
+		appendJsonQuery(
+				sqlAppender,
+				arguments.jsonDocument(),
+				arguments.jsonPath(),
+				arguments.isJsonType(),
+				arguments.wrapMode(),
+				arguments.passingClause(),
+				walker
+		);
+	}
+
+	static void appendJsonQuery(SqlAppender sqlAppender, Expression jsonDocument, SqlAstNode jsonPath, boolean isJsonType, JsonQueryWrapMode wrapMode, @Nullable JsonPathPassingClause passingClause, SqlAstTranslator<?> walker) {
 		if ( wrapMode == JsonQueryWrapMode.WITH_WRAPPER ) {
 			sqlAppender.appendSql( "jsonb_path_query_array(" );
 		}
@@ -53,16 +65,15 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 		else {
 			sqlAppender.appendSql( "(select t.v from jsonb_path_query(" );
 		}
-		final boolean needsCast = !arguments.isJsonType() && arguments.jsonDocument() instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}
-		arguments.jsonDocument().accept( walker );
+		jsonDocument.accept( walker );
 		if ( needsCast ) {
 			sqlAppender.appendSql( " as jsonb)" );
 		}
 		sqlAppender.appendSql( ',' );
-		final SqlAstNode jsonPath = arguments.jsonPath();
 		if ( jsonPath instanceof Literal ) {
 			jsonPath.accept( walker );
 		}
@@ -71,7 +82,6 @@ public class PostgreSQLJsonQueryFunction extends JsonQueryFunction {
 			jsonPath.accept( walker );
 			sqlAppender.appendSql( " as jsonpath)" );
 		}
-		final JsonPathPassingClause passingClause = arguments.passingClause();
 		if ( passingClause != null ) {
 			sqlAppender.append( ",jsonb_build_object" );
 			char separator = '(';

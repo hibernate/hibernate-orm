@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
 
-import java.util.Iterator;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ForeignKey;
@@ -88,9 +87,7 @@ public class ForeignKeyConstraintMapsIdTest extends BaseNonConfigCoreFunctionalT
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( table.getName().equals( "Post" ) ) {
-					Iterator<org.hibernate.mapping.ForeignKey> foreignKeyIterator = table.getForeignKeys().values().iterator();
-					while ( foreignKeyIterator.hasNext() ) {
-						org.hibernate.mapping.ForeignKey foreignKey = foreignKeyIterator.next();
+					for ( var foreignKey : table.getForeignKeyCollection() ) {
 						if ( foreignKey.getColumn( 0 ).getName().equals( "PD_ID" ) ) {
 							assertEquals( "FK_PD", foreignKey.getName() );
 							return;

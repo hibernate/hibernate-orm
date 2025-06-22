@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.original;
@@ -13,6 +13,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -21,23 +22,27 @@ import jakarta.persistence.criteria.Root;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(xmlMappings = {
-		"org/hibernate/orm/test/collection/original/UserPermissions.hbm.xml",
-		"org/hibernate/orm/test/collection/original/Zoo.hbm.xml",
+		"org/hibernate/orm/test/collection/original/UserPermissions.xml",
+		"org/hibernate/orm/test/collection/original/Zoo.xml",
 })
 @SessionFactory
 public class CollectionTest {
+	@AfterEach
+	void dropTestData(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
 
 	@Test
-	public void testExtraLazy(SessionFactoryScope scope) {
+	public void testLaziness(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
 					User u = new User( "gavin" );
@@ -50,15 +55,13 @@ public class CollectionTest {
 
 		scope.inTransaction(
 				s -> {
-					User u = s.get( User.class, "gavin" );
+					User u = s.find( User.class, "gavin" );
 
 					assertFalse( Hibernate.isInitialized( u.getPermissions() ) );
 					assertEquals( 2, u.getPermissions().size() );
 					assertTrue( u.getPermissions().contains( new Permission( "obnoxiousness" ) ) );
 					assertFalse( u.getPermissions().contains( new Permission( "silliness" ) ) );
-					assertNotNull( u.getPermissions().get( 1 ) );
-					assertNull( u.getPermissions().get( 3 ) );
-					assertFalse( Hibernate.isInitialized( u.getPermissions() ) );
+					assertTrue( Hibernate.isInitialized( u.getPermissions() ) );
 
 					assertFalse( Hibernate.isInitialized( u.getSessionData() ) );
 					assertEquals( 1, u.getSessionData().size() );
@@ -68,15 +71,12 @@ public class CollectionTest {
 					assertFalse( u.getSessionData().containsValue( "bar" ) );
 					assertEquals( "foo value", u.getSessionData().get( "foo" ) );
 					assertNull( u.getSessionData().get( "bar" ) );
-					assertFalse( Hibernate.isInitialized( u.getSessionData() ) );
-
-					assertFalse( Hibernate.isInitialized( u.getSessionData() ) );
-					u.getSessionData().put( "bar", "bar value" );
-					u.getSessionAttributeNames().add( "bar" );
-					assertFalse( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
 					assertTrue( Hibernate.isInitialized( u.getSessionData() ) );
 
-					s.remove( u );
+					u.getSessionData().put( "bar", "bar value" );
+					u.getSessionAttributeNames().add( "bar" );
+					assertTrue( Hibernate.isInitialized( u.getSessionAttributeNames() ) );
+					assertTrue( Hibernate.isInitialized( u.getSessionData() ) );
 				}
 		);
 	}

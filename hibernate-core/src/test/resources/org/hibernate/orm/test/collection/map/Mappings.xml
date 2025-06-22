@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.map</package>
+
+    <entity class="Parent">
+        <attributes>
+            <id name="name"/>
+            <one-to-many name="children" mapped-by="parent">
+                <!--
+                    The original hbm.xml mapping used a formula for the map-key -
+                    see https://hibernate.atlassian.net/browse/HHH-19427
+
+                    However, it simply named a column.  So for now, cheat...
+                -->
+                <map-key-column name="name"/>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </one-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Child">
+        <attributes>
+            <id name="name"/>
+            <many-to-one name="parent">
+                <join-column name="parent_fk"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

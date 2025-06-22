@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.NamedAttributeNode;
 
@@ -21,7 +21,7 @@ public class NamedAttributeNodeJpaAnnotation implements NamedAttributeNode {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public NamedAttributeNodeJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public NamedAttributeNodeJpaAnnotation(ModelsContext modelContext) {
 		this.subgraph = "";
 		this.keySubgraph = "";
 	}
@@ -29,7 +29,7 @@ public class NamedAttributeNodeJpaAnnotation implements NamedAttributeNode {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public NamedAttributeNodeJpaAnnotation(NamedAttributeNode annotation, SourceModelBuildingContext modelContext) {
+	public NamedAttributeNodeJpaAnnotation(NamedAttributeNode annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 		this.subgraph = annotation.subgraph();
 		this.keySubgraph = annotation.keySubgraph();
@@ -40,7 +40,7 @@ public class NamedAttributeNodeJpaAnnotation implements NamedAttributeNode {
 	 */
 	public NamedAttributeNodeJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (String) attributeValues.get( "value" );
 		this.subgraph = (String) attributeValues.get( "subgraph" );
 		this.keySubgraph = (String) attributeValues.get( "keySubgraph" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.criteria.JpaJsonExistsExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.FunctionRenderer;
@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -172,18 +173,19 @@ public class SqmJsonExistsExpression extends AbstractSqmJsonPathExpression<Boole
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "json_exists(" );
-		getArguments().get( 0 ).appendHqlString( sb );
-		sb.append( ',' );
-		getArguments().get( 1 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "json_exists(" );
+		getArguments().get( 0 ).appendHqlString( hql, context );
+		hql.append( ',' );
+		getArguments().get( 1 ).appendHqlString( hql, context );
 
-		appendPassingExpressionHqlString( sb );
-		switch ( errorBehavior ) {
-			case ERROR -> sb.append( " error on error" );
-			case TRUE -> sb.append( " true on error" );
-			case FALSE -> sb.append( " false on error" );
-		}
-		sb.append( ')' );
+		appendPassingExpressionHqlString( hql, context );
+		hql.append( switch ( errorBehavior ) {
+			case ERROR -> " error on error";
+			case TRUE -> " true on error";
+			case FALSE -> " false on error";
+			case UNSPECIFIED -> "";
+		} );
+		hql.append( ')' );
 	}
 }

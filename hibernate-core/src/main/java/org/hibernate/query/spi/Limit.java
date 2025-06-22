@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
+
+import java.util.Objects;
 
 /**
  * Paging limits
@@ -39,8 +41,8 @@ public class Limit {
 	}
 
 	public int getFirstRowJpa() {
-		// JPA defines this return as a primitive with magic values...
-		//  	- specifically the "magic number" 0 (ZERO) as defined by the spec.
+		// JPA defines this return as a primitive with magic values:
+		// specifically, the "magic number" 0 (ZERO) as defined by the spec.
 		return firstRow == null ? 0 : firstRow;
 	}
 
@@ -53,29 +55,19 @@ public class Limit {
 	}
 
 	public int getMaxRowsJpa() {
-		// JPA defines this return as a primitive with magic values...
-		//  	- specifically the "magic number" Integer.MAX_VALUE as defined by the spec.
+		// JPA defines this return as a primitive with magic values:
+		// specifically, the "magic number" Integer.MAX_VALUE as defined by the spec
 		return maxRows == null ? Integer.MAX_VALUE : maxRows;
 	}
 
 	public void setMaxRows(int maxRows) {
-		if ( maxRows < 0 ) {
-			// treat negatives specially as meaning no limit...
-			this.maxRows = null;
-		}
-		else {
-			this.maxRows = maxRows;
-		}
+		// treat negatives specially as meaning no limit
+		this.maxRows = maxRows < 0 ? null : maxRows;
 	}
 
 	public void setMaxRows(Integer maxRows) {
-		if ( maxRows != null && maxRows < 0 ) {
-			// treat negatives specially as meaning no limit...
-			this.maxRows = null;
-		}
-		else {
-			this.maxRows = maxRows;
-		}
+		// treat negatives specially as meaning no limit
+		this.maxRows = maxRows != null && maxRows < 0 ? null : maxRows;
 	}
 
 	public boolean isCompatible(Limit limit) {
@@ -85,11 +77,10 @@ public class Limit {
 		else if ( this == limit ) {
 			return true;
 		}
-
-		if ( firstRow != null ? !firstRow.equals( limit.firstRow ) : limit.firstRow != null ) {
-			return false;
+		else {
+			return Objects.equals( firstRow, limit.firstRow )
+				&& Objects.equals( maxRows, limit.maxRows );
 		}
-		return maxRows != null ? maxRows.equals( limit.maxRows ) : limit.maxRows == null;
 	}
 
 }

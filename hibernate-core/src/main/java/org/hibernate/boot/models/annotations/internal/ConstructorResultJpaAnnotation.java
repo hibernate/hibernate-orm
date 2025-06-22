@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ConstructorResult;
 
@@ -24,13 +24,13 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ConstructorResultJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ConstructorResultJpaAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ConstructorResultJpaAnnotation(ConstructorResult annotation, SourceModelBuildingContext modelContext) {
+	public ConstructorResultJpaAnnotation(ConstructorResult annotation, ModelsContext modelContext) {
 		this.targetClass = annotation.targetClass();
 		this.columns = extractJdkValue( annotation, CONSTRUCTOR_RESULT, "columns", modelContext );
 	}
@@ -40,7 +40,7 @@ public class ConstructorResultJpaAnnotation implements ConstructorResult {
 	 */
 	public ConstructorResultJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.targetClass = (Class<?>) attributeValues.get( "targetClass" );
 		this.columns = (jakarta.persistence.ColumnResult[]) attributeValues.get( "columns" );
 	}

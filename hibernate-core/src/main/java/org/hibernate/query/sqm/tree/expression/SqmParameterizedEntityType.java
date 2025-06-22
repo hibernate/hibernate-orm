@@ -1,14 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+
+import java.util.Objects;
 
 /**
  * Entity type expression based on a parameter - `TYPE( :someParam )`
@@ -18,7 +21,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> implements SqmSelectableNode<T> {
 	private final SqmParameter<T> discriminatorSource;
 
-	public SqmExpression getDiscriminatorSource() {
+	public SqmExpression<T> getDiscriminatorSource() {
 		return discriminatorSource;
 	}
 
@@ -45,10 +48,8 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public void internalApplyInferableType(SqmExpressible<?> type) {
+	public void internalApplyInferableType(SqmBindableType<?> type) {
 		setExpressibleType( type );
-
-		//noinspection unchecked
 		discriminatorSource.applyInferableType( type );
 	}
 
@@ -58,10 +59,20 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "type(" );
-		discriminatorSource.appendHqlString( sb );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "type(" );
+		discriminatorSource.appendHqlString( hql, context );
+		hql.append( ')' );
 	}
 
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmParameterizedEntityType<?> that
+			&& Objects.equals( discriminatorSource, that.discriminatorSource );
+	}
+
+	@Override
+	public int hashCode() {
+		return discriminatorSource.hashCode();
+	}
 }

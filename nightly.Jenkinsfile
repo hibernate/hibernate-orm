@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 import groovy.transform.Field
@@ -13,10 +11,10 @@ import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper
 /*
  * See https://github.com/hibernate/hibernate-jenkins-pipeline-helpers
  */
-@Library('hibernate-jenkins-pipeline-helpers@1.13') _
+@Library('hibernate-jenkins-pipeline-helpers') _
 import org.hibernate.jenkins.pipeline.helpers.job.JobHelper
 
-@Field final String DEFAULT_JDK_VERSION = '17'
+@Field final String DEFAULT_JDK_VERSION = '21'
 @Field final String DEFAULT_JDK_TOOL = "OpenJDK ${DEFAULT_JDK_VERSION} Latest"
 @Field final String NODE_PATTERN_BASE = 'Worker&&Containers'
 @Field List<BuildEnvironment> environments
@@ -30,9 +28,9 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
 		new BuildEnvironment( dbName: 'mariadb_10_5' ),
-		new BuildEnvironment( dbName: 'postgresql_12' ),
-		new BuildEnvironment( dbName: 'edb_12' ),
-// 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
+		new BuildEnvironment( dbName: 'postgresql_13' ),
+		new BuildEnvironment( dbName: 'edb_13' ),
+		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
 		new BuildEnvironment( dbName: 'sybase_jconn' ),
@@ -110,55 +108,37 @@ stage('Build') {
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
 								case "mysql_8_0":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:8.0.31').pull()
-									}
 									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
 								case "mariadb_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.5.25').pull()
-									}
 									sh "./docker_db.sh mariadb_10_5"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_12":
-									// use the postgis image to enable the PGSQL GIS (spatial) extension
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:12-3.4').pull()
-									}
-									sh "./docker_db.sh postgresql_12"
+								case "postgresql_13":
+									sh "./docker_db.sh postgresql_13"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "edb_12":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:12.16-3.3-postgis').pull()
-									sh "./docker_db.sh edb_12"
+								case "edb_13":
+									sh "./docker_db.sh edb_13"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "db2_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
+									docker.withRegistry('https://quay.io', 'hibernate.quay.io') {
+										docker.image('hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
 									}
 									sh "./docker_db.sh db2_10_5"
 									state[buildEnv.tag]['containerName'] = "db2"
 									break;
 								case "mssql_2017":
-									docker.image('mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede').pull()
 									sh "./docker_db.sh mssql_2017"
 									state[buildEnv.tag]['containerName'] = "mssql"
 									break;
 								case "sybase_jconn":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('nguoianphu/docker-sybase').pull()
-									}
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "cockroachdb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.12').pull()
-									}
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
@@ -304,13 +284,13 @@ void runBuildOnNode(String label, Closure body) {
 void ciBuild(buildEnv, String args) {
   // On untrusted nodes, we use the same access key as for PRs:
   // it has limited access, essentially it can only push build scans.
-  def develocityCredentialsId = buildEnv.node ? 'ge.hibernate.org-access-key-pr' : 'ge.hibernate.org-access-key'
+  def develocityCredentialsId = buildEnv.node ? 'develocity.commonhaus.dev-access-key-pr' : 'develocity.commonhaus.dev-access-key'
 
   ciBuild(develocityCredentialsId, args)
 }
 
 void ciBuild(String args) {
-  ciBuild('ge.hibernate.org-access-key-pr', args)
+  ciBuild('develocity.commonhaus.dev-access-key-pr', args)
 }
 
 void ciBuild(String develocityCredentialsId, String args) {

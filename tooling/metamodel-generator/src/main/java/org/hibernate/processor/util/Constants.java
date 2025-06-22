@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.util;
@@ -47,6 +47,9 @@ public final class Constants {
 	public static final String NAMED_ENTITY_GRAPH = "jakarta.persistence.NamedEntityGraph";
 	public static final String NAMED_ENTITY_GRAPHS = "jakarta.persistence.NamedEntityGraphs";
 
+	public static final String TYPED_QUERY_REFERENCE = "jakarta.persistence.TypedQueryReference";
+	public static final String ENTITY_GRAPH = "jakarta.persistence.EntityGraph";
+
 	public static final String HIB_NAMED_QUERY = "org.hibernate.annotations.NamedQuery";
 	public static final String HIB_NAMED_QUERIES = "org.hibernate.annotations.NamedQueries";
 	public static final String HIB_NAMED_NATIVE_QUERY = "org.hibernate.annotations.NamedNativeQuery";
@@ -81,11 +84,15 @@ public final class Constants {
 	public static final String JD_ORDER_BY = "jakarta.data.repository.OrderBy";
 	public static final String JD_ORDER_BY_LIST = "jakarta.data.repository.OrderBy.List";
 
+	public static final String JD_LIFECYCLE_EVENT = "jakarta.data.event.LifecycleEvent";
+
 	public static final String HIB_ORDER = "org.hibernate.query.Order";
 	public static final String HIB_PAGE = "org.hibernate.query.Page";
 	public static final String HIB_KEYED_PAGE = "org.hibernate.query.KeyedPage";
 	public static final String HIB_KEYED_RESULT_LIST = "org.hibernate.query.KeyedResultList";
 	public static final String HIB_SORT_DIRECTION = "org.hibernate.query.SortDirection";
+	public static final String HIB_RESTRICTION = "org.hibernate.query.restriction.Restriction";
+	public static final String HIB_RANGE = "org.hibernate.query.range.Range";
 
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 
@@ -102,8 +109,13 @@ public final class Constants {
 	public static final String MUTINY_SESSION = "org.hibernate.reactive.mutiny.Mutiny.Session";
 	public static final String MUTINY_STATELESS_SESSION = "org.hibernate.reactive.mutiny.Mutiny.StatelessSession";
 	public static final String QUARKUS_SESSION_OPERATIONS = "io.quarkus.hibernate.reactive.panache.common.runtime.SessionOperations";
+	public static final String HIB_ENABLED_FETCH_PROFILE = "org.hibernate.EnabledFetchProfile";
 
 	public static final String TUPLE = "jakarta.persistence.Tuple";
+
+	public static final String INJECT = "jakarta.inject.Inject";
+	public static final String TYPE_LITERAL = "jakarta.enterprise.util.TypeLiteral";
+	public static final String EVENT = "jakarta.enterprise.event.Event";
 
 	public static final String UNI = "io.smallrye.mutiny.Uni";
 	public static final String UNI_MUTINY_SESSION = UNI + "<" + MUTINY_SESSION + ">";
@@ -119,7 +131,15 @@ public final class Constants {
 	public static final String LIST_ATTRIBUTE = "jakarta.persistence.metamodel.ListAttribute";
 	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
+	public static final String PERSISTENCE_UNIT = "jakarta.persistence.PersistenceUnit";
+	public static final String POST_CONSTRUCT = "jakarta.annotation.PostConstruct";
+	public static final String PRE_DESTROY = "jakarta.annotation.PreDestroy";
+
 	public static final String JAVA_OBJECT = "java.lang.Object";
+	public static final String VOID = "java.lang.Void";
+	public static final String STRING = "java.lang.String";
+	public static final String BOOLEAN = "java.lang.Boolean";
+	public static final String OBJECTS = "java.util.Objects";
 	public static final String ITERABLE = "java.lang.Iterable";
 	public static final String COLLECTION = "java.util.Collection";
 	public static final String LIST = "java.util.List";
@@ -127,8 +147,11 @@ public final class Constants {
 	public static final String SET = "java.util.Set";
 	public static final String OPTIONAL = "java.util.Optional";
 	public static final String STREAM = "java.util.stream.Stream";
+	public static final String COLLECTORS = "java.util.stream.Collectors";
 
 	public static final String NULLABLE = "jakarta.annotation.Nullable";
+	public static final String NONNULL = "jakarta.annotation.Nonnull";
+	public static final String NOT_NULL = "jakarta.validation.constraints.NotNull";
 
 	public static final String PANACHE_ORM_REPOSITORY_BASE = "io.quarkus.hibernate.orm.panache.PanacheRepositoryBase";
 	public static final String PANACHE_ORM_ENTITY_BASE = "io.quarkus.hibernate.orm.panache.PanacheEntityBase";

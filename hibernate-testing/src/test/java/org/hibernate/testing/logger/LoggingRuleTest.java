@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.logger;
@@ -33,9 +33,9 @@ public class LoggingRuleTest {
 
 	@Test
 	public void testRule() {
-		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000008:" );
+		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000229:" );
 		Assert.assertFalse( triggerable.wasTriggered() );
-		LOG.autoFlushWillNotWork(); //Uses code HHH000008
+		LOG.runningSchemaValidator(); //Uses code HHH000229
 		Assert.assertTrue( triggerable.wasTriggered() );
 		triggerable.reset();
 		Assert.assertFalse( triggerable.wasTriggered() );

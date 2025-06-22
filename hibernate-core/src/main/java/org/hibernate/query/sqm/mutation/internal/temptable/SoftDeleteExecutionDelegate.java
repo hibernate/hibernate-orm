@@ -1,14 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -28,6 +23,7 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -49,6 +45,10 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
 import static org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter.omittingLockingAndPaging;
@@ -85,10 +85,9 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 	@Override
 	public int execute(DomainQueryExecutionContext domainQueryExecutionContext) {
 		final String targetEntityName = getSqmDelete().getTarget().getEntityName();
-		final EntityPersister targetEntityDescriptor = getSessionFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( targetEntityName );
+		final EntityPersister targetEntityDescriptor =
+				getSessionFactory().getMappingMetamodel()
+						.getEntityDescriptor( targetEntityName );
 
 		final EntityMappingType rootEntityDescriptor = targetEntityDescriptor.getRootEntityDescriptor();
 
@@ -265,21 +264,10 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 				executionContext
 		);
 
-		final Assignment softDeleteAssignment = SoftDeleteHelper.createSoftDeleteAssignment(
-				targetTableReference,
-				rootEntityDescriptor.getSoftDeleteMapping()
-		);
-
-		final TableDetails softDeleteTable = rootEntityDescriptor.getSoftDeleteTableDetails();
-		final TableDetails.KeyDetails keyDetails = softDeleteTable.getKeyDetails();
-		final List<Expression> idExpressions = new ArrayList<>( keyDetails.getColumnCount() );
-		keyDetails.forEachKeyColumn( (position, column) -> idExpressions.add(
-				new ColumnReference( targetTableReference, column )
-		) );
-		final Expression idExpression = idExpressions.size() == 1
-				? idExpressions.get( 0 )
-				: new SqlTuple( idExpressions, rootEntityDescriptor.getIdentifierMapping() );
-
+		final Assignment softDeleteAssignment = rootEntityDescriptor
+				.getSoftDeleteMapping()
+				.createSoftDeleteAssignment( targetTableReference );
+		final Expression idExpression = createIdExpression( rootEntityDescriptor, targetTableReference );
 		final UpdateStatement updateStatement = new UpdateStatement(
 				targetTableReference,
 				singletonList( softDeleteAssignment ),
@@ -289,6 +277,19 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		executeUpdate( updateStatement, jdbcParameterBindings, executionContext );
 
 		return rows;
+	}
+
+	private static Expression createIdExpression(EntityMappingType rootEntityDescriptor, NamedTableReference targetTableReference) {
+		final TableDetails softDeleteTable = rootEntityDescriptor.getSoftDeleteTableDetails();
+		final TableDetails.KeyDetails keyDetails = softDeleteTable.getKeyDetails();
+		final List<Expression> idExpressions = new ArrayList<>( keyDetails.getColumnCount() );
+		keyDetails.forEachKeyColumn( (position, column) -> idExpressions.add(
+				new ColumnReference( targetTableReference, column )
+		) );
+		final Expression idExpression = idExpressions.size() == 1
+				? idExpressions.get( 0 )
+				: new SqlTuple( idExpressions, rootEntityDescriptor.getIdentifierMapping() );
+		return idExpression;
 	}
 
 	private int performDeleteWithSubQuery(
@@ -328,10 +329,9 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 				? idExpressions.get( 0 )
 				: new SqlTuple( idExpressions, rootEntityDescriptor.getIdentifierMapping() );
 
-		final Assignment softDeleteAssignment = SoftDeleteHelper.createSoftDeleteAssignment(
-				targetTable,
-				rootEntityDescriptor.getSoftDeleteMapping()
-		);
+		final Assignment softDeleteAssignment = rootEntityDescriptor
+				.getSoftDeleteMapping()
+				.createSoftDeleteAssignment( targetTable );
 
 		final UpdateStatement updateStatement = new UpdateStatement(
 				targetTable,
@@ -348,10 +348,9 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 			PredicateCollector predicateCollector,
 			JdbcParameterBindings jdbcParameterBindings,
 			SqmJdbcExecutionContextAdapter executionContext) {
-		final Assignment softDeleteAssignment = SoftDeleteHelper.createSoftDeleteAssignment(
-				rootTableReference,
-				rootEntityDescriptor.getSoftDeleteMapping()
-		);
+		final Assignment softDeleteAssignment = rootEntityDescriptor
+				.getSoftDeleteMapping()
+				.createSoftDeleteAssignment( rootTableReference );
 
 		final UpdateStatement updateStatement = new UpdateStatement(
 				rootTableReference,

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.basic;
@@ -56,7 +56,7 @@ public interface BookAuthorRepository {
 	Book book(String isbn);
 
 	@Find
-	Optional<Book> bookMaybe(@By("#id") String id);
+	Optional<Book> bookMaybe(@By("id(this)") String id);
 
 	@Find
 	Book[] books(@By("isbn") String[] isbns);
@@ -213,4 +213,13 @@ public interface BookAuthorRepository {
 
 	@Query("")
 	List<Author> withNoOrder2(PageRequest pageRequest);
+
+	@Query("update Author set name = :name where ssn = :id")
+	void updateAuthorAddress1(String id, String name);
+
+	@Query("update Author set name = :name where ssn = :id")
+	int updateAuthorAddress2(String id, String name);
+
+	@Query("update Author set name = :name where ssn = :id")
+	boolean updateAuthorAddress3(String id, String name);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -22,7 +21,7 @@ import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
 
@@ -62,8 +61,8 @@ public class AbstractSchemaMigratorTest {
 				.when(destinationTableInformation).getName();
 		columnReferenceMappings.add(new ForeignKeyInformationImpl.ColumnReferenceMappingImpl(
 				new ColumnInformationImpl(null, toIdentifier("referencing_column"), // column name is lower case
-						0, "typeName", 255, 0, TruthValue.TRUE),
-				new ColumnInformationImpl(destinationTableInformation, null, 1, "typeName", 0, 0, TruthValue.TRUE)));
+						0, "typeName", 255, 0, true),
+				new ColumnInformationImpl(destinationTableInformation, null, 1, "typeName", 0, 0, true)));
 		doReturn(singletonList(new ForeignKeyInformationImpl(toIdentifier("FKp8mpamfw2inhj88hwhty1eipm"), columnReferenceMappings)))
 				.when(existingTableInformation).getForeignKeys();
 

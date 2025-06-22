@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
@@ -273,17 +273,20 @@ public abstract class AbstractDeleteCoordinator
 				session
 		);
 
-		mutationExecutor.execute(
-				entity,
-				null,
-				null,
-				(statementDetails, affectedRowCount, batchPosition) ->
-						resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
-				session,
-				staleStateException -> staleObjectState( id, staleStateException )
-		);
-
-		mutationExecutor.release();
+		try {
+			mutationExecutor.execute(
+					entity,
+					null,
+					null,
+					(statementDetails, affectedRowCount, batchPosition) ->
+							resultCheck( id, statementDetails, affectedRowCount, batchPosition ),
+					session,
+					staleStateException -> staleObjectState( id, staleStateException )
+			);
+		}
+		finally {
+			mutationExecutor.release();
+		}
 	}
 
 	private StaleObjectStateException staleObjectState(Object id, StaleStateException staleStateException) {

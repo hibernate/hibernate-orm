@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -13,7 +13,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicPluralType;
@@ -23,12 +24,15 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.internal.util.ReflectHelper.arrayClass;
+
 /**
  * Descriptor for {@code T[]} handling.
  *
  * @author Christian Beikov
  * @author Jordan Gigov
  */
+@AllowReflection
 public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 
 	public ArrayJavaType(BasicType<T> baseDescriptor) {
@@ -36,11 +40,9 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 	}
 
 	public ArrayJavaType(JavaType<T> baseDescriptor) {
-		super(
-				(Class<T[]>) Array.newInstance( baseDescriptor.getJavaTypeClass(), 0 ).getClass(),
+		super( arrayClass( baseDescriptor.getJavaTypeClass() ),
 				baseDescriptor,
-				new ArrayMutabilityPlan<>( baseDescriptor )
-		);
+				new ArrayMutabilityPlan<>( baseDescriptor ) );
 	}
 
 	@Override
@@ -264,7 +266,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 		else if ( type == BinaryStream.class ) {
 			//noinspection unchecked
-			return (X) new BinaryStreamImpl( toBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( toBytes( value ) );
 		}
 		else if ( type.isArray() ) {
 			final Class<?> preferredJavaTypeClass = type.getComponentType();
@@ -285,10 +287,10 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			return null;
 		}
 
-		if ( value instanceof java.sql.Array ) {
+		if ( value instanceof java.sql.Array array ) {
 			try {
 				//noinspection unchecked
-				value = (X) ( (java.sql.Array) value ).getArray();
+				value = (X) array.getArray();
 			}
 			catch ( SQLException ex ) {
 				// This basically shouldn't happen unless you've lost connection to the database.
@@ -296,8 +298,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 		}
 
-		if ( value instanceof Object[] ) {
-			final Object[] raw = (Object[]) value;
+		if ( value instanceof Object[] raw ) {
 			final Class<T> componentClass = getElementJavaType().getJavaTypeClass();
 			//noinspection unchecked
 			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( componentClass, raw.length );
@@ -314,12 +315,12 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			}
 			return wrapped;
 		}
-		else if ( value instanceof byte[] ) {
-			return fromBytes( (byte[]) value );
+		else if ( value instanceof byte[] bytes ) {
+			return fromBytes( bytes );
 		}
-		else if ( value instanceof BinaryStream ) {
+		else if ( value instanceof BinaryStream binaryStream ) {
 			// When the value is a BinaryStream, this is a deserialization request
-			return fromBytes( ( (BinaryStream) value ).getBytes() );
+			return fromBytes( binaryStream.getBytes() );
 		}
 		else if ( getElementJavaType().isInstance( value ) ) {
 			// Support binding a single element as parameter value
@@ -329,8 +330,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			wrapped[0] = (T) value;
 			return wrapped;
 		}
-		else if ( value instanceof Collection<?> ) {
-			final Collection<?> collection = (Collection<?>) value;
+		else if ( value instanceof Collection<?> collection ) {
 			//noinspection unchecked
 			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), collection.size() );
 			int i = 0;
@@ -359,9 +359,8 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 	}
 
-	private T[] fromBytes(byte[] value) {
-		Class<T> elementClass = getElementJavaType().getJavaTypeClass();
-		byte[] bytes = value;
+	private T[] fromBytes(byte[] bytes) {
+		final Class<T> elementClass = getElementJavaType().getJavaTypeClass();
 		if ( elementClass.isEnum() ) {
 			final Object[] array = (Object[]) Array.newInstance( elementClass, bytes.length );
 			for (int i = 0; i < bytes.length; i++ ) {
@@ -375,10 +374,11 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		else {
 			// When the value is a byte[], this is a deserialization request
 			//noinspection unchecked
-			return (T[]) SerializationHelper.deserialize(value);
+			return (T[]) SerializationHelper.deserialize(bytes);
 		}
 	}
 
+	@AllowReflection
 	private static class ArrayMutabilityPlan<T> implements MutabilityPlan<T[]> {
 
 		private final Class<T> componentClass;
@@ -400,7 +400,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 				return null;
 			}
 			//noinspection unchecked
-			T[] copy = (T[]) Array.newInstance( componentClass, value.length );
+			final T[] copy = (T[]) Array.newInstance( componentClass, value.length );
 			for ( int i = 0; i < value.length; i ++ ) {
 				copy[ i ] = componentPlan.deepCopy( value[ i ] );
 			}

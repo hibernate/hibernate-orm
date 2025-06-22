@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class EntityRepresentationStrategyMap implements EntityRepresentationStrategy {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyMap.class );
 
-	private final JavaType<Map> mapJtd;
+	private final JavaType<Map<String,?>> mapJavaType;
 
 	private final ProxyFactory proxyFactory;
 	private final EntityInstantiatorDynamicMap instantiator;
@@ -38,7 +38,7 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	public EntityRepresentationStrategyMap(
 			PersistentClass bootType,
 			RuntimeModelCreationContext creationContext) {
-		this.mapJtd = creationContext.getTypeConfiguration()
+		this.mapJavaType = creationContext.getTypeConfiguration()
 				.getJavaTypeRegistry()
 				.getDescriptor( Map.class );
 
@@ -51,7 +51,6 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	private static ProxyFactory createProxyFactory(PersistentClass bootType) {
 		try {
 			ProxyFactory proxyFactory = new MapProxyFactory();
-
 			proxyFactory.postInstantiate(
 					bootType.getEntityName(),
 					null,
@@ -60,7 +59,6 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 					null,
 					null
 			);
-
 			return proxyFactory;
 		}
 		catch (HibernateException he) {
@@ -99,7 +97,7 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 
 	@Override
 	public JavaType<?> getMappedJavaType() {
-		return mapJtd;
+		return mapJavaType;
 	}
 
 	@Override

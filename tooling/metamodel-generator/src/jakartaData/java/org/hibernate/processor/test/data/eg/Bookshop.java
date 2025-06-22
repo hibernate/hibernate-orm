@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.data.eg;
 
+import jakarta.annotation.Nonnull;
 import jakarta.data.repository.CrudRepository;
 import jakarta.data.repository.Find;
 import jakarta.data.repository.Query;
@@ -11,14 +12,20 @@ import jakarta.data.repository.Repository;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.util.List;
+
+import static jakarta.transaction.Transactional.TxType.REQUIRES_NEW;
 
 @Repository
 public interface Bookshop extends CrudRepository<Book,String> {
 	@Find
-	@Transactional
-	List<Book> byPublisher(String publisher_name);
+	@Transactional(REQUIRES_NEW)
+	List<Book> byPublisher(@Size(min=2,max=100) String publisher_name);
+
+	@Find
+	List<Book> byTitle(@Nonnull String title);
 
 	@Query("select isbn where title like ?1 order by isbn")
 	String[] ssns(@NotBlank String title);
@@ -28,6 +35,9 @@ public interface Bookshop extends CrudRepository<Book,String> {
 
 	@Query("select count(this) where this.title like ?1 order by this.isbn")
 	long count2(String title);
+
+	@Query("select length(text) where title = ?1")
+	int length(@Nonnull String title);
 
 	@Query("select count(this)")
 	long countAll();

@@ -3,16 +3,18 @@
 goal=
 if [ "$RDBMS" == "h2" ]; then
   # This is the default.
-  goal=""
+  goal="preVerifyRelease"
+  # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
+	export GRADLE_OPTS=-Dorg.gradle.jvmargs='-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=768m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8'
 elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then
   goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_4" ]; then
   goal="-Pdb=mariadb_ci"
-elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_12" ]; then
+elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_13" ]; then
   goal="-Pdb=pgsql_ci"
-elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_12" ]; then
+elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_13" ]; then
   goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle_ci"
@@ -60,10 +62,11 @@ elif [ "$RDBMS" == "db2_10_5" ]; then
   goal="-Pdb=db2"
 elif [ "$RDBMS" == "mssql" ] || [ "$RDBMS" == "mssql_2017" ]; then
   goal="-Pdb=mssql_ci"
+# Exclude some Sybase tests on CI because they use `xmltable` function which has a memory leak on the DB version in CI
 elif [ "$RDBMS" == "sybase" ]; then
-  goal="-Pdb=sybase_ci"
+  goal="-Pdb=sybase_ci -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "sybase_jconn" ]; then
-  goal="-Pdb=sybase_jconn_ci"
+  goal="-Pdb=sybase_jconn_ci -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
 elif [ "$RDBMS" == "hana_cloud" ]; then
@@ -81,4 +84,4 @@ function logAndExec() {
   exec "${@}"
 }
 
-logAndExec ./gradlew check ${goal} "${@}" -Plog-test-progress=true --stacktrace
+logAndExec ./gradlew ciCheck ${goal} "${@}" -Plog-test-progress=true --stacktrace

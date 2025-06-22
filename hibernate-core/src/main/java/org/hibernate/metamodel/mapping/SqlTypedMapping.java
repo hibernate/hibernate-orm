@@ -1,10 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
 
 import org.hibernate.engine.jdbc.Size;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Models the type of a thing that can be used as an expression in a SQL query
@@ -12,11 +14,11 @@ import org.hibernate.engine.jdbc.Size;
  * @author Christian Beikov
  */
 public interface SqlTypedMapping {
-	String getColumnDefinition();
-	Long getLength();
-	Integer getPrecision();
-	Integer getScale();
-	Integer getTemporalPrecision();
+	@Nullable String getColumnDefinition();
+	@Nullable Long getLength();
+	@Nullable Integer getPrecision();
+	@Nullable Integer getScale();
+	@Nullable Integer getTemporalPrecision();
 	default boolean isLob() {
 		return getJdbcMapping().getJdbcType().isLob();
 	}

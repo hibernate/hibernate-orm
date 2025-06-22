@@ -1,14 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+
+import java.util.Objects;
 
 /**
  * Models a reference to a {@link org.hibernate.query.sqm.tree.select.SqmAliasedNode}
@@ -21,7 +24,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	// The navigable path is optionally set in case this is a reference to an attribute of a selection
 	private final NavigablePath navigablePath;
 
-	public SqmAliasedNodeRef(int position, SqmExpressible<Integer> intType, NodeBuilder criteriaBuilder) {
+	public SqmAliasedNodeRef(int position, SqmBindableType<Integer> intType, NodeBuilder criteriaBuilder) {
 		super( intType, criteriaBuilder );
 		this.position = position;
 		this.navigablePath = null;
@@ -30,7 +33,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	public SqmAliasedNodeRef(
 			int position,
 			NavigablePath navigablePath,
-			SqmExpressible<Integer> type,
+			SqmBindableType<Integer> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.position = position;
@@ -70,12 +73,25 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( navigablePath == null ) {
-			sb.append( position );
+			hql.append( position );
 		}
 		else {
-			sb.append( navigablePath.getLocalName() );
+			hql.append( navigablePath.getLocalName() );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmAliasedNodeRef that
+			&& position == that.position
+			&& Objects.equals( navigablePath == null ? null : navigablePath.getLocalName(),
+				that.navigablePath == null ? null : that.navigablePath.getLocalName() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( position, navigablePath == null ? null : navigablePath.getLocalName() );
 	}
 }

@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.internal.log.SubSystemLogging;
 
@@ -23,6 +24,7 @@ import java.lang.invoke.MethodHandles;
 		name = JaxbLogger.LOGGER_NAME,
 		description = "Logging related to JAXB processing"
 )
+@Internal
 public interface JaxbLogger extends BasicLogger {
 	String LOGGER_NAME = BootLogging.NAME + ".jaxb";
 	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JaxbLogger.class, LOGGER_NAME );

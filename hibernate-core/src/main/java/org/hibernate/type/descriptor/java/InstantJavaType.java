@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -40,6 +40,11 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 
 	public InstantJavaType() {
 		super( Instant.class, ImmutableMutabilityPlan.instance() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Instant;
 	}
 
 	@Override
@@ -146,16 +151,15 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			return null;
 		}
 
-		if ( value instanceof Instant ) {
-			return (Instant) value;
+		if ( value instanceof Instant instant ) {
+			return instant;
 		}
 
-		if ( value instanceof OffsetDateTime ) {
-			return ( (OffsetDateTime) value ).toInstant();
+		if ( value instanceof OffsetDateTime offsetDateTime ) {
+			return offsetDateTime.toInstant();
 		}
 
-		if ( value instanceof Timestamp ) {
-			final Timestamp ts = (Timestamp) value;
+		if ( value instanceof Timestamp timestamp ) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -166,20 +170,19 @@ public class InstantJavaType extends AbstractTemporalJavaType<Instant>
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			if ( ts.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
+			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toInstant();
 			}
 			else {
-				return ts.toInstant();
+				return timestamp.toInstant();
 			}
 		}
 
-		if ( value instanceof Long ) {
-			return Instant.ofEpochMilli( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return Instant.ofEpochMilli( longValue );
 		}
 
-		if ( value instanceof Calendar ) {
-			final Calendar calendar = (Calendar) value;
+		if ( value instanceof Calendar calendar ) {
 			return ZonedDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() ).toInstant();
 		}
 

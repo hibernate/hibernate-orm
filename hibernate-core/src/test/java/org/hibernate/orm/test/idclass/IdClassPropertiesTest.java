@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.idclass;
@@ -7,6 +7,7 @@ package org.hibernate.orm.test.idclass;
 import java.io.Serializable;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Marco Belladelli
  */
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16761" )
+@Exclude
 public class IdClassPropertiesTest {
 	@Test
 	public void testRight() {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.NonTransientException;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.model.domain.internal.EntityPersisterConcurrentMap;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
@@ -32,15 +33,18 @@ public class MappingModelCreationProcess {
 	 */
 	public static void process(
 			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		final MappingModelCreationProcess process = new MappingModelCreationProcess(
 				entityPersisterMap,
+				collectionPersisterMap,
 				creationContext
 		);
 		process.execute();
 	}
 
 	private final EntityPersisterConcurrentMap entityPersisterMap;
+	private final Map<String, CollectionPersister> collectionPersisterMap;
 	private final RuntimeModelCreationContext creationContext;
 
 	private String currentlyProcessingRole;
@@ -48,8 +52,10 @@ public class MappingModelCreationProcess {
 
 	private MappingModelCreationProcess(
 			EntityPersisterConcurrentMap entityPersisterMap,
+			Map<String, CollectionPersister> collectionPersisterMap,
 			RuntimeModelCreationContext creationContext) {
 		this.entityPersisterMap = entityPersisterMap;
+		this.collectionPersisterMap = collectionPersisterMap;
 		this.creationContext = creationContext;
 	}
 
@@ -70,16 +76,22 @@ public class MappingModelCreationProcess {
 	 */
 	private void execute() {
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
-			if ( entityPersister instanceof InFlightEntityMappingType ) {
-				( (InFlightEntityMappingType) entityPersister ).linkWithSuperType( this );
+			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.linkWithSuperType( this );
 			}
 		}
 
 		for ( EntityPersister entityPersister : entityPersisterMap.values() ) {
 			currentlyProcessingRole = entityPersister.getEntityName();
 
-			if ( entityPersister instanceof InFlightEntityMappingType ) {
-				( (InFlightEntityMappingType) entityPersister ).prepareMappingModel( this );
+			if ( entityPersister instanceof InFlightEntityMappingType inFlightEntityMappingType ) {
+				inFlightEntityMappingType.prepareMappingModel( this );
+			}
+		}
+
+		for ( CollectionPersister collectionPersister : collectionPersisterMap.values() ) {
+			if ( collectionPersister instanceof InFlightCollectionMapping inFlightCollectionMapping ) {
+				inFlightCollectionMapping.prepareMappingModel( this );
 			}
 		}
 

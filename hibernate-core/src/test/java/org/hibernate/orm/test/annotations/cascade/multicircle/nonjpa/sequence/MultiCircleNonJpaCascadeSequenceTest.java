@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.cascade.multicircle.nonjpa.sequence;
@@ -115,44 +115,7 @@ public class MultiCircleNonJpaCascadeSequenceTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		b.setC( null );
-		b.setD( null );
-		b.getGCollection().remove( g );
-
-		c.getBCollection().remove( b );
-		c.getDCollection().remove( d );
-
-		d.getBCollection().remove( b );
-		d.setC( null );
-		d.setE( null );
-		d.getFCollection().remove( f );
-
-		e.getDCollection().remove( d );
-		e.setF( null );
-
-		f.setD( null );
-		f.getECollection().remove( e );
-		f.setG( null );
-
-		g.setB( null );
-		g.getFCollection().remove( f );
-
-		scope.inTransaction(
-				session -> {
-					b = session.merge( b );
-					c = session.merge( c );
-					d = session.merge( d );
-					e = session.merge( e );
-					f = session.merge( f );
-					g = session.merge( g );
-					session.remove( f );
-					session.remove( g );
-					session.remove( b );
-					session.remove( d );
-					session.remove( e );
-					session.remove( c );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

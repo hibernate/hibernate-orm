@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.test.util;
@@ -139,19 +139,6 @@ public class TestUtil {
 			expectedType = expectedType.getComponentType();
 			actualType = getComponentType( actualType );
 		}
-		assertEquals(
-				"Types do not match: " + buildErrorString( errorString, clazz ),
-				expectedType,
-				actualType
-		);
-	}
-
-	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Type expectedType,
-			String errorString) {
-		Field field = getFieldFromMetamodelFor( clazz, fieldName );
-		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
-		ParameterizedType type = (ParameterizedType) field.getGenericType();
-		Type actualType = type.getActualTypeArguments()[1];
 		assertEquals(
 				"Types do not match: " + buildErrorString( errorString, clazz ),
 				expectedType,
@@ -335,6 +322,9 @@ public class TestUtil {
 	}
 
 	public static File getMetaModelSourceFileFor(Class<?> clazz, boolean prefix) {
+		if ( clazz.isMemberClass() ) {
+			return getMetaModelSourceFileFor( clazz.getEnclosingClass(), prefix );
+		}
 		String metaModelClassName = getMetaModelClassName(clazz, prefix);
 		// generate the file name
 		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
@@ -351,13 +341,17 @@ public class TestUtil {
 	}
 
 	private static String getMetaModelClassName(Class<?> clazz, boolean prefix) {
-		return prefix
-				? clazz.getPackageName() + '.' + META_MODEL_CLASS_POSTFIX + clazz.getSimpleName()
-				: clazz.getName() + META_MODEL_CLASS_POSTFIX;
+		final String packageName = clazz.getPackageName();
+		return prefix ? packageName + '.' + META_MODEL_CLASS_POSTFIX + clazz.getName().substring( packageName.length() + 1 )
+				.replaceAll( "\\$", "\\$_" )
+				: packageName + clazz.getName().substring( packageName.length() )
+						.replaceAll( "\\$", "_\\$" ) + META_MODEL_CLASS_POSTFIX;
 	}
 
 	private static String getMetaModelClassName(String className) {
-		return className + META_MODEL_CLASS_POSTFIX;
+		final int index = className.lastIndexOf( '.' );
+		final String packageName = className.substring( 0, index + 1 );
+		return packageName + className.substring( packageName.length() ).replaceAll( "\\$", "_\\$" ) + META_MODEL_CLASS_POSTFIX;
 	}
 
 	public static String getMetaModelSourceAsString(Class<?> clazz) {

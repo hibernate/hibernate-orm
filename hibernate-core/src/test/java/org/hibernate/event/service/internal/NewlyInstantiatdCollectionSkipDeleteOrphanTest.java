@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.service.internal;
@@ -88,17 +88,7 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			if ( up.getId() != null ) {
-				s.remove( up );
-			}
-			if ( vp.getId() != null ) {
-				s.remove( vp );
-			}
-			if ( c.getId() != null ) {
-				s.remove( c );
-			}
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

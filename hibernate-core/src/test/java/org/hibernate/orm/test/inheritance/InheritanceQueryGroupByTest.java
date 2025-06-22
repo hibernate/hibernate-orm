@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.inheritance;
@@ -150,8 +150,8 @@ public class InheritanceQueryGroupByTest {
 					Long.class
 			).getSingleResult();
 			assertThat( sum ).isEqualTo( 3L );
-			// When not selected, group by should only use the foreign key (parent_id)
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, parentFkName, 2 );
+			// Association is joined, so every use of the join alias will make use of target table columns
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, parentFkName, 1 );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", childPropCount );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", childPropCount );
 		} );
@@ -234,8 +234,8 @@ public class InheritanceQueryGroupByTest {
 					Long.class
 			).getSingleResult();
 			assertThat( sum ).isEqualTo( 3L );
-			// When not selected, group by should only use the foreign key (parent_id)
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, parentFkName, 3 );
+			// Association is joined, so every use of the join alias will make use of target table columns
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, parentFkName, 1 );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_one_col", childPropCount );
 			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "child_two_col", childPropCount );
 		} );

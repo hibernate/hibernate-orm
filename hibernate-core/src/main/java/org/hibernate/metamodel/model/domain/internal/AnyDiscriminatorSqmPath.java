@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.model.domain.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.DiscriminatorSqmPath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -12,6 +12,8 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements DiscriminatorSqmPath<T> {
 
@@ -43,6 +45,19 @@ public class AnyDiscriminatorSqmPath<T> extends AbstractSqmPath<T> implements Di
 
 	@Override
 	public AnyDiscriminatorSqmPathSource<T> getExpressible() {
-		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
+//		return (AnyDiscriminatorSqmPathSource<T>) getNodeType();
+		return (AnyDiscriminatorSqmPathSource<T>) getReferencedPathSource();
+	}
+
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof AnyDiscriminatorSqmPath<?> that
+			&& Objects.equals( this.getLhs(), that.getLhs() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getLhs().hashCode();
 	}
 }

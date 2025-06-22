@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hbm.query;
@@ -9,7 +9,7 @@ import java.io.StringReader;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.jdbc.ReaderInputStream;
+import org.hibernate.internal.util.ReaderInputStream;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;

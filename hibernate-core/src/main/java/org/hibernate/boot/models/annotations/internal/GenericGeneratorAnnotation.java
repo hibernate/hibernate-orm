@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.models.HibernateAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,7 +24,7 @@ public class GenericGeneratorAnnotation implements GenericGenerator {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public GenericGeneratorAnnotation(SourceModelBuildingContext modelContext) {
+	public GenericGeneratorAnnotation(ModelsContext modelContext) {
 		this.type = org.hibernate.generator.Generator.class;
 		this.strategy = "native";
 		this.parameters = new org.hibernate.annotations.Parameter[0];
@@ -33,7 +33,7 @@ public class GenericGeneratorAnnotation implements GenericGenerator {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public GenericGeneratorAnnotation(GenericGenerator annotation, SourceModelBuildingContext modelContext) {
+	public GenericGeneratorAnnotation(GenericGenerator annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.type = annotation.type();
 		this.strategy = annotation.strategy();
@@ -48,7 +48,7 @@ public class GenericGeneratorAnnotation implements GenericGenerator {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public GenericGeneratorAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public GenericGeneratorAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.type = (Class<? extends org.hibernate.generator.Generator>) attributeValues.get( "type" );
 		this.strategy = (String) attributeValues.get( "strategy" );

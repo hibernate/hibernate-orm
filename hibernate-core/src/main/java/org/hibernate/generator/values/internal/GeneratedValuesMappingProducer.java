@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.values.internal;
@@ -12,8 +12,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
-import org.hibernate.query.results.DomainResultCreationStateImpl;
-import org.hibernate.query.results.JdbcValuesMappingImpl;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
+import org.hibernate.query.results.internal.JdbcValuesMappingImpl;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -57,7 +57,6 @@ public class GeneratedValuesMappingProducer implements JdbcValuesMappingProducer
 			final DomainResult<?> domainResult = resultBuilder.buildResult(
 					jdbcResultsMetadata,
 					domainResults.size(),
-					creationState.getLegacyFetchResolver()::resolve,
 					creationState
 			);
 

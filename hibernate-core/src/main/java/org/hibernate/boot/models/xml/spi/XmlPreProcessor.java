@@ -1,13 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.spi;
 
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
-import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 
@@ -26,17 +24,13 @@ public class XmlPreProcessor {
 			ManagedResources managedResources,
 			PersistenceUnitMetadata persistenceUnitMetadata) {
 		final XmlPreProcessingResultImpl collected = new XmlPreProcessingResultImpl( persistenceUnitMetadata );
-
-		for ( Binding<JaxbBindableMappingDescriptor> mappingXmlBinding : managedResources.getXmlMappingBindings() ) {
-			// for now skip hbm.xml
-			final JaxbBindableMappingDescriptor root = mappingXmlBinding.getRoot();
-			if ( root instanceof JaxbHbmHibernateMapping ) {
-				continue;
+		for ( var mappingXmlBinding : managedResources.getXmlMappingBindings() ) {
+			// skip hbm.xml
+			if ( mappingXmlBinding.getRoot() instanceof JaxbEntityMappingsImpl ) {
+				//noinspection unchecked
+				collected.addDocument( (Binding<JaxbEntityMappingsImpl>) mappingXmlBinding );
 			}
-			final JaxbEntityMappingsImpl jaxbEntityMappings = (JaxbEntityMappingsImpl) root;
-			collected.addDocument( jaxbEntityMappings );
 		}
-
 		return collected;
 	}
 }

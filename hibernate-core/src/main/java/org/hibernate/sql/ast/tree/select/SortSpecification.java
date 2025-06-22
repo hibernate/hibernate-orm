@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.select;
@@ -32,7 +32,7 @@ public class SortSpecification implements SqlAstNode {
 	/**
 	 * @deprecated Use {@linkplain #SortSpecification(Expression, SortDirection, Nulls)} instead
 	 */
-	@Deprecated
+	@Deprecated(since = "7", forRemoval = true)
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
 	}

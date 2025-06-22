@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.function.array;
@@ -15,6 +15,7 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayContains.class)
 // Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 @BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayContainsTest {
@@ -47,9 +49,7 @@ public class ArrayContainsTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createMutationQuery( "delete from EntityWithArrays" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -152,6 +152,24 @@ public class ArrayContainsTest {
 			//end::hql-array-in-hql-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	@JiraKey( "HHH-18851" )
+	public void testInArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Tuple> results = em.createQuery(
+							"select e.id " +
+									"from EntityWithArrays e " +
+									"where :p in e.theArray",
+							Tuple.class
+					)
+					.setParameter( "p", "abc" )
+					.getResultList();
+
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).get( 0 ) );
 		} );
 	}
 

@@ -1,2 +1,3 @@
 org.hibernate.vector.PGVectorTypeContributor
 org.hibernate.vector.OracleVectorTypeContributor
+org.hibernate.vector.MariaDBTypeContributor

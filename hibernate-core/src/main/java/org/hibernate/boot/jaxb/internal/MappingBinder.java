@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal;
@@ -119,14 +119,10 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 		this(
 				serviceRegistry.getService( ClassLoaderService.class ),
 				(settingName) -> {
-					final ConfigurationService configurationService;
-					if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
-						configurationService = serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class );
-					}
-					else {
-						configurationService = serviceRegistry.getService( ConfigurationService.class );
-					}
-
+					final ConfigurationService configurationService =
+							serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor
+									? serviceRegistryImplementor.fromRegistryOrChildren( ConfigurationService.class )
+									: serviceRegistry.getService( ConfigurationService.class );
 					return configurationService == null ? null : configurationService.getSettings().get( settingName );
 				}
 		);

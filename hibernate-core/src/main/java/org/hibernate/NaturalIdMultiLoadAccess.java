@@ -1,16 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
-import java.util.List;
-import java.util.Map;
+import jakarta.persistence.EntityGraph;
 
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.asMap;
+import java.util.List;
 
 /**
  * Loads multiple instances of a given entity type at once, by
@@ -38,6 +38,38 @@ import static org.hibernate.internal.util.collections.CollectionHelper.asMap;
  * @see org.hibernate.annotations.NaturalId
  */
 public interface NaturalIdMultiLoadAccess<T> {
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 * @return {@code this}, for method chaining
+	 */
+	default NaturalIdMultiLoadAccess<T> with(LockMode lockMode) {
+		return with( lockMode, PessimisticLockScope.NORMAL );
+	}
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NaturalIdMultiLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope);
+
+	/**
+	 * Specify the {@linkplain Timeout timeout} to use when
+	 * querying the database.
+	 *
+	 * @param timeout The timeout to apply to the database operation
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NaturalIdMultiLoadAccess<T> with(Timeout timeout);
+
 	/**
 	 * Specify the {@linkplain LockOptions lock options} to use when
 	 * querying the database.
@@ -45,7 +77,12 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * @param lockOptions The lock options to use
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use one of {@linkplain #with(LockMode)},
+	 * {@linkplain #with(LockMode, PessimisticLockScope)}
+	 * and/or {@linkplain #with(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	NaturalIdMultiLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
@@ -64,7 +101,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdMultiLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -75,7 +112,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdMultiLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -83,7 +120,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * @deprecated use {@link #withLoadGraph}
 	 */
 	@Deprecated(since = "6.3")
-	default NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph) {
+	default NaturalIdMultiLoadAccess<T> with(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -92,7 +129,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
 	 * and how it should be {@linkplain GraphSemantic interpreted}.
 	 */
-	NaturalIdMultiLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	NaturalIdMultiLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Specify a batch size, that is, how many entities should be
@@ -119,7 +156,7 @@ public interface NaturalIdMultiLoadAccess<T> {
 	/**
 	 * Should {@link #multiLoad} return entity instances that have been
 	 * {@link Session#remove(Object) marked for removal} in the current
-	 * session, but not yet {@code delete}d in the database?
+	 * session, but not yet deleted in the database?
 	 * <p>
 	 * By default, instances marked for removal are replaced by null in
 	 * the returned list of entities when {@link #enableOrderedReturn}
@@ -174,18 +211,4 @@ public interface NaturalIdMultiLoadAccess<T> {
 	 * @return The managed entities.
 	 */
 	List<T> multiLoad(List<?> ids);
-
-	/**
-	 * Helper for creating a {@link Map} that represents the value of a
-	 * composite natural id. An even number of arguments is expected,
-	 * with each attribute name followed by its value.
-	 *
-	 * @see NaturalIdLoadAccess#using(Object...)
-	 *
-	 * @deprecated use {@link Map#of} instead
-	 */
-	@Deprecated(since = "6.3")
-	static Map<String,?> compoundValue(Object... elements) {
-		return asMap( elements );
-	}
 }

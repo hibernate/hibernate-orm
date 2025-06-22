@@ -1,33 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -42,7 +19,6 @@ import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -63,7 +39,6 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.classic.Lifecycle;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.LockingStrategy;
@@ -72,7 +47,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
-import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -83,25 +57,22 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.NaturalIdResolutions;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.LoadEvent;
+import org.hibernate.event.spi.MergeContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.generator.values.internal.GeneratedValuesHelper;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
@@ -112,17 +83,16 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
+import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
-import org.hibernate.loader.ast.internal.MultiIdEntityLoaderStandard;
+import org.hibernate.loader.ast.internal.MultiIdEntityLoaderInPredicate;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
@@ -143,7 +113,6 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
@@ -153,7 +122,6 @@ import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
-import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -164,8 +132,7 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
-import org.hibernate.metamodel.mapping.MappingModelHelper;
+import org.hibernate.metamodel.mapping.internal.MappingModelHelper;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
@@ -180,7 +147,6 @@ import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatorTypeImpl;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.loader.ast.internal.EntityConcreteTypeLoader;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
 import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
@@ -191,6 +157,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.SimpleAttributeMetadata;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.UnifiedAnyDiscriminatorConverter;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -217,7 +184,6 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategyProvider;
@@ -256,6 +222,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -280,25 +248,48 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.io.Serializable;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.processIfManagedEntity;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
-import static org.hibernate.engine.internal.ManagedTypeHelper.processIfSelfDirtinessTracker;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
+import static org.hibernate.internal.util.collections.ArrayHelper.isAllTrue;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
@@ -323,7 +314,8 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 @Internal
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
-		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
+		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer,
+				FetchProfileAffectee, Joinable {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
@@ -336,6 +328,7 @@ public abstract class AbstractEntityPersister
 	private final EntityEntryFactory entityEntryFactory;
 
 	private final String sqlAliasStem;
+	private final String jpaEntityName;
 
 	private SingleIdEntityLoader<?> singleIdLoader;
 	private MultiIdEntityLoader<?> multiIdLoader;
@@ -462,8 +455,6 @@ public abstract class AbstractEntityPersister
 	 */
 	private final EntityPropertyMapping propertyMapping;
 
-	private final boolean implementsLifecycle;
-
 	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 	private ConcurrentHashMap<String,SingleIdArrayLoadPlan> nonLazyPropertyLoadPlansByName;
 
@@ -472,6 +463,7 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this.jpaEntityName = persistentClass.getJpaEntityName();
 
 		//set it here, but don't call it, since it's still uninitialized!
 		factory = creationContext.getSessionFactory();
@@ -497,7 +489,7 @@ public abstract class AbstractEntityPersister
 			isLazyPropertiesCacheable = true;
 		}
 
-		entityMetamodel = new EntityMetamodel( persistentClass, this, creationContext );
+		entityMetamodel = creationContext.createEntityMetamodel( persistentClass, this );
 
 		entityEntryFactory = entityMetamodel.isMutable()
 				? MutableEntityEntryFactory.INSTANCE
@@ -515,12 +507,12 @@ public abstract class AbstractEntityPersister
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		representationStrategy = creationContext.getBootstrapContext().getRepresentationStrategySelector()
-				.resolveStrategy( persistentClass, this, creationContext );
-
+		representationStrategy =
+				creationContext.getBootstrapContext().getRepresentationStrategySelector()
+						.resolveStrategy( persistentClass, this, creationContext );
 		javaType = representationStrategy.getLoadJavaType();
 		assert javaType != null;
-		this.implementsLifecycle = Lifecycle.class.isAssignableFrom( javaType.getJavaTypeClass() );
+		accessOptimizer = accessOptimizer( representationStrategy );
 
 		concreteProxy = entityMetamodel.isPolymorphic()
 				&& ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() || hasProxy() )
@@ -551,18 +543,13 @@ public abstract class AbstractEntityPersister
 		queryLoaderName = persistentClass.getLoaderName();
 
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 
 		final List<Column> columns = persistentClass.getIdentifier().getColumns();
 		for (int i = 0; i < columns.size(); i++ ) {
 			final Column column = columns.get(i);
 			rootTableKeyColumnNames[i] = column.getQuotedName( dialect );
 			rootTableKeyColumnReaders[i] = column.getReadExpr( dialect );
-			rootTableKeyColumnReaderTemplates[i] = column.getTemplate(
-					dialect,
-					typeConfiguration,
-					functionRegistry
-			);
+			rootTableKeyColumnReaderTemplates[i] = column.getTemplate( dialect, typeConfiguration );
 			identifierAliases[i] = column.getAlias( dialect, persistentClass.getRootTable() );
 		}
 
@@ -628,11 +615,7 @@ public abstract class AbstractEntityPersister
 					foundFormula = true;
 					final Formula formula = (Formula) selectable;
 					formula.setFormula( substituteBrackets( formula.getFormula() ) );
-					formulaTemplates[k] = selectable.getTemplate(
-							dialect,
-							typeConfiguration,
-							functionRegistry
-					);
+					formulaTemplates[k] = selectable.getTemplate( dialect, typeConfiguration );
 				}
 				else {
 					final Column column = (Column) selectable;
@@ -684,6 +667,15 @@ public abstract class AbstractEntityPersister
 		final ArrayList<String[]> propColumnReaderTemplates = new ArrayList<>();
 		final ArrayList<FetchMode> joinedFetchesList = new ArrayList<>();
 
+		if ( persistentClass.hasSubclasses() ) {
+			for ( Selectable selectable : persistentClass.getIdentifier().getSelectables() ) {
+				if ( !selectable.isFormula() ) {
+					// Identifier columns are always shared between subclasses
+					sharedColumnNames.add( ( (Column) selectable ).getQuotedName( dialect ) );
+				}
+			}
+		}
+
 		for ( Property prop : persistentClass.getSubclassPropertyClosure() ) {
 			names.add( prop.getName() );
 			types.add( prop.getType() );
@@ -697,11 +689,7 @@ public abstract class AbstractEntityPersister
 			for ( int i = 0; i < selectables.size(); i++ ) {
 				final Selectable selectable = selectables.get(i);
 				if ( selectable.isFormula() ) {
-					final String template = selectable.getTemplate(
-							dialect,
-							typeConfiguration,
-							functionRegistry
-					);
+					final String template = selectable.getTemplate( dialect, typeConfiguration );
 					forms[i] = template;
 					final String formulaAlias = selectable.getAlias( dialect );
 					if ( prop.isSelectable() && !formulaAliases.contains( formulaAlias ) ) {
@@ -720,8 +708,7 @@ public abstract class AbstractEntityPersister
 					readers[i] = column.getReadExpr( dialect );
 					readerTemplates[i] = column.getTemplate(
 							dialect,
-							typeConfiguration,
-							functionRegistry
+							typeConfiguration
 					);
 					if ( thisClassProperties.contains( prop )
 							? persistentClass.hasSubclasses()
@@ -815,14 +802,15 @@ public abstract class AbstractEntityPersister
 			final NamedQueryMemento<?> memento = getNamedQueryMemento( null );
 			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
 		}
-		return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+		else {
+			return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+		}
 	}
 
 	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
-			return factory.getServiceRegistry()
-					.requireService( BatchLoaderFactory.class )
+			return factory.getServiceRegistry().requireService( BatchLoaderFactory.class )
 					.createEntityBatchLoader( batchSize, this, loadQueryInfluencers );
 		}
 		else {
@@ -851,24 +839,21 @@ public abstract class AbstractEntityPersister
 		return entityNameByTableNameMap;
 	}
 
-	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
-		if ( getIdentifierType() instanceof BasicType
-				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
-			return new MultiIdEntityLoaderArrayParam<>( this, factory );
-		}
-		else {
-			return new MultiIdEntityLoaderStandard<>( this, identifierColumnSpan, factory );
-		}
+	/**
+	 * Used by Hibernate Reactive
+	 */
+	protected MultiIdEntityLoader<?> buildMultiIdLoader() {
+		return getIdentifierType() instanceof BasicType
+			&& supportsSqlArrayType( getDialect() )
+				? new MultiIdEntityLoaderArrayParam<>( this, factory )
+				: new MultiIdEntityLoaderInPredicate<>( this, identifierColumnSpan, factory );
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
 		try {
+			final int idTypeCode = ((BasicType<?>) getIdentifierType()).getJdbcType().getDdlTypeCode();
 			return dialect.getIdentityColumnSupport()
-					.getIdentitySelectString(
-							getTableName(0),
-							getKeyColumns(0)[0],
-							( (BasicType<?>) getIdentifierType() ).getJdbcType().getDdlTypeCode()
-					);
+					.getIdentitySelectString( getTableName(0), getKeyColumns(0)[0], idTypeCode );
 		}
 		catch (MappingException ex) {
 			return null;
@@ -1173,8 +1158,7 @@ public abstract class AbstractEntityPersister
 	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
 		final ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList<>();
 		for ( Type propertyType : aep.getPropertyTypes() ) {
-			if ( propertyType instanceof AssociationType ) {
-				final AssociationType associationType = (AssociationType) propertyType;
+			if ( propertyType instanceof AssociationType associationType ) {
 				final String ukName = associationType.getLHSPropertyName();
 				if ( ukName != null ) {
 					final AttributeMapping attributeMapping = aep.findAttributeMapping( ukName );
@@ -1199,7 +1183,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected Map<String, SingleIdArrayLoadPlan> getLazyLoadPlanByFetchGroup() {
-		final BytecodeEnhancementMetadata metadata = entityMetamodel.getBytecodeEnhancementMetadata();
+		final var metadata = getBytecodeEnhancementMetadata();
 		return metadata.isEnhancedForLazyLoading() && metadata.getLazyAttributesMetadata().hasLazyAttributes()
 				? createLazyLoadPlanByFetchGroup( metadata )
 				: emptyMap();
@@ -1227,7 +1211,6 @@ public abstract class AbstractEntityPersister
 			// use the subclass closure
 			partsToSelect.add( getAttributeMapping( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
 		}
-
 		return createLazyLoanPlan( partsToSelect );
 	}
 
@@ -1394,8 +1377,10 @@ public abstract class AbstractEntityPersister
 
 		identifierMapping.forEachSelectable(
 				(columnIndex, selection) -> {
+					final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
+
 					final String rootPkColumnName = pkColumnNames[ columnIndex ];
-					final Expression pkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
+					final Expression pkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
 							createColumnReferenceKey(
 									rootTableReference,
 									rootPkColumnName,
@@ -1411,7 +1396,7 @@ public abstract class AbstractEntityPersister
 					);
 
 					final String fkColumnName = fkColumnNames[ columnIndex ];
-					final Expression fkColumnExpression = creationState.getSqlExpressionResolver().resolveSqlExpression(
+					final Expression fkColumnExpression = sqlExpressionResolver.resolveSqlExpression(
 							createColumnReferenceKey(
 									joinedTableReference,
 									fkColumnName,
@@ -1435,62 +1420,17 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object initializeLazyProperty(String fieldName, Object entity, SharedSessionContractImplementor session) {
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityEntry entry = persistenceContext.getEntry( entity );
-		final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
+		return hasCollections() && getPropertyType( fieldName ) instanceof CollectionType collectionType
+				? initializedLazyCollection( fieldName, entity, collectionType, session )
+				: initializedLazyField( fieldName, entity, session );
+	}
 
-		if ( hasCollections() ) {
-			final Type type = getPropertyType( fieldName );
-			if ( type instanceof CollectionType ) {
-				// we have a condition where a collection attribute is being access via enhancement:
-				// 		we can circumvent all the rest and just return the PersistentCollection
-				final CollectionType collectionType = (CollectionType) type;
-				final CollectionPersister persister = factory.getRuntimeMetamodels()
-						.getMappingMetamodel()
-						.getCollectionDescriptor( collectionType.getRole() );
-
-				// Get/create the collection, and make sure it is initialized!  This initialized part is
-				// different from proxy-based scenarios where we have to create the PersistentCollection
-				// reference "ahead of time" to add as a reference to the proxy.  For bytecode solutions
-				// we are not creating the PersistentCollection ahead of time, but instead we are creating
-				// it on first request through the enhanced entity.
-
-				// see if there is already a collection instance associated with the session
-				// 		NOTE : can this ever happen?
-				final Object key = getCollectionKey( persister, entity, entry, session );
-				assert key != null;
-				PersistentCollection<?> collection = persistenceContext.getCollection( new CollectionKey( persister, key ) );
-				if ( collection == null ) {
-					collection = collectionType.instantiate( session, persister, key );
-					collection.setOwner( entity );
-					persistenceContext.addUninitializedCollection( persister, collection, key );
-				}
-
-				interceptor.attributeInitialized( fieldName );
-
-				if ( collectionType.isArrayType() ) {
-					persistenceContext.addCollectionHolder( collection );
-				}
-
-				// update the "state" of the entity's EntityEntry to over-write UNFETCHED_PROPERTY reference
-				// for the collection to the just loaded collection
-				final EntityEntry ownerEntry = persistenceContext.getEntry( entity );
-				if ( ownerEntry == null ) {
-					// the entity is not in the session; it was probably deleted,
-					// so we cannot load the collection anymore.
-					throw new LazyInitializationException(
-							"Could not locate EntityEntry for the collection owner in the PersistenceContext"
-					);
-				}
-				ownerEntry.overwriteLoadedStateCollectionValue( fieldName, collection );
-
-				// EARLY EXIT!!!
-				return collection;
-			}
-		}
-
+	private Object initializedLazyField(
+			String fieldName,
+			Object entity,
+			SharedSessionContractImplementor session) {
 		final Object id = session.getContextEntityIdentifier( entity );
+		final EntityEntry entry = session.getPersistenceContext().getEntry( entity );
 		if ( entry == null ) {
 			throw new HibernateException( "entity is not associated with the session: " + id );
 		}
@@ -1503,14 +1443,23 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() && isLazyPropertiesCacheable() ) {
+		// attempt to read it from second-level cache
+		if ( session.getCacheMode().isGetEnabled()
+			&& canReadFromCache()
+			&& isLazyPropertiesCacheable() ) {
 			final EntityDataAccess cacheAccess = getCacheAccessStrategy();
-			final Object cacheKey = cacheAccess.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
+			final Object cacheKey =
+					cacheAccess.generateCacheKey(
+							id,
+							this,
+							session.getFactory(),
+							session.getTenantIdentifier()
+					);
 			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, this, cacheAccess );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
 				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
-				if (initializedValue != LazyPropertyInitializer.UNFETCHED_PROPERTY) {
+				if ( initializedValue != LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 					// The following should be redundant, since the setter should have set this already.
 					// interceptor.attributeInitialized(fieldName);
 
@@ -1521,7 +1470,60 @@ public abstract class AbstractEntityPersister
 		}
 
 		return initializeLazyPropertiesFromDatastore( entity, id, entry, fieldName, session );
+	}
 
+	private PersistentCollection<?> initializedLazyCollection(
+			String fieldName,
+			Object entity,
+			CollectionType collectionType,
+			SharedSessionContractImplementor session) {
+		// a collection attribute is being accessed via enhancement:
+		// we can circumvent all the rest and just return the PersistentCollection
+		final CollectionPersister persister =
+				factory.getMappingMetamodel()
+						.getCollectionDescriptor( collectionType.getRole() );
+
+		// Get/create the collection, and make sure it is initialized!  This initialized part is
+		// different from proxy-based scenarios where we have to create the PersistentCollection
+		// reference "ahead of time" to add as a reference to the proxy.  For bytecode solutions
+		// we are not creating the PersistentCollection ahead of time, but instead we are creating
+		// it on first request through the enhanced entity.
+
+		// see if there is already a collection instance associated with the session
+		// 		NOTE : can this ever happen?
+		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final EntityEntry entry = persistenceContext.getEntry( entity );
+		final Object key = getCollectionKey( persister, entity, entry, session );
+		assert key != null;
+		PersistentCollection<?> collection =
+				persistenceContext.getCollection( new CollectionKey( persister, key ) );
+		if ( collection == null ) {
+			collection = collectionType.instantiate( session, persister, key );
+			collection.setOwner( entity );
+			persistenceContext.addUninitializedCollection( persister, collection, key );
+		}
+
+		final var interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
+		interceptor.attributeInitialized( fieldName );
+
+		if ( collectionType.isArrayType() ) {
+			persistenceContext.addCollectionHolder( collection );
+		}
+
+		// update the "state" of the entity's EntityEntry to over-write UNFETCHED_PROPERTY reference
+		// for the collection to the just loaded collection
+		final EntityEntry ownerEntry = persistenceContext.getEntry( entity );
+		if ( ownerEntry == null ) {
+			// the entity is not in the session; it was probably deleted,
+			// so we cannot load the collection anymore.
+			throw new LazyInitializationException(
+					"Could not locate EntityEntry for the collection owner in the PersistenceContext"
+			);
+		}
+		ownerEntry.overwriteLoadedStateCollectionValue( fieldName, collection );
+
+		return collection;
 	}
 
 	public @Nullable static Object getCollectionKey(
@@ -1530,19 +1532,16 @@ public abstract class AbstractEntityPersister
 			EntityEntry ownerEntry,
 			SharedSessionContractImplementor session) {
 		final CollectionType collectionType = persister.getCollectionType();
-
 		if ( ownerEntry != null ) {
 			// this call only works when the owner is associated with the Session, which is not always the case
 			return collectionType.getKeyOfOwner( owner, session );
 		}
-
-		final EntityPersister ownerPersister = persister.getOwnerEntityPersister();
-		if ( collectionType.getLHSPropertyName() == null ) {
-			// collection key is defined by the owning entity identifier
-			return ownerPersister.getIdentifier( owner, session );
-		}
 		else {
-			return ownerPersister.getPropertyValue( owner, collectionType.getLHSPropertyName() );
+			final EntityPersister ownerPersister = persister.getOwnerEntityPersister();
+			return collectionType.getLHSPropertyName() == null
+					// collection key is defined by the owning entity identifier
+					? ownerPersister.getIdentifier( owner, session )
+					: ownerPersister.getPropertyValue( owner, collectionType.getLHSPropertyName() );
 		}
 	}
 
@@ -1552,116 +1551,116 @@ public abstract class AbstractEntityPersister
 			final EntityEntry entry,
 			final String fieldName,
 			final SharedSessionContractImplementor session) {
-		if ( nonLazyPropertyNames.contains( fieldName ) ) {
-			// An eager property can be lazy because of an applied EntityGraph
-			final List<ModelPart> partsToSelect = new ArrayList<>(1);
-			int propertyIndex = getPropertyIndex( fieldName );
-			partsToSelect.add( getAttributeMapping( propertyIndex ) );
-			SingleIdArrayLoadPlan lazyLoanPlan;
-			ConcurrentHashMap<String, SingleIdArrayLoadPlan> propertyLoadPlansByName = this.nonLazyPropertyLoadPlansByName;
-			if ( propertyLoadPlansByName == null ) {
-				propertyLoadPlansByName = new ConcurrentHashMap<>();
-				lazyLoanPlan = createLazyLoanPlan( partsToSelect );
-				propertyLoadPlansByName.put( fieldName, lazyLoanPlan );
-				this.nonLazyPropertyLoadPlansByName = propertyLoadPlansByName;
-			}
-			else {
-				lazyLoanPlan = nonLazyPropertyLoadPlansByName.get( fieldName );
-				if ( lazyLoanPlan == null ) {
-					lazyLoanPlan = createLazyLoanPlan( partsToSelect );
-					nonLazyPropertyLoadPlansByName.put( fieldName, lazyLoanPlan );
+		return nonLazyPropertyNames.contains( fieldName )
+				? initLazyProperty( entity, id, entry, fieldName, session )
+				: initLazyProperties( entity, id, entry, fieldName, session );
+	}
+
+	private Object initLazyProperties(
+			Object entity,
+			Object id,
+			EntityEntry entry,
+			String fieldName,
+			SharedSessionContractImplementor session) {
+
+		assert hasLazyProperties();
+		LOG.tracef( "Initializing lazy properties from datastore (triggered for '%s')", fieldName );
+
+		final var interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
+		assert interceptor != null : "Expecting bytecode interceptor to be non-null";
+		final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
+
+		final var lazyAttributesMetadata = getBytecodeEnhancementMetadata().getLazyAttributesMetadata();
+		final String fetchGroup = lazyAttributesMetadata.getFetchGroupName( fieldName );
+		final var fetchGroupAttributeDescriptors =
+				lazyAttributesMetadata.getFetchGroupAttributeDescriptors( fetchGroup );
+
+		final SingleIdArrayLoadPlan lazySelect = getSQLLazySelectLoadPlan( fetchGroup );
+		try {
+			Object finalResult = null;
+			final Object[] results = lazySelect.load( id, session );
+			int i = 0;
+			for ( var fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
+				final String attributeName = fetchGroupAttributeDescriptor.getName();
+				final boolean previousInitialized = initializedLazyAttributeNames.contains( attributeName );
+				if ( previousInitialized ) {
+					// it's already been initialized (e.g. by a write) so we don't want to overwrite
+					i++;
+					// TODO: we should consider un-marking an attribute as dirty based on the selected value
+					// - we know the current value:
+					//   getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
+					// - we know the selected value (see selectedValue below)
+					// - we can use the attribute Type to tell us if they are the same
+					// - assuming entity is a SelfDirtinessTracker we can also know if the attribute is currently
+					//   considered dirty, and if really not dirty we would do the un-marking
+					// - of course that would mean a new method on SelfDirtinessTracker to allow un-marking
+				}
+				else {
+					final Object result = results[i++];
+					if ( initializeLazyProperty( fieldName, entity, entry, fetchGroupAttributeDescriptor, result ) ) {
+						finalResult = result;
+						interceptor.attributeInitialized( attributeName );
+					}
 				}
 			}
-			try {
-				final Object[] values = lazyLoanPlan.load( id, session );
-				final Object selectedValue = values[0];
-				initializeLazyProperty(
-						entity,
-						entry,
-						selectedValue,
-						propertyIndex,
-						getPropertyTypes()[propertyIndex]
-				);
-				return selectedValue;
-			}
-			catch (JDBCException ex) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert(
-						ex.getSQLException(),
-						"could not initialize lazy properties: " + infoString( this, id, getFactory() ),
-						lazyLoanPlan.getJdbcSelect().getSqlString()
-				);
-			}
+			LOG.trace( "Done initializing lazy properties" );
+			return finalResult;
+		}
+		catch (JDBCException ex) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					ex.getSQLException(),
+					"could not initialize lazy properties: "
+							+ infoString( this, id, getFactory() ),
+					lazySelect.getJdbcSelect().getSqlString()
+			);
+		}
+	}
+
+	private Object initLazyProperty(
+			Object entity,
+			Object id,
+			EntityEntry entry,
+			String fieldName,
+			SharedSessionContractImplementor session) {
+		// An eager property can be lazy because of an applied EntityGraph
+		final int propertyIndex = getPropertyIndex( fieldName );
+		final List<ModelPart> partsToSelect = List.of( getAttributeMapping( propertyIndex ) );
+		final SingleIdArrayLoadPlan lazyLoanPlan = getOrCreateLazyLoadPlan( fieldName, partsToSelect );
+		try {
+			final Object[] results = lazyLoanPlan.load( id, session );
+			final Object result = results[0];
+			initializeLazyProperty( entity, entry, result, propertyIndex,
+					getPropertyTypes()[propertyIndex] );
+			return result;
+		}
+		catch (JDBCException ex) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					ex.getSQLException(),
+					"could not initialize lazy properties: "
+							+ infoString( this, id, getFactory() ),
+					lazyLoanPlan.getJdbcSelect().getSqlString()
+			);
+		}
+	}
+
+	private SingleIdArrayLoadPlan getOrCreateLazyLoadPlan(String fieldName, List<ModelPart> partsToSelect) {
+		var propertyLoadPlansByName = nonLazyPropertyLoadPlansByName;
+		if ( propertyLoadPlansByName == null ) {
+			propertyLoadPlansByName = new ConcurrentHashMap<>();
+			final SingleIdArrayLoadPlan newLazyLoanPlan = createLazyLoanPlan( partsToSelect );
+			propertyLoadPlansByName.put( fieldName, newLazyLoanPlan );
+			nonLazyPropertyLoadPlansByName = propertyLoadPlansByName;
+			return newLazyLoanPlan;
 		}
 		else {
-			if ( !hasLazyProperties() ) {
-				throw new AssertionFailure( "no lazy properties" );
+			final SingleIdArrayLoadPlan lazyLoanPlan = nonLazyPropertyLoadPlansByName.get( fieldName );
+			if ( lazyLoanPlan == null ) {
+				final SingleIdArrayLoadPlan newLazyLoanPlan = createLazyLoanPlan( partsToSelect );
+				nonLazyPropertyLoadPlansByName.put( fieldName, newLazyLoanPlan );
+				return newLazyLoanPlan;
 			}
-
-			final PersistentAttributeInterceptor interceptor = asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
-			assert interceptor != null : "Expecting bytecode interceptor to be non-null";
-
-			LOG.tracef( "Initializing lazy properties from datastore (triggered for `%s`)", fieldName );
-
-			final String fetchGroup = getEntityMetamodel().getBytecodeEnhancementMetadata()
-					.getLazyAttributesMetadata()
-					.getFetchGroupName( fieldName );
-			final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = getEntityMetamodel().getBytecodeEnhancementMetadata()
-					.getLazyAttributesMetadata()
-					.getFetchGroupAttributeDescriptors( fetchGroup );
-
-			final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
-
-			final SingleIdArrayLoadPlan lazySelect = getSQLLazySelectLoadPlan( fetchGroup );
-
-			try {
-				Object result = null;
-				final Object[] values = lazySelect.load( id, session );
-				int i = 0;
-				for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
-					final boolean previousInitialized = initializedLazyAttributeNames.contains(
-							fetchGroupAttributeDescriptor.getName() );
-
-					if ( previousInitialized ) {
-						// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
-						// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
-						// 		we know the selected value (see selectedValue below)
-						//		we can use the attribute Type to tell us if they are the same
-						//
-						//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
-						//			currently considered dirty, and if really not dirty we would do the un-marking
-						//
-						//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
-
-						// its already been initialized (e.g. by a write) so we don't want to overwrite
-						i++;
-						continue;
-					}
-
-					final Object selectedValue = values[i++];
-					final boolean set = initializeLazyProperty(
-							fieldName,
-							entity,
-							entry,
-							fetchGroupAttributeDescriptor,
-							selectedValue
-					);
-					if ( set ) {
-						result = selectedValue;
-						interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
-					}
-				}
-
-				LOG.trace( "Done initializing lazy properties" );
-
-				return result;
-
-			}
-			catch (JDBCException ex) {
-				throw session.getJdbcServices().getSqlExceptionHelper().convert(
-						ex.getSQLException(),
-						"could not initialize lazy properties: " + infoString( this, id, getFactory() ),
-						lazySelect.getJdbcSelect().getSqlString()
-				);
+			else {
+				return lazyLoanPlan;
 			}
 		}
 	}
@@ -1672,11 +1671,9 @@ public abstract class AbstractEntityPersister
 			final SharedSessionContractImplementor session,
 			final EntityEntry entry,
 			final CacheEntry cacheEntry) {
-
 		LOG.trace( "Initializing lazy properties from second-level cache" );
-
 		Object result = null;
-		Serializable[] disassembledValues = cacheEntry.getDisassembledState();
+		final Serializable[] disassembledValues = cacheEntry.getDisassembledState();
 		for ( int j = 0; j < lazyPropertyNames.length; j++ ) {
 			final Serializable cachedValue = disassembledValues[lazyPropertyNumbers[j]];
 			final Type lazyPropertyType = lazyPropertyTypes[j];
@@ -1694,9 +1691,7 @@ public abstract class AbstractEntityPersister
 				}
 			}
 		}
-
 		LOG.trace( "Done initializing lazy properties" );
-
 		return result;
 	}
 
@@ -1721,40 +1716,30 @@ public abstract class AbstractEntityPersister
 		return fieldName.equals( lazyPropertyNames[index] );
 	}
 
-
-
 	protected boolean initializeLazyProperty(
 			final String fieldName,
 			final Object entity,
 			final EntityEntry entry,
-			LazyAttributeDescriptor fetchGroupAttributeDescriptor,
+			final LazyAttributeDescriptor fetchGroupAttributeDescriptor,
 			final Object propValue) {
 		final String name = fetchGroupAttributeDescriptor.getName();
-		initializeLazyProperty(
-				entity,
-				entry,
-				propValue,
+		initializeLazyProperty( entity, entry, propValue,
 				getPropertyIndex( name ),
-				fetchGroupAttributeDescriptor.getType()
-		);
+				fetchGroupAttributeDescriptor.getType() );
 		return fieldName.equals( name );
 	}
 
 	private void initializeLazyProperty(Object entity, EntityEntry entry, Object propValue, int index, Type type) {
 		setPropertyValue( entity, index, propValue );
-		if ( entry.getLoadedState() != null ) {
+		final Object[] loadedState = entry.getLoadedState();
+		if ( loadedState != null ) {
 			// object have been loaded with setReadOnly(true); HHH-2236
-			entry.getLoadedState()[index] = type.deepCopy(
-					propValue,
-					factory
-			);
+			loadedState[index] = type.deepCopy( propValue, factory );
 		}
 		// If the entity has deleted state, then update that as well
-		if ( entry.getDeletedState() != null ) {
-			entry.getDeletedState()[index] = type.deepCopy(
-					propValue,
-					factory
-			);
+		final Object[] deletedState = entry.getDeletedState();
+		if ( deletedState != null ) {
+			deletedState[index] = type.deepCopy( propValue, factory );
 		}
 	}
 
@@ -1838,7 +1823,7 @@ public abstract class AbstractEntityPersister
 				this::fetchProcessor,
 				true,
 				new LoadQueryInfluencers( factory ),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 
 		final NavigablePath entityPath = new NavigablePath( getRootPathName() );
@@ -1904,9 +1889,10 @@ public abstract class AbstractEntityPersister
 		for ( ; i < sqlSelections.size(); i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );
 			final ColumnReference columnReference = (ColumnReference) sqlSelection.getExpression();
-			final String selectAlias = !columnReference.isColumnExpressionFormula()
-					? columnAliases[columnIndex++] + suffix
-					: formulaAliases[formulaIndex++] + suffix;
+			final String selectAlias =
+					columnReference.isColumnExpressionFormula()
+							? formulaAliases[formulaIndex++] + suffix
+							: columnAliases[columnIndex++] + suffix;
 			sqlSelections.set(
 					i,
 					new SqlSelectionImpl(
@@ -1916,70 +1902,61 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		final String sql = getFactory().getJdbcServices()
-				.getDialect()
-				.getSqlAstTranslatorFactory()
-				.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
-				.translate( null, QueryOptions.NONE )
-				.getSqlString();
+		final String sql =
+				getDialect().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
+						.translate( null, QueryOptions.NONE )
+						.getSqlString();
 		final int fromIndex = sql.lastIndexOf( " from" );
-		final String expression;
-		if ( fromIndex != -1 ) {
-			expression = sql.substring( "select ".length(), fromIndex );
-		}
-		else {
-			expression = sql.substring( "select ".length() );
-		}
-		return expression;
+		return fromIndex != -1
+				? sql.substring( "select ".length(), fromIndex )
+				: sql.substring( "select ".length() );
 	}
 
 	private ImmutableFetchList fetchProcessor(FetchParent fetchParent, LoaderSqlAstCreationState creationState) {
 		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
 		final int size = fetchableContainer.getNumberOfFetchables();
 		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
-
 		for ( int i = 0; i < size; i++ ) {
 			final Fetchable fetchable = fetchableContainer.getFetchable( i );
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
 				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				if ( fetchable.asBasicValuedModelPart() != null ) {
-					// Ignore lazy basic columns
-					if ( fetchTiming == FetchTiming.DELAYED ) {
-						continue;
+				if ( !skipFetchable( fetchable, fetchTiming ) ) {
+					if ( fetchTiming == null ) {
+						throw new AssertionFailure( "fetchTiming was null" );
 					}
-				}
-				else if ( fetchable instanceof Association ) {
-					final Association association = (Association) fetchable;
-					// Ignore the fetchable if the FK is on the other side
-					if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-						continue;
+					if ( fetchable.isSelectable() ) {
+						final Fetch fetch = fetchParent.generateFetchableFetch(
+								fetchable,
+								fetchParent.resolveNavigablePath( fetchable ),
+								fetchTiming,
+								false,
+								null,
+								creationState
+						);
+						fetches.add( fetch );
 					}
-					// Ensure the FK comes from the root table
-					if ( !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
-						continue;
-					}
-				}
-
-				if ( fetchTiming == null ) {
-					throw new AssertionFailure("fetchTiming was null");
-				}
-
-				if ( fetchable.isSelectable() ) {
-					final Fetch fetch = fetchParent.generateFetchableFetch(
-							fetchable,
-							fetchParent.resolveNavigablePath( fetchable ),
-							fetchTiming,
-							false,
-							null,
-							creationState
-					);
-					fetches.add( fetch );
 				}
 			}
 		}
-
 		return fetches.build();
+	}
+
+	private boolean skipFetchable(Fetchable fetchable, FetchTiming fetchTiming) {
+		if ( fetchable.asBasicValuedModelPart() != null ) {
+			// Ignore lazy basic columns
+			return fetchTiming == FetchTiming.DELAYED;
+		}
+		else if ( fetchable instanceof Association association ) {
+			// Ignore the fetchable if the FK is on the other side
+			return association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET
+				// Ensure the FK comes from the root table
+				|| !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() );
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -2149,7 +2126,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected LockingStrategy generateLocker(LockMode lockMode) {
-		return factory.getJdbcServices().getDialect().getLockingStrategy( this, lockMode );
+		return getDialect().getLockingStrategy( this, lockMode );
 	}
 
 	private LockingStrategy getLocker(LockMode lockMode) {
@@ -2162,8 +2139,13 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockMode lockMode,
-			EventSource session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		getLocker( lockMode ).lock( id, version, object, LockOptions.WAIT_FOREVER, session );
+	}
+
+	@Override
+	public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
+		lock( id, version, object, lockMode, (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -2172,8 +2154,13 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			EventSource session) throws HibernateException {
+			SharedSessionContractImplementor session) throws HibernateException {
 		getLocker( lockOptions.getLockMode() ).lock( id, version, object, lockOptions.getTimeOut(), session );
+	}
+
+	@Override
+	public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
+		lock( id, version, object, lockOptions, (SharedSessionContractImplementor) session );
 	}
 
 	@Override
@@ -2216,94 +2203,53 @@ public abstract class AbstractEntityPersister
 		return propertyMapping.getColumnNames( propertyName );
 	}
 
-	/**
-	 * Warning:
-	 * When there are duplicated property names in the subclasses
-	 * of the class, this method may return the wrong table
-	 * number for the duplicated subclass property. Note that
-	 * SingleTableEntityPersister defines an overloaded form
-	 * which takes the entity name.
-	 */
-	public int getSubclassPropertyTableNumber(String propertyPath) {
-		throw new UnsupportedOperationException();
-//		String rootPropertyName = StringHelper.root( propertyPath );
-//		Type type = propertyMapping.toType( rootPropertyName );
-//		if ( type.isAssociationType() ) {
-//			AssociationType assocType = (AssociationType) type;
-//			if ( assocType.useLHSPrimaryKey() ) {
-//				// performance op to avoid the array search
-//				return 0;
-//			}
-//			else if ( type instanceof CollectionType ) {
-//				// properly handle property-ref-based associations
-//				rootPropertyName = assocType.getLHSPropertyName();
-//			}
-//		}
-//		//Enable for HHH-440, which we don't like:
-//		/*if ( type.isComponentType() && !propertyName.equals(rootPropertyName) ) {
-//			String unrooted = StringHelper.unroot(propertyName);
-//			int idx = ArrayHelper.indexOf( getSubclassColumnClosure(), unrooted );
-//			if ( idx != -1 ) {
-//				return getSubclassColumnTableNumberClosure()[idx];
-//			}
-//		}*/
-//		int index = ArrayHelper.indexOf( getSubclassPropertyNameClosure(), rootPropertyName ); //TODO: optimize this better!
-//		return index == -1 ? 0 : getSubclassPropertyTableNumber( index );
-	}
+	private DiscriminatorType<?> discriminatorDomainType;
 
-	private DiscriminatorType<?> discriminatorType;
-
-	protected DiscriminatorType<?> resolveDiscriminatorType() {
-		if ( discriminatorType == null ) {
-			discriminatorType = buildDiscriminatorType();
+	@Override
+	public DiscriminatorType<?> getDiscriminatorDomainType() {
+		if ( discriminatorDomainType == null ) {
+			discriminatorDomainType = buildDiscriminatorType();
 		}
-		return discriminatorType;
+		return discriminatorDomainType;
 	}
 
 	private DiscriminatorType<?> buildDiscriminatorType() {
-		final BasicType<?> underlingJdbcMapping = getDiscriminatorType();
-		if ( underlingJdbcMapping == null ) {
-			return null;
-		}
-
-		final JavaTypeRegistry javaTypeRegistry = factory.getTypeConfiguration().getJavaTypeRegistry();
-
-		final JavaType<Object> domainJavaType;
-		if ( representationStrategy.getMode() == POJO
-				&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() ) ) {
-			domainJavaType = javaTypeRegistry.resolveDescriptor( Class.class );
-		}
-		else {
-			domainJavaType = javaTypeRegistry.resolveDescriptor( String.class );
-		}
-
-		//noinspection rawtypes
-		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
-				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
-				domainJavaType,
-				underlingJdbcMapping,
-				getSubclassByDiscriminatorValue(),
-				factory.getMappingMetamodel()
-		);
-
-		//noinspection unchecked,rawtypes
-		return new DiscriminatorTypeImpl( underlingJdbcMapping, converter );
+		final BasicType<?> underlyingJdbcMapping = getDiscriminatorType();
+		return underlyingJdbcMapping == null
+				? null
+				: new DiscriminatorTypeImpl<>(
+						underlyingJdbcMapping,
+						new UnifiedAnyDiscriminatorConverter<>(
+								getNavigableRole()
+										.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
+								factory.getTypeConfiguration().getJavaTypeRegistry()
+										.resolveDescriptor( discriminatedType() ),
+								underlyingJdbcMapping.getRelationalJavaType(),
+								getSubclassByDiscriminatorValue(),
+								null,
+								factory.getMappingMetamodel()
+						)
+				);
 	}
 
-	@Override
-	public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
-		return this::buildDiscriminatorType;
+	private Class<?> discriminatedType() {
+		return representationStrategy.getMode() == POJO
+			&& getEntityName().equals( getJavaType().getJavaTypeClass().getName() )
+				? Class.class
+				: String.class;
 	}
 
 	public static String generateTableAlias(String rootAlias, int tableNumber) {
 		if ( tableNumber == 0 ) {
 			return rootAlias;
 		}
-		final StringBuilder alias = new StringBuilder().append( rootAlias );
-		if ( !rootAlias.endsWith( "_" ) ) {
-			alias.append( '_' );
+		else {
+			final var alias = new StringBuilder().append( rootAlias );
+			if ( !rootAlias.endsWith( "_" ) ) {
+				alias.append( '_' );
+			}
+			return alias.append( tableNumber ).append( '_' ).toString();
 		}
-		return alias.append( tableNumber ).append( '_' ).toString();
 	}
 
 	private int getSubclassPropertyIndex(String propertyName) {
@@ -2637,8 +2583,8 @@ public abstract class AbstractEntityPersister
 		final SimpleSelect select = new SimpleSelect( getFactory() )
 				.setTableName( getTableName(0) )
 				.addColumns( getKeyColumns(0) );
-		for ( int i = 0; i < propertyNames.length; i++ ) {
-			select.addRestriction( getPropertyColumnNames( propertyNames[i] ) );
+		for ( String propertyName : propertyNames ) {
+			select.addRestriction( getPropertyColumnNames( propertyName ) );
 		}
 		return select.toStatementString();
 	}
@@ -2738,8 +2684,8 @@ public abstract class AbstractEntityPersister
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticInsertGroup.getOperation( i );
-						if ( mutation instanceof JdbcOperation ) {
-							LOG.debugf( " Insert (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						if ( mutation instanceof JdbcOperation jdbcOperation ) {
+							LOG.debugf( " Insert (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2750,8 +2696,8 @@ public abstract class AbstractEntityPersister
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
-						if ( mutation instanceof JdbcOperation ) {
-							LOG.debugf( " Update (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						if ( mutation instanceof JdbcOperation jdbcOperation ) {
+							LOG.debugf( " Update (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2762,8 +2708,8 @@ public abstract class AbstractEntityPersister
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
-						if ( mutation instanceof JdbcOperation ) {
-							LOG.debugf( " Delete (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						if ( mutation instanceof JdbcOperation jdbcOperation ) {
+							LOG.debugf( " Delete (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2848,12 +2794,11 @@ public abstract class AbstractEntityPersister
 			}
 
 			if ( softDeleteMapping != null ) {
-				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
-				final Predicate softDeletePredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
-						tableReference,
-						softDeleteMapping,
-						creationState.getSqlExpressionResolver()
-				);
+				final TableReference tableReference =
+						tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+				final Predicate softDeletePredicate =
+						softDeleteMapping.createNonDeletedRestriction( tableReference,
+								creationState.getSqlExpressionResolver() );
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
 				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
 					// Register entity name usage for the hierarchy root table to avoid pruning
@@ -2873,9 +2818,9 @@ public abstract class AbstractEntityPersister
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
 			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
-			final Map<String, EntityNameUse> entityNameUseMap;
 			final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
-			entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
+			final Map<String, EntityNameUse> entityNameUseMap =
+					new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
 			if ( subMappingTypes.isEmpty() ) {
 				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
 			}
@@ -3136,16 +3081,16 @@ public abstract class AbstractEntityPersister
 	protected boolean shouldInnerJoinSubclassTable(int subclassTableNumber, Set<String> treatAsDeclarations) {
 		if ( isClassOrSuperclassJoin( subclassTableNumber ) ) {
 			// the table is either this persister's driving table or (one of) its superclass persister's driving
-			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
+			// tables which can be inner-joined as long as the 'shouldInnerJoin' condition resolves to true
 			return !isInverseTable( subclassTableNumber )
 				&& !isNullableTable( subclassTableNumber );
 		}
 
 		// otherwise we have a subclass table and need to look a little deeper...
 
-		// IMPL NOTE : By default includeSubclasses indicates that all subclasses should be joined and that each
-		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
-		// so we give TREAT-AS higher precedence...
+		// IMPL NOTE: By default, 'includeSubclasses' indicates that all subclasses should be joined and that each
+		// subclass ought to be joined by outer join. However, 'TREAT AS' always requires that an inner join be used,
+		// so we give 'TREAT AS' higher precedence...
 
 		return isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations );
 	}
@@ -3183,10 +3128,10 @@ public abstract class AbstractEntityPersister
 
 		final List<AttributeMapping> insertGeneratedAttributes = hasInsertGeneratedProperties() ?
 				GeneratedValuesProcessor.getGeneratedAttributes( this, INSERT )
-				: Collections.emptyList();
+				: emptyList();
 		final List<AttributeMapping> updateGeneratedAttributes = hasUpdateGeneratedProperties() ?
 				GeneratedValuesProcessor.getGeneratedAttributes( this, UPDATE )
-				: Collections.emptyList();
+				: emptyList();
 
 		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
 		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
@@ -3195,7 +3140,7 @@ public abstract class AbstractEntityPersister
 		updateDelegate = createUpdateDelegate();
 
 		if ( isIdentifierAssignedByInsert() ) {
-			identitySelectString = getIdentitySelectString( factory.getJdbcServices().getDialect() );
+			identitySelectString = getIdentitySelectString( getDialect() );
 		}
 
 		if ( hasInsertGeneratedProperties() ) {
@@ -3329,17 +3274,17 @@ public abstract class AbstractEntityPersister
 
 			final boolean inverseTable = isInverseTable( relativePosition );
 			if ( existing == null ) {
-				final Consumer<SelectableConsumer> selectableConsumerConsumer = tableKeyColumnVisitationSupplier.get();
 				final List<EntityTableMapping.KeyColumn> keyColumns = new ArrayList<>();
-				selectableConsumerConsumer.accept( (selectionIndex, selectableMapping) -> {
-					keyColumns.add( new EntityTableMapping.KeyColumn(
-							tableExpression,
-							selectableMapping.getSelectionExpression(),
-							selectableMapping.getWriteExpression(),
-							selectableMapping.isFormula(),
-							selectableMapping.getJdbcMapping()
-					) );
-				} );
+				tableKeyColumnVisitationSupplier.get()
+						.accept( (selectionIndex, selectableMapping) -> {
+							keyColumns.add( new EntityTableMapping.KeyColumn(
+									tableExpression,
+									selectableMapping.getSelectionExpression(),
+									selectableMapping.getWriteExpression(),
+									selectableMapping.isFormula(),
+									selectableMapping.getJdbcMapping()
+							) );
+						} );
 
 				final boolean isIdentifierTable = isIdentifierTable( tableExpression );
 
@@ -3410,7 +3355,7 @@ public abstract class AbstractEntityPersister
 	 * Consumer for processing table details.  Used while {@linkplain #buildTableMappings() building}
 	 * the {@link EntityTableMapping} descriptors.
 	 */
-	interface MutabilityOrderedTableConsumer {
+	protected interface MutabilityOrderedTableConsumer {
 		void consume(
 				String tableExpression,
 				int relativePosition,
@@ -3472,7 +3417,10 @@ public abstract class AbstractEntityPersister
 	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
-			insertBuilder.addValueColumn( softDeleteMapping );
+			final MutatingTableReference mutatingTable = insertBuilder.getMutatingTable();
+			final ColumnReference columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
+			final ColumnValueBinding nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}
 
@@ -3548,18 +3496,17 @@ public abstract class AbstractEntityPersister
 			Object entity,
 			String nameOfAttributeBeingAccessed,
 			SharedSessionContractImplementor session) {
-		final BytecodeEnhancementMetadata enhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
-		final BytecodeLazyAttributeInterceptor currentInterceptor = enhancementMetadata.extractLazyInterceptor( entity );
-		if ( currentInterceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-			final EnhancementAsProxyLazinessInterceptor proxyInterceptor = (EnhancementAsProxyLazinessInterceptor) currentInterceptor;
+		final var enhancementMetadata = getBytecodeEnhancementMetadata();
+		if ( enhancementMetadata.extractLazyInterceptor( entity )
+				instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
 
 			final EntityKey entityKey = proxyInterceptor.getEntityKey();
 			final Object identifier = entityKey.getIdentifier();
 
 			Object loaded = null;
 			if ( canReadFromCache && session.isEventSource() ) {
-				LoadEvent loadEvent = new LoadEvent( identifier, entity, session.asEventSource(), false );
-				loaded = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( loadEvent, this, entityKey );
+				final EventSource eventSource = (EventSource) session;
+				loaded = eventSource.loadFromSecondLevelCache( this, entityKey, entity, LockMode.NONE );
 			}
 			if ( loaded == null ) {
 				loaded = determineLoaderToUse( session ).load( identifier, entity, LockOptions.NONE, session );
@@ -3594,6 +3541,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public List<?> multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+		return multiLoad( ids, (SharedSessionContractImplementor) session, loadOptions );
+	}
+
+	@Override
+	public List<?> multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 		return multiIdLoader.load( ids, loadOptions, session );
 	}
 
@@ -3629,13 +3581,13 @@ public abstract class AbstractEntityPersister
 			LoadQueryInfluencers loadQueryInfluencers,
 			boolean onlyApplyForLoadByKeyFilters) {
 		if ( filterHelper != null && loadQueryInfluencers.hasEnabledFilters() ) {
-			if ( filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters(), onlyApplyForLoadByKeyFilters ) ) {
-				return true;
-			}
+			return filterHelper.isAffectedBy( loadQueryInfluencers.getEnabledFilters(), onlyApplyForLoadByKeyFilters )
+				|| isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
 
-			return isAffectedByEnabledFilters( new HashSet<>(), loadQueryInfluencers, onlyApplyForLoadByKeyFilters );
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -3682,7 +3634,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public int[] findModified(Object[] old, Object[] current, Object entity, SharedSessionContractImplementor session)
 			throws HibernateException {
-		int[] props = DirtyHelper.findModified(
+		final int[] modified = DirtyHelper.findModified(
 				entityMetamodel.getProperties(),
 				current,
 				old,
@@ -3690,12 +3642,12 @@ public abstract class AbstractEntityPersister
 				getPropertyUpdateability(),
 				session
 		);
-		if ( props == null ) {
+		if ( modified == null ) {
 			return null;
 		}
 		else {
-			logDirtyProperties( props );
-			return props;
+			logDirtyProperties( modified );
+			return modified;
 		}
 	}
 
@@ -3713,7 +3665,7 @@ public abstract class AbstractEntityPersister
 		if ( LOG.isTraceEnabled() ) {
 			for ( int prop : props ) {
 				final String propertyName = getAttributeMapping( prop ).getAttributeName();
-				LOG.trace( StringHelper.qualify( getEntityName(), propertyName ) + " is dirty" );
+				LOG.trace( qualify( getEntityName(), propertyName ) + " is dirty" );
 			}
 		}
 	}
@@ -3721,6 +3673,10 @@ public abstract class AbstractEntityPersister
 	@Override
 	public SessionFactoryImplementor getFactory() {
 		return factory;
+	}
+
+	private Dialect getDialect() {
+		return factory.getJdbcServices().getDialect();
 	}
 
 	@Override
@@ -3776,6 +3732,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public @Nullable String getJpaEntityName() {
+		return jpaEntityName;
+	}
+
+	@Override
 	public boolean isInherited() {
 		return entityMetamodel.isInherited();
 	}
@@ -3783,6 +3744,16 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasCascades() {
 		return entityMetamodel.hasCascades();
+	}
+
+	@Override
+	public boolean hasToOnes() {
+		return entityMetamodel.hasToOnes();
+	}
+
+	@Override
+	public boolean hasCascadePersist() {
+		return entityMetamodel.hasCascadePersist();
 	}
 
 	@Override
@@ -3829,7 +3800,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void afterReassociate(Object entity, SharedSessionContractImplementor session) {
-		final BytecodeEnhancementMetadata metadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		final var metadata = getBytecodeEnhancementMetadata();
 		if ( metadata.isEnhancedForLazyLoading() ) {
 			final BytecodeLazyAttributeInterceptor interceptor = metadata.extractLazyInterceptor( entity );
 			if ( interceptor == null ) {
@@ -3843,30 +3814,29 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void handleNaturalIdReattachment(Object entity, SharedSessionContractImplementor session) {
-		if ( naturalIdMapping == null ) {
-			return;
+		if ( naturalIdMapping != null ) {
+			if ( naturalIdMapping.isMutable() ) {
+				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				final NaturalIdResolutions naturalIdResolutions = persistenceContext.getNaturalIdResolutions();
+				final Object id = getIdentifier( entity, session );
+
+				// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
+				// database, because we have no other way to know if the state changed while detached.
+				final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
+				final Object naturalIdSnapshot = naturalIdFromSnapshot( entitySnapshot );
+
+				naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this, false );
+				final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
+				naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
+			}
+			// otherwise we assume there were no changes to natural id during detachment for now,
+			// that is validated later during flush.
 		}
+	}
 
-		if ( ! naturalIdMapping.isMutable() ) {
-			// we assume there were no changes to natural id during detachment for now, that is validated later
-			// during flush.
-			return;
-		}
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final NaturalIdResolutions naturalIdResolutions = persistenceContext.getNaturalIdResolutions();
-		final Object id = getIdentifier( entity, session );
-
-		// for reattachment of mutable natural-ids, we absolutely positively have to grab the snapshot from the
-		// database, because we have no other way to know if the state changed while detached.
-		final Object[] entitySnapshot = persistenceContext.getDatabaseSnapshot( id, this );
-		final Object naturalIdSnapshot = entitySnapshot == StatefulPersistenceContext.NO_ROW
-				? null
+	private Object naturalIdFromSnapshot(Object[] entitySnapshot) {
+		return entitySnapshot == PersistenceContext.NO_ROW ? null
 				: naturalIdMapping.extractNaturalIdFromEntityState( entitySnapshot );
-
-		naturalIdResolutions.removeSharedResolution( id, naturalIdSnapshot, this, false );
-		final Object naturalId = naturalIdMapping.extractNaturalIdFromEntity( entity );
-		naturalIdResolutions.manageLocalResolution( id, naturalId, this, CachedNaturalIdValueSource.UPDATE );
 	}
 
 	@Override
@@ -3962,7 +3932,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean hasProxy() {
 		// skip proxy instantiation if entity is bytecode enhanced
-		return entityMetamodel.isLazy() && !entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		return entityMetamodel.isLazy()
+			&& !getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	@Override @Deprecated
@@ -4047,13 +4018,13 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public String toString() {
-		return StringHelper.unqualify( getClass().getName() )
+		return unqualify( getClass().getName() )
 				+ '(' + entityMetamodel.getName() + ')';
 	}
 
 	@Override
 	public boolean isInstrumented() {
-		return entityMetamodel.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		return getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
 	@Override
@@ -4072,38 +4043,36 @@ public abstract class AbstractEntityPersister
 			&& ( isVersionGeneratedOnExecution() || isVersionGeneratedBeforeExecution() );
 	}
 
+	private Generator versionPropertyGenerator() {
+		return getEntityMetamodel().getGenerators()[ getVersionProperty() ];
+	}
+
 	public boolean isVersionGeneratedOnExecution() {
-		final Generator strategy = getEntityMetamodel().getGenerators()[ getVersionProperty() ];
-		return strategy != null && strategy.generatesSometimes() && strategy.generatedOnExecution();
+		final Generator strategy = versionPropertyGenerator();
+		return strategy != null
+			&& strategy.generatesSometimes()
+			&& strategy.generatedOnExecution();
 	}
 
 	public boolean isVersionGeneratedBeforeExecution() {
-		final Generator strategy = getEntityMetamodel().getGenerators()[ getVersionProperty() ];
-		return strategy != null && strategy.generatesSometimes() && !strategy.generatedOnExecution();
+		final Generator strategy = versionPropertyGenerator();
+		return strategy != null
+			&& strategy.generatesSometimes()
+			&& !strategy.generatedOnExecution();
 	}
 
 	@Override
 	public void afterInitialize(Object entity, SharedSessionContractImplementor session) {
-		if ( isPersistentAttributeInterceptable( entity ) && getRepresentationStrategy().getMode() == POJO ) {
-			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata()
-					.extractLazyInterceptor( entity );
+		if ( isPersistentAttributeInterceptable( entity )
+				&& getRepresentationStrategy().getMode() == POJO ) {
+			final var interceptor =
+					getBytecodeEnhancementMetadata()
+							.extractLazyInterceptor( entity );
 			assert interceptor != null;
 			if ( interceptor.getLinkedSession() == null ) {
 				interceptor.setSession( session );
 			}
 		}
-
-		// clear the fields that are marked as dirty in the dirtiness tracker
-		processIfSelfDirtinessTracker( entity, AbstractEntityPersister::clearDirtyAttributes );
-		processIfManagedEntity( entity, AbstractEntityPersister::useTracker );
-	}
-
-	private static void clearDirtyAttributes(final SelfDirtinessTracker entity) {
-		entity.$$_hibernate_clearDirtyAttributes();
-	}
-
-	private static void useTracker(final ManagedEntity entity) {
-		entity.$$_hibernate_setUseTracker( true );
 	}
 
 	@Override
@@ -4167,11 +4136,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public boolean implementsLifecycle() {
-		return this.implementsLifecycle;
-	}
-
-	@Override
 	public Class<?> getConcreteProxyClass() {
 		final JavaType<?> proxyJavaType = getRepresentationStrategy().getProxyJavaType();
 		return proxyJavaType != null ? proxyJavaType.getJavaTypeClass() : javaType.getJavaTypeClass();
@@ -4183,9 +4147,8 @@ public abstract class AbstractEntityPersister
 			accessOptimizer.setPropertyValues( object, values );
 		}
 		else {
-			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 			final AttributeMappingsList attributeMappings = getAttributeMappings();
-			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
+			if ( getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
 				for ( int i = 0; i < attributeMappings.size(); i++ ) {
 					final Object value = values[i];
 					if ( value != UNFETCHED_PROPERTY ) {
@@ -4212,11 +4175,11 @@ public abstract class AbstractEntityPersister
 			return accessOptimizer.getPropertyValues( object );
 		}
 		else {
-			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final var enhancementMetadata = getBytecodeEnhancementMetadata();
 			final AttributeMappingsList attributeMappings = getAttributeMappings();
 			final Object[] values = new Object[attributeMappings.size()];
 			if ( enhancementMetadata.isEnhancedForLazyLoading() ) {
-				final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
+				final var lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 				for ( int i = 0; i < attributeMappings.size(); i++ ) {
 					final AttributeMapping attributeMapping = attributeMappings.get( i );
 					if ( !lazyAttributesMetadata.isLazyAttribute( attributeMapping.getAttributeName() )
@@ -4258,11 +4221,10 @@ public abstract class AbstractEntityPersister
 				baseValueType = (ManagedMappingType) attributeMapping.getMappedType();
 			}
 		}
-		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping ) {
-			final AttributeMapping mapping = ( (NonAggregatedIdentifierMapping) identifierMapping ).findSubPart(
-					propertyName,
-					null
-			).asAttributeMapping();
+		else if ( identifierMapping instanceof NonAggregatedIdentifierMapping nonAggregatedIdentifierMapping ) {
+			final AttributeMapping mapping =
+					nonAggregatedIdentifierMapping.findSubPart( propertyName, null )
+							.asAttributeMapping();
 			if ( mapping != null ) {
 				baseValue = mapping.getValue( object );
 				if ( dotIndex != -1 ) {
@@ -4298,6 +4260,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public Object getIdentifier(Object entity, MergeContext mergeContext) {
+		return identifierMapping.getIdentifier( entity, mergeContext );
+	}
+
+	@Override
 	public void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session) {
 		identifierMapping.setIdentifier( entity, id, session );
 	}
@@ -4310,7 +4277,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object instantiate(Object id, SharedSessionContractImplementor session) {
-		final Object instance = getRepresentationStrategy().getInstantiator().instantiate( session.getFactory() );
+		final Object instance = getRepresentationStrategy().getInstantiator().instantiate();
 		linkToSession( instance, session );
 		if ( id != null ) {
 			setIdentifier( instance, id, session );
@@ -4325,8 +4292,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void setSession(PersistentAttributeInterceptable entity, SharedSessionContractImplementor session) {
-		final BytecodeLazyAttributeInterceptor interceptor =
-				getEntityMetamodel().getBytecodeEnhancementMetadata()
+		final var interceptor =
+				getBytecodeEnhancementMetadata()
 						.extractLazyInterceptor( entity );
 		if ( interceptor != null ) {
 			interceptor.setSession( session );
@@ -4335,12 +4302,12 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public boolean isInstance(Object object) {
-		return getRepresentationStrategy().getInstantiator().isInstance( object, getFactory() );
+		return getRepresentationStrategy().getInstantiator().isInstance( object );
 	}
 
 	@Override
 	public boolean hasUninitializedLazyProperties(Object object) {
-		return entityMetamodel.getBytecodeEnhancementMetadata().hasUnFetchedAttributes( object );
+		return getBytecodeEnhancementMetadata().hasUnFetchedAttributes( object );
 	}
 
 	@Override
@@ -4349,14 +4316,11 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().getGenerator().allowAssignedIdentifiers() ) {
-			return;
+		if ( !getGenerator().allowAssignedIdentifiers() ) {
+			// reset the identifier
+			final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
+			setIdentifier( entity, defaultIdentifier, session );
 		}
-
-		// reset the identifier
-		final Object defaultIdentifier = identifierMapping.getUnsavedStrategy().getDefaultValue( currentId );
-		setIdentifier( entity, defaultIdentifier, session );
-
 		// reset the version
 		if ( versionMapping != null ) {
 			final Object defaultVersion = versionMapping.getUnsavedStrategy().getDefaultValue( currentVersion );
@@ -4368,13 +4332,13 @@ public abstract class AbstractEntityPersister
 	public EntityPersister getSubclassEntityPersister(Object instance, SessionFactoryImplementor factory) {
 		if ( instance != null
 				&& hasSubclasses()
-				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance, factory ) ) {
+				&& !getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
 			// todo (6.0) : this previously used `org.hibernate.tuple.entity.EntityTuplizer#determineConcreteSubclassEntityName`
 			//		- we may need something similar here...
 			for ( EntityMappingType subclassMappingType : subclassMappingTypes.values() ) {
-				if ( subclassMappingType.getEntityPersister().getRepresentationStrategy()
-						.getInstantiator().isSameClass(instance, factory) ) {
-					return subclassMappingType.getEntityPersister();
+				final EntityPersister persister = subclassMappingType.getEntityPersister();
+				if ( persister.getRepresentationStrategy().getInstantiator().isSameClass( instance ) ) {
+					return persister;
 				}
 			}
 		}
@@ -4399,16 +4363,17 @@ public abstract class AbstractEntityPersister
 		if ( shouldGetAllProperties( entity ) && accessOptimizer != null ) {
 			return accessOptimizer.getPropertyValues( entity );
 		}
-
-		final Object[] result = new Object[attributeMappings.size()];
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			result[i] = getterCache[i].getForInsert( entity, mergeMap, session );
+		else {
+			final Object[] result = new Object[attributeMappings.size()];
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				result[i] = getterCache[i].getForInsert( entity, mergeMap, session );
+			}
+			return result;
 		}
-		return result;
 	}
 
 	protected boolean shouldGetAllProperties(Object entity) {
-		final BytecodeEnhancementMetadata metadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
+		final var metadata = getBytecodeEnhancementMetadata();
 		return !metadata.isEnhancedForLazyLoading()
 			|| !metadata.hasUnFetchedAttributes( entity );
 	}
@@ -4437,15 +4402,13 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		final List<ModelPart> identifierList = isIdentifierAssignedByInsert() ?
-				List.of( getIdentifierMapping() ) :
-				Collections.emptyList();
-		if ( originalSize > 0 && generatedBasicAttributes.size() == originalSize ) {
-			return Collections.unmodifiableList( combine( identifierList, generatedBasicAttributes ) );
-		}
-		else  {
-			return identifierList;
-		}
+		final List<ModelPart> identifierList =
+				isIdentifierAssignedByInsert()
+						? List.of( getIdentifierMapping() )
+						: emptyList();
+		return originalSize > 0 && generatedBasicAttributes.size() == originalSize
+				? unmodifiableList( combine( identifierList, generatedBasicAttributes ) )
+				: identifierList;
 	}
 
 	@Override
@@ -4470,18 +4433,14 @@ public abstract class AbstractEntityPersister
 		final int originalSize = generatedAttributes.size();
 		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
 		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
-			if ( generatedAttribute instanceof SelectableMapping
-					&& ( (SelectableMapping) generatedAttribute ).getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+			if ( generatedAttribute instanceof SelectableMapping selectableMapping
+					&& selectableMapping.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
 				generatedBasicAttributes.add( generatedAttribute );
 			}
 		}
-
-		if ( generatedBasicAttributes.size() == originalSize ) {
-			return Collections.unmodifiableList( generatedBasicAttributes );
-		}
-		else  {
-			return Collections.emptyList();
-		}
+		return generatedBasicAttributes.size() == originalSize
+				? unmodifiableList( generatedBasicAttributes )
+				: emptyList();
 	}
 
 	@Override
@@ -4573,11 +4532,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.hasNaturalIdentifier();
 	}
 
-	private void setPropertyValue(Object object, String propertyName, Object value) {
-		final AttributeMapping attributeMapping = findSubPart( propertyName, this ).asAttributeMapping();
-		setterCache[attributeMapping.getStateArrayPosition()].set( object, value );
-	}
-
 	public static int getTableId(String tableName, String[] tables) {
 		for ( int j = 0; j < tables.length; j++ ) {
 			if ( tableName.equalsIgnoreCase( tables[j] ) ) {
@@ -4592,13 +4546,13 @@ public abstract class AbstractEntityPersister
 		return representationStrategy;
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public BytecodeEnhancementMetadata getInstrumentationMetadata() {
 		return getBytecodeEnhancementMetadata();
 	}
 
 	@Override
-	public BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
+	public final BytecodeEnhancementMetadata getBytecodeEnhancementMetadata() {
 		return entityMetamodel.getBytecodeEnhancementMetadata();
 	}
 
@@ -4612,12 +4566,24 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String determineTableName(Table table) {
-		return MappingModelCreationHelper.getTableIdentifierExpression( table, factory );
+		return table.getSubselect() != null
+				? "( " + createSqlQueryParser( table ).process() + " )"
+				: factory.getSqlStringGenerationContext().format( table.getQualifiedTableName() );
+	}
+
+	private SQLQueryParser createSqlQueryParser(Table table) {
+		return new SQLQueryParser(
+				table.getSubselect(),
+				null,
+				// NOTE: this allows finer control over catalog and schema used for
+				// placeholder handling (`{h-catalog}`, `{h-schema}`, `{h-domain}`)
+				new ExplicitSqlStringGenerationContext( table.getCatalog(), table.getSchema(), factory )
+		);
 	}
 
 	@Override
 	public EntityEntryFactory getEntityEntryFactory() {
-		return this.entityEntryFactory;
+		return entityEntryFactory;
 	}
 
 	/**
@@ -4709,66 +4675,93 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void forEachAttributeMapping(final IndexedConsumer<? super AttributeMapping> consumer) {
+	public void forEachAttributeMapping(IndexedConsumer<? super AttributeMapping> consumer) {
 		attributeMappings.indexedForEach( consumer );
 	}
 
 	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
-		if ( identifierMapping != null ) {
-			return;
+		if ( identifierMapping == null ) {
+			prepareMappings( creationProcess );
+			handleSubtypeMappings( creationProcess );
+			prepareMultiTableMutationStrategy( creationProcess );
+			prepareMultiTableInsertStrategy( creationProcess );
 		}
+	}
 
-		final RuntimeModelCreationContext creationContext = creationProcess.getCreationContext();
+	private void handleSubtypeMappings(MappingModelCreationProcess creationProcess) {
+		// Register a callback for after all `#prepareMappingModel` calls have finished. Here we want to delay the
+		// generation of `staticFetchableList` because we need to wait until after all subclasses have had their
+		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
+		creationProcess.registerInitializationCallback(
+				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
+				() -> {
+					final var builder = new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
+					visitSubTypeAttributeMappings( builder::add );
+					assert superMappingType != null || builder.assertFetchableIndexes();
+					staticFetchableList = builder.build();
+					return true;
+				}
+		);
+	}
 
-		final PersistentClass bootEntityDescriptor = creationContext
-				.getBootModel()
-				.getEntityBinding( getEntityName() );
+	private static ReflectionOptimizer.AccessOptimizer accessOptimizer(EntityRepresentationStrategy strategy) {
+		final ReflectionOptimizer reflectionOptimizer = strategy.getReflectionOptimizer();
+		return reflectionOptimizer == null ? null : reflectionOptimizer.getAccessOptimizer();
+	}
 
-//		EntityMappingType rootEntityDescriptor;
+	private void prepareMappings(MappingModelCreationProcess creationProcess) {
+		final PersistentClass bootEntityDescriptor =
+				creationProcess.getCreationContext().getBootModel()
+						.getEntityBinding( getEntityName() );
+		initializeSpecialAttributeMappings( creationProcess, bootEntityDescriptor );
+		versionGenerator = createVersionGenerator( entityMetamodel, versionMapping );
+		buildDeclaredAttributeMappings( creationProcess, bootEntityDescriptor );
+		getAttributeMappings();
+		initializeNaturalIdMapping( creationProcess, bootEntityDescriptor );
+	}
+
+	private void initializeSpecialAttributeMappings
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		if ( superMappingType != null ) {
-			( (InFlightEntityMappingType) superMappingType ).prepareMappingModel( creationProcess );
+			((InFlightEntityMappingType) superMappingType).prepareMappingModel( creationProcess );
 			if ( shouldProcessSuperMapping() ) {
-				discriminatorMapping = superMappingType.getDiscriminatorMapping();
-				identifierMapping = superMappingType.getIdentifierMapping();
-				naturalIdMapping = superMappingType.getNaturalIdMapping();
-				versionMapping = superMappingType.getVersionMapping();
-				rowIdMapping = superMappingType.getRowIdMapping();
-				softDeleteMapping = superMappingType.getSoftDeleteMapping();
+				inheritSupertypeSpecialAttributeMappings();
 			}
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
 			}
-//			rootEntityDescriptor = superMappingType.getRootEntityDescriptor();
 		}
 		else {
 			prepareMappingModel( creationProcess, bootEntityDescriptor );
-//			rootEntityDescriptor = this;
 		}
+	}
 
-		final EntityMetamodel currentEntityMetamodel = getEntityMetamodel();
+	private void inheritSupertypeSpecialAttributeMappings() {
+		discriminatorMapping = superMappingType.getDiscriminatorMapping();
+		identifierMapping = superMappingType.getIdentifierMapping();
+		naturalIdMapping = superMappingType.getNaturalIdMapping();
+		versionMapping = superMappingType.getVersionMapping();
+		rowIdMapping = superMappingType.getRowIdMapping();
+		softDeleteMapping = superMappingType.getSoftDeleteMapping();
+	}
 
-		if ( currentEntityMetamodel.isVersioned() ) {
-			final BeforeExecutionGenerator generator = currentEntityMetamodel.getVersionGenerator();
-			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
-			versionGenerator = generator == null ? new VersionGeneration( versionMapping ) : generator;
-		}
-
+	private void buildDeclaredAttributeMappings
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		int stateArrayPosition = getStateArrayInitialPosition( creationProcess );
-
-		final NonIdentifierAttribute[] properties = currentEntityMetamodel.getProperties();
-		AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
+		final NonIdentifierAttribute[] properties = entityMetamodel.getProperties();
+		final AttributeMappingsMap.Builder mappingsBuilder = AttributeMappingsMap.builder();
 		int fetchableIndex = getFetchableIndexOffset();
-		for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
-			final NonIdentifierAttribute runtimeAttrDefinition = properties[i];
-			final Property bootProperty = bootEntityDescriptor.getProperty( runtimeAttrDefinition.getName() );
-
+		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
+			final NonIdentifierAttribute runtimeAttributeDefinition = properties[i];
+			final String attributeName = runtimeAttributeDefinition.getName();
+			final Property bootProperty = bootEntityDescriptor.getProperty( attributeName );
 			if ( superMappingType == null
 					|| superMappingType.findAttributeMapping( bootProperty.getName() ) == null ) {
 				mappingsBuilder.put(
-						runtimeAttrDefinition.getName(),
+						attributeName,
 						generateNonIdAttributeMapping(
-								runtimeAttrDefinition,
+								runtimeAttributeDefinition,
 								bootProperty,
 								stateArrayPosition++,
 								fetchableIndex++,
@@ -4777,35 +4770,24 @@ public abstract class AbstractEntityPersister
 				);
 			}
 			declaredAttributeMappings = mappingsBuilder.build();
-//			else {
-				// its defined on the supertype, skip it here
-//			}
+			// otherwise, it's defined on the supertype, skip it here
 		}
+	}
 
-		getAttributeMappings();
+	private static BeforeExecutionGenerator createVersionGenerator
+			(EntityMetamodel currentEntityMetamodel, EntityVersionMapping versionMapping) {
+		if ( currentEntityMetamodel.isVersioned() ) {
+			final BeforeExecutionGenerator generator = currentEntityMetamodel.getVersionGenerator();
+			// need to do this here because EntityMetamodel doesn't have the EntityVersionMapping :-(
+			return generator == null ? new VersionGeneration( versionMapping ) : generator;
+		}
+		else {
+			return null;
+		}
+	}
 
-		postProcessAttributeMappings( creationProcess, bootEntityDescriptor );
-
-		final ReflectionOptimizer reflectionOptimizer = representationStrategy.getReflectionOptimizer();
-		accessOptimizer = reflectionOptimizer != null ? reflectionOptimizer.getAccessOptimizer() : null;
-
-		// register a callback for after all `#prepareMappingModel` calls have finished.  here we want to delay the
-		// generation of `staticFetchableList` because we need to wait until after all subclasses have had their
-		// `#prepareMappingModel` called (and their declared attribute mappings resolved)
-		creationProcess.registerInitializationCallback(
-				"Entity(" + getEntityName() + ") `staticFetchableList` generator",
-				() -> {
-					final ImmutableAttributeMappingList.Builder builder =
-							new ImmutableAttributeMappingList.Builder( attributeMappings.size() );
-					visitSubTypeAttributeMappings( builder::add );
-					assert superMappingType != null || builder.assertFetchableIndexes();
-					staticFetchableList = builder.build();
-					return true;
-				}
-		);
-
-		boolean needsMultiTableInsert = hasMultipleTables();
-		if ( needsMultiTableInsert ) {
+	private void prepareMultiTableMutationStrategy(MappingModelCreationProcess creationProcess) {
+		if ( hasMultipleTables() ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
@@ -4815,28 +4797,16 @@ public abstract class AbstractEntityPersister
 							return false;
 						}
 						else {
-							sqmMultiTableMutationStrategy.prepare(
-									creationProcess,
-									creationContext.getJdbcServices().getBootstrapJdbcConnectionAccess()
-							);
+							sqmMultiTableMutationStrategy.prepare( creationProcess );
 							return true;
 						}
 					}
 			);
-
 		}
-		else {
-			sqmMultiTableMutationStrategy = null;
-		}
+	}
 
-		if ( !needsMultiTableInsert && getGenerator() instanceof BulkInsertionCapableIdentifierGenerator ) {
-			if ( getGenerator() instanceof OptimizableGenerator ) {
-				final Optimizer optimizer = ( (OptimizableGenerator) getGenerator() ).getOptimizer();
-				needsMultiTableInsert = optimizer != null && optimizer.getIncrementSize() > 1;
-			}
-		}
-
-		if ( needsMultiTableInsert ) {
+	private void prepareMultiTableInsertStrategy(MappingModelCreationProcess creationProcess) {
+		if ( hasMultipleTables() || generatorNeedsMultiTableInsert() ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableInsertStrategy` interpretation",
 					() -> {
@@ -4846,18 +4816,23 @@ public abstract class AbstractEntityPersister
 							return false;
 						}
 						else {
-							sqmMultiTableInsertStrategy.prepare(
-									creationProcess,
-									creationContext.getJdbcServices().getBootstrapJdbcConnectionAccess()
-							);
+							sqmMultiTableInsertStrategy.prepare( creationProcess );
 							return true;
 						}
 					}
 			);
+		}
+	}
 
+	private boolean generatorNeedsMultiTableInsert() {
+		final Generator generator = getGenerator();
+		if ( generator instanceof BulkInsertionCapableIdentifierGenerator
+				&& generator instanceof OptimizableGenerator optimizableGenerator ) {
+			final Optimizer optimizer = optimizableGenerator.getOptimizer();
+			return optimizer != null && optimizer.getIncrementSize() > 1;
 		}
 		else {
-			sqmMultiTableInsertStrategy = null;
+			return false;
 		}
 	}
 
@@ -4872,11 +4847,10 @@ public abstract class AbstractEntityPersister
 				// Determining the number of attribute mappings unfortunately has to be done this way,
 				// because calling `subMappingType.getNumberOfDeclaredAttributeMappings()` at this point
 				// may produce wrong results because subMappingType might not have completed prepareMappingModel yet
-				final int propertySpan = subMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
-				final int superPropertySpan = subMappingType.getSuperMappingType()
-						.getEntityPersister()
-						.getEntityMetamodel()
-						.getPropertySpan();
+				final int propertySpan =
+						subMappingType.getEntityPersister().getEntityMetamodel().getPropertySpan();
+				final int superPropertySpan =
+						subMappingType.getSuperMappingType().getEntityPersister().getEntityMetamodel().getPropertySpan();
 				final int numberOfDeclaredAttributeMappings = propertySpan - superPropertySpan;
 				offset += numberOfDeclaredAttributeMappings;
 			}
@@ -4887,35 +4861,20 @@ public abstract class AbstractEntityPersister
 
 	private void prepareMappingModel(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final EntityInstantiator instantiator = getRepresentationStrategy().getInstantiator();
-		final Supplier<?> templateInstanceCreator;
-		if ( ! instantiator.canBeInstantiated() ) {
-			templateInstanceCreator = null;
-		}
-		else {
-			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-			templateInstanceCreator = new LazyValue<>( () -> instantiator.instantiate( sessionFactory ) )::getValue;
-		}
-
-		identifierMapping = creationProcess.processSubPart(
-				EntityIdentifierMapping.ID_ROLE_NAME,
-				(role, process) -> generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
-		);
-
-		versionMapping = generateVersionMapping( templateInstanceCreator, bootEntityDescriptor, creationProcess );
-
-		if ( rowIdName == null ) {
-			rowIdMapping = null;
-		}
-		else {
-			rowIdMapping = creationProcess.processSubPart(
-					rowIdName,
-					(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this )
-			);
-		}
-
+		final Supplier<?> instantiate = instantiator.canBeInstantiated() ? instantiator::instantiate : null;
+		identifierMapping = creationProcess.processSubPart( EntityIdentifierMapping.ID_ROLE_NAME,
+				(role, process) -> generateIdentifierMapping( instantiate, bootEntityDescriptor, process ) );
+		versionMapping = generateVersionMapping( instantiate, bootEntityDescriptor, creationProcess );
+		rowIdMapping = rowIdName == null ? null
+				: creationProcess.processSubPart( rowIdName,
+						(role, process) -> new EntityRowIdMappingImpl( rowIdName, getTableName(), this ) );
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor );
-		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
-
+		softDeleteMapping = resolveSoftDeleteMapping(
+				this,
+				bootEntityDescriptor.getRootClass(),
+				getIdentifierTableName(),
+				creationProcess
+		);
 		if ( softDeleteMapping != null ) {
 			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
 				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
@@ -4923,21 +4882,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private static SoftDeleteMapping resolveSoftDeleteMapping(
-			AbstractEntityPersister persister,
-			PersistentClass bootEntityDescriptor,
-			String identifierTableName,
-			MappingModelCreationProcess creationProcess) {
-		final RootClass rootClass = bootEntityDescriptor.getRootClass();
-		return SoftDeleteHelper.resolveSoftDeleteMapping(
-				persister,
-				rootClass,
-				identifierTableName,
-				creationProcess.getCreationContext().getJdbcServices().getDialect()
-		);
-	}
-
-	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	private void initializeNaturalIdMapping
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		if ( superMappingType != null ) {
 			naturalIdMapping = superMappingType.getNaturalIdMapping();
 		}
@@ -4949,7 +4895,8 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected NaturalIdMapping generateNaturalIdMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected NaturalIdMapping generateNaturalIdMapping
+			(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		//noinspection AssertWithSideEffects
 		assert bootEntityDescriptor.hasNaturalId();
 
@@ -4966,7 +4913,7 @@ public abstract class AbstractEntityPersister
 		// collect the names of the attributes making up the natural-id.
 		final Set<String> attributeNames = setOfSize( naturalIdAttributeIndexes.length );
 		for ( int naturalIdAttributeIndex : naturalIdAttributeIndexes ) {
-			attributeNames.add( this.getPropertyNames()[ naturalIdAttributeIndex ] );
+			attributeNames.add( getPropertyNames()[ naturalIdAttributeIndex ] );
 		}
 
 		// then iterate over the attribute mappings finding the ones having names
@@ -5088,7 +5035,7 @@ public abstract class AbstractEntityPersister
 					length,
 					precision,
 					scale,
-					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
+					getDiscriminatorDomainType()
 			);
 		}
 	}
@@ -5208,8 +5155,7 @@ public abstract class AbstractEntityPersister
 			MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
 
-		if ( idType instanceof CompositeType ) {
-			final CompositeType cidType = (CompositeType) idType;
+		if ( idType instanceof CompositeType cidType ) {
 
 			// NOTE: the term `isEmbedded` here uses Hibernate's older (pre-JPA) naming for its "non-aggregated"
 			// composite-id support.  It unfortunately conflicts with the JPA usage of "embedded".  Here we normalize
@@ -5406,8 +5352,7 @@ public abstract class AbstractEntityPersister
 
 					customReadExpr = selectable.getTemplate(
 							creationContext.getDialect(),
-							creationContext.getTypeConfiguration(),
-							creationContext.getFunctionRegistry()
+							creationContext.getTypeConfiguration()
 					);
 					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
 					Column column = value.getColumns().get( 0 );
@@ -5464,12 +5409,10 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		}
-		else if ( attrType instanceof AnyType ) {
+		else if ( attrType instanceof AnyType anyType ) {
 			final JavaType<Object> baseAssociationJtd =
 					creationContext.getTypeConfiguration().getJavaTypeRegistry()
 							.getDescriptor( Object.class );
-
-			final AnyType anyType = (AnyType) attrType;
 
 			final MutabilityPlan<?> mutabilityPlan = new DiscriminatedAssociationAttributeMapping.MutabilityPlanImpl( anyType );
 			final SimpleAttributeMetadata attributeMetadataAccess = new SimpleAttributeMetadata(
@@ -5492,7 +5435,7 @@ public abstract class AbstractEntityPersister
 					bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE,
 					propertyAccess,
 					bootProperty,
-					(AnyType) attrType,
+					anyType,
 					(Any) value,
 					creationProcess
 			);
@@ -5532,7 +5475,7 @@ public abstract class AbstractEntityPersister
 					creationProcess
 			);
 		}
-		else if ( attrType instanceof EntityType ) {
+		else if ( attrType instanceof EntityType entityType ) {
 			return buildSingularAssociationAttributeMapping(
 					attrName,
 					getNavigableRole().append( attrName ),
@@ -5541,7 +5484,7 @@ public abstract class AbstractEntityPersister
 					bootProperty,
 					this,
 					this,
-					(EntityType) attrType,
+					entityType,
 					propertyAccess,
 					tupleAttrDefinition.getCascadeStyle(),
 					creationProcess
@@ -5692,7 +5635,7 @@ public abstract class AbstractEntityPersister
 			for ( AttributeMapping am : declaredAttributeMappings.valueIterator() ) {
 				builder.add( am );
 			}
-			this.attributeMappings = builder.build();
+			attributeMappings = builder.build();
 			final Getter[] getters = new Getter[attributeMappings.size()];
 			final Setter[] setters = new Setter[attributeMappings.size()];
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
@@ -5700,8 +5643,8 @@ public abstract class AbstractEntityPersister
 				getters[i] = propertyAccess.getGetter();
 				setters[i] = propertyAccess.getSetter();
 			}
-			this.getterCache = getters;
-			this.setterCache = setters;
+			getterCache = getters;
+			setterCache = setters;
 			// subclasses?  it depends on the usage
 		}
 
@@ -5808,8 +5751,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			for ( AttributeMapping attribute : declaredAttributeMappings.valueIterator() ) {
-				if ( attribute instanceof EmbeddableValuedModelPart && attribute instanceof VirtualModelPart ) {
-					EmbeddableValuedModelPart part = (EmbeddableValuedModelPart) attribute;
+				if ( attribute instanceof EmbeddableValuedModelPart part && attribute instanceof VirtualModelPart ) {
 					final ModelPart subPart = part.findSubPart( name, null );
 					if ( subPart != null ) {
 						return subPart;
@@ -6125,9 +6067,8 @@ public abstract class AbstractEntityPersister
 		}
 
 		// aliases for composite-id's
-		if ( getIdentifierType() instanceof ComponentType ) {
+		if ( getIdentifierType() instanceof ComponentType componentId ) {
 			// Fetch embedded identifiers property names from the "virtual" identifier component
-			final ComponentType componentId = (ComponentType) getIdentifierType();
 			final String[] idPropertyNames = componentId.getPropertyNames();
 			final String[] idAliases = getIdentifierAliases();
 
@@ -6162,14 +6103,14 @@ public abstract class AbstractEntityPersister
 		for (Property property : properties) {
 			final String name = path == null ? property.getName() : path + "." + property.getName();
 			if ( property.isComposite() ) {
-				Component component = (Component) property.getValue();
+				final Component component = (Component) property.getValue();
 				internalInitSubclassPropertyAliasesMap( name, component.getProperties() );
 			}
 
-			String[] aliases = new String[property.getColumnSpan()];
+			final String[] aliases = new String[property.getColumnSpan()];
 			int l = 0;
+			final Dialect dialect = getDialect();
 			for ( Selectable selectable: property.getSelectables() ) {
-				Dialect dialect = getFactory().getJdbcServices().getDialect();
 				aliases[l] = selectable.getAlias( dialect, property.getValue().getTable() );
 				l++;
 			}
@@ -6185,5 +6126,29 @@ public abstract class AbstractEntityPersister
 
 	protected String getSqlWhereStringTableExpression(){
 		return sqlWhereStringTableExpression;
+	}
+
+	@Override
+	public boolean managesColumns(String[] columnNames) {
+		for (String columnName : columnNames) {
+			if ( !writesToColumn( columnName ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private boolean writesToColumn(String columnName) {
+		if ( contains( rootTableKeyColumnNames, columnName ) ) {
+			return true;
+		}
+		for ( int i = 0; i < propertyColumnNames.length; i++ ) {
+			if ( contains( propertyColumnNames[i], columnName )
+					&& isAllTrue( propertyColumnInsertable[i] )
+					&& isAllTrue( propertyColumnUpdateable[i] ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

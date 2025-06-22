@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.temptable;
@@ -82,11 +82,12 @@ public class TemporaryTable implements Exportable, Contributable {
 		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( persisterQuerySpace );
 		// The table name might be a sub-query, which is inappropriate for a temporary table name
 		final String tableBaseName;
-		if ( rootEntityPersister != entityPersister && rootEntityPersister instanceof SingleTableEntityPersister ) {
+		if ( rootEntityPersister != entityPersister
+				&& rootEntityPersister instanceof SingleTableEntityPersister singleTableEntityPersister ) {
 			// In this case, the descriptor is a subclass of a single table inheritance.
 			// To avoid name collisions, we suffix the table name with the subclass number
 			tableBaseName = nameParts.getObjectName().getText() + ArrayHelper.indexOf(
-					( (SingleTableEntityPersister) rootEntityPersister ).getSubclassClosure(),
+					singleTableEntityPersister.getSubclassClosure(),
 					entityPersister.getEntityName()
 			);
 		}
@@ -224,8 +225,7 @@ public class TemporaryTable implements Exportable, Contributable {
 								fkTarget.forEachSelectable(
 										(columnIndex, selection) -> {
 											final Selectable selectable = columnIterator.next();
-											if ( selectable instanceof Column ) {
-												final Column column = (Column) selectable;
+											if ( selectable instanceof Column column ) {
 												columns.add(
 														new TemporaryTableColumn(
 																temporaryTable,
@@ -257,12 +257,12 @@ public class TemporaryTable implements Exportable, Contributable {
 			BiConsumer<PluralAttributeMapping, String> consumer) {
 		entityDescriptor.visitSubTypeAttributeMappings(
 				attribute -> {
-					if ( attribute instanceof PluralAttributeMapping ) {
-						consumer.accept( (PluralAttributeMapping) attribute, attribute.getAttributeName() );
+					if ( attribute instanceof PluralAttributeMapping pluralAttributeMapping ) {
+						consumer.accept( pluralAttributeMapping, attribute.getAttributeName() );
 					}
-					else if ( attribute instanceof EmbeddedAttributeMapping ) {
+					else if ( attribute instanceof EmbeddedAttributeMapping embeddedAttributeMapping ) {
 						visitPluralAttributes(
-								(EmbeddedAttributeMapping) attribute,
+								embeddedAttributeMapping,
 								attribute.getAttributeName(),
 								consumer
 						);
@@ -277,12 +277,10 @@ public class TemporaryTable implements Exportable, Contributable {
 			BiConsumer<PluralAttributeMapping, String> consumer) {
 		attributeMapping.visitSubParts(
 				modelPart -> {
-					if ( modelPart instanceof PluralAttributeMapping ) {
-						final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) modelPart;
+					if ( modelPart instanceof PluralAttributeMapping pluralAttribute ) {
 						consumer.accept( pluralAttribute, attributeName + "." + pluralAttribute.getAttributeName() );
 					}
-					else if ( modelPart instanceof EmbeddedAttributeMapping ) {
-						final EmbeddedAttributeMapping embeddedAttribute = (EmbeddedAttributeMapping) modelPart;
+					else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
 						visitPluralAttributes(
 								embeddedAttribute,
 								attributeName + "." + embeddedAttribute.getAttributeName(),
@@ -341,8 +339,8 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 					}
 					else {
-						if ( identifierGenerator instanceof OptimizableGenerator ) {
-							final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
+						if ( identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
+							final Optimizer optimizer = optimizableGenerator.getOptimizer();
 							hasOptimizer = optimizer != null && optimizer.getIncrementSize() > 1;
 						}
 						else {
@@ -404,8 +402,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									attribute.forEachSelectable(
 											(columnIndex, selection) -> {
 												final Selectable selectable = columnIterator.next();
-												if ( selectable instanceof Column ) {
-													final Column column = (Column) selectable;
+												if ( selectable instanceof Column column ) {
 													columns.add(
 															new TemporaryTableColumn(
 																	temporaryTable,

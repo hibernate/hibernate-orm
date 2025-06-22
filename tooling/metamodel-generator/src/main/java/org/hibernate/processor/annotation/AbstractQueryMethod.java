@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -8,17 +8,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.processor.util.Constants.BOXED_VOID;
+import static org.hibernate.processor.util.Constants.COLLECTORS;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_PAGE;
 import static org.hibernate.processor.util.Constants.HIB_KEYED_RESULT_LIST;
 import static org.hibernate.processor.util.Constants.HIB_ORDER;
 import static org.hibernate.processor.util.Constants.HIB_PAGE;
 import static org.hibernate.processor.util.Constants.HIB_QUERY;
+import static org.hibernate.processor.util.Constants.HIB_RANGE;
+import static org.hibernate.processor.util.Constants.HIB_RESTRICTION;
 import static org.hibernate.processor.util.Constants.HIB_SELECTION_QUERY;
 import static org.hibernate.processor.util.Constants.HIB_SORT_DIRECTION;
 import static org.hibernate.processor.util.Constants.JD_CURSORED_PAGE;
@@ -28,11 +31,13 @@ import static org.hibernate.processor.util.Constants.JD_PAGE;
 import static org.hibernate.processor.util.Constants.JD_PAGE_REQUEST;
 import static org.hibernate.processor.util.Constants.JD_SORT;
 import static org.hibernate.processor.util.Constants.LIST;
+import static org.hibernate.processor.util.Constants.NONNULL;
 import static org.hibernate.processor.util.Constants.OPTIONAL;
 import static org.hibernate.processor.util.Constants.QUERY;
 import static org.hibernate.processor.util.Constants.SESSION_TYPES;
 import static org.hibernate.processor.util.Constants.STREAM;
 import static org.hibernate.processor.util.Constants.TYPED_QUERY;
+import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isPrimitive;
 
 /**
@@ -89,6 +94,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	abstract boolean isNullable(int index);
 
+	boolean initiallyUnwrapped() {
+		return !isUsingEntityManager() // a TypedQuery from EntityManager is not a SelectionQuery
+			|| isUsingSpecification() && !isReactive(); // SelectionSpecification.createQuery() returns SelectionQuery
+	}
+
 	List<String> parameterTypes() {
 		return paramTypes.stream()
 				.map(paramType -> isOrderParam(paramType) && paramType.endsWith("[]")
@@ -105,11 +115,22 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 				.orElse("");
 	}
 
+	boolean hasRestriction() {
+		return paramTypes.stream()
+				.anyMatch( type -> isRestrictionParam( type )
+								|| isRangeParam( type ) );
+	}
+
+	boolean hasOrder() {
+		return paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam)
+			|| !orderBys.isEmpty();
+	}
+
 	String strip(final String fullType) {
 		String type = fullType;
 		// strip off type annotations
 		while ( type.charAt(0) == '@' ) {
-			int startIndex = type.indexOf( ' ' );
+			int startIndex = type.lastIndexOf( ' ' );
 			if ( startIndex > 0 ) {
 				type = type.substring(startIndex+1);
 			}
@@ -149,7 +170,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
-					.append(paramNames.get(i).replace('.', '$'));
+					.append(parameterName(paramNames.get(i)));
 		}
 		declaration
 				.append(")");
@@ -177,7 +198,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		if ( addNonnullAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(annotationMetaEntity.importType(NONNULL))
 					.append(' ');
 		}
 	}
@@ -259,18 +280,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	boolean applyOrder(
-			StringBuilder declaration, List<String> paramTypes,
-			@Nullable String containerType, boolean unwrapped) {
-		if ( !isJakartaCursoredPage(containerType) && hasOrdering(paramTypes) ) {
-			unwrapQuery( declaration, unwrapped );
-			declaration
-					.append("\t\t\t.setOrder(_orders)\n");
-			return true;
-		}
-		return unwrapped;
-	}
-
 	void handlePageParameters(
 			StringBuilder declaration, List<String> paramTypes,
 			@Nullable String containerType) {
@@ -285,35 +294,70 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	void convertExceptions(StringBuilder declaration) {
-		if (dataRepository) {
-			declaration
-					.append("\t}\n");
-			if ( singleResult() ) {
-				declaration
-						.append("\tcatch (")
-						.append(annotationMetaEntity.importType("jakarta.persistence.NoResultException"))
-						.append(" exception) {\n")
-						.append("\t\tthrow new ")
-						.append(annotationMetaEntity.importType("jakarta.data.exceptions.EmptyResultException"))
-						.append("(exception.getMessage(), exception);\n")
-						.append("\t}\n")
-						.append("\tcatch (")
-						.append(annotationMetaEntity.importType("jakarta.persistence.NonUniqueResultException"))
-						.append(" exception) {\n")
-						.append("\t\tthrow new ")
-						.append(annotationMetaEntity.importType("jakarta.data.exceptions.NonUniqueResultException"))
-						.append("(exception.getMessage(), exception);\n")
-						.append("\t}\n");
+	void handleRestrictionParameters(
+			StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( isRestrictionParam(paramType) ) {
+				if ( paramType.startsWith(LIST) || paramType.endsWith("[]") ) {
+					declaration
+							.append( "\t_spec.restrict(" )
+							.append( annotationMetaEntity.importType(HIB_RESTRICTION) )
+							.append( ".all(" )
+							.append( paramName )
+							.append( "));\n" );
+
+				}
+				else {
+					declaration
+							.append( "\t_spec.restrict(" )
+							.append( paramName )
+							.append( ");\n" );
+				}
 			}
+			else if ( isRangeParam(paramType) && returnTypeName!= null ) {
+				final TypeElement entityElement =
+						annotationMetaEntity.getContext().getElementUtils()
+								.getTypeElement( returnTypeName );
+				declaration
+						.append("\t_spec.restrict(")
+						.append(annotationMetaEntity.importType(HIB_RESTRICTION))
+						.append(".restrict(")
+						.append(annotationMetaEntity.importType(
+										getGeneratedClassFullyQualifiedName( entityElement, false ) ))
+						.append('.')
+						.append(paramName)
+						.append(", ")
+						.append(paramName)
+						.append("));\n");
+			}
+		}
+	}
+
+	void convertExceptions(StringBuilder declaration) {
+		if ( dataRepository ) {
+			if ( !isReactive() ) {
+				declaration
+						.append(";\n")
+						.append( "\t}\n" );
+			}
+			if ( singleResult() ) {
+				handle( declaration, "jakarta.persistence.NoResultException",
+						"jakarta.data.exceptions.EmptyResultException" );
+				handle( declaration, "jakarta.persistence.NonUniqueResultException",
+						"jakarta.data.exceptions.NonUniqueResultException" );
+			}
+			handle( declaration, "jakarta.persistence.PersistenceException",
+					"jakarta.data.exceptions.DataException" );
+			if ( isReactive() ) {
+				declaration
+						.append( ";\n" );
+			}
+		}
+		else {
 			declaration
-					.append("\tcatch (")
-					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceException"))
-					.append(" exception) {\n")
-					.append("\t\tthrow new ")
-					.append(annotationMetaEntity.importType("jakarta.data.exceptions.DataException"))
-					.append("(exception.getMessage(), exception);\n")
-					.append("\t}\n");
+					.append(";\n");
 		}
 	}
 
@@ -334,6 +378,8 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	static boolean isSpecialParam(String parameterType) {
 		return isPageParam(parameterType)
+			|| isRestrictionParam(parameterType)
+			|| isRangeParam(parameterType)
 			|| isOrderParam(parameterType)
 			|| isKeyedPageParam(parameterType)
 			|| isSessionParameter(parameterType);
@@ -353,7 +399,16 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		return parameterType.startsWith(HIB_ORDER)
 			|| parameterType.startsWith(LIST + "<" + HIB_ORDER)
 			|| parameterType.startsWith(JD_SORT)
-			|| parameterType.startsWith(JD_ORDER);
+			|| parameterType.startsWith(JD_ORDER) && !parameterType.endsWith("[]");
+	}
+
+	static boolean isRestrictionParam(String parameterType) {
+		return parameterType.startsWith(HIB_RESTRICTION)
+			|| parameterType.startsWith(LIST + "<" + HIB_RESTRICTION);
+	}
+
+	static boolean isRangeParam(String parameterType) {
+		return parameterType.startsWith(HIB_RANGE);
 	}
 
 	static boolean isJakartaCursoredPage(@Nullable String containerType) {
@@ -369,7 +424,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		annotationMetaEntity.staticImport(HIB_ORDER, "by");
 		annotationMetaEntity.staticImport(HIB_PAGE, "page");
 		annotationMetaEntity.staticImport("org.hibernate.query.KeyedPage.KeyInterpretation", "*");
-		annotationMetaEntity.staticImport(Collectors.class.getName(), "toList");
+		annotationMetaEntity.staticImport(COLLECTORS, "toList");
 		if ( returnTypeName == null ) {
 			throw new AssertionFailure("entity class cannot be null");
 		}
@@ -389,10 +444,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			"\t\t\t\t\t\t.stream()\n" +
 			"\t\t\t\t\t\t.map(_key -> Cursor.forKey(_key.toArray()))\n" +
 			"\t\t\t\t\t\t.collect(toList());\n" +
-			//SHOULD BE new CursoredPageRecord<>
-			"\t\treturn new CursoredPageRecord(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
+			"\t\treturn new CursoredPageRecord<>(_results.getResultList(), _cursors, _totalResults, pageRequest,\n" +
 			"\t\t\t\t_results.isLastPage() ? null : afterCursor(_cursors.get(_cursors.size()-1), pageRequest.page()+1, pageRequest.size(), pageRequest.requestTotal()),\n" +
-			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()));";
+			"\t\t\t\t_results.isFirstPage() ? null : beforeCursor(_cursors.get(0), pageRequest.page()-1, pageRequest.size(), pageRequest.requestTotal()))";
 
 	static final String MAKE_KEYED_PAGE
 			= "\tvar _unkeyedPage =\n" +
@@ -412,13 +466,15 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	void createQuery(StringBuilder declaration) {}
 
+	void createSpecification(StringBuilder declaration) {}
+
 	void setParameters(StringBuilder declaration, List<String> paramTypes, String indent) {}
 
 	void tryReturn(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( isJakartaCursoredPage(containerType) ) {
 			makeKeyedPage( declaration, paramTypes );
 		}
-		if ( dataRepository ) {
+		if ( dataRepository && !isReactive() ) {
 			declaration
 					.append("\ttry {\n");
 		}
@@ -430,7 +486,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			}
 			totalResults(declaration, paramTypes);
 		}
-		if ( dataRepository ) {
+		if ( dataRepository && !isReactive() ) {
 			declaration
 					.append('\t');
 		}
@@ -484,32 +540,46 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 		}
 	}
 
-	void collectOrdering(StringBuilder declaration, List<String> paramTypes) {
+	void collectOrdering(StringBuilder declaration, List<String> paramTypes, @Nullable String containerType) {
 		if ( hasOrdering(paramTypes) ) {
 			if ( returnTypeName != null ) {
-				declaration
-						.append("\tvar _orders = new ")
-						.append(annotationMetaEntity.importType("java.util.ArrayList"))
-						.append("<")
-						.append(annotationMetaEntity.importType(HIB_ORDER))
-						.append("<? super ")
-						.append(annotationMetaEntity.importType(returnTypeName))
-						.append(">>();\n");
+				final boolean cursoredPage = isJakartaCursoredPage( containerType );
+				final String add;
+				if ( cursoredPage ) {
+					// we need to collect them together in a List
+					declaration
+							.append("\tvar _orders = new ")
+							.append(annotationMetaEntity.importType("java.util.ArrayList"))
+							.append("<")
+							.append(annotationMetaEntity.importType(HIB_ORDER))
+							.append("<? super ")
+							.append(annotationMetaEntity.importType(returnTypeName))
+							.append(">>();\n");
+					add = "_orders.add";
+				}
+				else {
+					add = "_spec.sort";
+				}
+
 				// static orders declared using @OrderBy must come first
 				for ( OrderBy orderBy : orderBys ) {
 					annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 					declaration
-							.append("\t_orders.add(")
-							.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+							.append("\t")
+							.append(add)
+							.append('(')
+							.append(annotationMetaEntity.staticImport(HIB_ORDER, orderBy.descending  ? "desc" : "asc"))
 							.append('(')
 							.append(annotationMetaEntity.importType(returnTypeName))
 							.append(".class, \"")
 							.append(orderBy.fieldName)
-							.append("\", ")
-							.append(orderBy.descending ? "DESCENDING" : "ASCENDING")
-							.append(", ")
-							.append(orderBy.ignoreCase)
-							.append("));\n");
+							.append("\")");
+					if ( orderBy.ignoreCase ) {
+						declaration
+								.append("\n\t.ignoringCase()");
+					}
+					declaration
+							.append(");\n");
 
 				}
 				for (int i = 0; i < paramTypes.size(); i++) {
@@ -520,20 +590,36 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append("\tfor (var _sort : ")
 								.append(name)
 								.append(") {\n")
-								.append("\t\t_orders.add(_sort);\n")
+								.append("\t\t")
+								.append(add)
+								.append("(_sort);\n")
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(HIB_ORDER) ) {
 						declaration
-								.append("\t_orders.add(")
+								.append("\t")
+								.append(add)
+								.append('(')
 								.append(name)
 								.append(");\n");
 					}
 					else if ( type.startsWith(LIST + "<" + HIB_ORDER) ) {
-						declaration
-								.append("\t_orders.addAll(")
-								.append(name)
-								.append(");\n");
+						if ( cursoredPage ) {
+							declaration
+									.append("\t_orders.addAll(")
+									.append(name)
+									.append(");\n");
+						}
+						else {
+							declaration
+									.append("\tfor (var _sort : ")
+									.append(name)
+									.append(") {\n")
+									.append("\t\t")
+									.append(add)
+									.append("(_sort);\n")
+									.append("\t}\n");
+						}
 					}
 					else if ( type.startsWith(JD_ORDER) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
@@ -541,15 +627,17 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append("\tfor (var _sort : ")
 								.append(name)
 								.append(".sorts()) {\n")
-								.append("\t\t_orders.add(")
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append("\t\t")
+								.append(add)
+								.append('(')
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
-								.append(".class, _sort.property(),")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.ignoreCase()));\n")
+								.append(".class, _sort.property())")
+								.append("\n\t\t\t\t\t")
+								.append(".reversedIf(_sort.isDescending())")
+								.append("\n\t\t\t\t\t")
+								.append(".ignoringCaseIf(_sort.ignoreCase()));\n")
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(JD_SORT) && type.endsWith("...") ) {
@@ -559,31 +647,37 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 								.append("\tfor (var _sort : ")
 								.append(name)
 								.append(") {\n")
-								.append("\t\t_orders.add(")
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append("\t\t")
+								.append(add)
+								.append('(')
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
-								.append(".class, _sort.property(),")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.isAscending() ? ASCENDING : DESCENDING,")
-								.append("\n\t\t\t\t\t\t")
-								.append("_sort.ignoreCase()));\n")
+								.append(".class, _sort.property())")
+								.append("\n\t\t\t\t\t")
+								.append(".reversedIf(_sort.isDescending())")
+								.append("\n\t\t\t\t\t")
+								.append(".ignoringCaseIf(_sort.ignoreCase()));\n")
 								.append("\t}\n");
 					}
 					else if ( type.startsWith(JD_SORT) ) {
 						annotationMetaEntity.staticImport(HIB_SORT_DIRECTION, "*");
 						declaration
-								.append("\t_orders.add(")
-								.append(annotationMetaEntity.staticImport(HIB_ORDER, "by"))
+								.append("\t")
+								.append(add)
+								.append('(')
+								.append(annotationMetaEntity.staticImport(HIB_ORDER, "asc"))
 								.append('(')
 								.append(annotationMetaEntity.importType(returnTypeName))
 								.append(".class, ")
 								.append(name)
-								.append(".property(),")
-								.append("\n\t\t\t\t\t\t")
+								.append(".property())")
+								.append("\n\t\t\t\t\t")
+								.append(".reversedIf(")
 								.append(name)
-								.append(".isAscending() ? ASCENDING : DESCENDING,")
-								.append("\n\t\t\t\t\t\t")
+								.append(".isDescending())")
+								.append("\n\t\t\t\t\t")
+								.append(".ignoringCaseIf(")
 								.append(name)
 								.append(".ignoreCase()));\n");
 					}
@@ -597,6 +691,10 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			|| !orderBys.isEmpty();
 	}
 
+	boolean isUsingSpecification() {
+		return false;
+	}
+
 	protected void executeSelect(
 			StringBuilder declaration,
 			List<String> paramTypes,
@@ -607,11 +705,11 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 			if ( nullable ) {
 				unwrapQuery(declaration, unwrapped);
 				declaration
-						.append("\t\t\t.getSingleResultOrNull();");
+						.append("\t\t\t.getSingleResultOrNull()");
 			}
 			else {
 				declaration
-						.append("\t\t\t.getSingleResult();");
+						.append("\t\t\t.getSingleResult()");
 			}
 		}
 		else {
@@ -624,28 +722,28 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append("\t\t\t.getResultList()\n\t\t\t.toArray(new ")
 								.append(annotationMetaEntity.importType(returnTypeName))
-								.append("[0]);");
+								.append("[0])");
 					}
 					break;
 				case OPTIONAL:
 					unwrapQuery(declaration, unwrapped);
 					declaration
-							.append("\t\t\t.uniqueResultOptional();");
+							.append("\t\t\t.uniqueResultOptional()");
 					break;
 				case STREAM:
 					declaration
-							.append("\t\t\t.getResultStream();");
+							.append("\t\t\t.getResultStream()");
 					break;
 				case LIST:
 					declaration
-							.append("\t\t\t.getResultList();");
+							.append("\t\t\t.getResultList()");
 					break;
 				case HIB_KEYED_RESULT_LIST:
 					unwrapQuery(declaration, unwrapped);
 					declaration
 							.append("\t\t\t.getKeyedResultList(")
 							.append(parameterName(HIB_KEYED_PAGE, paramTypes, paramNames))
-							.append(");");
+							.append(")");
 					break;
 				case JD_PAGE:
 					if ( isReactive() ) {
@@ -666,6 +764,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 					declaration
 							.append("new ")
 							.append(annotationMetaEntity.importType("jakarta.data.page.impl.PageRecord"))
+							.append("<>")
 							.append('(')
 							.append(parameterName(JD_PAGE_REQUEST, paramTypes, paramNames))
 							.append(", _results, _totalResults)");
@@ -673,8 +772,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append(')');
 					}
-					declaration
-							.append(';');
 					break;
 				case JD_CURSORED_PAGE:
 					if ( returnTypeName == null ) {
@@ -703,7 +800,7 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						declaration
 								.append("\t\t\t.unwrap(")
 								.append(annotationMetaEntity.importType(containerType))
-								.append(".class);");
+								.append(".class)");
 
 					}
 					else {
@@ -711,11 +808,9 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 						if ( declaration.charAt(lastIndex) == '\n' )  {
 							declaration.setLength(lastIndex);
 						}
-						declaration.append(';');
 					}
 			}
 		}
-		declaration.append('\n');
 	}
 
 	private static String parameterName(String paramType, List<String> paramTypes, List<String> paramNames) {

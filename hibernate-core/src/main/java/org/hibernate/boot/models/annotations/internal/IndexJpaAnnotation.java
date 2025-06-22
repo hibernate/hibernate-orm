@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Index;
 
@@ -22,7 +22,7 @@ public class IndexJpaAnnotation implements Index {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public IndexJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public IndexJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.unique = false;
 		this.options = "";
@@ -31,7 +31,7 @@ public class IndexJpaAnnotation implements Index {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public IndexJpaAnnotation(Index annotation, SourceModelBuildingContext modelContext) {
+	public IndexJpaAnnotation(Index annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.columnList = annotation.columnList();
 		this.unique = annotation.unique();
@@ -41,7 +41,7 @@ public class IndexJpaAnnotation implements Index {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public IndexJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public IndexJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.columnList = (String) attributeValues.get( "columnList" );
 		this.unique = (boolean) attributeValues.get( "unique" );

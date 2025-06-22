@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tuple;
 
 import org.hibernate.FetchMode;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.walking.spi.AttributeSource;
@@ -90,6 +91,11 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	@Override
 	public CascadeStyle getCascadeStyle() {
 		return attributeInformation.getCascadeStyle();
+	}
+
+	@Override
+	public OnDeleteAction getOnDeleteAction() {
+		return attributeInformation.getOnDeleteAction();
 	}
 
 	@Override

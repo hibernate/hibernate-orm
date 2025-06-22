@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -9,6 +9,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.sql.Connection;
 import java.util.TimeZone;
+import java.util.function.UnaryOperator;
 
 /**
  * Specialized {@link SessionBuilder} with access to stuff from another session.
@@ -38,7 +39,7 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @deprecated use {@link #connectionHandlingMode} instead.
+	 * @deprecated use {@link #connectionHandling} instead.
 	 */
 	@Deprecated(since = "6.0")
 	SharedSessionBuilder connectionReleaseMode();
@@ -71,11 +72,17 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	 */
 	SharedSessionBuilder autoClose();
 
-	@Override
+	@Override @Deprecated
 	SharedSessionBuilder statementInspector(StatementInspector statementInspector);
 
 	@Override
+	SessionBuilder statementInspector(UnaryOperator<String> operator);
+
+	@Override @Deprecated
 	SharedSessionBuilder connectionHandlingMode(PhysicalConnectionHandlingMode mode);
+
+	@Override
+	SharedSessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode);
 
 	@Override
 	SharedSessionBuilder autoClear(boolean autoClear);
@@ -112,4 +119,7 @@ public interface SharedSessionBuilder extends SessionBuilder {
 
 	@Override
 	SharedSessionBuilder autoClose(boolean autoClose);
+
+	@Override
+	SharedSessionBuilder identifierRollback(boolean identifierRollback);
 }

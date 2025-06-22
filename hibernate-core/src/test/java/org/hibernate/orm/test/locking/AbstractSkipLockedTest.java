@@ -1,29 +1,28 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
+import jakarta.persistence.Timeout;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.Query;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -208,10 +207,7 @@ public abstract class AbstractSkipLockedTest
 	}
 
 	protected void applySkipLocked(Query query) {
-		query.setLockOptions(
-				new LockOptions( lockMode() )
-						.setTimeOut( LockOptions.SKIP_LOCKED )
-		);
+		query.setHibernateLockMode( lockMode() ).setTimeout( Timeout.milliseconds( -2 ) );
 	}
 
 	protected abstract LockMode lockMode();

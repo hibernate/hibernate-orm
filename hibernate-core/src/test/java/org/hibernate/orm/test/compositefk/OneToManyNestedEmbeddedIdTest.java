@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.compositefk;
@@ -36,10 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class OneToManyNestedEmbeddedIdTest {
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete from ChildEntity" ).executeUpdate();
-			em.createQuery( "delete from ParentEntity" ).executeUpdate();
-		} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

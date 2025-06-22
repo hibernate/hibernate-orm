@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -55,6 +55,6 @@ public class NonUniqueObjectException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + ": " + infoString( entityName, identifier );
+		return super.getMessage() + " for entity " + infoString( entityName, identifier );
 	}
 }

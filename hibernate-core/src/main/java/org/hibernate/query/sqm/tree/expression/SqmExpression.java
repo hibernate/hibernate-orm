@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -9,15 +9,15 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Internal;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -40,7 +40,8 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
 	@Override
-	@Nullable SqmExpressible<T> getNodeType();
+	@Nullable
+	SqmBindableType<T> getNodeType();
 
 	/**
 	 * Used to apply type information based on the expression's usage
@@ -51,7 +52,7 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	 * an implicit cast)
 	 */
 	@Internal
-	void applyInferableType(@Nullable SqmExpressible<?> type);
+	void applyInferableType(@Nullable SqmBindableType<?> type);
 
 	@Override
 	default void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
@@ -111,17 +112,17 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	default <X> SqmExpression<X> castAs(DomainType<X> type) {
 		if ( getNodeType() == type ) {
-			return (SqmExpression<X>) this;
+			// safe cast, because we just checked
+			@SuppressWarnings("unchecked")
+			final SqmExpression<X> castExpression = (SqmExpression<X>) this;
+			return castExpression;
 		}
-		final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
-		final SqmCastTarget<T> target = new SqmCastTarget<>( (ReturnableType<T>) type, nodeBuilder() );
-		return queryEngine.getSqmFunctionRegistry()
-				.findFunctionDescriptor("cast")
-					.generateSqmExpression(
-							asList( this, target ),
-							(ReturnableType<X>) type,
-							queryEngine
-					);
+		else {
+			final QueryEngine queryEngine = nodeBuilder().getQueryEngine();
+			final SqmCastTarget<?> target = new SqmCastTarget<>( (ReturnableType<?>) type, nodeBuilder() );
+			return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
+					.generateSqmExpression( asList( this, target ), (ReturnableType<X>) type, queryEngine );
+		}
 	}
 
 	@Override
@@ -130,8 +131,8 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 	}
 
 	@Override
-	Predicate notEqualTo(Expression<?> value);
+	JpaPredicate notEqualTo(Expression<?> value);
 
 	@Override
-	Predicate notEqualTo(Object value);
+	JpaPredicate notEqualTo(Object value);
 }

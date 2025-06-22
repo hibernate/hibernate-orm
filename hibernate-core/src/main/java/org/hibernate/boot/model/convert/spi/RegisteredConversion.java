@@ -1,24 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.spi;
 
-import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
-import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorStandardImpl;
-import org.hibernate.boot.model.convert.internal.ConverterHelper;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.type.descriptor.converter.internal.JpaAttributeConverterImpl;
-import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
+
+import static org.hibernate.boot.model.convert.internal.ConverterHelper.resolveConverterClassParamTypes;
 
 /**
  * A registered conversion.
@@ -27,25 +22,23 @@ import jakarta.persistence.AttributeConverter;
  *
  * @author Steve Ebersole
  */
-public class RegisteredConversion {
-	private final Class<?> explicitDomainType;
-	private final Class<? extends AttributeConverter<?,?>> converterType;
-	private final boolean autoApply;
+public record RegisteredConversion(
+		Class<?> explicitDomainType,
+		Class<? extends AttributeConverter<?,?>> converterType,
+		boolean autoApply,
+		ConverterDescriptor<?,?> converterDescriptor) {
 
-	private final ConverterDescriptor converterDescriptor;
+	public RegisteredConversion {
+		assert converterType != null;
+	}
 
 	public RegisteredConversion(
 			Class<?> explicitDomainType,
 			Class<? extends AttributeConverter<?,?>> converterType,
 			boolean autoApply,
 			MetadataBuildingContext context) {
-		assert converterType != null;
-
-		this.explicitDomainType = explicitDomainType;
-		this.converterType = converterType;
-		this.autoApply = autoApply;
-
-		this.converterDescriptor = determineConverterDescriptor( explicitDomainType, converterType, autoApply, context );
+		this( explicitDomainType, converterType, autoApply,
+				determineConverterDescriptor( explicitDomainType, converterType, autoApply, context ) );
 	}
 
 	@Override
@@ -53,13 +46,12 @@ public class RegisteredConversion {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof RegisteredConversion that) ) {
 			return false;
 		}
-		RegisteredConversion that = (RegisteredConversion) o;
-		return autoApply == that.autoApply
-				&& Objects.equals( explicitDomainType, that.explicitDomainType )
-				&& converterType.equals( that.converterType );
+		return this.autoApply == that.autoApply
+			&& Objects.equals( this.explicitDomainType, that.explicitDomainType )
+			&& Objects.equals( this.converterType, that.converterType );
 	}
 
 	@Override
@@ -67,25 +59,19 @@ public class RegisteredConversion {
 		return Objects.hash( explicitDomainType, converterType );
 	}
 
-	private static ConverterDescriptor determineConverterDescriptor(
+	private static ConverterDescriptor<?,?> determineConverterDescriptor(
 			Class<?> explicitDomainType,
 			Class<? extends AttributeConverter<?, ?>> converterType,
 			boolean autoApply,
 			MetadataBuildingContext context) {
-		final List<ResolvedType> resolvedParamTypes = ConverterHelper.resolveConverterClassParamTypes(
-				converterType,
-				context.getBootstrapContext().getClassmateContext()
-		);
+		final ClassmateContext classmateContext = context.getBootstrapContext().getClassmateContext();
+		final var resolvedParamTypes = resolveConverterClassParamTypes( converterType, classmateContext );
 		final ResolvedType relationalType = resolvedParamTypes.get( 1 );
-		final ResolvedType domainTypeToMatch;
-		if ( !void.class.equals( explicitDomainType ) ) {
-			domainTypeToMatch = context.getBootstrapContext().getClassmateContext().getTypeResolver().resolve( explicitDomainType );
-		}
-		else {
-			domainTypeToMatch = resolvedParamTypes.get( 0 );
-		}
-
-		return new ConverterDescriptorImpl( converterType, domainTypeToMatch, relationalType, autoApply );
+		final ResolvedType domainTypeToMatch =
+				void.class.equals( explicitDomainType )
+						? resolvedParamTypes.get( 0 )
+						: classmateContext.getTypeResolver().resolve( explicitDomainType );
+		return ConverterDescriptors.of( converterType, domainTypeToMatch, relationalType, autoApply );
 	}
 
 	public Class<?> getExplicitDomainType() {
@@ -100,71 +86,7 @@ public class RegisteredConversion {
 		return autoApply;
 	}
 
-	public ConverterDescriptor getConverterDescriptor() {
+	public ConverterDescriptor<?,?> getConverterDescriptor() {
 		return converterDescriptor;
 	}
-
-	private static class ConverterDescriptorImpl implements ConverterDescriptor {
-		private final Class<? extends AttributeConverter<?, ?>> converterType;
-		private final ResolvedType domainTypeToMatch;
-		private final ResolvedType relationalType;
-		private final boolean autoApply;
-
-		private final AutoApplicableConverterDescriptor autoApplyDescriptor;
-
-		public ConverterDescriptorImpl(
-				Class<? extends AttributeConverter<?, ?>> converterType,
-				ResolvedType domainTypeToMatch,
-				ResolvedType relationalType,
-				boolean autoApply) {
-			this.converterType = converterType;
-			this.domainTypeToMatch = domainTypeToMatch;
-			this.relationalType = relationalType;
-			this.autoApply = autoApply;
-
-			this.autoApplyDescriptor = autoApply
-					? new AutoApplicableConverterDescriptorStandardImpl( this )
-					: AutoApplicableConverterDescriptorBypassedImpl.INSTANCE;
-		}
-
-		@Override
-		public Class<? extends AttributeConverter<?, ?>> getAttributeConverterClass() {
-			return converterType;
-		}
-
-		@Override
-		public ResolvedType getDomainValueResolvedType() {
-			return domainTypeToMatch;
-		}
-
-		@Override
-		public ResolvedType getRelationalValueResolvedType() {
-			return relationalType;
-		}
-
-		@Override
-		public AutoApplicableConverterDescriptor getAutoApplyDescriptor() {
-			return autoApplyDescriptor;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public JpaAttributeConverter<?, ?> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-			final ManagedBean<? extends AttributeConverter<?, ?>> converterBean =
-					context.getManagedBeanRegistry().getBean( converterType );
-
-			final TypeConfiguration typeConfiguration = context.getTypeConfiguration();
-			final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
-			javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() );
-
-			//noinspection rawtypes
-			return new JpaAttributeConverterImpl(
-					converterBean,
-					javaTypeRegistry.getDescriptor(  converterBean.getBeanClass() ),
-					javaTypeRegistry.resolveDescriptor( domainTypeToMatch.getErasedType() ),
-					javaTypeRegistry.resolveDescriptor( relationalType.getErasedType() )
-			);
-		}
-	}
-
 }

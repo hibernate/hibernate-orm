@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.HibernateAnnotations.JOIN_COLUMN_OR_FORMULA;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -24,7 +24,7 @@ public class JoinColumnOrFormulaAnnotation implements JoinColumnOrFormula {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public JoinColumnOrFormulaAnnotation(SourceModelBuildingContext modelContext) {
+	public JoinColumnOrFormulaAnnotation(ModelsContext modelContext) {
 		this.formula = HibernateAnnotations.JOIN_FORMULA.createUsage( modelContext );
 		this.column = JpaAnnotations.JOIN_COLUMN.createUsage( modelContext );
 	}
@@ -32,7 +32,7 @@ public class JoinColumnOrFormulaAnnotation implements JoinColumnOrFormula {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public JoinColumnOrFormulaAnnotation(JoinColumnOrFormula annotation, SourceModelBuildingContext modelContext) {
+	public JoinColumnOrFormulaAnnotation(JoinColumnOrFormula annotation, ModelsContext modelContext) {
 		this.formula = extractJdkValue( annotation, JOIN_COLUMN_OR_FORMULA, "formula", modelContext );
 		this.column = extractJdkValue( annotation, JOIN_COLUMN_OR_FORMULA, "column", modelContext );
 	}
@@ -40,7 +40,7 @@ public class JoinColumnOrFormulaAnnotation implements JoinColumnOrFormula {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public JoinColumnOrFormulaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public JoinColumnOrFormulaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.formula = (org.hibernate.annotations.JoinFormula) attributeValues.get( "formula" );
 		this.column = (jakarta.persistence.JoinColumn) attributeValues.get( "column" );
 	}

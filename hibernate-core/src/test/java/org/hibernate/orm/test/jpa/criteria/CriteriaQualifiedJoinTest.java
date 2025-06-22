@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria;
@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.query.common.JoinType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -18,7 +19,6 @@ import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -94,7 +94,7 @@ public class CriteriaQualifiedJoinTest {
 			final HibernateCriteriaBuilder cb = entityManager.unwrap( Session.class ).getCriteriaBuilder();
 			final JpaCriteriaQuery<Tuple> query = cb.createTupleQuery();
 			final JpaRoot<Primary> root = query.from( Primary.class );
-			final JpaEntityJoin<Primary,Secondary> entityJoin = root.join( Secondary.class, SqmJoinType.INNER );
+			final JpaEntityJoin<Primary,Secondary> entityJoin = root.join( Secondary.class, JoinType.INNER );
 			final JpaPath<Integer> id = root.get( "id" );
 			entityJoin.on( cb.equal( id, entityJoin.get( "id" ) ) );
 			final JpaPath<String> name = entityJoin.get( "name" );

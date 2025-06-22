@@ -1,31 +1,29 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -40,6 +38,9 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
@@ -48,8 +49,8 @@ import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParamet
 /**
  * @author Steve Ebersole
  */
-public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements JpaCriteriaQuery<T>, SqmStatement<T>,
-		org.hibernate.query.sqm.internal.ParameterCollector {
+public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
+		implements JpaCriteriaQuery<T>, SqmStatement<T>, ParameterCollector {
 	private final SqmQuerySource querySource;
 
 	private Set<SqmParameter<?>> parameters;
@@ -103,7 +104,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	 *           in order to allow correct parameter handing.
 	 */
 	public SqmSelectStatement(SqmSelectStatement<T> original) {
-		super( original.getQueryPart(), original.getCteStatementMap(), original.getResultType(), original.nodeBuilder() );
+		super( original.getQueryPart(),
+				original.getCteStatementMap(),
+				original.getResultType(),
+				original.nodeBuilder() );
 		this.querySource = CRITERIA;
 	}
 
@@ -121,10 +125,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmSelectStatement<T> copy(SqmCopyContext context) {
 		final SqmSelectStatement<T> existing = context.getCopy( this );
-		if ( existing != null ) {
-			return existing;
-		}
-		return createCopy( context, getResultType() );
+		return existing != null ? existing : createCopy( context, getResultType() );
 	}
 
 	@Internal
@@ -160,6 +161,16 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
+	public NodeBuilder getCriteriaBuilder() {
+		return nodeBuilder();
+	}
+
+	@Override
+	public List<Order> getOrderList() {
+		return unmodifiableList( getQueryPart().getSortSpecifications() );
+	}
+
+	@Override
 	public SqmQuerySource getQuerySource() {
 		return querySource;
 	}
@@ -167,9 +178,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public SqmQuerySpec<T> getQuerySpec() {
 		if ( querySource == CRITERIA ) {
-			final SqmQueryPart<T> queryPart = getQueryPart();
-			if ( queryPart instanceof SqmQuerySpec<?> ) {
-				return (SqmQuerySpec<T>) queryPart;
+			if ( getQueryPart() instanceof SqmQuerySpec<T> querySpec ) {
+				return querySpec;
 			}
 			throw new IllegalStateException(
 					"Query group can't be treated as query spec. Use JpaSelectCriteria#getQueryPart to access query group details"
@@ -181,17 +191,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	public boolean producesUniqueResults() {
-		return producesUniqueResults( getQueryPart() );
-	}
-
-	private boolean producesUniqueResults(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> ) {
-			return ( (SqmQuerySpec<?>) queryPart ).producesUniqueResults();
-		}
-		else {
-			// For query groups we have to assume that duplicates are possible
-			return true;
-		}
+		// For query groups we have to assume that duplicates are possible
+		return !( getQueryPart() instanceof SqmQuerySpec<?> querySpec )
+			|| querySpec.producesUniqueResults();
 	}
 
 	public boolean containsCollectionFetches() {
@@ -199,13 +201,15 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	private boolean containsCollectionFetches(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> ) {
-			return ( (SqmQuerySpec<?>) queryPart ).containsCollectionFetches();
+		if ( queryPart instanceof SqmQuerySpec<?> querySpec ) {
+			return querySpec.containsCollectionFetches();
+		}
+		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
+			// We only have to check the first one
+			return containsCollectionFetches( queryGroup.getQueryParts().get( 0 ) );
 		}
 		else {
-			// We only have to check the first one
-			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
-			return containsCollectionFetches( queryGroup.getQueryParts().get( 0 ) );
+			throw new IllegalStateException("No SqmQueryPart");
 		}
 	}
 
@@ -214,13 +218,15 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	private boolean usesDistinct(SqmQueryPart<?> queryPart) {
-		if ( queryPart instanceof SqmQuerySpec<?> ) {
-			return ( (SqmQuerySpec<?>) queryPart ).getSelectClause().isDistinct();
+		if ( queryPart instanceof SqmQuerySpec<?> querySpec ) {
+			return querySpec.getSelectClause().isDistinct();
+		}
+		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
+			// We only have to check the first one
+			return usesDistinct( queryGroup.getQueryParts().get( 0 ) );
 		}
 		else {
-			// We only have to check the first one
-			final SqmQueryGroup<?> queryGroup = (SqmQueryGroup<?>) queryPart;
-			return usesDistinct( queryGroup.getQueryParts().get( 0 ) );
+			throw new IllegalStateException("No SqmQueryPart");
 		}
 	}
 
@@ -230,8 +236,9 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			assert parameters == null : "SqmSelectStatement (as Criteria) should not have collected parameters";
 			return collectParameters( this );
 		}
-
-		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
+		else {
+			return parameters == null ? emptySet() : unmodifiableSet( parameters );
+		}
 	}
 
 	@Override
@@ -249,7 +256,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		if ( parameters == null ) {
 			parameters = new LinkedHashSet<>();
 		}
-
 		parameters.add( parameter );
 	}
 
@@ -257,8 +263,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	protected <X> JpaCteCriteria<X> withInternal(String name, AbstractQuery<X> criteria) {
 		if ( criteria instanceof SqmSubQuery<?> ) {
 			throw new IllegalArgumentException(
-					"Invalid query type provided to root query 'with' method, " +
-							"expecting a root query to use as CTE instead found a subquery"
+					"Invalid query type provided to root query 'with' method, "
+					+ "expecting a root query to use as CTE instead found a subquery"
 			);
 		}
 		return super.withInternal( name, criteria );
@@ -269,11 +275,12 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			String name,
 			AbstractQuery<X> baseCriteria,
 			boolean unionDistinct,
-			Function<JpaCteCriteria<X>, AbstractQuery<X>> recursiveCriteriaProducer) {
+			Function<JpaCteCriteria<X>,
+			AbstractQuery<X>> recursiveCriteriaProducer) {
 		if ( baseCriteria instanceof SqmSubQuery<?> ) {
 			throw new IllegalArgumentException(
-					"Invalid query type provided to root query 'with' method, " +
-							"expecting a root query to use as CTE instead found a subquery"
+					"Invalid query type provided to root query 'with' method, "
+					+ "expecting a root query to use as CTE instead found a subquery"
 			);
 		}
 		return super.withInternal( name, baseCriteria, unionDistinct, recursiveCriteriaProducer );
@@ -290,14 +297,10 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	@Override
 	public Set<ParameterExpression<?>> getParameters() {
 		// At this level, the number of parameters may still be growing as
-		// nodes are added to the Criteria - so we re-calculate this every
-		// time.
-		//
-		// for a "finalized" set of parameters, use `#resolveParameters` instead
-		assert querySource == CRITERIA;
-		return getSqmParameters().stream()
-				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
-				.collect( Collectors.toSet() );
+		// nodes are added to the Criteria, so we recalculate this every time.
+		// For a finalized set of parameters, use resolveParameters() instead
+		assert querySource == SqmQuerySource.CRITERIA;
+		return SqmUtil.getParameters( this );
 	}
 
 	@Override
@@ -314,8 +317,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
-		//noinspection unchecked,rawtypes
-		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		final SqmPredicate combined =
+				combinePredicates( getQuerySpec().getHavingClausePredicate(), restrictions );
 		getQuerySpec().setHavingClausePredicate( combined );
 		return this;
 	}
@@ -330,53 +333,42 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectStatement<T> multiselect(Selection<?>... selections) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selections ) {
 				checkSelectionIsJpaCompliant( selection );
 			}
 		}
-
-		final Selection<? extends T> resultSelection = getResultSelection( selections );
-		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
+		getQuerySpec().getSelectClause()
+				.setSelection( (SqmSelectableNode<?>) getResultSelection( selections ) );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public SqmSelectStatement<T> multiselect(List<Selection<?>> selectionList) {
 		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			for ( Selection<?> selection : selectionList ) {
 				checkSelectionIsJpaCompliant( selection );
 			}
 		}
-		final Selection<? extends T> resultSelection = getResultSelection( selectionList );
-		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
+		getQuerySpec().getSelectClause()
+				.setSelection( (SqmSelectableNode<?>) getResultSelection( selectionList ) );
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
-	private Selection<? extends T> getResultSelection(List<?> selectionList) {
+	private JpaSelection<?> getResultSelection(List<Selection<?>> selections) {
 		final Class<T> resultType = getResultType();
-		//noinspection rawtypes
-		final List<? extends JpaSelection<?>> selections = (List) selectionList;
 		if ( resultType == null || resultType == Object.class ) {
-			switch ( selectionList.size() ) {
-				case 0: {
-					throw new IllegalArgumentException(
-							"empty selections passed to criteria query typed as Object"
-					);
-				}
-				case 1: {
-					return (Selection<? extends T>) selectionList.get( 0 );
-				}
-				default: {
-					return (Selection<? extends T>) nodeBuilder().array( (List) selectionList );
-				}
-			}
+			return switch ( selections.size() ) {
+				case 0 -> throw new IllegalArgumentException(
+						"empty selections passed to criteria query typed as Object" );
+				case 1 -> (JpaSelection<?>) selections.get( 0 );
+				default -> nodeBuilder().array( selections );
+			};
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			return (Selection<? extends T>) nodeBuilder().tuple( (List) selectionList );
+			return nodeBuilder().tuple( selections );
 		}
 		else if ( resultType.isArray() ) {
 			return nodeBuilder().array( resultType, selections );
@@ -520,13 +512,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	public SqmSelectStatement<Long> createCountQuery() {
 		final SqmSelectStatement<?> copy = createCopy( noParamCopyContext(), Object.class );
 		final SqmQueryPart<?> queryPart = copy.getQueryPart();
-		final SqmQuerySpec<?> querySpec;
 		//TODO: detect queries with no 'group by', but aggregate functions
 		//      in 'select' list (we don't even need to hit the database to
 		//      know they return exactly one row)
-		if ( queryPart.isSimpleQueryPart()
-				&& !( querySpec = (SqmQuerySpec<?>) queryPart ).isDistinct()
+		if ( queryPart instanceof SqmQuerySpec<?> querySpec
+				&& !querySpec.isDistinct()
 				&& querySpec.getGroupingExpressions().isEmpty() ) {
+			// we can just remove any fetch joins and
+			// replace the select list with count(*)
 			for ( SqmRoot<?> root : querySpec.getRootList() ) {
 				root.removeLeftFetchJoins();
 			}
@@ -534,28 +527,67 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			if ( querySpec.getFetch() == null && querySpec.getOffset() == null ) {
 				querySpec.setOrderByClause( null );
 			}
-
 			return (SqmSelectStatement<Long>) copy;
 		}
 		else {
+			// we have to wrap query in an outer query
+			//TODO: do some deeper analysis for unions (simplify their select lists)
 			aliasSelections( queryPart );
-			final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
 			final SqmSelectStatement<Long> query = nodeBuilder().createQuery( Long.class );
+			final SqmSubQuery<?> subquery = new SqmSubQuery<>( query, queryPart, null, nodeBuilder() );
 			query.from( subquery );
 			query.select( nodeBuilder().count() );
+			if ( subquery.getFetch() == null && subquery.getOffset() == null ) {
+				subquery.getQueryPart().setOrderByClause( null );
+			}
 			return query;
 		}
 	}
 
+	@Override
+	public SqmSelectStatement<Boolean> createExistsQuery() {
+		final SqmSelectStatement<?> copy = createCopy( noParamCopyContext(), Object.class );
+		final SqmQueryPart<?> queryPart = copy.getQueryPart();
+		//TODO: detect queries with no 'group by', but aggregate functions
+		//      in 'select' list (we don't even need to hit the database to
+		//      know they return exactly one row)
+		if ( queryPart.isSimpleQueryPart() ) {
+			final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;
+			querySpec.setDistinct( false );
+			if ( querySpec.getGroupingExpressions().isEmpty() ) {
+				for ( SqmRoot<?> root : querySpec.getRootList() ) {
+					root.removeLeftFetchJoins();
+				}
+				querySpec.getSelectClause().setSelection( nodeBuilder().literal( 1 ) );
+			}
+		}
+		//TODO: do some deeper analysis for unions (simplify their select lists)
+		aliasSelections( queryPart );
+		final SqmSubQuery<?> subquery = new SqmSubQuery<>( copy, queryPart, null, nodeBuilder() );
+		final SqmSelectStatement<Boolean> query = nodeBuilder().createQuery( Boolean.class );
+		query.select( nodeBuilder().exists( subquery ) );
+		if ( subquery.getFetch() == null && subquery.getOffset() == null ) {
+			subquery.getQueryPart().setOrderByClause( null );
+		}
+		query.addCteStatements( getCteStatementMap() );
+		return query;
+	}
+
+	/**
+	 * Add synthetic aliases to all elements of the {@code select}
+	 * list, allowing the query to be reused as a subquery.
+	 */
 	private <S> void aliasSelections(SqmQueryPart<S> queryPart) {
 		if ( queryPart.isSimpleQueryPart() ) {
 			final SqmQuerySpec<S> querySpec = queryPart.getFirstQuerySpec();
 			final LinkedHashSet<JpaSelection<?>> newSelections = new LinkedHashSet<>();
 			aliasSelection( querySpec.getSelection(), newSelections );
+			final JpaSelection<?> selection =
+					newSelections.size() == 1
+							? newSelections.iterator().next()
+							: nodeBuilder().tuple( newSelections.toArray( new JpaSelection<?>[0] ) );
 			//noinspection unchecked
-			querySpec.setSelection( (JpaSelection<S>) ( newSelections.size() == 1 ?
-					newSelections.iterator().next() :
-					nodeBuilder().tuple( newSelections.toArray( new JpaSelection<?>[0] ) ) ) );
+			querySpec.setSelection( (JpaSelection<S>) selection );
 		}
 		else {
 			( (SqmQueryGroup<?>) queryPart ).getQueryParts().forEach( this::aliasSelections );
@@ -568,8 +600,18 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				aliasSelection( selectionItem, newSelections );
 			}
 		}
-		else {
+		// careful, if we don't want to reinsert the same selection
+		// with a different hash (because we modified the alias) or
+		// we'll get a broken LinkedHashSet containing dupe elements
+		else if ( !newSelections.contains( selection ) ) {
 			newSelections.add( selection.alias( "c" + newSelections.size() ) );
 		}
+	}
+
+	private int aliasCounter = 0;
+
+	@Override
+	public String generateAlias() {
+		return "var_" + (++aliasCounter);
 	}
 }

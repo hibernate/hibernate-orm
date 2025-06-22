@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.typeparameters;
@@ -38,11 +38,7 @@ public class TypeParameterTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Widget" ).executeUpdate()
-
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

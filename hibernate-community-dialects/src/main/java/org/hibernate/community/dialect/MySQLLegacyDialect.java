@@ -1,23 +1,32 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
-import org.hibernate.LockOptions;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.*;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.InnoDBStorageEngine;
+import org.hibernate.dialect.MyISAMStorageEngine;
+import org.hibernate.dialect.MySQLServerConfiguration;
+import org.hibernate.dialect.MySQLStorageEngine;
+import org.hibernate.dialect.NullOrdering;
+import org.hibernate.dialect.Replacer;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -26,6 +35,8 @@ import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -43,15 +54,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.dialect.NullOrdering;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
-import org.hibernate.query.sqm.mutation.internal.temptable.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -76,7 +86,11 @@ import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -239,6 +253,16 @@ public class MySQLLegacyDialect extends Dialect {
 		}
 	}
 
+	/**
+	 * MySQL strips any trailing space character from a
+	 * value stored in a column of type {@code char(n)}.
+	 * @return {@code true}
+	 */
+	@Override
+	public boolean stripsTrailingSpacesFromChar() {
+		return true;
+	}
+
 	@Override
 	public boolean useMaterializedLobWhenCapacityExceeded() {
 		// MySQL has no real concept of LOBs, so we can just use longtext/longblob with the materialized JDBC APIs
@@ -264,7 +288,10 @@ public class MySQLLegacyDialect extends Dialect {
 				//MySQL doesn't let you cast to DOUBLE/FLOAT
 				//but don't just return 'decimal' because
 				//the default scale is 0 (no decimal places)
-				return "decimal($p,$s)";
+				return getMySQLVersion().isSameOrAfter( 8, 0, 17 )
+					// In newer versions of MySQL, casting to float/double is supported
+					? super.castType( sqlTypeCode )
+					: "decimal($p,$s)";
 			case CHAR:
 			case NCHAR:
 			case VARCHAR:
@@ -384,6 +411,11 @@ public class MySQLLegacyDialect extends Dialect {
 
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return MySQLAggregateSupport.forMySQL( this );
 	}
 
 	@Deprecated
@@ -537,6 +569,11 @@ public class MySQLLegacyDialect extends Dialect {
 		return Types.BIT;
 	}
 
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return getMySQLVersion().isSameOrAfter( 5, 7 ) ? SqlTypes.JSON_ARRAY : super.getPreferredSqlTypeCodeForArray();
+	}
+
 //	@Override
 //	public int getDefaultDecimalPrecision() {
 //		//this is the maximum, but I guess it's too high
@@ -604,10 +641,7 @@ public class MySQLLegacyDialect extends Dialect {
 		BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 
 		SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
-		functionRegistry.noArgsBuilder( "localtime" )
-				.setInvariantType(basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP ))
-				.setUseParenthesesWhenNoArgs( false )
-				.register();
+
 		// pi() produces a value with 7 digits unless we're explicit
 		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
 			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
@@ -667,7 +701,25 @@ public class MySQLLegacyDialect extends Dialect {
 			functionFactory.jsonMergepatch_mysql();
 			functionFactory.jsonArrayAppend_mysql();
 			functionFactory.jsonArrayInsert_mysql();
+
+			if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
+				functionFactory.unnest_emulated();
+				functionFactory.jsonTable_mysql();
+			}
+			if ( supportsRecursiveCTE() ) {
+				functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, false );
+			}
 		}
+	}
+
+	/**
+	 * MySQL doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum recursion depth of MySQL
+		return 1000;
 	}
 
 	@Override
@@ -678,7 +730,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		if ( getMySQLVersion().isSameOrAfter( 5, 7 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MySQLCastingJsonJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, MySQLCastingJsonArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructorIfAbsent( MySQLCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 		}
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
@@ -701,7 +753,7 @@ public class MySQLLegacyDialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement );
+				return new MySQLLegacySqlAstTranslator<>( sessionFactory, statement, MySQLLegacyDialect.this );
 			}
 		};
 	}
@@ -855,7 +907,7 @@ public class MySQLLegacyDialect extends Dialect {
 	public String getQueryHintString(String query, String hints) {
 		return getMySQLVersion().isBefore( 5 )
 				? super.getQueryHintString( query, hints )
-				: IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+				: addUseIndexQueryHint( query, hints );
 	}
 
 	/**
@@ -1147,15 +1199,15 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
-		if ( dbMetaData == null ) {
+		if ( metadata == null ) {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -1285,17 +1337,48 @@ public class MySQLLegacyDialect extends Dialect {
 				.replace("S", "%f");
 	}
 
-	private String withTimeout(String lockString, int timeout) {
-		switch (timeout) {
-			case LockOptions.NO_WAIT:
-				return supportsNoWait() ? lockString + " nowait" : lockString;
-			case LockOptions.SKIP_LOCKED:
-				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
-			case LockOptions.WAIT_FOREVER:
-				return lockString;
-			default:
-				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
+	private String withTimeout(String lockString, Timeout timeout) {
+		return switch ( timeout.milliseconds() ) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
+	}
+
+	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, Timeout timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return withTimeout( supportsForShare() ? " for share" : " lock in share mode", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, Timeout timeout) {
+		if ( supportsAliasLocks() && supportsForShare() ) {
+			return withTimeout( " for share of " + aliases, timeout );
 		}
+		else {
+			// fall back to locking all aliases
+			return getReadLockString( timeout );
+		}
+	}
+
+	private String withTimeout(String lockString, int timeout) {
+		return switch ( timeout ) {
+			case Timeouts.NO_WAIT_MILLI -> supportsNoWait() ? lockString + " nowait" : lockString;
+			case Timeouts.SKIP_LOCKED_MILLI -> supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			case Timeouts.WAIT_FOREVER_MILLI -> lockString;
+			default -> supportsWait() ? lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout ) : lockString;
+		};
 	}
 
 	@Override
@@ -1462,6 +1545,47 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public String getFromDualForSelectOnly() {
 		return getVersion().isSameOrAfter( 8 ) ? "" : ( " from " + getDual() );
+	}
+
+	@Override
+	public boolean supportsDistinctFromPredicate() {
+		// It supports a proprietary operator
+		return true;
+	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsNestedSubqueryCorrelation() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getVersion().isSameOrAfter( 5, 7 );
 	}
 
 }

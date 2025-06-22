@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -18,41 +18,36 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
  * @author Steve Ebersole
  */
 public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExpressible {
+
 	enum Nature {
 		/**
-		 * The Collection element or Map element
+		 * The Collection element or Map element.
 		 */
-		ELEMENT( "{element}" ),
+		ELEMENT,
 		/**
-		 * The List index or Map key
+		 * The List index or Map key.
 		 */
-		INDEX( "{index}" ),
+		INDEX,
 		/**
-		 * The identifier for
+		 * The identifier for and idbag.
 		 */
-		ID( "{collection-id}" );
-
-		private final String name;
-
-		Nature(String name) {
-			this.name = name;
-		}
+		ID;
 
 		public String getName() {
-			return name;
+			return switch (this) {
+				case ELEMENT -> "{element}";
+				case INDEX -> "{index}";
+				case ID -> "{collection-id}";
+			};
 		}
 
 		public static Nature fromNameExact(String name) {
-			switch ( name ) {
-				case "{element}":
-					return ELEMENT;
-				case "{index}":
-					return INDEX;
-				case "{collection-id}":
-					return ID;
-			}
-
-			return null;
+			return switch ( name ) {
+				case "{element}" -> ELEMENT;
+				case "{index}" -> INDEX;
+				case "{collection-id}" -> ID;
+				default -> null;
+			};
 		}
 
 		public static Nature fromName(String name) {
@@ -75,7 +70,7 @@ public interface CollectionPart extends ValuedModelPart, Fetchable, JavaTypedExp
 				return ELEMENT;
 			}
 
-			if ( ID.name.equals( name ) ) {
+			if ( ID.getName().equals( name ) ) {
 				return ID;
 			}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import jakarta.persistence.PersistenceUnitTransactionType;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
@@ -26,13 +27,12 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
-import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
@@ -55,6 +55,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.Action;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.UserType;
@@ -72,15 +73,31 @@ import jakarta.persistence.SharedCacheMode;
  * <li>{@linkplain #setProperty(String, String) configuration properties}
  *     from various sources, and
  * <li>entity O/R mappings, defined in either {@linkplain #addAnnotatedClass
- *    annotated classes}, or {@linkplain #addFile XML mapping documents}.
+ *     annotated classes}, or {@linkplain #addFile XML mapping documents}.
  * </ul>
  * <p>
- * Note that XML mappings may be expressed using the JPA {@code orm.xml}
- * format, or in Hibernate's legacy {@code .hbm.xml} format.
+ * Note that XML mappings may be expressed using either:
+ * <ul>
+ * <li>the JPA-standard {@code orm.xml} format, or
+ * <li>the legacy {@code .hbm.xml} format, which is considered deprecated.
+ * </ul>
  * <p>
  * Configuration properties are enumerated by {@link AvailableSettings}.
+ * <p>
+ * When instantiated, an instance of {@code Configuration} has its properties
+ * initially populated from the {@linkplain Environment#getProperties()
+ * environment}, including:
+ * <ul>
+ * <li>JVM {@linkplain System#getProperties() system properties}, and
+ * <li>properties specified in {@code hibernate.properties}.
+ * </ul>
+ * <p>
+ * These initial properties may be completely discarded by calling
+ * {@link #setProperties(Properties)}, or they may be overridden
+ * individually by calling {@link #setProperty(String, String)}.
+ * <p>
  * <pre>
- *  SessionFactory factory = new Configuration()
+ * SessionFactory factory = new Configuration()
  *     // scan classes for mapping annotations
  *     .addAnnotatedClass(Item.class)
  *     .addAnnotatedClass(Bid.class)
@@ -112,12 +129,17 @@ import jakarta.persistence.SharedCacheMode;
  * Programs may directly use the APIs defined under {@link org.hibernate.boot},
  * as an alternative to using an instance of this class.
  *
+ * @apiNote The {@link org.hibernate.jpa.HibernatePersistenceConfiguration}
+ * is a new alternative to this venerable API, and extends the JPA-standard
+ * {@link jakarta.persistence.PersistenceConfiguration}.
+ *
  * @author Gavin King
  * @author Steve Ebersole
  *
  * @see SessionFactory
  * @see AvailableSettings
  * @see org.hibernate.boot
+ * @see org.hibernate.jpa.HibernatePersistenceConfiguration
  */
 public class Configuration {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Configuration.class );
@@ -142,7 +164,7 @@ public class Configuration {
 
 	private Map<String, SqmFunctionDescriptor> customFunctionDescriptors;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class<?>, ConverterDescriptor> attributeConverterDescriptorsByClass;
+	private Map<Class<?>, ConverterDescriptor<?,?>> attributeConverterDescriptorsByClass;
 	private List<EntityNameResolver> entityNameResolvers = new ArrayList<>();
 
 	// used to build SF
@@ -242,8 +264,7 @@ public class Configuration {
 	 * @return The value currently associated with that property name; may be null.
 	 */
 	public String getProperty(String propertyName) {
-		Object o = properties.get( propertyName );
-		return o instanceof String ? (String) o : null;
+		return properties.get( propertyName ) instanceof String property ? property : null;
 	}
 
 	/**
@@ -433,6 +454,75 @@ public class Configuration {
 	public Configuration configure(File configFile) throws HibernateException {
 		standardServiceRegistryBuilder.configure( configFile );
 		properties.putAll( standardServiceRegistryBuilder.getSettings() );
+		return this;
+	}
+
+	// New typed property setters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Set {@value AvailableSettings#SHOW_SQL}, {@value AvailableSettings#FORMAT_SQL},
+	 * and {@value AvailableSettings#HIGHLIGHT_SQL}.
+	 *
+	 * @param showSql should SQL be logged to console?
+	 * @param formatSql should logged SQL be formatted
+	 * @param highlightSql should logged SQL be highlighted with pretty colors
+	 */
+	public Configuration showSql(boolean showSql, boolean formatSql, boolean highlightSql) {
+		setProperty( AvailableSettings.SHOW_SQL, Boolean.toString(showSql) );
+		setProperty( AvailableSettings.FORMAT_SQL, Boolean.toString(formatSql) );
+		setProperty( AvailableSettings.HIGHLIGHT_SQL, Boolean.toString(highlightSql) );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#HBM2DDL_AUTO}.
+	 *
+	 * @param action the {@link Action}
+	 */
+	public Configuration setSchemaExportAction(Action action) {
+		setProperty( AvailableSettings.HBM2DDL_AUTO, action.getExternalHbm2ddlName() );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#USER} and {@value AvailableSettings#PASS}.
+	 *
+	 * @param user the user id
+	 * @param pass the password
+	 */
+	public Configuration setCredentials(String user, String pass) {
+		setProperty( AvailableSettings.USER, user );
+		setProperty( AvailableSettings.PASS, pass );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#URL}.
+	 *
+	 * @param url the JDBC URL
+	 */
+	public Configuration setJdbcUrl(String url) {
+		setProperty( AvailableSettings.URL, url );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#DATASOURCE}.
+	 *
+	 * @param jndiName the JNDI name of the datasource
+	 */
+	public Configuration setDatasource(String jndiName) {
+		setProperty( AvailableSettings.DATASOURCE, jndiName );
+		return this;
+	}
+
+	/**
+	 * Set {@value AvailableSettings#JAKARTA_TRANSACTION_TYPE}.
+	 *
+	 * @param transactionType the {@link PersistenceUnitTransactionType}
+	 */
+	public Configuration setTransactionType(PersistenceUnitTransactionType transactionType) {
+		setProperty( AvailableSettings.JAKARTA_TRANSACTION_TYPE, transactionType.toString() );
 		return this;
 	}
 
@@ -669,11 +759,6 @@ public class Configuration {
 		if ( entityClass == null ) {
 			throw new IllegalArgumentException( "The specified class cannot be null" );
 		}
-
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
-		}
-
 		return addResource( entityClass.getName().replace( '.', '/' ) + ".hbm.xml" );
 	}
 
@@ -690,6 +775,20 @@ public class Configuration {
 	}
 
 	/**
+	 * Read metadata from the annotations associated with the given classes.
+	 *
+	 * @param annotatedClasses The classes containing annotations
+	 *
+	 * @return this (for method chaining)
+	 */
+	public Configuration addAnnotatedClasses(Class... annotatedClasses) {
+		for (Class annotatedClass : annotatedClasses) {
+			addAnnotatedClass( annotatedClass );
+		}
+		return this;
+	}
+
+	/**
 	 * Read package-level metadata.
 	 *
 	 * @param packageName java package name
@@ -700,6 +799,22 @@ public class Configuration {
 	 */
 	public Configuration addPackage(String packageName) throws MappingException {
 		metadataSources.addPackage( packageName );
+		return this;
+	}
+
+	/**
+	 * Read package-level metadata.
+	 *
+	 * @param packageNames java package names
+	 *
+	 * @return this (for method chaining)
+	 *
+	 * @throws MappingException in case there is an error in the mapping data
+	 */
+	public Configuration addPackages(String... packageNames) throws MappingException {
+		for (String packageName : packageNames) {
+			addPackage( packageName );
+		}
 		return this;
 	}
 
@@ -936,7 +1051,8 @@ public class Configuration {
 		}
 
 		if ( attributeConverterDescriptorsByClass != null ) {
-			attributeConverterDescriptorsByClass.values().forEach( metadataBuilder::applyAttributeConverter );
+			attributeConverterDescriptorsByClass.values()
+					.forEach( metadataBuilder::applyAttributeConverter );
 		}
 
 		final Metadata metadata = metadataBuilder.build();
@@ -1042,7 +1158,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass, boolean autoApply) {
-		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, autoApply, false, classmateContext ) );
 		return this;
 	}
 
@@ -1053,8 +1169,8 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?,?>> attributeConverterClass) {
-		addAttributeConverter( new ClassBasedConverterDescriptor( attributeConverterClass, classmateContext ) );
+	public Configuration addAttributeConverter(Class<? extends AttributeConverter<?, ?>> attributeConverterClass) {
+		addAttributeConverter( ConverterDescriptors.of( attributeConverterClass, classmateContext ) );
 		return this;
 	}
 
@@ -1068,7 +1184,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter) {
-		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverter, classmateContext ) );
 		return this;
 	}
 
@@ -1085,7 +1201,7 @@ public class Configuration {
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration addAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply) {
-		addAttributeConverter( new InstanceBasedConverterDescriptor( attributeConverter, autoApply, classmateContext ) );
+		addAttributeConverter( ConverterDescriptors.of( attributeConverter, autoApply, classmateContext ) );
 		return this;
 	}
 
@@ -1096,7 +1212,7 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration addAttributeConverter(ConverterDescriptor converterDescriptor) {
+	public Configuration addAttributeConverter(ConverterDescriptor<?,?> converterDescriptor) {
 		if ( attributeConverterDescriptorsByClass == null ) {
 			attributeConverterDescriptorsByClass = new HashMap<>();
 		}
@@ -1162,18 +1278,22 @@ public class Configuration {
 	}
 
 	/**
-	 * Adds the incoming properties to the internal properties structure, as
-	 * long as the internal structure does not already contain an entry for
-	 * the given key.
+	 * Adds the incoming properties to the internal properties structure,
+	 * as long as the internal structure does <em>not</em> already contain
+	 * an entry for the given key. If a given property is already set in
+	 * this {@code Configuration}, ignore the setting specified in the
+	 * argument {@link Properties} object.
+	 *
+	 * @apiNote You're probably looking for {@link #addProperties(Properties)}.
 	 *
 	 * @param properties The properties to merge
 	 *
 	 * @return {@code this} for method chaining
 	 */
 	public Configuration mergeProperties(Properties properties) {
-		for ( Map.Entry<Object,Object> entry : properties.entrySet() ) {
-			if ( !properties.containsKey( entry.getKey() ) ) {
-				properties.setProperty( (String) entry.getKey(), (String) entry.getValue() );
+		for ( String property : properties.stringPropertyNames() ) {
+			if ( !this.properties.containsKey( property ) ) {
+				this.properties.setProperty( property, properties.getProperty( property ) );
 			}
 		}
 		return this;

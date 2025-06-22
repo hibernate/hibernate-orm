@@ -65,6 +65,12 @@ to specify the ImplicitNamingStrategy to use.  See
 <<chapters/bootstrap/Bootstrap.adoc#bootstrap,Bootstrap>> for additional details on bootstrapping.
 
 
+[NOTE]
+.@EmbeddedColumnNaming
+====
+A related topic is the use of `@EmbeddedColumnNaming` to help with the implicit naming of columns associated with mapping an embeddable.
+See <<bnb,the disucussion>>
+====
 
 [[PhysicalNamingStrategy]]
 ==== PhysicalNamingStrategy

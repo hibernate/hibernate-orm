@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
@@ -11,7 +11,7 @@ import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
  * Basic support for {@link MultiTenantConnectionProvider} implementations using
- * individual {@link ConnectionProvider} instances per tenant behind the scenes.
+ * an individual {@link ConnectionProvider} instance per tenant behind the scenes.
  * <p>
  * This class is meant to be subclassed to implement application-specific
  * requirements.

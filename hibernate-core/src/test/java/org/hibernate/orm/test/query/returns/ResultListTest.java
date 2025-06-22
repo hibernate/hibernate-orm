@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.returns;
@@ -10,7 +10,6 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.TupleElement;
 
 import org.hibernate.query.Query;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -45,16 +44,14 @@ public class ResultListTest {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete BasicEntity" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void testSelectionTupleList(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Tuple> query = session.createQuery( SINGLE_SELECTION_QUERY, Tuple.class );
+					final Query<Tuple> query = session.createQuery( SINGLE_SELECTION_QUERY, Tuple.class );
 					verifyList(
 							query,
 							(tuple) -> {
@@ -85,7 +82,7 @@ public class ResultListTest {
 	public void testAliasedSelectionTupleList(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Tuple> query = session.createQuery( SINGLE_ALIASED_SELECTION_QUERY, Tuple.class );
+					final Query<Tuple> query = session.createQuery( SINGLE_ALIASED_SELECTION_QUERY, Tuple.class );
 					verifyList(
 							query,
 							(tuple) -> {
@@ -111,7 +108,7 @@ public class ResultListTest {
 	public void testSelectionsTupleList(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Tuple> query = session.createQuery( MULTI_SELECTION_QUERY, Tuple.class );
+					final Query<Tuple> query = session.createQuery( MULTI_SELECTION_QUERY, Tuple.class );
 					verifyList(
 							query,
 							(tuple) -> {
@@ -166,7 +163,7 @@ public class ResultListTest {
 	public void testSelectionList(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
+					final Query<String> query = session.createQuery( SINGLE_SELECTION_QUERY, String.class );
 					verifyList(
 							query,
 							(data) -> assertThat( data, is( "value" ) )
@@ -179,7 +176,7 @@ public class ResultListTest {
 	public void testScrollSelections(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<Object[]> query = session.createQuery( MULTI_SELECTION_QUERY, Object[].class );
+					final Query<Object[]> query = session.createQuery( MULTI_SELECTION_QUERY, Object[].class );
 					verifyList(
 							query,
 							(values) -> {

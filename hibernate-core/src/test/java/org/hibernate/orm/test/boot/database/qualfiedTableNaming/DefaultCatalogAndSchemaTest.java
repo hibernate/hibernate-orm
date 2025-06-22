@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.database.qualfiedTableNaming;
@@ -32,6 +32,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -236,7 +237,7 @@ public class DefaultCatalogAndSchemaTest {
 				BootstrapContext bootstrapContext = ((MetadataImpl) metadata).getBootstrapContext();
 				sfb = new SessionFactoryBuilderImpl(
 						metadata,
-						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext),
+						new SessionFactoryOptionsBuilder( serviceRegistry, bootstrapContext ),
 						bootstrapContext
 				);
 				break;
@@ -247,8 +248,8 @@ public class DefaultCatalogAndSchemaTest {
 		sessionFactory = (SessionFactoryImplementor) sfb.build();
 		toClose.add( sessionFactory );
 
-		NameQualifierSupport nameQualifierSupport = sessionFactory.getJdbcServices().getJdbcEnvironment()
-				.getNameQualifierSupport();
+		NameQualifierSupport nameQualifierSupport =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getNameQualifierSupport();
 		dbSupportsCatalogs = nameQualifierSupport.supportsCatalogs();
 		dbSupportsSchemas = nameQualifierSupport.supportsSchemas();
 	}
@@ -313,12 +314,17 @@ public class DefaultCatalogAndSchemaTest {
 
 	@Test
 	@SkipForDialect(value = SQLServerDialect.class,
-			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+			comment = "SQL Server support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
 	@SkipForDialect(value = SybaseDialect.class,
-			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+			comment = "Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	@SkipForDialect(value = InformixDialect.class,
+			comment = "Informix support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"
 					+ " and some catalogs don't exist.")
@@ -392,9 +398,9 @@ public class DefaultCatalogAndSchemaTest {
 				.filter( p -> p.getMappedClass().equals( entityClass ) )
 				.findFirst()
 				.orElseThrow( () -> new IllegalStateException( "Cannot find persister for " + entityClass ) );
-		String jpaEntityName = sessionFactory.getRuntimeMetamodels().getJpaMetamodel().getEntities()
+		String jpaEntityName = sessionFactory.getJpaMetamodel().getEntities()
 				.stream()
-				.filter( p -> p.getBindableJavaType().equals( entityClass ) )
+				.filter( p -> p.getJavaType().equals( entityClass ) )
 				.findFirst()
 				.orElseThrow( () -> new IllegalStateException( "Cannot find entity metamodel for " + entityClass ) )
 				.getName();
@@ -775,8 +781,8 @@ public class DefaultCatalogAndSchemaTest {
 		}
 
 		private String patternStringForQualifier() {
-			return ( catalog != null ? Pattern.quote( catalog + "." ) : "" )
-					+ ( schema != null ? Pattern.quote( schema + "." ) : "" );
+			return ( catalog != null ? Pattern.quote( catalog ) + "." : "" )
+					+ ( schema != null ? Pattern.quote( schema ) + "." : "" );
 		}
 	}
 

@@ -1,16 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -36,19 +38,35 @@ public class H2ArrayToStringFunction extends ArrayToStringFunction {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression separatorExpression = (Expression) sqlAstArguments.get( 1 );
 		final Expression defaultExpression = sqlAstArguments.size() > 2 ? (Expression) sqlAstArguments.get( 2 ) : null;
+		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) arrayExpression.getExpressionType().getSingleJdbcMapping();
+		final int ddlTypeCode = pluralType.getElementType().getJdbcType().getDdlTypeCode();
+		final boolean needsCast = !SqlTypes.isStringType( ddlTypeCode );
 		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
 		sqlAppender.append( " is not null then coalesce((select listagg(" );
 		if ( defaultExpression != null ) {
 			sqlAppender.append( "coalesce(" );
 		}
+		if ( needsCast ) {
+			if ( ddlTypeCode == SqlTypes.BOOLEAN ) {
+				// By default, H2 uses upper case, so lower it for a consistent experience
+				sqlAppender.append( "lower(" );
+			}
+			sqlAppender.append( "cast(" );
+		}
 		sqlAppender.append( "array_get(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append(",i.idx)" );
+		if ( needsCast ) {
+			sqlAppender.append( " as varchar)" );
+			if ( ddlTypeCode == SqlTypes.BOOLEAN ) {
+				sqlAppender.append( ')' );
+			}
+		}
 		if ( defaultExpression != null ) {
-			sqlAppender.append( "," );
+			sqlAppender.append( ',' );
 			defaultExpression.accept( walker );
-			sqlAppender.append( ")" );
+			sqlAppender.append( ')' );
 		}
 		sqlAppender.append("," );
 		separatorExpression.accept( walker );

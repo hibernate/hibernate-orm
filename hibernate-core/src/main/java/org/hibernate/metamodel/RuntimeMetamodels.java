@@ -1,15 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
  * Entry point providing access to the runtime metamodels:
@@ -38,25 +36,34 @@ public interface RuntimeMetamodels {
 
 	// some convenience methods...
 
+	/**
+	 * @deprecated Only called from tests
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default EntityMappingType getEntityMappingType(String entityName) {
 		return getMappingMetamodel().getEntityDescriptor( entityName );
 	}
 
-	default EntityMappingType getEntityMappingType(Class entityType) {
+	/**
+	 * @deprecated Only called from tests
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	default EntityMappingType getEntityMappingType(Class<?> entityType) {
 		return getMappingMetamodel().getEntityDescriptor( entityType );
 	}
 
+	/**
+	 * @deprecated No longer called
+	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	default PluralAttributeMapping getPluralAttributeMapping(String role) {
 		return getMappingMetamodel().findCollectionDescriptor( role ).getAttributeMapping();
 	}
 
 	/**
-	 * @deprecated Use {@link #getEmbedded(NavigableRole)} instead
+	 * @deprecated No longer called
 	 */
-	@Deprecated
-	EmbeddableValuedModelPart getEmbedded(String role);
-	EmbeddableValuedModelPart getEmbedded(NavigableRole role);
-
+	@Deprecated(since = "7.0", forRemoval = true)
 	default String getImportedName(String name) {
 		return getMappingMetamodel().getImportedName( name );
 	}

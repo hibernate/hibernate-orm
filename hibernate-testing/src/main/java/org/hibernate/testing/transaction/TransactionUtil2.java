@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.transaction;
@@ -28,7 +28,7 @@ public class TransactionUtil2 {
 	public static void inSession(SessionFactoryImplementor sfi, Consumer<SessionImplementor> action) {
 		log.trace( "#inSession(SF,action)" );
 
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+		try (SessionImplementor session = sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
 			action.accept( session );
 			log.trace( "called action" );
@@ -41,7 +41,7 @@ public class TransactionUtil2 {
 	public static <R> R fromSession(SessionFactoryImplementor sfi, Function<SessionImplementor,R> action) {
 		log.trace( "#inSession(SF,action)" );
 
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+		try (SessionImplementor session = sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
 			return action.apply( session );
 		}
@@ -54,7 +54,7 @@ public class TransactionUtil2 {
 		log.trace( "#inSession(SF,action)" );
 
 		R result = null;
-		try (SessionImplementor session = (SessionImplementor) sfi.openSession()) {
+		try (SessionImplementor session = sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
 			result = action.apply( session );
 			log.trace( "called action" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
@@ -55,9 +55,9 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 	/**
 	 * Extract the generated key value from the given result set after execution of {@link #getSelectSQL()}.
 	 */
-	private GeneratedValues extractReturningValues(ResultSet resultSet, SharedSessionContractImplementor session)
+	private GeneratedValues extractReturningValues(ResultSet resultSet, PreparedStatement statement, SharedSessionContractImplementor session)
 			throws SQLException {
-		return getGeneratedValues( resultSet, persister, getTiming(), session );
+		return getGeneratedValues( resultSet, statement, persister, getTiming(), session );
 	}
 
 	@Override
@@ -86,7 +86,6 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 				statementDetails.releaseStatement( session );
 			}
 			jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
-			session.getJdbcCoordinator().afterStatementExecution();
 		}
 
 		// the insert is complete, select the generated id...
@@ -98,7 +97,7 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 
 			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect, idSelectSql );
 			try {
-				return extractReturningValues( resultSet, session );
+				return extractReturningValues( resultSet, idSelect, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -149,12 +148,12 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 
 		try {
 			//fetch the generated id in a separate query
-			PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL, false );
+			final PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL );
 			try {
 				bindParameters( binder.getEntity(), idSelect, session );
-				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
+				final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
 				try {
-					return extractReturningValues( resultSet, session );
+					return extractReturningValues( resultSet, idSelect, session );
 				}
 				finally {
 					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );

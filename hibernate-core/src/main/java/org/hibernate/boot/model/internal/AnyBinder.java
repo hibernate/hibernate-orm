@@ -1,14 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorImplicitValues;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.OnDelete;
@@ -18,13 +22,16 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.internal.FullNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.internal.ShortNameImplicitDiscriminatorStrategy;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.models.spi.MemberDetails;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinTable;
 
-import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
+import static org.hibernate.boot.model.internal.BinderHelper.aggregateCascadeTypes;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 
@@ -37,8 +44,8 @@ public class AnyBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext context,
-			MemberDetails property,
 			AnnotatedJoinColumns joinColumns) {
+		final MemberDetails property = inferredData.getAttributeMember();
 
 		//check validity
 		if ( property.hasDirectAnnotationUsage( Columns.class ) ) {
@@ -62,7 +69,7 @@ public class AnyBinder {
 			}
 		}
 		bindAny(
-				getCascadeStrategy( null, hibernateCascade, false, context ),
+				aggregateCascadeTypes( null, hibernateCascade, false, context ),
 				//@Any has no cascade attribute
 				joinColumns,
 				onDeleteAnn == null ? null : onDeleteAnn.action(),
@@ -76,7 +83,7 @@ public class AnyBinder {
 	}
 
 	private static void bindAny(
-			String cascadeStrategy,
+			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns columns,
 			OnDeleteAction onDeleteAction,
 			Nullability nullability,
@@ -107,6 +114,12 @@ public class AnyBinder {
 				context
 		);
 
+		final AnyDiscriminator anyDiscriminator = property.getDirectAnnotationUsage( AnyDiscriminator.class );
+		final AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues = property.getDirectAnnotationUsage( AnyDiscriminatorImplicitValues.class );
+		if ( anyDiscriminatorImplicitValues != null ) {
+			value.setImplicitDiscriminatorValueStrategy( resolveImplicitDiscriminatorStrategy( anyDiscriminatorImplicitValues, context ) );
+		}
+
 		final PropertyBinder binder = new PropertyBinder();
 		binder.setName( inferredData.getPropertyName() );
 		binder.setValue( value );
@@ -127,5 +140,37 @@ public class AnyBinder {
 		//composite FK columns are in the same table, so it's OK
 		propertyHolder.addProperty( prop, inferredData.getAttributeMember(), columns, inferredData.getDeclaringClass() );
 		binder.callAttributeBindersInSecondPass( prop );
+	}
+
+	public static ImplicitDiscriminatorStrategy resolveImplicitDiscriminatorStrategy(
+			AnyDiscriminatorImplicitValues anyDiscriminatorImplicitValues,
+			MetadataBuildingContext context) {
+		final AnyDiscriminatorImplicitValues.Strategy strategy = anyDiscriminatorImplicitValues.value();
+
+		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.FULL_NAME ) {
+			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+		}
+
+		if ( strategy == AnyDiscriminatorImplicitValues.Strategy.SHORT_NAME ) {
+			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+		}
+
+		assert strategy == AnyDiscriminatorImplicitValues.Strategy.CUSTOM;
+
+		final Class<? extends ImplicitDiscriminatorStrategy> customStrategy = anyDiscriminatorImplicitValues.implementation();
+
+		if ( ImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return null;
+		}
+
+		if ( FullNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return FullNameImplicitDiscriminatorStrategy.FULL_NAME_STRATEGY;
+		}
+
+		if ( ShortNameImplicitDiscriminatorStrategy.class.equals( customStrategy ) ) {
+			return ShortNameImplicitDiscriminatorStrategy.SHORT_NAME_STRATEGY;
+		}
+
+		return context.getBootstrapContext().getCustomTypeProducer().produceBeanInstance( customStrategy );
 	}
 }

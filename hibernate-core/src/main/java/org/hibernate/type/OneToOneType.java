@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -12,9 +12,11 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 
 /**
  * A one-to-one association to an entity
@@ -62,10 +64,9 @@ public class OneToOneType extends EntityType {
 	@Override
 	public boolean isNull(Object owner, SharedSessionContractImplementor session) {
 		if ( propertyName != null ) {
-			final EntityPersister ownerPersister = session.getFactory()
-					.getRuntimeMetamodels()
-					.getMappingMetamodel()
-					.getEntityDescriptor( entityName );
+			final EntityPersister ownerPersister =
+					session.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( entityName );
 			final Object id = session.getContextEntityIdentifier( owner );
 			final EntityKey entityKey = session.generateEntityKey( id, ownerPersister );
 			return session.getPersistenceContextInternal().isPropertyNull( entityKey, getPropertyName() );
@@ -81,17 +82,22 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public int[] getSqlTypeCodes(MappingContext mappingContext) throws MappingException {
-		return ArrayHelper.EMPTY_INT_ARRAY;
+	public int[] getSqlTypeCodes(MappingContext mappingContext) {
+		return EMPTY_INT_ARRAY;
 	}
 
 	@Override
 	public boolean[] toColumnNullness(Object value, MappingContext mapping) {
-		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
+		return EMPTY_BOOLEAN_ARRAY;
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session) {
+	public void nullSafeSet(
+			PreparedStatement st,
+			Object value,
+			int index,
+			boolean[] settable,
+			SharedSessionContractImplementor session) {
 		//nothing to do
 	}
 
@@ -131,21 +137,22 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner) {
 		return null;
 	}
 
 	@Override
-	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) throws HibernateException {
+	public Serializable disassemble(Object value, SessionFactoryImplementor sessionFactory) {
 		return null;
 	}
 
 	@Override
-	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		//this should be a call to resolve(), not resolveIdentifier(),
-		//because it might be a property-ref, and we did not cache the
-		//referenced value
-		return resolve( session.getContextEntityIdentifier(owner), session, owner );
+	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner)
+			throws HibernateException {
+		// this should be a call to resolve(), not resolveIdentifier(),
+		// because it might be a property-ref, and we did not cache the
+		// referenced value
+		return resolve( session.getContextEntityIdentifier( owner ), session, owner );
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.registry.internal;
@@ -217,9 +217,8 @@ public class BootstrapServiceRegistryImpl
 		destroy( integratorServiceBinding );
 
 		if ( childRegistries != null ) {
-			for(ServiceRegistry serviceRegistry : childRegistries) {
-				if(serviceRegistry instanceof ServiceRegistryImplementor) {
-					ServiceRegistryImplementor serviceRegistryImplementor = (ServiceRegistryImplementor) serviceRegistry;
+			for ( ServiceRegistry serviceRegistry : childRegistries ) {
+				if ( serviceRegistry instanceof ServiceRegistryImplementor serviceRegistryImplementor ) {
 					serviceRegistryImplementor.destroy();
 				}
 			}
@@ -262,9 +261,9 @@ public class BootstrapServiceRegistryImpl
 	@Override
 	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
 		final Service service = binding.getService();
-		if ( service instanceof Stoppable ) {
+		if ( service instanceof Stoppable stoppable ) {
 			try {
-				( (Stoppable) service ).stop();
+				stoppable.stop();
 			}
 			catch ( Exception e ) {
 				LOG.unableToStopService( service.getClass(), e );

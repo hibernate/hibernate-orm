@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -78,6 +78,8 @@ public interface PersistenceSettings {
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 * @see org.hibernate.internal.SessionFactoryRegistry
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyName(String)
+	 *
+	 * @since 7.0
 	 */
 	String SESSION_FACTORY_JNDI_NAME = "hibernate.session_factory_jndi_name";
 
@@ -134,18 +136,20 @@ public interface PersistenceSettings {
 	 *
 	 * @see #SCANNER
 	 * @see org.hibernate.boot.archive.scan.spi.Scanner
-	 * @see org.hibernate.boot.archive.scan.spi.AbstractScannerImpl
 	 * @see org.hibernate.boot.MetadataBuilder#applyArchiveDescriptorFactory
 	 */
 	String SCANNER_ARCHIVE_INTERPRETER = "hibernate.archive.interpreter";
 
 	/**
 	 * Identifies a comma-separated list of values indicating the types of things we should
-	 * auto-detect during scanning. Allowable values include:
+	 * autodetect during scanning. Allowable values include:
 	 * <ul>
 	 *     <li>{@code "class"} specifies that {@code .class} files are discovered as managed classes
 	 *     <li>{@code "hbm"} specifies that {@code hbm.xml} files are discovered as mapping files
 	 * </ul>
+	 * When {@code .class} discovery is enabled, the module {@code hibernate-scan-jandex}
+	 * must be added as a dependency, or some other implementation of the service
+	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made available.
 	 *
 	 * @see org.hibernate.boot.MetadataBuilder#applyScanOptions
 	 */

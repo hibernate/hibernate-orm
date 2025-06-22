@@ -1,12 +1,8 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.properties;
-
-import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -20,9 +16,10 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
-
-import org.hibernate.orm.env.HibernateVersion;
+import org.hibernate.build.OrmBuildDetails;
 import org.hibernate.orm.properties.jdk17.SettingsCollector;
+
+import javax.inject.Inject;
 
 import static org.hibernate.orm.properties.SettingsDocumentationPlugin.TASK_GROUP_NAME;
 
@@ -31,8 +28,6 @@ import static org.hibernate.orm.properties.SettingsDocumentationPlugin.TASK_GROU
  */
 public class SettingsDocGenerationTask extends DefaultTask {
 	public static final String TASK_NAME = "generateSettingsDoc";
-
-	private final HibernateVersion hibernateVersion;
 
 	private final DirectoryProperty javadocDirectory;
 	private final Property<String> publishedDocsUrl;
@@ -46,8 +41,7 @@ public class SettingsDocGenerationTask extends DefaultTask {
 		setGroup( TASK_GROUP_NAME );
 		setDescription( "Collects descriptions of Hibernate configuration properties in preparation for inclusion in the User Guide" );
 
-		hibernateVersion = (HibernateVersion) project.getExtensions().getByName( HibernateVersion.EXT_KEY );
-		getInputs().property( "ormVersion", hibernateVersion );
+		getInputs().property( "ormVersion", getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersion() );
 
 		javadocDirectory = project.getObjects().directoryProperty();
 		javadocDirectory.convention( dslExtension.getJavadocDirectory() );
@@ -94,7 +88,7 @@ public class SettingsDocGenerationTask extends DefaultTask {
 	public void generateSettingsDocumentation() {
 		final String publishedJavadocUrl = publishedDocsUrl.get()
 				+ "/"
-				+ hibernateVersion.getFamily()
+				+ getProject().getExtensions().getByType( OrmBuildDetails.class ).getHibernateVersionFamily()
 				+ "/javadocs/";
 
 		AsciiDocWriter.writeToFile(

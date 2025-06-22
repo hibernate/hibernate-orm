@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -29,10 +29,11 @@ public class ForeignKey extends Constraint {
 	private final List<Column> referencedColumns = new ArrayList<>();
 	private boolean creationEnabled = true;
 
-	public ForeignKey(Table table){
-		setTable( table );
+	public ForeignKey(Table table) {
+		super( table );
 	}
 
+	@Deprecated(since = "7")
 	public ForeignKey() {
 	}
 

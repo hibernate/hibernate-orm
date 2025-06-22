@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -23,20 +23,20 @@ public class GenericGeneratorsAnnotation implements GenericGenerators, Repeatabl
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public GenericGeneratorsAnnotation(SourceModelBuildingContext modelContext) {
+	public GenericGeneratorsAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public GenericGeneratorsAnnotation(GenericGenerators annotation, SourceModelBuildingContext modelContext) {
+	public GenericGeneratorsAnnotation(GenericGenerators annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, HibernateAnnotations.GENERIC_GENERATORS, "value", modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public GenericGeneratorsAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public GenericGeneratorsAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (GenericGenerator[]) attributeValues.get( "value" );
 	}
 

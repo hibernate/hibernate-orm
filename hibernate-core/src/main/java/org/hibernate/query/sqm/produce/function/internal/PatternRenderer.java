@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function.internal;
@@ -181,7 +181,7 @@ public class PatternRenderer {
 			Boolean fromFirst,
 			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		if ( numberOfArguments < maxParamIndex ) {
 			LOG.missingArguments( maxParamIndex, numberOfArguments );
 		}

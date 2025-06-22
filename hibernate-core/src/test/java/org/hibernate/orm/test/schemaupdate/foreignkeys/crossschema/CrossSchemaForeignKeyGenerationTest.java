@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.schemaupdate.foreignkeys.crossschema;
@@ -31,12 +31,11 @@ import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.GroupedSchemaMigratorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
 import org.hibernate.tool.schema.internal.IndividuallySchemaMigratorImpl;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
+import org.hibernate.tool.schema.spi.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
@@ -145,7 +144,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 		final Database database = metadata.getDatabase();
 		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -153,18 +152,13 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 
@@ -214,7 +208,7 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 
 		final HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		final Map configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		final Map<String,Object> configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 		final ExecutionOptions options = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -222,18 +216,13 @@ public class CrossSchemaForeignKeyGenerationTest extends BaseUnitTestCase {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 

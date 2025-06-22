@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -137,7 +137,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 				resolveSqlExpression( navigablePath, jdbcMappingToUse, tableGroup, creationState ),
 				jdbcMappingToUse.getJdbcJavaType(),
 				fetchParent,
-				creationState.getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getCreationContext().getTypeConfiguration()
 		);
 	}
 

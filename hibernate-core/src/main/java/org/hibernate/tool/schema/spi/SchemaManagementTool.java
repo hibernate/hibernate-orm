@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.hibernate.Incubating;
 import org.hibernate.service.Service;
-import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
 /**
@@ -22,6 +21,9 @@ public interface SchemaManagementTool extends Service {
 	SchemaDropper getSchemaDropper(Map<String,Object> options);
 	SchemaMigrator getSchemaMigrator(Map<String,Object> options);
 	SchemaValidator getSchemaValidator(Map<String,Object> options);
+	default SchemaPopulator getSchemaPopulator(Map<String,Object> options) {
+		throw new UnsupportedOperationException("Schema populator is not supported by this schema management tool.");
+	}
 	default SchemaTruncator getSchemaTruncator(Map<String,Object> options) {
 		throw new UnsupportedOperationException("Schema truncator is not supported by this schema management tool.");
 	}

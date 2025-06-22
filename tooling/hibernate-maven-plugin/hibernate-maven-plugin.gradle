@@ -1,0 +1,66 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "local.java-module"
+    id "local.publishing"
+    id "local.code-quality"
+    id "org.gradlex.maven-plugin-development" version "1.0.3"
+}
+
+description = 'Maven plugin to integrate aspects of Hibernate into your build.'
+
+dependencies {
+    implementation project( ":hibernate-core" )
+
+    implementation "org.apache.maven:maven-plugin-api:3.6.3"
+    implementation "org.apache.maven:maven-project:2.2.1"
+    implementation "org.apache.maven.shared:file-management:3.1.0"
+
+    compileOnly "org.apache.maven.plugin-tools:maven-plugin-annotations:3.6.0"
+}
+
+def releasePrepareTask = tasks.register("releasePrepare") {
+    group "release-prepare"
+    description "See :release:releasePrepare for details.  Here we hook in the `check` task."
+
+    dependsOn tasks.check
+}
+
+// used from the h2 CI job
+tasks.register("preVerifyRelease") {
+    group "release-prepare"
+    description "Delegates to `releasePrepare` task"
+
+    dependsOn releasePrepareTask
+}
+
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts") {
+    from components.java
+
+    // Adjust the pom for 3 things:
+    //      1. set packaging to maven-plugin (org.gradlex.maven-plugin-development does not in my testing)
+    //      2. scope of org.apache.maven dependencies
+    pom.withXml {
+        asNode()
+                .version
+                .plus {
+                    packaging('maven-plugin')
+                }
+        asNode()
+                .dependencies
+                .dependency
+                .findAll { dependency ->
+                    dependency.groupId.text().startsWith('org.apache.maven')
+                }
+                .each { dependency ->
+                    if (!dependency.groupId.text().startsWith('org.apache.maven.shared')) {
+                        dependency.scope*.value = 'provided'
+                    }
+                }
+    }
+}
+

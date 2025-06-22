@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.metamodel;
@@ -44,7 +44,7 @@ public class EmbeddedTypeTest {
 				entityManager -> {
 					SingularAttribute soldDate_ = entityManager.getMetamodel().embeddable( ShelfLife.class )
 							.getSingularAttribute( "soldDate" );
-					assertEquals( Date.class, soldDate_.getBindableJavaType() );
+					assertEquals( Date.class, soldDate_.getJavaType() );
 					assertEquals( Date.class, soldDate_.getType().getJavaType() );
 					assertEquals( Date.class, soldDate_.getJavaType() );
 				}

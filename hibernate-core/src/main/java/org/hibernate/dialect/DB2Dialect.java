@@ -1,28 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
-import org.hibernate.LockOptions;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -41,6 +25,9 @@ import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.DB2SqlAstTranslator;
+import org.hibernate.dialect.sql.ast.PostgreSQLSqlAstTranslator;
+import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
@@ -49,18 +36,22 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.procedure.internal.DB2CallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -74,15 +65,21 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.tool.schema.internal.StandardTableExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
@@ -99,7 +96,23 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
@@ -122,7 +135,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
- * A {@linkplain Dialect SQL dialect} for DB2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
+ * A {@linkplain Dialect SQL dialect} for Db2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
+ * <p>
+ * Please refer to the
+ * <a href="https://www.ibm.com/docs/en/db2/12.1">Db2 documentation</a>.
  *
  * @author Gavin King
  *
@@ -141,17 +157,28 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final LimitHandler limitHandler = getDB2Version().isBefore( 11, 1 )
-			? LegacyDB2LimitHandler.INSTANCE
-			: DB2LimitHandler.INSTANCE;
+	private final LimitHandler limitHandler =
+			getDB2Version().isBefore( 11, 1 )
+					? LegacyDB2LimitHandler.INSTANCE
+					: DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
+	private final StandardTableExporter db2TableExporter = new StandardTableExporter( this ) {
+		@Override
+		protected void applyAggregateColumnCheck(StringBuilder buf, AggregateColumn aggregateColumn) {
+			final JdbcType jdbcType = aggregateColumn.getType().getJdbcType();
+			if ( !jdbcType.isLob() && !jdbcType.isXml() ) { // LOB or XML columns can't have check constraints
+				super.applyAggregateColumnCheck( buf, aggregateColumn );
+			}
+		}
+	};
 
 	public DB2Dialect() {
 		this( MINIMUM_VERSION );
 	}
 
 	public DB2Dialect(DialectResolutionInfo info) {
-		super( info );
+		this( info.makeCopyOrDefault( MINIMUM_VERSION ) );
+		registerKeywords( info );
 	}
 
 	public DB2Dialect(DatabaseVersion version) {
@@ -163,26 +190,16 @@ public class DB2Dialect extends Dialect {
 		return MINIMUM_VERSION;
 	}
 
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		//not keywords, at least not in DB2 11,
-		//but perhaps they were in older versions?
-		registerKeyword( "current" );
-		registerKeyword( "date" );
-		registerKeyword( "time" );
-		registerKeyword( "timestamp" );
-		registerKeyword( "fetch" );
-		registerKeyword( "first" );
-		registerKeyword( "rows" );
-		registerKeyword( "only" );
-	}
-
 	/**
 	 * DB2 LUW Version
 	 */
 	public DatabaseVersion getDB2Version() {
 		return this.getVersion();
+	}
+
+	@Override
+	public Exporter<Table> getTableExporter() {
+		return this.db2TableExporter;
 	}
 
 	@Override
@@ -240,6 +257,14 @@ public class DB2Dialect extends Dialect {
 		);
 	}
 
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		return new PostgreSQLSqlAstTranslator<>( factory, optionalTableUpdate )
+				.createMergeOperation( optionalTableUpdate );
+	}
 	protected UniqueDelegate createUniqueDelegate() {
 		return new AlterTableUniqueIndexDelegate( this );
 	}
@@ -256,6 +281,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsUserDefinedTypes() {
+		return true;
+	}
+
+	@Override
 	protected boolean supportsPredicateAsExpression() {
 		return getDB2Version().isSameOrAfter( 11 );
 	}
@@ -267,10 +297,10 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
 		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
-		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
@@ -417,13 +447,14 @@ public class DB2Dialect extends Dialect {
 		functionFactory.listagg( null );
 
 		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.jsonValue_no_passing();
+			functionFactory.jsonValue_db2();
 			functionFactory.jsonQuery_no_passing();
 			functionFactory.jsonExists_no_passing();
 			functionFactory.jsonObject_db2();
 			functionFactory.jsonArray_db2();
 			functionFactory.jsonArrayAgg_db2();
 			functionFactory.jsonObjectAgg_db2();
+			functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 		}
 
 		functionFactory.xmlelement();
@@ -440,6 +471,31 @@ public class DB2Dialect extends Dialect {
 			functionFactory.xmlexists_db2_legacy();
 		}
 		functionFactory.xmlagg();
+		functionFactory.xmltable_db2();
+
+		functionFactory.unnest_db2( getMaximumSeriesSize() );
+		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
+
+		functionFactory.hex( "hex(?1)" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.sha( "hash(?1, 2)" );
+			functionFactory.md5( "hash(?1, 0)" );
+		}
+	}
+
+	/**
+	 * DB2 doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with a top level recursive CTE which requires an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		// Even if DB2 11 supports JSON functions, it's not possible to unnest a JSON array to rows, so stick to XML
+		return SqlTypes.XML_ARRAY;
 	}
 
 	@Override
@@ -808,15 +864,29 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_SHARE_SKIP_LOCKED_SQL
+				: FOR_SHARE_SQL;
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_SHARE_SKIP_LOCKED_SQL
 				: FOR_SHARE_SQL;
 	}
@@ -1060,7 +1130,9 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return DB2AggregateSupport.INSTANCE;
+		return getDB2Version().isSameOrAfter( 11 )
+				? DB2AggregateSupport.JSON_INSTANCE
+				: DB2AggregateSupport.INSTANCE;
 	}
 
 	@Override
@@ -1085,7 +1157,15 @@ public class DB2Dialect extends Dialect {
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor(
 				sqle -> switch ( extractErrorCode( sqle ) ) {
-					case -803 -> extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
+					case -803 -> {
+						// Unique constraint
+						final String constraintWithKind = extractUsingTemplate( "SQLERRMC=", ",", sqle.getMessage() );
+						// strip off "1;" for PK, or "2;" for other UK
+						yield constraintWithKind == null ? null : constraintWithKind.substring(2);
+					}
+					case -543, -545, -530,-531 ->
+						// Foreign key or check constraint
+							extractUsingTemplate( "SQLERRMC=", ",", sqle.getMessage() );
 					default -> null;
 				}
 		);
@@ -1093,17 +1173,24 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> switch ( extractErrorCode( sqlException ) ) {
-			case -952 -> new LockTimeoutException( message, sqlException, sql );
-			case -803 -> new ConstraintViolationException(
-					message,
-					sqlException,
-					sql,
-					ConstraintViolationException.ConstraintKind.UNIQUE,
-					getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-			);
-			default -> null;
-		};
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case -952 ->
+							new LockTimeoutException( message, sqlException, sql );
+					case -803 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -530,-531 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -407 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -543,-545 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					default -> null;
+				};
 	}
 
 	@Override
@@ -1262,10 +1349,10 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore( true );
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -1328,4 +1415,25 @@ public class DB2Dialect extends Dialect {
 	public String getFromDualForSelectOnly() {
 		return " from " + getDual();
 	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
 }

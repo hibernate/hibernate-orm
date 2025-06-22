@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -9,7 +9,6 @@ import java.util.Set;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -42,10 +41,10 @@ public class CriteriaGetJoinsTest {
 		scope.inTransaction(
 				session -> {
 					HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
-					JpaCriteriaQuery cq = cb.createQuery();
+					JpaCriteriaQuery<?> cq = cb.createQuery();
 					JpaRoot<MyEntity> root = cq.from( MyEntity.class );
 					root.join( "secondEntity", JoinType.LEFT );
-					root.join( MyEntity.class, SqmJoinType.LEFT );
+					root.join( MyEntity.class, org.hibernate.query.common.JoinType.LEFT );
 					Set<Join<MyEntity, ?>> joins = root.getJoins();
 					/*
 						SqmEntityJoin does not implement jakarta.persistence.criteria.Join, iterating through the
@@ -53,7 +52,7 @@ public class CriteriaGetJoinsTest {
 
 					 */
 					assertThat( joins.size() ).isEqualTo( 1 );
-					joins.forEach( join -> join.getJoinType() );
+					joins.forEach( Join::getJoinType );
 				}
 		);
 	}

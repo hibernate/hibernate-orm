@@ -1,0 +1,10 @@
+*
+!.gitignore
+
+# See https://stackoverflow.com/a/67976259/6692043
+!codeStyles/
+!codeStyles/Project.xml
+!codeStyles/codeStyleConfig.xml
+!inspectionProfiles/
+!inspectionProfiles/Project_Default.xml
+!icon.svg

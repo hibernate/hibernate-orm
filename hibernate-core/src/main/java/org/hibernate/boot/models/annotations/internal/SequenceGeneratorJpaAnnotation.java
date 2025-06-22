@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.SequenceGenerator;
 
@@ -25,7 +25,7 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SequenceGeneratorJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public SequenceGeneratorJpaAnnotation(ModelsContext modelContext) {
 		this( "", modelContext );
 	}
 
@@ -36,7 +36,7 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	 *     <li>{@linkplain jakarta.persistence.GeneratedValue#generator()} set to a non-empty String, but with no matching {@linkplain SequenceGenerator}</li>
 	 * </ol>
 	 */
-	public SequenceGeneratorJpaAnnotation(String name, SourceModelBuildingContext modelContext) {
+	public SequenceGeneratorJpaAnnotation(String name, ModelsContext modelContext) {
 		this.name = name;
 		this.sequenceName = "";
 		this.catalog = "";
@@ -49,7 +49,7 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SequenceGeneratorJpaAnnotation(SequenceGenerator annotation, SourceModelBuildingContext modelContext) {
+	public SequenceGeneratorJpaAnnotation(SequenceGenerator annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.sequenceName = annotation.sequenceName();
 		this.catalog = annotation.catalog();
@@ -64,7 +64,7 @@ public class SequenceGeneratorJpaAnnotation implements SequenceGenerator {
 	 */
 	public SequenceGeneratorJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.sequenceName = (String) attributeValues.get( "sequenceName" );
 		this.catalog = (String) attributeValues.get( "catalog" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.hibernate.boot.model.process.internal.EnumeratedValueConverter;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -19,6 +18,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import jakarta.persistence.EnumType;
 
 import static jakarta.persistence.EnumType.ORDINAL;
+import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.ENUM;
 import static org.hibernate.type.SqlTypes.NAMED_ENUM;
@@ -36,21 +36,21 @@ import static org.hibernate.type.SqlTypes.VARCHAR;
  * @author Steve Ebersole
  */
 public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
+
 	public EnumJavaType(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.instance() );
 	}
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
-		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
-		final EnumType type = context.getEnumeratedType();
-		final int sqlType = getSqlType( context, type, jdbcTypeRegistry );
-		return jdbcTypeRegistry.getDescriptor( sqlType );
+		return context.getTypeConfiguration().getJdbcTypeRegistry().getDescriptor( sqlType( context ) );
 	}
 
-	private int getSqlType(JdbcTypeIndicators context, EnumType type, JdbcTypeRegistry jdbcTypeRegistry) {
+	private int sqlType(JdbcTypeIndicators context) {
+		final EnumType enumType = context.getEnumeratedType();
 		final boolean preferNativeEnumTypes = context.isPreferNativeEnumTypesEnabled();
-		return switch ( type == null ? ORDINAL : type ) {
+		final JdbcTypeRegistry jdbcTypeRegistry = context.getTypeConfiguration().getJdbcTypeRegistry();
+		return switch ( enumType == null ? ORDINAL : enumType ) {
 			case ORDINAL:
 				if ( preferNativeEnumTypes && jdbcTypeRegistry.hasRegisteredDescriptor( ORDINAL_ENUM ) ) {
 					yield ORDINAL_ENUM;
@@ -124,26 +124,27 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof String ) {
-			return fromName( (String) value );
+		else if ( value instanceof String string ) {
+			return fromName( string );
 		}
-		else if ( value instanceof Long ) {
-			return fromLong( (Long) value );
+		else if ( value instanceof Long longValue ) {
+			return fromLong( longValue );
 		}
-		else if ( value instanceof Integer ) {
-			return fromInteger( (Integer) value );
+		else if ( value instanceof Integer integerValue ) {
+			return fromInteger( integerValue );
 		}
-		else if ( value instanceof Short ) {
-			return fromShort( (Short) value );
+		else if ( value instanceof Short shortValue ) {
+			return fromShort( shortValue );
 		}
-		else if ( value instanceof Byte ) {
-			return fromByte( (Byte) value );
+		else if ( value instanceof Byte byteValue ) {
+			return fromByte( byteValue );
 		}
-		else if ( value instanceof Number ) {
-			return fromLong( ((Number) value).longValue() );
+		else if ( value instanceof Number number ) {
+			return fromLong( number.longValue() );
 		}
-
+		else {
 		return (T) value;
+		}
 	}
 
 	/**
@@ -255,7 +256,7 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<T, ?> converter, Dialect dialect) {
 		if ( converter != null
 				&& jdbcType.getDefaultSqlTypeCode() != NAMED_ENUM ) {
 			return renderConvertedEnumCheckConstraint( columnName, jdbcType, converter, dialect );
@@ -272,16 +273,19 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 		}
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private String renderConvertedEnumCheckConstraint(
 			String columnName,
 			JdbcType jdbcType,
-			BasicValueConverter<?, ?> converter,
+			BasicValueConverter<T, ?> converter,
 			Dialect dialect) {
-		final Set valueSet;
+		final Set<?> valueSet = valueSet( jdbcType, converter );
+		return valueSet == null ? null : dialect.getCheckCondition( columnName, valueSet, jdbcType );
+	}
+
+	private <R> Set<R> valueSet(JdbcType jdbcType, BasicValueConverter<T,R> converter) {
 		// for `@EnumeratedValue` we already have the possible values...
-		if ( converter instanceof EnumeratedValueConverter enumeratedValueConverter ) {
-			valueSet = enumeratedValueConverter.getRelationalValueSet();
+		if ( converter instanceof EnumeratedValueConverter<T,R> enumeratedValueConverter ) {
+			return enumeratedValueConverter.getRelationalValueSet();
 		}
 		else {
 			if ( !SqlTypes.isIntegral( jdbcType.getJdbcTypeCode() )
@@ -290,17 +294,14 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 				// INTEGER, SMALLINT, TINYINT, (N)CHAR, (N)VARCHAR, LONG(N)VARCHAR
 				return null;
 			}
-
-			final Class<T> javaTypeClass = getJavaTypeClass();
-			final T[] enumConstants = javaTypeClass.getEnumConstants();
-			valueSet = CollectionHelper.setOfSize( enumConstants.length );
-			for ( T enumConstant : enumConstants ) {
-				//noinspection unchecked
-				final Object relationalValue = ( (BasicValueConverter) converter ).toRelationalValue( enumConstant );
-				valueSet.add( relationalValue );
+			else {
+				final T[] enumConstants = getJavaTypeClass().getEnumConstants();
+				final Set<R> valueSet = setOfSize( enumConstants.length );
+				for ( T enumConstant : enumConstants ) {
+					valueSet.add( converter.toRelationalValue( enumConstant ) );
+				}
+				return valueSet;
 			}
 		}
-
-		return dialect.getCheckCondition( columnName, valueSet, jdbcType );
 	}
 }

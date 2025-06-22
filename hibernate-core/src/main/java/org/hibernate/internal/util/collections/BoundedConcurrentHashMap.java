@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal.util.collections;
@@ -84,7 +84,10 @@ import java.util.concurrent.locks.ReentrantLock;
  * @param <V> the type of mapped values
  *
  * @author Doug Lea
+ * @deprecated We shouldn't maintain a cache implementation in the Hibernate ORM codebase,
+ * so this will be eventually removed as we encourage to plug-in external implementations for all caching needs.
  */
+@Deprecated(forRemoval = true)
 public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		implements ConcurrentMap<K, V>, Serializable {
 
@@ -2124,20 +2127,18 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public boolean contains(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
 				return false;
 			}
-			Entry<?, ?> e = (Entry<?, ?>) o;
 			V v = BoundedConcurrentHashMap.this.get( e.getKey() );
 			return v != null && v.equals( e.getValue() );
 		}
 
 		@Override
 		public boolean remove(Object o) {
-			if ( !( o instanceof Map.Entry ) ) {
+			if ( !(o instanceof Entry<?, ?> e) ) {
 				return false;
 			}
-			Entry<?, ?> e = (Entry<?, ?>) o;
 			return BoundedConcurrentHashMap.this.remove( e.getKey(), e.getValue() );
 		}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -35,12 +35,7 @@ public class SimpleCacheKeysFactory implements CacheKeysFactory {
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		// natural ids always need to be wrapped
-		return NaturalIdCacheKey.from(
-				naturalIdValues,
-				persister,
-				null,
-				session
-		);
+		return NaturalIdCacheKey.from( naturalIdValues, persister, null, session );
 	}
 
 	@Override

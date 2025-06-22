@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.annotations;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,11 +20,13 @@ import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.service.ServiceRegistry;
 
+import static java.util.Collections.addAll;
+import static java.util.Collections.emptyList;
 import static org.hibernate.boot.jaxb.SourceType.OTHER;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Steve Ebersole
@@ -32,13 +35,13 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 	private final Collection<Class<?>> knownClasses;
 	private final Collection<ClassDetails> classDetails;
 	private final Collection<String> packageNames;
-	private final Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings;
+	private final Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappings;
 
 	public AdditionalManagedResourcesImpl(
 			Collection<Class<?>> knownClasses,
 			Collection<ClassDetails> classDetails,
 			Collection<String> packageNames,
-			Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings) {
+			Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappings) {
 		this.knownClasses = knownClasses;
 		this.classDetails = classDetails;
 		this.packageNames = packageNames;
@@ -46,34 +49,33 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<ConverterDescriptor> getAttributeConverterDescriptors() {
-		return Collections.emptyList();
+	public Collection<ConverterDescriptor<?,?>> getAttributeConverterDescriptors() {
+		return emptyList();
 	}
 
 	@Override
 	public Collection<Class<?>> getAnnotatedClassReferences() {
-		return knownClasses == null ? Collections.emptyList() : knownClasses;
+		return knownClasses == null ? emptyList() : knownClasses;
 	}
 
 	@Override
 	public Collection<String> getAnnotatedClassNames() {
-		if ( CollectionHelper.isNotEmpty( classDetails ) ) {
+		if ( isNotEmpty( classDetails ) ) {
 			return classDetails.stream().map( ClassDetails::getName ).toList();
 		}
-		return Collections.emptyList();
+		return emptyList();
 	}
 
 	@Override
 	public Collection<String> getAnnotatedPackageNames() {
-		return packageNames == null ? Collections.emptyList() : packageNames;
+		return packageNames == null ? emptyList() : packageNames;
 	}
 
 	@Override
-	public Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
+	public Collection<Binding<? extends JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
 		if ( xmlMappings == null ) {
-			return Collections.emptyList();
+			return emptyList();
 		}
-
 		return xmlMappings;
 	}
 
@@ -88,7 +90,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		private List<Class<?>> classes;
 		private List<ClassDetails> classDetails;
 		private List<String> packageNames;
-		private Collection<Binding<JaxbBindableMappingDescriptor>> xmlMappings;
+		private Collection<Binding<? extends JaxbBindableMappingDescriptor>> xmlMappings;
 
 		public Builder(ServiceRegistry serviceRegistry) {
 			this.mappingBinder = new MappingBinder( serviceRegistry );
@@ -100,37 +102,37 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 
 		public Builder addLoadedClasses(List<Class<?>> additionalClasses) {
 			if ( additionalClasses != null ) {
-				if ( this.classes == null ) {
-					this.classes = new ArrayList<>();
+				if ( classes == null ) {
+					classes = new ArrayList<>();
 				}
-				this.classes.addAll( additionalClasses );
+				classes.addAll( additionalClasses );
 			}
 			return this;
 		}
 
 		public Builder addLoadedClasses(Class<?>... additionalClasses) {
-			if ( this.classes == null ) {
-				this.classes = new ArrayList<>();
+			if ( classes == null ) {
+				classes = new ArrayList<>();
 			}
-			Collections.addAll( this.classes, additionalClasses );
+			addAll( classes, additionalClasses );
 			return this;
 		}
 
 		public Builder addClassDetails(List<ClassDetails> additionalClassDetails) {
 			if ( additionalClassDetails != null ) {
-				if ( this.classDetails == null ) {
-					this.classDetails = new ArrayList<>();
+				if ( classDetails == null ) {
+					classDetails = new ArrayList<>();
 				}
-				this.classDetails.addAll( additionalClassDetails );
+				classDetails.addAll( additionalClassDetails );
 			}
 			return this;
 		}
 
-		public Builder addPackages(String... packageNames) {
-			if ( this.packageNames == null ) {
-				this.packageNames = new ArrayList<>();
+		public Builder addPackages(String... additionalPackageNames) {
+			if ( packageNames == null ) {
+				packageNames = new ArrayList<>();
 			}
-			Collections.addAll( this.packageNames, packageNames );
+			addAll( packageNames, additionalPackageNames );
 			return this;
 		}
 
@@ -143,10 +145,7 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		}
 
 		public Builder addXmlMappings(String resourceName, Origin origin) {
-			return addXmlBinding( mappingBinder.bind(
-					Builder.class.getClassLoader().getResourceAsStream( resourceName ),
-					origin
-			) );
+			return addXmlBinding( mappingBinder.bind( getResourceAsStream( resourceName ), origin ) );
 		}
 
 		public Builder addXmlBinding(Binding<JaxbBindableMappingDescriptor> binding) {
@@ -158,12 +157,15 @@ public class AdditionalManagedResourcesImpl implements ManagedResources {
 		}
 
 		public void addJaxbEntityMappings(List<JaxbEntityMappingsImpl> additionalJaxbMappings) {
-			if ( additionalJaxbMappings == null ) {
-				return;
+			if ( additionalJaxbMappings != null ) {
+				for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
+					addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
+				}
 			}
-			for ( JaxbEntityMappingsImpl additionalJaxbMapping : additionalJaxbMappings ) {
-				addXmlBinding( new Binding<>( additionalJaxbMapping, new Origin( OTHER, "additional" ) ) );
-			}
+		}
+
+		private static InputStream getResourceAsStream(String resourceName) {
+			return Builder.class.getClassLoader().getResourceAsStream( resourceName );
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.hql.internal;
@@ -31,6 +31,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.Nulls;
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.dialect.function.SqlColumn;
@@ -43,18 +45,17 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.PathSource;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
@@ -63,8 +64,17 @@ import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaJsonExistsNode;
+import org.hibernate.query.criteria.JpaJsonQueryNode;
+import org.hibernate.query.criteria.JpaJsonTableColumnsNode;
+import org.hibernate.query.criteria.JpaJsonValueNode;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
+import org.hibernate.query.criteria.JpaXmlTableColumnNode;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.tree.domain.SqmEntityDomainType;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -74,10 +84,10 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.FrameExclusion;
-import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.FrameMode;
+import org.hibernate.query.common.FetchClauseType;
+import org.hibernate.query.common.FrameExclusion;
+import org.hibernate.query.common.FrameKind;
+import org.hibernate.query.common.FrameMode;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.ParsingException;
@@ -86,7 +96,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
@@ -95,6 +105,7 @@ import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.function.SqmSetReturningFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
@@ -117,8 +128,8 @@ import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
-import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmFunctionRoot;
 import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
@@ -126,47 +137,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
-import org.hibernate.query.sqm.tree.expression.AbstractSqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
-import org.hibernate.query.sqm.tree.expression.SqmAny;
-import org.hibernate.query.sqm.tree.expression.SqmAnyDiscriminatorValue;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmByUnit;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
-import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
-import org.hibernate.query.sqm.tree.expression.SqmCollation;
-import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
-import org.hibernate.query.sqm.tree.expression.SqmEvery;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmFormat;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
-import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmJsonExistsExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonNullBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonObjectAggUniqueKeysBehavior;
-import org.hibernate.query.sqm.tree.expression.SqmJsonQueryExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJsonValueExpression;
-import org.hibernate.query.sqm.tree.expression.SqmLiteral;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
-import org.hibernate.query.sqm.tree.expression.SqmNamedExpression;
-import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
-import org.hibernate.query.sqm.tree.expression.SqmOver;
-import org.hibernate.query.sqm.tree.expression.SqmOverflow;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
-import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmSummarization;
-import org.hibernate.query.sqm.tree.expression.SqmToDuration;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
-import org.hibernate.query.sqm.tree.expression.SqmTuple;
-import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmXmlElementExpression;
+import org.hibernate.query.sqm.tree.expression.*;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
@@ -174,6 +145,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
@@ -223,6 +195,7 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
@@ -258,18 +231,21 @@ import static org.hibernate.internal.util.QuotingHelper.unquoteIdentifier;
 import static org.hibernate.internal.util.QuotingHelper.unquoteJavaStringLiteral;
 import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
 import static org.hibernate.query.hql.internal.SqmTreeCreationHelper.extractJpaCompliantAlias;
-import static org.hibernate.query.sqm.TemporalUnit.DATE;
-import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_WEEK;
-import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_YEAR;
-import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
-import static org.hibernate.query.sqm.TemporalUnit.OFFSET;
-import static org.hibernate.query.sqm.TemporalUnit.TIME;
-import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_HOUR;
-import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_MINUTE;
-import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_MONTH;
-import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_YEAR;
+import static org.hibernate.query.common.TemporalUnit.DATE;
+import static org.hibernate.query.common.TemporalUnit.DAY_OF_MONTH;
+import static org.hibernate.query.common.TemporalUnit.DAY_OF_WEEK;
+import static org.hibernate.query.common.TemporalUnit.DAY_OF_YEAR;
+import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.common.TemporalUnit.OFFSET;
+import static org.hibernate.query.common.TemporalUnit.TIME;
+import static org.hibernate.query.common.TemporalUnit.TIMEZONE_HOUR;
+import static org.hibernate.query.common.TemporalUnit.TIMEZONE_MINUTE;
+import static org.hibernate.query.common.TemporalUnit.WEEK_OF_MONTH;
+import static org.hibernate.query.common.TemporalUnit.WEEK_OF_YEAR;
 import static org.hibernate.query.sqm.internal.SqmUtil.resolveExpressibleJavaTypeClass;
+import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.forClassInstantiation;
+import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.forListInstantiation;
+import static org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation.forMapInstantiation;
 import static org.hibernate.type.descriptor.DateTimeUtils.DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 
@@ -337,10 +313,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private final Stack<DotIdentifierConsumer> dotIdentifierConsumerStack;
 
-	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>( ParameterDeclarationContext.class );
-	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>( SqmCreationProcessingState.class );
+	private final Stack<ParameterDeclarationContext> parameterDeclarationContextStack = new StandardStack<>();
+	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
-	private final BasicDomainType<Integer> integerDomainType;
+	private final BasicType<Integer> integerDomainType;
 	private final JavaType<List<?>> listJavaType;
 	private final JavaType<Map<?,?>> mapJavaType;
 
@@ -411,7 +387,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		this.creationContext = creationContext;
 		this.query = query;
 		this.dotIdentifierConsumerStack = new StandardStack<>(
-				DotIdentifierConsumer.class,
 				new BasicDotIdentifierConsumer( this )
 		);
 		this.parameterStyle = creationOptions.useStrictJpaCompliance()
@@ -439,6 +414,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return processingStateStack;
 	}
 
+	private NodeBuilder nodeBuilder() {
+		return creationContext.getNodeBuilder();
+	}
+
+	private QueryEngine queryEngine() {
+		return creationContext.getQueryEngine();
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grammar rules
 
@@ -450,19 +433,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		try {
 			final ParseTree parseTree = ctx.getChild( 0 );
-			if ( parseTree instanceof HqlParser.SelectStatementContext ) {
-				final SqmSelectStatement<R> selectStatement = visitSelectStatement( (HqlParser.SelectStatementContext) parseTree );
+			if ( parseTree instanceof HqlParser.SelectStatementContext selectStatementContext ) {
+				final SqmSelectStatement<R> selectStatement = visitSelectStatement( selectStatementContext );
 				selectStatement.getQueryPart().validateQueryStructureAndFetchOwners();
 				return selectStatement;
 			}
-			else if ( parseTree instanceof HqlParser.InsertStatementContext ) {
-				return visitInsertStatement( (HqlParser.InsertStatementContext) parseTree );
+			else if ( parseTree instanceof HqlParser.InsertStatementContext insertStatementContext ) {
+				return visitInsertStatement( insertStatementContext );
 			}
-			else if ( parseTree instanceof HqlParser.UpdateStatementContext ) {
-				return visitUpdateStatement( (HqlParser.UpdateStatementContext) parseTree );
+			else if ( parseTree instanceof HqlParser.UpdateStatementContext updateStatementContext ) {
+				return visitUpdateStatement( updateStatementContext );
 			}
-			else if ( parseTree instanceof HqlParser.DeleteStatementContext ) {
-				return visitDeleteStatement( (HqlParser.DeleteStatementContext) parseTree );
+			else if ( parseTree instanceof HqlParser.DeleteStatementContext deleteStatementContext ) {
+				return visitDeleteStatement( deleteStatementContext );
 			}
 		}
 		finally {
@@ -478,8 +461,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmSelectStatement<R> visitSelectStatement(HqlParser.SelectStatementContext ctx) {
-		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
-		final SqmSelectStatement<R> selectStatement = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
+		final var queryExpressionContext = ctx.queryExpression();
+		final SqmSelectStatement<R> selectStatement = new SqmSelectStatement<>( nodeBuilder() );
 
 		parameterCollector = selectStatement;
 
@@ -508,14 +491,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				(EntityDomainType<R>) visitEntityName( dmlTargetContext.entityName() ),
 				extractAlias( dmlTargetContext.variable() ),
 				false,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	@Override
 	public SqmInsertStatement<R> visitInsertStatement(HqlParser.InsertStatementContext ctx) {
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final HqlParser.TargetFieldsContext targetFieldsSpecContext = ctx.targetFields();
+		final var dmlTargetContext = ctx.targetEntity();
+		final var targetFieldsSpecContext = ctx.targetFields();
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
@@ -525,10 +508,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 
-		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
+		final var queryExpressionContext = ctx.queryExpression();
 		if ( queryExpressionContext != null ) {
 			final SqmInsertSelectStatement<R> insertStatement =
-					new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
+					new SqmInsertSelectStatement<>( root, nodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 					insertStatement,
@@ -568,7 +551,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			final SqmInsertValuesStatement<R> insertStatement =
-					new SqmInsertValuesStatement<>( root, creationContext.getNodeBuilder() );
+					new SqmInsertValuesStatement<>( root, nodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 					insertStatement,
@@ -585,7 +568,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 
 				final ArrayList<SqmValues> valuesList = new ArrayList<>();
-				final HqlParser.ValuesListContext valuesListContext = ctx.valuesList();
+				final var valuesListContext = ctx.valuesList();
 				for ( int i = 1; i < valuesListContext.getChildCount(); i += 2 ) {
 					final ParseTree values = valuesListContext.getChild( i );
 					final ArrayList<SqmExpression<?>> valuesExpressions = new ArrayList<>();
@@ -595,11 +578,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						final String targetPathJavaType = targetPath.getJavaTypeName();
 						final boolean isEnum = targetPath.isEnum();
 						final ParseTree valuesContext = values.getChild( j );
-						final HqlParser.ExpressionContext expressionContext;
 						final Set<String> possibleEnumTypes;
 						final SqmExpression<?> value;
-						if ( isEnum && valuesContext.getChild( 0 ) instanceof HqlParser.ExpressionContext
-								&& ( possibleEnumTypes = getPossibleEnumTypes( expressionContext = (HqlParser.ExpressionContext) valuesContext.getChild( 0 ) ) ) != null ) {
+						if ( isEnum
+								&& valuesContext.getChild( 0 ) instanceof HqlParser.ExpressionContext expressionContext
+								&& ( possibleEnumTypes = getPossibleEnumTypes( expressionContext ) ) != null ) {
 							value = resolveEnumShorthandLiteral(
 									expressionContext,
 									getPossibleEnumValue( expressionContext ),
@@ -635,9 +618,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		@SuppressWarnings("unchecked")
 		final SqmInsertStatement<R> statement = (SqmInsertStatement<R>) processingState.getProcessingQuery();
 		final SqmConflictClause<R> conflictClause = new SqmConflictClause<>( statement );
-		final HqlParser.ConflictTargetContext conflictTargetContext = ctx.conflictTarget();
+		final var conflictTargetContext = ctx.conflictTarget();
 		if ( conflictTargetContext != null ) {
-			final HqlParser.IdentifierContext identifierCtx = conflictTargetContext.identifier();
+			final var identifierCtx = conflictTargetContext.identifier();
 			if ( identifierCtx != null ) {
 				conflictClause.conflictOnConstraint( visitIdentifier( identifierCtx ) );
 			}
@@ -649,23 +632,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				conflictClause.conflictOnConstraintPaths( constraintAttributes );
 			}
 		}
-		final HqlParser.ConflictActionContext conflictActionContext = ctx.conflictAction();
-		final HqlParser.SetClauseContext setClauseContext = conflictActionContext.setClause();
+		final var conflictActionContext = ctx.conflictAction();
+		final var setClauseContext = conflictActionContext.setClause();
 		if ( setClauseContext != null ) {
 			processingState.getPathRegistry().registerByAliasOnly( conflictClause.getExcludedRoot() );
 			final SqmConflictUpdateAction<R> updateAction = conflictClause.onConflictDoUpdate();
 			for ( HqlParser.AssignmentContext assignmentContext : setClauseContext.assignment() ) {
 				updateAction.addAssignment( visitAssignment( assignmentContext ) );
 			}
-			final SqmPredicate sqmPredicate = visitWhereClause( conflictActionContext.whereClause() );
-			updateAction.where( sqmPredicate );
+			updateAction.where( visitWhereClause( conflictActionContext.whereClause() ) );
 		}
 		return conflictClause;
 	}
 
 	@Override
 	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
-		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( creationContext.getNodeBuilder() );
+		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( nodeBuilder() );
 		parameterCollector = updateStatement;
 		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 				updateStatement,
@@ -677,14 +659,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			updateStatement.versioned( ctx.VERSIONED() != null );
 			//noinspection unchecked
 			updateStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
-			final HqlParser.SetClauseContext setClauseCtx = ctx.setClause();
+			final var setClauseCtx = ctx.setClause();
 			for ( ParseTree subCtx : setClauseCtx.children ) {
-				if ( subCtx instanceof HqlParser.AssignmentContext ) {
-					updateStatement.applyAssignment( visitAssignment( (HqlParser.AssignmentContext) subCtx ) );
+				if ( subCtx instanceof HqlParser.AssignmentContext assignmentContext ) {
+					updateStatement.applyAssignment( visitAssignment( assignmentContext ) );
 				}
 			}
 
-			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
+			final var whereClauseContext = ctx.whereClause();
 			if ( whereClauseContext != null ) {
 				updateStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
 			}
@@ -703,12 +685,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( ctx.simplePath() );
 		final String targetPathJavaType = targetPath.getJavaTypeName();
 		final boolean isEnum = targetPath.isEnum();
-		final ParseTree rightSide = ctx.getChild( 2 );
-		final HqlParser.ExpressionContext expressionContext;
+		final var rightSide = ctx.expressionOrPredicate();
 		final Set<String> possibleEnumValues;
 		final SqmExpression<?> value;
-		if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
-				&& ( possibleEnumValues = getPossibleEnumTypes( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
+		if ( isEnum
+				&& rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext expressionContext
+				&& ( possibleEnumValues = getPossibleEnumTypes( expressionContext ) ) != null ) {
 			value = resolveEnumShorthandLiteral(
 					expressionContext,
 					getPossibleEnumValue( expressionContext ),
@@ -724,20 +706,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
-		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( creationContext.getNodeBuilder() );
-
+		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( nodeBuilder() );
 		parameterCollector = deleteStatement;
-
-		final SqmDmlCreationProcessingState sqmDeleteCreationState = new SqmDmlCreationProcessingState(
-				deleteStatement,
-				this
-		);
-
+		final SqmDmlCreationProcessingState sqmDeleteCreationState =
+				new SqmDmlCreationProcessingState( deleteStatement, this );
 		processingStateStack.push( sqmDeleteCreationState );
 		try {
 			//noinspection unchecked
 			deleteStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
-			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
+			final var whereClauseContext = ctx.whereClause();
 			if ( whereClauseContext != null ) {
 				deleteStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
 			}
@@ -769,34 +746,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitCte(HqlParser.CteContext ctx) {
-		final SqmCteContainer cteContainer = (SqmCteContainer) processingStateStack.getCurrent().getProcessingQuery();
-		final String name = visitIdentifier( (HqlParser.IdentifierContext) ctx.children.get( 0 ) );
+		final SqmCteContainer cteContainer =
+				(SqmCteContainer) processingStateStack.getCurrent().getProcessingQuery();
+		final String name = visitIdentifier( ctx.identifier() );
 		final TerminalNode thirdChild = (TerminalNode) ctx.getChild( 2 );
-		final int queryExpressionIndex;
-		final CteMaterialization materialization;
-		switch ( thirdChild.getSymbol().getType() ) {
-			case HqlParser.NOT:
-				materialization = CteMaterialization.NOT_MATERIALIZED;
-				queryExpressionIndex = 5;
-				break;
-			case HqlParser.MATERIALIZED:
-				materialization = CteMaterialization.MATERIALIZED;
-				queryExpressionIndex = 4;
-				break;
-			default:
-				materialization = null;
-				queryExpressionIndex = 3;
-				break;
-		}
+		final CteMaterialization materialization = switch ( thirdChild.getSymbol().getType() ) {
+			case HqlParser.NOT -> CteMaterialization.NOT_MATERIALIZED;
+			case HqlParser.MATERIALIZED -> CteMaterialization.MATERIALIZED;
+			default -> null;
+		};
 
-		final HqlParser.QueryExpressionContext queryExpressionContext = (HqlParser.QueryExpressionContext) ctx.getChild( queryExpressionIndex );
-		final SqmSelectQuery<Object> cte;
-		if ( cteContainer instanceof SqmSubQuery<?> ) {
-			cte = new SqmSubQuery<>( ( (SqmSubQuery<?>) cteContainer ).getParent(), creationContext.getNodeBuilder() );
-		}
-		else {
-			cte = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
-		}
+		final var queryExpressionContext = ctx.queryExpression();
+		final SqmSelectQuery<Object> cte =
+				cteContainer instanceof SqmSubQuery<?> subQuery
+						? new SqmSubQuery<>( subQuery.getParent(), nodeBuilder() )
+						: new SqmSelectStatement<>( nodeBuilder() );
 		processingStateStack.push(
 				new SqmQueryPartCreationProcessingStateStandardImpl(
 						processingStateStack.getCurrent(),
@@ -807,87 +771,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final JpaCteCriteria<?> oldCte = currentPotentialRecursiveCte;
 		try {
 			currentPotentialRecursiveCte = null;
-			if ( queryExpressionContext instanceof HqlParser.SetQueryGroupContext ) {
-				final HqlParser.SetQueryGroupContext setContext = (HqlParser.SetQueryGroupContext) queryExpressionContext;
+			if ( queryExpressionContext instanceof HqlParser.SetQueryGroupContext setContext ) {
 				// A recursive query is only possible if the child count is lower than 5 e.g. `withClause? q1 op q2`
 				if ( setContext.getChildCount() < 5 ) {
-					final SetOperator setOperator = (SetOperator) setContext.getChild( setContext.getChildCount() - 2 )
-							.accept( this );
-					switch ( setOperator ) {
-						case UNION:
-						case UNION_ALL:
-							final HqlParser.OrderedQueryContext nonRecursiveQueryContext;
-							final HqlParser.OrderedQueryContext recursiveQueryContext;
-							// On count == 4, we have a withClause at index 0
-							if ( setContext.getChildCount() == 4 ) {
-								nonRecursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 1 );
-								recursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 3 );
-							}
-							else {
-								nonRecursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 0 );
-								recursiveQueryContext = (HqlParser.OrderedQueryContext) setContext.getChild( 2 );
-							}
-							// First visit the non-recursive part
-							nonRecursiveQueryContext.accept( this );
-
-							// Visiting the possibly recursive part must happen within the call to SqmCteContainer.with,
-							// because in there, the SqmCteStatement/JpaCteCriteria is available for use in the recursive part.
-							// The structure (SqmCteTable) for the SqmCteStatement is based on the non-recursive part,
-							// which is necessary to have, so that the SqmCteRoot/SqmCteJoin can resolve sub-paths.
-							final SqmSelectStatement<Object> recursivePart = new SqmSelectStatement<>( creationContext.getNodeBuilder() );
-
-							processingStateStack.pop();
-							processingStateStack.push(
-									new SqmQueryPartCreationProcessingStateStandardImpl(
-											processingStateStack.getCurrent(),
-											recursivePart,
-											this
-									)
-							);
-							final JpaCteCriteria<Object> cteDefinition;
-							if ( setOperator == SetOperator.UNION ) {
-								cteDefinition = cteContainer.withRecursiveUnionDistinct(
-										name,
-										cte,
-										cteCriteria -> {
-											currentPotentialRecursiveCte = cteCriteria;
-											recursiveQueryContext.accept( this );
-											return recursivePart;
-										}
-								);
-							}
-							else {
-								cteDefinition = cteContainer.withRecursiveUnionAll(
-										name,
-										cte,
-										cteCriteria -> {
-											currentPotentialRecursiveCte = cteCriteria;
-											recursiveQueryContext.accept( this );
-											return recursivePart;
-										}
-								);
-							}
-							if ( materialization != null ) {
-								cteDefinition.setMaterialization( materialization );
-							}
-							final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-							final ParseTree potentialSearchClause;
-							if ( lastChild instanceof HqlParser.CycleClauseContext ) {
-								applyCycleClause( cteDefinition, (HqlParser.CycleClauseContext) lastChild );
-								potentialSearchClause = ctx.getChild( ctx.getChildCount() - 2 );
-							}
-							else {
-								potentialSearchClause = lastChild;
-							}
-							if ( potentialSearchClause instanceof HqlParser.SearchClauseContext ) {
-								applySearchClause( cteDefinition, (HqlParser.SearchClauseContext) potentialSearchClause );
-							}
-							return null;
+					if ( handleRecursive( ctx, setContext, cteContainer, name, cte, materialization ) ) {
+						return null;
 					}
 				}
 			}
 			queryExpressionContext.accept( this );
-			final JpaCteCriteria<Object> cteDefinition = cteContainer.with( name, cte );
+			final JpaCteCriteria<?> cteDefinition = cteContainer.with( name, cte );
 			if ( materialization != null ) {
 				cteDefinition.setMaterialization( materialization );
 			}
@@ -899,14 +792,85 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return null;
 	}
 
+	private boolean handleRecursive(
+			HqlParser.CteContext cteContext,
+			HqlParser.SetQueryGroupContext setContext,
+			SqmCteContainer cteContainer,
+			String name,
+			SqmSelectQuery<Object> cte,
+			CteMaterialization materialization) {
+		final SetOperator setOperator = (SetOperator) setContext.setOperator(0).accept( this );
+		switch ( setOperator ) {
+			case UNION:
+			case UNION_ALL:
+				final var nonRecursiveQueryContext = setContext.orderedQuery(0);
+				final var recursiveQueryContext = setContext.orderedQuery(1);
+				// First visit the non-recursive part
+				nonRecursiveQueryContext.accept( this );
+
+				// Visiting the possibly recursive part must happen within the call to SqmCteContainer.with,
+				// because in there, the SqmCteStatement/JpaCteCriteria is available for use in the recursive part.
+				// The structure (SqmCteTable) for the SqmCteStatement is based on the non-recursive part,
+				// which is necessary to have, so that the SqmCteRoot/SqmCteJoin can resolve sub-paths.
+				final SqmSelectStatement<Object> recursivePart =
+						new SqmSelectStatement<>( nodeBuilder() );
+
+				processingStateStack.pop();
+				processingStateStack.push(
+						new SqmQueryPartCreationProcessingStateStandardImpl(
+								processingStateStack.getCurrent(),
+								recursivePart,
+								this
+						)
+				);
+				final JpaCteCriteria<Object> cteDefinition;
+				if ( setOperator == SetOperator.UNION ) {
+					cteDefinition = cteContainer.withRecursiveUnionDistinct(
+							name,
+							cte,
+							cteCriteria -> {
+								currentPotentialRecursiveCte = cteCriteria;
+								recursiveQueryContext.accept( this );
+								return recursivePart;
+							}
+					);
+				}
+				else {
+					cteDefinition = cteContainer.withRecursiveUnionAll(
+							name,
+							cte,
+							cteCriteria -> {
+								currentPotentialRecursiveCte = cteCriteria;
+								recursiveQueryContext.accept( this );
+								return recursivePart;
+							}
+					);
+				}
+				if ( materialization != null ) {
+					cteDefinition.setMaterialization( materialization );
+				}
+				final var cycleClauseContext = cteContext.cycleClause();
+				if ( cycleClauseContext != null ) {
+					applyCycleClause( cteDefinition, cycleClauseContext );
+				}
+				final var searchClauseContext = cteContext.searchClause();
+				if ( searchClauseContext != null ) {
+					applySearchClause( cteDefinition, searchClauseContext );
+				}
+				return true;
+		}
+		return false;
+	}
+
 	private void applyCycleClause(JpaCteCriteria<?> cteDefinition, HqlParser.CycleClauseContext ctx) {
-		final HqlParser.CteAttributesContext attributesContext = ctx.cteAttributes();
-		final String cycleMarkAttributeName = visitIdentifier( (HqlParser.IdentifierContext) ctx.getChild( 3 ) );
-		final List<JpaCteCriteriaAttribute> cycleAttributes = new ArrayList<>( ( attributesContext.getChildCount() + 1 ) >> 1 );
-		final List<ParseTree> children = attributesContext.children;
+		final var attributesContext = ctx.cteAttributes();
+		final String cycleMarkAttributeName = visitIdentifier( ctx.identifier(0) );
+		final List<JpaCteCriteriaAttribute> cycleAttributes =
+				new ArrayList<>( ( attributesContext.getChildCount() + 1 ) >> 1 );
+		final var identifiers = attributesContext.identifier();
 		final JpaCteCriteriaType<?> type = cteDefinition.getType();
-		for ( int i = 0; i < children.size(); i += 2 ) {
-			final String attributeName = visitIdentifier( (HqlParser.IdentifierContext) children.get( i ) );
+		for ( int i = 0; i < identifiers.size(); i ++ ) {
+			final String attributeName = visitIdentifier( identifiers.get( i ) );
 			final JpaCteCriteriaAttribute attribute = type.getAttribute( attributeName );
 			if ( attribute == null ) {
 				throw new SemanticException(
@@ -924,49 +888,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String cyclePathAttributeName;
 		final Object cycleValue;
 		final Object noCycleValue;
-		if ( ctx.getChildCount() > 4 ) {
-			if ( ctx.getChildCount() > 6 ) {
-				final SqmLiteral<?> cycleLiteral = (SqmLiteral<?>) visitLiteral( (HqlParser.LiteralContext) ctx.getChild( 5 ) );
-				final SqmLiteral<?> noCycleLiteral = (SqmLiteral<?>) visitLiteral( (HqlParser.LiteralContext) ctx.getChild( 7 ) );
-				cycleValue = cycleLiteral.getLiteralValue();
-				noCycleValue = noCycleLiteral.getLiteralValue();
-			}
-			else {
-				cycleValue = Boolean.TRUE;
-				noCycleValue = Boolean.FALSE;
-			}
-			final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-			if ( lastChild instanceof HqlParser.IdentifierContext ) {
-				cyclePathAttributeName = visitIdentifier( (HqlParser.IdentifierContext) lastChild );
-			}
-			else {
-				cyclePathAttributeName = null;
-			}
+		if ( ctx.TO() != null && ctx.DEFAULT() != null ) {
+			final SqmLiteral<?> cycleLiteral = (SqmLiteral<?>) visitLiteral( ctx.literal(0) );
+			final SqmLiteral<?> noCycleLiteral = (SqmLiteral<?>) visitLiteral( ctx.literal(1) );
+			cycleValue = cycleLiteral.getLiteralValue();
+			noCycleValue = noCycleLiteral.getLiteralValue();
+		}
+		else {
+			cycleValue = Boolean.TRUE;
+			noCycleValue = Boolean.FALSE;
+		}
+		if ( ctx.USING() != null ) {
+			cyclePathAttributeName = visitIdentifier( ctx.identifier(1) );
 		}
 		else {
 			cyclePathAttributeName = null;
-			cycleValue = Boolean.TRUE;
-			noCycleValue = Boolean.FALSE;
 		}
 
 		cteDefinition.cycleUsing( cycleMarkAttributeName, cyclePathAttributeName, cycleValue, noCycleValue, cycleAttributes );
 	}
 
 	private void applySearchClause(JpaCteCriteria<?> cteDefinition, HqlParser.SearchClauseContext ctx) {
-		final CteSearchClauseKind kind;
-		if ( ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.BREADTH ) {
-			kind = CteSearchClauseKind.BREADTH_FIRST;
-		}
-		else {
-			kind = CteSearchClauseKind.DEPTH_FIRST;
-		}
 		final String searchAttributeName = visitIdentifier( ctx.identifier() );
-		final HqlParser.SearchSpecificationsContext searchCtx = ctx.searchSpecifications();
+		final var searchCtx = ctx.searchSpecifications();
 		final List<JpaSearchOrder> searchOrders = new ArrayList<>( ( searchCtx.getChildCount() + 1 ) >> 1 );
-		final List<ParseTree> children = searchCtx.children;
+		final var searchSpecifications = searchCtx.searchSpecification();
 		final JpaCteCriteriaType<?> type = cteDefinition.getType();
-		for ( int i = 0; i < children.size(); i += 2 ) {
-			final HqlParser.SearchSpecificationContext specCtx = (HqlParser.SearchSpecificationContext) children.get( i );
+		for ( int i = 0; i < searchSpecifications.size(); i ++ ) {
+			final var specCtx = searchSpecifications.get( i );
 			final String attributeName = visitIdentifier( specCtx.identifier() );
 			final JpaCteCriteriaAttribute attribute = type.getAttribute( attributeName );
 			if ( attribute == null ) {
@@ -980,49 +929,47 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 			SortDirection sortOrder = SortDirection.ASCENDING;
-			NullPrecedence nullPrecedence = NullPrecedence.NONE;
+			Nulls nullPrecedence = Nulls.NONE;
 			int index = 1;
 			if ( index < specCtx.getChildCount() ) {
 				if ( specCtx.getChild( index ) instanceof HqlParser.SortDirectionContext ) {
-					final HqlParser.SortDirectionContext sortCtx = specCtx.sortDirection();
-					switch ( ( (TerminalNode) sortCtx.getChild( 0 ) ).getSymbol().getType() ) {
-						case HqlParser.ASC:
-							sortOrder = SortDirection.ASCENDING;
-							break;
-						case HqlParser.DESC:
-							sortOrder = SortDirection.DESCENDING;
-							break;
-						default:
-							throw new UnsupportedOperationException( "Unrecognized sort ordering: " + sortCtx.getText() );
-					}
+					final var sortCtx = specCtx.sortDirection();
+					final Token symbol = ((TerminalNode) sortCtx.getChild( 0 )).getSymbol();
+					sortOrder = switch ( symbol.getType() ) {
+						case HqlParser.ASC -> SortDirection.ASCENDING;
+						case HqlParser.DESC -> SortDirection.DESCENDING;
+						default -> throw new UnsupportedOperationException(
+								"Unrecognized sort ordering: " + sortCtx.getText() );
+					};
 					index++;
 				}
 				if ( index < specCtx.getChildCount() ) {
-					final HqlParser.NullsPrecedenceContext nullsPrecedenceContext = specCtx.nullsPrecedence();
-					switch ( ( (TerminalNode) nullsPrecedenceContext.getChild( 1 ) ).getSymbol().getType() ) {
-						case HqlParser.FIRST:
-							nullPrecedence = NullPrecedence.FIRST;
-							break;
-						case HqlParser.LAST:
-							nullPrecedence = NullPrecedence.LAST;
-							break;
-						default:
-							throw new UnsupportedOperationException( "Unrecognized null precedence: " + nullsPrecedenceContext.getText() );
-					}
+					final var nullsPrecedenceContext = specCtx.nullsPrecedence();
+					final Token symbol = ((TerminalNode) nullsPrecedenceContext.getChild( 1 )).getSymbol();
+					nullPrecedence = switch ( symbol.getType() ) {
+						case HqlParser.FIRST -> Nulls.FIRST;
+						case HqlParser.LAST -> Nulls.LAST;
+						default -> throw new UnsupportedOperationException(
+								"Unrecognized null precedence: " + nullsPrecedenceContext.getText() );
+					};
 				}
 			}
-			searchOrders.add( creationContext.getNodeBuilder().search( attribute, sortOrder, nullPrecedence ) );
+			searchOrders.add( nodeBuilder().search( attribute, sortOrder, nullPrecedence ) );
 		}
-		cteDefinition.search( kind, searchAttributeName, searchOrders );
+		cteDefinition.search( getCteSearchClauseKind( ctx ), searchAttributeName, searchOrders );
+	}
+
+	private static CteSearchClauseKind getCteSearchClauseKind(HqlParser.SearchClauseContext ctx) {
+		return ctx.BREADTH() != null ? CteSearchClauseKind.BREADTH_FIRST : CteSearchClauseKind.DEPTH_FIRST;
 	}
 
 	@Override
 	public SqmQueryPart<?> visitSimpleQueryGroup(HqlParser.SimpleQueryGroupContext ctx) {
-		final int lastChild = ctx.getChildCount() - 1;
-		if ( lastChild != 0 ) {
-			ctx.getChild( 0 ).accept( this );
+		final var withClauseContext = ctx.withClause();
+		if ( withClauseContext != null ) {
+			withClauseContext.accept( this );
 		}
-		return (SqmQueryPart<?>) ctx.getChild( lastChild ).accept( this );
+		return (SqmQueryPart<?>) ctx.orderedQuery().accept( this );
 	}
 
 	@Override
@@ -1031,68 +978,62 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmFromClause fromClause = buildInferredFromClause(null);
 		sqmQuerySpec.setFromClause( fromClause );
 		sqmQuerySpec.setSelectClause( buildInferredSelectClause( fromClause ) );
-		visitQueryOrder( sqmQuerySpec, ctx.queryOrder() );
+		visitOrderBy( sqmQuerySpec, ctx.orderByClause() );
+		visitLimitOffset( sqmQuerySpec, ctx.limitOffset() );
 		return sqmQuerySpec;
 	}
 
 	@Override
 	public SqmQueryPart<?> visitQuerySpecExpression(HqlParser.QuerySpecExpressionContext ctx) {
 		final SqmQueryPart<?> queryPart = visitQuery( ctx.query() );
-		final HqlParser.QueryOrderContext queryOrderContext = ctx.queryOrder();
-		if ( queryOrderContext != null ) {
-			visitQueryOrder( queryPart, queryOrderContext );
-		}
+		visitOrderBy( queryPart, ctx.orderByClause() );
+		visitLimitOffset( queryPart, ctx.limitOffset() );
 		return queryPart;
 	}
 
 	@Override
 	public SqmQueryPart<?> visitNestedQueryExpression(HqlParser.NestedQueryExpressionContext ctx) {
 		final SqmQueryPart<?> queryPart = (SqmQueryPart<?>) ctx.queryExpression().accept( this );
-		final HqlParser.QueryOrderContext queryOrderContext = ctx.queryOrder();
-		if ( queryOrderContext != null ) {
-			final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
-			processingStateStack.push(
-					new SqmQueryPartCreationProcessingStateStandardImpl(
-							processingStateStack.getCurrent(),
-							firstProcessingState.getProcessingQuery(),
-							this
-					)
-			);
-			visitQueryOrder( queryPart, queryOrderContext);
-		}
+		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
+		processingStateStack.push(
+				new SqmQueryPartCreationProcessingStateStandardImpl(
+						processingStateStack.getCurrent(),
+						firstProcessingState.getProcessingQuery(),
+						this
+				)
+		);
+		visitOrderBy( queryPart, ctx.orderByClause() );
+		visitLimitOffset( queryPart, ctx.limitOffset() );
 		return queryPart;
 	}
 
 	@Override
 	public SqmQueryGroup<?> visitSetQueryGroup(HqlParser.SetQueryGroupContext ctx) {
-		final List<ParseTree> children = ctx.children;
-		final int firstIndex;
-		if ( children.get( 0 ) instanceof HqlParser.WithClauseContext ) {
-			children.get( 0 ).accept( this );
-			firstIndex = 1;
+		var withClauseContext = ctx.withClause();
+		if ( withClauseContext != null ) {
+			withClauseContext.accept( this );
 		}
-		else {
-			firstIndex = 0;
-		}
-		final SqmQueryPart<?> firstQueryPart = (SqmQueryPart<?>) children.get( firstIndex ).accept( this );
-		SqmQueryGroup<?> queryGroup;
-		if ( firstQueryPart instanceof SqmQueryGroup<?>) {
-			queryGroup = (SqmQueryGroup<?>) firstQueryPart;
-		}
-		else {
-			queryGroup = new SqmQueryGroup<>( firstQueryPart );
-		}
+		final SqmQueryPart<?> firstQueryPart =
+				(SqmQueryPart<?>) ctx.orderedQuery(0).accept( this );
+		SqmQueryGroup<?> queryGroup =
+				firstQueryPart instanceof SqmQueryGroup<?> sqmQueryGroup
+						? sqmQueryGroup
+						: new SqmQueryGroup<>( firstQueryPart );
 		setCurrentQueryPart( queryGroup );
-		final int size = children.size();
+		final var orderedQueryContexts = ctx.orderedQuery();
+		final var setOperatorContexts = ctx.setOperator();
 		final SqmCreationProcessingState firstProcessingState = processingStateStack.pop();
-		for ( int i = firstIndex + 1; i < size; i += 2 ) {
-			final SetOperator operator = visitSetOperator( (HqlParser.SetOperatorContext) children.get(i) );
-			final HqlParser.OrderedQueryContext simpleQueryCtx =
-					(HqlParser.OrderedQueryContext) children.get( i + 1 );
-			queryGroup = getSqmQueryGroup( operator, simpleQueryCtx, queryGroup, size, firstProcessingState, i );
+		for ( int i = 0; i < setOperatorContexts.size(); i++ ) {
+			queryGroup = getSqmQueryGroup(
+					visitSetOperator( setOperatorContexts.get(i) ),
+					orderedQueryContexts.get( i+1 ),
+					queryGroup,
+					setOperatorContexts.size(),
+					firstProcessingState,
+					i
+			);
 		}
 		processingStateStack.push( firstProcessingState );
-
 		return queryGroup;
 	}
 
@@ -1103,8 +1044,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			int size,
 			SqmCreationProcessingState firstProcessingState,
 			int i) {
-
-		final List<SqmQueryPart<X>> queryParts;
 		processingStateStack.push(
 				new SqmQueryPartCreationProcessingStateStandardImpl(
 						processingStateStack.getCurrent(),
@@ -1112,28 +1051,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						this
 				)
 		);
-		if ( queryGroup.getSetOperator() == null || queryGroup.getSetOperator() == operator ) {
+		final List<SqmQueryPart<X>> queryParts;
+		final SetOperator setOperator = queryGroup.getSetOperator();
+		if ( setOperator == null || setOperator == operator ) {
 			queryGroup.setSetOperator( operator );
 			queryParts = queryGroup.queryParts();
 		}
 		else {
 			queryParts = new ArrayList<>( size - ( i >> 1 ) );
 			queryParts.add( queryGroup );
-			queryGroup = new SqmQueryGroup<>( creationContext.getNodeBuilder(), operator, queryParts );
+			queryGroup = new SqmQueryGroup<>( nodeBuilder(), operator, queryParts );
 			setCurrentQueryPart( queryGroup );
 		}
 
 		try {
-			final List<ParseTree> subChildren = simpleQueryCtx.children;
-			if ( subChildren.get( 0 ) instanceof HqlParser.QueryContext ) {
-				final SqmQuerySpec<X> querySpec = new SqmQuerySpec<>( creationContext.getNodeBuilder() );
+			if ( simpleQueryCtx instanceof HqlParser.QuerySpecExpressionContext querySpecContext ) {
+				final SqmQuerySpec<X> querySpec = new SqmQuerySpec<>( nodeBuilder() );
 				queryParts.add( querySpec );
-				visitQuerySpecExpression( (HqlParser.QuerySpecExpressionContext) simpleQueryCtx );
+				visitQuerySpecExpression( querySpecContext );
 			}
-			else {
+			else if ( simpleQueryCtx instanceof HqlParser.NestedQueryExpressionContext nestedQueryContext ) {
 				try {
-					final SqmSelectStatement<Object> selectStatement =
-							new SqmSelectStatement<>( creationContext.getNodeBuilder() );
+					final SqmSelectStatement<?> selectStatement =
+							new SqmSelectStatement<>( nodeBuilder() );
 					processingStateStack.push(
 							new SqmQueryPartCreationProcessingStateStandardImpl(
 									processingStateStack.getCurrent(),
@@ -1143,13 +1083,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					);
 					@SuppressWarnings("unchecked")
 					final SqmQueryPart<X> queryPart = (SqmQueryPart<X>)
-							visitNestedQueryExpression( (HqlParser.NestedQueryExpressionContext) simpleQueryCtx );
+							visitNestedQueryExpression( nestedQueryContext );
 					queryParts.add( queryPart );
 				}
 				finally {
 					processingStateStack.pop();
 				}
 			}
+			// else if QueryOrderExpressionContext, nothing to do
 		}
 		finally {
 			processingStateStack.pop();
@@ -1161,56 +1102,46 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SetOperator visitSetOperator(HqlParser.SetOperatorContext ctx) {
 		final Token token = ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol();
 		final boolean all = ctx.getChildCount() == 2;
-		switch ( token.getType() ) {
-			case UNION:
-				return all ? SetOperator.UNION_ALL : SetOperator.UNION;
-			case INTERSECT:
-				return all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT;
-			case EXCEPT:
-				return all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT;
-			default:
-				throw new ParsingException( "Unrecognized set operator: " + token.getText() );
+		return switch ( token.getType() ) {
+			case UNION -> all ? SetOperator.UNION_ALL : SetOperator.UNION;
+			case INTERSECT -> all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT;
+			case EXCEPT -> all ? SetOperator.EXCEPT_ALL : SetOperator.EXCEPT;
+			default -> throw new ParsingException( "Unrecognized set operator: " + token.getText() );
+		};
+	}
+
+	protected void visitLimitOffset(SqmQueryPart<?> sqmQueryPart, HqlParser.LimitOffsetContext ctx) {
+		if ( ctx != null ) {
+			final var limitClauseContext = ctx.limitClause();
+			final var offsetClauseContext = ctx.offsetClause();
+			final var fetchClauseContext = ctx.fetchClause();
+			if ( limitClauseContext != null || offsetClauseContext != null || fetchClauseContext != null ) {
+				if ( getCreationOptions().useStrictJpaCompliance() ) {
+					throw new StrictJpaComplianceViolation(
+							StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
+					);
+				}
+
+				if ( processingStateStack.depth() > 1 && sqmQueryPart.getOrderByClause() == null ) {
+					throw new SemanticException(
+							"A 'limit', 'offset', or 'fetch' clause requires an 'order by' clause when used in a subquery",
+							query
+					);
+				}
+
+				setOffsetFetchLimit( sqmQueryPart, limitClauseContext, offsetClauseContext, fetchClauseContext );
+			}
 		}
 	}
 
-	protected void visitQueryOrder(SqmQueryPart<?> sqmQueryPart, HqlParser.QueryOrderContext ctx) {
-		if ( ctx == null ) {
-			return;
-		}
-		final SqmOrderByClause orderByClause;
-		final HqlParser.OrderByClauseContext orderByClauseContext = ctx.orderByClause();
-		if ( orderByClauseContext != null ) {
+	protected void visitOrderBy(SqmQueryPart<?> sqmQueryPart, HqlParser.OrderByClauseContext ctx) {
+		if ( ctx != null ) {
 			if ( creationOptions.useStrictJpaCompliance() && processingStateStack.depth() > 1 ) {
 				throw new StrictJpaComplianceViolation(
 						StrictJpaComplianceViolation.Type.SUBQUERY_ORDER_BY
 				);
 			}
-
-			orderByClause = visitOrderByClause( orderByClauseContext );
-			sqmQueryPart.setOrderByClause( orderByClause );
-		}
-		else {
-			orderByClause = null;
-		}
-
-		final HqlParser.LimitClauseContext limitClauseContext = ctx.limitClause();
-		final HqlParser.OffsetClauseContext offsetClauseContext = ctx.offsetClause();
-		final HqlParser.FetchClauseContext fetchClauseContext = ctx.fetchClause();
-		if ( limitClauseContext != null || offsetClauseContext != null || fetchClauseContext != null ) {
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				throw new StrictJpaComplianceViolation(
-						StrictJpaComplianceViolation.Type.LIMIT_OFFSET_CLAUSE
-				);
-			}
-
-			if ( processingStateStack.depth() > 1 && orderByClause == null ) {
-				throw new SemanticException(
-						"A 'limit', 'offset', or 'fetch' clause requires an 'order by' clause when used in a subquery",
-						query
-				);
-			}
-
-			setOffsetFetchLimit(sqmQueryPart, limitClauseContext, offsetClauseContext, fetchClauseContext);
+			sqmQueryPart.setOrderByClause( visitOrderByClause( ctx ) );
 		}
 	}
 
@@ -1236,30 +1167,40 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmQuerySpec<?> visitQuery(HqlParser.QueryContext ctx) {
 		final SqmQuerySpec<?> sqmQuerySpec = currentQuerySpec();
 
+		final var fromClauseContext = ctx.fromClause();
+		final var whereClauseContext = ctx.whereClause();
+		final var groupByClauseContext = ctx.groupByClause();
+		final var havingClauseContext = ctx.havingClause();
+		final var selectClauseContext = ctx.selectClause();
+
+		if ( havingClauseContext != null && groupByClauseContext == null ) {
+			throw new SemanticException( "Query has 'having' but no 'group by'", query );
+		}
+
 		// visit from clause first!!!
 		final SqmFromClause fromClause =
-				ctx.fromClause() == null
-						? buildInferredFromClause( ctx.selectClause() )
-						: visitFromClause( ctx.fromClause() );
+				fromClauseContext == null
+						? buildInferredFromClause( selectClauseContext )
+						: visitFromClause( fromClauseContext );
 		sqmQuerySpec.setFromClause( fromClause );
 
 		final SqmSelectClause selectClause =
-				ctx.selectClause() == null
+				selectClauseContext == null
 						? buildInferredSelectClause( fromClause )
-						: visitSelectClause( ctx.selectClause() );
+						: visitSelectClause( selectClauseContext );
 		sqmQuerySpec.setSelectClause( selectClause );
 
-		final SqmWhereClause whereClause = new SqmWhereClause( creationContext.getNodeBuilder() );
-		if ( ctx.whereClause() != null ) {
-			whereClause.setPredicate( (SqmPredicate) ctx.whereClause().accept( this ) );
+		final SqmWhereClause whereClause = new SqmWhereClause( nodeBuilder() );
+		if ( whereClauseContext != null ) {
+			whereClause.setPredicate( (SqmPredicate) whereClauseContext.accept( this ) );
 		}
 		sqmQuerySpec.setWhereClause( whereClause );
 
-		if ( ctx.groupByClause() != null ) {
-			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( ctx.groupByClause() ) );
+		if ( groupByClauseContext != null ) {
+			sqmQuerySpec.setGroupByClauseExpressions( visitGroupByClause( groupByClauseContext ) );
 		}
-		if ( ctx.havingClause() != null ) {
-			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( ctx.havingClause() ) );
+		if ( havingClauseContext != null ) {
+			sqmQuerySpec.setHavingClausePredicate( visitHavingClause( havingClauseContext ) );
 		}
 
 		return sqmQuerySpec;
@@ -1282,7 +1223,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final EntityDomainType<R> entityDescriptor = getResultEntity();
 			if ( entityDescriptor != null ) {
 				final SqmRoot<R> sqmRoot =
-						new SqmRoot<>( entityDescriptor, null, false, creationContext.getNodeBuilder() );
+						new SqmRoot<>( entityDescriptor, "_0", false, nodeBuilder() );
 				processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
 				fromClause.addRoot( sqmRoot );
 			}
@@ -1293,13 +1234,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private EntityDomainType<R> getResultEntity() {
 		final JpaMetamodel jpaMetamodel = creationContext.getJpaMetamodel();
 		if ( expectedResultEntity != null ) {
-			@SuppressWarnings("rawtypes")
-			final EntityDomainType entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
+			final EntityDomainType<?> entityDescriptor = jpaMetamodel.findEntityType( expectedResultEntity );
 			if ( entityDescriptor == null ) {
 				throw new SemanticException( "Query has no 'from' clause, and the result type '"
 						+ expectedResultEntity + "' is not an entity type", query );
 			}
-			return entityDescriptor;
+			//noinspection unchecked
+			return (EntityDomainType<R>) entityDescriptor;
 		}
 		else if ( expectedResultType != null ) {
 			final EntityDomainType<R> entityDescriptor = jpaMetamodel.findEntityType( expectedResultType );
@@ -1328,8 +1269,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					query );
 		}
 
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-
+		final NodeBuilder nodeBuilder = nodeBuilder();
 		for ( SqmRoot<?> sqmRoot : fromClause.getRoots() ) {
 			if ( "this".equals( sqmRoot.getExplicitAlias() ) ) {
 				// we found an entity with the alias 'this'
@@ -1430,7 +1370,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private void applyJoinsToInferredSelectClause(SqmFrom<?,?> sqm, SqmSelectClause selectClause) {
 		sqm.visitSqmJoins( sqmJoin -> {
 			if ( sqmJoin.isImplicitlySelectable() ) {
-				selectClause.addSelection( new SqmSelection<>( sqmJoin, sqmJoin.getAlias(), creationContext.getNodeBuilder() ) );
+				selectClause.addSelection( new SqmSelection<>( sqmJoin, sqmJoin.getAlias(), nodeBuilder() ) );
 				applyJoinsToInferredSelectClause( sqmJoin, selectClause );
 			}
 		} );
@@ -1440,8 +1380,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmSelectClause visitSelectClause(HqlParser.SelectClauseContext ctx) {
 		// todo (6.0) : primer a select-clause-specific SemanticPathPart into the stack
 		final SqmSelectClause selectClause =
-				new SqmSelectClause( ctx.DISTINCT() != null, creationContext.getNodeBuilder() );
-		final HqlParser.SelectionListContext selectionListContext = ctx.selectionList();
+				new SqmSelectClause( ctx.DISTINCT() != null, nodeBuilder() );
+		final var selectionListContext = ctx.selectionList();
 		for ( HqlParser.SelectionContext selectionContext : selectionListContext.selection() ) {
 			selectClause.addSelection( visitSelection( selectionContext ) );
 		}
@@ -1458,7 +1398,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				// NOTE : SqmSelection forces the alias down to its selectableNode.
 				//		- no need to do that here
 				resultIdentifier,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 
 		// if the node is not a dynamic-instantiation, register it with
@@ -1471,27 +1411,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmSelectableNode<?> visitSelectableNode(HqlParser.SelectionContext ctx) {
-		final ParseTree subCtx = ctx.getChild( 0 ).getChild( 0 );
+		final ParseTree subCtx = ctx.selectExpression().getChild( 0 );
 		if ( subCtx instanceof HqlParser.ExpressionOrPredicateContext ) {
 			final SqmExpression<?> sqmExpression = (SqmExpression<?>) subCtx.accept( this );
-			if ( sqmExpression instanceof SqmPath ) {
-				final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpression;
-				if ( sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-					// for plural-attribute selections, use the element path as the selection
-					//		- this is not strictly JPA compliant
-					if ( creationOptions.useStrictJpaCompliance() ) {
-						SqmTreeCreationLogger.LOGGER.debugf(
-								"Raw selection of plural attribute not supported by JPA: %s.  Use `value(%s)` or `key(%s)` to indicate what part of the collection to select",
-								sqmPath.getAlias(),
-								sqmPath.getAlias(),
-								sqmPath.getAlias()
-						);
-					}
-
-					final SqmPath<?> elementPath = sqmPath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
-					processingStateStack.getCurrent().getPathRegistry().register( elementPath );
-					return elementPath;
+			if ( sqmExpression instanceof SqmPath<?> sqmPath
+					&& sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+				// for plural-attribute selections, use the element path as the selection
+				//		- this is not strictly JPA compliant
+				if ( creationOptions.useStrictJpaCompliance() ) {
+					SqmTreeCreationLogger.LOGGER.debugf(
+							"Raw selection of plural attribute not supported by JPA."
+								+ " Use 'value(%s)' or 'key(%s)' to indicate what part of the collection to select",
+							sqmPath.getAlias(),
+							sqmPath.getAlias()
+					);
 				}
+
+				final SqmPath<?> elementPath =
+						sqmPath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
+				processingStateStack.getCurrent().getPathRegistry().register( elementPath );
+				return elementPath;
 			}
 
 			return sqmExpression;
@@ -1501,45 +1440,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmDynamicInstantiation<?> visitInstantiation(HqlParser.InstantiationContext ctx) {
-		final SqmDynamicInstantiation<?> dynamicInstantiation;
-		final ParseTree instantiationTarget = ctx.instantiationTarget().getChild( 0 );
-		if ( instantiationTarget instanceof HqlParser.SimplePathContext ) {
-			String className = instantiationTarget.getText();
-			if ( expectedResultTypeName != null && expectedResultTypeShortName.equals( className ) ) {
-				className = expectedResultTypeName;
-			}
-			try {
-				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(
-						resolveInstantiationTargetJtd( className ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (ClassLoadingException e) {
-				throw new SemanticException( "Could not resolve class '" + className + "' named for instantiation",
-						query );
-			}
-		}
-		else {
-			final TerminalNode terminalNode = (TerminalNode) instantiationTarget;
-			switch ( terminalNode.getSymbol().getType() ) {
-				case HqlParser.MAP:
-					dynamicInstantiation = SqmDynamicInstantiation.forMapInstantiation(
-							mapJavaType,
-							creationContext.getNodeBuilder()
-					);
-					break;
-				case HqlParser.LIST:
-					dynamicInstantiation = SqmDynamicInstantiation.forListInstantiation(
-							listJavaType,
-							creationContext.getNodeBuilder()
-					);
-					break;
-				default:
-					throw new UnsupportedOperationException( "Unsupported instantiation target: " + terminalNode );
-			}
-		}
-
-		for ( HqlParser.InstantiationArgumentContext arg : ctx.instantiationArguments().instantiationArgument() ) {
+		final SqmDynamicInstantiation<?> dynamicInstantiation = visitInstantiationTarget( ctx.instantiationTarget() );
+		for ( var arg : ctx.instantiationArguments().instantiationArgument() ) {
 			dynamicInstantiation.addArgument( visitInstantiationArgument( arg ) );
 		}
 
@@ -1556,41 +1458,62 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return dynamicInstantiation;
 	}
 
-	private JavaType<?> resolveInstantiationTargetJtd(String className) {
+	@Override
+	public SqmDynamicInstantiation<?> visitInstantiationTarget(HqlParser.InstantiationTargetContext ctx) {
+		if ( ctx.MAP() != null ) {
+			return forMapInstantiation( mapJavaType, nodeBuilder() );
+		}
+		else if ( ctx.LIST() != null ) {
+			return forListInstantiation( listJavaType, nodeBuilder() );
+		}
+		else {
+			final var simplePath = ctx.simplePath();
+			if ( simplePath == null ) {
+				throw new SyntaxException( "Missing instantiation target type" );
+			}
+			final String className = instantiationClassName( simplePath );
+			try {
+				return forClassInstantiation( resolveInstantiationTargetType( className ), nodeBuilder() );
+			}
+			catch (ClassLoadingException e) {
+				throw new SemanticException( "Could not resolve class '" + className + "' named for instantiation", query );
+			}
+		}
+	}
+
+	private String instantiationClassName(HqlParser.SimplePathContext ctx) {
+		final String name = ctx.getText();
+		return expectedResultTypeName != null && expectedResultTypeShortName.equals( name )
+				? expectedResultTypeName
+				: name;
+	}
+
+	private JavaType<?> resolveInstantiationTargetType(String className) {
 		final String qualifiedName = creationContext.getJpaMetamodel().qualifyImportableName( className );
 		final Class<?> targetJavaType = creationContext.classForName( qualifiedName );
-		return creationContext.getTypeConfiguration().getJavaTypeRegistry()
-				.resolveDescriptor( targetJavaType );
+		return creationContext.getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( targetJavaType );
 	}
 
 	@Override
 	public SqmDynamicInstantiationArgument<?> visitInstantiationArgument(HqlParser.InstantiationArgumentContext ctx) {
-		final HqlParser.VariableContext variable = ctx.variable();
+		final var variable = ctx.variable();
 		final String alias = variable == null ? null : extractAlias( variable );
-
 		final SqmSelectableNode<?> argExpression =
 				(SqmSelectableNode<?>) ctx.instantiationArgumentExpression().accept( this );
-
-		final SqmDynamicInstantiationArgument<?> argument = new SqmDynamicInstantiationArgument<>(
-				argExpression,
-				alias,
-				creationContext.getNodeBuilder()
-		);
-
+		final SqmDynamicInstantiationArgument<?> argument =
+				new SqmDynamicInstantiationArgument<>( argExpression, alias, nodeBuilder() );
 		if ( !(argExpression instanceof SqmDynamicInstantiation) ) {
 			processingStateStack.getCurrent().getPathRegistry().register( argument );
 		}
-
 		return argument;
 	}
 
 	@Override
 	public SqmPath<?> visitJpaSelectObjectSyntax(HqlParser.JpaSelectObjectSyntaxContext ctx) {
 		final String alias = ctx.getChild( 2 ).getText();
-		final SqmFrom<?, ?> sqmFromByAlias = processingStateStack.getCurrent().getPathRegistry().findFromByAlias(
-				alias,
-				true
-		);
+		final SqmFrom<?, ?> sqmFromByAlias =
+				processingStateStack.getCurrent().getPathRegistry()
+						.findFromByAlias( alias, true );
 		if ( sqmFromByAlias == null ) {
 			throw new SemanticException( "Could not resolve alias '" +  alias
 					+ "' in selection [" + ctx.getText() + "]",
@@ -1601,15 +1524,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public List<SqmExpression<?>> visitGroupByClause(HqlParser.GroupByClauseContext ctx) {
-		final int size = ctx.getChildCount();
-		// Shift 1 bit instead of division by 2
-		final int estimateExpressionsCount = ( size >> 1 ) - 1;
-		final List<SqmExpression<?>> expressions = new ArrayList<>( estimateExpressionsCount );
+		final var groupByExpressionContexts = ctx.groupByExpression();
+		final int size = groupByExpressionContexts.size();
+		final List<SqmExpression<?>> expressions = new ArrayList<>( size );
 		for ( int i = 0; i < size; i++ ) {
-			final ParseTree parseTree = ctx.getChild( i );
-			if ( parseTree instanceof HqlParser.GroupByExpressionContext ) {
-				expressions.add( (SqmExpression<?>) parseTree.accept( this ) );
-			}
+			expressions.add( (SqmExpression<?>) groupByExpressionContexts.get( i ).accept( this ) );
 		}
 		return expressions;
 	}
@@ -1618,15 +1537,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			ParseTree child,
 			boolean definedCollate,
 			boolean allowPositionalOrAliases) {
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
+		final NodeBuilder nodeBuilder = nodeBuilder();
 		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
 		final SqmQuery<?> processingQuery = processingState.getProcessingQuery();
 		final SqmQueryPart<?> queryPart;
-		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
-			queryPart = ( (SqmInsertSelectStatement<?>) processingQuery ).getSelectQueryPart();
+		if ( processingQuery instanceof SqmInsertSelectStatement<?> insertSelectStatement ) {
+			queryPart = insertSelectStatement.getSelectQueryPart();
 		}
-		else if ( processingQuery instanceof SqmSelectQuery<?> ) {
-			queryPart = ( (SqmSelectQuery<?>) processingQuery ).getQueryPart();
+		else if ( processingQuery instanceof SqmSelectQuery<?> selectQuery ) {
+			queryPart = selectQuery.getQueryPart();
 		}
 		else {
 			queryPart = null;
@@ -1646,7 +1565,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			// make sure this selection exists
 			final SqmAliasedNode<?> nodeByPosition;
 			if ( queryPart instanceof SqmQueryGroup<?> ) {
-				final List<SqmSelection<?>> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
+				final var selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
 				nodeByPosition = position <= selections.size() ? selections.get( position - 1 ) : null;
 			}
 			else {
@@ -1658,16 +1577,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						query );
 			}
 
-			return new SqmAliasedNodeRef( position, integerDomainType, nodeBuilder);
+			return new SqmAliasedNodeRef(
+					position,
+					nodeBuilder.resolveExpressible( integerDomainType ),
+					nodeBuilder
+			);
 		}
-		else if ( child instanceof HqlParser.IdentifierContext ) {
-			final String identifierText = visitIdentifier( (HqlParser.IdentifierContext) child );
+		else if ( child instanceof HqlParser.IdentifierContext identifierContext ) {
+			final String identifierText = visitIdentifier( identifierContext );
 			if ( queryPart instanceof SqmQueryGroup<?> ) {
 				// If the current query part is a query group, check if the text matches
 				// an attribute name of one of the selected SqmFrom elements or the path source name of a SqmPath
 				SqmFrom<?, ?> found = null;
 				int sqmPosition = 0;
-				final List<SqmSelection<?>> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
+				final List<SqmSelection<?>> selections =
+						queryPart.getFirstQuerySpec().getSelectClause().getSelections();
 				for ( int i = 0; i < selections.size(); i++ ) {
 					final SqmSelection<?> sqmSelection = selections.get( i );
 					if ( identifierText.equals( sqmSelection.getAlias() ) ) {
@@ -1678,10 +1602,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						);
 					}
 					final SqmSelectableNode<?> selectableNode = sqmSelection.getSelectableNode();
-					if ( selectableNode instanceof SqmFrom<?, ?> ) {
-						final SqmFrom<?, ?> fromElement = (SqmFrom<?, ?>) selectableNode;
-						final SqmPathSource<?> pathSource = fromElement.getReferencedPathSource();
-						if ( pathSource.findSubPathSource( identifierText ) != null ) {
+					if ( selectableNode instanceof SqmFrom<?, ?> fromElement ) {
+						if ( fromElement.getReferencedPathSource().findSubPathSource( identifierText ) != null ) {
 							if ( sqmPosition != 0 ) {
 								throw new IllegalStateException(
 										"Multiple from elements expose unqualified attribute: " + identifierText );
@@ -1690,8 +1612,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							sqmPosition = i + 1;
 						}
 					}
-					else if ( selectableNode instanceof SqmPath<?> ) {
-						final SqmPath<?> path = (SqmPath<?>) selectableNode;
+					else if ( selectableNode instanceof SqmPath<?> path ) {
 						if ( identifierText.equals( path.getReferencedPathSource().getPathName() ) ) {
 							if ( sqmPosition != 0 ) {
 								throw new IllegalStateException(
@@ -1710,7 +1631,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					);
 				}
 				else if ( sqmPosition != 0 ) {
-					return new SqmAliasedNodeRef( sqmPosition,  nodeBuilder.getIntegerType(), nodeBuilder );
+					return new SqmAliasedNodeRef(
+							sqmPosition,
+							nodeBuilder.getIntegerType(),
+							nodeBuilder
+					);
 				}
 			}
 			else {
@@ -1724,7 +1649,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						// This is syntactically disallowed
 						throw new SyntaxException( "'collate' is not allowed for alias-based 'order by' or 'group by' items" );
 					}
-					return new SqmAliasedNodeRef( correspondingPosition, integerDomainType, nodeBuilder );
+					return new SqmAliasedNodeRef(
+							correspondingPosition,
+							nodeBuilder.resolveExpressible( integerDomainType ),
+							nodeBuilder
+					);
 				}
 
 				final SqmFrom<?, ?> sqmFrom =
@@ -1764,18 +1693,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmOrderByClause visitOrderByClause(HqlParser.OrderByClauseContext ctx, boolean allowPositionalOrAliases) {
-		final int size = ctx.getChildCount();
-		// Shift 1 bit instead of division by 2
-		final int estimateExpressionsCount = ( size >> 1 ) - 1;
-		final SqmOrderByClause orderByClause = new SqmOrderByClause( estimateExpressionsCount );
+		final var sortSpecificationContexts = ctx.sortSpecification();
+		final int size = sortSpecificationContexts.size();
+		final SqmOrderByClause orderByClause = new SqmOrderByClause( size );
 		for ( int i = 0; i < size; i++ ) {
-			final ParseTree parseTree = ctx.getChild( i );
-			if ( parseTree instanceof HqlParser.SortSpecificationContext ) {
-				orderByClause.addSortSpecification( visitSortSpecification(
-						(HqlParser.SortSpecificationContext) parseTree,
-						allowPositionalOrAliases
-				) );
-			}
+			orderByClause.addSortSpecification( visitSortSpecification(
+					sortSpecificationContexts.get( i ),
+					allowPositionalOrAliases
+			) );
 		}
 		return orderByClause;
 	}
@@ -1788,10 +1713,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmSortSpecification visitSortSpecification(
 			HqlParser.SortSpecificationContext ctx,
 			boolean allowPositionalOrAliases) {
-		final SqmExpression<?> sortExpression = visitSortExpression(
-				ctx.sortExpression(),
-				allowPositionalOrAliases
-		);
+		final SqmExpression<?> sortExpression = visitSortExpression( ctx.sortExpression(), allowPositionalOrAliases );
 		if ( sortExpression == null ) {
 			throw new SemanticException( "Could not resolve sort expression: '" + ctx.sortExpression().getText() + "'",
 					query );
@@ -1799,28 +1721,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( sortExpression instanceof SqmLiteral || sortExpression instanceof SqmParameter ) {
 			HqlLogging.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
 		}
+		return new SqmSortSpecification( sortExpression, sortOrder( ctx ), nullPrecedence( ctx ) );
+	}
 
-		final SortDirection sortOrder =
-				ctx.sortDirection() == null || ctx.sortDirection().DESC() == null
-						? SortDirection.ASCENDING
-						: SortDirection.DESCENDING;
-		final NullPrecedence nullPrecedence;
+	private static SortDirection sortOrder(HqlParser.SortSpecificationContext ctx) {
+		return ctx.sortDirection() == null || ctx.sortDirection().DESC() == null
+				? SortDirection.ASCENDING
+				: SortDirection.DESCENDING;
+	}
+
+	private static Nulls nullPrecedence(HqlParser.SortSpecificationContext ctx) {
 		if ( ctx.nullsPrecedence() == null ) {
-			nullPrecedence = NullPrecedence.NONE;
+			return Nulls.NONE;
 		}
 		else {
 			if ( ctx.nullsPrecedence().FIRST() != null ) {
-				nullPrecedence = NullPrecedence.FIRST;
+				return Nulls.FIRST;
 			}
 			else if ( ctx.nullsPrecedence().LAST() != null ) {
-				nullPrecedence = NullPrecedence.LAST;
+				return Nulls.LAST;
 			}
 			else {
 				throw new ParsingException( "Unrecognized null precedence" );
 			}
 		}
-
-		return new SqmSortSpecification( sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
@@ -1834,22 +1758,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmQuerySpec<?> currentQuerySpec() {
 		final SqmQuery<?> processingQuery = processingStateStack.getCurrent().getProcessingQuery();
-		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
-			return ( (SqmInsertSelectStatement<?>) processingQuery ).getSelectQueryPart().getLastQuerySpec();
+		if ( processingQuery instanceof SqmInsertSelectStatement<?> insertSelectStatement ) {
+			return insertSelectStatement.getSelectQueryPart().getLastQuerySpec();
+		}
+		else if ( processingQuery instanceof SqmSelectQuery<?> selectQuery ) {
+			return selectQuery.getQueryPart().getLastQuerySpec();
 		}
 		else {
-			return ( (SqmSelectQuery<?>) processingQuery ).getQueryPart().getLastQuerySpec();
+			throw new AssertionFailure( "Unrecognized SqmQuery type" );
 		}
 	}
 
 	private <X> void setCurrentQueryPart(SqmQueryPart<X> queryPart) {
 		@SuppressWarnings("unchecked")
 		final SqmQuery<X> processingQuery = (SqmQuery<X>) processingStateStack.getCurrent().getProcessingQuery();
-		if ( processingQuery instanceof SqmInsertSelectStatement<?> ) {
-			( (SqmInsertSelectStatement<X>) processingQuery ).setSelectQueryPart( queryPart );
+		if ( processingQuery instanceof SqmInsertSelectStatement<X> insertSelectStatement ) {
+			insertSelectStatement.setSelectQueryPart( queryPart );
+		}
+		else if ( processingQuery instanceof AbstractSqmSelectQuery<X> selectQuery ) {
+			selectQuery.setQueryPart( queryPart );
 		}
 		else {
-			( (AbstractSqmSelectQuery<X>) processingQuery ).setQueryPart( queryPart );
+			throw new AssertionFailure( "Unrecognized SqmQuery type" );
 		}
 	}
 
@@ -1877,7 +1807,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return null;
 		}
 
-		final HqlParser.FetchCountOrPercentContext fetchCountOrPercent = ctx.fetchCountOrPercent();
+		final var fetchCountOrPercent = ctx.fetchCountOrPercent();
 		if ( fetchCountOrPercent.PERCENT() == null ) {
 			return (SqmExpression<?>) fetchCountOrPercent.parameterOrIntegerLiteral().accept( this );
 		}
@@ -1916,21 +1846,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				dotIdentifierConsumerStack.pop();
 			}
 		}
-		if ( part instanceof DomainPathPart ) {
-			return ( (DomainPathPart) part ).getSqmExpression();
-		}
-		return part;
+		return part instanceof DomainPathPart domainPathPart ? domainPathPart.getSqmExpression() : part;
 	}
 
 	@Override
 	public Object visitGeneralPathExpression(HqlParser.GeneralPathExpressionContext ctx) {
 		final SemanticPathPart part = visitGeneralPathFragment( ctx.generalPathFragment() );
-		if ( part instanceof DomainPathPart ) {
-			return ( (DomainPathPart) part ).getSqmExpression();
-		}
-		else {
-			return part;
-		}
+		return part instanceof DomainPathPart domainPathPart ? domainPathPart.getSqmExpression() : part;
 	}
 
 	@Override
@@ -1962,20 +1884,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( ctx.parameter() != null ) {
 			return (SqmExpression<?>) ctx.parameter().accept( this );
 		}
-		final ParseTree firstChild = ctx.getChild( 0 );
-		if ( firstChild instanceof TerminalNode ) {
-			switch ( ( (TerminalNode) firstChild ).getSymbol().getType() ) {
-				case HqlParser.INTEGER_LITERAL:
-					return integerLiteral( firstChild.getText() );
-				case HqlParser.FLOAT_LITERAL:
-					return floatLiteral( firstChild.getText() );
-				case HqlParser.DOUBLE_LITERAL:
-					return doubleLiteral( firstChild.getText() );
-				default:
-					throw new UnsupportedOperationException( "Unsupported literal: " + firstChild.getText() );
-			}
+		if ( ctx.getChild( 0 ) instanceof TerminalNode firstChild ) {
+			return switch ( firstChild.getSymbol().getType() ) {
+				case HqlParser.INTEGER_LITERAL -> integerLiteral( ctx.getChild( 0 ).getText() );
+				case HqlParser.FLOAT_LITERAL -> floatLiteral( ctx.getChild( 0 ).getText() );
+				case HqlParser.DOUBLE_LITERAL -> doubleLiteral( ctx.getChild( 0 ).getText() );
+				default -> throw new UnsupportedOperationException( "Unsupported literal: " + ctx.getChild( 0 ).getText() );
+			};
 		}
-		return (SqmExpression<?>) firstChild.accept( this );
+		return (SqmExpression<?>) ctx.getChild( 0 ).accept( this );
 	}
 
 	public String getEntityName(HqlParser.EntityNameContext parserEntityName) {
@@ -2009,9 +1926,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public EntityDomainType<?> visitEntityName(HqlParser.EntityNameContext parserEntityName) {
 		final String entityName = getEntityName( parserEntityName );
-		final EntityDomainType<?> entityReference = getCreationContext()
-				.getJpaMetamodel()
-				.getHqlEntityReference( entityName );
+		final EntityDomainType<?> entityReference = getJpaMetamodel().getHqlEntityReference( entityName );
 		if ( entityReference == null ) {
 			throw new UnknownEntityException( "Could not resolve target entity '" + entityName + "'", entityName );
 		}
@@ -2043,7 +1958,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			fromClause.addRoot( sqmRoot );
 
 			for ( int i = 1; i < roots.size(); i++ ) {
-				final HqlParser.EntityWithJoinsContext secondaryRoot = roots.get( i );
+				final var secondaryRoot = roots.get( i );
 				SqmTreeCreationHelper.handleRootAsCrossJoin( secondaryRoot, sqmRoot, this );
 			}
 		}
@@ -2066,14 +1981,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final int size = parserSpace.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
 			final ParseTree parseTree = parserSpace.getChild( i );
-			if ( parseTree instanceof HqlParser.CrossJoinContext ) {
-				consumeCrossJoin( (HqlParser.CrossJoinContext) parseTree, sqmRoot );
+			if ( parseTree instanceof HqlParser.CrossJoinContext crossJoinContext ) {
+				consumeCrossJoin( crossJoinContext, sqmRoot );
 			}
-			else if ( parseTree instanceof HqlParser.JoinContext ) {
-				consumeJoin( (HqlParser.JoinContext) parseTree, sqmRoot );
+			else if ( parseTree instanceof HqlParser.JoinContext joinContext ) {
+				consumeJoin( joinContext, sqmRoot );
 			}
-			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext ) {
-				consumeJpaCollectionJoin( (HqlParser.JpaCollectionJoinContext) parseTree, sqmRoot );
+			else if ( parseTree instanceof HqlParser.JpaCollectionJoinContext jpaCollectionJoinContext ) {
+				consumeJpaCollectionJoin( jpaCollectionJoinContext, sqmRoot );
 			}
 		}
 
@@ -2082,7 +1997,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmRoot<?> visitRootEntity(HqlParser.RootEntityContext ctx) {
-		final HqlParser.EntityNameContext entityNameContext = ctx.entityName();
+		final var entityNameContext = ctx.entityName();
 		final String name = getEntityName( entityNameContext );
 
 		final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().getHqlEntityReference( name );
@@ -2114,7 +2029,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmRoot<?> sqmRoot =
-				new SqmRoot<>( entityDescriptor, alias, true, creationContext.getNodeBuilder() );
+				new SqmRoot<>( entityDescriptor, alias, true, nodeBuilder() );
 		pathRegistry.register( sqmRoot );
 		return sqmRoot;
 	}
@@ -2131,7 +2046,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final String parentAlias = entityNameParseTreeChildren.get( 0 ).getText();
 			final AbstractSqmFrom<?, ?> correlation =
 					processingState.getPathRegistry().findFromByAlias( parentAlias, true );
-			if ( correlation instanceof SqmCorrelation<?, ?> ) {
+			if ( correlation instanceof SqmCorrelation<?, ?> sqmCorrelation ) {
 				final DotIdentifierConsumer dotIdentifierConsumer = new QualifiedJoinPathConsumer(
 						correlation,
 						SqmJoinType.INNER,
@@ -2152,7 +2067,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						false,
 						true
 				);
-				return ((SqmCorrelation<?, ?>) correlation).getCorrelatedRoot();
+				return sqmCorrelation.getCorrelatedRoot();
 			}
 			throw new SemanticException( "Could not resolve entity or correlation path '" + name + "'", query );
 		}
@@ -2174,11 +2089,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private static SqmCteStatement<?> matchCteStatement(SqmCreationProcessingState state, String n) {
-		if ( state.getProcessingQuery() instanceof SqmCteContainer ) {
-			final SqmCteContainer container = (SqmCteContainer) state.getProcessingQuery();
-			return container.getCteStatement( n );
-		}
-		return null;
+		return state.getProcessingQuery() instanceof SqmCteContainer container
+				? container.getCteStatement( n )
+				: null;
 	}
 
 	@Override
@@ -2199,16 +2112,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmRoot<?> visitRootFunction(HqlParser.RootFunctionContext ctx) {
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation(
+					"The JPA specification does not support functions in the from clause. " +
+							"Please disable the JPA query compliance if you want to use this feature.",
+					StrictJpaComplianceViolation.Type.FROM_FUNCTION
+			);
+		}
+
+		final SqmSetReturningFunction<?> function = (SqmSetReturningFunction<?>) ctx.setReturningFunction().accept( this );
+		final String alias = extractAlias( ctx.variable() );
+		final SqmFunctionRoot<?> sqmRoot = new SqmFunctionRoot<>( function, alias );
+		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
+		return sqmRoot;
+	}
+
+	@Override
 	public String visitVariable(HqlParser.VariableContext ctx) {
 		return extractAlias( ctx );
 	}
 
 	protected String extractAlias(HqlParser.VariableContext ctx) {
 		return SqmTreeCreationHelper.extractAlias( ctx, this );
-	}
-
-	protected String applyJpaCompliance(String text) {
-		return SqmTreeCreationHelper.applyJpaCompliance( text, this );
 	}
 
 	@Override
@@ -2221,15 +2147,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
 
-		final EntityDomainType<T> entityDescriptor = getCreationContext().getJpaMetamodel()
-				.resolveHqlEntityReference( name );
+		final EntityDomainType<T> entityDescriptor = getJpaMetamodel().resolveHqlEntityReference( name );
 
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'",
 					query );
 		}
 		final SqmCrossJoin<T> join = new SqmCrossJoin<>(
-				entityDescriptor,
+				(SqmEntityDomainType<T>) entityDescriptor,
 				extractAlias( parserJoin.variable() ),
 				sqmRoot
 		);
@@ -2240,6 +2165,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		sqmRoot.addSqmJoin( join );
 	}
 
+	private JpaMetamodel getJpaMetamodel() {
+		return getCreationContext().getJpaMetamodel();
+	}
+
 	@Override
 	public final SqmJoin<?, ?> visitJoin(HqlParser.JoinContext parserJoin) {
 		throw new UnsupportedOperationException( "Unexpected call to #visitJoin, see #consumeJoin" );
@@ -2247,7 +2176,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	protected <X> void consumeJoin(HqlParser.JoinContext parserJoin, SqmRoot<X> sqmRoot) {
 		final SqmJoinType joinType = getSqmJoinType( parserJoin.joinType() );
-		final HqlParser.JoinTargetContext qualifiedJoinTargetContext = parserJoin.joinTarget();
+		final var qualifiedJoinTargetContext = parserJoin.joinTarget();
 		final String alias = extractAlias( getVariable( qualifiedJoinTargetContext ) );
 		final boolean fetch = parserJoin.FETCH() != null;
 
@@ -2258,12 +2187,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		dotIdentifierConsumerStack.push( new QualifiedJoinPathConsumer( sqmRoot, joinType, fetch, alias, this ) );
 		try {
 			final SqmJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
-			final HqlParser.JoinRestrictionContext joinRestrictionContext = parserJoin.joinRestriction();
+			final var joinRestrictionContext = parserJoin.joinRestriction();
 			if ( join instanceof SqmEntityJoin<?,?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
 			}
-			else if ( join instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) join;
+			else if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					if ( join.getExplicitAlias() != null && attributeJoin.isFetched() ) {
 						throw new StrictJpaComplianceViolation(
@@ -2293,11 +2221,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private static HqlParser.VariableContext getVariable(HqlParser.JoinTargetContext joinTargetContext) {
-		if ( joinTargetContext instanceof HqlParser.JoinPathContext ) {
-			return ((HqlParser.JoinPathContext) joinTargetContext).variable();
+		if ( joinTargetContext instanceof HqlParser.JoinPathContext joinPathContext ) {
+			return joinPathContext.variable();
 		}
-		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext ) {
-			return ((HqlParser.JoinSubqueryContext) joinTargetContext).variable();
+		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext joinSubqueryContext ) {
+			return joinSubqueryContext.variable();
+		}
+		else if ( joinTargetContext instanceof HqlParser.JoinFunctionContext joinFunctionContext ) {
+			return joinFunctionContext.variable();
 		}
 		else {
 			throw new ParsingException( "unexpected join type" );
@@ -2311,11 +2242,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.JoinTargetContext joinTargetContext,
 			String alias,
 			boolean fetch) {
-		if ( joinTargetContext instanceof HqlParser.JoinPathContext ) {
-			final HqlParser.JoinPathContext joinPathContext = (HqlParser.JoinPathContext) joinTargetContext;
+		if ( joinTargetContext instanceof HqlParser.JoinPathContext joinPathContext ) {
 			return (SqmJoin<X, ?>) joinPathContext.path().accept( this );
 		}
-		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext ) {
+		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext joinSubqueryContext ) {
 			if ( fetch ) {
 				throw new SemanticException( "The 'from' clause of a subquery has a 'fetch' join", query );
 			}
@@ -2327,7 +2257,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 
-			final HqlParser.JoinSubqueryContext joinSubqueryContext = (HqlParser.JoinSubqueryContext) joinTargetContext;
 			final boolean lateral = joinSubqueryContext.LATERAL() != null;
 			final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
 			final SqmSubQuery<X> subQuery = (SqmSubQuery<X>) joinSubqueryContext.subquery().accept( this );
@@ -2335,6 +2264,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final SqmJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
 			processingStateStack.getCurrent().getPathRegistry().register( join );
 			return join;
+		}
+		else if ( joinTargetContext instanceof HqlParser.JoinFunctionContext joinFunctionContext ) {
+			if ( fetch ) {
+				throw new SemanticException( "The 'from' clause of a set returning function has a 'fetch' join", query );
+			}
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation(
+						"The JPA specification does not support functions in the from clause. " +
+								"Please disable the JPA query compliance if you want to use this feature.",
+						StrictJpaComplianceViolation.Type.FROM_FUNCTION
+				);
+			}
+
+			final boolean lateral = joinFunctionContext.LATERAL() != null;
+			final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
+			final SqmSetReturningFunction<?> function = (SqmSetReturningFunction<?>) joinFunctionContext.setReturningFunction().accept( this );
+			dotIdentifierConsumerStack.push( identifierConsumer );
+			final SqmFunctionJoin<?> join = new SqmFunctionJoin<>(
+					function,
+					alias,
+					joinType,
+					lateral,
+					(SqmRoot<Object>) sqmRoot
+			);
+			processingStateStack.getCurrent().getPathRegistry().register( join );
+			sqmRoot.addSqmJoin( (SqmJoin<X, ?>) join );
+			return (SqmJoin<X, ?>) join;
 		}
 		else {
 			throw new ParsingException( "unexpected join type" );
@@ -2347,18 +2303,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			final TerminalNode firstChild = (TerminalNode) joinTypeContext.getChild(0);
-			switch ( firstChild.getSymbol().getType() ) {
-				case HqlParser.FULL:
-					return SqmJoinType.FULL;
-				case HqlParser.RIGHT:
-					return SqmJoinType.RIGHT;
+			return switch ( firstChild.getSymbol().getType() ) {
+				case HqlParser.FULL -> SqmJoinType.FULL;
+				case HqlParser.RIGHT -> SqmJoinType.RIGHT;
 				// For some reason, we also support `outer join` syntax..
-				case HqlParser.OUTER:
-				case HqlParser.LEFT:
-					return SqmJoinType.LEFT;
-				default:
-					return SqmJoinType.INNER;
-			}
+				case HqlParser.OUTER, HqlParser.LEFT -> SqmJoinType.LEFT;
+				default -> SqmJoinType.INNER;
+			};
 		}
 	}
 
@@ -2403,7 +2354,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmGroupedPredicate visitGroupedPredicate(HqlParser.GroupedPredicateContext ctx) {
 		return new SqmGroupedPredicate(
 				(SqmPredicate) ctx.predicate().accept( this ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -2426,37 +2377,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmPredicate junction(Predicate.BooleanOperator operator, SqmPredicate lhs, SqmPredicate rhs) {
-		if ( lhs instanceof SqmJunctionPredicate ) {
-			final SqmJunctionPredicate junction = (SqmJunctionPredicate) lhs;
+		if ( lhs instanceof SqmJunctionPredicate junction ) {
 			if ( junction.getOperator() == operator ) {
 				junction.getPredicates().add( rhs );
 				return junction;
 			}
 		}
-		if ( rhs instanceof SqmJunctionPredicate ) {
-			final SqmJunctionPredicate junction = (SqmJunctionPredicate) rhs;
+		if ( rhs instanceof SqmJunctionPredicate junction ) {
 			if ( junction.getOperator() == operator ) {
 				junction.getPredicates().add( 0, lhs );
 				return junction;
 			}
 		}
-		return new SqmJunctionPredicate(
-				operator,
-				lhs,
-				rhs,
-				creationContext.getNodeBuilder()
-		);
+		return new SqmJunctionPredicate( operator, lhs, rhs, nodeBuilder() );
 	}
 
 	@Override
 	public SqmPredicate visitNegatedPredicate(HqlParser.NegatedPredicateContext ctx) {
-		SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
-		if ( predicate instanceof SqmNegatablePredicate ) {
-			( (SqmNegatablePredicate) predicate ).negate();
+		final SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
+		if ( predicate instanceof SqmNegatablePredicate negatablePredicate ) {
+			negatablePredicate.negate();
 			return predicate;
 		}
 		else {
-			return new SqmNegatedPredicate( predicate, creationContext.getNodeBuilder() );
+			return new SqmNegatedPredicate( predicate, nodeBuilder() );
 		}
 	}
 
@@ -2467,7 +2411,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				(SqmExpression<?>) ctx.expression( 1 ).accept( this ),
 				(SqmExpression<?>) ctx.expression( 2 ).accept( this ),
 				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -2477,18 +2421,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmNullnessPredicate(
 				(SqmExpression<?>) ctx.expression().accept( this ),
 				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	@Override
 	public SqmEmptinessPredicate visitIsEmptyPredicate(HqlParser.IsEmptyPredicateContext ctx) {
 		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
-		if ( expression instanceof SqmPluralValuedSimplePath ) {
+		if ( expression instanceof SqmPluralValuedSimplePath<?> pluralValuedSimplePath ) {
 			return new SqmEmptinessPredicate(
-					(SqmPluralValuedSimplePath<?>) expression,
+					pluralValuedSimplePath,
 					ctx.NOT() != null,
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 		else {
@@ -2502,7 +2446,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				(SqmExpression<?>) ctx.expression().accept( this ),
 				true,
 				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -2512,43 +2456,36 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				(SqmExpression<?>) ctx.expression().accept( this ),
 				false,
 				ctx.NOT() != null,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	@Override
 	public Object visitComparisonOperator(HqlParser.ComparisonOperatorContext ctx) {
 		final TerminalNode firstToken = (TerminalNode) ctx.getChild( 0 );
-		switch ( firstToken.getSymbol().getType() ) {
-			case HqlLexer.EQUAL:
-				return ComparisonOperator.EQUAL;
-			case HqlLexer.NOT_EQUAL:
-				return ComparisonOperator.NOT_EQUAL;
-			case HqlLexer.LESS:
-				return ComparisonOperator.LESS_THAN;
-			case HqlLexer.LESS_EQUAL:
-				return ComparisonOperator.LESS_THAN_OR_EQUAL;
-			case HqlLexer.GREATER:
-				return ComparisonOperator.GREATER_THAN;
-			case HqlLexer.GREATER_EQUAL:
-				return ComparisonOperator.GREATER_THAN_OR_EQUAL;
-			default:
-				throw new ParsingException("Unrecognized comparison operator");
-		}
+		return switch ( firstToken.getSymbol().getType() ) {
+			case HqlLexer.EQUAL -> ComparisonOperator.EQUAL;
+			case HqlLexer.NOT_EQUAL -> ComparisonOperator.NOT_EQUAL;
+			case HqlLexer.LESS -> ComparisonOperator.LESS_THAN;
+			case HqlLexer.LESS_EQUAL -> ComparisonOperator.LESS_THAN_OR_EQUAL;
+			case HqlLexer.GREATER -> ComparisonOperator.GREATER_THAN;
+			case HqlLexer.GREATER_EQUAL -> ComparisonOperator.GREATER_THAN_OR_EQUAL;
+			default -> throw new ParsingException( "Unrecognized comparison operator" );
+		};
 	}
 
 	@Override
 	public SqmPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
 		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
-		final HqlParser.ExpressionContext leftExpressionContext = ctx.expression( 0 );
-		final HqlParser.ExpressionContext rightExpressionContext = ctx.expression( 1 );
+		final var leftExpressionContext = ctx.expression( 0 );
+		final var rightExpressionContext = ctx.expression( 1 );
 		return createComparisonPredicate( comparisonOperator, leftExpressionContext, rightExpressionContext );
 	}
 
 	@Override
 	public SqmPredicate visitIsDistinctFromPredicate(HqlParser.IsDistinctFromPredicateContext ctx) {
-		final HqlParser.ExpressionContext leftExpressionContext = ctx.expression( 0 );
-		final HqlParser.ExpressionContext rightExpressionContext = ctx.expression( 1 );
+		final var leftExpressionContext = ctx.expression( 0 );
+		final var rightExpressionContext = ctx.expression( 1 );
 		final ComparisonOperator comparisonOperator = ctx.NOT() == null
 				? ComparisonOperator.DISTINCT_FROM
 				: ComparisonOperator.NOT_DISTINCT_FROM;
@@ -2583,12 +2520,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			final SqmExpression<?> l = (SqmExpression<?>) leftExpressionContext.accept( this );
 			final SqmExpression<?> r = (SqmExpression<?>) rightExpressionContext.accept( this );
-			if ( l instanceof AnyDiscriminatorSqmPath && r instanceof SqmLiteralEntityType ) {
+			if ( l instanceof AnyDiscriminatorSqmPath<?> anyDiscriminatorPath && r instanceof SqmLiteralEntityType ) {
 				left = l;
-				right = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) left, rightExpressionContext );
+				right = createDiscriminatorValue( anyDiscriminatorPath, rightExpressionContext );
 			}
-			else if ( r instanceof AnyDiscriminatorSqmPath && l instanceof SqmLiteralEntityType ) {
-				left = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) r, leftExpressionContext );
+			else if ( r instanceof AnyDiscriminatorSqmPath<?> anyDiscriminatorPath && l instanceof SqmLiteralEntityType ) {
+				left = createDiscriminatorValue( anyDiscriminatorPath, leftExpressionContext );
 				right = r;
 			}
 			else {
@@ -2600,18 +2537,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				left,
 				comparisonOperator,
 				right,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	private <T> SqmExpression<T> createDiscriminatorValue(
 			AnyDiscriminatorSqmPath<T> anyDiscriminatorTypeSqmPath,
 			HqlParser.ExpressionContext valueExpressionContext) {
+		final var expressible = anyDiscriminatorTypeSqmPath.getExpressible();
 		return new SqmAnyDiscriminatorValue<>(
-				anyDiscriminatorTypeSqmPath.getNodeType().getPathName(),
-				creationContext.getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
-				anyDiscriminatorTypeSqmPath.getExpressible().getSqmPathType(),
-				creationContext.getNodeBuilder()
+				expressible.getPathName(),
+				getJpaMetamodel().resolveHqlEntityReference( valueExpressionContext.getText() ),
+				expressible.getPathType(),
+				nodeBuilder()
 		);
 	}
 
@@ -2664,16 +2602,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( ctx instanceof HqlParser.GeneralPathFragmentContext && ctx.getChildCount() == 1 ) {
 				ctx = ctx.getChild( 0 );
 
-				if ( ctx instanceof HqlParser.SimplePathContext ) {
-					HqlParser.SimplePathContext simplePathContext = (HqlParser.SimplePathContext) ctx;
-					int size = simplePathContext.simplePathElement().size();
-					if ( size==0 ) {
-						return simplePathContext.getText();
-					}
-					else {
-						return simplePathContext.simplePathElement(size -1)
-								.identifier().getText();
-					}
+				if ( ctx instanceof HqlParser.SimplePathContext simplePathContext ) {
+					final int size = simplePathContext.simplePathElement().size();
+					return size == 0
+							? simplePathContext.getText()
+							: simplePathContext.simplePathElement( size - 1 ).identifier().getText();
 				}
 			}
 		}
@@ -2696,9 +2629,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
 				asList( lhs, rhs ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
-		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 	}
 
 	@Override
@@ -2706,7 +2639,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		checkJsonFunctionsEnabled( ctx );
 		final SqmExpression<?> jsonDocument = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
 		final SqmExpression<?> jsonPath = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
-		final HqlParser.JsonValueReturningClauseContext returningClause = ctx.jsonValueReturningClause();
+		final var returningClause = ctx.jsonValueReturningClause();
 		final SqmCastTarget<?> castTarget = returningClause == null
 				? null
 				: (SqmCastTarget<?>) returningClause.castTarget().accept( this );
@@ -2716,9 +2649,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? asList( jsonDocument, jsonPath )
 						: asList( jsonDocument, jsonPath, castTarget ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
-		for ( HqlParser.JsonValueOnErrorOrEmptyClauseContext subCtx : ctx.jsonValueOnErrorOrEmptyClause() ) {
+		visitJsonValueOnErrorOrEmptyClause( jsonValue, ctx.jsonValueOnErrorOrEmptyClause() );
+		final var passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonValue.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		return jsonValue;
+	}
+
+	private void visitJsonValueOnErrorOrEmptyClause(JpaJsonValueNode<?> jsonValue, List<HqlParser.JsonValueOnErrorOrEmptyClauseContext> errorOrEmptyClauseContexts) {
+		for ( HqlParser.JsonValueOnErrorOrEmptyClauseContext subCtx : errorOrEmptyClauseContexts ) {
 			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
 			final TerminalNode lastToken = (TerminalNode) subCtx.getChild( subCtx.getChildCount() - 1 );
 			if ( lastToken.getSymbol().getType() == HqlParser.ERROR ) {
@@ -2738,18 +2687,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 		}
-		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
-		if ( passingClause != null ) {
-			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
-			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
-			for ( int i = 0; i < expressionContexts.size(); i++ ) {
-				jsonValue.passing(
-						visitIdentifier( identifierContexts.get( i ) ),
-						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
-				);
-			}
-		}
-		return jsonValue;
 	}
 
 	@Override
@@ -2760,9 +2697,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmJsonQueryExpression jsonQuery = (SqmJsonQueryExpression) getFunctionDescriptor( "json_query" ).<String>generateSqmExpression(
 				asList( jsonDocument, jsonPath ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
-		final HqlParser.JsonQueryWrapperClauseContext wrapperClause = ctx.jsonQueryWrapperClause();
+		visitJsonQueryWrapperClause( jsonQuery, ctx.jsonQueryWrapperClause() );
+		visitJsonQueryOnErrorOrEmptyClause( jsonQuery, ctx.jsonQueryOnErrorOrEmptyClause() );
+		final var passingClause = ctx.jsonPassingClause();
+		if ( passingClause != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonQuery.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		return jsonQuery;
+	}
+
+	private static void visitJsonQueryWrapperClause(JpaJsonQueryNode jsonQuery, HqlParser.JsonQueryWrapperClauseContext wrapperClause) {
 		if ( wrapperClause != null ) {
 			final TerminalNode firstToken = (TerminalNode) wrapperClause.getChild( 0 );
 			if ( firstToken.getSymbol().getType() == HqlParser.WITH ) {
@@ -2778,7 +2731,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				jsonQuery.withoutWrapper();
 			}
 		}
-		for ( HqlParser.JsonQueryOnErrorOrEmptyClauseContext subCtx : ctx.jsonQueryOnErrorOrEmptyClause() ) {
+	}
+
+	private static void visitJsonQueryOnErrorOrEmptyClause(JpaJsonQueryNode jsonQuery, List<HqlParser.JsonQueryOnErrorOrEmptyClauseContext> jsonQueryOnErrorOrEmptyClauseContexts) {
+		for ( HqlParser.JsonQueryOnErrorOrEmptyClauseContext subCtx : jsonQueryOnErrorOrEmptyClauseContexts ) {
 			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
 			final TerminalNode lastToken = (TerminalNode) subCtx.getChild( subCtx.getChildCount() - 1 );
 			if ( lastToken.getSymbol().getType() == HqlParser.ERROR ) {
@@ -2812,18 +2768,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 		}
-		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
-		if ( passingClause != null ) {
-			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
-			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
-			for ( int i = 0; i < expressionContexts.size(); i++ ) {
-				jsonQuery.passing(
-						visitIdentifier( identifierContexts.get( i ) ),
-						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
-				);
-			}
-		}
-		return jsonQuery;
 	}
 
 	@Override
@@ -2835,9 +2779,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmJsonExistsExpression jsonExists = (SqmJsonExistsExpression) getFunctionDescriptor( "json_exists" ).<Boolean>generateSqmExpression(
 				asList( jsonDocument, jsonPath ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
-		final HqlParser.JsonExistsOnErrorClauseContext subCtx = ctx.jsonExistsOnErrorClause();
+		final var subCtx = ctx.jsonExistsOnErrorClause();
 		if ( subCtx != null ) {
 			final TerminalNode firstToken = (TerminalNode) subCtx.getChild( 0 );
 			switch ( firstToken.getSymbol().getType() ) {
@@ -2846,7 +2790,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				case HqlParser.FALSE -> jsonExists.falseOnError();
 			}
 		}
-		final HqlParser.JsonPassingClauseContext passingClause = ctx.jsonPassingClause();
+		final var passingClause = ctx.jsonPassingClause();
 		if ( passingClause != null ) {
 			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClause.expressionOrPredicate();
 			final List<HqlParser.IdentifierContext> identifierContexts = passingClause.identifier();
@@ -2863,7 +2807,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitJsonArrayFunction(HqlParser.JsonArrayFunctionContext ctx) {
 		checkJsonFunctionsEnabled( ctx );
-		final HqlParser.JsonNullClauseContext subCtx = ctx.jsonNullClause();
+		final var subCtx = ctx.jsonNullClause();
 		final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = ctx.expressionOrPredicate();
 		int count = argumentContexts.size();
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>( count + (subCtx == null ? 0 : 1 ) );
@@ -2881,20 +2825,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor( "json_array" ).generateSqmExpression(
 				arguments,
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
 	@Override
 	public SqmExpression<?> visitJsonObjectFunction(HqlParser.JsonObjectFunctionContext ctx) {
 		checkJsonFunctionsEnabled( ctx );
-		final HqlParser.JsonObjectFunctionEntriesContext entries = ctx.jsonObjectFunctionEntries();
+		final var entries = ctx.jsonObjectFunctionEntries();
 		final List<SqmTypedNode<?>> arguments;
 		if ( entries == null ) {
 			arguments = Collections.emptyList();
 		}
 		else {
-			final HqlParser.JsonNullClauseContext subCtx = ctx.jsonNullClause();
+			final var subCtx = ctx.jsonNullClause();
 			final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = entries.expressionOrPredicate();
 			int count = argumentContexts.size();
 			arguments = new ArrayList<>( count + ( subCtx == null ? 0 : 1 ) );
@@ -2913,14 +2857,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor( "json_object" ).generateSqmExpression(
 				arguments,
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
 	@Override
 	public Object visitJsonArrayAggFunction(HqlParser.JsonArrayAggFunctionContext ctx) {
 		checkJsonFunctionsEnabled( ctx );
-		final HqlParser.JsonNullClauseContext jsonNullClauseContext = ctx.jsonNullClause();
+		final var jsonNullClauseContext = ctx.jsonNullClause();
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( jsonNullClauseContext == null ? 1 : 2 );
 		arguments.add( (SqmTypedNode<?>) ctx.expressionOrPredicate().accept( this ) );
 		if ( jsonNullClauseContext != null ) {
@@ -2938,15 +2882,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? null
 						: visitOrderByClause( ctx.orderByClause(), false ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
 	@Override
 	public Object visitJsonObjectAggFunction(HqlParser.JsonObjectAggFunctionContext ctx) {
 		checkJsonFunctionsEnabled( ctx );
-		final HqlParser.JsonNullClauseContext jsonNullClauseContext = ctx.jsonNullClause();
-		final HqlParser.JsonUniqueKeysClauseContext jsonUniqueKeysClauseContext = ctx.jsonUniqueKeysClause();
+		final var jsonNullClauseContext = ctx.jsonNullClause();
+		final var jsonUniqueKeysClauseContext = ctx.jsonUniqueKeysClause();
 		final ArrayList<SqmTypedNode<?>> arguments = new ArrayList<>( 4 );
 		for ( HqlParser.ExpressionOrPredicateContext subCtx : ctx.expressionOrPredicate() ) {
 			arguments.add( (SqmTypedNode<?>) subCtx.accept( this ) );
@@ -2971,8 +2915,96 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				arguments,
 				getFilterExpression( ctx ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
+	}
+
+	@Override
+	public Object visitJsonTableFunction(HqlParser.JsonTableFunctionContext ctx) {
+		checkJsonFunctionsEnabled( ctx );
+		final List<HqlParser.ExpressionContext> argumentsContexts = ctx.expression();
+		final SqmExpression<?> jsonDocument = (SqmExpression<?>) argumentsContexts.get( 0 ).accept( this );
+		final SqmJsonTableFunction<?> jsonTable;
+		if ( argumentsContexts.size() == 1 ) {
+			jsonTable = nodeBuilder().jsonTable( jsonDocument );
+		}
+		else {
+			//noinspection unchecked
+			final SqmExpression<String> jsonPath = (SqmExpression<String>) argumentsContexts.get( 1 ).accept( this );
+			jsonTable = nodeBuilder().jsonTable( jsonDocument, jsonPath );
+		}
+		final var passingClauseContext = ctx.jsonPassingClause();
+		if ( passingClauseContext != null ) {
+			final List<HqlParser.ExpressionOrPredicateContext> expressionContexts = passingClauseContext.expressionOrPredicate();
+			final List<HqlParser.IdentifierContext> identifierContexts = passingClauseContext.identifier();
+			for ( int i = 0; i < expressionContexts.size(); i++ ) {
+				jsonTable.passing(
+						visitIdentifier( identifierContexts.get( i ) ),
+						(SqmExpression<?>) expressionContexts.get( i ).accept( this )
+				);
+			}
+		}
+		visitColumns( jsonTable, ctx.jsonTableColumnsClause().jsonTableColumns().jsonTableColumn() );
+
+		final var errorClauseContext = ctx.jsonTableErrorClause();
+		if ( errorClauseContext != null ) {
+			if ( ( (TerminalNode) errorClauseContext.getChild( 0 ) ).getSymbol().getType() == HqlParser.ERROR ) {
+				jsonTable.errorOnError();
+			}
+			else {
+				jsonTable.nullOnError();
+			}
+		}
+		return jsonTable;
+	}
+
+	private void visitColumns(JpaJsonTableColumnsNode columnsNode, List<HqlParser.JsonTableColumnContext> columnContexts) {
+		for ( HqlParser.JsonTableColumnContext columnContext : columnContexts ) {
+			if ( columnContext instanceof HqlParser.JsonTableQueryColumnContext queryContext ) {
+				final String attributeName = visitIdentifier( queryContext.identifier() );
+				final TerminalNode jsonPath = queryContext.STRING_LITERAL();
+				final JpaJsonQueryNode queryNode = jsonPath == null
+						? columnsNode.queryColumn( attributeName )
+						: columnsNode.queryColumn( attributeName, unquoteStringLiteral( jsonPath.getText() ) );
+				visitJsonQueryOnErrorOrEmptyClause( queryNode, queryContext.jsonQueryOnErrorOrEmptyClause() );
+			}
+			else if ( columnContext instanceof HqlParser.JsonTableValueColumnContext valueContext ) {
+				final String attributeName = visitIdentifier( valueContext.identifier() );
+				final SqmCastTarget<?> sqmCastTarget = visitCastTarget( valueContext.castTarget() );
+				final TerminalNode jsonPath = valueContext.STRING_LITERAL();
+				final JpaJsonValueNode<?> valueNode =
+						jsonPath == null
+								? columnsNode.valueColumn( attributeName, sqmCastTarget )
+								: columnsNode.valueColumn( attributeName, sqmCastTarget,
+										unquoteStringLiteral( jsonPath.getText() ) );
+				visitJsonValueOnErrorOrEmptyClause( valueNode, valueContext.jsonValueOnErrorOrEmptyClause() );
+			}
+			else if ( columnContext instanceof HqlParser.JsonTableOrdinalityColumnContext ordinalityContext ) {
+				columnsNode.ordinalityColumn( visitIdentifier( ordinalityContext.identifier() ) );
+			}
+			else if ( columnContext instanceof HqlParser.JsonTableExistsColumnContext existsContext ) {
+				final String attributeName = visitIdentifier( existsContext.identifier() );
+				final TerminalNode jsonPath = existsContext.STRING_LITERAL();
+				final JpaJsonExistsNode existsNode = jsonPath == null
+						? columnsNode.existsColumn( attributeName )
+						: columnsNode.existsColumn( attributeName, unquoteStringLiteral( jsonPath.getText() ) );
+				final var errorClauseContext = existsContext.jsonExistsOnErrorClause();
+				if ( errorClauseContext != null ) {
+					switch ( ( (TerminalNode) errorClauseContext.getChild( 0 ) ).getSymbol().getType() ) {
+						case HqlParser.ERROR -> existsNode.errorOnError();
+						case HqlParser.TRUE -> existsNode.trueOnError();
+						case HqlParser.FALSE -> existsNode.falseOnError();
+					}
+				}
+			}
+			else {
+				final var nestedColumnContext = (HqlParser.JsonTableNestedColumnContext) columnContext;
+				visitColumns(
+						columnsNode.nested( unquoteStringLiteral( nestedColumnContext.STRING_LITERAL().getText() ) ),
+						nestedColumnContext.jsonTableColumnsClause().jsonTableColumns().jsonTableColumn()
+				);
+			}
+		}
 	}
 
 	private void checkJsonFunctionsEnabled(ParserRuleContext ctx) {
@@ -2989,8 +3021,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitXmlelementFunction(HqlParser.XmlelementFunctionContext ctx) {
 		checkXmlFunctionsEnabled( ctx );
 		final String elementName = visitIdentifier( ctx.identifier() );
-		final SqmXmlElementExpression xmlelement = creationContext.getNodeBuilder().xmlelement( elementName );
-		final HqlParser.XmlattributesFunctionContext attributeCtx = ctx.xmlattributesFunction();
+		final SqmXmlElementExpression xmlelement = nodeBuilder().xmlelement( elementName );
+		final var attributeCtx = ctx.xmlattributesFunction();
 		if ( attributeCtx != null ) {
 			final List<HqlParser.ExpressionOrPredicateContext> expressions = attributeCtx.expressionOrPredicate();
 			final List<HqlParser.IdentifierContext> attributeNames = attributeCtx.identifier();
@@ -3018,7 +3050,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					i += 2;
 				}
 				else {
-					if ( !( expression instanceof SqmPath<?> path ) || !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
+					if ( !( expression instanceof SqmPath<?> path )
+							|| !( path.getModel() instanceof PersistentAttribute<?, ?> attribute ) ) {
 						throw new SemanticException(
 								"Can't use expression '" + exprCtx.getText() + " without explicit name in xmlforest function" +
 										", because XML element names can only be derived from path expressions.",
@@ -3029,18 +3062,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 		}
-		return creationContext.getNodeBuilder().xmlforest( elementExpressions );
+		return nodeBuilder().xmlforest( elementExpressions );
 	}
 
 	@Override
 	public SqmExpression<?> visitXmlpiFunction(HqlParser.XmlpiFunctionContext ctx) {
 		checkXmlFunctionsEnabled( ctx );
 		final String name = visitIdentifier( ctx.identifier() );
-		final HqlParser.ExpressionContext exprCtx = ctx.expression();
+		final var exprCtx = ctx.expression();
 		//noinspection unchecked
 		return exprCtx == null
-				? creationContext.getNodeBuilder().xmlpi( name )
-				: creationContext.getNodeBuilder().xmlpi( name, (Expression<String>) exprCtx.accept( this ) );
+				? nodeBuilder().xmlpi( name )
+				: nodeBuilder().xmlpi( name, (Expression<String>) exprCtx.accept( this ) );
 	}
 
 	@Override
@@ -3048,7 +3081,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		checkXmlFunctionsEnabled( ctx );
 		final SqmExpression<String> query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
 		final SqmExpression<?> xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
-		return creationContext.getNodeBuilder().xmlquery( query, xmlDocument );
+		return nodeBuilder().xmlquery( query, xmlDocument );
 	}
 
 	@Override
@@ -3056,7 +3089,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		checkXmlFunctionsEnabled( ctx );
 		final SqmExpression<String> query = (SqmExpression<String>) ctx.expression( 0 ).accept( this );
 		final SqmExpression<?> xmlDocument = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
-		return creationContext.getNodeBuilder().xmlexists( query, xmlDocument );
+		return nodeBuilder().xmlexists( query, xmlDocument );
 	}
 
 	@Override
@@ -3074,9 +3107,55 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								? null
 								: visitOrderByClause( ctx.orderByClause(), false ),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				)
 		);
+	}
+
+	@Override
+	public Object visitXmltableFunction(HqlParser.XmltableFunctionContext ctx) {
+		checkXmlFunctionsEnabled( ctx );
+		final List<HqlParser.ExpressionContext> argumentsContexts = ctx.expression();
+		//noinspection unchecked
+		final SqmExpression<String> xpath = (SqmExpression<String>) argumentsContexts.get( 0 ).accept( this );
+		final SqmExpression<?> document = (SqmExpression<?>) argumentsContexts.get( 1 ).accept( this );
+		final SqmXmlTableFunction<?> xmlTable = nodeBuilder().xmlTable( xpath, document);
+		visitColumns( xmlTable, ctx.xmltableColumnsClause().xmltableColumn() );
+		return xmlTable;
+	}
+
+	private void visitColumns(SqmXmlTableFunction<?> xmlTable, List<HqlParser.XmltableColumnContext> columnContexts) {
+		for ( HqlParser.XmltableColumnContext columnContext : columnContexts ) {
+			if ( columnContext instanceof HqlParser.XmlTableQueryColumnContext queryColumnContext ) {
+				final String columnName = visitIdentifier( queryColumnContext.identifier() );
+				final TerminalNode pathNode = queryColumnContext.STRING_LITERAL();
+				final String xpath = pathNode == null ? null : unquoteStringLiteral( pathNode.getText() );
+				final JpaXmlTableColumnNode<String> node = xmlTable.queryColumn( columnName, xpath );
+				final var defaultClause = queryColumnContext.xmltableDefaultClause();
+				if ( defaultClause != null ) {
+					//noinspection unchecked
+					node.defaultExpression( (Expression<String>) defaultClause.expression().accept( this ) );
+				}
+			}
+			else if ( columnContext instanceof HqlParser.XmlTableValueColumnContext valueColumnContext ) {
+				final String columnName = visitIdentifier( valueColumnContext.identifier() );
+				//noinspection unchecked
+				final SqmCastTarget<Object> castTarget = (SqmCastTarget<Object>) visitCastTarget( valueColumnContext.castTarget() );
+				final TerminalNode pathNode = valueColumnContext.STRING_LITERAL();
+				final String xpath = pathNode == null ? null : unquoteStringLiteral( pathNode.getText() );
+				final JpaXmlTableColumnNode<Object> node = xmlTable.valueColumn( columnName, castTarget, xpath );
+				final var defaultClause = valueColumnContext.xmltableDefaultClause();
+				if ( defaultClause != null ) {
+					//noinspection unchecked
+					node.defaultExpression( (Expression<Object>) defaultClause.expression().accept( this ) );
+				}
+			}
+			else {
+				final var ordinalityColumnContext
+						= (HqlParser.XmlTableOrdinalityColumnContext) columnContext;
+				xmlTable.ordinalityColumn( visitIdentifier( ordinalityColumnContext.identifier() ) );
+			}
+		}
 	}
 
 	private void checkXmlFunctionsEnabled(ParserRuleContext ctx) {
@@ -3098,22 +3177,24 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpressible<?> rhsExpressible = rhs.getExpressible();
 		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
 			throw new SemanticException(
-					"First operand for includes predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					"First operand for includes predicate must be a basic plural type expression, but found: "
+							+ lhsExpressible.getSqmType(),
 					query
 			);
 		}
 		if ( rhsExpressible != null && !( rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
 			throw new SemanticException(
-					"Second operand for includes predicate must be a basic plural type expression, but found: " + rhsExpressible.getSqmType(),
+					"Second operand for includes predicate must be a basic plural type expression, but found: "
+							+ rhsExpressible.getSqmType(),
 					query
 			);
 		}
 		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_includes" ).generateSqmExpression(
 				asList( lhs, rhs ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
-		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 	}
 
 	@Override
@@ -3124,16 +3205,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
 		if ( lhsExpressible != null && !( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
 			throw new SemanticException(
-					"First operand for intersects predicate must be a basic plural type expression, but found: " + lhsExpressible.getSqmType(),
+					"First operand for intersects predicate must be a basic plural type expression, but found: "
+							+ lhsExpressible.getSqmType(),
 					query
 			);
 		}
 		final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_intersects" ).generateSqmExpression(
 				asList( lhs, rhs ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
-		return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+		return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 	}
 
 	@Override
@@ -3146,7 +3228,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(SqmExpression<?>) ctx.expression(1).accept( this ),
 					negated,
 					caseSensitive,
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 		else {
@@ -3156,25 +3238,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(SqmExpression<?>) ctx.likeEscape().accept( this ),
 					negated,
 					caseSensitive,
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 	}
 
 	@Override
 	public Object visitLikeEscape(HqlParser.LikeEscapeContext ctx) {
-		final HqlParser.ParameterContext parameter = ctx.parameter();
-		if ( parameter instanceof HqlParser.NamedParameterContext ) {
-			return visitNamedParameter(
-					(HqlParser.NamedParameterContext) parameter,
-					creationContext.getNodeBuilder().getCharacterType()
-			);
+		final var parameter = ctx.parameter();
+		final BasicType<Character> characterType = nodeBuilder().getCharacterType();
+		if ( parameter instanceof HqlParser.NamedParameterContext namedParameterContext ) {
+			return visitNamedParameter( namedParameterContext, characterType );
 		}
-		else if ( parameter instanceof HqlParser.PositionalParameterContext ) {
-			return visitPositionalParameter(
-					(HqlParser.PositionalParameterContext) parameter,
-					creationContext.getNodeBuilder().getCharacterType()
-			);
+		else if ( parameter instanceof HqlParser.PositionalParameterContext positionalParameterContext ) {
+			return visitPositionalParameter( positionalParameterContext, characterType );
 		}
 		else {
 			final TerminalNode terminalNode = (TerminalNode) ctx.getChild( 1 );
@@ -3185,11 +3262,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						query
 				);
 			}
-			return new SqmLiteral<>(
-					escape.charAt( 0 ),
-					creationContext.getNodeBuilder().getCharacterType(),
-					creationContext.getNodeBuilder()
-			);
+			return new SqmLiteral<>( escape.charAt( 0 ), characterType, nodeBuilder() );
 		}
 	}
 
@@ -3197,12 +3270,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitMemberOfPredicate(HqlParser.MemberOfPredicateContext ctx) {
 		final boolean negated = ctx.NOT() != null;
 		final SqmPath<?> sqmPluralPath = consumeDomainPath( ctx.path() );
-		if ( sqmPluralPath instanceof SqmPluralValuedSimplePath ) {
+		if ( sqmPluralPath instanceof SqmPluralValuedSimplePath<?> pluralValuedSimplePath ) {
 			return new SqmMemberOfPredicate(
 					(SqmExpression<?>) ctx.expression().accept( this ),
-					(SqmPluralValuedSimplePath<?>) sqmPluralPath,
+					pluralValuedSimplePath,
 					negated,
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 		else {
@@ -3215,9 +3288,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitInPredicate(HqlParser.InPredicateContext ctx) {
 		final boolean negated = ctx.getChildCount() == 4;
 		final SqmExpression<?> testExpression = (SqmExpression<?>) ctx.expression().accept( this );
-		final HqlParser.InListContext inListContext = ctx.inList();
-		if ( inListContext instanceof HqlParser.ExplicitTupleInListContext ) {
-			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) inListContext;
+		final var inListContext = ctx.inList();
+		if ( inListContext instanceof HqlParser.ExplicitTupleInListContext tupleExpressionListContext ) {
 			final int size = tupleExpressionListContext.getChildCount();
 			final int estimatedSize = size >> 1;
 			final String testExpressionJavaType = testExpression.getJavaTypeName();
@@ -3230,10 +3302,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					final ParseTree parseTree = tupleExpressionListContext.getChild( i );
 					if ( parseTree instanceof HqlParser.ExpressionOrPredicateContext ) {
 						final ParseTree child = parseTree.getChild( 0 );
-						final HqlParser.ExpressionContext expressionContext;
 						final Set<String> possibleEnumTypes;
-						if ( isEnum && child instanceof HqlParser.ExpressionContext
-								&& ( possibleEnumTypes = getPossibleEnumTypes( expressionContext = (HqlParser.ExpressionContext) child ) ) != null ) {
+						if ( isEnum && child instanceof HqlParser.ExpressionContext expressionContext
+								&& ( possibleEnumTypes = getPossibleEnumTypes( expressionContext ) ) != null ) {
 							listExpressions.add(
 									resolveEnumShorthandLiteral(
 											expressionContext,
@@ -3253,44 +3324,39 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						testExpression,
 						listExpressions,
 						negated,
-						creationContext.getNodeBuilder()
+						nodeBuilder()
 				);
 			}
 			finally {
 				parameterDeclarationContextStack.pop();
 			}
 		}
-		else if ( inListContext instanceof HqlParser.ParamInListContext ) {
-			final HqlParser.ParamInListContext tupleExpressionListContext = (HqlParser.ParamInListContext) inListContext;
+		else if ( inListContext instanceof HqlParser.ParamInListContext tupleExpressionListContext ) {
 			parameterDeclarationContextStack.push( () -> true );
 			try {
 				return new SqmInListPredicate(
 						testExpression,
 						singletonList( tupleExpressionListContext.parameter().accept( this ) ),
 						negated,
-						creationContext.getNodeBuilder()
+						nodeBuilder()
 				);
 			}
 			finally {
 				parameterDeclarationContextStack.pop();
 			}
 		}
-		else if ( inListContext instanceof HqlParser.SubqueryInListContext ) {
-			final HqlParser.SubqueryInListContext subQueryOrParamInListContext = (HqlParser.SubqueryInListContext) inListContext;
-			final SqmSubQuery<?> subquery = visitSubquery( subQueryOrParamInListContext.subquery() );
+		else if ( inListContext instanceof HqlParser.SubqueryInListContext subQueryOrParamInListContext ) {
 			return new SqmInSubQueryPredicate(
 					testExpression,
-					subquery,
+					visitSubquery( subQueryOrParamInListContext.subquery() ),
 					negated,
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
-		else if ( inListContext instanceof HqlParser.PersistentCollectionReferenceInListContext ) {
+		else if ( inListContext instanceof HqlParser.PersistentCollectionReferenceInListContext collectionReferenceInListContext ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 			}
-			final HqlParser.PersistentCollectionReferenceInListContext collectionReferenceInListContext =
-					(HqlParser.PersistentCollectionReferenceInListContext) inListContext;
 			return new SqmInSubQueryPredicate<>(
 					testExpression,
 					createCollectionReferenceSubQuery(
@@ -3298,49 +3364,49 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							(TerminalNode) collectionReferenceInListContext.collectionQuantifier().getChild(0).getChild(0)
 					),
 					negated,
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
-		else if ( inListContext instanceof HqlParser.ArrayInListContext ) {
+		else if ( inListContext instanceof HqlParser.ArrayInListContext arrayInListContext ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
 			}
-			final HqlParser.ArrayInListContext arrayInListContext =
-					(HqlParser.ArrayInListContext) inListContext;
 
 			final SqmExpression<?> arrayExpr = (SqmExpression<?>) arrayInListContext.expression().accept( this );
 			final SqmExpressible<?> arrayExpressible = arrayExpr.getExpressible();
-			if ( arrayExpressible != null && !( arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?>) ) {
-				throw new SemanticException(
-						"Right operand for in-array predicate must be a basic plural type expression, but found: " + arrayExpressible.getSqmType(),
-						query
-				);
+			if ( arrayExpressible != null ) {
+				if ( !(arrayExpressible.getSqmType() instanceof BasicPluralType<?, ?> pluralType) ) {
+					throw new SemanticException(
+							"Right operand for in-array predicate must be a basic plural type expression, but found: "
+								+ arrayExpressible.getSqmType(),
+							query
+					);
+				}
+				testExpression.applyInferableType( pluralType.getElementType() );
 			}
 			final SelfRenderingSqmFunction<Boolean> contains = getFunctionDescriptor( "array_contains" ).generateSqmExpression(
 					asList( arrayExpr, testExpression ),
 					null,
-					creationContext.getQueryEngine()
+					queryEngine()
 			);
-			return new SqmBooleanExpressionPredicate( contains, negated, creationContext.getNodeBuilder() );
+			return new SqmBooleanExpressionPredicate( contains, negated, nodeBuilder() );
 		}
 		else {
-			throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
+			throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : "
+					+ ctx.getText() );
 		}
 	}
 
 	@Override
 	public SqmPredicate visitExistsCollectionPartPredicate(HqlParser.ExistsCollectionPartPredicateContext ctx) {
-		final SqmSubQuery<Object> subQuery = createCollectionReferenceSubQuery(
-				ctx.simplePath(),
-				null
-		);
-		return new SqmExistsPredicate( subQuery, creationContext.getNodeBuilder() );
+		final SqmSubQuery<Object> subQuery = createCollectionReferenceSubQuery( ctx.simplePath(), null );
+		return new SqmExistsPredicate( subQuery, nodeBuilder() );
 	}
 
 	@Override
 	public SqmPredicate visitExistsPredicate(HqlParser.ExistsPredicateContext ctx) {
 		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept( this );
-		return new SqmExistsPredicate( expression, creationContext.getNodeBuilder() );
+		return new SqmExistsPredicate( expression, nodeBuilder() );
 	}
 
 	@Override
@@ -3354,22 +3420,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		@SuppressWarnings("unchecked")
 		final SqmExpression<Boolean> booleanExpression = (SqmExpression<Boolean>) expression;
-		return new SqmBooleanExpressionPredicate( booleanExpression, creationContext.getNodeBuilder() );
+		return new SqmBooleanExpressionPredicate( booleanExpression, nodeBuilder() );
 	}
 
 	@Override
 	public Object visitEntityTypeExpression(HqlParser.EntityTypeExpressionContext ctx) {
-		final HqlParser.EntityTypeReferenceContext entityTypeReferenceContext = ctx.entityTypeReference();
+		final var entityTypeReferenceContext = ctx.entityTypeReference();
 		// can be one of 2 forms:
 		//		1) TYPE( some.path )
 		//		2) TYPE( :someParam )
-		final HqlParser.ParameterContext parameter = entityTypeReferenceContext.parameter();
-		final HqlParser.PathContext path = entityTypeReferenceContext.path();
+		final var parameter = entityTypeReferenceContext.parameter();
+		final var path = entityTypeReferenceContext.path();
 		if ( parameter != null ) {
 			// we have form (2)
 			return new SqmParameterizedEntityType<>(
 					(SqmParameter<?>) parameter.accept( this ),
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 		else if ( path != null ) {
@@ -3394,19 +3460,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
-			final SqmPathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
+			final PathSource<?> identifierDescriptor = identifiableType.getIdentifierDescriptor();
 			if ( identifierDescriptor == null ) {
 				// mainly for benefit of Hibernate Processor
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
 						+ "' of 'id()' is a '" + identifiableType.getTypeName()
 						+ "' and does not have a well-defined '@Id' attribute" );
 			}
-			return sqmPath.get( identifierDescriptor.getPathName() );
+			return sqmPath.get( identifierDescriptor.getPathName(), true );
 		}
 		else if ( sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
-			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true, processingStateStack.getCurrent().getCreationState() );
+			return sqmPath.resolvePathPart( AnyKeyPart.KEY_NAME, true,
+					processingStateStack.getCurrent().getCreationState() );
 		}
 		else {
 			throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -3422,7 +3489,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPath<?> visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
+		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getPathType();
 		if ( sqmPathType instanceof IdentifiableDomainType<?> identifiableType ) {
 			if ( !identifiableType.hasVersionAttribute() ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -3452,12 +3519,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmPath<?> sqmPath = consumeDomainPath( ctx.path() );
-		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
 
-		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
-			@SuppressWarnings("unchecked")
-			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<Object>) sqmPathType;
-			final List<? extends PersistentAttribute<Object, ?>> attributes = identifiableType.findNaturalIdAttributes();
+		if ( sqmPath.getReferencedPathSource().getPathType() instanceof IdentifiableDomainType<?> identifiableType ) {
+			final List<? extends PersistentAttribute<?, ?>> attributes = identifiableType.findNaturalIdAttributes();
 			if ( attributes == null ) {
 				throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
 						+ "' of 'naturalid()' is a '" + identifiableType.getTypeName()
@@ -3471,10 +3535,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 
-			@SuppressWarnings("unchecked")
-			final SingularAttribute<Object, ?> naturalIdAttribute
-					= (SingularAttribute<Object, ?>) attributes.get(0);
-			return sqmPath.get( naturalIdAttribute );
+			final SingularAttribute<?, ?> naturalIdAttribute = (SingularAttribute<?, ?>) attributes.get(0);
+			return sqmPath.get( (SingularAttribute) naturalIdAttribute );
 		}
 
 		throw new FunctionArgumentException( "Argument '" + sqmPath.getNavigablePath()
@@ -3490,10 +3552,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmFkExpression<?> visitToOneFkReference(HqlParser.ToOneFkReferenceContext ctx) {
 		final SqmPath<?> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final SqmPathSource<?> toOneReference = sqmPath.getReferencedPathSource();
-
-		final boolean validToOneRef = toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
-				&& toOneReference instanceof EntitySqmPathSource;
-
+		final boolean validToOneRef =
+				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
+						&& toOneReference instanceof EntitySqmPathSource;
 		if ( !validToOneRef ) {
 			throw new FunctionArgumentException(
 					String.format(
@@ -3504,15 +3565,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 
 		}
-
-		return new SqmFkExpression<>( (SqmEntityValuedSimplePath<?>) sqmPath );
+		return new SqmFkExpression<>( sqmPath );
 	}
 
 	@Override
 	public SqmMapEntryReference<?, ?> visitMapEntrySelection(HqlParser.MapEntrySelectionContext ctx) {
 		return new SqmMapEntryReference<>(
 				consumePluralAttributeReference( ctx.path() ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -3531,7 +3591,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
 						asList( lhs, rhs ),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 			}
 			else {
@@ -3539,7 +3599,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return getFunctionDescriptor( "array_append" ).generateSqmExpression(
 						asList( lhs, rhs ),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 			}
 		}
@@ -3549,7 +3609,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
 						asList( lhs, rhs ),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 			}
 			else {
@@ -3557,7 +3617,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
 						asList( lhs, rhs ),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 			}
 		}
@@ -3565,49 +3625,43 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return getFunctionDescriptor( "concat" ).generateSqmExpression(
 					asList( lhs, rhs ),
 					null,
-					creationContext.getQueryEngine()
+					queryEngine()
 			);
 		}
 	}
 
 	@Override
 	public Object visitSignOperator(HqlParser.SignOperatorContext ctx) {
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.PLUS:
-				return UnaryArithmeticOperator.UNARY_PLUS;
-			case HqlParser.MINUS:
-				return UnaryArithmeticOperator.UNARY_MINUS;
-			default:
-				throw new ParsingException("Unrecognized sign operator");
-		}
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.PLUS -> UnaryArithmeticOperator.UNARY_PLUS;
+			case HqlParser.MINUS -> UnaryArithmeticOperator.UNARY_MINUS;
+			default -> throw new ParsingException( "Unrecognized sign operator" );
+		};
 	}
 
 	@Override
 	public Object visitAdditiveOperator(HqlParser.AdditiveOperatorContext ctx) {
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.PLUS:
-				return BinaryArithmeticOperator.ADD;
-			case HqlParser.MINUS:
-				return BinaryArithmeticOperator.SUBTRACT;
-			default:
-				throw new ParsingException("Unrecognized additive operator");
-		}
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.PLUS -> BinaryArithmeticOperator.ADD;
+			case HqlParser.MINUS -> BinaryArithmeticOperator.SUBTRACT;
+			default -> throw new ParsingException( "Unrecognized additive operator" );
+		};
 	}
 
 	@Override
 	public Object visitMultiplicativeOperator(HqlParser.MultiplicativeOperatorContext ctx) {
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.ASTERISK:
-				return BinaryArithmeticOperator.MULTIPLY;
-			case HqlParser.SLASH:
-				return this.creationOptions.isPortableIntegerDivisionEnabled()
-						? BinaryArithmeticOperator.DIVIDE_PORTABLE
-						: BinaryArithmeticOperator.DIVIDE;
-			case HqlParser.PERCENT_OP:
-				return BinaryArithmeticOperator.MODULO;
-			default:
-				throw new ParsingException("Unrecognized multiplicative operator");
-		}
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.ASTERISK -> BinaryArithmeticOperator.MULTIPLY;
+			case HqlParser.PERCENT_OP -> BinaryArithmeticOperator.MODULO;
+			case HqlParser.SLASH ->
+					creationOptions.isPortableIntegerDivisionEnabled()
+							? BinaryArithmeticOperator.DIVIDE_PORTABLE
+							: BinaryArithmeticOperator.DIVIDE;
+			default -> throw new ParsingException( "Unrecognized multiplicative operator" );
+		};
 	}
 
 	@Override
@@ -3625,8 +3679,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				operator,
 				left,
 				right,
-				creationContext.getJpaMetamodel(),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -3645,7 +3698,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return getFunctionDescriptor("mod").generateSqmExpression(
 					asList( left, right ),
 					null,
-					creationContext.getQueryEngine()
+					queryEngine()
 			);
 		}
 		else {
@@ -3653,8 +3706,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					operator,
 					left,
 					right,
-					creationContext.getJpaMetamodel(),
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 	}
@@ -3665,7 +3717,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				(SqmExpression<?>) ctx.expression().accept( this ),
 				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ),
 				resolveExpressibleTypeBasic( Duration.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -3673,7 +3725,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmDurationUnit<>(
 				extractUnit.getUnit(),
 				resolveExpressibleTypeBasic( Long.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -3685,7 +3737,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ),
 				expression,
 				resolveExpressibleTypeBasic( Long.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -3716,14 +3768,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("collate").generateSqmExpression(
 				asList( expressionToCollate, castTargetExpression ),
 				null, //why not string?
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
 	@Override
 	public Object visitCollation(HqlParser.CollationContext ctx) {
 		final StringBuilder collation = new StringBuilder();
-		final HqlParser.SimplePathContext simplePathContext = ctx.simplePath();
+		final var simplePathContext = ctx.simplePath();
 		final boolean quoted = simplePathContext.getStart().getType() == QUOTED_IDENTIFIER;
 		if ( quoted ) {
 			collation.append("\"");
@@ -3737,7 +3789,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			collation.append("\"");
 		}
 		return new SqmCollation( collation.toString(), null,
-				creationContext.getNodeBuilder() );
+				nodeBuilder() );
 	}
 
 	@Override
@@ -3748,7 +3800,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 		final List<SqmExpression<?>> expressions = visitExpressions( ctx );
-		return new SqmTuple<>( expressions, creationContext.getNodeBuilder() );
+		return new SqmTuple<>( expressions, nodeBuilder() );
 	}
 
 	private List<SqmExpression<?>> visitExpressions(ParserRuleContext parentContext) {
@@ -3774,11 +3826,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmCaseSimple<?, ?> visitSimpleCaseList(HqlParser.SimpleCaseListContext ctx) {
 		final int size = ctx.simpleCaseWhen().size();
 		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expressionOrPredicate().accept(this);
-		final SqmCaseSimple caseExpression = new SqmCaseSimple<>( expression, size, creationContext.getNodeBuilder() );
+		final SqmCaseSimple caseExpression = new SqmCaseSimple<>( expression, size, nodeBuilder() );
 
 		for ( int i = 0; i < size; i++ ) {
-			final HqlParser.SimpleCaseWhenContext simpleCaseWhenContext = ctx.simpleCaseWhen( i );
-			final HqlParser.ExpressionContext testExpression = simpleCaseWhenContext.expression();
+			final var simpleCaseWhenContext = ctx.simpleCaseWhen( i );
+			final var testExpression = simpleCaseWhenContext.expression();
 			final SqmExpression<?> test;
 			final Set<String> possibleEnumTypes;
 			if ( ( possibleEnumTypes = getPossibleEnumTypes( testExpression ) ) != null ) {
@@ -3797,7 +3849,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			caseExpression.when( test, result );
 		}
 
-		final HqlParser.CaseOtherwiseContext caseOtherwiseContext = ctx.caseOtherwise();
+		final var caseOtherwiseContext = ctx.caseOtherwise();
 		if ( caseOtherwiseContext != null ) {
 			caseExpression.otherwise( (SqmExpression<?>) caseOtherwiseContext.expressionOrPredicate().accept( this ) );
 		}
@@ -3808,17 +3860,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public SqmCaseSearched<?> visitSearchedCaseList(HqlParser.SearchedCaseListContext ctx) {
 		final int size = ctx.searchedCaseWhen().size();
-		final SqmCaseSearched caseExpression = new SqmCaseSearched<>( size, creationContext.getNodeBuilder() );
+		final SqmCaseSearched caseExpression = new SqmCaseSearched<>( size, nodeBuilder() );
 
 		for ( int i = 0; i < size; i++ ) {
-			final HqlParser.SearchedCaseWhenContext searchedCaseWhenContext = ctx.searchedCaseWhen( i );
+			final var searchedCaseWhenContext = ctx.searchedCaseWhen( i );
 			caseExpression.when(
 					(SqmPredicate) searchedCaseWhenContext.predicate().accept( this ),
 					(SqmExpression<?>) searchedCaseWhenContext.expressionOrPredicate().accept( this )
 			);
 		}
 
-		final HqlParser.CaseOtherwiseContext caseOtherwiseContext = ctx.caseOtherwise();
+		final var caseOtherwiseContext = ctx.caseOtherwise();
 		if ( caseOtherwiseContext != null ) {
 			caseExpression.otherwise( (SqmExpression<?>) caseOtherwiseContext.expressionOrPredicate().accept( this ) );
 		}
@@ -3831,7 +3883,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("current_date")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Date.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3840,7 +3892,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("current_time")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Time.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3849,7 +3901,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("current_timestamp")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Timestamp.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3858,7 +3910,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("instant")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( Instant.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3867,7 +3919,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("local_date")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalDate.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3876,7 +3928,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("local_time")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalTime.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3885,7 +3937,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("local_datetime")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( LocalDateTime.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3894,7 +3946,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("offset_datetime")
 				.generateSqmExpression(
 						resolveExpressibleTypeBasic( OffsetDateTime.class ),
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 	}
 
@@ -3906,31 +3958,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitUnaryNumericLiteralExpression(HqlParser.UnaryNumericLiteralExpressionContext ctx) {
 		final TerminalNode node = (TerminalNode) ctx.getChild( 1 ).getChild( 0 );
-		final String text;
-		if ( ( (TerminalNode) ctx.getChild( 0 ).getChild( 0 ) ).getSymbol().getType() == HqlParser.MINUS ) {
-			text = "-" + node.getText();
-		}
-		else {
-			text = node.getText();
-		}
-		switch ( node.getSymbol().getType() ) {
-			case HqlParser.INTEGER_LITERAL:
-				return integerLiteral( text );
-			case HqlParser.LONG_LITERAL:
-				return longLiteral( text );
-			case HqlParser.BIG_INTEGER_LITERAL:
-				return bigIntegerLiteral( text );
-			case HqlParser.HEX_LITERAL:
-				return hexLiteral( text );
-			case HqlParser.FLOAT_LITERAL:
-				return floatLiteral( text );
-			case HqlParser.DOUBLE_LITERAL:
-				return doubleLiteral( text );
-			case HqlParser.BIG_DECIMAL_LITERAL:
-				return bigDecimalLiteral( text );
-			default:
-				throw new ParsingException("Unexpected terminal node [" + text + "]");
-		}
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 ).getChild( 0 )).getSymbol();
+		final String text = symbol.getType() == HqlParser.MINUS ? "-" + node.getText() : node.getText();
+		return switch ( node.getSymbol().getType() ) {
+			case HqlParser.INTEGER_LITERAL -> integerLiteral( text );
+			case HqlParser.LONG_LITERAL -> longLiteral( text );
+			case HqlParser.BIG_INTEGER_LITERAL -> bigIntegerLiteral( text );
+			case HqlParser.HEX_LITERAL -> hexLiteral( text );
+			case HqlParser.FLOAT_LITERAL -> floatLiteral( text );
+			case HqlParser.DOUBLE_LITERAL -> doubleLiteral( text );
+			case HqlParser.BIG_DECIMAL_LITERAL -> bigDecimalLiteral( text );
+			default -> throw new ParsingException( "Unexpected terminal node [" + text + "]" );
+		};
 	}
 
 	@Override
@@ -3967,7 +4006,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor( "array" ).generateSqmExpression(
 				arguments,
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -3981,36 +4020,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( node.getSymbol().getType() == HqlLexer.EOF ) {
 			return null;
 		}
-		switch ( node.getSymbol().getType() ) {
-			case HqlParser.STRING_LITERAL:
-				return stringLiteral( node.getText() );
-			case HqlParser.JAVA_STRING_LITERAL:
-				return javaStringLiteral( node.getText() );
-			case HqlParser.INTEGER_LITERAL:
-				return integerLiteral( node.getText() );
-			case HqlParser.LONG_LITERAL:
-				return longLiteral( node.getText() );
-			case HqlParser.BIG_INTEGER_LITERAL:
-				return bigIntegerLiteral( node.getText() );
-			case HqlParser.HEX_LITERAL:
-				return hexLiteral( node.getText() );
-			case HqlParser.FLOAT_LITERAL:
-				return floatLiteral( node.getText() );
-			case HqlParser.DOUBLE_LITERAL:
-				return doubleLiteral( node.getText() );
-			case HqlParser.BIG_DECIMAL_LITERAL:
-				return bigDecimalLiteral( node.getText() );
-			case HqlParser.FALSE:
-				return booleanLiteral( false );
-			case HqlParser.TRUE:
-				return booleanLiteral( true );
-			case HqlParser.NULL:
-				return new SqmLiteralNull<>( creationContext.getNodeBuilder() );
-			case HqlParser.BINARY_LITERAL:
-				return binaryLiteral( node.getText() );
-			default:
-				throw new ParsingException("Unexpected terminal node [" + node.getText() + "]");
-		}
+		return switch ( node.getSymbol().getType() ) {
+			case HqlParser.STRING_LITERAL -> stringLiteral( node.getText() );
+			case HqlParser.JAVA_STRING_LITERAL -> javaStringLiteral( node.getText() );
+			case HqlParser.INTEGER_LITERAL -> integerLiteral( node.getText() );
+			case HqlParser.LONG_LITERAL -> longLiteral( node.getText() );
+			case HqlParser.BIG_INTEGER_LITERAL -> bigIntegerLiteral( node.getText() );
+			case HqlParser.HEX_LITERAL -> hexLiteral( node.getText() );
+			case HqlParser.FLOAT_LITERAL -> floatLiteral( node.getText() );
+			case HqlParser.DOUBLE_LITERAL -> doubleLiteral( node.getText() );
+			case HqlParser.BIG_DECIMAL_LITERAL -> bigDecimalLiteral( node.getText() );
+			case HqlParser.FALSE -> booleanLiteral( false );
+			case HqlParser.TRUE -> booleanLiteral( true );
+			case HqlParser.NULL -> new SqmLiteralNull<>( nodeBuilder() );
+			case HqlParser.BINARY_LITERAL -> binaryLiteral( node.getText() );
+			default -> throw new ParsingException( "Unexpected terminal node [" + node.getText() + "]" );
+		};
 	}
 
 	@Override
@@ -4053,7 +4078,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJdbcTimestampLiteral(HqlParser.JdbcTimestampLiteralContext ctx) {
-		final HqlParser.DateTimeContext dateTime = ctx.dateTime();
+		final var dateTime = ctx.dateTime();
 		if ( dateTime != null ) {
 			return dateTime.accept( this );
 		}
@@ -4064,7 +4089,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJdbcDateLiteral(HqlParser.JdbcDateLiteralContext ctx) {
-		final HqlParser.DateContext date = ctx.date();
+		final var date = ctx.date();
 		if ( date != null ) {
 			return date.accept( this );
 		}
@@ -4075,7 +4100,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitJdbcTimeLiteral(HqlParser.JdbcTimeLiteralContext ctx) {
-		final HqlParser.TimeContext time = ctx.time();
+		final var time = ctx.time();
 		if ( time != null ) {
 			return time.accept( this );
 		}
@@ -4115,7 +4140,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				LocalDateTime.of( localDate( date ), localTime( time ) ),
 				resolveExpressibleTypeBasic( LocalDateTime.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4126,7 +4151,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				ZonedDateTime.of( localDate( date ), localTime( time ), visitZoneId( timezone ) ),
 				resolveExpressibleTypeBasic( ZonedDateTime.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4156,7 +4181,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				OffsetDateTime.of( localDate( date ), localTime( time ), zoneOffset( offset ) ),
 				resolveExpressibleTypeBasic( OffsetDateTime.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4167,7 +4192,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				OffsetDateTime.of( localDate( date ), localTime( time ), zoneOffset( offset ) ),
 				resolveExpressibleTypeBasic( OffsetDateTime.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4176,7 +4201,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				localDate( ctx ),
 				resolveExpressibleTypeBasic( LocalDate.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4185,14 +4210,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				localTime( ctx ),
 				resolveExpressibleTypeBasic( LocalTime.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	private static LocalTime localTime(HqlParser.TimeContext ctx) {
 		final int hour = Integer.parseInt( ctx.hour().getText() );
 		final int minute = Integer.parseInt( ctx.minute().getText() );
-		final HqlParser.SecondContext secondContext = ctx.second();
+		final var secondContext = ctx.second();
 		if ( secondContext != null ) {
 			final String secondText = secondContext.getText();
 			final int index = secondText.indexOf( '.' );
@@ -4250,15 +4275,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
+	private static CharSequence stripQuotes(String literalText) {
+		return literalText.subSequence( 1, literalText.length() - 1 );
+	}
+
 	private SqmLiteral<?> sqlTimestampLiteralFrom(String literalText) {
-		final TemporalAccessor parsed = DATE_TIME.parse( literalText.subSequence( 1, literalText.length() - 1 ) );
+		final TemporalAccessor parsed = DATE_TIME.parse( stripQuotes( literalText ) );
 		try {
 			final ZonedDateTime zonedDateTime = ZonedDateTime.from( parsed );
 			final Calendar literal = GregorianCalendar.from( zonedDateTime );
 			return new SqmLiteral<>(
 					literal,
 					resolveExpressibleTypeBasic( Calendar.class ),
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 		catch (DateTimeException dte) {
@@ -4267,28 +4296,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return new SqmLiteral<>(
 					literal,
 					resolveExpressibleTypeBasic( Timestamp.class ),
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 	}
 
 	private SqmLiteral<Date> sqlDateLiteralFrom(String literalText) {
-		final LocalDate localDate = LocalDate.from( ISO_LOCAL_DATE.parse( literalText.subSequence( 1, literalText.length() - 1 ) ) );
+		final LocalDate localDate = LocalDate.from( ISO_LOCAL_DATE.parse( stripQuotes( literalText ) ) );
 		final Date literal = Date.valueOf( localDate );
 		return new SqmLiteral<>(
 				literal,
 				resolveExpressibleTypeBasic( Date.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	private SqmLiteral<Time> sqlTimeLiteralFrom(String literalText) {
-		final LocalTime localTime = LocalTime.from( ISO_LOCAL_TIME.parse( literalText.subSequence( 1, literalText.length() - 1 ) ) );
+		final LocalTime localTime = LocalTime.from( ISO_LOCAL_TIME.parse( stripQuotes( literalText ) ) );
 		final Time literal = Time.valueOf( localTime );
 		return new SqmLiteral<>(
 				literal,
 				resolveExpressibleTypeBasic( Time.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4296,7 +4325,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				value,
 				resolveExpressibleTypeBasic( Boolean.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4304,7 +4333,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				unquoteStringLiteral( text ),
 				resolveExpressibleTypeBasic( String.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4313,7 +4342,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				unquoted,
 				resolveExpressibleTypeBasic( String.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4323,7 +4352,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						CharSequenceHelper.subSequence( text, 2, text.length() - 1 )
 				),
 				resolveExpressibleTypeBasic( byte[].class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4336,11 +4365,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			text = Integer.toString( intValue );
 		}
 
-		return new SqmHqlNumericLiteral<>(
-				text,
-				integerDomainType,
-				creationContext.getNodeBuilder()
-		);
+		return new SqmHqlNumericLiteral<>( text, integerDomainType, nodeBuilder() );
 	}
 
 	@SuppressWarnings("RedundantIfStatement")
@@ -4362,7 +4387,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmHqlNumericLiteral<>(
 				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
 				resolveExpressibleTypeBasic( Long.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4371,7 +4396,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmHqlNumericLiteral<>(
 				text.substring( 0, text.length() - 2 ).replace( "_", "" ),
 				resolveExpressibleTypeBasic( BigInteger.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4380,7 +4405,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmHqlNumericLiteral<>(
 				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
 				resolveExpressibleTypeBasic( Float.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4391,7 +4416,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmHqlNumericLiteral<>(
 				text.replace( "_", "" ),
 				resolveExpressibleTypeBasic( Double.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4400,7 +4425,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmHqlNumericLiteral<>(
 				text.substring( 0, text.length() - 2 ).replace( "_", "" ),
 				resolveExpressibleTypeBasic( BigDecimal.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -4429,14 +4454,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private <T> SqmNamedParameter<T> visitNamedParameter(
 			HqlParser.NamedParameterContext ctx,
-			SqmExpressible<T> expressibleType) {
+			SqmBindableType<T> expressibleType) {
 		parameterStyle = parameterStyle.withNamed();
 		return resolveParameter(
 				new SqmNamedParameter<>(
 						ctx.getChild( 1 ).getText(),
 						parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
 						expressibleType,
-						creationContext.getNodeBuilder()
+						nodeBuilder()
 				)
 		);
 	}
@@ -4448,7 +4473,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private <T> SqmPositionalParameter<T> visitPositionalParameter(
 			HqlParser.PositionalParameterContext ctx,
-			SqmExpressible<T> expressibleType) {
+			SqmBindableType<T> expressibleType) {
 		if ( ctx.getChildCount() == 1 ) {
 			throw new ParameterLabelException( "Unlabeled ordinal parameter ('?' rather than ?1)" );
 		}
@@ -4458,7 +4483,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						Integer.parseInt( ctx.getChild( 1 ).getText() ),
 						parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
 						expressibleType,
-						creationContext.getNodeBuilder()
+						nodeBuilder()
 				)
 		);
 	}
@@ -4491,9 +4516,29 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public SqmSetReturningFunction<?> visitSimpleSetReturningFunction(HqlParser.SimpleSetReturningFunctionContext ctx) {
+		final String functionName = visitIdentifier( ctx.identifier() );
+		final var argumentsContext = ctx.genericFunctionArguments();
+		@SuppressWarnings("unchecked")
+		final List<SqmTypedNode<?>> functionArguments =
+				argumentsContext == null
+						? emptyList()
+						: (List<SqmTypedNode<?>>) argumentsContext.accept(this);
+
+		SqmSetReturningFunctionDescriptor functionTemplate = getSetReturningFunctionDescriptor( functionName );
+		if ( functionTemplate == null ) {
+			throw new SemanticException(
+					"The %s() set-returning function was not registered for the dialect".formatted( functionName ),
+					query
+			);
+		}
+		return functionTemplate.generateSqmExpression( functionArguments, queryEngine() );
+	}
+
+	@Override
 	public SqmExpression<?> visitJpaNonstandardFunction(HqlParser.JpaNonstandardFunctionContext ctx) {
 		final String functionName = toName( ctx.jpaNonstandardFunctionName() );
-		final HqlParser.GenericFunctionArgumentsContext argumentsContext = ctx.genericFunctionArguments();
+		final var argumentsContext = ctx.genericFunctionArguments();
 		@SuppressWarnings("unchecked")
 		final List<SqmTypedNode<?>> functionArguments =
 				argumentsContext == null
@@ -4514,7 +4559,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return functionTemplate.generateSqmExpression(
 				functionArguments,
 				returnableType,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -4526,7 +4571,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqlColumn( columnName, resultType ).generateSqmExpression(
 				(SqmTypedNode<?>) semanticPathPart,
 				resultType,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -4567,48 +4612,38 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public Object visitGenericFunction(HqlParser.GenericFunctionContext ctx) {
 		final SqmFunctionDescriptor functionTemplate = getFunctionTemplate(  ctx );
-
 		final List<SqmTypedNode<?>> functionArguments = getFunctionArguments( ctx );
 		final SqmPredicate filterExpression = getFilterExpression( ctx );
-		final SqmFunction<?> function;
-		switch ( functionTemplate.getFunctionKind() ) {
-			case ORDERED_SET_AGGREGATE:
-				function = functionTemplate.generateOrderedSetAggregateSqmExpression(
-						functionArguments,
-						filterExpression,
-						ctx.withinGroupClause() == null
-								? null // this is allowed for e.g. rank(), but not for all
-								: visitOrderByClause( ctx.withinGroupClause().orderByClause(), false ),
-						null,
-						creationContext.getQueryEngine()
-				);
-				break;
-			case AGGREGATE:
-				function = functionTemplate.generateAggregateSqmExpression(
-						functionArguments,
-						filterExpression,
-						null,
-						creationContext.getQueryEngine()
-				);
-				break;
-			case WINDOW:
-				function = functionTemplate.generateWindowSqmExpression(
-						functionArguments,
-						filterExpression,
-						null,
-						null,
-						null,
-						creationContext.getQueryEngine()
-				);
-				break;
-			default:
-				function = functionTemplate.generateSqmExpression(
-						functionArguments,
-						null,
-						creationContext.getQueryEngine()
-				);
-				break;
-		}
+		final SqmFunction<?> function = switch ( functionTemplate.getFunctionKind() ) {
+			case ORDERED_SET_AGGREGATE -> functionTemplate.generateOrderedSetAggregateSqmExpression(
+					functionArguments,
+					filterExpression,
+					ctx.withinGroupClause() == null
+							? null // this is allowed for e.g. rank(), but not for all
+							: visitOrderByClause( ctx.withinGroupClause().orderByClause(), false ),
+					null,
+					queryEngine()
+			);
+			case AGGREGATE -> functionTemplate.generateAggregateSqmExpression(
+					functionArguments,
+					filterExpression,
+					null,
+					queryEngine()
+			);
+			case WINDOW -> functionTemplate.generateWindowSqmExpression(
+					functionArguments,
+					filterExpression,
+					null,
+					null,
+					null,
+					queryEngine()
+			);
+			default -> functionTemplate.generateSqmExpression(
+					functionArguments,
+					null,
+					queryEngine()
+			);
+		};
 		return applyOverClause( ctx.overClause(), function );
 	}
 
@@ -4739,7 +4774,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								? null // this is allowed
 								: visitOrderByClause( ctx.withinGroupClause().orderByClause(), false ),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				)
 		);
 	}
@@ -4750,7 +4785,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final OnOverflowClauseContext overflowCtx = ctx.onOverflowClause();
 		final List<SqmTypedNode<?>> functionArguments = new ArrayList<>( 3 );
 		if ( ctx.DISTINCT() != null ) {
-			functionArguments.add( new SqmDistinct<>( firstArgument, creationContext.getNodeBuilder() ) );
+			functionArguments.add( new SqmDistinct<>( firstArgument, nodeBuilder() ) );
 		}
 		else {
 			functionArguments.add( firstArgument );
@@ -4790,16 +4825,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = ctx.expressionOrPredicate();
 		int count = argumentContexts.size();
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>( count+1 );
-		final HqlParser.DatetimeFieldContext datetimeFieldContext = ctx.datetimeField();
+		final var datetimeFieldContext = ctx.datetimeField();
 		if ( datetimeFieldContext != null  ) {
 			arguments.add( toDurationUnit( (SqmExtractUnit<?>) datetimeFieldContext.accept( this ) ) );
 		}
 		for ( int i = 0; i < count-1; i++ ) {
-			final HqlParser.ExpressionOrPredicateContext argumentContext = argumentContexts.get(i);
+			final var argumentContext = argumentContexts.get(i);
 			arguments.add( (SqmTypedNode<?>) argumentContext.accept( this ) );
 		}
 		// we handle the last argument differently...
-		final HqlParser.ExpressionOrPredicateContext argumentContext = argumentContexts.get( count-1 );
+		final var argumentContext = argumentContexts.get( count-1 );
 		arguments.add( visitFinalFunctionArgument( argumentContext ) );
 
 		if ( ctx.DISTINCT() != null ) {
@@ -4831,141 +4866,131 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
-		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( name );
+		return queryEngine().getSqmFunctionRegistry().findFunctionDescriptor( name );
+	}
+
+	private SqmSetReturningFunctionDescriptor getSetReturningFunctionDescriptor(String name) {
+		return queryEngine().getSqmFunctionRegistry().findSetReturningFunctionDescriptor( name );
 	}
 
 	@Override
 	public SqmExtractUnit<?> visitDatetimeField(HqlParser.DatetimeFieldContext ctx) {
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.DAY:
-				return new SqmExtractUnit<>(
-						TemporalUnit.DAY,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.MONTH:
-				return new SqmExtractUnit<>(
-						TemporalUnit.MONTH,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.YEAR:
-				return new SqmExtractUnit<>(
-						TemporalUnit.YEAR,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.HOUR:
-				return new SqmExtractUnit<>(
-						TemporalUnit.HOUR,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.MINUTE:
-				return new SqmExtractUnit<>(
-						TemporalUnit.MINUTE,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.SECOND:
-				return new SqmExtractUnit<>(
-						TemporalUnit.SECOND,
-						resolveExpressibleTypeBasic( Float.class ),
-						nodeBuilder
-				);
-			case HqlParser.NANOSECOND:
-				return new SqmExtractUnit<>(
-						NANOSECOND,
-						resolveExpressibleTypeBasic( Long.class ),
-						nodeBuilder
-				);
-			case HqlParser.WEEK:
-				return new SqmExtractUnit<>(
-						TemporalUnit.WEEK,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.QUARTER:
-				return new SqmExtractUnit<>(
-						TemporalUnit.QUARTER,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.EPOCH:
-				return new SqmExtractUnit<>(
-						TemporalUnit.EPOCH,
-						resolveExpressibleTypeBasic( Long.class ),
-						nodeBuilder
-				);
-		}
-		throw new ParsingException( "Unsupported datetime field [" + ctx.getText() + "]" );
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.DAY -> new SqmExtractUnit<>(
+					TemporalUnit.DAY,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.MONTH -> new SqmExtractUnit<>(
+					TemporalUnit.MONTH,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.YEAR -> new SqmExtractUnit<>(
+					TemporalUnit.YEAR,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.HOUR -> new SqmExtractUnit<>(
+					TemporalUnit.HOUR,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.MINUTE -> new SqmExtractUnit<>(
+					TemporalUnit.MINUTE,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.SECOND -> new SqmExtractUnit<>(
+					TemporalUnit.SECOND,
+					resolveExpressibleTypeBasic( Float.class ),
+					nodeBuilder
+			);
+			case HqlParser.NANOSECOND -> new SqmExtractUnit<>(
+					NANOSECOND,
+					resolveExpressibleTypeBasic( Long.class ),
+					nodeBuilder
+			);
+			case HqlParser.WEEK -> new SqmExtractUnit<>(
+					TemporalUnit.WEEK,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.QUARTER -> new SqmExtractUnit<>(
+					TemporalUnit.QUARTER,
+					resolveExpressibleTypeBasic( Integer.class ),
+					nodeBuilder
+			);
+			case HqlParser.EPOCH -> new SqmExtractUnit<>(
+					TemporalUnit.EPOCH,
+					resolveExpressibleTypeBasic( Long.class ),
+					nodeBuilder
+			);
+			default -> throw new ParsingException( "Unsupported datetime field [" + ctx.getText() + "]" );
+		};
 	}
 
 	@Override
 	public Object visitDayField(HqlParser.DayFieldContext ctx) {
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		switch ( ( (TerminalNode) ctx.getChild( 2 ) ).getSymbol().getType() ) {
-			case HqlParser.MONTH:
-				return new SqmExtractUnit<>( DAY_OF_MONTH, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
-			case HqlParser.WEEK:
-				return new SqmExtractUnit<>( DAY_OF_WEEK, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
-			case HqlParser.YEAR:
-				return new SqmExtractUnit<>( DAY_OF_YEAR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
-		}
-		throw new ParsingException("Unsupported day field [" + ctx.getText() + "]");
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final Token symbol = ((TerminalNode) ctx.getChild( 2 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.MONTH ->
+					new SqmExtractUnit<>( DAY_OF_MONTH, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			case HqlParser.WEEK ->
+					new SqmExtractUnit<>( DAY_OF_WEEK, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			case HqlParser.YEAR ->
+					new SqmExtractUnit<>( DAY_OF_YEAR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			default -> throw new ParsingException( "Unsupported day field [" + ctx.getText() + "]" );
+		};
 	}
 
 	@Override
 	public Object visitWeekField(HqlParser.WeekFieldContext ctx) {
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		switch ( ( (TerminalNode) ctx.getChild( 2 ) ).getSymbol().getType() ) {
-			case HqlParser.MONTH:
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final Token symbol = ((TerminalNode) ctx.getChild( 2 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.MONTH ->
 				//this is computed from DAY_OF_MONTH/7
-				return new SqmExtractUnit<>( WEEK_OF_MONTH, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
-			case HqlParser.YEAR:
+					new SqmExtractUnit<>( WEEK_OF_MONTH, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			case HqlParser.YEAR ->
 				//this is computed from DAY_OF_YEAR/7
-				return new SqmExtractUnit<>( WEEK_OF_YEAR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
-		}
-		throw new ParsingException("Unsupported week field [" + ctx.getText() + "]");
+					new SqmExtractUnit<>( WEEK_OF_YEAR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			default -> throw new ParsingException( "Unsupported week field [" + ctx.getText() + "]" );
+		};
 	}
 
 	@Override
 	public Object visitDateOrTimeField(HqlParser.DateOrTimeFieldContext ctx) {
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.DATE:
-				return isExtractingJdbcTemporalType
-						? new SqmExtractUnit<>( DATE, resolveExpressibleTypeBasic( Date.class ), nodeBuilder )
-						: new SqmExtractUnit<>( DATE, resolveExpressibleTypeBasic( LocalDate.class ), nodeBuilder );
-			case HqlParser.TIME:
-				return isExtractingJdbcTemporalType
-						? new SqmExtractUnit<>( TIME, resolveExpressibleTypeBasic( Time.class ), nodeBuilder )
-						: new SqmExtractUnit<>( TIME, resolveExpressibleTypeBasic( LocalTime.class ), nodeBuilder );
-		}
-		throw new ParsingException("Unsupported date or time field [" + ctx.getText() + "]");
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.DATE -> isExtractingJdbcTemporalType
+					? new SqmExtractUnit<>( DATE, resolveExpressibleTypeBasic( Date.class ), nodeBuilder )
+					: new SqmExtractUnit<>( DATE, resolveExpressibleTypeBasic( LocalDate.class ), nodeBuilder );
+			case HqlParser.TIME -> isExtractingJdbcTemporalType
+					? new SqmExtractUnit<>( TIME, resolveExpressibleTypeBasic( Time.class ), nodeBuilder )
+					: new SqmExtractUnit<>( TIME, resolveExpressibleTypeBasic( LocalTime.class ), nodeBuilder );
+			default -> throw new ParsingException( "Unsupported date or time field [" + ctx.getText() + "]" );
+		};
 	}
 
 	@Override
 	public Object visitTimeZoneField(HqlParser.TimeZoneFieldContext ctx) {
-		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
-		switch ( ( (TerminalNode) ctx.getChild( ctx.getChildCount() - 1 ) ).getSymbol().getType() ) {
-			case HqlParser.TIMEZONE_HOUR:
-			case HqlParser.HOUR:
-				return new SqmExtractUnit<>( TIMEZONE_HOUR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
-			case HqlParser.TIMEZONE_MINUTE:
-			case HqlParser.MINUTE:
-				return new SqmExtractUnit<>(
-						TIMEZONE_MINUTE,
-						resolveExpressibleTypeBasic( Integer.class ),
-						nodeBuilder
-				);
-			case HqlParser.OFFSET:
-				return new SqmExtractUnit<>( OFFSET, resolveExpressibleTypeBasic( ZoneOffset.class ), nodeBuilder );
-			default:
-				// should never happen
-				throw new ParsingException("Unsupported time zone field [" + ctx.getText() + "]");
-		}
+		final NodeBuilder nodeBuilder = nodeBuilder();
+		final Token symbol = ((TerminalNode) ctx.getChild( ctx.getChildCount() - 1 )).getSymbol();
+		// should never happen
+		return switch ( symbol.getType() ) {
+			case HqlParser.TIMEZONE_HOUR, HqlParser.HOUR ->
+					new SqmExtractUnit<>( TIMEZONE_HOUR, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			case HqlParser.TIMEZONE_MINUTE, HqlParser.MINUTE ->
+					new SqmExtractUnit<>( TIMEZONE_MINUTE, resolveExpressibleTypeBasic( Integer.class ), nodeBuilder );
+			case HqlParser.OFFSET ->
+					new SqmExtractUnit<>( OFFSET, resolveExpressibleTypeBasic( ZoneOffset.class ), nodeBuilder );
+			default -> throw new ParsingException( "Unsupported time zone field [" + ctx.getText() + "]" );
+		};
 	}
 
 	@Override
@@ -4998,7 +5023,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("extract").generateSqmExpression(
 				asList( extractFieldExpression, expressionToExtract ),
 				extractFieldExpression.getType(),
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -5019,7 +5044,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor( "trunc" ).generateSqmExpression(
 				secondArg == null ? singletonList( expression ) : asList( expression, secondArg ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -5029,7 +5054,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmFormat(
 				format,
 				resolveExpressibleTypeBasic( String.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -5041,7 +5066,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("format").generateSqmExpression(
 				asList( expressionToCast, format ),
 				null, //why not string?
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -5053,13 +5078,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("cast").generateSqmExpression(
 				asList( expressionToCast, castTargetExpression ),
 				castTargetExpression.getType(),
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
 	@Override
 	public SqmCastTarget<?> visitCastTarget(HqlParser.CastTargetContext castTargetContext) {
-		final HqlParser.CastTargetTypeContext castTargetTypeContext = castTargetContext.castTargetType();
+		final var castTargetTypeContext = castTargetContext.castTargetType();
 		final String targetName = castTargetTypeContext.fullTargetName;
 
 		final TerminalNode firstArg = castTargetContext.INTEGER_LITERAL(0);
@@ -5075,7 +5100,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				length,
 				precision,
 				scale,
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -5089,14 +5114,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return getFunctionDescriptor( "array_position" ).generateSqmExpression(
 					asList( stringOrArray, patternOrElement ),
 					null,
-					creationContext.getQueryEngine()
+					queryEngine()
 			);
 		}
 		else {
 			return getFunctionDescriptor( "position" ).generateSqmExpression(
 					asList( patternOrElement, stringOrArray ),
 					null,
-					creationContext.getQueryEngine()
+					queryEngine()
 			);
 		}
 	}
@@ -5115,7 +5140,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? asList( string, replacement, start )
 						: asList( string, replacement, start, length ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -5123,7 +5148,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitEveryFunction(HqlParser.EveryFunctionContext ctx) {
 		if ( ctx.subquery() != null ) {
 			final SqmSubQuery<?> subquery = (SqmSubQuery<?>) ctx.subquery().accept( this );
-			return new SqmEvery<>( subquery, creationContext.getNodeBuilder() );
+			return new SqmEvery<>( subquery, nodeBuilder() );
 		}
 		else if ( ctx.predicate() != null ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
@@ -5136,7 +5161,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							singletonList( argument ),
 							getFilterExpression( ctx ),
 							resolveExpressibleTypeBasic( Boolean.class ),
-							creationContext.getQueryEngine()
+							queryEngine()
 					)
 			);
 		}
@@ -5149,7 +5174,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							ctx.simplePath(),
 							(TerminalNode) ctx.collectionQuantifier().getChild(0).getChild(0)
 					),
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 	}
@@ -5158,7 +5183,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitAnyFunction(HqlParser.AnyFunctionContext ctx) {
 		if ( ctx.subquery() != null ) {
 			final SqmSubQuery<?> subquery = (SqmSubQuery<?>) ctx.subquery().accept( this );
-			return new SqmAny<>( subquery, creationContext.getNodeBuilder() );
+			return new SqmAny<>( subquery, nodeBuilder() );
 		}
 		else if ( ctx.predicate() != null ) {
 			if ( getCreationOptions().useStrictJpaCompliance() ) {
@@ -5171,7 +5196,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							singletonList( argument ),
 							getFilterExpression( ctx ),
 							resolveExpressibleTypeBasic( Boolean.class ),
-							creationContext.getQueryEngine()
+							queryEngine()
 					)
 			);
 		}
@@ -5184,7 +5209,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 							ctx.simplePath(),
 							(TerminalNode) ctx.collectionQuantifier().getChild(0).getChild(0)
 					),
-					creationContext.getNodeBuilder()
+					nodeBuilder()
 			);
 		}
 	}
@@ -5202,17 +5227,16 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		final SqmSubQuery<?> subQuery = new SqmSubQuery<>(
 				processingStateStack.getCurrent().getProcessingQuery(),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
-		final SqmSelectClause selectClause = new SqmSelectClause( false, 1, creationContext.getNodeBuilder() );
+		final SqmSelectClause selectClause = new SqmSelectClause( false, 1, nodeBuilder() );
 		final SqmFromClause fromClause = new SqmFromClause( 1 );
 		SqmPath<?> lhs = pluralAttributePath.getLhs();
 		final List<String> implicitJoinPaths = new ArrayList<>();
-		while ( !( lhs instanceof AbstractSqmFrom<?, ?> ) ) {
+		while ( !(lhs instanceof AbstractSqmFrom<?, ?> correlationBase) ) {
 			implicitJoinPaths.add( lhs.getNavigablePath().getLocalName() );
 			lhs = lhs.getLhs();
 		}
-		final AbstractSqmFrom<?, ?> correlationBase = (AbstractSqmFrom<?, ?>) lhs;
 		final SqmCorrelation<?, ?> correlation = correlationBase.createCorrelation();
 		SqmFrom<?, ?> joinBase = correlation;
 		for ( int i = implicitJoinPaths.size() - 1; i >= 0; i-- ) {
@@ -5223,24 +5247,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( collectionReferenceCtx == null ) {
 			final SqmLiteral<Integer> literal = new SqmLiteral<>(
 					1,
-					creationContext.getNodeBuilder().getIntegerType(),
-					creationContext.getNodeBuilder()
+					nodeBuilder().getIntegerType(),
+					nodeBuilder()
 			);
 			subQuery.applyInferableType( literal.getNodeType() );
 			selectClause.setSelection( literal );
 		}
 		else {
-			final String partName;
-			switch ( collectionReferenceCtx.getSymbol().getType() ) {
-				case HqlParser.ELEMENTS:
-					partName = CollectionPart.Nature.ELEMENT.getName();
-					break;
-				case HqlParser.INDICES:
-					partName = CollectionPart.Nature.INDEX.getName();
-					break;
-				default:
-					throw new ParsingException( "Unexpected collection reference : " + collectionReferenceCtx.getText() );
-			}
+			final String partName = switch ( collectionReferenceCtx.getSymbol().getType() ) {
+				case HqlParser.ELEMENTS -> CollectionPart.Nature.ELEMENT.getName();
+				case HqlParser.INDICES -> CollectionPart.Nature.INDEX.getName();
+				default -> throw new ParsingException( "Unexpected collection reference: "
+						+ collectionReferenceCtx.getText() );
+			};
 			final SqmPath<?> path = collectionJoin.resolvePathPart( partName, true, this );
 			subQuery.applyInferableType( path.getNodeType() );
 			selectClause.setSelection( path );
@@ -5269,7 +5288,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final List<SqmExpression<?>> partitions;
 		if ( ctx.partitionClause() != null ) {
-			final HqlParser.PartitionClauseContext partitionClause = ctx.partitionClause();
+			final var partitionClause = ctx.partitionClause();
 			partitions = new ArrayList<>( ( partitionClause.getChildCount() >> 1 ) - 1 );
 			for ( int i = 2; i < partitionClause.getChildCount(); i += 2 ) {
 				partitions.add( (SqmExpression<?>) partitionClause.getChild( i ).accept( this ) );
@@ -5289,21 +5308,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final FrameKind endKind;
 		final SqmExpression<?> endExpression;
 		final FrameExclusion exclusion;
-		final HqlParser.FrameClauseContext frameClause = ctx.frameClause();
+		final var frameClause = ctx.frameClause();
 		if ( frameClause != null ) {
-			switch ( ( (TerminalNode) frameClause.getChild( 0 ) ).getSymbol().getType() ) {
-				case HqlParser.RANGE:
-					mode = FrameMode.RANGE;
-					break;
-				case HqlParser.ROWS:
-					mode = FrameMode.ROWS;
-					break;
-				case HqlParser.GROUPS:
-					mode = FrameMode.GROUPS;
-					break;
-				default:
-					throw new IllegalArgumentException( "Unexpected frame mode: " + frameClause.getChild( 0 ) );
-			}
+			final Token symbol = ((TerminalNode) frameClause.getChild( 0 )).getSymbol();
+			mode = switch ( symbol.getType() ) {
+				case HqlParser.RANGE -> FrameMode.RANGE;
+				case HqlParser.ROWS -> FrameMode.ROWS;
+				case HqlParser.GROUPS -> FrameMode.GROUPS;
+				default -> throw new IllegalArgumentException( "Unexpected frame mode: " + frameClause.getChild( 0 ) );
+			};
 			final int frameStartIndex;
 			if ( frameClause.getChild( 1 ) instanceof TerminalNode ) {
 				frameStartIndex = 2;
@@ -5323,22 +5336,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					: null;
 			final ParseTree lastChild = frameClause.getChild( frameClause.getChildCount() - 1 );
 			if ( lastChild instanceof HqlParser.FrameExclusionContext ) {
-				switch ( ( (TerminalNode) lastChild.getChild( 1 ) ).getSymbol().getType() ) {
-					case HqlParser.CURRENT:
-						exclusion = FrameExclusion.CURRENT_ROW;
-						break;
-					case HqlParser.GROUP:
-						exclusion = FrameExclusion.GROUP;
-						break;
-					case HqlParser.TIES:
-						exclusion = FrameExclusion.TIES;
-						break;
-					case HqlParser.NO:
-						exclusion = FrameExclusion.NO_OTHERS;
-						break;
-					default:
-						throw new IllegalArgumentException( "Unexpected frame exclusion: " + lastChild );
-				}
+				final Token token = ((TerminalNode) lastChild.getChild( 1 )).getSymbol();
+				exclusion = switch ( token.getType() ) {
+					case HqlParser.CURRENT -> FrameExclusion.CURRENT_ROW;
+					case HqlParser.GROUP -> FrameExclusion.GROUP;
+					case HqlParser.TIES -> FrameExclusion.TIES;
+					case HqlParser.NO -> FrameExclusion.NO_OTHERS;
+					default -> throw new IllegalArgumentException( "Unexpected frame exclusion: " + lastChild );
+				};
 			}
 			else {
 				exclusion = FrameExclusion.NO_OTHERS;
@@ -5366,26 +5371,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private FrameKind getFrameKind(ParseTree child) {
-		switch ( ( (TerminalNode) child.getChild( 1 ) ).getSymbol().getType() ) {
-			case HqlParser.PRECEDING:
-				if ( child.getChild( 0 ) instanceof TerminalNode ) {
-					return FrameKind.UNBOUNDED_PRECEDING;
-				}
-				else {
-					return FrameKind.OFFSET_PRECEDING;
-				}
-			case HqlParser.FOLLOWING:
-				if ( child.getChild( 0 ) instanceof TerminalNode ) {
-					return FrameKind.UNBOUNDED_FOLLOWING;
-				}
-				else {
-					return FrameKind.OFFSET_FOLLOWING;
-				}
-			case HqlParser.ROW:
-				return FrameKind.CURRENT_ROW;
-			default:
-				throw new IllegalArgumentException( "Illegal frame kind: " + child );
-		}
+		final Token symbol = ((TerminalNode) child.getChild( 1 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.PRECEDING ->
+					child.getChild( 0 ) instanceof TerminalNode
+							? FrameKind.UNBOUNDED_PRECEDING
+							: FrameKind.OFFSET_PRECEDING;
+			case HqlParser.FOLLOWING ->
+					child.getChild( 0 ) instanceof TerminalNode
+							? FrameKind.UNBOUNDED_FOLLOWING
+							: FrameKind.OFFSET_FOLLOWING;
+			case HqlParser.ROW -> FrameKind.CURRENT_ROW;
+			default -> throw new IllegalArgumentException( "Illegal frame kind: " + child );
+		};
 	}
 
 	@Override
@@ -5393,7 +5391,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmSummarization<>(
 				SqmSummarization.Kind.CUBE,
 				visitExpressions( ctx ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -5402,7 +5400,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmSummarization<>(
 				SqmSummarization.Kind.ROLLUP,
 				visitExpressions( ctx ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -5417,7 +5415,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return getFunctionDescriptor("substring").generateSqmExpression(
 				length == null ? asList( source, start ) : asList( source, start, length ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -5435,44 +5433,40 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						? asList( source, length, padSpec, padChar )
 						: asList( source, length, padSpec ),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
 	@Override
 	public SqmTrimSpecification visitPadSpecification(HqlParser.PadSpecificationContext ctx) {
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.LEADING:
-				return new SqmTrimSpecification( TrimSpec.LEADING, creationContext.getNodeBuilder() );
-			case HqlParser.TRAILING:
-				return new SqmTrimSpecification( TrimSpec.TRAILING, creationContext.getNodeBuilder() );
-		}
-		throw new ParsingException("Unsupported pad specification [" + ctx.getText() + "]");
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.LEADING -> new SqmTrimSpecification( TrimSpec.LEADING, nodeBuilder() );
+			case HqlParser.TRAILING -> new SqmTrimSpecification( TrimSpec.TRAILING, nodeBuilder() );
+			default -> throw new ParsingException( "Unsupported pad specification [" + ctx.getText() + "]" );
+		};
 	}
 
 	@Override
 	public SqmLiteral<Character> visitPadCharacter(HqlParser.PadCharacterContext ctx) {
 		final String padCharText = ctx.STRING_LITERAL().getText();
-
 		if ( padCharText.length() != 3 ) {
 			throw new SemanticException( "Pad character for pad() function must be single character, found '"
 					+ padCharText + "'",
 					query );
 		}
-
 		return new SqmLiteral<>(
 				padCharText.charAt( 1 ),
 				resolveExpressibleTypeBasic( Character.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
 	@Override
 	public SqmExpression<?> visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression<?> source = (SqmExpression<?>) ctx.expression().accept( this );
-		final SqmTrimSpecification trimSpec = visitTrimSpecification( ctx.trimSpecification() );;
+		final SqmTrimSpecification trimSpec = visitTrimSpecification( ctx.trimSpecification() );
 		final SqmExpression<Character> trimChar = visitTrimCharacter( ctx.trimCharacter() );
-
 		return getFunctionDescriptor("trim").generateSqmExpression(
 				asList(
 						trimSpec,
@@ -5480,7 +5474,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						source
 				),
 				null,
-				creationContext.getQueryEngine()
+				queryEngine()
 		);
 	}
 
@@ -5488,20 +5482,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmTrimSpecification visitTrimSpecification(HqlParser.TrimSpecificationContext ctx) {
 		// JPA says the default is BOTH
 		final TrimSpec spec = ctx != null ? trimSpec( ctx ) : TrimSpec.BOTH;
-		return new SqmTrimSpecification( spec, creationContext.getNodeBuilder() );
+		return new SqmTrimSpecification( spec, nodeBuilder() );
 	}
 
 	private static TrimSpec trimSpec(HqlParser.TrimSpecificationContext ctx) {
-		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
-			case HqlParser.LEADING:
-				return TrimSpec.LEADING;
-			case HqlParser.TRAILING:
-				return TrimSpec.TRAILING;
-			case HqlParser.BOTH:
-				return TrimSpec.BOTH;
-			default:
-				throw new ParsingException( "Unrecognized trim specification" );
-		}
+		final Token symbol = ((TerminalNode) ctx.getChild( 0 )).getSymbol();
+		return switch ( symbol.getType() ) {
+			case HqlParser.LEADING -> TrimSpec.LEADING;
+			case HqlParser.TRAILING -> TrimSpec.TRAILING;
+			case HqlParser.BOTH -> TrimSpec.BOTH;
+			default -> throw new ParsingException( "Unrecognized trim specification" );
+		};
 	}
 
 	@Override
@@ -5529,7 +5520,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmLiteral<>(
 				trimCharText.charAt( 0 ),
 				resolveExpressibleTypeBasic( Character.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -5538,7 +5529,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmCollectionSize(
 				consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) ),
 				resolveExpressibleTypeBasic( Integer.class ),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 	}
 
@@ -5572,17 +5563,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			);
 		}
 
-		CollectionPart.Nature nature;
-		switch ( firstNode.getSymbol().getType() ) {
-			case ELEMENTS:
-				nature = CollectionPart.Nature.ELEMENT;
-				break;
-			case INDICES:
-				nature = CollectionPart.Nature.INDEX;
-				break;
-			default:
-				throw new ParsingException("Impossible symbol");
-		}
+		CollectionPart.Nature nature = switch ( firstNode.getSymbol().getType() ) {
+			case ELEMENTS -> CollectionPart.Nature.ELEMENT;
+			case INDICES -> CollectionPart.Nature.INDEX;
+			default -> throw new ParsingException( "Impossible symbol" );
+		};
 
 		return pluralAttributePath.resolvePathPart( nature.getName(), true, this );
 	}
@@ -5662,10 +5647,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmSubQuery<?> visitSubquery(HqlParser.SubqueryContext ctx) {
-		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
+		final var queryExpressionContext = ctx.queryExpression();
 		final SqmSubQuery<?> subQuery = new SqmSubQuery<>(
 				processingStateStack.getCurrent().getProcessingQuery(),
-				creationContext.getNodeBuilder()
+				nodeBuilder()
 		);
 
 		processingStateStack.push(
@@ -5681,9 +5666,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 			final List<SqmSelection<?>> selections = subQuery.getQuerySpec().getSelectClause().getSelections();
 			if ( selections.size() == 1 ) {
-				subQuery.applyInferableType( selections.get( 0 ).getExpressible().getSqmType() );
+				final SqmExpressible<?> expressible = selections.get( 0 ).getExpressible();
+				if ( expressible != null ) {
+					subQuery.applyInferableType( expressible.getSqmType() );
+				}
 			}
-
 			return subQuery;
 		}
 		finally {
@@ -5697,8 +5684,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SemanticPathPart visitPath(HqlParser.PathContext ctx) {
-		final HqlParser.SyntacticDomainPathContext syntacticDomainPath = ctx.syntacticDomainPath();
-		final HqlParser.GeneralPathFragmentContext generalPathFragment = ctx.generalPathFragment();
+		final var syntacticDomainPath = ctx.syntacticDomainPath();
+		final var generalPathFragment = ctx.generalPathFragment();
 		if ( syntacticDomainPath != null ) {
 			return visitPathContinuation( visitSyntacticDomainPath( syntacticDomainPath ), ctx.pathContinuation() );
 		}
@@ -5730,7 +5717,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return visitToOneFkReference( ctx.toOneFkReference() );
 		}
 		else if ( ctx.function() != null ) {
-			final HqlParser.SlicedPathAccessFragmentContext slicedFragmentsCtx = ctx.slicedPathAccessFragment();
+			final var slicedFragmentsCtx = ctx.slicedPathAccessFragment();
 			if ( slicedFragmentsCtx != null ) {
 				final List<HqlParser.ExpressionContext> slicedFragments = slicedFragmentsCtx.expression();
 				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
@@ -5740,7 +5727,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
 						),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 			}
 			else {
@@ -5760,7 +5747,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final List<HqlParser.ExpressionContext> slicedFragments = ctx.slicedPathAccessFragment().expression();
 			final SqmTypedNode<?> lhs = (SqmTypedNode<?>) visitSimplePath( ctx.simplePath() );
 			final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
-			if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( lhsExpressible == null ) {
+				throw new SemanticException( "Slice operator applied to expression of unknown type", query );
+			}
+			else if ( lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
 				return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
 						List.of(
 								lhs,
@@ -5768,10 +5758,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 								(SqmTypedNode<?>) slicedFragments.get( 1 ).accept( this )
 						),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
 			}
-			else {
+			else if ( lhsExpressible.getRelationalJavaType() instanceof StringJavaType
+					&& !(lhs instanceof SqmPluralValuedSimplePath) ) {
 				final SqmExpression<?> start = (SqmExpression<?>) slicedFragments.get( 0 ).accept( this );
 				final SqmExpression<?> end = (SqmExpression<?>) slicedFragments.get( 1 ).accept( this );
 				return getFunctionDescriptor( "substring" ).generateSqmExpression(
@@ -5784,21 +5775,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 												BinaryArithmeticOperator.SUBTRACT,
 												end,
 												start,
-												creationContext.getJpaMetamodel(),
-												creationContext.getNodeBuilder()
+												nodeBuilder()
 										),
 										new SqmLiteral<>(
 												1,
-												creationContext.getNodeBuilder().getIntegerType(),
-												creationContext.getNodeBuilder()
+												nodeBuilder().getIntegerType(),
+												nodeBuilder()
 										),
-										creationContext.getJpaMetamodel(),
-										creationContext.getNodeBuilder()
+										nodeBuilder()
 								)
 						),
 						null,
-						creationContext.getQueryEngine()
+						queryEngine()
 				);
+			}
+			else {
+				throw new SemanticException( "Slice operator applied to expression which is not a string or SQL array", query );
 			}
 		}
 		else {
@@ -5866,7 +5858,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final int numberOfContinuations = ctx.simplePathElement().size();
 
 		final DotIdentifierConsumer dotIdentifierConsumer = dotIdentifierConsumerStack.getCurrent();
-		final HqlParser.IdentifierContext identifierContext = ctx.identifier();
+		final var identifierContext = ctx.identifier();
 		assert identifierContext.getChildCount() == 1;
 
 		dotIdentifierConsumer.consumeIdentifier(
@@ -5876,8 +5868,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 
 		for ( int i = 0; i < numberOfContinuations; i++ ) {
-			final HqlParser.SimplePathElementContext continuation = ctx.simplePathElement( i );
-			final HqlParser.IdentifierContext identifier = continuation.identifier();
+			final var continuation = ctx.simplePathElement( i );
+			final var identifier = continuation.identifier();
 			assert identifier.getChildCount() == 1;
 			dotIdentifierConsumer.consumeIdentifier(
 					visitIdentifier( identifier ),
@@ -5893,8 +5885,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPath<?> visitTreatedNavigablePath(HqlParser.TreatedNavigablePathContext ctx) {
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
 		final boolean madeNested;
-		if ( consumer instanceof QualifiedJoinPathConsumer) {
-			final QualifiedJoinPathConsumer qualifiedJoinPathConsumer = (QualifiedJoinPathConsumer) consumer;
+		if ( consumer instanceof QualifiedJoinPathConsumer qualifiedJoinPathConsumer ) {
 			madeNested = !qualifiedJoinPathConsumer.isNested();
 			if ( madeNested ) {
 				qualifiedJoinPathConsumer.setNested( true );
@@ -5906,7 +5897,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		consumeManagedTypeReference( ctx.path() );
 
 		final String treatTargetName = ctx.simplePath().getText();
-		final String importableName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		final String importableName = getJpaMetamodel().qualifyImportableName( treatTargetName );
 		if ( importableName == null ) {
 			throw new SemanticException( "Could not resolve treat target type '" + treatTargetName + "'", query );
 		}
@@ -5947,8 +5938,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPath<?> visitCollectionValueNavigablePath(HqlParser.CollectionValueNavigablePathContext ctx) {
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
 		final boolean madeNested;
-		if ( consumer instanceof QualifiedJoinPathConsumer) {
-			final QualifiedJoinPathConsumer qualifiedJoinPathConsumer = (QualifiedJoinPathConsumer) consumer;
+		if ( consumer instanceof QualifiedJoinPathConsumer qualifiedJoinPathConsumer ) {
 			madeNested = !qualifiedJoinPathConsumer.isNested();
 			if ( madeNested ) {
 				qualifiedJoinPathConsumer.setNested( true );
@@ -5973,10 +5963,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		SqmPath<?> result;
-		if ( consumer instanceof QualifiedJoinPathConsumer) {
+		if ( consumer instanceof QualifiedJoinPathConsumer qualifiedJoinPathConsumer ) {
 			if ( madeNested && !hasContinuation ) {
 				// Reset the nested state before consuming the terminal identifier
-				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+				qualifiedJoinPathConsumer.setNested( false );
 			}
 			consumer.consumeIdentifier( CollectionPart.Nature.ELEMENT.getName(), false, !hasContinuation );
 			result = (SqmPath<?>) consumer.getConsumedPart();
@@ -5990,8 +5980,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				// Reset the nested state before consuming the terminal identifier
 				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
 			}
-			final HqlParser.SimplePathContext identCtx = ctx.pathContinuation().simplePath();
-			if ( consumer instanceof QualifiedJoinPathConsumer) {
+			final var identCtx = ctx.pathContinuation().simplePath();
+			if ( consumer instanceof QualifiedJoinPathConsumer ) {
 				result = consumeDomainPath( identCtx );
 			}
 			else {
@@ -6019,8 +6009,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPath<?> visitMapKeyNavigablePath(HqlParser.MapKeyNavigablePathContext ctx) {
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.getCurrent();
 		final boolean madeNested;
-		if ( consumer instanceof QualifiedJoinPathConsumer) {
-			final QualifiedJoinPathConsumer qualifiedJoinPathConsumer = (QualifiedJoinPathConsumer) consumer;
+		if ( consumer instanceof QualifiedJoinPathConsumer qualifiedJoinPathConsumer ) {
 			madeNested = !qualifiedJoinPathConsumer.isNested();
 			if ( madeNested ) {
 				qualifiedJoinPathConsumer.setNested( true );
@@ -6033,8 +6022,21 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final boolean hasContinuation = ctx.getChildCount() == 5;
 
 		final SqmPathSource<?> referencedPathSource = sqmPath.getReferencedPathSource();
-		final TerminalNode firstNode = (TerminalNode) ctx.indexKeyQuantifier().getChild(0);
-		checkPluralPath( sqmPath, referencedPathSource, firstNode );
+		final TerminalNode firstNode = (TerminalNode) ctx.indexKeyQuantifier().getChild( 0 );
+		if ( firstNode.getSymbol().getType() == HqlParser.INDEX
+				&& referencedPathSource instanceof AnonymousTupleType<?> tupleType ) {
+			if ( tupleType.findSubPathSource( CollectionPart.Nature.INDEX.getName() ) == null ) {
+				throw new FunctionArgumentException(
+						String.format(
+								"The set-returning from node '%s' does not specify an index/ordinality",
+								sqmPath.getNavigablePath()
+						)
+				);
+			}
+		}
+		else {
+			checkPluralPath( sqmPath, referencedPathSource, firstNode );
+		}
 
 		if ( getCreationOptions().useStrictJpaCompliance() ) {
 			final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
@@ -6045,12 +6047,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		SqmPath<?> result;
-		if ( sqmPath instanceof SqmMapJoin ) {
-			final SqmMapJoin<?, ?, ?> sqmMapJoin = (SqmMapJoin<?, ?, ?>) sqmPath;
-			if ( consumer instanceof QualifiedJoinPathConsumer) {
+		if ( sqmPath instanceof SqmMapJoin<?, ?, ?> sqmMapJoin ) {
+			if ( consumer instanceof QualifiedJoinPathConsumer pathConsumer ) {
 				if ( madeNested && !hasContinuation ) {
 					// Reset the nested state before consuming the terminal identifier
-					( (QualifiedJoinPathConsumer) consumer ).setNested( false );
+					pathConsumer.setNested( false );
 				}
 				consumer.consumeIdentifier( CollectionPart.Nature.INDEX.getName(), false, !hasContinuation );
 				result = (SqmPath<?>) consumer.getConsumedPart();
@@ -6059,12 +6060,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				result = sqmMapJoin.key();
 			}
 		}
-		else if ( sqmPath instanceof SqmListJoin ) {
+		else if ( sqmPath instanceof SqmListJoin<?, ?> listJoin ) {
 			if ( hasContinuation ) {
 				throw new TerminalPathException("List index has no attributes");
 			}
-			SqmListJoin<?,?> listJoin = (SqmListJoin<?,?>) sqmPath;
 			result = listJoin.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
+		}
+		else if ( sqmPath instanceof SqmFunctionRoot<?> functionRoot ) {
+			if ( hasContinuation ) {
+				throw new TerminalPathException("List index has no attributes");
+			}
+			result = functionRoot.index();
+		}
+		else if ( sqmPath instanceof SqmFunctionJoin<?> functionJoin ) {
+			if ( hasContinuation ) {
+				throw new TerminalPathException("List index has no attributes");
+			}
+			result = functionJoin.index();
 		}
 		else {
 			assert sqmPath instanceof SqmPluralValuedSimplePath;
@@ -6077,8 +6089,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				// Reset the nested state before consuming the terminal identifier
 				( (QualifiedJoinPathConsumer) consumer ).setNested( false );
 			}
-			final HqlParser.SimplePathContext identCtx = ctx.pathContinuation().simplePath();
-			if ( consumer instanceof QualifiedJoinPathConsumer) {
+			final var identCtx = ctx.pathContinuation().simplePath();
+			if ( consumer instanceof QualifiedJoinPathConsumer ) {
 				result = consumeDomainPath( identCtx );
 			}
 			else {
@@ -6102,7 +6114,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private void checkPluralPath(SqmPath<?> pluralAttributePath, SqmPathSource<?> referencedPathSource, TerminalNode firstNode) {
-		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
+		if ( !( referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
 			throw new FunctionArgumentException(
 					String.format(
 							"Argument of '%s' is not a plural path '%s'",
@@ -6115,8 +6127,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmPath<?> consumeDomainPath(HqlParser.PathContext parserPath) {
 		final SemanticPathPart consumedPart = (SemanticPathPart) parserPath.accept( this );
-		if ( consumedPart instanceof SqmPath ) {
-			return (SqmPath<?>) consumedPart;
+		if ( consumedPart instanceof SqmPath<?> sqmPath ) {
+			return sqmPath;
 		}
 		else {
 			throw new PathException( "Expecting domain-model path, but found: " + consumedPart );
@@ -6126,8 +6138,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmPath<?> consumeDomainPath(HqlParser.SimplePathContext sequence) {
 		final SemanticPathPart consumedPart = (SemanticPathPart) sequence.accept( this );
-		if ( consumedPart instanceof SqmPath ) {
-			return (SqmPath<?>) consumedPart;
+		if ( consumedPart instanceof SqmPath<?> sqmPath ) {
+			return sqmPath;
 		}
 		else {
 			throw new PathException( "Expecting domain-model path, but found: " + consumedPart );
@@ -6137,11 +6149,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmPath<?> consumeManagedTypeReference(HqlParser.PathContext parserPath) {
 		final SqmPath<?> sqmPath = consumeDomainPath( parserPath );
 		final SqmPathSource<?> pathSource = sqmPath.getReferencedPathSource();
-		if ( pathSource.getSqmPathType() instanceof ManagedDomainType<?> ) {
+		if ( pathSource.getPathType() instanceof ManagedDomainType<?> ) {
 			return sqmPath;
 		}
 		else {
-			throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath() + "], but found: " + pathSource.getSqmPathType() );
+			throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath()
+					+ "], but found: " + pathSource.getPathType() );
 		}
 	}
 
@@ -6151,8 +6164,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return sqmPath;
 		}
 		else {
-			throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath() + "], but found: "
-					+ sqmPath.getReferencedPathSource().getSqmPathType() );
+			throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath()
+					+ "], but found: " + sqmPath.getReferencedPathSource().getPathType() );
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -71,8 +71,8 @@ public class CharacterArrayMappingTests {
 			}
 			else {
 				assertThat(
-						jdbcMapping.getJdbcType().getJdbcTypeCode(),
-						isOneOf( SqlTypes.ARRAY, SqlTypes.SQLXML, SqlTypes.VARBINARY )
+						jdbcMapping.getJdbcType().getDdlTypeCode(),
+						isOneOf( SqlTypes.ARRAY, SqlTypes.JSON, SqlTypes.SQLXML, SqlTypes.VARBINARY, SqlTypes.LONG32VARCHAR )
 				);
 			}
 		}

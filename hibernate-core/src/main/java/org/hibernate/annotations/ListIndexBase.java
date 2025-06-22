@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -9,9 +9,9 @@ import java.lang.annotation.Retention;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the base value for the {@link jakarta.persistence.OrderColumn
- * order column} of a persistent list or array, that is, the order column
- * value of the first element of the list or array.
+ * Specifies the base value for the {@linkplain jakarta.persistence.OrderColumn
+ * order column} of a persistent list or array, that is, the order column value
+ * of the first element of the list or array.
  * <ul>
  * <li>When a row is read from the database, this base value is subtracted
  *     from the order column value to determine an index in the list or array.

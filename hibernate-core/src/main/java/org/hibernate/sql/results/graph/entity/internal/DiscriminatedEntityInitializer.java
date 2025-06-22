@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -223,14 +223,14 @@ public class DiscriminatedEntityInitializer
 					// Read the discriminator from the result set if necessary
 					final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
 					data.concreteDescriptor = fetchedPart.resolveDiscriminatorValue( discriminatorValue ).getEntityPersister();
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			else {
 				data.setState( State.INITIALIZED );
 				if ( keyIsEager ) {
 					data.concreteDescriptor = rowProcessingState.getSession().getEntityPersister( null, lazyInitializer.getImplementation() );
-					data.entityIdentifier = lazyInitializer.getIdentifier();
+					data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 				}
 			}
 			data.setInstance( instance );

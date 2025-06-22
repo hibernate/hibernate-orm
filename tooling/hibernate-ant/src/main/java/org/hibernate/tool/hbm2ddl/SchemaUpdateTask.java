@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
@@ -193,7 +193,7 @@ public class SchemaUpdateTask extends MatchingTask {
 			throw new BuildException( "File not found: " + e.getMessage(), e );
 		}
 		catch (IOException e) {
-			throw new BuildException( "IOException : " + e.getMessage(), e );
+			throw new BuildException( "IOException: " + e.getMessage(), e );
 		}
 		catch (BuildException e) {
 			throw e;

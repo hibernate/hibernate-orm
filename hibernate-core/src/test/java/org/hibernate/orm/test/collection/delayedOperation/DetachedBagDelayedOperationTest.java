@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.delayedOperation;
@@ -102,12 +102,7 @@ public class DetachedBagDelayedOperationTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Child" ).executeUpdate();
-					session.createQuery( "delete from Parent" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -151,7 +146,7 @@ public class DetachedBagDelayedOperationTest {
 
 					assertTrue( opDetachedWatcher.wasTriggered() );
 					assertEquals(
-							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
+							"HHH000496: Detaching an uninitialized collection with queued operations from a session: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children with owner id '1']",
 							opDetachedWatcher.getFirstTriggeredMessage()
 					);
 					opDetachedWatcher.reset();
@@ -188,7 +183,7 @@ public class DetachedBagDelayedOperationTest {
 					Parent p = session.merge( pWithQueuedOperations );
 					assertTrue( opMergedWatcher.wasTriggered() );
 					assertEquals(
-							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children#1]",
+							"HHH000494: Attempt to merge an uninitialized collection with queued operations; queued operations will be ignored: [org.hibernate.orm.test.collection.delayedOperation.DetachedBagDelayedOperationTest$Parent.children with owner id '1']",
 							opMergedWatcher.getFirstTriggeredMessage()
 					);
 					opMergedWatcher.reset();

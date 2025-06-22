@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy;
@@ -12,6 +12,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -80,7 +81,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	private MappingMetamodelImplementor getMappingMetamodel() {
-		return session.getFactory().getRuntimeMetamodels().getMappingMetamodel();
+		return session.getFactory().getMappingMetamodel();
 	}
 
 	private EntityPersister getEntityDescriptor() {
@@ -146,7 +147,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 		else {
 			final EntityPersister entityDescriptor =
-					session.getFactory().getRuntimeMetamodels().getMappingMetamodel()
+					session.getFactory().getMappingMetamodel()
 							.getEntityDescriptor( entityName );
 			return session.generateEntityKey( id, entityDescriptor );
 		}
@@ -206,7 +207,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			try {
 				final SessionFactoryImplementor factory =
 						SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid );
-				final SharedSessionContractImplementor session = factory.openSession();
+				final SessionImplementor session = factory.openSession();
 				session.getPersistenceContext().setDefaultReadOnly( true );
 				session.setHibernateFlushMode( FlushMode.MANUAL );
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_CHECK;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -30,13 +30,13 @@ public class OverriddenCheckAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenCheckAnnotation(SourceModelBuildingContext modelContext) {
+	public OverriddenCheckAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public OverriddenCheckAnnotation(DialectOverride.Check annotation, SourceModelBuildingContext modelContext) {
+	public OverriddenCheckAnnotation(DialectOverride.Check annotation, ModelsContext modelContext) {
 		dialect( annotation.dialect() );
 		before( annotation.before() );
 		sameOrAfter( annotation.sameOrAfter() );
@@ -46,7 +46,7 @@ public class OverriddenCheckAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OverriddenCheckAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public OverriddenCheckAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		super( attributeValues, DIALECT_OVERRIDE_CHECK, modelContext );
 		override( (Check) attributeValues.get( "override" ) );
 	}

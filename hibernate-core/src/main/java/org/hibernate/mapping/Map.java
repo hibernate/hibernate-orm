@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -19,9 +19,10 @@ import org.hibernate.usertype.UserCollectionType;
  * A mapping model object representing a collection of type {@link java.util.Map}.
  * A map has a primary key consisting of the key columns + index columns.
  */
-public class Map extends IndexedCollection {
+public non-sealed class Map extends IndexedCollection {
 
 	private String mapKeyPropertyName;
+	private boolean hasMapKeyProperty;
 
 	public Map(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
@@ -56,12 +57,12 @@ public class Map extends IndexedCollection {
 		if ( isSorted() ) {
 			return new SortedMapType( getRole(), getReferencedPropertyName(), getComparator() );
 		}
-
-		if ( hasOrder() ) {
+		else if ( hasOrder() ) {
 			return new OrderedMapType( getRole(), getReferencedPropertyName() );
 		}
-
-		return new MapType( getRole(), getReferencedPropertyName() );
+		else {
+			return new MapType( getRole(), getReferencedPropertyName() );
+		}
 	}
 
 
@@ -74,5 +75,14 @@ public class Map extends IndexedCollection {
 
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean hasMapKeyProperty() {
+		return hasMapKeyProperty;
+	}
+
+	public void setHasMapKeyProperty(boolean hasMapKeyProperty) {
+		this.hasMapKeyProperty = hasMapKeyProperty;
 	}
 }

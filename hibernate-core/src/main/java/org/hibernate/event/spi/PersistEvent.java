@@ -1,13 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 /**
- * An event class for persist()
+ * Event class for {@link org.hibernate.Session#persist}.
  *
  * @author Gavin King
+ *
+ * @see org.hibernate.Session#persist
  */
 public class PersistEvent extends AbstractEvent {
 
@@ -22,9 +24,7 @@ public class PersistEvent extends AbstractEvent {
 	public PersistEvent(Object object, EventSource source) {
 		super(source);
 		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create event with null entity"
-			);
+			throw new IllegalArgumentException( "Entity may not be null" );
 		}
 		this.object = object;
 	}

@@ -1,22 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.orm.junit;
 
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.MappingException;
-import org.hibernate.SessionFactory;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
@@ -24,7 +14,6 @@ import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
@@ -51,15 +40,15 @@ import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.boot.spi.SecondPass;
+import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.HANADialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -68,13 +57,12 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
-import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -85,26 +73,35 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
-import org.hibernate.testing.boot.BootstrapContextImpl;
-
-import jakarta.persistence.AttributeConverter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -217,7 +214,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof HANADialect
 				|| dialect instanceof CockroachDialect
 				|| dialect instanceof MySQLDialect
@@ -227,7 +223,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return !( dialect instanceof DB2Dialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect );
@@ -267,6 +262,13 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsSkipLocked implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsSkipLocked();
+		}
+	}
+
+	public static final class SupportsTruncateWithCast implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsTruncateWithCast();
 		}
 	}
 
@@ -315,14 +317,12 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsPadWithChar implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return !( dialect instanceof DerbyDialect );
 		}
 	}
 
 	public static class SupportsGroupByRollup implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof DB2Dialect
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof PostgreSQLDialect
@@ -335,7 +335,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsGroupByGroupingSets implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof DB2Dialect
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof PostgreSQLDialect
@@ -370,7 +369,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsCharCodeConversion implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't support the `ASCII` or `CHR` functions
 			return !( dialect instanceof DerbyDialect );
 		}
@@ -378,7 +376,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsReplace implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't support the `REPLACE` function
 			return !( dialect instanceof DerbyDialect );
 		}
@@ -386,7 +383,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsRepeat implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't support the `REPEAT` function
 			return !( dialect instanceof DerbyDialect
 					|| dialect instanceof InformixDialect );
@@ -417,8 +413,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsTruncateThroughCast implements DialectFeatureCheck {
+	public static class SupportsDateTimeTruncation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
+			if (dialect instanceof DerbyDialect
+				|| dialect instanceof FirebirdDialect
+				|| dialect instanceof InformixDialect) {
+				return false;
+			}
 			try {
 				dialect.appendDatetimeFormat( new StringBuilderSqlAppender(), "" );
 				return true;
@@ -437,7 +438,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsOrderByInCorrelatedSubquery implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect.supportsOrderByInSubquery()
 					// For some reason, HANA doesn't support order by in correlated subqueries...
 					&& !( dialect instanceof HANADialect );
@@ -470,7 +470,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsStringAggregation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect
 					|| dialect instanceof HSQLDialect
 					|| dialect instanceof MySQLDialect
@@ -486,7 +485,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect
 				|| dialect instanceof PostgreSQLDialect
 				|| dialect instanceof HANADialect
@@ -500,7 +498,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect
 				|| dialect instanceof PostgreSQLDialect
 				|| dialect instanceof HANADialect
@@ -514,7 +511,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsWindowFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't really support window functions, only row_number()
 			return dialect.supportsWindowFunctions() && !( dialect instanceof DerbyDialect );
 		}
@@ -522,7 +518,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFilterClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// Derby doesn't really support window functions, only row_number()
 			return dialect instanceof PostgreSQLDialect;
 		}
@@ -530,7 +525,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsSubqueryInOnClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof TiDBDialect );
 		}
@@ -538,7 +532,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof H2Dialect
 					|| dialect instanceof MySQLDialect
@@ -549,14 +542,11 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return !( dialect instanceof MySQLDialect
+			return !( dialect instanceof MySQLDialect && !(dialect instanceof MariaDBDialect)
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect
-					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) )
-					|| dialect instanceof InformixDialect
-					|| dialect instanceof MariaDBDialect;
+					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) );
 		}
 	}
 
@@ -568,7 +558,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsTruncateTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof MySQLDialect
 				|| dialect instanceof H2Dialect
 				|| dialect instanceof SQLServerDialect
@@ -590,60 +579,19 @@ abstract public class DialectFeatureChecks {
 						"",
 						"",
 						"",
-						new AggregateColumn(new Column(), null) {
-							@Override
-							public TruthValue getNullable() {
-								return TruthValue.UNKNOWN;
-							}
-
-							@Override
-							public int getTypeCode() {
-								return SqlTypes.STRUCT;
-							}
-
-							@Override
-							public String getTypeName() {
-								return null;
-							}
-
-							@Override
-							public int getColumnSize() {
-								return 0;
-							}
-
-							@Override
-							public int getDecimalDigits() {
-								return 0;
-							}
-						}, new Column() {
-							@Override
-							public TruthValue getNullable() {
-								return TruthValue.UNKNOWN;
-							}
-
-							@Override
-							public int getTypeCode() {
-								return Types.VARCHAR;
-							}
-
-							@Override
-							public String getTypeName() {
-								return "varchar";
-							}
-
-							@Override
-							public int getColumnSize() {
-								return 0;
-							}
-
-							@Override
-							public int getDecimalDigits() {
-								return 0;
-							}
-						}
+						SqlTypes.STRUCT,
+						new SqlTypedMappingImpl(
+								"varchar",
+								null,
+								null,
+								null,
+								null,
+								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
+						),
+						new TypeConfiguration()
 				) != null;
 			}
-			catch (Exception e) {
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
 				return false;
 			}
 		}
@@ -658,60 +606,46 @@ abstract public class DialectFeatureChecks {
 						"",
 						"",
 						"",
-						new AggregateColumn(new Column(), null) {
-							@Override
-							public TruthValue getNullable() {
-								return TruthValue.UNKNOWN;
-							}
-
-							@Override
-							public int getTypeCode() {
-								return SqlTypes.JSON;
-							}
-
-							@Override
-							public String getTypeName() {
-								return null;
-							}
-
-							@Override
-							public int getColumnSize() {
-								return 0;
-							}
-
-							@Override
-							public int getDecimalDigits() {
-								return 0;
-							}
-						}, new Column() {
-							@Override
-							public TruthValue getNullable() {
-								return TruthValue.UNKNOWN;
-							}
-
-							@Override
-							public int getTypeCode() {
-								return Types.VARCHAR;
-							}
-
-							@Override
-							public String getTypeName() {
-								return "varchar";
-							}
-
-							@Override
-							public int getColumnSize() {
-								return 0;
-							}
-
-							@Override
-							public int getDecimalDigits() {
-								return 0;
-							}
-						}
+						SqlTypes.JSON,
+						new SqlTypedMappingImpl(
+								"varchar",
+								null,
+								null,
+								null,
+								null,
+								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
+						),
+						new TypeConfiguration()
 				) != null;
 			}
-				catch (Exception e) {
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsXmlAggregate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				return dialect.getAggregateSupport() != null
+						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
+						"",
+						"",
+						"",
+						"",
+						SqlTypes.SQLXML,
+						new SqlTypedMappingImpl(
+								"varchar",
+								null,
+								null,
+								null,
+								null,
+								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
+						),
+						new TypeConfiguration()
+				) != null;
+			}
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
 				return false;
 			}
 		}
@@ -723,7 +657,19 @@ abstract public class DialectFeatureChecks {
 				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.JSON );
 				return true;
 			}
-			catch (Exception e) {
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsXmlComponentUpdate implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				dialect.getAggregateSupport().requiresAggregateCustomWriteExpressionRenderer( SqlTypes.SQLXML );
+				return true;
+			}
+			catch (UnsupportedOperationException | IllegalArgumentException e) {
 				return false;
 			}
 		}
@@ -886,6 +832,150 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsUnnest implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "unnest" );
+		}
+	}
+
+	public static class SupportsGenerateSeries implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "generate_series" );
+		}
+	}
+
+	public static class SupportsJsonTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "json_table" );
+		}
+	}
+
+	public static class SupportsXmlTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesSetReturningFunction( dialect, "xmltable" );
+		}
+	}
+
+	public static class SupportsArrayAgg implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_agg" );
+		}
+	}
+
+	public static class SupportsArrayAppend implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_append" );
+		}
+	}
+
+	public static class SupportsArrayConcat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_concat" );
+		}
+	}
+
+	public static class SupportsArrayConstructor implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array" );
+		}
+	}
+
+	public static class SupportsArrayContains implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_contains" );
+		}
+	}
+
+	public static class SupportsArrayFill implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_fill" );
+		}
+	}
+
+	public static class SupportsArrayGet implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_get" );
+		}
+	}
+
+	public static class SupportsArrayIncludes implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_includes" );
+		}
+	}
+
+	public static class SupportsArrayIntersects implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_intersects" );
+		}
+	}
+
+	public static class SupportsArrayLength implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_length" );
+		}
+	}
+
+	public static class SupportsArrayPositions implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_positions" );
+		}
+	}
+
+	public static class SupportsArrayPosition implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_position" );
+		}
+	}
+
+	public static class SupportsArrayPrepend implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_prepend" );
+		}
+	}
+
+	public static class SupportsArrayRemoveIndex implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_remove_index" );
+		}
+	}
+
+	public static class SupportsArrayRemove implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_remove" );
+		}
+	}
+
+	public static class SupportsArrayReplace implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_replace" );
+		}
+	}
+
+	public static class SupportsArraySet implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_set" );
+		}
+	}
+
+	public static class SupportsArraySlice implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_slice" );
+		}
+	}
+
+	public static class SupportsArrayToString implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_to_string" );
+		}
+	}
+
+	public static class SupportsArrayTrim implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_trim" );
+		}
+	}
+
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
@@ -910,6 +1000,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsTypedArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+		}
+	}
+
 	public static class SupportsUpsertOrMerge implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof DerbyDialect );
@@ -930,9 +1026,41 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsUnicodeNClob implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SybaseASEDialect aseDialect)
+					// The jconn driver apparently doesn't support unicode characters
+					|| aseDialect.getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
 	private static final HashMap<Dialect, SqmFunctionRegistry> FUNCTION_REGISTRIES = new HashMap<>();
 
 	public static boolean definesFunction(Dialect dialect, String functionName) {
+		return getSqmFunctionRegistry( dialect ).findFunctionDescriptor( functionName ) != null;
+	}
+
+	public static boolean definesSetReturningFunction(Dialect dialect, String functionName) {
+		return getSqmFunctionRegistry( dialect ).findSetReturningFunctionDescriptor( functionName ) != null;
+	}
+
+	public static class SupportsSubqueryInSelect implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubqueryInSelect();
+		}
+	}
+
+	public static class SupportSubqueryAsLeftHandSideInPredicate implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsSubselectAsInPredicateLHS();
+		}
+	}
+
+
+	private static SqmFunctionRegistry getSqmFunctionRegistry(Dialect dialect) {
 		SqmFunctionRegistry sqmFunctionRegistry = FUNCTION_REGISTRIES.get( dialect );
 		if ( sqmFunctionRegistry == null ) {
 			final TypeConfiguration typeConfiguration = new TypeConfiguration();
@@ -948,11 +1076,15 @@ abstract public class DialectFeatureChecks {
 			dialect.initializeFunctionRegistry( functionContributions );
 			FUNCTION_REGISTRIES.put( dialect, sqmFunctionRegistry = functionContributions.functionRegistry );
 		}
-		return sqmFunctionRegistry.findFunctionDescriptor( functionName ) != null;
+		return sqmFunctionRegistry;
 	}
 
-	private static class FakeTypeContributions implements TypeContributions {
+	public static class FakeTypeContributions implements TypeContributions {
 		private final TypeConfiguration typeConfiguration;
+
+		@Override
+		public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
+		}
 
 		public FakeTypeContributions(TypeConfiguration typeConfiguration) {
 			this.typeConfiguration = typeConfiguration;
@@ -964,7 +1096,7 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	private static class FakeFunctionContributions implements FunctionContributions {
+	public static class FakeFunctionContributions implements FunctionContributions {
 		private final Dialect dialect;
 		private final TypeConfiguration typeConfiguration;
 		private final SqmFunctionRegistry functionRegistry;
@@ -1068,11 +1200,6 @@ abstract public class DialectFeatureChecks {
 		@Override
 		public String getCurrentContributorName() {
 			return "";
-		}
-
-		@Override
-		public SourceModelBuildingContext getSourceModelBuildingContext() {
-			return null;
 		}
 
 		@Override
@@ -1353,14 +1480,6 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addPropertyAnnotatedWithMapsIdSpecj(
-				ClassDetails entityClassDetails,
-				PropertyData specJPropertyData,
-				String s) {
-
-		}
-
-		@Override
 		public void addToOneAndIdProperty(ClassDetails entityClassDetails, PropertyData propertyAnnotatedElement) {
 
 		}
@@ -1467,7 +1586,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public void addPropertyReferencedAssociation(String s, String propertyName, String syntheticPropertyName) {
+		public void addPropertyReferencedAssociation(String entityName, String propertyName, String syntheticPropertyName) {
 
 		}
 
@@ -1511,7 +1630,7 @@ abstract public class DialectFeatureChecks {
 		}
 
 		@Override
-		public SessionFactory buildSessionFactory() {
+		public SessionFactoryImplementor buildSessionFactory() {
 			return null;
 		}
 

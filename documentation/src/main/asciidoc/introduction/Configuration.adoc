@@ -2,18 +2,21 @@
 == Configuration and bootstrap
 
 We would love to make this section short.
-Unfortunately, there's several distinct ways to configure and bootstrap Hibernate, and we're going to have to describe at least two of them in detail.
+Unfortunately, there are several distinct ways to configure and bootstrap Hibernate, and we're going to have to describe at least two of them in detail.
 
-The four basic ways to obtain an instance of Hibernate are shown in the following table:
+The five basic ways to obtain an instance of Hibernate are shown in the following table:
 
-[%breakable,cols="50,50"]
+[%breakable,cols="50,50",number=0]
 |===
 
 | Using the standard JPA-defined XML, and the operation `Persistence.createEntityManagerFactory()`
 | Usually chosen when portability between JPA implementations is important.
 
-| Using the link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] class to construct a `SessionFactory`
-| When portability between JPA implementations is not important, this option is quicker, adds some flexibility and saves a typecast.
+| Using the standard JPA-defined  `PersistenceConfiguration` class
+| Usually chosen when portability between JPA implementations is important, but programmatic control is desired.
+
+| Using link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`] or the older link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] class to construct a `SessionFactory`
+| When portability between JPA implementations is not important, this option adds some convenience and saves a typecast.
 
 | Using the more complex APIs defined in link:{doc-javadoc-url}org/hibernate/boot/package-summary.html[`org.hibernate.boot`]
 | Used primarily by framework integrators, this option is outside the scope of this document.
@@ -51,7 +54,7 @@ First, add the following dependency to your project:
 org.hibernate.orm:hibernate-core:{version}
 ----
 
-Where `{version}` is the version of Hibernate you're using.
+Where `{version}` is the version of Hibernate you're using, `{fullVersion}`, for example.
 
 You'll also need to add a dependency for the JDBC
 driver for your database.
@@ -65,13 +68,13 @@ driver for your database.
 | MySQL or TiDB             | `com.mysql:mysql-connector-j:{version}`
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
 | DB2                       | `com.ibm.db2:jcc:{version}`
-| SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:${version}`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11:${version}`
+| SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:{version}`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc17:{version}`
 | H2                        | `com.h2database:h2:{version}`
 | HSQLDB                    | `org.hsqldb:hsqldb:{version}`
 |===
 
-Where `{version}` is the latest version of the JDBC driver for your databse.
+Where `{version}` is the latest version of the JDBC driver for your database.
 
 [[optional-dependencies]]
 === Optional dependencies
@@ -102,11 +105,11 @@ or `org.slf4j:slf4j-jdk14`
 | A JDBC connection pool, for example, {agroal}[Agroal] |
 `org.hibernate.orm:hibernate-agroal` +
 and `io.agroal:agroal-pool`
-| The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
+| The {generator}[Hibernate Processor], especially if you're using Jakarta Data or the JPA criteria query API | `org.hibernate.orm:hibernate-processor`
 | The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
 | {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
 `org.hibernate.validator:hibernate-validator` +
-and `org.glassfish:jakarta.el`
+and `org.glassfish.expressly:expressly`
 | Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
 and `org.ehcache:ehcache`
 | Local second-level cache support via JCache and {caffeine}[Caffeine]| `org.hibernate.orm:hibernate-jcache` +
@@ -118,6 +121,8 @@ and `com.github.ben-manes.caffeine:jcache`
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
 | <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+| <<jfr,Hibernate JFR>>, for monitoring via Java Flight Recorder | `org.hibernate.orm:hibernate-jfr`
+| Hibernate Jandex integration, for <<entity-discovery,entity discovery>> | `org.hibernate.orm:hibernate-scan-jandex`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
@@ -202,49 +207,97 @@ EntityManagerFactory entityManagerFactory =
 ----
 
 [[configuration-api]]
-=== Configuration using Hibernate API
+=== Programmatic configuration using JPA API
 
-Alternatively, the venerable class link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] allows an instance of Hibernate to be configured in Java code.
+The new `PersistenceConfiguration` class allows full programmatic control over creation of the `EntityManagerFactory`.
+
+[source,java]
+----
+EntityManagerFactory entityManagerFactory =
+        new PersistenceConfiguration("Bookshop")
+            .managedClass(Book.class)
+            .managedClass(Author.class)
+            // PostgreSQL
+            .property(PersistenceConfiguration.JDBC_URL, "jdbc:postgresql://localhost/example")
+            // Credentials
+            .property(PersistenceConfiguration.JDBC_USER, user)
+            .property(PersistenceConfiguration.JDBC_PASSWORD, password)
+            // Automatic schema export
+            .property(PersistenceConfiguration.SCHEMAGEN_DATABASE_ACTION,
+                    Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .property(JdbcSettings.SHOW_SQL, true)
+            .property(JdbcSettings.FORMAT_SQL, true)
+            .property(JdbcSettings.HIGHLIGHT_SQL, true)
+            // Create a new EntityManagerFactory
+            .createEntityManagerFactory();
+----
+
+The specification gives JPA implementors like Hibernate explicit permission to extend this class, and so Hibernate offers the link:{doc-javadoc-url}org/hibernate/jpa/HibernatePersistenceConfiguration.html[`HibernatePersistenceConfiguration`], which lets us obtain a `SessionFactory` without any need for a cast.
 
 [source,java]
 ----
 SessionFactory sessionFactory =
-        new Configuration()
-            .addAnnotatedClass(Book.class)
-            .addAnnotatedClass(Author.class)
+        new HibernatePersistenceConfiguration("Bookshop")
+            .managedClass(Book.class)
+            .managedClass(Author.class)
             // PostgreSQL
-            .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
+            .jdbcUrl("jdbc:postgresql://localhost/example")
             // Credentials
-            .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
-            .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
+            .jdbcCredentials(user, password)
             // Automatic schema export
-            .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
-                         Action.SPEC_ACTION_DROP_AND_CREATE)
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
             // SQL statement logging
-            .setProperty(AvailableSettings.SHOW_SQL, true)
-            .setProperty(AvailableSettings.FORMAT_SQL, true)
-            .setProperty(AvailableSettings.HIGHLIGHT_SQL, true)
+            .showSql(true, true, true)
             // Create a new SessionFactory
-            .buildSessionFactory();
+            .createEntityManagerFactory();
 ----
 
-The `Configuration` class has survived almost unchanged since the very earliest (pre-1.0) versions of Hibernate, and so it doesn't look particularly modern.
-On the other hand, it's very easy to use, and exposes some options that `persistence.xml` doesn't support.
+Alternatively, the venerable class link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] offers similar functionality.
 
 :native-bootstrap: {doc-user-guide-url}#bootstrap-native
 :boot: {doc-javadoc-url}/org/hibernate/boot/package-summary.html
 
 .Advanced configuration options
 ****
-Actually, the `Configuration` class is just a very simple facade for the more modern, much more powerful—but more complex—API defined in the package `org.hibernate.boot`.
+Actually, these APIs are very simple facades resting on the much more powerful--but also more complex--APIs defined in the package `org.hibernate.boot`.
 This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
 
+[[entity-discovery]]
+=== Entity discovery
+
+In a Jakarta EE container environment, we don't usually need to list entity and embeddable classes explicitly in `persistence.xml`.
+Instead, the container scans the persistence unit `jar` file and automatically discovers classes annotated `@Entity`, `@Embeddable`, or `@MappedSuperclass`.
+
+`HibernatePersistenceConfiguration` offers the same functionality if the <<optional-dependencies,optional dependency>> `hibernate-scan-jandex` is available at runtime.
+
+In the following code, entity classes available on the class loader which loaded `Main.class` are automatically discovered.
+
+[source,java]
+----
+SessionFactory sessionFactory =
+        // entities discovered on ClassLoader of Main.class
+        new HibernatePersistenceConfiguration("Bookshop", Main.class)
+            // PostgreSQL
+            .jdbcUrl("jdbc:postgresql://localhost/example")
+            // Credentials
+            .jdbcCredentials(user, password)
+            // Automatic schema export
+            .schemaToolingAction(Action.SPEC_ACTION_DROP_AND_CREATE)
+            // SQL statement logging
+            .showSql(true, true, true)
+            // Create a new SessionFactory
+            .createEntityManagerFactory();
+----
+
+Notice that we were able to remove the calls to `managedClass()`.
+
 [[configuration-properties]]
 === Configuration using Hibernate properties file
 
-If we're using the Hibernate `Configuration` API, but we don't want to put certain configuration properties directly in the Java code, we can specify them in a file named `hibernate.properties`, and place the file in the root classpath.
+If we're using programmatic configuration, but we don't want to put certain configuration properties directly in the Java code, we can specify them in a file named `hibernate.properties`, and place the file in the root classpath.
 
 [source,properties]
 ----
@@ -263,7 +316,9 @@ hibernate.highlight_sql=true
 [[basic-configuration-settings]]
 === Basic configuration settings
 
-The class link:{doc-javadoc-url}org/hibernate/cfg/AvailableSettings.html[`AvailableSettings`] enumerates all the configuration properties understood by Hibernate.
+The `PersistenceConfiguration` class declares `static final` constants holding the names of all configuration properties defined by the specification itself, for example, `JDBC_URL` holds the property name `"jakarta.persistence.jdbc.driver"`.
+
+Similarly, the class link:{doc-javadoc-url}org/hibernate/cfg/AvailableSettings.html[`AvailableSettings`] enumerates all the configuration properties understood by Hibernate.
 
 Of course, we're not going to cover every useful configuration setting in this chapter.
 Instead, we'll mention the ones you need to get started, and come back to some other important settings later, especially when we talk about performance tuning.
@@ -289,7 +344,7 @@ The properties you really do need to get started are these three:
 [IMPORTANT]
 // .You don't need `hibernate.dialect` anymore!
 ====
-In Hibernate 6, you don't need to specify `hibernate.dialect`.
+Since Hibernate 6, you don't need to specify `hibernate.dialect`.
 The correct Hibernate SQL `Dialect` will be determined for you automatically.
 The only reason to specify this property is if you're using a custom user-written `Dialect` class.
 
@@ -310,7 +365,7 @@ jakarta.persistence.database-major-version=15
 jakarta.persistence.database-minor-version=7
 ----
 
-The product name is the value returned by `java.sql.DatabaseMetaData.getDatabaseProductName()`, for example, `PostgreSQL`, `MySQL` `H2`, `Oracle`, `EnterpriseDB`, `MariaDB`, or `Microsoft SQL Server`.
+The product name is the value returned by `java.sql.DatabaseMetaData.getDatabaseProductName()`, for example, `PostgreSQL`, `MySQL`, `H2`, `Oracle`, `EnterpriseDB`, `MariaDB`, or `Microsoft SQL Server`.
 
 .Settings needed when database is inaccessible at startup
 [%breakable,cols="50,~"]
@@ -330,8 +385,10 @@ You can set the size of Hibernate's built-in connection pool using this property
 |===
 | Configuration property name | Purpose
 
-| `hibernate.connection.pool_size` | The size of the built-in connection pool
+| `hibernate.connection.pool_size` | The size of the connection pool
 |===
+
+This configuration property is also respected when you use Agroal, HikariCP, or c3p0 for connection pooling.
 
 [CAUTION]
 // .The default connection pool is not meant for production use
@@ -370,13 +427,14 @@ properties:
 | Configuration property name                                | Purpose
 
 | `jakarta.persistence.schema-generation.database.action`
-a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints
-* If `create`, export tables, sequences, and constraints, without attempting to drop them first
-* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup
-Additionally, drop the schema on `SessionFactory` shutdown
+a| * If `drop-and-create`, first drop the schema, then export tables, sequences, and constraints, and then populate initial data
+* If `create`, export tables, sequences, and constraints, without attempting to drop them first, and then populate initial data
+* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup;
+additionally, drop the schema on `SessionFactory` shutdown
 * If `drop`, drop the schema on `SessionFactory` shutdown
 * If `validate`, validate the database schema without changing it
-* If `update`, only export what's missing in the schema
+* If `update`, only export what's missing in the schema, and alter incorrect column types
+* If `populate`, only populate initial data
 
 | `jakarta.persistence.create-database-schemas`
 | (Optional) If `true`, automatically create schemas and catalogs
@@ -408,13 +466,7 @@ As we mentioned <<testing,earlier>>, it can also be useful to control schema exp
 The link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API allows programmatic control over schema export:
 
 [source,java]
-sessionFactory.getSchemaManager().exportMappedObjects(true);
-
-JPA has a more limited and less ergonomic API:
-
-[source,java]
-Persistence.generateSchema("org.hibernate.example",
-                           Map.of(JAKARTA_HBM2DDL_DATABASE_ACTION, CREATE))
+sessionFactory.getSchemaManager().create(true);
 ====
 
 [[logging-generated-sql]]
@@ -424,7 +476,7 @@ Persistence.generateSchema("org.hibernate.example",
 
 To see the generated SQL as it's sent to the database, you have two options.
 
-One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL direct to the console.
+One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL directly to the console.
 You can make the output much more readable by enabling formatting or highlighting.
 These settings really help when troubleshooting the generated SQL statements.
 
@@ -457,7 +509,7 @@ logger.jdbc-extract.level=trace
 
 ----
 
-But with this approach we miss out on the pretty highlighting.
+SQL logging respects the settings `hibernate.format_sql` and `hibernate.highlight_sql`, so we don't miss out on the pretty formatting and highlighting.
 
 [[minimizing]]
 === Minimizing repetitive mapping information
@@ -469,10 +521,10 @@ The following properties are very useful for minimizing the amount of informatio
 |===
 | Configuration property name           | Purpose
 
-| `hibernate.default_schema`            | A default schema name for entities which do not explicitly declare one
-| `hibernate.default_catalog`           | A default catalog name for entities which do not explicitly declare one
-| `hibernate.physical_naming_strategy`  | A `PhysicalNamingStrategy` implementing your database naming standards
-| `hibernate.implicit_naming_strategy`  | An `ImplicitNamingStrategy` which specifies how "logical" names of relational objects should be inferred when no name is specified in annotations
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#DEFAULT_SCHEMA[`hibernate.default_schema`]            | A default schema name for entities which do not explicitly declare one
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#DEFAULT_CATALOG[`hibernate.default_catalog`]           | A default catalog name for entities which do not explicitly declare one
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#PHYSICAL_NAMING_STRATEGY[`hibernate.physical_naming_strategy`]  | A `PhysicalNamingStrategy` implementing your database naming standards
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#IMPLICIT_NAMING_STRATEGY[`hibernate.implicit_naming_strategy`]  | An `ImplicitNamingStrategy` which specifies how "logical" names of relational objects should be inferred when no name is specified in annotations
 |===
 
 [TIP]
@@ -480,6 +532,33 @@ The following properties are very useful for minimizing the amount of informatio
 ====
 Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an especially good way to reduce the clutter of annotations on your entity classes, and to implement your database naming conventions, and so we think you should do it for any nontrivial data model.
 We'll have more to say about them in <<naming-strategies>>.
+====
+
+[[quoted-identifiers]]
+=== Quoting SQL identifiers
+
+By default, Hibernate never quotes a SQL table or column name in generated SQL when the name contains only alphanumeric characters.
+This behavior is usually much more convenient, especially when working with a legacy schema, since unquoted identifiers aren't case-sensitive, and so Hibernate doesn't need to know or care whether a column is named `NAME`, `name`, or `Name` on the database side.
+On the other hand, any table or column name containing a punctuation character like `$` is automatically quoted by default.
+
+The following settings enable additional automatic quoting:
+
+.Settings for identifier quoting
+[%breakable,cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#KEYWORD_AUTO_QUOTING_ENABLED[`hibernate.auto_quote_keyword`]          | Automatically quote any identifier which is a SQL keyword
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#GLOBALLY_QUOTED_IDENTIFIERS[`hibernate.globally_quoted_identifiers`] | Automatically quote every identifier
+|===
+
+Note that `hibernate.globally_quoted_identifiers` is a synonym for `<delimited-identifiers/>` in <<configuration-jpa,`persistence.xml`>>.
+We don't recommend the use of global identifier quoting, and in fact these settings are rarely used.
+
+[TIP]
+====
+A better alternative is to explicitly quote table and column names where necessary, by writing `@Table(name="\"View\")` or `@Column(name="\"number\"")`.
+Since that's kinda ugly, Hibernate lets us use a backtick as the quote character instead of the double quote.
 ====
 
 [[nationalized-chars]]
@@ -494,14 +573,42 @@ So, if you're working with SQL Server, you might need to force Hibernate to use 
 |===
 | Configuration property name                 | Purpose
 
-| `hibernate.use_nationalized_character_data` | Use `nchar` and `nvarchar` instead of `char` and `varchar`
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#USE_NATIONALIZED_CHARACTER_DATA[`hibernate.use_nationalized_character_data`] | Use `nchar` and `nvarchar` instead of `char` and `varchar`
 |===
 
-On the other hand, if only _some_ columns store nationalized data, use the `@Nationalized` annotation to indicate fields of your entities which map these columns.
+On the other hand, if only _some_ columns store nationalized data, use the link:{doc-javadoc-url}org/hibernate/annotations/Nationalized.html[`@Nationalized`] annotation to indicate fields of your entities which map these columns.
 
 [TIP]
 // .Configuring SQL Server to use UTF-8 by default
 ====
 Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `_UTF8`.
 ====
+
+[[datetime-jdbc]]
+=== Date and time types and JDBC
+
+By default, Hibernate handles date and time types defined by `java.time` by:
+
+- converting `java.time` types to JDBC date/time types defined in `java.sql` when sending data to the database, and
+- reading `java.sql` types from JDBC and then converting them to `java.time` types when retrieving data from the database.
+
+This works best when the database server time zone agrees with JVM system time zone.
+
+TIP: We therefore recommend setting things up so that the database server and the JVM agree on the same time zone. **Hint:** when in doubt, UTC is quite a nice time zone.
+
+There are two system configuration properties which influence this behavior:
+
+.Settings for JDBC date/time handling
+[%breakable,cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/JdbcSettings.html#JDBC_TIME_ZONE[`hibernate.jdbc.time_zone`]          | Use an explicit time zone when interacting with JDBC
+| link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html#JAVA_TIME_USE_DIRECT_JDBC[`hibernate.type.java_time_use_direct_jdbc`] | Read and write `java.time` types directly to and from JDBC
+|===
+
+You may set `hibernate.jdbc.time_zone` to the time zone of the database server if for some reason the JVM needs to operate in a different time zone.
+We do not recommend this approach.
+
+On the other hand, we would love to recommend the use of `hibernate.type.java_time_use_direct_jdbc`, but this option is still experimental for now, and does result in some subtle differences in behavior which might affect legacy programs using Hibernate.
 

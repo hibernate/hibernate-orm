@@ -1,0 +1,886 @@
+[[generator]]
+== Compile-time tooling
+
+The _static metamodel generator_ is a standard part of JPA.
+// It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
+We've actually already seen its handiwork in the code examples <<main-hibernate,earlier>>: it's the author of the class `Book_`, which contains the static metamodel of the <<book,entity class>> `Book`.
+
+Hibernate comes with an annotation processor which does much more than just this.
+It's capable of automatically generating:
+
+- <<static-metamodel,JPA metamodel>> classes, as we've already seen,
+- link:{doc-data-repositories-url}#data-static-metamodel[Jakarta Data metamodel] classes,
+- static <<generated-query-methods,query methods>> and <<generated-finder-methods,finder methods>>, and
+- implementations of <<static-or-instance,repository interfaces>>, including link:{doc-data-repositories-url}#repository-interfaces[Jakarta Data repositories].
+
+[[metamodel-generator]]
+.Hibernate Processor
+****
+
+:generator: https://hibernate.org/orm/processor/
+:generator-guide: {doc-user-guide-url}#tooling-modelgen
+
+{generator}[Hibernate Processor], the annotation processor formerly known as the Metamodel Generator, began its life as a code generator for what JPA calls a https://jakarta.ee/specifications/persistence/3.2/jakarta-persistence-spec-3.2#a6072[_static metamodel_].
+That is, it produces a typed model of the persistent classes in our program, giving us a type safe way to refer to their attributes in Java code.
+In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
+
+The history behind this thing is quite interesting.
+Back when Java's annotation processing API was brand spankin' new, the static metamodel for JPA was proposed by Gavin King for inclusion in JPA 2.0, as a way to achieve type safety in the nascent criteria query API.
+It's fair to say that, back in 2010, this API was not a runaway success.
+Tools did not, at the time, feature robust support for annotation processors.
+And all the explicit generic types made user code quite verbose and difficult to read.
+(The need for an explicit reference to a `CriteriaBuilder` instance also contributed verbosity to the criteria API.)
+For years, Gavin counted this as one of his more embarrassing missteps.
+
+But time has been kind to the static metamodel.
+By now, all Java compilers, build tools, and IDEs have robust support for annotation processing, and Java's local type inference (the `var` keyword) eliminates the verbose generic types.
+JPA's `CriteriaBuilder` and `EntityGraph` APIs are still not quite perfect, but the imperfections aren't related to static type safety or annotation processing.
+The static metamodel itself is undeniably useful and elegant.
+
+And it turns out that there was quite a lot of unlocked potential there.
+Since Hibernate 6.3 the Processor has started taking on a much bigger role.
+Today, it even contains a link:{doc-data-repositories-url}[complete implementation of the Jakarta Data specification].
+
+Now, you still don't have to use the Hibernate Processor with Hibernate—the APIs we just mentioned still also accept plain strings—but we find that it works well with Gradle and integrates smoothly with our IDE, and the advantage in type-safety is compelling.
+****
+
+[TIP]
+====
+We've already seen how to set up the annotation processor in the <<hello-hibernate,Gradle build>> we saw earlier.
+For more details on how to integrate the Hibernate Processor, check out the {generator-guide}[Static Metamodel Generator] section in the User Guide.
+====
+
+[[static-metamodel]]
+=== The static metamodel
+
+We've already seen several ways to use the JPA static metamodel.
+Metamodel references are useful for expressing, in a completely type-safe way:
+
+- <<criteria-queries,Criteria queries>>,
+- eager fetching via an <<entity-graph,entity graph>>,
+- dynamic <<restrictions-and-ordering,restriction and sorting>>, and
+- references to named <<named-queries,queries>> and named entity graphs.
+
+Here's an example of the sort of code that's generated for an entity class, as mandated by the JPA specification:
+
+[source,java]
+.Generated Code
+----
+@StaticMetamodel(Book.class)
+public abstract class Book_ {
+
+    /**
+     * @see org.example.Book#isbn
+     **/
+    public static volatile SingularAttribute<Book, String> isbn;
+
+    /**
+     * @see org.example.Book#text
+     **/
+    public static volatile SingularAttribute<Book, String> text;
+
+    /**
+     * @see org.example.Book#title
+     **/
+    public static volatile SingularAttribute<Book, String> title;
+
+    /**
+     * @see org.example.Book#type
+     **/
+    public static volatile SingularAttribute<Book, Type> type;
+
+    /**
+     * @see org.example.Book#publicationDate
+     **/
+    public static volatile SingularAttribute<Book, LocalDate> publicationDate;
+
+    /**
+     * @see org.example.Book#publisher
+     **/
+    public static volatile SingularAttribute<Book, Publisher> publisher;
+
+    /**
+     * @see org.example.Book#authors
+     **/
+    public static volatile SetAttribute<Book, Author> authors;
+
+    public static final String ISBN = "isbn";
+    public static final String TEXT = "text";
+    public static final String TITLE = "title";
+    public static final String TYPE = "type";
+    public static final String PUBLICATION_DATE = "publicationDate";
+    public static final String PUBLISHER = "publisher";
+    public static final String AUTHORS = "authors";
+
+}
+----
+
+For each attribute of the entity, the `Book_` class has:
+
+1. a `String`-valued constant like `TITLE` , and
+2. a typesafe reference like `title` to a metamodel object of type `Attribute`.
+
+[TIP]
+====
+Hibernate Processor allows _statically-typed_ access to elements of the JPA `Metamodel`. But the `Metamodel` is also accessible in a "reflective" way, via the `EntityManagerFactory`.
+
+[source,java]
+----
+EntityType<Book> book = entityManagerFactory.getMetamodel().entity(Book.class);
+SingularAttribute<Book,Long> id = book.getDeclaredId(Long.class)
+----
+// SingularAttribute<Book,String> title = book.getDeclaredSingularAttribute("title", String.class)
+
+This is very useful for writing generic code in frameworks or libraries.
+For example, you could use it to create your own criteria query API.
+====
+
+The JPA static metamodel for an entity also contains members representing the named queries and named entity graphs declared by `@NamedQuery`, `@NamedNativeQuery`, and `@NamedEntityGraph` annotations of the entity class.
+
+For example, if we had:
+
+[source,java]
+----
+@CheckHQL // validate named queries at compile time
+@NamedQuery(name = "findBooksByTitle",
+            query = "from Book where title like :title order by title")
+@Entity
+class Book { ... }
+----
+
+Then we may execute the query as follows:
+
+[source,java]
+----
+var books =
+        entityManager.createNamedQuery(Queries_._findBooksByTitle_)
+                .setParameter("title", titlePattern)
+                .setPage(page)
+                .getResultList();
+----
+
+Notice that no typecast was required here, since the generated code embeds the return type of the query as a type argument of the JPA `TypedQueryReference`:
+
+[source,java]
+----
+/**
+ * @see #_findBooksByTitle_
+ **/
+public static final String QUERY_FIND_BOOKS_BY_TITLE = "findBooksByTitle";
+
+
+/**
+ * The query named {@value QUERY_FIND_BOOKS_BY_TITLE}
+ * <pre>
+ * from Book where title like :title order by title
+ * </pre>
+ *
+ * @see org.example.Book
+ **/
+public static volatile TypedQueryReference<Book> _findBooksByTitle_;
+----
+
+[TIP]
+====
+Actually, Hibernate Processor doesn't require that such annotations be applied to the entity class itself, as we <<organizing-persistence,already saw earlier>>.
+====
+
+We've already been using metamodel references like `Book_.authors` and `Book.AUTHORS` in the previous chapters.
+So now let's see what else Hibernate Processor can do for us.
+
+[[finders-queries-repositories]]
+=== Finder methods, query methods, and repositories
+
+Automatic generation of _finder methods_ and _query methods_ is a relatively new feature of Hibernate Processor--originally introduced as an experiment--which ultimately grew into a whole new way to use Hibernate.
+
+We're going to meet three different kinds of generated method:
+
+- a _<<generated-named-queries,named query method>>_ has its signature and implementation generated directly from a `@NamedQuery` annotation,
+- a _<<generated-query-methods,query method>>_ has a signature that's explicitly declared, and a generated implementation which executes a HQL or SQL query specified via a `@HQL` or `@SQL` annotation, and
+- a _<<generated-finder-methods,finder method>>_ annotated `@Find` has a signature that's explicitly declared, and a generated implementation inferred from the parameter list.
+
+We're also going to see two ways that these methods can be called:
+
+- as static methods of a generated abstract class, or
+- as <<static-or-instance,instance methods of an interface>> with a generated implementation which may even be <<cdi-bean-injection,injected>>.
+
+Back in <<organizing-persistence>>, we walked you through a few different ways to organize your code with the help of Hibernate Processor.
+That journey terminated at the idea of a repository, but we emphasized that you aren't required to stay all the way to the end of the line.
+Repositories are a sweet spot for many users, but they might not be your sweet spot, and that's OK.
+Hibernate Processor is perfectly happy to generate `static` implementations of `@HQL`, `@SQL`, and `@Find` methods, eliminating the need to inject or instantiate a repository object.
+
+.Hibernate Processor and Jakarta Data
+****
+// For many years we've followed a three-step process: implement, learn from experience, and then standardize.
+//
+The functionality we're about to describe was developed before Jakarta Data took on its current shape, and directly triggered the apocalypse which lead to the final form of the specification.
+Therefore, there's massive overlap between the functionality described in this chapter, and the functionality available via the Jakarta Data annotations.
+On the other hand, Jakarta Data can't do _everything_ described below, and in particular it doesn't yet come with built-in support for stateful persistence contexts or reactive sessions.
+// We are currently working hard to standardize these capabilities, but writing great specifications takes time.
+
+We've therefore opted _not_ to rewrite this chapter in a Jakarta Data-centric way, and instead refer you to link:{doc-data-repositories-url}[Introducing Hibernate Data Repositories] for information about the standard Jakarta Data APIs.
+
+As Jakarta Data matures, even more of this functionality might be made obsolete, at least in the form described here.
+We're working hard to make that happen.
+****
+
+[CAUTION]
+====
+The functionality described in the rest of this chapter depends on the use of the annotations described in <<entities>>.
+Hibernate Processor is not currently able to generate finder methods and query methods for entities declared completely in XML, and it's not able to validate HQL which queries such entities.
+(On the other hand, the <<object-relational-mapping,O/R mappings>> may be specified in XML, since they're not needed by the Processor.)
+====
+
+To whet our appetites, let's see how it works for a `@NamedQuery`.
+
+[[generated-named-queries]]
+=== Named queries and Hibernate Processor
+
+The very simplest way to generate a query method is to put a `@NamedQuery` annotation anywhere we like, with a `name` beginning with the magical character `#`.
+
+Let's just stick it on the `Book` class:
+
+[source,java]
+----
+@CheckHQL // validate the query at compile time
+@NamedQuery(name = "#findByTitleAndType",
+            query = "select book from Book book where book.title like :title and book.type = :type")
+@Entity
+public class Book { ... }
+----
+
+Now the Processor adds the following method declaration to the metamodel class `Book_`.
+
+[source,java]
+.Generated Code
+----
+/**
+ * Execute named query {@value #QUERY_FIND_BY_TITLE_AND_TYPE} defined by annotation of {@link Book}.
+ **/
+public static List<Book> findByTitleAndType(@Nonnull EntityManager entityManager, String title, Type type) {
+    return entityManager.createNamedQuery(QUERY_FIND_BY_TITLE_AND_TYPE)
+            .setParameter("title", title)
+            .setParameter("type", type)
+            .getResultList();
+}
+----
+
+We can easily call this method from wherever we like, as long as we have access to an `EntityManager`:
+
+[source,java]
+----
+List<Book> books =
+        Book_.findByTitleAndType(entityManager, titlePattern, Type.BOOK);
+----
+
+Now, this is quite nice, but it's a bit inflexible in various ways, and so this probably _isn't_ the best way to generate a query method.
+
+[[generated-query-methods]]
+=== Generated query methods
+
+The principal problem with generating the query method straight from the `@NamedQuery` annotation is that it doesn't let us explicitly specify the return type or parameter list.
+In the case we just saw, Hibernate Processor does a reasonable job of inferring the query return type and parameter types, but we're often going to need a bit more control.
+
+The solution is to write down the signature of the query method _explicitly_, as an abstract method in Java.
+We'll need a place to put this method, and since our `Book` entity isn't an abstract class, we'll just introduce a new interface for this purpose:
+
+[source,java]
+----
+interface Queries {
+    @HQL("where title like :title and type = :type")
+    List<Book> findBooksByTitleAndType(String title, String type);
+}
+----
+
+Instead of `@NamedQuery`, which is a type-level annotation, we specify the HQL query using the new `@HQL` annotation, which we place directly on the query method.
+This results in the following generated code in the `Queries_` class:
+
+[source,java]
+.Generated Code
+----
+@StaticMetamodel(Queries.class)
+public abstract class Queries_ {
+
+    /**
+     * Execute the query {@value #FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type}.
+     *  
+     * @see org.example.Queries#findBooksByTitleAndType(String,Type)
+     **/
+    public static List<Book> findBooksByTitleAndType(@Nonnull EntityManager entityManager, String title, Type type) {
+        return entityManager.createQuery(FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type, Book.class)
+                .setParameter("title", title)
+                .setParameter("type", type)
+                .getResultList();
+    }
+
+    static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
+            "where title like :title and type = :type";
+
+}
+
+----
+
+Notice that the signature differs just slightly from the one we wrote down in the `Queries` interface: the Processor has prepended a parameter accepting `EntityManager` to the parameter list.
+
+If we want to explicitly specify the name and type of this parameter, we may declare it explicitly:
+
+[source,java]
+----
+interface Queries {
+    @HQL("where title like :title and type = :type")
+    List<Book> findBooksByTitleAndType(StatelessSession session, String title, String type);
+}
+----
+
+Hibernate Processor defaults to using `EntityManager` as the session type, but other types are allowed:
+
+- `Session`,
+- `StatelessSession`, or
+- `Mutiny.Session` or `Mutiny.StatelessSession` from Hibernate Reactive.
+
+The real value of all this is in the checks which can now be done at compile time.
+Hibernate Processor verifies that the parameters of our abstract method declaration match the parameters of the HQL query, for example:
+
+- for a named parameter `:alice`, there must be a method parameter named `alice` with exactly the same type, or
+- for an ordinal parameter `?2`, the second method parameter must have exactly the same type.
+
+The query must also be syntactically legal and semantically well-typed, that is, the entities, attributes, and functions referenced in the query must actually exist and have compatible types.
+Hibernate Processor determines this by inspecting the annotations of the entity classes at compile time.
+
+[NOTE]
+====
+The `@CheckHQL` annotation which instructs Hibernate to validate named queries is _not_ necessary for query methods annotated `@HQL`.
+====
+
+The `@HQL` annotation has a friend named `@SQL` which lets us specify a query written in native SQL instead of in HQL.
+In this case there's a lot less the Processor can do to check that the query is legal and well-typed.
+
+We imagine you're wondering whether a `static` method is really the right thing to use here.
+
+[[static-or-instance]]
+=== Generating query methods as instance methods
+
+One thing not to like about what we've just seen is that we can't transparently replace a generated `static` function of the `Queries_` class with an improved handwritten implementation without impacting clients.
+Now, if our query is only called in one place, which is quite common, this isn't going to be a big issue, and so we're inclined to think the `static` function is fine.
+
+But if this function is called from many places, it's probably better to promote it to an instance method of some class or interface.
+Fortunately, this is straightforward.
+
+All we need to do is add an abstract getter method for the session object to our `Queries` interface.
+(And remove the session from the method parameter list.)
+We may call this method anything we like:
+
+[source,java]
+----
+interface Queries {
+    EntityManager entityManager();
+
+    @HQL("where title like :title and type = :type")
+    List<Book> findBooksByTitleAndType(String title, String type);
+}
+----
+
+Here we've used `EntityManager` as the session type, but other types are allowed, as we saw above.
+
+Now Hibernate Processor does something a bit different:
+
+[source,java]
+.Generated Code
+----
+@StaticMetamodel(Queries.class)
+public class Queries_ implements Queries {
+
+    private final @Nonnull EntityManager entityManager;
+
+    public Queries_(@Nonnull EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
+    public @Nonnull EntityManager entityManager() {
+        return entityManager;
+    }
+
+    /**
+     * Execute the query {@value #FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type}.
+     * 
+     * @see org.example.Queries#findBooksByTitleAndType(String,Type)
+     **/
+    @Override
+    public List<Book> findBooksByTitleAndType(String title, Type type) {
+        return entityManager.createQuery(FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type, Book.class)
+                .setParameter("title", title)
+                .setParameter("type", type)
+                .getResultList();
+    }
+
+    static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
+            "where title like :title and type = :type";
+
+}
+----
+
+The generated class `Queries_` now implements the `Queries` interface, and the generated query method implements our abstract method directly.
+
+Of course, the protocol for calling the query method has to change:
+
+[source,java]
+----
+Queries queries = new Queries_(entityManager);
+List<Book> books = queries.findByTitleAndType(titlePattern, Type.BOOK);
+----
+
+If we ever need to swap out the generated query method with one we write by hand, without impacting clients, all we need to do is replace the abstract method with a `default` method of the `Queries` interface.
+For example:
+
+[source,java]
+----
+interface Queries {
+    EntityManager entityManager();
+
+    // handwritten method replacing previous generated implementation
+    default List<Book> findBooksByTitleAndType(String title, String type) {
+        entityManager()
+                .createQuery("where title like :title and type = :type", Book.class)
+                        .setParameter("title", title)
+                        .setParameter("type", type)
+                        .setFlushMode(COMMIT)
+                        .setMaxResults(100)
+                        .getResultList();
+    }
+}
+----
+
+What if we would like to inject a `Queries` object instead of calling its constructor directly?
+
+[[cdi-bean-injection]]
+[%unbreakable]
+[TIP]
+====
+As you <<organizing-persistence,recall>>, we don't think these things really need to be container-managed objects.
+But if you _want_ them to be--if you're allergic to calling constructors, for some reason--then:
+
+- placing `jakarta.inject` on the build path will cause an `@Inject` annotation to be added to the constructor of `Queries_`, and
+- placing `jakarta.enterprise.context` on the build path will cause a `@Dependent` annotation to be added to the `Queries_` class.
+
+Thus, the generated implementation of `Queries` will be a perfectly functional CDI bean with no extra work to be done.
+====
+
+Is the `Queries` interface starting to look a lot like a DAO-style repository object?
+Well, perhaps.
+You can certainly _decide to use_ this facility to create a `BookRepository` if that's what you prefer.
+But unlike a repository, our `Queries` interface:
+
+- doesn't attempt to hide the `EntityManager` from its clients,
+- doesn't implement or extend any framework-provided interface or abstract class, at least not unless you want to create such a framework yourself, and
+- isn't restricted to service a particular entity class.
+
+We can have as many or as few interfaces with query methods as we like.
+There's no one-one-correspondence between these interfaces and entity types.
+This approach is so flexible that we don't even really know what to call these "interfaces with query methods".
+
+[[generated-finder-methods]]
+=== Generated finder methods
+
+At this point, one usually begins to question whether it's even necessary to write a query at all.
+Would it be possible to just infer the query from the method signature?
+
+In some simple cases it's indeed possible, and this is the purpose of _finder methods_.
+A finder method is a method annotated `@Find`.
+For example:
+
+[source,java]
+----
+@Find
+Book getBook(String isbn);
+----
+
+A finder method may have multiple parameters:
+
+[source,java]
+----
+@Find
+List<Book> getBooksByTitle(String title, Type type);
+----
+
+The name of the finder method is arbitrary and carries no semantics.
+But:
+
+- the return type determines the entity class to be queried, and
+- the parameters of the method must match the fields of the entity class _exactly_, by both name and type.
+
+Considering our first example, `Book` has a persistent field `String isbn`, so this finder method is legal.
+If there were no field named `isbn` in `Book`, or if it had a different type, this method declaration would be rejected with a meaningful error at compile time.
+Similarly, the second example is legal, since `Book` has fields `String title` and `Type type`.
+
+[%unbreakable]
+[IMPORTANT]
+====
+You might notice that our solution to this problem is very different from the approach taken by others.
+In DAO-style repository frameworks, you're asked to encode the semantics of the finder method into the _name of the method_.
+This idea came to Java from Ruby, and we think it doesn't belong here.
+It's completely unnatural in Java, and by almost any measure other than _counting characters_ it's objectively worse than just writing the query in a string literal.
+At least string literals accommodate whitespace and punctuation characters.
+Oh and, you know, it's pretty useful to be able to rename a finder method _without changing its semantics_. 🙄
+====
+
+The code generated for this finder method depends on what kind of fields match the method parameters:
+
+[cols="45,~"]
+|===
+|`@Id` field | Uses `EntityManager.find()`
+|All `@NaturalId` fields | Uses `Session.byNaturalId()`
+|Other persistent fields, or a mix of field types | Uses a criteria query
+|===
+
+The generated code also depends on what kind of session we have, since the capabilities of stateless sessions, and of reactive sessions, differ slightly from the capabilities of regular stateful sessions.
+
+With `EntityManager` as the session type, we obtain:
+
+[source,java]
+----
+/**
+ * Find {@link Book} by {@link Book#isbn isbn}.
+ *
+ * @see org.example.Dao#getBook(String)
+ **/
+@Override
+public Book getBook(@Nonnull String isbn) {
+	return entityManager.find(Book.class, isbn);
+}
+
+/**
+ * Find {@link Book} by {@link Book#title title} and {@link Book#type type}.
+ *
+ * @see org.example.Dao#getBooksByTitle(String,Type)
+ **/
+@Override
+public List<Book> getBooksByTitle(String title, Type type) {
+	var builder = entityManager.getEntityManagerFactory().getCriteriaBuilder();
+	var query = builder.createQuery(Book.class);
+	var entity = query.from(Book.class);
+	query.where(
+			title==null
+				? entity.get(Book_.title).isNull()
+				: builder.equal(entity.get(Book_.title), title),
+			type==null
+				? entity.get(Book_.type).isNull()
+				: builder.equal(entity.get(Book_.type), type)
+	);
+	return entityManager.createQuery(query).getResultList();
+}
+----
+
+It's even possible to match a parameter of a finder method against a property of an associated entity or embeddable.
+The natural syntax would be a parameter declaration like `String publisher.name`, but because that's not legal Java, we can write it as `String publisher$name`, taking advantage of a legal Java identifier character that nobody ever uses for anything else:
+
+[source,java]
+----
+@Find
+List<Book> getBooksByPublisherName(String publisher$name);
+----
+
+The `@Pattern` annotation may be applied to a parameter of type `String`, indicating that the argument is a wildcarded pattern which will be compared using `like`.
+
+[source,java]
+----
+@Find
+List<Book> getBooksByTitle(@Pattern String title, Type type);
+----
+
+Even better, a parameter may be of type `Range<T>`, where `T` is the type of the matching field.
+
+[source,java]
+----
+@Find
+List<Book> getBooksByTitle(Range<String> title, Type type);
+----
+
+The link:{doc-javadoc-url}org/hibernate/query/range/Range.html[`Range`] interface has a variety of `static` methods the caller may use to construct different kinds of ranges.
+For example, `Range.pattern()` constructs a `Range` representing a pattern.
+
+[source,java]
+----
+List<Book> books =
+        // returns books with titles beginning with "hibernate"
+        queries.getBooksByTitle(Range.prefix("hibernate", false), type);
+----
+
+A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
+
+[source,java]
+----
+@Find(namedFetchProfiles=Book_.FETCH_WITH_AUTHORS)
+Book getBookWithAuthors(String isbn);
+----
+
+This lets us declare which associations of `Book` should be pre-fetched by annotating the `Book` class.
+
+
+// In an interface or abstract class, write down the "signature" of the query as a function, and specify the HQL or SQL query string itself using a `@HQL` or `@SQL` annotation:
+//
+// [source,java]
+// ----
+// interface Queries {
+//     @HQL("from Book where title like :title order by title offset :start fetch first :max rows only")
+//     List<Book> findBooksTitled(String title, int max, int start);
+// }
+// ----
+//
+//
+// A query method with a similar signature and return type is generated in the corresponding static metamodel class `Queries_`.
+// We can call the generated query method like this:
+//
+// [source,java]
+// ----
+// List<Book> books =
+//         Queries_.findBooksTitled(entityManager, titlePattern,
+//                         RESULTS_PER_PAGE, page*RESULTS_PER_PAGE);
+// ----
+
+[[paging-and-ordering]]
+=== Paging, ordering, and restrictions
+
+Optionally, a query method--or a finder method which returns multiple results--may have additional "magic" parameters which do not map to query parameters:
+
+[cols="19,~,32m"]
+|===
+| Parameter type | Purpose | Example argument
+
+| `Page` | Specifies a page of query results | Page.first(20)
+| `Order<? super E>` | Specifies an entity attribute to order by, if `E` is the entity type returned by the query | Order.asc(Book_.title)
+| `List<Order? super E>` +
+(or varargs) | Specifies entity attributes to order by, if `E` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
+| `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
+| `List<Object[]>` +
+(or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))
+| `Restriction<? super E>` | Specifies a restriction used to filter query results | Restriction.startsWith("Hibernate")
+|===
+
+Thus, if we redefine our earlier query method as follows:
+
+[source,java]
+----
+interface Queries {
+    @HQL("from Book where title like :title and type = :type")
+    List<Book> findBooksByTitleAndType(String title, Type type,
+                                       Page page, Order<? super Book>... order);
+}
+----
+
+Then we can call it like this:
+
+[source,java]
+----
+List<Book> books =
+        Queries_.findBooksByTitleAndType(entityManager, titlePattern, Type.BOOK,
+                Page.page(RESULTS_PER_PAGE, page), Order.asc(Book_.isbn));
+----
+
+Alternatively, we could have written this query method as a finder method:
+
+[source,java]
+----
+interface Queries {
+    @Find
+    List<Book> getBooksByTitle(String title, Type type,
+                               Page page, Order<? super Book>... order);
+}
+----
+
+Similarly, we may define a query method which accepts an arbitrary ``Restriction``:
+
+[source,java]
+----
+interface Queries {
+    @Find
+    List<Book> findBooks(Restriction<? super Book> restriction, Order<? super Book>... order);
+}
+----
+
+As we <<restrictions-and-ordering,saw earlier>>, the `Restriction` interface has a variety of `static` methods for constructing restrictions.
+
+[source,java]
+----
+List<Book> books =
+        // returns books with titles beginning with "hibernate", sorted by title
+        queries.findBooks(Restriction.startsWith(Book_.title, "hibernate", false),
+                          Order.asc(Book_.title));
+----
+
+This gives some dynamic control over query execution.
+We'll see <<return-query-from-method-example,below>> that it's even possible for the caller to gain direct control over the `Query` object.
+
+[[key-based-paging]]
+=== Key-based pagination
+
+A generated query or finder method can make use of <<key-based-pagination,key-based pagination>>.
+
+[source,java]
+----
+@Query("where publicationDate > :minDate")
+KeyedResultList<Book> booksFromDate(Session session, LocalDate minDate, KeyedPage<Book> page);
+----
+
+Note that this method:
+
+- accepts a `KeyedPage`, and
+- returns `KeyedResultList`.
+
+Such a method may be used like this:
+
+[source,java]
+----
+// obtain the first page of results
+KeyedResultList<Book> first =
+        Queries_.booksFromDate(session, minDate,
+                Page.first(25).keyedBy(Order.asc(Book_.isbn)));
+List<Book> firstPage = first.getResultList();
+...
+
+if (!firstPage.isLastPage()) {
+    // obtain the second page of results
+    KeyedResultList<Book> second =
+            Queries_.booksFromDate(session, minDate,
+                    firstPage.getNextPage());
+    List<Book> secondPage = second.getResultList();
+    ...
+}
+----
+
+[[return-types]]
+=== Query and finder method return types
+
+A query method doesn't need to return `List`.
+It might return a single `Book`.
+
+[source,java]
+----
+@HQL("where isbn = :isbn")
+Book findBookByIsbn(String isbn);
+----
+
+For a query with a projection list, `Object[]` or `List<Object[]>` is permitted:
+
+[source,java]
+----
+@HQL("select isbn, title from Book where isbn = :isbn")
+Object[] findBookAttributesByIsbn(String isbn);
+----
+
+But when there's just one item in the `select` list, the type of that item should be used:
+
+[source,java]
+----
+@HQL("select title from Book where isbn = :isbn")
+String getBookTitleByIsbn(String isbn);
+----
+
+[source,java]
+----
+@HQL("select local datetime")
+LocalDateTime getServerDateTime();
+----
+
+A query which returns a selection list may have a query method which repackages the result as a record, as we saw in <<projection-lists>>.
+
+[source,java]
+----
+record IsbnTitle(String isbn, String title) {}
+
+@HQL("select isbn, title from Book")
+List<IsbnTitle> listIsbnAndTitleForEachBook(Page page);
+----
+
+A query method might even return `TypedQuery` or `SelectionQuery`:
+
+[[return-query-from-method-example]]
+[source,java]
+----
+@HQL("where title like :title")
+SelectionQuery<Book> findBooksByTitle(String title);
+----
+
+This is extremely useful at times, since it allows the client to further manipulate the query:
+
+[source,java]
+----
+List<Book> books =
+        Queries_.findBooksByTitle(entityManager, titlePattern)
+            .setOrder(Order.asc(Book_.title))                   // order the results
+            .setPage(Page.page(RESULTS_PER_PAGE, page))         // return the given page of results
+            .setFlushMode(FlushModeType.COMMIT)                 // don't flush session before query execution
+            .setReadOnly(true)                                  // load the entities in read-only mode
+            .setCacheStoreMode(CacheStoreMode.BYPASS)           // don't cache the results
+            .setComment("Hello world!")                         // add a comment to the generated SQL
+            .getResultList();
+----
+
+// Finally, a query method might return a `Pager`.
+// This is an incubating API in Hibernate 6.3 that makes it easy to paginate query result sets.
+// A query method returning type `Pager` must accept a `Page` object specifying the initial page.
+//
+// [source,java]
+// ----
+// @HQL("from Book where title like :title")
+// Pager<Book> findBooksByTitle(String title, Page initialPage);
+// ----
+//
+// There are several idioms for the use of `Pager`, here's one:
+//
+// [source,java]
+// ----
+// new Queries_(session)
+//         .findBooksByTitle(title, Page.first(pageSize))
+//                 .forEachRemainingPage(books -> {
+//                     for (Book book : books) {
+//                         ...
+//                     }
+//                     session.clear();
+//                 })
+// ----
+
+An `insert`, `update`, or `delete` query must return `int`, `boolean`, or `void`.
+
+[source,java]
+----
+@HQL("delete from Book")
+int deleteAllBooks();
+----
+
+[source,java]
+----
+@HQL("update Book set discontinued = true where discontinued = false and isbn = :isbn")
+boolean discontinueBook(String isbn);
+----
+
+[source,java]
+----
+@HQL("update Book set discontinued = true where isbn = :isbn")
+void discontinueBook(String isbn);
+----
+
+On the other hand, finder methods are currently much more limited.
+A finder method must return an entity type like `Book`, or a list of the entity type, `List<Book>`, for example.
+
+[NOTE]
+====
+As you might expect, for a reactive session, all query methods and finder methods must return `Uni`.
+====
+
+[[query-validator]]
+=== An alternative approach
+
+:query-validator: https://github.com/hibernate/query-validator/
+
+What if you just don't like the ideas we've presented in this chapter, preferring to call the `Session` or `EntityManager` directly, but you still want compile-time validation for HQL?
+Or what if you _do_ like the ideas, but you're working on a huge existing codebase full of code you don't want to change?
+
+Well, there's a solution for you, too.
+The {query-validator}[Query Validator] is a separate annotation processor that's capable of type-checking HQL strings, not only in annotations, but even when they occur as arguments to `createQuery()`, `createSelectionQuery()`, or `createMutationQuery()`. It's even able to check calls to `setParameter()`, with some restrictions.
+
+The Query Validator works in `javac`, Gradle, Maven, and the Eclipse Java Compiler.
+
+[CAUTION]
+====
+Unlike Hibernate Processor, which is a completely bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
+====

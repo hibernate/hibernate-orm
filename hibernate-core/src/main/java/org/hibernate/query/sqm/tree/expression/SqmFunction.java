@@ -1,19 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.query.criteria.JpaFunction;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -38,7 +40,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	public SqmFunction(
 			String functionName,
 			SqmFunctionDescriptor functionDescriptor,
-			@Nullable SqmExpressible<T> type,
+			@Nullable SqmBindableType<T> type,
 			List<? extends SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
@@ -68,105 +70,105 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		// Special case a few functions with special syntax for rendering...
 		// Unless we introduce dedicated SqmXXX classes that override this method, we have to render it this way
 		switch ( functionName ) {
 			case "cast": {
-				sb.append( "cast(" );
-				arguments.get( 0 ).appendHqlString( sb );
-				sb.append( " as " );
-				arguments.get( 1 ).appendHqlString( sb );
-				sb.append( ')' );
+				hql.append( "cast(" );
+				arguments.get( 0 ).appendHqlString( hql, context );
+				hql.append( " as " );
+				arguments.get( 1 ).appendHqlString( hql, context );
+				hql.append( ')' );
 				break;
 			}
 			case "extract": {
-				sb.append( "extract(" );
-				arguments.get( 0 ).appendHqlString( sb );
-				sb.append( " from " );
-				arguments.get( 1 ).appendHqlString( sb );
-				sb.append( ')' );
+				hql.append( "extract(" );
+				arguments.get( 0 ).appendHqlString( hql, context );
+				hql.append( " from " );
+				arguments.get( 1 ).appendHqlString( hql, context );
+				hql.append( ')' );
 				break;
 			}
 			case "format": {
-				sb.append( "format(" );
-				arguments.get( 0 ).appendHqlString( sb );
-				sb.append( " as " );
-				arguments.get( 1 ).appendHqlString( sb );
-				sb.append( ')' );
+				hql.append( "format(" );
+				arguments.get( 0 ).appendHqlString( hql, context );
+				hql.append( " as " );
+				arguments.get( 1 ).appendHqlString( hql, context );
+				hql.append( ')' );
 				break;
 			}
 			case "overlay": {
-				sb.append( "overlay(" );
-				arguments.get( 0 ).appendHqlString( sb );
-				sb.append( " placing " );
-				arguments.get( 1 ).appendHqlString( sb );
-				sb.append( " from " );
-				arguments.get( 2 ).appendHqlString( sb );
+				hql.append( "overlay(" );
+				arguments.get( 0 ).appendHqlString( hql, context );
+				hql.append( " placing " );
+				arguments.get( 1 ).appendHqlString( hql, context );
+				hql.append( " from " );
+				arguments.get( 2 ).appendHqlString( hql, context );
 				if ( arguments.size() == 4 ) {
-					sb.append( " for " );
-					arguments.get( 3 ).appendHqlString( sb );
+					hql.append( " for " );
+					arguments.get( 3 ).appendHqlString( hql, context );
 				}
-				sb.append( ')' );
+				hql.append( ')' );
 				break;
 			}
 			case "trim": {
-				sb.append( "trim(" );
+				hql.append( "trim(" );
 				switch ( arguments.size() ) {
 					case 1:
-						arguments.get( 0 ).appendHqlString( sb );
+						arguments.get( 0 ).appendHqlString( hql, context );
 						break;
 					case 2:
-						arguments.get( 0 ).appendHqlString( sb );
-						sb.append( " from " );
-						arguments.get( 1 ).appendHqlString( sb );
+						arguments.get( 0 ).appendHqlString( hql, context );
+						hql.append( " from " );
+						arguments.get( 1 ).appendHqlString( hql, context );
 						break;
 					case 3:
-						arguments.get( 0 ).appendHqlString( sb );
-						sb.append( ' ' );
-						arguments.get( 1 ).appendHqlString( sb );
-						sb.append( " from " );
-						arguments.get( 3 ).appendHqlString( sb );
+						arguments.get( 0 ).appendHqlString( hql, context );
+						hql.append( ' ' );
+						arguments.get( 1 ).appendHqlString( hql, context );
+						hql.append( " from " );
+						arguments.get( 3 ).appendHqlString( hql, context );
 						break;
 				}
-				sb.append( ')' );
+				hql.append( ')' );
 				break;
 			}
 			case "pad": {
-				sb.append( "pad(" );
-				arguments.get( 0 ).appendHqlString( sb );
-				sb.append( " with" );
+				hql.append( "pad(" );
+				arguments.get( 0 ).appendHqlString( hql, context );
+				hql.append( " with" );
 				for ( int i = 1; i < arguments.size(); i++ ) {
-					sb.append( ' ' );
-					arguments.get( i ).appendHqlString( sb );
+					hql.append( ' ' );
+					arguments.get( i ).appendHqlString( hql, context );
 				}
-				sb.append( ')' );
+				hql.append( ')' );
 				break;
 			}
 			case "position": {
-				sb.append( "position(" );
-				arguments.get( 0 ).appendHqlString( sb );
-				sb.append( " in " );
-				arguments.get( 1 ).appendHqlString( sb );
-				sb.append( ')' );
+				hql.append( "position(" );
+				arguments.get( 0 ).appendHqlString( hql, context );
+				hql.append( " in " );
+				arguments.get( 1 ).appendHqlString( hql, context );
+				hql.append( ')' );
 				break;
 			}
 			default: {
-				sb.append( functionName );
+				hql.append( functionName );
 				if ( arguments.isEmpty() ) {
 					if ( functionDescriptor.alwaysIncludesParentheses() ) {
-						sb.append( "()" );
+						hql.append( "()" );
 					}
 					return;
 				}
-				sb.append( '(' );
-				arguments.get( 0 ).appendHqlString( sb );
+				hql.append( '(' );
+				arguments.get( 0 ).appendHqlString( hql, context );
 				for ( int i = 1; i < arguments.size(); i++ ) {
-					sb.append( ", " );
-					arguments.get( i ).appendHqlString( sb );
+					hql.append( ", " );
+					arguments.get( i ).appendHqlString( hql, context );
 				}
 
-				sb.append( ')' );
+				hql.append( ')' );
 				break;
 			}
 		}
@@ -181,7 +183,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	private SqmFunctionPath<T> getFunctionPath() {
 		SqmFunctionPath<T> path = functionPath;
 		if ( path == null ) {
-			path = functionPath = new SqmFunctionPath<T>( this );
+			path = functionPath = new SqmFunctionPath<>( this );
 		}
 		return path;
 	}
@@ -200,5 +202,17 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return getFunctionPath().resolveIndexedAccess( selector, isTerminal, creationState );
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmFunction<?> that
+			&& Objects.equals( this.functionName, that.functionName )
+			&& Objects.equals( this.arguments, that.arguments );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( functionName, arguments );
 	}
 }

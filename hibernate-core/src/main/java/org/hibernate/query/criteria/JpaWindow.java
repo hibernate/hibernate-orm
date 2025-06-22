@@ -1,11 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.FrameExclusion;
+import org.hibernate.query.common.FrameExclusion;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;

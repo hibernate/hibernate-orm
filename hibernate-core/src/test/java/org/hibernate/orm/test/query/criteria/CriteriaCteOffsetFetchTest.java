@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -7,11 +7,11 @@ package org.hibernate.orm.test.query.criteria;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -113,7 +113,7 @@ public class CriteriaCteOffsetFetchTest {
 				}
 			}
 
-			final QueryImplementor<Product> query = session.createQuery( cq );
+			final Query<Product> query = session.createQuery( cq );
 			if ( queryOptions ) {
 				if ( firstResult != null ) {
 					query.setFirstResult( firstResult );

@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -24,6 +25,7 @@ import java.lang.invoke.MethodHandles;
 		name = SqlAstTreeLogger.LOGGER_NAME,
 		description = "Logging related to the processing of SQL AST trees"
 )
+@Internal
 public interface SqlAstTreeLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.ast.tree";
 

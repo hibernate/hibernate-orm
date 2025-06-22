@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
 
 import java.io.InputStream;
+import java.sql.Blob;
 
 /**
  * Wraps a binary stream to also provide the length which is needed when binding.
@@ -37,4 +38,12 @@ public interface BinaryStream {
 	 * Release any underlying resources.
 	 */
 	void release();
+
+	/**
+	 * Use the given {@link LobCreator} to create a {@link Blob}
+	 * with the same data as this binary stream.
+	 *
+	 * @since 7.0
+	 */
+	Blob asBlob(LobCreator lobCreator);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.convert.internal;
@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.boot.internal.ClassmateContext;
+import org.hibernate.boot.spi.ClassmateContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
@@ -30,7 +30,7 @@ import jakarta.persistence.AttributeConverter;
  */
 public class ConverterHelper {
 	public static ParameterizedType extractAttributeConverterParameterizedType(Class<? extends AttributeConverter<?,?>> base) {
-		return GenericsHelper.extractParameterizedType( base );
+		return GenericsHelper.extractParameterizedType( base, AttributeConverter.class );
 	}
 
 	public static ResolvedType resolveAttributeType(MemberDetails memberDetails, MetadataBuildingContext context) {
@@ -39,13 +39,12 @@ public class ConverterHelper {
 
 	public static ResolvedMember<? extends Member> resolveMember(MemberDetails memberDetails, MetadataBuildingContext buildingContext) {
 		final ClassmateContext classmateContext = buildingContext.getBootstrapContext().getClassmateContext();
-
-		final ResolvedType declaringClassType = classmateContext.getTypeResolver().resolve( memberDetails.getDeclaringType().toJavaClass() );
-		final ResolvedTypeWithMembers declaringClassWithMembers = classmateContext.getMemberResolver().resolve(
-				declaringClassType,
-				null,
-				null
-		);
+		final ResolvedType declaringClassType =
+				classmateContext.getTypeResolver()
+						.resolve( memberDetails.getDeclaringType().toJavaClass() );
+		final ResolvedTypeWithMembers declaringClassWithMembers =
+				classmateContext.getMemberResolver()
+						.resolve( declaringClassType, null, null );
 
 		final Member member = memberDetails.toJavaMember();
 		if ( member instanceof Method ) {
@@ -114,37 +113,39 @@ public class ConverterHelper {
 			return converterDefinedType.getErasedType() == erasedCheckType;
 		}
 
-		if ( !converterDefinedType.getErasedType().isAssignableFrom( erasedCheckType ) ) {
-			return false;
-		}
+		return converterDefinedType.getErasedType().isAssignableFrom( erasedCheckType )
+			&& checkTypeParametersMatch( converterDefinedType, checkType );
+	}
 
-		// if the converter did not define any nested type parameters, then the check above is
-		// enough for a match
-		if ( converterDefinedType.getTypeParameters().isEmpty() ) {
+	private static boolean checkTypeParametersMatch(ResolvedType converterDefinedType, ResolvedType checkType) {
+		final List<ResolvedType> converterTypeParameters = converterDefinedType.getTypeParameters();
+		// if the converter did not define any nested type parameters,
+		// then the checks already done above are enough for a match
+		if ( converterTypeParameters.isEmpty() ) {
 			return true;
 		}
-
-		// however, here the converter *did* define nested type parameters, so we'd have a converter defined using something like, e.g., List<String> for its
-		// domain type.
-		//
-		// we need to check those nested types as well
-
-		if ( checkType.getTypeParameters().isEmpty() ) {
-			// the domain type did not define nested type params.  a List<String> would not auto-match a List(<Object>)
-			return false;
-		}
-
-		if ( converterDefinedType.getTypeParameters().size() != checkType.getTypeParameters().size() ) {
-			// they had different number of type params somehow.
-			return false;
-		}
-
-		for ( int i = 0; i < converterDefinedType.getTypeParameters().size(); i++ ) {
-			if ( !typesMatch( converterDefinedType.getTypeParameters().get( i ), checkType.getTypeParameters().get( i ) ) ) {
+		else {
+			// However, here the converter *did* define nested type parameters,
+			// so we'd have a converter defined using something like, for example,
+			// List<String> for its domain type, and so we need to check those
+			// nested types as well
+			final List<ResolvedType> checkTypeParameters = checkType.getTypeParameters();
+			if ( checkTypeParameters.isEmpty() ) {
+				// the domain type did not define nested type params.  a List<String> would not auto-match a List(<Object>)
 				return false;
 			}
+			else if ( converterTypeParameters.size() != checkTypeParameters.size() ) {
+				// they had different number of type params somehow.
+				return false;
+			}
+			else {
+				for ( int i = 0; i < converterTypeParameters.size(); i++ ) {
+					if ( !typesMatch( converterTypeParameters.get( i ), checkTypeParameters.get( i ) ) ) {
+						return false;
+					}
+				}
+				return true;
+			}
 		}
-
-		return true;
 	}
 }

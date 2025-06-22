@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -88,33 +88,6 @@ public interface DialectOverride {
 	@Retention(RUNTIME)
 	@interface Checks {
 		Check[] value();
-	}
-
-	/**
-	 * Specializes an {@link org.hibernate.annotations.OrderBy}
-	 * in a certain dialect.
-	 *
-	 * @deprecated Use {@link SQLOrder}
-	 */
-	@Target({METHOD, FIELD})
-	@Retention(RUNTIME)
-	@Repeatable(OrderBys.class)
-	@OverridesAnnotation(org.hibernate.annotations.OrderBy.class)
-	@Deprecated(since = "6.3", forRemoval = true)
-	@interface OrderBy {
-		/**
-		 * The {@link Dialect} in which this override applies.
-		 */
-		Class<? extends Dialect> dialect();
-		Version before() default @Version(major = MAX_VALUE);
-		Version sameOrAfter() default @Version(major = MIN_VALUE);
-
-		org.hibernate.annotations.OrderBy override();
-	}
-	@Target({METHOD, FIELD})
-	@Retention(RUNTIME)
-	@interface OrderBys {
-		OrderBy[] value();
 	}
 
 	/**
@@ -279,7 +252,7 @@ public interface DialectOverride {
 
 		org.hibernate.annotations.SQLRestriction override();
 	}
-	@Target({METHOD, FIELD})
+	@Target({METHOD, FIELD, TYPE})
 	@Retention(RUNTIME)
 	@interface SQLRestrictions {
 		SQLRestriction[] value();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -8,7 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.Incubating;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -139,6 +139,26 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * When mapping a basic array or collection type to the database what is the preferred SQL type code to use,
+	 * given the element SQL type code?
+	 * <p>
+	 * Returns a key into the {@link JdbcTypeRegistry}.
+	 *
+	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForArray()
+	 *
+	 * @since 7.0
+	 */
+	default int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+		return resolveJdbcTypeCode(
+				switch ( elementSqlTypeCode ) {
+					case SqlTypes.JSON -> SqlTypes.JSON_ARRAY;
+					case SqlTypes.SQLXML -> SqlTypes.XML_ARRAY;
+					default -> getExplicitJdbcTypeCode();
+				}
+		);
+	}
+
+	/**
 	 * Useful for resolutions based on column length.
 	 * <p>
 	 * E.g. for choosing between a {@code VARCHAR} ({@code String}) and {@code CHAR(1)} ({@code Character}/{@code char}).
@@ -217,6 +237,17 @@ public interface JdbcTypeIndicators {
 	 */
 	default boolean preferJdbcDatetimeTypes() {
 		return false;
+	}
+
+	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	default boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return getCurrentBaseSqlTypeIndicators().isXmlFormatMapperLegacyFormatEnabled();
 	}
 
 	/**

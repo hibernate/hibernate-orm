@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.beanvalidation;
@@ -8,11 +8,14 @@ import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.spi.PreCollectionUpdateEvent;
+import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -29,11 +32,10 @@ import org.jboss.logging.Logger;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.TraversableResolver;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 
-import static jakarta.validation.Validation.buildDefaultValidatorFactory;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 
 /**
@@ -44,7 +46,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize
  */
 //FIXME review exception model
 public class BeanValidationEventListener
-		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener {
+		implements PreInsertEventListener, PreUpdateEventListener, PreDeleteEventListener, PreUpsertEventListener, PreCollectionUpdateEventListener,
+		SessionFactoryObserver {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			MethodHandles.lookup(),
@@ -52,32 +55,25 @@ public class BeanValidationEventListener
 			BeanValidationEventListener.class.getName()
 	);
 
-	private ValidatorFactory factory;
-	private final ConcurrentHashMap<EntityPersister, Set<String>> associationsPerEntityPersister = new ConcurrentHashMap<>();
+	private HibernateTraversableResolver traversableResolver;
+	private Validator validator;
 	private GroupsPerOperation groupsPerOperation;
-	boolean initialized;
 
-	/**
-	 * Constructor used in an environment where validator factory is injected (JPA2).
-	 *
-	 * @param factory The {@code ValidatorFactory} to use to create {@code Validator} instance(s)
-	 * @param settings Configured properties
-	 */
 	public BeanValidationEventListener(
-			ValidatorFactory factory, Map<String,Object> settings, ClassLoaderService classLoaderService) {
-		init( factory, settings, classLoaderService );
-	}
-
-	public void initialize(Map<String,Object> settings, ClassLoaderService classLoaderService) {
-		if ( !initialized ) {
-			init( buildDefaultValidatorFactory(), settings, classLoaderService );
-		}
-	}
-
-	private void init(ValidatorFactory factory, Map<String,Object> settings, ClassLoaderService classLoaderService) {
-		this.factory = factory;
+			ValidatorFactory factory, Map<String, Object> settings, ClassLoaderService classLoaderService) {
+		traversableResolver = new HibernateTraversableResolver();
+		validator = factory.usingContext()
+				.traversableResolver( traversableResolver )
+				.getValidator();
 		groupsPerOperation = GroupsPerOperation.from( settings, new ClassLoaderAccessImpl( classLoaderService ) );
-		initialized = true;
+	}
+
+	@Override
+	public void sessionFactoryCreated(SessionFactory factory) {
+		SessionFactoryImplementor implementor = factory.unwrap( SessionFactoryImplementor.class );
+		implementor
+				.getMappingMetamodel()
+				.forEachEntityDescriptor( entityPersister -> traversableResolver.addPersister( entityPersister, implementor ) );
 	}
 
 	public boolean onPreInsert(PreInsertEvent event) {
@@ -121,6 +117,17 @@ public class BeanValidationEventListener
 		return false;
 	}
 
+	@Override
+	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
+		final Object entity = castNonNull( event.getCollection().getOwner() );
+		validate(
+				entity,
+				event.getSession().getEntityPersister( event.getAffectedOwnerEntityName(), entity ),
+				event.getFactory(),
+				GroupsPerOperation.Operation.UPDATE
+		);
+	}
+
 	private <T> void validate(
 			T object,
 			EntityPersister persister,
@@ -129,10 +136,6 @@ public class BeanValidationEventListener
 		if ( object == null || persister.getRepresentationStrategy().getMode() != RepresentationMode.POJO ) {
 			return;
 		}
-		TraversableResolver tr = new HibernateTraversableResolver( persister, associationsPerEntityPersister, sessionFactory );
-		Validator validator = factory.usingContext()
-				.traversableResolver( tr )
-				.getValidator();
 		final Class<?>[] groups = groupsPerOperation.get( operation );
 		if ( groups.length > 0 ) {
 			final Set<ConstraintViolation<T>> constraintViolations = validator.validate( object, groups );
@@ -153,7 +156,7 @@ public class BeanValidationEventListener
 				builder.append( toString( groups ) );
 				builder.append( "\nList of constraint violations:[\n" );
 				for ( ConstraintViolation<?> violation : constraintViolations ) {
-					builder.append( "\t" ).append( violation.toString() ).append("\n");
+					builder.append( "\t" ).append( violation.toString() ).append( "\n" );
 				}
 				builder.append( "]" );
 

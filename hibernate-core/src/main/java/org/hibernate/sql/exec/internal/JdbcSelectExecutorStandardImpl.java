@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
@@ -9,13 +9,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.CacheMode;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.TupleTransformer;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -26,6 +28,7 @@ import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
+import org.hibernate.sql.results.jdbc.internal.AbstractJdbcValues;
 import org.hibernate.sql.results.jdbc.internal.CachedJdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
@@ -44,6 +47,9 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
@@ -89,8 +95,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
-		boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
-		Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
+		final boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
+		final Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
 		if ( readOnly != null ) {
 			// The read-only/modifiable mode for the query was explicitly set.
 			// Temporarily set the default read-only/modifiable setting to the query's setting.
@@ -141,22 +147,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 
 		if ( rowTransformer == null ) {
-			@SuppressWarnings("unchecked")
-			final TupleTransformer<R> tupleTransformer = (TupleTransformer<R>) executionContext
-					.getQueryOptions()
-					.getTupleTransformer();
-
-			if ( tupleTransformer == null ) {
-				rowTransformer = RowTransformerStandardImpl.instance();
-			}
-			else {
-				final List<DomainResult<?>> domainResults = jdbcValues.getValuesMapping().getDomainResults();
-				final String[] aliases = new String[domainResults.size()];
-				for ( int i = 0; i < domainResults.size(); i++ ) {
-					aliases[i] = domainResults.get( i ).getResultVariable();
-				}
-				rowTransformer = new RowTransformerTupleTransformerAdapter<>( aliases, tupleTransformer );
-			}
+			rowTransformer = getRowTransformer( executionContext, jdbcValues );
 		}
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
@@ -200,10 +191,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				executionContext,
-				processingOptions
-		);
+		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
 
 		final RowReader<R> rowReader = ResultsHelper.createRowReader(
 				session.getFactory(),
@@ -230,7 +219,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		if ( stats ) {
 			final long endTime = System.nanoTime();
-			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			final long milliseconds =
+					TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
 			statistics.queryExecuted(
 					executionContext.getQueryIdentifier( jdbcSelect.getSqlString() ),
 					getResultSize( result ),
@@ -241,11 +231,25 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		return result;
 	}
 
-	private <T> int getResultSize(T result) {
-		if ( result instanceof List ) {
-			return ( (List<?>) result ).size();
+	private static <R> RowTransformer<R> getRowTransformer(ExecutionContext executionContext, JdbcValues jdbcValues) {
+		@SuppressWarnings("unchecked")
+		final TupleTransformer<R> tupleTransformer =
+				(TupleTransformer<R>) executionContext.getQueryOptions().getTupleTransformer();
+		if ( tupleTransformer == null ) {
+			return RowTransformerStandardImpl.instance();
 		}
-		return -1;
+		else {
+			final List<DomainResult<?>> domainResults = jdbcValues.getValuesMapping().getDomainResults();
+			final String[] aliases = new String[domainResults.size()];
+			for ( int i = 0; i < domainResults.size(); i++ ) {
+				aliases[i] = domainResults.get( i ).getResultVariable();
+			}
+			return new RowTransformerTupleTransformerAdapter<>( aliases, tupleTransformer );
+		}
+	}
+
+	private <T> int getResultSize(T result) {
+		return result instanceof List<?> list ? list.size() : -1;
 	}
 
 	private JdbcValues resolveJdbcValuesSource(
@@ -258,18 +262,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
 
-		final List<?> cachedResults;
-		final CacheMode cacheMode = JdbcExecHelper.resolveCacheMode( executionContext );
-
+		final CacheMode cacheMode = resolveCacheMode( executionContext );
 		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
-		final boolean cacheable = queryCacheEnabled && canBeCached
-				&& executionContext.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE;
-		final QueryKey queryResultsCacheKey;
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		final boolean cacheable =
+				queryCacheEnabled
+					&& canBeCached
+					&& queryOptions.isResultCachingEnabled() == Boolean.TRUE;
 
+		final QueryKey queryResultsCacheKey;
+		final List<?> cachedResults;
 		if ( cacheable && cacheMode.isGetEnabled() ) {
 			SqlExecLogger.SQL_EXEC_LOGGER.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
-			if ( querySpaces == null || querySpaces.size() == 0 ) {
+			if ( querySpaces == null || querySpaces.isEmpty() ) {
 				SqlExecLogger.SQL_EXEC_LOGGER.tracef( "Unexpected querySpaces is empty" );
 			}
 			else {
@@ -277,11 +283,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 
 			final QueryResultsCache queryCache = factory.getCache()
-					.getQueryResultsCache( executionContext.getQueryOptions().getResultCacheRegionName() );
+					.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
 
 			queryResultsCacheKey = QueryKey.from(
 					jdbcSelect.getSqlString(),
-					executionContext.getQueryOptions().getLimit(),
+					queryOptions.getLimit(),
 					executionContext.getQueryParameterBindings(),
 					session
 			);
@@ -321,7 +327,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			if ( cacheable && cacheMode.isPutEnabled() ) {
 				queryResultsCacheKey = QueryKey.from(
 						jdbcSelect.getSqlString(),
-						executionContext.getQueryOptions().getLimit(),
+						queryOptions.getLimit(),
 						executionContext.getQueryParameterBindings(),
 						session
 				);
@@ -331,20 +337,41 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 
+		return resolveJdbcValues(
+				queryIdentifier,
+				executionContext,
+				resultSetAccess,
+				cachedResults,
+				queryResultsCacheKey,
+				mappingProducer,
+				session,
+				factory
+		);
+	}
+
+	private static AbstractJdbcValues resolveJdbcValues(
+			String queryIdentifier,
+			ExecutionContext executionContext,
+			DeferredResultSetAccess resultSetAccess,
+			List<?> cachedResults,
+			QueryKey queryResultsCacheKey,
+			JdbcValuesMappingProducer mappingProducer,
+			SharedSessionContractImplementor session,
+			SessionFactoryImplementor factory) {
+		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 		if ( cachedResults == null ) {
 			final CachedJdbcValuesMetadata metadataForCache;
 			final JdbcValuesMapping jdbcValuesMapping;
 			if ( queryResultsCacheKey == null ) {
-				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, session.getLoadQueryInfluencers(), factory );
+				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, loadQueryInfluencers, factory );
 				metadataForCache = null;
 			}
 			else {
 				// If we need to put the values into the cache, we need to be able to capture the JdbcValuesMetadata
 				final CapturingJdbcValuesMetadata capturingMetadata = new CapturingJdbcValuesMetadata( resultSetAccess );
-				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, session.getLoadQueryInfluencers(), factory );
+				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, loadQueryInfluencers, factory );
 				metadataForCache = capturingMetadata.resolveMetadataForCache();
 			}
-
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
 					queryResultsCacheKey,
@@ -357,15 +384,24 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			);
 		}
 		else {
-			final JdbcValuesMapping jdbcValuesMapping;
-			if ( cachedResults.isEmpty() || !( cachedResults.get( 0 ) instanceof JdbcValuesMetadata ) ) {
-				jdbcValuesMapping = mappingProducer.resolve( resultSetAccess, session.getLoadQueryInfluencers(), factory );
-			}
-			else {
-				jdbcValuesMapping = mappingProducer.resolve( (JdbcValuesMetadata) cachedResults.get( 0 ), session.getLoadQueryInfluencers(), factory );
-			}
-			return new JdbcValuesCacheHit( cachedResults, jdbcValuesMapping );
+			final JdbcValuesMetadata valuesMetadata =
+					!cachedResults.isEmpty()
+						&& cachedResults.get( 0 ) instanceof JdbcValuesMetadata jdbcValuesMetadata
+							? jdbcValuesMetadata
+							: resultSetAccess;
+			return new JdbcValuesCacheHit( cachedResults,
+					mappingProducer.resolve( valuesMetadata, loadQueryInfluencers, factory ) );
 		}
+	}
+
+	private static CacheMode resolveCacheMode(ExecutionContext executionContext) {
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		final SharedSessionContract session = executionContext.getSession();
+		return coalesceSuppliedValues(
+				() -> queryOptions == null ? null : queryOptions.getCacheMode(),
+				session::getCacheMode,
+				() -> CacheMode.NORMAL
+		);
 	}
 
 	static class CapturingJdbcValuesMetadata implements JdbcValuesMetadata {
@@ -401,7 +437,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				position = resultSetAccess.resolveColumnPosition( columnName );
 				columnNames[position - 1] = columnName;
 			}
-			else if ( ( position = ArrayHelper.indexOf( columnNames, columnName ) + 1 ) == 0 ) {
+			else if ( ( position = indexOf( columnNames, columnName ) + 1 ) == 0 ) {
 				position = resultSetAccess.resolveColumnPosition( columnName );
 				columnNames[position - 1] = columnName;
 			}
@@ -433,20 +469,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			if ( columnNames == null ) {
 				initializeArrays();
 			}
-			final BasicType<J> basicType = resultSetAccess.resolveType(
-					position,
-					explicitJavaType,
-					typeConfiguration
-			);
+			final BasicType<J> basicType =
+					resultSetAccess.resolveType( position, explicitJavaType, typeConfiguration );
 			types[position - 1] = basicType;
 			return basicType;
 		}
 
 		public CachedJdbcValuesMetadata resolveMetadataForCache() {
-			if ( columnNames == null ) {
-				return null;
-			}
-			return new CachedJdbcValuesMetadata( columnNames, types );
+			return columnNames == null ? null : new CachedJdbcValuesMetadata( columnNames, types );
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
@@ -25,7 +25,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.RevisionMapping;
 import org.hibernate.envers.ModifiedEntityNames;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -238,7 +238,7 @@ public class EntityTypeChangeAuditTest extends EntityManagerFactoryBasedFunction
 	@Entity(name = "CustomTrackingRevisionEntity")
 	@Table(name = "TRACKING_REV_INFO")
 	@RevisionEntity
-	public static class CustomTrackingRevisionEntity extends DefaultRevisionEntity {
+	public static class CustomTrackingRevisionEntity extends RevisionMapping {
 
 		@ElementCollection
 		@JoinTable(

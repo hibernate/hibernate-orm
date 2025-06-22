@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.entities.ids;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -43,7 +43,7 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 	}
 
 	@Override
-	public CustomEnum nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+	public CustomEnum nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 			throws SQLException {
 		String name = rs.getString( position );
 		if ( rs.wasNull() ) {
@@ -52,7 +52,7 @@ public class CustomEnumUserType implements UserType<CustomEnum> {
 		return CustomEnum.fromYesNo( name );
 	}
 
-	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, CustomEnum value, int index, WrapperOptions options)
 			throws SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.VARCHAR );

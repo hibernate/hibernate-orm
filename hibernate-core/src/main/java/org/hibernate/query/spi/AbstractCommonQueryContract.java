@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -14,6 +13,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.FlushMode;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.QueryFlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -27,26 +30,26 @@ import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
-import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -54,8 +57,10 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.Arrays.asList;
 import static java.util.Locale.ROOT;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -63,6 +68,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.HibernateHints.HINT_COMMENT;
+import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
@@ -90,8 +96,15 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getInteger;
 import static org.hibernate.jpa.internal.util.LockModeTypeHelper.interpretLockMode;
 
 /**
+ * Base implementation of {@link CommonQueryContract}.
+ *
+ * @apiNote This class is now considered internal implementation
+ * and will move to an internal package in a future version.
+ * Application programs should never depend directly on this class.
+ *
  * @author Steve Ebersole
  */
+@Internal
 public abstract class AbstractCommonQueryContract implements CommonQueryContract {
 	private final SharedSessionContractImplementor session;
 	private final QueryOptionsImpl queryOptions;
@@ -106,16 +119,27 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		this.queryOptions = original.queryOptions;
 	}
 
-	public SharedSessionContractImplementor getSession() {
+	public final SharedSessionContractImplementor getSession() {
 		return session;
+	}
+
+	public final SessionFactoryImplementor getSessionFactory() {
+		return session.getFactory();
+	}
+
+	public final TypeConfiguration getTypeConfiguration() {
+		return session.getFactory().getTypeConfiguration();
+	}
+
+	protected final ExceptionConverter getExceptionConverter() {
+		return session.getExceptionConverter();
 	}
 
 	protected int getIntegerLiteral(JpaExpression<Number> expression, int defaultValue) {
 		if ( expression == null ) {
 			return defaultValue;
 		}
-
-		if ( expression instanceof SqmLiteral<?> ) {
+		else if ( expression instanceof SqmLiteral<?> ) {
 			return ( (SqmLiteral<Number>) expression ).getLiteralValue().intValue();
 		}
 		else if ( expression instanceof Parameter<?> ) {
@@ -130,26 +154,27 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		if ( expression == null ) {
 			return -1;
 		}
-
-		final Number fetchValue;
-		if ( expression instanceof SqmLiteral<?> ) {
-			fetchValue = ( (SqmLiteral<Number>) expression ).getLiteralValue();
-		}
-		else if ( expression instanceof SqmParameter<?> ) {
-			fetchValue = getParameterValue( (Parameter<Number>) expression );
-			if ( fetchValue == null ) {
-				return -1;
-			}
-		}
 		else {
-			throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
+			final Number fetchValue;
+			if ( expression instanceof SqmLiteral<?> ) {
+				fetchValue = ((SqmLiteral<Number>) expression).getLiteralValue();
+			}
+			else if ( expression instanceof SqmParameter<?> ) {
+				fetchValue = getParameterValue( (Parameter<Number>) expression );
+				if ( fetchValue == null ) {
+					return -1;
+				}
+			}
+			else {
+				throw new IllegalArgumentException( "Can't get max rows value from: " + expression );
+			}
+			// Note that we can never have ties because this is only used when we de-duplicate results
+			return switch ( selectStatement.getFetchClauseType() ) {
+				case ROWS_ONLY, ROWS_WITH_TIES -> fetchValue.intValue();
+				case PERCENT_ONLY, PERCENT_WITH_TIES ->
+						(int) Math.ceil( (((double) size) * fetchValue.doubleValue()) / 100d );
+			};
 		}
-		// Note that we can never have ties because this is only used when we de-duplicate results
-		return switch ( selectStatement.getFetchClauseType() ) {
-			case ROWS_ONLY, ROWS_WITH_TIES -> fetchValue.intValue();
-			case PERCENT_ONLY, PERCENT_WITH_TIES ->
-					(int) Math.ceil( ( ((double) size) * fetchValue.doubleValue() ) / 100d );
-		};
 	}
 
 
@@ -157,11 +182,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// Hints
 
 	public Map<String, Object> getHints() {
-		// According to the JPA spec, this should technically force a rollback, but
-		// that's insane :)
+		// According to the JPA spec, this should force a rollback, but that's insane :)
 		// If the TCK ever adds a check for this, we may need to change this behavior
-		getSession().checkOpen( false );
-
+		checkOpenNoRollback();
 		final Map<String,Object> hints = new HashMap<>();
 		collectHints( hints );
 		return hints;
@@ -196,7 +219,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			hints.put( appliedGraph.getSemantic().getJpaHintName(), appliedGraph.getGraph() );
 		}
 
-		final LockOptions lockOptions = getQueryOptions().getLockOptions();
+		final LockOptions lockOptions = getLockOptions();
 		if ( ! lockOptions.isEmpty() ) {
 			final LockMode lockMode = lockOptions.getLockMode();
 			if ( lockMode != null && lockMode != LockMode.NONE ) {
@@ -283,7 +306,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applySynchronizeSpacesHint(Object value) {
-		QueryLogging.QUERY_LOGGER.debug( "Query spaces hint was specified for non-native query; ignoring" );
+		throw new IllegalArgumentException( "Query spaces hint was specified for non-native query" );
 	}
 
 	protected final boolean applySelectionHint(String hintName, Object value) {
@@ -339,6 +362,8 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_SPEC_LOAD_GRAPH:
 					applyEntityGraphHint( hintName, value );
 					return true;
+				case HINT_FETCH_PROFILE:
+					queryOptions.enableFetchProfile( (String) value );
 				default:
 					// unrecognized hint
 					return false;
@@ -373,14 +398,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			);
 		}
 
-		final RuntimeMetamodels runtimeMetamodels = getSession().getFactory().getRuntimeMetamodels();
-		final JpaMetamodel jpaMetamodel = runtimeMetamodels.getJpaMetamodel();
+		final var factory = getSessionFactory();
 
-		final String entityName = runtimeMetamodels.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
+		final String entityName =
+				factory.getMappingMetamodel()
+						.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
 		final String graphNodes = graphString.substring( separatorPosition + 1, terminatorPosition );
 
-		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ) );
-		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSession().getSessionFactory() );
+		final RootGraphImpl<?> rootGraph =
+				new RootGraphImpl<>( null, factory.getJpaMetamodel().entity( entityName ) );
+		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSessionFactory() );
 		applyGraph( rootGraph, graphSemantic );
 	}
 
@@ -424,12 +451,16 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
+	private LockOptions getLockOptions() {
+		return getQueryOptions().getLockOptions();
+	}
+
 	protected void applyLockTimeoutHint(int timeout) {
-		getQueryOptions().getLockOptions().setTimeOut( timeout );
+		getLockOptions().setTimeOut( timeout );
 	}
 
 	protected void applyHibernateLockMode(LockMode value) {
-		getQueryOptions().getLockOptions().setLockMode( value );
+		getLockOptions().setLockMode( value );
 	}
 
 	protected void applyLockModeType(LockModeType value) {
@@ -443,13 +474,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		else if ( value instanceof LockModeType lockModeType ) {
 			applyLockModeType( lockModeType );
 		}
-		else if ( value instanceof String ) {
-			applyHibernateLockMode( interpretLockMode( value ) );
+		else if ( value instanceof String string ) {
+			applyHibernateLockMode( LockMode.fromExternalForm( string ) );
 		}
 		else {
 			throw new IllegalArgumentException(
 					String.format(
-							"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
+							"Native lock-mode hint [%s] must specify %s or %s. Encountered type: %s",
 							HINT_NATIVE_LOCKMODE,
 							LockMode.class.getName(),
 							LockModeType.class.getName(),
@@ -460,19 +491,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	protected void applyAliasSpecificLockModeHint(String hintName, Object value) {
-		// extract the alias
 		final String alias = hintName.substring( HINT_NATIVE_LOCKMODE.length() + 1 );
-		// determine the LockMode
-		try {
-			getQueryOptions().getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
-		}
-		catch ( Exception e ) {
-			QueryLogging.QUERY_MESSAGE_LOGGER.unableToDetermineLockModeValue( hintName, value );
-		}
+		getLockOptions().setAliasSpecificLockMode( alias, interpretLockMode( value ) );
 	}
 
 	protected void applyFollowOnLockingHint(Boolean followOnLocking) {
-		getQueryOptions().getLockOptions().setFollowOnLocking( followOnLocking );
+		getLockOptions().setFollowOnLocking( followOnLocking );
 	}
 
 
@@ -546,13 +570,21 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	public int getMaxResults() {
+	private void getCheckOpen() {
 		getSession().checkOpen();
+	}
+
+	private void checkOpenNoRollback() {
+		getSession().checkOpen( false );
+	}
+
+	public int getMaxResults() {
+		getCheckOpen();
 		return getQueryOptions().getLimit().getMaxRowsJpa();
 	}
 
 	public int getFirstResult() {
-		getSession().checkOpen();
+		getCheckOpen();
 		return getQueryOptions().getLimit().getFirstRowJpa();
 	}
 
@@ -560,28 +592,29 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
 
-	protected abstract ParameterMetadataImplementor getParameterMetadata();
+	@Override
+	public abstract ParameterMetadataImplementor getParameterMetadata();
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public Set<Parameter<?>> getParameters() {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 		return (Set) getParameterMetadata().getRegistrations();
 	}
 
 	public QueryParameterImplementor<?> getParameter(String name) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
 		try {
 			return getParameterMetadata().getQueryParameter( name );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> QueryParameterImplementor<T> getParameter(String name, Class<T> type) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
 		try {
 			//noinspection rawtypes
@@ -596,24 +629,24 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return parameter;
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
 	public QueryParameterImplementor<?> getParameter(int position) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
 		try {
 			return getParameterMetadata().getQueryParameter( position );
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public <T> QueryParameterImplementor<T> getParameter(int position, Class<T> type) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
 		try {
 			final QueryParameterImplementor parameter = getParameterMetadata().getQueryParameter( position );
@@ -627,7 +660,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return parameter;
 		}
 		catch ( HibernateException e ) {
-			throw getSession().getExceptionConverter().convert( e );
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -635,12 +668,18 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter binding handling
 
-	protected abstract QueryParameterBindings getQueryParameterBindings();
+	@Internal // Made public to work around this bug: https://bugs.openjdk.org/browse/JDK-8340443
+	public abstract QueryParameterBindings getQueryParameterBindings();
 	protected abstract boolean resolveJdbcParameterTypeIfNecessary();
 
+	private <P> JavaType<P> getJavaType(Class<P> javaType) {
+		return getTypeConfiguration().getJavaTypeRegistry()
+				.getDescriptor( javaType );
+	}
+
 	protected <P> QueryParameterBinding<P> locateBinding(Parameter<P> parameter) {
-		if ( parameter instanceof QueryParameterImplementor ) {
-			return locateBinding( (QueryParameterImplementor<P>) parameter );
+		if ( parameter instanceof QueryParameterImplementor<P> parameterImplementor ) {
+			return locateBinding( parameterImplementor );
 		}
 		else if ( parameter.getName() != null ) {
 			return locateBinding( parameter.getName() );
@@ -649,43 +688,41 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			return locateBinding( parameter.getPosition() );
 		}
 
-		throw getSession().getExceptionConverter().convert(
+		throw getExceptionConverter().convert(
 				new IllegalArgumentException( "Could not resolve binding for given parameter reference [" + parameter + "]" )
 		);
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(QueryParameterImplementor<P> parameter) {
-		getSession().checkOpen();
+		getCheckOpen();
 		return getQueryParameterBindings().getBinding( parameter );
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(String name) {
-		getSession().checkOpen();
+		getCheckOpen();
 		return getQueryParameterBindings().getBinding( name );
 	}
 
 	protected <P> QueryParameterBinding<P> locateBinding(int position) {
-		getSession().checkOpen();
+		getCheckOpen();
 		return getQueryParameterBindings().getBinding( position );
 	}
 
 	public boolean isBound(Parameter<?> param) {
-		getSession().checkOpen();
-		final QueryParameterImplementor<?> qp = getParameterMetadata().resolve( param );
-		return qp != null && getQueryParameterBindings().isBound( qp );
+		getCheckOpen();
+		final QueryParameterImplementor<?> parameter = getParameterMetadata().resolve( param );
+		return parameter != null && getQueryParameterBindings().isBound( parameter );
 	}
 
 	public <T> T getParameterValue(Parameter<T> param) {
-		QueryLogging.QUERY_LOGGER.tracef( "#getParameterValue(%s)", param );
+		checkOpenNoRollback();
 
-		getSession().checkOpen( false );
-
-		final QueryParameterImplementor<T> qp = getParameterMetadata().resolve( param );
-		if ( qp == null ) {
+		final QueryParameterImplementor<T> parameter = getParameterMetadata().resolve( param );
+		if ( parameter == null ) {
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
 		}
 
-		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( qp );
+		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( parameter );
 		if ( binding == null || !binding.isBound() ) {
 			throw new IllegalStateException( "Parameter value not yet bound : " + param.toString() );
 		}
@@ -700,7 +737,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public Object getParameterValue(String name) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
 		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
 		if ( !binding.isBound() ) {
@@ -716,104 +753,84 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public Object getParameterValue(int position) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
 		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
 		if ( !binding.isBound() ) {
 			throw new IllegalStateException( "The parameter [" + position + "] has not yet been bound" );
 		}
 
-		if ( binding.isMultiValued() ) {
-			return binding.getBindValues();
-		}
-		else {
-			return binding.getBindValue();
-		}
+		return binding.isMultiValued() ? binding.getBindValues() : binding.getBindValue();
 	}
 	@Override
 	public CommonQueryContract setParameter(String name, Object value) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
-		if ( value instanceof TypedParameterValue ) {
-			@SuppressWarnings("unchecked")
-			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
-			final BindableType<Object> type = typedValue.getType();
-			if ( type != null ) {
-				return setParameter( name, typedValue.getValue(), type );
-			}
-			else {
-				return setParameter( name, typedValue.getValue(), typedValue.getTypeReference() );
-			}
+		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
+			setTypedParameter( name, typedParameterValue );
 		}
-
-		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
-		final QueryParameter<Object> param = binding.getQueryParameter();
-		if ( param.allowsMultiValuedBinding() ) {
-			final BindableType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || isInstance( hibernateType, value ) ) {
-				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
-					//noinspection rawtypes
-					return setParameterList( name, (Collection) value );
-				}
+		else {
+			final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( name );
+			if ( multipleBinding( binding.getQueryParameter(), value )
+				&& value instanceof Collection<?> collectionValue
+				&& !isRegisteredAsBasicType( value.getClass() ) ) {
+				return setParameterList( name, collectionValue );
 			}
+			binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
-
-		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 
 		return this;
 	}
 
+	private boolean multipleBinding(QueryParameter<Object> param, Object value){
+		if ( param.allowsMultiValuedBinding() ) {
+			final Type<?> hibernateType = param.getHibernateType();
+			if ( hibernateType == null
+				|| hibernateType instanceof NullSqmExpressible
+				|| isInstance( hibernateType, value ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-	private boolean isInstance(BindableType<?> parameterType, Object value) {
-		final SqmExpressible<?> sqmExpressible = parameterType.resolveExpressible( getSession().getFactory() );
+	private <T> void setTypedParameter(String name, TypedParameterValue<T> typedValue) {
+		setParameter( name, typedValue.value(), typedValue.type() );
+	}
+
+	private <T> void setTypedParameter(int position, TypedParameterValue<T> typedValue) {
+		setParameter( position, typedValue.value(), typedValue.type() );
+	}
+
+	private boolean isInstance(Type<?> parameterType, Object value) {
+		final SqmExpressible<?> sqmExpressible = getNodeuilder().resolveExpressible( parameterType );
 		assert sqmExpressible != null;
-
 		return sqmExpressible.getExpressibleJavaType().isInstance( value );
+	}
+
+	private NodeBuilder getNodeuilder() {
+		return getSessionFactory().getQueryEngine().getCriteriaBuilder();
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameter(String name, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameter( name, value );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory()
-					.getTypeConfiguration()
-					.standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameter( name, value, paramType );
+			setParameter( name, value, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContract setParameter(String name, P value, BindableType<P> type) {
-		this.<P>locateBinding( name ).setBindValue( value, type );
+	public <P> CommonQueryContract setParameter(String name, P value, Type<P> type) {
+		this.<P>locateBinding( name ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated(since = "7")
 	public CommonQueryContract setParameter(String name, Instant value, TemporalType temporalType) {
 		this.locateBinding( name ).setBindValue( value, temporalType );
 		return this;
@@ -821,89 +838,50 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public CommonQueryContract setParameter(int position, Object value) {
-		getSession().checkOpen( false );
+		checkOpenNoRollback();
 
-		if ( value instanceof TypedParameterValue ) {
-			@SuppressWarnings("unchecked")
-			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
-			final BindableType<Object> type = typedValue.getType();
-			if ( type != null ) {
-				return setParameter( position, typedValue.getValue(), type );
-			}
-			else {
-				return setParameter( position, typedValue.getValue(), typedValue.getTypeReference() );
-			}
+		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
+			setTypedParameter( position, typedParameterValue );
 		}
-
-		final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
-		final QueryParameter<Object> param = binding.getQueryParameter();
-		if ( param.allowsMultiValuedBinding() ) {
-			final BindableType<?> hibernateType = param.getHibernateType();
-			if ( hibernateType == null || hibernateType instanceof NullSqmExpressible || isInstance( hibernateType, value ) ) {
-				if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
-					//noinspection rawtypes
-					return setParameterList( position, (Collection) value );
-				}
+		else {
+			final QueryParameterBinding<Object> binding = getQueryParameterBindings().getBinding( position );
+			if ( multipleBinding( binding.getQueryParameter(), value )
+				&& value instanceof Collection<?> collectionValue
+				&& !isRegisteredAsBasicType( value.getClass() ) ) {
+				return setParameterList( position, collectionValue );
 			}
+			binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
-
-		binding.setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 
 	private boolean isRegisteredAsBasicType(Class<?> valueClass) {
-		return getSession().getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
+		return getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameter(int position, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameter( position, value );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory()
-					.getTypeConfiguration()
-					.standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameter( position, value, paramType );
+			setParameter( position, value, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContract setParameter(int position, P value, BindableType<P> type) {
-		this.<P>locateBinding( position ).setBindValue( value, type );
+	public <P> CommonQueryContract setParameter(int position, P value, Type<P> type) {
+		this.<P>locateBinding( position ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated(since = "7")
 	public CommonQueryContract setParameter(int position, Instant value, TemporalType temporalType) {
 		this.locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
-
-
 
 	@Override
 	public <P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value) {
@@ -913,115 +891,93 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameter( parameter, value );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory()
-					.getTypeConfiguration()
-					.standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameter( parameter, value, paramType );
+			setParameter( parameter, value, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, BindableType<P> type) {
-		locateBinding( parameter ).setBindValue( value,  type );
+	public <P> CommonQueryContract setParameter(QueryParameter<P> parameter, P value, Type<P> type) {
+		locateBinding( parameter ).setBindValue( value, (BindableType<P>) type );
 		return this;
 	}
 
 
 	@Override
 	public <P> CommonQueryContract setParameter(Parameter<P> parameter, P value) {
-		if ( value instanceof TypedParameterValue ) {
-			@SuppressWarnings("unchecked")
+		if ( value instanceof TypedParameterValue<?> typedParameterValue ) {
+			final Class<P> parameterType = parameter.getParameterType();
+			final BindableType<?> type = typedParameterValue.type();
+			if ( type == null ) {
+				throw new IllegalArgumentException( "TypedParameterValue has no type" );
+			}
+			if ( !parameterType.isAssignableFrom( type.getJavaType() ) ) {
+				throw new QueryArgumentException( "Given TypedParameterValue is not assignable to given Parameter type",
+						parameterType, typedParameterValue.value() );
+			}
+			@SuppressWarnings("unchecked") // safe, because we just checked
 			final TypedParameterValue<P> typedValue = (TypedParameterValue<P>) value;
-			final BindableType<P> type = typedValue.getType();
-			if ( type != null ) {
-				setParameter( parameter, typedValue.getValue(), type );
-			}
-			else {
-				setParameter( parameter, typedValue.getValue(), typedValue.getTypeReference() );
-			}
+			setParameter( parameter, typedValue.value(), typedValue.type() );
 		}
 		else {
 			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
-
 		return this;
 	}
 
-	private <P> void setParameter(Parameter<P> parameter, P value, BindableType<P> type) {
-		if ( parameter instanceof QueryParameter ) {
-			setParameter( (QueryParameter<P>) parameter, value, type );
+	private <P> void setParameter(Parameter<P> parameter, P value, Type<P> type) {
+		if ( parameter instanceof QueryParameter<P> queryParameter ) {
+			setParameter( queryParameter, value, type );
 		}
 		else if ( value == null ) {
-			locateBinding( parameter ).setBindValue( null, type );
+			locateBinding( parameter ).setBindValue( null, (BindableType<P>) type );
 		}
 		else if ( value instanceof Collection ) {
 			//TODO: this looks wrong to me: how can value be both a P and a (Collection<P>)?
 			locateBinding( parameter ).setBindValues( (Collection<P>) value );
 		}
 		else {
-			locateBinding( parameter ).setBindValue( value, type );
+			locateBinding( parameter ).setBindValue( value, (BindableType<P>) type );
 		}
 	}
 
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(String name, Calendar value, TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(String name, Date value, TemporalType temporalType) {
 		locateBinding( name ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(int position, Calendar value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
 	}
 
-	@Override
+	@Override @Deprecated
 	public CommonQueryContract setParameter(int position, Date value, TemporalType temporalType) {
 		locateBinding( position ).setBindValue( value, temporalType );
 		return this;
@@ -1034,87 +990,43 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	}
 
 	public <P> CommonQueryContract setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( name, values );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( name, values, paramType );
+			setParameterList( name, values, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
 
 	@Override
-	public <P> CommonQueryContract setParameterList(String name, Collection<? extends P> values, BindableType<P> type) {
-		this.<P>locateBinding( name ).setBindValues( values, type );
+	public <P> CommonQueryContract setParameterList(String name, Collection<? extends P> values, Type<P> type) {
+		this.<P>locateBinding( name ).setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameterList(String name, Object[] values) {
-		locateBinding( name ).setBindValues( Arrays.asList( values ) );
+		locateBinding( name ).setBindValues( asList( values ) );
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameterList(String name, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( name, values );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( name, values, paramType );
+			setParameterList( name, values, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
-	public <P> CommonQueryContract setParameterList(String name, P[] values, BindableType<P> type) {
-		this.<P>locateBinding( name ).setBindValues( Arrays.asList( values ), type );
+	public <P> CommonQueryContract setParameterList(String name, P[] values, Type<P> type) {
+		this.<P>locateBinding( name ).setBindValues( asList( values ), (BindableType<P>) type );
 		return this;
 	}
 
@@ -1126,87 +1038,64 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( position, values );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( position, values, paramType );
+			setParameterList( position, values, getParamType( javaType ) );
 		}
-
 		return this;
 	}
 
+	private <P> Type<P> getParamType(Class<P> javaType) {
+		final BasicType<P> basicType =
+				getTypeConfiguration()
+						.standardBasicTypeForJavaType( javaType );
+		if ( basicType != null ) {
+			return basicType;
+		}
+		else {
+			final ManagedDomainType<P> managedDomainType =
+					getSessionFactory().getJpaMetamodel()
+							.managedType( javaType );
+			if ( managedDomainType != null ) {
+				return managedDomainType;
+			}
+			else {
+				throw new HibernateException( "Unable to determine Type: " + javaType.getName() );
+			}
+		}
+	}
+
 	@Override
-	public <P> CommonQueryContract setParameterList(int position, Collection<? extends P> values, BindableType<P> type) {
-		this.<P>locateBinding( position ).setBindValues( values, type );
+	public <P> CommonQueryContract setParameterList(int position, Collection<? extends P> values, Type<P> type) {
+		this.<P>locateBinding( position ).setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public CommonQueryContract setParameterList(int position, Object[] values) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ) );
+		locateBinding( position ).setBindValues( asList( values ) );
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameterList(int position, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( position, values );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( position, values, paramType );
+			setParameterList( position, values, getParamType( javaType ) );
 		}
 
 		return this;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <P> CommonQueryContract setParameterList(int position, P[] values, BindableType<P> type) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ), (BindableType) type );
+	public <P> CommonQueryContract setParameterList(int position, P[] values, Type<P> type) {
+		locateBinding( position ).setBindValues( asList( values ), (BindableType) type );
 		return this;
 	}
 
@@ -1219,88 +1108,45 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( parameter, values );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( parameter, values, paramType );
+			setParameterList( parameter, values, getParamType( javaType ) );
 		}
 
 		return this;
 	}
 
 	@Override
-	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type) {
-		locateBinding( parameter ).setBindValues( values, type );
+	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type) {
+		locateBinding( parameter ).setBindValues( values, (BindableType<P>) type );
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values) {
-		locateBinding( parameter ).setBindValues( values == null ? null : Arrays.asList( values ) );
+		locateBinding( parameter ).setBindValues( values == null ? null : asList( values ) );
 		return this;
 	}
 
 	@Override
 	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType) {
-		final JavaType<P> javaDescriptor = getSession().getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry()
-				.getDescriptor( javaType );
+		final JavaType<P> javaDescriptor = getJavaType( javaType );
 		if ( javaDescriptor == null ) {
 			setParameterList( parameter, values );
 		}
 		else {
-			final BindableType<P> paramType;
-			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
-			if ( basicType != null ) {
-				paramType = basicType;
-			}
-			else {
-				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
-						.getRuntimeMetamodels()
-						.getJpaMetamodel()
-						.managedType( javaType );
-				if ( managedDomainType != null ) {
-					paramType = managedDomainType;
-				}
-				else {
-					throw new HibernateException( "Unable to determine BindableType : " + javaType.getName() );
-				}
-			}
-
-			setParameterList( parameter, values, paramType );
+			setParameterList( parameter, values, getParamType( javaType ) );
 		}
 
 		return this;
 	}
 
-
 	@Override
-	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type) {
-		locateBinding( parameter ).setBindValues( Arrays.asList( values ), type );
+	public <P> CommonQueryContract setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type) {
+		locateBinding( parameter ).setBindValues( asList( values ), (BindableType<P>) type );
 		return this;
 	}
 
@@ -1314,11 +1160,11 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				}
 			}
 			else {
-				if ( object instanceof Collection<?> ) {
-					setParameterList( paramName, (Collection<?>) object );
+				if ( object instanceof Collection<?> collection ) {
+					setParameterList( paramName, collection );
 				}
-				else if ( object instanceof Object[] ) {
-					setParameterList( paramName, (Object[]) object );
+				else if ( object instanceof Object[] array ) {
+					setParameterList( paramName, array );
 				}
 				else {
 					setParameter( paramName, object, determineType( paramName, object.getClass() ) );
@@ -1328,16 +1174,19 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return this;
 	}
 
-	protected BindableType<Object> determineType(String namedParam, Class<?> retType) {
+	protected <T> Type<T> determineType(String namedParam, Class<? extends T> retType) {
 		BindableType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
 		}
 		if ( type == null && retType != null ) {
-			type = getSession().getFactory().getMappingMetamodel().resolveParameterBindType( retType );
+			type = getSessionFactory().getMappingMetamodel().resolveParameterBindType( retType );
+		}
+		if ( retType!= null && !retType.isAssignableFrom( type.getJavaType() ) ) {
+			throw new IllegalStateException( "Parameter not of expected type: " + retType.getName() );
 		}
 		//noinspection unchecked
-		return (BindableType<Object>) type;
+		return (Type<T>) type;
 	}
 
 	@Override
@@ -1345,10 +1194,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final Class<?> clazz = bean.getClass();
 		for ( String paramName : getParameterMetadata().getNamedParameterNames() ) {
 			try {
-				final PropertyAccess propertyAccess = BuiltInPropertyAccessStrategies.BASIC.getStrategy().buildPropertyAccess(
-						clazz,
-						paramName,
-						true );
+				final PropertyAccess propertyAccess =
+						BuiltInPropertyAccessStrategies.BASIC.getStrategy()
+								.buildPropertyAccess( clazz, paramName, true );
 				final Getter getter = propertyAccess.getGetter();
 				final Class<?> retType = getter.getReturnTypeClass();
 				final Object object = getter.get( bean );
@@ -1359,8 +1207,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {
-					BindableType<Object> type = determineType( paramName, retType );
-					setParameter( paramName, object, type );
+					setParameter( paramName, object, determineType( paramName, retType ) );
 				}
 			}
 			catch (PropertyNotFoundException pnfe) {

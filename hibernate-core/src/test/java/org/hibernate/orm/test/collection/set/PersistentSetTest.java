@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.set;
@@ -31,20 +31,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(
-		xmlMappings = "org/hibernate/orm/test/collection/set/Mappings.hbm.xml"
-)
+@SuppressWarnings("JUnitMalformedDeclaration")
+@DomainModel(xmlMappings = "org/hibernate/orm/test/collection/set/Mappings.xml")
 @SessionFactory(generateStatistics = true)
-@ServiceRegistry(
-		settings = {
-				@Setting(
-						name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"
-				),
-				@Setting(
-						name = AvailableSettings.USE_QUERY_CACHE, value = "true"
-				)
-		}
-)
+@ServiceRegistry(settings = {
+	@Setting(
+			name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"
+	),
+	@Setting(
+			name = AvailableSettings.USE_QUERY_CACHE, value = "true"
+	)
+})
 public class PersistentSetTest {
 
 	@Test

@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.VersionJavaType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -14,8 +15,8 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class UserTypeVersionJavaTypeWrapper<J> extends UserTypeJavaTypeWrapper<J> implements VersionJavaType<J> {
 
-	public UserTypeVersionJavaTypeWrapper(UserVersionType<J> userType) {
-		super( userType );
+	public UserTypeVersionJavaTypeWrapper(UserVersionType<J> userType, CustomType<J> customType) {
+		super( userType, customType );
 	}
 
 	@Override

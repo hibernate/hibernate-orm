@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.spi;
@@ -74,10 +74,7 @@ public class FilterDefRegistration {
 	}
 
 	public FilterDefinition toFilterDefinition(MetadataBuildingContext buildingContext) {
-		final ManagedBeanRegistry beanRegistry = buildingContext
-				.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
+		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext().getManagedBeanRegistry();
 
 		final Map<String, JdbcMapping> parameterJdbcMappings;
 		if ( CollectionHelper.isEmpty( parameterTypes ) ) {

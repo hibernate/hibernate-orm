@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -7,6 +7,8 @@ package org.hibernate.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
+
+import java.util.List;
 
 /**
  * A mapping model {@link Value} which may be treated as an identifying key of a
@@ -18,14 +20,24 @@ import org.hibernate.generator.Generator;
  */
 public interface KeyValue extends Value {
 
+	ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns);
+
 	ForeignKey createForeignKeyOfEntity(String entityName);
 
 	boolean isCascadeDeleteEnabled();
+
+	enum NullValueSemantic { VALUE, NULL, NEGATIVE, UNDEFINED, NONE, ANY }
+
+	NullValueSemantic getNullValueSemantic();
 
 	String getNullValue();
 
 	boolean isUpdateable();
 
+	/**
+	 * @deprecated No longer called, except from tests.
+	 *             Use {@link #createGenerator(Dialect, RootClass, Property, GeneratorSettings)}
+	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	Generator createGenerator(Dialect dialect, RootClass rootClass);
 

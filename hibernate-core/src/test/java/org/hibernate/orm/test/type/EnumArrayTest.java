@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
@@ -7,9 +7,12 @@ package org.hibernate.orm.test.type;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -18,6 +21,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -46,12 +50,14 @@ import static org.junit.Assert.assertThat;
 )
 @DomainModel(annotatedClasses = EnumArrayTest.TableWithEnumArrays.class)
 @SessionFactory
-@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase or the driver are trimming trailing zeros in byte arrays")
 public class EnumArrayTest {
+
+	private BasicType<MyEnum[]> arrayType;
 
 	@BeforeAll
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
+			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( MyEnum[].class );
 			em.persist( new TableWithEnumArrays( 1L, new MyEnum[]{} ) );
 			em.persist( new TableWithEnumArrays( 2L, new MyEnum[]{ MyEnum.FALSE, MyEnum.FALSE, null, MyEnum.TRUE } ) );
 			em.persist( new TableWithEnumArrays( 3L, null ) );
@@ -119,14 +125,20 @@ public class EnumArrayTest {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
-	@SkipForDialect(dialectClass = MySQLDialect.class )
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = DerbyDialect.class )
 	@SkipForDialect(dialectClass = DB2Dialect.class )
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = arrayType.getJdbcType().wrapWriteExpression( ":data", dialect );
 			TypedQuery<TableWithEnumArrays> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_enum_arrays t WHERE the_array " + op + " :data",
+					"SELECT * FROM table_with_enum_arrays t WHERE the_array " + op + " " + param,
 					TableWithEnumArrays.class
 			);
 			tq.setParameter( "data", new MyEnum[] { MyEnum.FALSE, MyEnum.FALSE, null, MyEnum.TRUE } );

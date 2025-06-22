@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapelemformula;
@@ -38,15 +38,7 @@ public class MapElementFormulaTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					Group g = session.get( Group.class, "users" );
-					assertEquals( 1, g.getUsers().size() );
-					session.remove( g );
-					session.remove( g.getUsers().get( "Gavin" ) );
-					session.remove( session.get( User.class, "turin" ) );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

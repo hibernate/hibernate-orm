@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -20,6 +20,11 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 
 	public CurrencyJavaType() {
 		super( Currency.class );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Currency;
 	}
 
 	@Override
@@ -56,11 +61,11 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Currency ) {
-			return (Currency) value;
+		if ( value instanceof Currency currency ) {
+			return currency;
 		}
-		if (value instanceof String) {
-			return Currency.getInstance( (String) value );
+		if (value instanceof String string) {
+			return Currency.getInstance( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}

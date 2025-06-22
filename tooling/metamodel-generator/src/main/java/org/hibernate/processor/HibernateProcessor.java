@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor;
@@ -7,6 +7,7 @@ package org.hibernate.processor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.annotation.AnnotationMetaEntity;
 import org.hibernate.processor.annotation.AnnotationMetaPackage;
+import org.hibernate.processor.annotation.NonManagedMetamodel;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.xml.JpaDescriptorParser;
@@ -22,12 +23,14 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.QualifiedNameable;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
 import javax.tools.StandardLocation;
 import java.io.IOException;
@@ -39,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -50,6 +54,7 @@ import static org.hibernate.processor.HibernateProcessor.DEBUG_OPTION;
 import static org.hibernate.processor.HibernateProcessor.EXCLUDE;
 import static org.hibernate.processor.HibernateProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION;
 import static org.hibernate.processor.HibernateProcessor.INCLUDE;
+import static org.hibernate.processor.HibernateProcessor.INDEX;
 import static org.hibernate.processor.HibernateProcessor.LAZY_XML_PARSING;
 import static org.hibernate.processor.HibernateProcessor.ORM_XML_OPTION;
 import static org.hibernate.processor.HibernateProcessor.PERSISTENCE_XML_OPTION;
@@ -81,7 +86,8 @@ import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
-import static org.hibernate.processor.util.TypeUtils.isClassOrRecordType;
+import static org.hibernate.processor.util.TypeUtils.isClassRecordOrInterfaceType;
+import static org.hibernate.processor.util.TypeUtils.isMemberType;
 
 /**
  * Main annotation processor.
@@ -115,7 +121,8 @@ import static org.hibernate.processor.util.TypeUtils.isClassOrRecordType;
 		ADD_GENERATED_ANNOTATION,
 		ADD_SUPPRESS_WARNINGS_ANNOTATION,
 		SUPPRESS_JAKARTA_DATA_METAMODEL,
-		INCLUDE, EXCLUDE
+		INCLUDE, EXCLUDE,
+		INDEX
 })
 public class HibernateProcessor extends AbstractProcessor {
 
@@ -185,8 +192,16 @@ public class HibernateProcessor extends AbstractProcessor {
 	 */
 	public static final String EXCLUDE = "exclude";
 
+	/**
+	 * Option to suppress creation of a filesystem-based index of entity
+	 * types and enums for use by the query validator. By default, and
+	 * index is created.
+	 */
+	public static final String INDEX = "index";
+
 	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
 
+	// dupe of ProcessorSessionFactory.ENTITY_INDEX for reasons of modularity
 	public static final String ENTITY_INDEX = "entity.index";
 
 	private Context context;
@@ -219,15 +234,21 @@ public class HibernateProcessor extends AbstractProcessor {
 		final PackageElement jakartaContextPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.enterprise.context" );
-		final PackageElement jakartaTransactionsPackage =
+		final PackageElement jakartaTransactionPackage =
 				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "jakarta.transactions" );
+						.getPackageElement( "jakarta.transaction" );
 		final PackageElement jakartaDataPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.data" );
 		final PackageElement quarkusOrmPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm" );
+		final PackageElement quarkusReactivePackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "io.quarkus.hibernate.reactive.runtime" );
+		final PackageElement dataEventPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.data.event" );
 
 		PackageElement quarkusOrmPanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
@@ -249,8 +270,9 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setAddNonnullAnnotation( packagePresent(jakartaAnnotationPackage) );
 		context.setAddGeneratedAnnotation( packagePresent(jakartaAnnotationPackage) );
 		context.setAddDependentAnnotation( packagePresent(jakartaContextPackage) );
-		context.setAddTransactionScopedAnnotation( packagePresent(jakartaTransactionsPackage) );
-		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) );
+		context.setAddTransactionScopedAnnotation( packagePresent(jakartaTransactionPackage) );
+		context.setDataEventPackageAvailable( packagePresent(dataEventPackage) );
+		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) || packagePresent(quarkusReactivePackage) );
 		context.setUsesQuarkusOrm( packagePresent(quarkusOrmPanachePackage) );
 		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
 
@@ -269,17 +291,15 @@ public class HibernateProcessor extends AbstractProcessor {
 
 		final String suppressedWarnings = options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION );
 		if ( suppressedWarnings != null ) {
-			if ( parseBoolean(suppressedWarnings) ) {
-				// legacy behavior from HHH-12068
-				context.setSuppressedWarnings(new String[] {"deprecation", "rawtypes"});
-			}
-			else {
-				context.setSuppressedWarnings( suppressedWarnings.replace(" ","").split(",\\s*") );
-			}
+			context.setSuppressedWarnings( parseBoolean( suppressedWarnings )
+					? new String[] {"deprecation", "rawtypes"} // legacy behavior from HHH-12068
+					: suppressedWarnings.replace( " ", "" ).split( ",\\s*" ) );
 		}
 
 		context.setInclude( options.getOrDefault( INCLUDE, "*" ) );
 		context.setExclude( options.getOrDefault( EXCLUDE, "" ) );
+
+		context.setIndexing( parseBoolean( options.getOrDefault( INDEX, "true" ) ) );
 
 		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
 	}
@@ -352,7 +372,8 @@ public class HibernateProcessor extends AbstractProcessor {
 			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
 			try {
 				final AnnotationMetaEntity metaEntity =
-						AnnotationMetaEntity.create( typeElement, context );
+						AnnotationMetaEntity.create( typeElement, context,
+								parentMetadata( typeElement, context::getMetaEntity ) );
 				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				context.removeElementToRedo( elementName );
 			}
@@ -362,58 +383,99 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Element element : roundEnvironment.getRootElements() ) {
-			try {
-				if ( !included( element )
-						|| hasAnnotation( element, Constants.EXCLUDE )
-						|| hasPackageAnnotation( element, Constants.EXCLUDE ) ) {
-					// skip it completely
+			processElement( element, null );
+		}
+	}
+
+	private void processElement(Element element, @Nullable Element parent) {
+		try {
+			if ( !included( element )
+					|| hasAnnotation( element, Constants.EXCLUDE )
+					|| hasPackageAnnotation( element, Constants.EXCLUDE )
+					|| element.getModifiers().contains( Modifier.PRIVATE ) ) {
+				// skip it completely
+				return;
+			}
+			else if ( isEntityOrEmbeddable( element )
+					&& !element.getModifiers().contains( Modifier.PRIVATE ) ) {
+				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
+				handleRootElementAnnotationMirrors( element, parent );
+			}
+			else if ( hasAuxiliaryAnnotations( element ) ) {
+				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
+				handleRootElementAuxiliaryAnnotationMirrors( element );
+			}
+			else if ( element instanceof TypeElement typeElement ) {
+				final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
+				if ( repository != null ) {
+					final AnnotationValue provider = getAnnotationValue( repository, "provider" );
+					if ( provider == null
+							|| provider.getValue().toString().isEmpty()
+							|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
+						context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+						final AnnotationMetaEntity metaEntity =
+								AnnotationMetaEntity.create( typeElement, context,
+										parentMetadata( parent, context::getMetaEntity ) );
+						if ( metaEntity.isInitialized() ) {
+							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+						}
+						// otherwise discard it (assume it has query by magical method name stuff)
+					}
 				}
-				else if ( isEntityOrEmbeddable( element ) ) {
-					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated entity class '" + element + "'" );
-					handleRootElementAnnotationMirrors( element );
-				}
-				else if ( hasAuxiliaryAnnotations( element ) ) {
-					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
-					handleRootElementAuxiliaryAnnotationMirrors( element );
-				}
-				else if ( element instanceof TypeElement typeElement ) {
-					final AnnotationMirror repository = getAnnotationMirror( element, JD_REPOSITORY );
-					if ( repository != null ) {
-						final AnnotationValue provider = getAnnotationValue( repository, "provider" );
-						if ( provider == null
-								|| provider.getValue().toString().isEmpty()
-								|| provider.getValue().toString().equalsIgnoreCase("hibernate") ) {
-							context.logMessage( Diagnostic.Kind.OTHER, "Processing repository class '" + element + "'" );
+				else {
+					for ( Element member : typeElement.getEnclosedElements() ) {
+						if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
+							context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 							final AnnotationMetaEntity metaEntity =
-									AnnotationMetaEntity.create( typeElement, context );
-							if ( metaEntity.isInitialized() ) {
-								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-							}
-							// otherwise discard it (assume it has query by magical method name stuff)
+									AnnotationMetaEntity.create( typeElement, context,
+											parentMetadata( parent, context::getMetaEntity ) );
+							context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+							break;
 						}
 					}
-					else {
-						for ( Element member : typeElement.getEnclosedElements() ) {
-							if ( hasAnnotation( member, HQL, SQL, FIND ) ) {
-								context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
-								final AnnotationMetaEntity metaEntity =
-										AnnotationMetaEntity.create( typeElement, context );
-								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-								break;
-							}
+					if ( enclosesEntityOrEmbeddable( element ) ) {
+						final NonManagedMetamodel metaEntity =
+								NonManagedMetamodel.create( typeElement, context, false,
+										parentMetadata( parent, context::getMetamodel ) );
+						context.addMetaEntity( metaEntity.getQualifiedName(), metaEntity );
+						if ( context.generateJakartaDataStaticMetamodel() ) {
+							final NonManagedMetamodel dataMetaEntity =
+									NonManagedMetamodel.create( typeElement, context, true,
+											parentMetadata( parent, context::getDataMetaEntity ) );
+							context.addDataMetaEntity( dataMetaEntity.getQualifiedName(), dataMetaEntity );
 						}
+
 					}
 				}
 			}
-			catch ( ProcessLaterException processLaterException ) {
-				if ( element instanceof TypeElement ) {
-					context.logMessage(
-							Diagnostic.Kind.OTHER,
-							"Could not process '" + element + "' (will redo in next round)"
-					);
-					context.addElementToRedo( ( (TypeElement) element).getQualifiedName() );
+			if ( isClassRecordOrInterfaceType( element ) ) {
+				for ( final Element child : element.getEnclosedElements() ) {
+					if ( isClassRecordOrInterfaceType( child ) ) {
+						processElement( child, element );
+					}
 				}
 			}
+		}
+		catch ( ProcessLaterException processLaterException ) {
+			if ( element instanceof TypeElement typeElement ) {
+				context.logMessage(
+						Diagnostic.Kind.OTHER,
+						"Could not process '" + element + "' (will redo in next round)"
+				);
+				context.addElementToRedo( typeElement.getQualifiedName() );
+			}
+		}
+	}
+
+	private @Nullable AnnotationMetaEntity parentMetadata(
+			@Nullable Element parent, Function<String, @Nullable Object> metamodel) {
+		if ( parent instanceof TypeElement parentElement
+				&& metamodel.apply( parentElement.getQualifiedName().toString() )
+						instanceof AnnotationMetaEntity parentMetaEntity ) {
+			return parentMetaEntity;
+		}
+		else {
+			return null;
 		}
 	}
 
@@ -425,7 +487,8 @@ public class HibernateProcessor extends AbstractProcessor {
 	private void createMetaModelClasses() {
 
 		for ( Metamodel aux : context.getMetaAuxiliaries() ) {
-			if ( !context.isAlreadyGenerated(aux) ) {
+			if ( !context.isAlreadyGenerated(aux)
+				&& !isClassRecordOrInterfaceType( aux.getElement().getEnclosingElement() ) ) {
 				context.logMessage( Diagnostic.Kind.OTHER,
 						"Writing metamodel for auxiliary '" + aux + "'" );
 				ClassWriter.writeFile( aux, context );
@@ -434,7 +497,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Metamodel entity : context.getMetaEntities() ) {
-			if ( !context.isAlreadyGenerated(entity) ) {
+			if ( !context.isAlreadyGenerated( entity ) && !isMemberType( entity.getElement() ) ) {
 				context.logMessage( Diagnostic.Kind.OTHER,
 						"Writing Jakarta Persistence metamodel for entity '" + entity + "'" );
 				ClassWriter.writeFile( entity, context );
@@ -443,7 +506,7 @@ public class HibernateProcessor extends AbstractProcessor {
 		}
 
 		for ( Metamodel entity : context.getDataMetaEntities() ) {
-			if ( !context.isAlreadyGenerated(entity) ) {
+			if ( !context.isAlreadyGenerated( entity ) && !isMemberType( entity.getElement() ) ) {
 				context.logMessage( Diagnostic.Kind.OTHER,
 						"Writing Jakarta Data metamodel for entity '" + entity + "'" );
 				ClassWriter.writeFile( entity, context );
@@ -520,6 +583,21 @@ public class HibernateProcessor extends AbstractProcessor {
 		return false;
 	}
 
+	private static boolean enclosesEntityOrEmbeddable(Element element) {
+		if ( element instanceof TypeElement typeElement ) {
+			for ( final Element enclosedElement : typeElement.getEnclosedElements() ) {
+				if ( isEntityOrEmbeddable( enclosedElement )
+					|| enclosesEntityOrEmbeddable( enclosedElement ) ) {
+					return true;
+				}
+			}
+			return false;
+		}
+		else {
+			return false;
+		}
+	}
+
 	private static boolean isEntityOrEmbeddable(Element element) {
 		return hasAnnotation(
 				element,
@@ -551,8 +629,8 @@ public class HibernateProcessor extends AbstractProcessor {
 		);
 	}
 
-	private void handleRootElementAnnotationMirrors(final Element element) {
-		if ( isClassOrRecordType( element ) ) {
+	private void handleRootElementAnnotationMirrors(final Element element, @Nullable Element parent) {
+		if ( isClassRecordOrInterfaceType( element ) ) {
 			if ( isEntityOrEmbeddable( element ) ) {
 				final TypeElement typeElement = (TypeElement) element;
 				indexEntityName( typeElement );
@@ -568,12 +646,14 @@ public class HibernateProcessor extends AbstractProcessor {
 									+ "' since XML configuration is metadata complete.");
 				}
 				else {
+					final AnnotationMetaEntity parentMetaEntity =
+							parentMetadata( parent, context::getMetamodel );
 					final boolean requiresLazyMemberInitialization
 							= hasAnnotation( element, EMBEDDABLE, MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
 							AnnotationMetaEntity.create( typeElement, context,
 									requiresLazyMemberInitialization,
-									true, false );
+									true, false, parentMetaEntity );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
@@ -587,10 +667,12 @@ public class HibernateProcessor extends AbstractProcessor {
 							// let a handwritten metamodel "override" the generated one
 							// (this is used in the Jakarta Data TCK)
 							&& !hasHandwrittenMetamodel(element) ) {
+						final AnnotationMetaEntity parentDataEntity =
+								parentMetadata( parent, context::getDataMetaEntity );
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,
-										true, true );
+										true, true, parentDataEntity );
 //						final Metamodel alreadyExistingDataMetaEntity =
 //								tryGettingExistingDataEntityFromContext( mirror, '_' + qualifiedName );
 //						if ( alreadyExistingDataMetaEntity != null ) {
@@ -647,9 +729,15 @@ public class HibernateProcessor extends AbstractProcessor {
 			final DeclaredType declaredType = (DeclaredType) type;
 			final TypeElement fieldType = (TypeElement) declaredType.asElement();
 			if ( fieldType.getKind() == ElementKind.ENUM ) {
-				for  (Element enumMember : fieldType.getEnclosedElements() ) {
+				for ( Element enumMember : fieldType.getEnclosedElements() ) {
 					if ( enumMember.getKind() == ElementKind.ENUM_CONSTANT ) {
+						final Element enclosingElement = fieldType.getEnclosingElement();
+						final boolean hasOuterType =
+								enclosingElement.getKind().isClass() || enclosingElement.getKind().isInterface();
 						context.addEnumValue( fieldType.getQualifiedName().toString(),
+								fieldType.getSimpleName().toString(),
+								hasOuterType ? ((TypeElement) enclosingElement).getQualifiedName().toString() : null,
+								hasOuterType ? enclosingElement.getSimpleName().toString() : null,
 								enumMember.getSimpleName().toString() );
 					}
 				}
@@ -660,7 +748,8 @@ public class HibernateProcessor extends AbstractProcessor {
 	private void handleRootElementAuxiliaryAnnotationMirrors(final Element element) {
 		if ( element instanceof TypeElement ) {
 			final AnnotationMetaEntity metaEntity =
-					AnnotationMetaEntity.create( (TypeElement) element, context );
+					AnnotationMetaEntity.create( (TypeElement) element, context,
+							parentMetadata( element.getEnclosingElement(), context::getMetaEntity ) );
 			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( element instanceof PackageElement ) {
@@ -708,41 +797,45 @@ public class HibernateProcessor extends AbstractProcessor {
 	}
 
 	private void writeIndex() {
-		final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
-		context.getEntityNameMappings().forEach((entityName, className) -> {
-			try (Writer writer = processingEnvironment.getFiler()
-					.createResource(
-							StandardLocation.SOURCE_OUTPUT,
-							ENTITY_INDEX,
-							entityName,
-							processingEnvironment.getElementUtils().getTypeElement( className )
-					)
-					.openWriter()) {
-				writer.append(className);
-			}
-			catch (IOException e) {
-				processingEnvironment.getMessager()
-						.printMessage(Diagnostic.Kind.WARNING,
-								"could not write entity index " + e.getMessage());
-			}
-		});
-		context.getEnumTypesByValue().forEach((valueName, enumTypeNames) -> {
-			try (Writer writer = processingEnvironment.getFiler().createResource(
-							StandardLocation.SOURCE_OUTPUT,
-							ENTITY_INDEX,
-							'.' + valueName,
-							processingEnvironment.getElementUtils().getTypeElement( enumTypeNames.iterator().next() )
-					)
-					.openWriter()) {
-				for (String enumTypeName : enumTypeNames) {
-					writer.append(enumTypeName).append(" ");
+		if ( context.isIndexing() ) {
+			final ProcessingEnvironment processingEnvironment = context.getProcessingEnvironment();
+			final Elements elementUtils = processingEnvironment.getElementUtils();
+			context.getEntityNameMappings().forEach( (entityName, className) -> {
+				try (Writer writer = processingEnvironment.getFiler()
+						.createResource(
+								StandardLocation.SOURCE_OUTPUT,
+								ENTITY_INDEX,
+								entityName,
+								elementUtils.getTypeElement( className )
+						)
+						.openWriter()) {
+					writer.append( className );
 				}
-			}
-			catch (IOException e) {
-				processingEnvironment.getMessager()
-						.printMessage(Diagnostic.Kind.WARNING,
-								"could not write entity index " + e.getMessage());
-			}
-		});
+				catch (IOException e) {
+					processingEnvironment.getMessager()
+							.printMessage( Diagnostic.Kind.WARNING,
+									"could not write entity index " + e.getMessage() );
+				}
+			} );
+			context.getEnumTypesByValue().forEach( (valueName, enumTypeNames) -> {
+				try (Writer writer = processingEnvironment.getFiler()
+						.createResource(
+								StandardLocation.SOURCE_OUTPUT,
+								ENTITY_INDEX,
+								'.' + valueName,
+								elementUtils.getTypeElement( enumTypeNames.iterator().next() )
+						)
+						.openWriter()) {
+					for ( String enumTypeName : enumTypeNames ) {
+						writer.append( enumTypeName ).append( " " );
+					}
+				}
+				catch (IOException e) {
+					processingEnvironment.getMessager()
+							.printMessage( Diagnostic.Kind.WARNING,
+									"could not write entity index " + e.getMessage() );
+				}
+			} );
+		}
 	}
 }

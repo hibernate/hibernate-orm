@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.softdelete;
@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel( annotatedClasses = { CollectionOfSoftDeleteTests.Shelf.class, CollectionOfSoftDeleteTests.Book.class } )
 @SessionFactory(useCollectingStatementInspector = true)
 public class CollectionOfSoftDeleteTests {
@@ -56,11 +57,7 @@ public class CollectionOfSoftDeleteTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from books" );
-			statement.execute( "delete from shelves" );
-		} ) );
+		scope.dropData();
 	}
 
 	@Test

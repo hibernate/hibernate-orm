@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -14,6 +14,13 @@ import org.hibernate.type.descriptor.java.VersionJavaType;
  * @see jakarta.persistence.Version
  */
 public interface EntityVersionMapping extends BasicValuedModelPart {
+
+	String VERSION_ROLE_NAME = "{version}";
+
+	static boolean matchesRoleName(String name) {
+		return VERSION_ROLE_NAME.equals( name );
+	}
+
 	/**
 	 * The attribute marked as the version
 	 */

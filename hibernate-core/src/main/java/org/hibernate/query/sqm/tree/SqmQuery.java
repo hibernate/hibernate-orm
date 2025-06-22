@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree;
@@ -14,4 +14,6 @@ import org.hibernate.query.criteria.JpaCriteriaBase;
 public interface SqmQuery<T> extends JpaCriteriaBase, SqmNode {
 	@Override
 	SqmQuery<T> copy(SqmCopyContext context);
+
+	String generateAlias();
 }

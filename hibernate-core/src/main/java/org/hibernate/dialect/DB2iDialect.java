@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockOptions;
+import jakarta.persistence.Timeout;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
@@ -16,6 +17,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2iSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.DB2iSqlAstTranslator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
@@ -38,7 +40,7 @@ import static org.hibernate.type.SqlTypes.ROWID;
 public class DB2iDialect extends DB2Dialect {
 
 	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
-	final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
+	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
 
 	private static final String FOR_UPDATE_SQL = " for update with rs";
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + " skip locked data";
@@ -63,9 +65,9 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
-			CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+			final var functionFactory = new CommonFunctionFactory( functionContributions );
 			functionFactory.listagg( null );
 			functionFactory.inverseDistributionOrderedSetAggregates();
 			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
@@ -193,15 +195,29 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
+	public String getWriteLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(Timeout timeout) {
+		return timeout.milliseconds() == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
 	public String getWriteLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+		return timeout == Timeouts.SKIP_LOCKED_MILLI && supportsSkipLocked()
 				? FOR_UPDATE_SKIP_LOCKED_SQL
 				: FOR_UPDATE_SQL;
 	}

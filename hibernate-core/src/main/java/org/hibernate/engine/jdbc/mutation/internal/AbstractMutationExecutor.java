@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.internal;
@@ -24,7 +24,7 @@ import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.ch
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
- * Base support for MutationExecutor implementations
+ * Base support for {@link MutationExecutor} implementations
  *
  * @author Steve Ebersole
  */

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -8,8 +8,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -17,7 +19,6 @@ import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaWindow;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -105,7 +106,7 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -198,8 +199,14 @@ public class CriteriaOrderedSetAggregateTest {
 		} );
 	}
 
+	/*
+	 * 	Skipped for MySQL 9.2: The test fails due to a regression in MySQL 9.2, which no longer supports NULLS FIRST/LAST in ORDER BY within LISTAGG as expected.
+	 *	See https://bugs.mysql.com/bug.php?id=117765 for more details.
+	 *	This is a MySQL issue, not a problem in the dialect implementation.
+	 */
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 9, minorVersion = 2, reason = "https://bugs.mysql.com/bug.php?id=117765")
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -230,7 +237,7 @@ public class CriteriaOrderedSetAggregateTest {
 					cb.literal( 0.5 ),
 					root.get( "theInt" ),
 					SortDirection.ASCENDING,
-					NullPrecedence.NONE
+					Nulls.NONE
 			);
 
 			cr.select( function );
@@ -259,7 +266,7 @@ public class CriteriaOrderedSetAggregateTest {
 					window,
 					root.get( "theInt" ),
 					SortDirection.ASCENDING,
-					NullPrecedence.NONE
+					Nulls.NONE
 			);
 
 			cr.select( function ).orderBy( cb.asc( cb.literal( 1 ) ) );

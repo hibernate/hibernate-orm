@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.hbm2ddl;
@@ -22,22 +22,18 @@ public interface ConnectionHelper {
 	 *
 	 * @param needsAutoCommit Should connection be forced to auto-commit
 	 * if not already.
-	 * @throws SQLException
 	 */
-	public void prepare(boolean needsAutoCommit) throws SQLException;
+	void prepare(boolean needsAutoCommit) throws SQLException;
 
 	/**
 	 * Get a reference to the connection we are using.
 	 *
 	 * @return The JDBC connection.
-	 * @throws SQLException
 	 */
-	public Connection getConnection() throws SQLException;
+	Connection getConnection() throws SQLException;
 
 	/**
 	 * Release any resources held by this helper.
-	 *
-	 * @throws SQLException
 	 */
-	public void release() throws SQLException;
+	void release() throws SQLException;
 }

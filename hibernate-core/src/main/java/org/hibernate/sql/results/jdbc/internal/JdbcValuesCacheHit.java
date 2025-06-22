@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -71,7 +71,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 		position += numberOfRows;
 
-		if ( position > this.numberOfRows ) {
+		if ( position >= this.numberOfRows ) {
 			position = this.numberOfRows;
 			return false;
 		}
@@ -81,7 +81,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 	@Override
 	public int getPosition() {
-		return position;
+		return position + 1;
 	}
 
 	@Override
@@ -93,8 +93,12 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			// we need to subtract it from `numberOfRows`
 			position = numberOfRows + position;
 		}
+		else {
+			// internally, positions are indexed from zero
+			position--;
+		}
 
-		if ( position > numberOfRows ) {
+		if ( position >= numberOfRows ) {
 			this.position = numberOfRows;
 			return false;
 		}
@@ -171,11 +175,10 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			return null;
 		}
 		final Object row = cachedResults.get( position + offset );
-		if ( valueIndexesToCacheIndexes == null ) {
-			return ( (Object[]) row )[valueIndex];
-		}
-		else if ( row instanceof Object[] ) {
-			return ( (Object[]) row )[valueIndexesToCacheIndexes[valueIndex]];
+		if ( row instanceof Object[] array ) {
+			return valueIndexesToCacheIndexes == null
+					? array[valueIndex]
+					: array[valueIndexesToCacheIndexes[valueIndex]];
 		}
 		else {
 			assert valueIndexesToCacheIndexes[valueIndex] == 0;

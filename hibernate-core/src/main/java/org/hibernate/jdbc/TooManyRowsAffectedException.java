@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jdbc;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates that more rows were affected then we were expecting to be.
+ * Indicates that more rows were affected than we were expecting to be.
  * Typically indicates presence of duplicate "PK" values in the
  * given table.
  *

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -9,8 +9,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -19,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@SkipForDialect(dialectClass = SybaseASEDialect.class)
 public class NClobStringTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -34,7 +37,7 @@ public class NClobStringTest extends BaseEntityManagerFunctionalTestCase {
 			final Product product = new Product();
 			product.setId(1);
 			product.setName("Mobile phone");
-			product.setWarranty("My product warranty");
+			product.setWarranty("My product®™ warranty 😍");
 
 			entityManager.persist(product);
 			return product.getId();
@@ -42,7 +45,7 @@ public class NClobStringTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			Product product = entityManager.find(Product.class, productId);
 
-			assertEquals("My product warranty", product.getWarranty());
+			assertEquals("My product®™ warranty 😍", product.getWarranty());
 		});
 	}
 

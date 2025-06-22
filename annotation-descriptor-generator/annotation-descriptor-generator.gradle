@@ -1,3 +1,0 @@
-apply from: rootProject.file( 'gradle/java-module.gradle' )
-apply plugin: 'org.hibernate.build.version-injection'
-

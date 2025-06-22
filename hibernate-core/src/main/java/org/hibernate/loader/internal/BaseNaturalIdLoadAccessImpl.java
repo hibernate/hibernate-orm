@@ -1,36 +1,38 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.loader.internal;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.engine.spi.NaturalIdResolutions.INVALID_NATURAL_ID_REFERENCE;
+import static org.hibernate.internal.NaturalIdHelper.performAnyNeededCrossReferenceSynchronizations;
 
 /**
  * Base support for load-by-natural-id
@@ -65,7 +67,25 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		return lockOptions;
 	}
 
-	public Object with(RootGraph<T> graph, GraphSemantic semantic) {
+	protected Object with(LockMode lockMode, PessimisticLockScope lockScope) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setLockMode( lockMode );
+		lockOptions.setLockScope( lockScope );
+		return this;
+	}
+
+
+	protected Object with(Timeout timeout) {
+		if ( lockOptions == null ) {
+			lockOptions = new LockOptions();
+		}
+		lockOptions.setTimeOut( timeout.milliseconds() );
+		return this;
+	}
+
+	public Object with(EntityGraph<T> graph, GraphSemantic semantic) {
 		this.rootGraph = (RootGraphImplementor<T>) graph;
 		this.graphSemantic = semantic;
 		return this;
@@ -121,63 +141,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 //				: resolvedId;
 //	}
 
-	protected void performAnyNeededCrossReferenceSynchronizations() {
-		if ( !synchronizationEnabled ) {
-			// synchronization (this process) was disabled
-			return;
-		}
-
-		final NaturalIdMapping naturalIdMapping = entityDescriptor.getNaturalIdMapping();
-
-		if ( !naturalIdMapping.isMutable() ) {
-			// only mutable natural-ids need this processing
-			return;
-		}
-
-		final SessionImplementor session = context.getSession();
-
-		if ( ! session.isTransactionInProgress() ) {
-			// not in a transaction so skip synchronization
-			return;
-		}
-
-		final PersistenceContext persistenceContext = context.getSession().getPersistenceContextInternal();
-		final Collection<?> cachedPkResolutions =
-				persistenceContext.getNaturalIdResolutions()
-						.getCachedPkResolutions( entityPersister() );
-		final boolean loggerDebugEnabled = LoaderLogging.LOADER_LOGGER.isDebugEnabled();
-		for ( Object pk : cachedPkResolutions ) {
-			final EntityKey entityKey = context.getSession().generateEntityKey( pk, entityPersister() );
-			final Object entity = persistenceContext.getEntity( entityKey );
-			final EntityEntry entry = persistenceContext.getEntry( entity );
-
-			if ( entry == null ) {
-				if ( loggerDebugEnabled ) {
-					LoaderLogging.LOADER_LOGGER.debugf(
-							"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : %s#%s",
-							entityDescriptor.getEntityName(),
-							pk
-					);
-				}
-				continue;
-			}
-
-			if ( !entry.requiresDirtyCheck( entity ) ) {
-				continue;
-			}
-
-			// MANAGED is the only status we care about here...
-			if ( entry.getStatus() != Status.MANAGED ) {
-				continue;
-			}
-
-			persistenceContext.getNaturalIdResolutions().handleSynchronization( pk, entity, entityPersister() );
-		}
-	}
-
 	@SuppressWarnings( "unchecked" )
 	protected final T doGetReference(Object normalizedNaturalIdValue) {
-		performAnyNeededCrossReferenceSynchronizations();
+		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, context.getSession() );
 
 		context.checkOpenOrWaitingForAutoClose();
 		context.pulseTransactionCoordinator();
@@ -212,7 +178,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 	@SuppressWarnings("unchecked")
 	protected final T doLoad(Object normalizedNaturalIdValue) {
-		performAnyNeededCrossReferenceSynchronizations();
+		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, context.getSession() );
 
 		context.checkOpenOrWaitingForAutoClose();
 		context.pulseTransactionCoordinator();

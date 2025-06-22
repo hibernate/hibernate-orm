@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
@@ -112,13 +112,11 @@ public class CollectionJavaType<C> extends AbstractClassJavaType<C> {
 			return true;
 		}
 
-		if ( one instanceof PersistentCollection<?> ) {
-			final PersistentCollection<?> pc = (PersistentCollection<?>) one;
+		if ( one instanceof PersistentCollection<?> pc ) {
 			return pc.wasInitialized() && ( pc.isWrapper( another ) || pc.isDirectlyProvidedCollection( another ) );
 		}
 
-		if ( another instanceof PersistentCollection<?> ) {
-			final PersistentCollection<?> pc = (PersistentCollection<?>) another;
+		if ( another instanceof PersistentCollection<?> pc ) {
 			return pc.wasInitialized() && ( pc.isWrapper( one ) || pc.isDirectlyProvidedCollection( one ) );
 		}
 

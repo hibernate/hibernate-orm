@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.enhanced;
@@ -15,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -36,6 +37,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -59,6 +62,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @BaseUnitTest
+@RequiresDialect(
+		value = H2Dialect.class,
+		comment = "Even though we use specialized Dialects, we still have calls happening to the "
+				+ "underlying driver which will blow up on various underlying drivers.  Nothing here is "
+				+ "Dialect-specific anyway, besides what each specialized Dialect exposes."
+)
 public class SequenceStyleConfigUnitTest {
 	private static final Type LONG_TYPE = new TypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
 
@@ -70,11 +79,13 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext1 = new MetadataBuildingContextTestingImpl(
+					serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
-					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					() -> buildingContext1.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			MetadataBuildingContext buildingContext = buildingContext1;
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
@@ -114,11 +125,13 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext1 = new MetadataBuildingContextTestingImpl(
+					serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
-					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
+					() -> buildingContext1.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
 			);
+			MetadataBuildingContext buildingContext = buildingContext1;
 			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure(
@@ -152,7 +165,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -180,7 +193,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -214,7 +227,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -246,7 +259,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -283,7 +296,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -342,7 +355,7 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
 			serviceRegistry.getService( JdbcServices.class ).getDialect().contributeTypes(
 					() -> buildingContext.getBootstrapContext().getTypeConfiguration(),
 					serviceRegistry
@@ -380,10 +393,28 @@ public class SequenceStyleConfigUnitTest {
 		}
 	}
 
-	public static class TableDialect extends Dialect {
+
+	public static final SettingProvider.Provider<Class<? extends Dialect>> TABLE_DIALECT_PROVIDER = new SettingProvider.Provider<Class<? extends Dialect>>() {
+		@Override
+		public Class<? extends Dialect> getSetting() {
+			return TableDialect.class;
+		}
+	};
+
+	public static final SettingProvider.Provider<Class<? extends Dialect>> SEQUENCE_DIALECT_PROVIDER
+			= () -> SequenceDialect.class;
+	public static final SettingProvider.Provider<Class<? extends Dialect>> POOLED_SEQUENCE_DIALECT_PROVIDER
+			= () -> PooledSequenceDialect.class;
+
+	public static class TableDialect extends Dialect implements SettingProvider.Provider {
 		@Override
 		public DatabaseVersion getVersion() {
 			return ZERO_VERSION;
+		}
+
+		@Override
+		public Object getSetting() {
+			return getClass();
 		}
 	}
 

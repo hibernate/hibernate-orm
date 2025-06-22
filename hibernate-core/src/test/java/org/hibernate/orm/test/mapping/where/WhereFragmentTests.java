@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.where;
@@ -24,7 +24,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.internal.util.collections.CollectionHelper.toSettingsMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -60,14 +59,8 @@ public class WhereFragmentTests {
 	 * Loads a User, fetching their detail and skills using an entity-graph
 	 */
 	public User findUserByIdUsingEntityGraph(Integer id, SessionFactoryScope factoryScope) {
-		return factoryScope.fromTransaction( (session) -> {
-			final Map<String, Object> properties = toSettingsMap(
-					SpecHints.HINT_SPEC_FETCH_GRAPH,
-					session.getEntityGraph("user-entity-graph")
-			);
-
-			return session.find(User.class, id, properties);
-		} );
+		return factoryScope.fromTransaction( (session) -> session.find( User.class, id,
+				Map.of( SpecHints.HINT_SPEC_FETCH_GRAPH, session.getEntityGraph("user-entity-graph") ) ) );
 	}
 
 	/**
@@ -97,11 +90,7 @@ public class WhereFragmentTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createNativeMutationQuery( "delete from t_user_skills" ).executeUpdate();
-			session.createNativeMutationQuery( "delete t_user_details" ).executeUpdate();
-			session.createNativeMutationQuery( "delete t_users" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

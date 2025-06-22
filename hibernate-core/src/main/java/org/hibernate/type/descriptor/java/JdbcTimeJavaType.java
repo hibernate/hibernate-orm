@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -175,16 +175,15 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return null;
 		}
 
-		if ( value instanceof Time ) {
-			return (Date) value;
+		if ( value instanceof Time time ) {
+			return time;
 		}
 
-		if ( value instanceof Date ) {
-			return new Time( ( (Date) value ).getTime() % 86_400_000 );
+		if ( value instanceof Date date ) {
+			return new Time( date.getTime() % 86_400_000 );
 		}
 
-		if ( value instanceof LocalTime ) {
-			final LocalTime localTime = (LocalTime) value;
+		if ( value instanceof LocalTime localTime ) {
 			final Time time = Time.valueOf( localTime );
 			if ( localTime.getNano() == 0 ) {
 				return time;
@@ -193,12 +192,12 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return new Time( time.getTime() + DateTimeUtils.roundToPrecision( localTime.getNano(), 3 ) / 1000000 );
 		}
 
-		if ( value instanceof Long ) {
-			return new Time( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return new Time( longValue );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new Time( ( (Calendar) value ).getTimeInMillis() % 86_400_000 );
+		if ( value instanceof Calendar calendar ) {
+			return new Time( calendar.getTimeInMillis() % 86_400_000 );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -235,7 +234,7 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 			return java.sql.Time.valueOf( accessor.query( LocalTime::from ) );
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse time string " + charSequence, pe );
+			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

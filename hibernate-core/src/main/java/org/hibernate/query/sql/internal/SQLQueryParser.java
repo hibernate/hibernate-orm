@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.internal;
-
-import java.util.Map;
 
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.naming.Identifier;
@@ -13,6 +11,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.Map;
 
 /**
  * Substitutes escape sequences of form {@code {alias}},
@@ -25,10 +25,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Paul Benedict
  */
 public class SQLQueryParser {
-
-	private final SessionFactoryImplementor factory;
 	private final String originalQueryString;
 	private final ParserContext context;
+
+	private final SqlStringGenerationContext sqlStringGenerationContext;
 
 	private long aliasesFound;
 
@@ -43,9 +43,16 @@ public class SQLQueryParser {
 	}
 
 	public SQLQueryParser(String queryString, ParserContext context, SessionFactoryImplementor factory) {
+		this( queryString, context, factory.getSqlStringGenerationContext() );
+	}
+
+	public SQLQueryParser(
+			String queryString,
+			ParserContext context,
+			SqlStringGenerationContext sqlStringGenerationContext) {
 		this.originalQueryString = queryString;
 		this.context = context;
-		this.factory = factory;
+		this.sqlStringGenerationContext = sqlStringGenerationContext;
 	}
 
 	public boolean queryHasAliases() {
@@ -169,10 +176,9 @@ public class SQLQueryParser {
 	}
 
 	private void handlePlaceholder(String token, StringBuilder result) {
-		final SqlStringGenerationContext context = factory.getSqlStringGenerationContext();
-		final Identifier defaultCatalog = context.getDefaultCatalog();
-		final Identifier defaultSchema = context.getDefaultSchema();
-		final Dialect dialect = context.getDialect();
+		final Identifier defaultCatalog = sqlStringGenerationContext.getDefaultCatalog();
+		final Identifier defaultSchema = sqlStringGenerationContext.getDefaultSchema();
+		final Dialect dialect = sqlStringGenerationContext.getDialect();
 		switch (token) {
 			case "h-domain":
 				if ( defaultCatalog != null ) {

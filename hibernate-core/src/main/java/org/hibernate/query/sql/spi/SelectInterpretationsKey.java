@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.spi;
@@ -20,16 +20,16 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final Collection<String> querySpaces;
-	private final TupleTransformer tupleTransformer;
-	private final ResultListTransformer resultListTransformer;
+	private final TupleTransformer<?> tupleTransformer;
+	private final ResultListTransformer<?> resultListTransformer;
 	private final int hash;
 
 	public SelectInterpretationsKey(
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
-			TupleTransformer tupleTransformer,
-			ResultListTransformer resultListTransformer) {
+			TupleTransformer<?> tupleTransformer,
+			ResultListTransformer<?> resultListTransformer) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.querySpaces = querySpaces;
@@ -42,8 +42,8 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
-			TupleTransformer tupleTransformer,
-			ResultListTransformer resultListTransformer,
+			TupleTransformer<?> tupleTransformer,
+			ResultListTransformer<?> resultListTransformer,
 			int hash) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
@@ -84,15 +84,13 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( !(o instanceof SelectInterpretationsKey that) ) {
 			return false;
 		}
-
-		final SelectInterpretationsKey that = (SelectInterpretationsKey) o;
 		return sql.equals( that.sql )
-				&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
-				&& Objects.equals( querySpaces, that.querySpaces )
-				&& Objects.equals( tupleTransformer, that.tupleTransformer )
-				&& Objects.equals( resultListTransformer, that.resultListTransformer );
+			&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
+			&& Objects.equals( querySpaces, that.querySpaces )
+			&& Objects.equals( tupleTransformer, that.tupleTransformer )
+			&& Objects.equals( resultListTransformer, that.resultListTransformer );
 	}
 }

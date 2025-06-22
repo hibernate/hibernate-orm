@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="7.0">
+    <package>org.hibernate.orm.test.collection.idbag</package>
+
+    <entity class="IdbagOwner">
+        <attributes>
+            <id name="name"/>
+            <many-to-many name="children" target-entity="IdbagOwner">
+                <collection-id>
+                    <column name="children_id"/>
+                    <generator generator="increment"/>
+                    <target>Long</target>
+                </collection-id>
+                <join-table name="idbag_owner_children">
+                    <join-column name="owner_fk"/>
+                    <inverse-join-column name="child_fk"/>
+                </join-table>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-many>
+        </attributes>
+    </entity>
+</entity-mappings>
+

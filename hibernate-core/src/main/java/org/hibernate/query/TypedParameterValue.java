@@ -1,11 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
-
+import jakarta.persistence.metamodel.Type;
+import org.hibernate.type.BindableType;
 import org.hibernate.type.BasicTypeReference;
+
+import java.util.Objects;
 
 /**
  * Represents a typed argument to a query parameter.
@@ -21,7 +24,11 @@ import org.hibernate.type.BasicTypeReference;
  * For example:
  * <pre>
  * query.setParameter("stringNamedParam",
- *         new TypedParameterValue(StandardBasicTypes.STRING, null))
+ *         TypedParameterValue.ofNull(StandardBasicTypes.STRING))
+ * </pre>
+ * <pre>
+ * query.setParameter("address",
+ *         TypedParameterValue.of(Address_.class_, address))
  * </pre>
  * <p>
  * Here, a "null string" argument was bound to the named parameter
@@ -38,26 +45,38 @@ import org.hibernate.type.BasicTypeReference;
  *
  * @see org.hibernate.type.StandardBasicTypes
  */
-public final class TypedParameterValue<J> {
+public record TypedParameterValue<J>(BindableType<J> type, J value) {
 
-	private final BindableType<J> type;
-	private final J value;
-
-	public TypedParameterValue(BindableType<J> type, J value) {
-		this.type = type;
-		this.value = value;
+	public TypedParameterValue {
+		Objects.requireNonNull( type, "type must not be null" );
 	}
 
-	public TypedParameterValue(BasicTypeReference<J> type, J value) {
-		this.type = type;
-		this.value = value;
+	/**
+	 * Obtain an instance with the given type and given value.
+	 *
+	 * @since 7.0
+	 */
+	public static <J> TypedParameterValue<J> of(Type<J> type, J value) {
+		return new TypedParameterValue<>( (BindableType<J>) type, value );
+	}
+
+	/**
+	 * Obtain an instance with the given type and a null value.
+	 *
+	 * @since 7.0
+	 */
+	public static <J> TypedParameterValue<J> ofNull(Type<J> type) {
+		return new TypedParameterValue<>( (BindableType<J>) type, null );
 	}
 
 	/**
 	 * The value to bind
 	 *
 	 * @return The value to be bound
+	 *
+	 * @deprecated use {@link #value}
 	 */
+	@Deprecated(since = "7")
 	public J getValue() {
 		return value;
 	}
@@ -66,7 +85,10 @@ public final class TypedParameterValue<J> {
 	 * The specific Hibernate type to use to bind the value.
 	 *
 	 * @return The Hibernate type to use.
+	 *
+	 * @deprecated use {@link #type}
 	 */
+	@Deprecated(since = "7")
 	public BindableType<J> getType() {
 		return type;
 	}
@@ -75,8 +97,11 @@ public final class TypedParameterValue<J> {
 	 * The specific Hibernate type reference to use to bind the value.
 	 *
 	 * @return The Hibernate type reference to use.
+	 *
+	 * @deprecated use {@link #type}
 	 */
+	@Deprecated(since = "7")
 	public BasicTypeReference<J> getTypeReference() {
-		return type instanceof BasicTypeReference ? (BasicTypeReference<J>) type : null;
+		return type instanceof BasicTypeReference<J> reference ? reference : null;
 	}
 }

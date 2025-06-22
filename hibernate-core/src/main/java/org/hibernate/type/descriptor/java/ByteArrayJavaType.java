@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
@@ -30,13 +30,20 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 
 	@SuppressWarnings("unchecked")
 	public ByteArrayJavaType() {
-		super( Byte[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
+		super( Byte[].class, ImmutableObjectArrayMutabilityPlan.get(), IncomparableComparator.INSTANCE );
 	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof byte[];
+	}
+
 	@Override
 	public boolean areEqual(Byte[] one, Byte[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals(one, another) );
+			|| one != null && another != null && Arrays.equals(one, another);
 	}
+
 	@Override
 	public int extractHashCode(Byte[] bytes) {
 		int hashCode = 1;
@@ -99,7 +106,7 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 			return (X) new ByteArrayInputStream( unwrapBytes( value ) );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( unwrapBytes( value ) );
+			return (X) new ArrayBackedBinaryStream( unwrapBytes( value ) );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( unwrapBytes( value ) );
@@ -112,18 +119,18 @@ public class ByteArrayJavaType extends AbstractClassJavaType<Byte[]> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof Byte[]) {
-			return (Byte[]) value;
+		if (value instanceof Byte[] bytes) {
+			return bytes;
 		}
-		if (value instanceof byte[]) {
-			return wrapBytes( (byte[]) value );
+		if (value instanceof byte[] bytes) {
+			return wrapBytes( bytes );
 		}
-		if (value instanceof InputStream) {
-			return wrapBytes( DataHelper.extractBytes( (InputStream) value ) );
+		if (value instanceof InputStream inputStream) {
+			return wrapBytes( DataHelper.extractBytes( inputStream ) );
 		}
-		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob blob ) {
 			try {
-				return wrapBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
+				return wrapBytes( DataHelper.extractBytes( blob.getBinaryStream() ) );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( "Unable to access lob stream", e );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
@@ -128,7 +128,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	public final boolean isModifiableEntity(EntityEntry entry) {
-		return ( entry == null ? entityPersister().isMutable() : entry.isModifiableEntity() );
+		return entry == null ? entityPersister().isMutable() : entry.isModifiableEntity();
 	}
 
 	@Override
@@ -138,7 +138,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object nextVersion,
 			SharedSessionContractImplementor session) {
 		if ( versionUpdateGroup == null ) {
-			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
+			throw new HibernateException( "Cannot force version increment relative to subtype; use the root type" );
 		}
 		doVersionUpdate( null, id, nextVersion, currentVersion, session );
 	}
@@ -151,7 +151,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean batching,
 			SharedSessionContractImplementor session) {
 		if ( versionUpdateGroup == null ) {
-			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
+			throw new HibernateException( "Cannot force version increment relative to subtype; use the root type" );
 		}
 		doVersionUpdate( null, id, nextVersion, currentVersion, batching, session );
 	}
@@ -540,7 +540,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				final Generator generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnUpdate()
-						&& !generator.generatedOnExecution( object, session ) ) {
+						&& generator.generatedBeforeExecution( object, session ) ) {
 					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
 					entityPersister().setPropertyValue( object, i, newValues[i] );
 					fieldsPreUpdateNeeded[count++] = i;
@@ -667,7 +667,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		final Generator generator = attributeMapping.getGenerator();
 		final boolean generated = isValueGenerated( generator );
-		final boolean needsDynamicUpdate = generated && session != null && !generator.generatedOnExecution( entity, session );
+		final boolean needsDynamicUpdate =
+				generated && session != null && generator.generatedBeforeExecution( entity, session );
 		final boolean generatedInSql = generated && isValueGenerationInSql( generator, dialect );
 		if ( generatedInSql && !needsDynamicUpdate && !( (OnExecutionGenerator) generator ).writePropertyValue() ) {
 			analysis.registerValueGeneratedInSqlNoWrite();
@@ -1364,11 +1365,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		 * Callback at start of processing an attribute
 		 */
 		public void startingAttribute(AttributeMapping attribute) {
-			if ( attribute.getJdbcTypeCount() < 1 || !( attribute instanceof SingularAttributeMapping ) ) {
+			if ( attribute.getJdbcTypeCount() < 1
+					|| !( attribute instanceof SingularAttributeMapping singularAttributeMapping ) ) {
 				currentAttributeAnalysis = new SkippedAttributeAnalysis( attribute );
 			}
 			else {
-				currentAttributeAnalysis = new IncludedAttributeAnalysis( (SingularAttributeMapping) attribute );
+				currentAttributeAnalysis = new IncludedAttributeAnalysis( singularAttributeMapping );
 				if ( dirtyAttributeIndexes == null
 						|| contains( dirtyAttributeIndexes, attribute.getStateArrayPosition() ) ) {
 					currentAttributeAnalysis.markDirty( dirtyAttributeIndexes != null );

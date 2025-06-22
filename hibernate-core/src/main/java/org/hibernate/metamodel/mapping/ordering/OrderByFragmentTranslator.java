@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering;
@@ -24,8 +24,8 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
  * with an order set or map.
  *
  * @author Steve Ebersole
+ *
  * @see jakarta.persistence.OrderBy
- * @see org.hibernate.annotations.OrderBy
  */
 public class OrderByFragmentTranslator {
 	private static final Logger LOG = Logger.getLogger( OrderByFragmentTranslator.class.getName() );

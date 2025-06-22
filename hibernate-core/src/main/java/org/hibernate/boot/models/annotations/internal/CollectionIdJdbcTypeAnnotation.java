@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.CollectionIdJdbcType;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
@@ -19,20 +19,20 @@ public class CollectionIdJdbcTypeAnnotation implements CollectionIdJdbcType {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionIdJdbcTypeAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionIdJdbcTypeAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CollectionIdJdbcTypeAnnotation(CollectionIdJdbcType annotation, SourceModelBuildingContext modelContext) {
+	public CollectionIdJdbcTypeAnnotation(CollectionIdJdbcType annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionIdJdbcTypeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CollectionIdJdbcTypeAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (Class<? extends JdbcType>) attributeValues.get( "value" );
 	}
 

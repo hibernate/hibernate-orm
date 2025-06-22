@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.internal;
@@ -9,6 +9,7 @@ import org.hibernate.annotations.Source;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
@@ -79,23 +80,21 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 
 	@Override
 	public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
-		if ( valueGenerator == null ) {
-			return propertyType.wrap( getCurrentTimestamp( session ), session );
-		}
-		else {
-			return valueGenerator.generate();
-		}
+		return valueGenerator == null
+				? propertyType.wrap( getCurrentTimestamp( session ), session )
+				: valueGenerator.generate();
 	}
 
 	private Timestamp getCurrentTimestamp(SharedSessionContractImplementor session) {
-		Dialect dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
-		boolean callable = dialect.isCurrentTimestampSelectStringCallable();
-		String timestampSelectString = dialect.getCurrentTimestampSelectString();
+		final Dialect dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
+		final boolean callable = dialect.isCurrentTimestampSelectStringCallable();
+		final String timestampSelectString = dialect.getCurrentTimestampSelectString();
+		final JdbcCoordinator coordinator = session.getJdbcCoordinator();
+		final StatementPreparer statementPreparer = coordinator.getStatementPreparer();
 		PreparedStatement statement = null;
-		JdbcCoordinator coordinator = session.getJdbcCoordinator();
 		try {
-			statement = prepareStatement( coordinator, timestampSelectString, callable );
-			Timestamp ts = callable
+			statement = statementPreparer.prepareStatement( timestampSelectString, callable );
+			final Timestamp ts = callable
 					? extractCalledResult( statement, coordinator, timestampSelectString )
 					: extractResult( statement, coordinator, timestampSelectString );
 			logResult( ts );
@@ -116,23 +115,16 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 		}
 	}
 
-	private static PreparedStatement prepareStatement(
-			JdbcCoordinator coordinator,
-			String timestampSelectString,
-			boolean callable) {
-		return coordinator.getStatementPreparer().prepareStatement( timestampSelectString, callable );
-	}
-
 	private static Timestamp extractResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
 			throws SQLException {
-		ResultSet resultSet = coordinator.getResultSetReturn().extract( statement, sql );
+		final ResultSet resultSet = coordinator.getResultSetReturn().extract( statement, sql );
 		resultSet.next();
 		return resultSet.getTimestamp( 1 );
 	}
 
 	private static Timestamp extractCalledResult(PreparedStatement statement, JdbcCoordinator coordinator, String sql)
 			throws SQLException {
-		CallableStatement callable = (CallableStatement) statement;
+		final CallableStatement callable = (CallableStatement) statement;
 		callable.registerOutParameter( 1, TIMESTAMP );
 		coordinator.getResultSetReturn().execute( callable, sql );
 		return callable.getTimestamp( 1 );

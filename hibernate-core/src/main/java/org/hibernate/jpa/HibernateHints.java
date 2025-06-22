@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa;
@@ -151,9 +151,32 @@ public interface HibernateHints {
 	/**
 	 * Whether to treat a {@link org.hibernate.procedure.ProcedureCall}
 	 * or {@link jakarta.persistence.StoredProcedureQuery} as a call
-	 * to a function rather than a call to a procedure.
+	 * to a function rather than a call to a procedure. Set hint to
+	 * {@link Boolean#TRUE TRUE} or {@code "true"} to indicated that
+	 * the call should be treated as a function call.
+	 * <p>
+	 * When no other return type is indicated, a function is assumed
+	 * to return {@link java.sql.Types#REF_CURSOR REF_CURSOR}.
+	 *
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall
+	 * @see #HINT_CALLABLE_FUNCTION_RETURN_TYPE
 	 */
 	String HINT_CALLABLE_FUNCTION = "org.hibernate.callableFunction";
+
+	/**
+	 * The {@linkplain org.hibernate.type.SqlTypes JDBC type code},
+	 * {@linkplain jakarta.persistence.metamodel.Type type}, or
+	 * {@link Class} of the value returned by a SQL function called
+	 * via {@link org.hibernate.procedure.ProcedureCall} or
+	 * {@link jakarta.persistence.StoredProcedureQuery}. Has the side
+	 * effect of causing the call to be treated as a function call
+	 * rather than a call to a stored procedure.
+	 *
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(int)
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(jakarta.persistence.metamodel.Type)
+	 * @see org.hibernate.procedure.ProcedureCall#markAsFunctionCall(Class)
+	 */
+	String HINT_CALLABLE_FUNCTION_RETURN_TYPE = "hibernate.procedure.function_return_jdbc_type_code";
 
 	/**
 	 * Hint for specifying the tenant id to use when creating an
@@ -166,10 +189,13 @@ public interface HibernateHints {
 
 	/**
 	 * Hint to enable a fetch profile for a given
-	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}.
+	 * {@link jakarta.persistence.EntityManager#setProperty(String, Object) EntityManager}
+	 * or {@link jakarta.persistence.Query#setHint(String, Object) Query}.
 	 *
 	 * @see org.hibernate.Session#enableFetchProfile(String)
+	 * @see org.hibernate.query.SelectionQuery#enableFetchProfile(String)
 	 * @see jakarta.persistence.EntityManager#setProperty(String, Object)
+	 * @see jakarta.persistence.Query#setHint(String, Object)
 	 */
 	String HINT_FETCH_PROFILE = "org.hibernate.fetchProfile";
 

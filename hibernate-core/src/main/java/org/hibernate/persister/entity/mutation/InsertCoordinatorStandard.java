@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.entity.mutation;
@@ -140,7 +140,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				final Generator generator = generators[i];
 				if ( generator != null
 						&& generator.generatesOnInsert()
-						&& !generator.generatedOnExecution( entity, session ) ) {
+						&& generator.generatedBeforeExecution( entity, session ) ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
 					persister.setPropertyValue( entity, i, values[i] );
 					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
@@ -407,7 +407,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				else {
 					final Generator generator = attributeMapping.getGenerator();
 					if ( isValueGenerated( generator ) ) {
-						if ( session != null && !generator.generatedOnExecution( object, session ) ) {
+						if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
 							attributeInclusions[attributeIndex] = true;
 							attributeMapping.forEachInsertable( insertGroupBuilder );
 						}
@@ -433,11 +433,13 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final BasicEntityIdentifierMapping identifierMapping = (BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
-					tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
-							column.getColumnName(),
-							columnValues[i],
-							identifierMapping.getJdbcMapping()
-					) );
+					if ( columnValues != null ) {
+						tableMapping.getKeyMapping().forEachKeyColumn( (i, column) -> tableInsertBuilder.addKeyColumn(
+								column.getColumnName(),
+								columnValues[i],
+								identifierMapping.getJdbcMapping()
+						) );
+					}
 				}
 			}
 			else {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -44,6 +44,15 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	 * @return query root corresponding to the given cte
 	 */
 	<X> JpaRoot<X> from(JpaCteCriteria<X> cte);
+
+	/**
+	 * Create and add a query root corresponding to the given set-returning function,
+	 * forming a cartesian product with any existing roots.
+	 *
+	 * @param function the set-returning function
+	 * @return query root corresponding to the given function
+	 */
+	<X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function);
 
 	@Override
 	JpaSelectCriteria<T> distinct(boolean distinct);

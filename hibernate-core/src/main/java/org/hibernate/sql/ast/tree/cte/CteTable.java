@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.cte;
@@ -23,8 +23,8 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.derived.AnonymousTupleTableGroupProducer;
-import org.hibernate.query.derived.CteTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
+import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
 
 /**
  * Describes the table definition for the CTE - its name amd its columns
@@ -71,13 +71,10 @@ public class CteTable {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String idName;
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			idName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
-		}
-		else {
-			idName = "id";
-		}
+		final String idName =
+				identifierMapping instanceof SingleAttributeIdentifierMapping
+						? identifierMapping.getAttributeName()
+						: "id";
 		forEachCteColumn( idName, identifierMapping, columns::add );
 		return new CteTable( cteName, columns );
 	}
@@ -88,7 +85,7 @@ public class CteTable {
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final String idName;
 		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			idName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
+			idName = identifierMapping.getAttributeName();
 		}
 		else {
 			idName = "id";
@@ -122,14 +119,12 @@ public class CteTable {
 	}
 
 	public static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
-		if ( modelPart instanceof BasicValuedMapping ) {
-			consumer.accept( new CteColumn( prefix, ( (BasicValuedMapping) modelPart ).getJdbcMapping() ) );
+		if ( modelPart instanceof BasicValuedMapping basicValuedMapping ) {
+			consumer.accept( new CteColumn( prefix, basicValuedMapping.getJdbcMapping() ) );
 		}
-		else if ( modelPart instanceof EntityValuedModelPart ) {
-			final EntityValuedModelPart entityPart = ( EntityValuedModelPart ) modelPart;
+		else if ( modelPart instanceof EntityValuedModelPart entityPart ) {
 			final ModelPart targetPart;
-			if ( modelPart instanceof Association ) {
-				final Association association = (Association) modelPart;
+			if ( modelPart instanceof Association association ) {
 				if ( association.getForeignKeyDescriptor() == null ) {
 					// This is expected to happen when processing a
 					// PostInitCallbackEntry because the callbacks
@@ -149,8 +144,7 @@ public class CteTable {
 			}
 			forEachCteColumn( prefix + "_" + entityPart.getPartName(), targetPart, consumer );
 		}
-		else if ( modelPart instanceof DiscriminatedAssociationModelPart ) {
-			final DiscriminatedAssociationModelPart discriminatedPart = (DiscriminatedAssociationModelPart) modelPart;
+		else if ( modelPart instanceof DiscriminatedAssociationModelPart discriminatedPart ) {
 			final String newPrefix = prefix + "_" + discriminatedPart.getPartName() + "_";
 			forEachCteColumn(
 					newPrefix + "discriminator",
@@ -207,19 +201,16 @@ public class CteTable {
 		if ( modelPart == modelPartToFind ) {
 			return -offset;
 		}
-		if ( modelPart instanceof EntityValuedModelPart ) {
-			final ModelPart keyPart;
-			if ( modelPart instanceof Association ) {
-				keyPart = ( (Association) modelPart ).getForeignKeyDescriptor();
-			}
-			else {
-				keyPart = ( (EntityValuedModelPart) modelPart ).getEntityMappingType().getIdentifierMapping();
-			}
+		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
+			final ModelPart keyPart =
+					modelPart instanceof Association association
+							? association.getForeignKeyDescriptor()
+							: entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
 			return determineModelPartStartIndex( offset, keyPart, modelPartToFind );
 		}
-		else if ( modelPart instanceof EmbeddableValuedModelPart ) {
-			final EmbeddableValuedModelPart embeddablePart = ( EmbeddableValuedModelPart ) modelPart;
-			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
+		else if ( modelPart instanceof EmbeddableValuedModelPart embeddablePart ) {
+			final AttributeMappingsList attributeMappings =
+					embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping mapping = attributeMappings.get( i );
 				final int result = determineModelPartStartIndex( offset, mapping, modelPartToFind );

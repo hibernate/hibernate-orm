@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.entitygraph.ast;
@@ -54,11 +54,8 @@ public class LoadPlanBuilderTest {
 
 		final SingleIdEntityLoaderStandardImpl<?> loader = new SingleIdEntityLoaderStandardImpl<>( entityDescriptor, new LoadQueryInfluencers( sessionFactory ) );
 
-		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
-				LockOptions.READ,
-				new LoadQueryInfluencers( sessionFactory ),
-				sessionFactory
-		);
+		final SingleIdLoadPlan<?> loadPlan =
+				loader.resolveLoadPlan( LockOptions.READ, new LoadQueryInfluencers( sessionFactory ) );
 
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
@@ -96,11 +93,7 @@ public class LoadPlanBuilderTest {
 			}
 		};
 
-		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan(
-				LockOptions.READ,
-				influencers,
-				sessionFactory
-		);
+		final SingleIdLoadPlan<?> loadPlan = loader.resolveLoadPlan( LockOptions.READ, influencers );
 		final List<DomainResult<?>> domainResults = loadPlan.getJdbcSelect()
 				.getJdbcValuesMappingProducer()
 				.resolve( null, new LoadQueryInfluencers( sessionFactory ), sessionFactory )

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
@@ -20,12 +20,4 @@ public interface ExecutionOptions {
 	boolean shouldManageNamespaces();
 
 	ExceptionHandler getExceptionHandler();
-
-	/**
-	 * @deprecated No longer used, see {@link org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_FILTER_PROVIDER}
-	 */
-	@Deprecated( forRemoval = true )
-	default SchemaFilter getSchemaFilter() {
-		throw new UnsupportedOperationException();
-	}
 }

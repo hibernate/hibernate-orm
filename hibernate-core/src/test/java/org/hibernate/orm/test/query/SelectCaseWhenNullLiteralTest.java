@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
@@ -40,11 +40,7 @@ public class SelectCaseWhenNullLiteralTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -75,6 +71,30 @@ public class SelectCaseWhenNullLiteralTest {
 				session -> {
 					List result = session.createQuery( "select count(case when 1=1 then ?1 else null end) from Person p" )
 							.setParameter( 1, 2 )
+							.list();
+					assertThat( result.size(), is( 1 ) );
+					assertThat( result.get( 0 ), is( 1L ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-19291" )
+	public void testSelectCaseWhenNullLiteralWithParametersWithNamedParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List result = session.createQuery( "select case when 1=1 then :value else null end from Person p" )
+							.setParameter( "value", 2 )
+							.list();
+					assertThat( result.size(), is( 1 ) );
+					assertThat( result.get( 0 ), is( 2 ) );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					List result = session.createQuery( "select count(case when 1=1 then :value else null end) from Person p" )
+							.setParameter( "value", 2 )
 							.list();
 					assertThat( result.size(), is( 1 ) );
 					assertThat( result.get( 0 ), is( 1L ) );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -13,7 +13,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -89,7 +90,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
+		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
 		sqlAppender.appendSql( "avg(" );
 		final Expression arg;
 		if ( sqlAstArguments.get( 0 ) instanceof Distinct ) {
@@ -150,7 +151,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		public void validate(
 				List<? extends SqmTypedNode<?>> arguments,
 				String functionName,
-				TypeConfiguration typeConfiguration) {
+				BindingContext bindingContext) {
 			if ( arguments.size() != 1 ) {
 				throw new FunctionArgumentException(
 						String.format(
@@ -166,7 +167,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			final SqmExpressible<?> expressible = argument.getExpressible();
 			final DomainType<?> domainType;
 			if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
-				final JdbcType jdbcType = getJdbcType( domainType, typeConfiguration );
+				final JdbcType jdbcType = getJdbcType( domainType, bindingContext.getTypeConfiguration() );
 				if ( !isNumeric( jdbcType ) ) {
 					throw new FunctionArgumentException(
 							String.format(
@@ -186,15 +187,15 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			if ( SqlTypes.isNumericType( sqlTypeCode ) ) {
 				return true;
 			}
-			if ( jdbcType instanceof ArrayJdbcType ) {
-				return isNumeric( ( (ArrayJdbcType) jdbcType ).getElementJdbcType() );
+			if ( jdbcType instanceof ArrayJdbcType arrayJdbcType ) {
+				return isNumeric( arrayJdbcType.getElementJdbcType() );
 			}
 			return false;
 		}
 
 		private static JdbcType getJdbcType(DomainType<?> domainType, TypeConfiguration typeConfiguration) {
-			if ( domainType instanceof JdbcMapping ) {
-				return ( (JdbcMapping) domainType ).getJdbcType();
+			if ( domainType instanceof JdbcMapping jdbcMapping ) {
+				return jdbcMapping.getJdbcType();
 			}
 			else {
 				final JavaType<?> javaType = domainType.getExpressibleJavaType();
@@ -230,7 +231,8 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			if ( impliedType != null ) {
 				return impliedType;
 			}
-			final JdbcMapping jdbcMapping = ( (Expression) arguments.get( 0 ) ).getExpressionType().getSingleJdbcMapping();
+			Expression expression = (Expression) arguments.get( 0 );
+			final JdbcMapping jdbcMapping = expression.getExpressionType().getSingleJdbcMapping();
 			if ( jdbcMapping instanceof BasicPluralType<?, ?> ) {
 				return (BasicValuedMapping) jdbcMapping;
 			}

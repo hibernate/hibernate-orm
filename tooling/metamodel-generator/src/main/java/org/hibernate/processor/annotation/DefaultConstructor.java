@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -9,12 +9,15 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
-import static org.hibernate.processor.annotation.AnnotationMetaEntity.usingReactiveSession;
 import static org.hibernate.processor.util.Constants.ENTITY_MANAGER_FACTORY;
 import static org.hibernate.processor.util.Constants.HIB_SESSION_FACTORY;
+import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.MUTINY_SESSION;
 import static org.hibernate.processor.util.Constants.MUTINY_SESSION_FACTORY;
 import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
+import static org.hibernate.processor.util.Constants.PERSISTENCE_UNIT;
+import static org.hibernate.processor.util.Constants.POST_CONSTRUCT;
+import static org.hibernate.processor.util.Constants.PRE_DESTROY;
 
 /**
  * Used by the container to instantiate a Jakarta Data repository.
@@ -22,7 +25,7 @@ import static org.hibernate.processor.util.Constants.MUTINY_STATELESS_SESSION;
  * @author Gavin King
  */
 public class DefaultConstructor implements MetaAttribute {
-	private final Metamodel annotationMetaEntity;
+	private final AnnotationMetaEntity annotationMetaEntity;
 	private final String constructorName;
 	private final String methodName;
 	private final String sessionTypeName;
@@ -31,7 +34,7 @@ public class DefaultConstructor implements MetaAttribute {
 	private final boolean addInjectAnnotation;
 
 	public DefaultConstructor(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String constructorName,
 			String methodName,
 			String sessionTypeName,
@@ -48,7 +51,7 @@ public class DefaultConstructor implements MetaAttribute {
 	}
 
 	private boolean isReactive() {
-		return usingReactiveSession(sessionTypeName);
+		return annotationMetaEntity.isReactive();
 	}
 
 	@Override
@@ -66,10 +69,10 @@ public class DefaultConstructor implements MetaAttribute {
 		final StringBuilder declaration = new StringBuilder();
 		declaration
 				.append('\n');
-		if ( annotationMetaEntity.getSupertypeName() == null ) {
+		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
 			declaration
 					.append("@")
-					.append(annotationMetaEntity.importType("jakarta.persistence.PersistenceUnit"));
+					.append(annotationMetaEntity.importType(PERSISTENCE_UNIT));
 			if ( dataStore != null ) {
 				declaration
 						.append("(unitName=\"")
@@ -82,15 +85,16 @@ public class DefaultConstructor implements MetaAttribute {
 					.append(" ")
 					.append(sessionVariableName)
 					.append("Factory;\n\n");
+			final String sessionFactoryType = isReactive() ? MUTINY_SESSION_FACTORY : HIB_SESSION_FACTORY;
 			declaration.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.PostConstruct"))
+					.append(annotationMetaEntity.importType(POST_CONSTRUCT))
 					.append("\nprivate void openSession() {")
 					.append("\n\t")
 					.append(sessionVariableName)
 					.append(" = ")
 					.append(sessionVariableName)
 					.append("Factory.unwrap(")
-					.append(annotationMetaEntity.importType(isReactive() ? MUTINY_SESSION_FACTORY : HIB_SESSION_FACTORY))
+					.append(annotationMetaEntity.importType( sessionFactoryType ))
 					.append(".class).openStatelessSession()");
 			if ( MUTINY_SESSION.equals(sessionTypeName)
 					|| MUTINY_STATELESS_SESSION.equals(sessionTypeName) ) {
@@ -103,7 +107,7 @@ public class DefaultConstructor implements MetaAttribute {
 			// TODO: is it a problem that we never close the session?
 			if ( !isReactive() ) {
 				declaration.append('@')
-						.append(annotationMetaEntity.importType("jakarta.annotation.PreDestroy"))
+						.append(annotationMetaEntity.importType(PRE_DESTROY))
 						.append("\nprivate void closeSession() {")
 						.append("\n\t")
 						.append(sessionVariableName)
@@ -124,7 +128,7 @@ public class DefaultConstructor implements MetaAttribute {
 		if ( addInjectAnnotation ) {
 			declaration
 					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.inject.Inject"))
+					.append(annotationMetaEntity.importType(INJECT))
 					.append('\n');
 		}
 	}

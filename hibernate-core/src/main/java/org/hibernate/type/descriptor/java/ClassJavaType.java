@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -13,11 +13,17 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class ClassJavaType extends AbstractClassJavaType<Class> {
+public class ClassJavaType extends AbstractClassJavaType<Class<?>> {
 	public static final ClassJavaType INSTANCE = new ClassJavaType();
 
+	@SuppressWarnings({"unchecked", "rawtypes"} )
 	public ClassJavaType() {
-		super( Class.class );
+		super( (Class) Class.class );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Class;
 	}
 
 	@Override
@@ -25,11 +31,13 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		return true;
 	}
 
-	public String toString(Class value) {
+	@Override
+	public String toString(Class<?> value) {
 		return value.getName();
 	}
 
-	public Class fromString(CharSequence string) {
+	@Override
+	public Class<?> fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
 		}
@@ -42,8 +50,9 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
-	public <X> X unwrap(Class value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(Class<?> value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -56,12 +65,13 @@ public class ClassJavaType extends AbstractClassJavaType<Class> {
 		throw unknownUnwrap( type );
 	}
 
-	public <X> Class wrap(X value, WrapperOptions options) {
+	@Override
+	public <X> Class<?> wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
 		if (value instanceof Class) {
-			return (Class) value;
+			return (Class<?>) value;
 		}
 		if (value instanceof CharSequence) {
 			return fromString( (CharSequence) value );

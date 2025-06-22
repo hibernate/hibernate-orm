@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.function;
 
-import org.hibernate.query.ReturnableType;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
@@ -28,9 +29,9 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = FunctionKind.NORMAL;
 	}
@@ -38,9 +39,9 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	public AbstractSqmSelfRenderingFunctionDescriptor(
 			String name,
 			FunctionKind functionKind,
-			ArgumentsValidator argumentsValidator,
-			FunctionReturnTypeResolver returnTypeResolver,
-			FunctionArgumentTypeResolver argumentTypeResolver) {
+			@Nullable ArgumentsValidator argumentsValidator,
+			@Nullable FunctionReturnTypeResolver returnTypeResolver,
+			@Nullable FunctionArgumentTypeResolver argumentTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = functionKind;
 	}

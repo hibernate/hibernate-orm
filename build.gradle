@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 
 buildscript {
@@ -19,13 +17,13 @@ buildscript {
 
 
 plugins {
-	id 'org.hibernate.build.xjc-jakarta' version '2.0.3' apply false
+	id "local.module"
+
 	id "org.hibernate.build.version-injection" version "2.0.0" apply false
-	id 'org.hibernate.matrix-test' version '3.1.1' apply false
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '7.0.0' apply false
 
-	id 'com.diffplug.spotless' version '6.25.0'
+	id "com.diffplug.spotless" version "7.0.2"
 	id 'org.checkerframework' version '0.6.40'
 	id 'org.hibernate.orm.build.jdks'
 
@@ -37,82 +35,30 @@ plugins {
 	id "com.dorongold.task-tree" version "2.1.1"
 }
 
-apply from: file( 'gradle/module.gradle' )
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Release Task
+// Releasing
 
-task release {
-	description = "The task performed when we are performing a release build.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
-
-	doFirst {
-		def javaVersionsInUse = jdkVersions.allVersions
-		if ( javaVersionsInUse != [JavaLanguageVersion.of( 11 )].toSet() ) {
-			throw new IllegalStateException( "Please use JDK 11 to perform the release. Currently using: ${javaVersionsInUse}" )
-		}
-	}
+tasks.register( 'releasePrepare' ) {
+	group "release-prepare"
+	description "Scripted release 'Release Prepare' stage.  " +
+			"Includes various checks as to the publish-ability of the project: testing, generation, etc.  " +
+			"Sub-projects register their own `releasePrepare` to hook into this stage."
+	// See `:release:releasePrepare` which does a lot of heavy lifting here
 }
 
-task publish {
-	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any publish-related activities to perform"
+tasks.register( 'releasePerform' ) {
+	group "release-perform"
+	description "Scripted release 'Release Perform' stage.  " +
+			"Generally this entails publishing artifacts to various servers.  " +
+			"Sub-projects register their own `releasePerform` to hook into this stage."
+	// See `:release:releasePerform` which does a lot of heavy lifting here
 }
-
-ext {
-	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
-		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
-			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
-		}
-	}
-}
-
-nexusPublishing {
-	repositories {
-		sonatype {
-			username = project.hasProperty( 'hibernatePublishUsername' ) ? project.property( 'hibernatePublishUsername' ) : null
-			password = project.hasProperty( 'hibernatePublishPassword' ) ? project.property( 'hibernatePublishPassword' ) : null
-		}
-	}
-}
-
-gradle.taskGraph.addTaskExecutionGraphListener(
-		new TaskExecutionGraphListener() {
-			@Override
-			void graphPopulated(TaskExecutionGraph graph) {
-				String[] tasksToLookFor = [
-						'publish',
-						'publishToSonatype',
-						'publishAllPublicationsToSonatype',
-						'publishPublishedArtifactsPublicationToSonatypeRepository',
-						'publishRelocationArtifactsPublicationToSonatypeRepository',
-				]
-
-				for ( String taskToLookFor : tasksToLookFor ) {
-					if ( graph.hasTask( taskToLookFor ) ) {
-						// trying to publish - make sure the needed credentials are available
-
-						if ( project.property( 'hibernatePublishUsername' ) == null ) {
-							throw new RuntimeException( "`-PhibernatePublishUsername=...` not found" )
-						}
-						if ( project.property( 'hibernatePublishPassword' ) == null ) {
-							throw new RuntimeException( "`-PhibernatePublishPassword=...` not found" )
-						}
-
-						break;
-					}
-				}
-			}
-		}
-)
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // CI Build Task
 
-task ciBuild {
+tasks.register('ciBuild') {
 	description = "The task performed when one of the 'main' jobs are triggered on the " +
 			"CI server.  Just as above, relies on the fact that subprojects will " +
 			"appropriately define a release task themselves if they have any tasks " +
@@ -139,6 +85,3 @@ idea {
 		name = "hibernate-orm"
 	}
 }
-
-
-

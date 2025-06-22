@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -137,13 +136,7 @@ public class LazyCollectionDeletedAllowProxyTest {
 
 	@AfterEach
 	public void cleanData(SessionFactoryScope scope) {
-		scope.inTransaction( s -> {
-			Query query = s.createQuery( "from Post" );
-			List<Post> posts = query.getResultList();
-			posts.forEach( post -> {
-				s.remove( post );
-			} );
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 

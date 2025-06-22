@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy;
@@ -8,7 +8,6 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -77,7 +76,7 @@ public class LazyLoadingByEnhancerSetterTest {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-10747" )
+	// failure doesn't occur with HHH-16572 change @FailureExpected( jiraKey = "HHH-10747" )
 	public void testProperty(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			ItemProperty input = new ItemProperty();

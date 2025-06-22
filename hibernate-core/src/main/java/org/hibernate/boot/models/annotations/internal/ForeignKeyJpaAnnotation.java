@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.ForeignKey;
 
@@ -22,7 +22,7 @@ public class ForeignKeyJpaAnnotation implements ForeignKey {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ForeignKeyJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ForeignKeyJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.value = jakarta.persistence.ConstraintMode.CONSTRAINT;
 		this.foreignKeyDefinition = "";
@@ -32,7 +32,7 @@ public class ForeignKeyJpaAnnotation implements ForeignKey {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ForeignKeyJpaAnnotation(ForeignKey annotation, SourceModelBuildingContext modelContext) {
+	public ForeignKeyJpaAnnotation(ForeignKey annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.value = annotation.value();
 		this.foreignKeyDefinition = annotation.foreignKeyDefinition();
@@ -42,7 +42,7 @@ public class ForeignKeyJpaAnnotation implements ForeignKey {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ForeignKeyJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ForeignKeyJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.value = (jakarta.persistence.ConstraintMode) attributeValues.get( "value" );
 		this.foreignKeyDefinition = (String) attributeValues.get( "foreignKeyDefinition" );

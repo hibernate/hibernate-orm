@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -245,16 +245,24 @@ public interface MappingSettings {
 	String JAVA_TIME_USE_DIRECT_JDBC = "hibernate.type.java_time_use_direct_jdbc";
 
 	/**
-	 * Indicates whether to prefer using SQL enums and the respective special JDBC types for binding/extracting
-	 * of values.
-	 * <p/>
-	 * Used to set the value across the entire system as opposed to scattered, individual
-	 * {@linkplain org.hibernate.annotations.JdbcTypeCode} and {@linkplain org.hibernate.annotations.JdbcType}
-	 * naming specific {@linkplain org.hibernate.type.descriptor.jdbc.JdbcType} implementations.
+	 * Indicates that named SQL {@code enum} types should be used by default instead
+	 * of {@code varchar} on databases which support named enum types.
+	 * <p>
+	 * A named enum type is declared in DDL using {@code create type ... as enum} or
+	 * {@code create type ... as domain}.
+	 * <p>
+	 * This configuration property is used to specify a global preference, as an
+	 * alternative to the use of
+	 * {@link org.hibernate.annotations.JdbcTypeCode @JdbcTypeCode(SqlTypes.NAMED_ENUM)}
+	 * at the field or property level.
 	 *
 	 * @settingDefault false
 	 *
 	 * @since 6.5
+	 *
+	 * @see org.hibernate.type.SqlTypes#NAMED_ENUM
+	 * @see org.hibernate.dialect.type.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.type.OracleEnumJdbcType
 	 */
 	@Incubating
 	String PREFER_NATIVE_ENUM_TYPES = "hibernate.type.prefer_native_enum_types";
@@ -270,6 +278,9 @@ public interface MappingSettings {
 	 * or {@code hibernate.type.preferred_array_jdbc_type=TABLE}.
 	 *
 	 * @settingDefault {@link Dialect#getPreferredSqlTypeCodeForArray()}.
+	 *
+	 * @see org.hibernate.type.SqlTypes#ARRAY
+	 * @see org.hibernate.type.SqlTypes#TABLE
 	 *
 	 * @since 6.6
 	 */
@@ -313,6 +324,17 @@ public interface MappingSettings {
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";
+
+	/**
+	 * Specifies whether to use the legacy provider specific and non-portable XML format for collections and byte arrays
+	 * for XML serialization/deserialization.
+	 * <p>
+	 * {@code false} by default. This property only exists for backwards compatibility.
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String XML_FORMAT_MAPPER_LEGACY_FORMAT = "hibernate.type.xml_format_mapper.legacy_format";
 
 	/**
 	 * Configurable control over how to handle {@code Byte[]} and {@code Character[]} types
@@ -485,7 +507,17 @@ public interface MappingSettings {
 	String TRANSFORM_HBM_XML_FEATURE_HANDLING = "hibernate.transform_hbm_xml.unsupported_feature_handling";
 
 	/**
+	 * Specifies that Hibernate should always restrict by discriminator values in
+	 * SQL {@code select} statements, even when querying the root entity of an
+	 * entity inheritance hierarchy.
+	 * <p>
+	 * By default, Hibernate only restricts by discriminator values when querying
+	 * a subtype, or when the root entity is explicitly annotated
+	 * {@link org.hibernate.annotations.DiscriminatorOptions#force
+	 * DiscriminatorOptions(force=true)}.
+	 *
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect
+	 * @see org.hibernate.annotations.DiscriminatorOptions#force
 	 *
 	 * @settingDefault {@code false}
 	 */

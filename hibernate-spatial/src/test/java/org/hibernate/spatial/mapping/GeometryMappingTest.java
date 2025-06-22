@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.mapping;
@@ -7,8 +7,6 @@ package org.hibernate.spatial.mapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spatial.GeolatteGeometryJavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -33,16 +31,8 @@ public class GeometryMappingTest {
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
-				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( MLEntity.class );
-		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
-				.getTypeConfiguration()
-				.getJdbcTypeRegistry();
-
-		final JavaTypeRegistry javaTypeRegistry = entityDescriptor.getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry();
 
 		ModelPart part = entityDescriptor.findSubPart( "lineString" );
 		assertThat( part.getJavaType(), equalTo( GeolatteGeometryJavaType.MULTILINESTRING_INSTANCE ) );

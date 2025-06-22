@@ -1,12 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.type.BindingContext;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
@@ -16,7 +17,6 @@ import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A function that dynamically dispatches to other functions,
@@ -61,10 +61,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction(
-				arguments,
-				queryEngine.getTypeConfiguration()
-		);
+		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
 		return functionDescriptor.generateSqmExpression( arguments, impliedResultType, queryEngine );
 	}
 
@@ -74,10 +71,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			SqmPredicate filter,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction(
-				arguments,
-				queryEngine.getTypeConfiguration()
-		);
+		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
 		return functionDescriptor.generateAggregateSqmExpression(
 				arguments,
 				filter,
@@ -93,10 +87,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction(
-				arguments,
-				queryEngine.getTypeConfiguration()
-		);
+		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
 		return functionDescriptor.generateOrderedSetAggregateSqmExpression(
 				arguments,
 				filter,
@@ -114,10 +105,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 			Boolean fromFirst,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final SqmFunctionDescriptor functionDescriptor = validateGetFunction(
-				arguments,
-				queryEngine.getTypeConfiguration()
-		);
+		final SqmFunctionDescriptor functionDescriptor = validateGetFunction( arguments, queryEngine );
 		return functionDescriptor.generateWindowSqmExpression(
 				arguments,
 				filter,
@@ -137,13 +125,13 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 	public void validate(
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
-			TypeConfiguration typeConfiguration) {
-		validateGetFunction( arguments, typeConfiguration );
+			BindingContext bindingContext) {
+		validateGetFunction( arguments, bindingContext );
 	}
 
 	private SqmFunctionDescriptor validateGetFunction(
 			List<? extends SqmTypedNode<?>> arguments,
-			TypeConfiguration typeConfiguration) {
+			BindingContext bindingContext) {
 		RuntimeException exception = null;
 		for ( String overload : functionNames ) {
 			final SqmFunctionDescriptor functionDescriptor = functionRegistry.findFunctionDescriptor( overload );
@@ -151,7 +139,7 @@ public class DynamicDispatchFunction implements SqmFunctionDescriptor, Arguments
 				throw new IllegalArgumentException( "No function registered under the name '" + overload + "'" );
 			}
 			try {
-				functionDescriptor.getArgumentsValidator().validate( arguments, overload, typeConfiguration );
+				functionDescriptor.getArgumentsValidator().validate( arguments, overload, bindingContext );
 				return functionDescriptor;
 			}
 			catch (RuntimeException ex) {

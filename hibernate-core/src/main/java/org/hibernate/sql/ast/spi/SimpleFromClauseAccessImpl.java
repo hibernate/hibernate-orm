@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
@@ -17,6 +17,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Simple implementation of FromClauseAccess
@@ -48,6 +50,16 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 			return tableGroup;
 		}
 		return parent.findTableGroup( navigablePath );
+	}
+
+	@Override
+	public @Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable) {
+		for ( TableGroup tableGroup : tableGroupMap.values() ) {
+			if ( tableGroup.findTableReference( identificationVariable ) != null ) {
+				return tableGroup;
+			}
+		}
+		return parent == null ? null : parent.findTableGroupByIdentificationVariable( identificationVariable );
 	}
 
 	@Override
@@ -96,10 +108,9 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 	}
 
 	private TableGroup getCorrelatedTableGroup(TableGroup tableGroup) {
-		if ( tableGroup instanceof CorrelatedTableGroup ) {
-			return getCorrelatedTableGroup( ( (CorrelatedTableGroup) tableGroup ).getCorrelatedTableGroup() );
-		}
-		return tableGroup;
+		return tableGroup instanceof CorrelatedTableGroup correlatedTableGroup
+				? getCorrelatedTableGroup( correlatedTableGroup.getCorrelatedTableGroup() )
+				: tableGroup;
 	}
 
 	@Override

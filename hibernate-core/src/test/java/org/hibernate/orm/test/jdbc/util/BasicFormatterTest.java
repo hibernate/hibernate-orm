@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jdbc.util;
@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
  * @author Steve Ebersole
  */
 public class BasicFormatterTest extends BaseUnitTestCase {
-
 	@Test
 	public void testNoLoss() {
 		assertNoLoss( "insert into Address (city, state, zip, \"from\") values (?, ?, ?, 'insert value')" );
@@ -47,12 +46,50 @@ public class BasicFormatterTest extends BaseUnitTestCase {
 				"(select p.pid from Address where city = 'Boston') union (select p.pid from Address where city = 'Taipei')"
 		);
 		assertNoLoss( "select group0.[order] as order0 from [Group] group0 where group0.[order]=?1" );
+		assertNoLoss( """
+						INSERT INTO TEST_TABLE (JSON) VALUES
+						('{
+						"apiVersion": "2.0",
+						"data": {
+							"updated": "2010-01-07T19:58:42.949Z",
+							"totalItems": 800,
+							"startIndex": 1,
+							"itemsPerPage": 1,
+							"items": [
+							{
+								"id": "hYB0mn5zh2c",
+								"uploaded": "2007-06-05T22:07:03.000Z",
+								"updated": "2010-01-07T13:26:50.000Z",
+								"uploader": "GoogleDeveloperDay",
+								"category": "News",
+								"title": "Google Developers Day US - Maps API Introduction",
+								"description": "Google Maps API Introduction ..."
+							}
+							]
+						}
+						}')
+					"""
+		);
 	}
 
 	@Test
 //	@FailureExpected( jiraKey = "HHH-15125")
 	public void testProblematic() {
 		assertNoLoss( "select * from ((select e.id from Entity e union all select e.id from Entity e) union select e.id from Entity e) grp" );
+	}
+
+	@Test
+	public void  testSingleLineComment(){
+		assertNoLoss("CREATE TRIGGER before_employee_delete\n"
+					+ "BEFORE DELETE ON employees\n"
+					+ "FOR EACH ROW\n"
+					+ "BEGIN\n"
+					+ "    -- abcd\n"
+					+ "    IF EXISTS (SELECT 1 FROM orders WHERE employee_id = OLD.id) THEN\n"
+					+ "        SIGNAL SQLSTATE '45000'\n"
+					+ "        SET MESSAGE_TEXT = 'Cannot delete employee because they have related orders';\n"
+					+ "    END IF;\n"
+					+ "END ");
 	}
 
 	private void assertNoLoss(String query) {

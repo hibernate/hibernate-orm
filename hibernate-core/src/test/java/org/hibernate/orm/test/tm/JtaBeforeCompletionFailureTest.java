@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tm;
@@ -54,10 +54,7 @@ public class JtaBeforeCompletionFailureTest extends BaseSessionFactoryFunctional
 
 	@AfterEach
 	public void tearDown() {
-		inTransaction(
-				session ->
-						session.createQuery( "delete SimpleEntity" ).executeUpdate()
-		);
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

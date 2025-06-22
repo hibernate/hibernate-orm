@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -24,14 +24,14 @@ public interface EntityCopyObserver {
 	void entityCopyDetected(Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource session);
 
 	/**
-	 * Called when the top-level merge operation is complete.
+	 * Called when the toplevel merge operation is complete.
 	 *
 	 * @param session The session
 	 */
 	void topLevelMergeComplete(EventSource session);
 
 	/**
-	 * Called to clear any data stored in this EntityCopyObserver.
+	 * Called to clear any data stored in this {@code EntityCopyObserver}.
 	 */
 	void clear();
 }

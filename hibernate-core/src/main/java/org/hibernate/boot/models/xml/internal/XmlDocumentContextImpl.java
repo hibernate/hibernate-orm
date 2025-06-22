@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.EffectiveMappingDefaults;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * @author Steve Ebersole
@@ -19,13 +19,13 @@ import org.hibernate.models.spi.SourceModelBuildingContext;
 public class XmlDocumentContextImpl implements XmlDocumentContext {
 	private final XmlDocument xmlDocument;
 	private final EffectiveMappingDefaults effectiveDefaults;
-	private final SourceModelBuildingContext modelBuildingContext;
+	private final ModelsContext modelBuildingContext;
 	private final BootstrapContext bootstrapContext;
 
 	public XmlDocumentContextImpl(
 			XmlDocument xmlDocument,
 			RootMappingDefaults mappingDefaults,
-			SourceModelBuildingContext modelBuildingContext,
+			ModelsContext modelBuildingContext,
 			BootstrapContext bootstrapContext) {
 		this.xmlDocument = xmlDocument;
 		this.effectiveDefaults = buildEffectiveDefaults( xmlDocument, mappingDefaults );
@@ -44,7 +44,7 @@ public class XmlDocumentContextImpl implements XmlDocumentContext {
 	}
 
 	@Override
-	public SourceModelBuildingContext getModelBuildingContext() {
+	public ModelsContext getModelBuildingContext() {
 		return modelBuildingContext;
 	}
 

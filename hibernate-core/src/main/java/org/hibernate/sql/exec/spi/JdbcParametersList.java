@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.spi;
@@ -16,17 +16,17 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
  */
 public interface JdbcParametersList {
 
-	static final JdbcParametersList EMPTY = new JdbcParametersListMulti( new JdbcParameter[]{} );
+	JdbcParametersList EMPTY = new JdbcParametersListMulti( new JdbcParameter[]{} );
 
-	public JdbcParameter get(int selectionIndex);
+	JdbcParameter get(int selectionIndex);
 
-	public int size();
+	int size();
 
-	public static Builder newBuilder() {
+	static Builder newBuilder() {
 		return newBuilder( 2 );
 	}
 
-	public static JdbcParametersList fromList(final List<JdbcParameter> originalList) {
+	static JdbcParametersList fromList(final List<JdbcParameter> originalList) {
 		final Builder builder = newBuilder( originalList.size() );
 		for ( JdbcParameter element : originalList ) {
 			builder.add( element );
@@ -34,19 +34,19 @@ public interface JdbcParametersList {
 		return builder.build();
 	}
 
-	public static JdbcParametersList empty() {
+	static JdbcParametersList empty() {
 		return EMPTY;
 	}
 
-	public static JdbcParametersList singleton(final JdbcParameter p) {
+	static JdbcParametersList singleton(final JdbcParameter p) {
 		return new JdbcParametersListSingleton( p );
 	}
 
-	public static Builder newBuilder(final int i) {
+	static Builder newBuilder(final int i) {
 		return new Builder( i );
 	}
 
-	public static class Builder {
+	class Builder {
 		private JdbcParameter[] array;
 		private int index = 0;
 
@@ -82,7 +82,7 @@ public interface JdbcParametersList {
 		}
 	}
 
-	public final class JdbcParametersListMulti implements JdbcParametersList {
+	final class JdbcParametersListMulti implements JdbcParametersList {
 
 		private final JdbcParameter[] array;
 
@@ -99,7 +99,7 @@ public interface JdbcParametersList {
 		}
 	}
 
-	public final class JdbcParametersListSingleton implements JdbcParametersList {
+	final class JdbcParametersListSingleton implements JdbcParametersList {
 
 		private final JdbcParameter singleElement;
 

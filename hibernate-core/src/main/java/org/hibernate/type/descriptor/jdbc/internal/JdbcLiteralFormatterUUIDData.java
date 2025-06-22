@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc.internal;
@@ -24,7 +24,6 @@ public class JdbcLiteralFormatterUUIDData<T> extends BasicJdbcLiteralFormatter<T
 
 	@Override
 	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		final UUID literalValue = unwrap( value, UUID.class, wrapperOptions );
-		dialect.appendUUIDLiteral( appender, literalValue );
+		dialect.appendUUIDLiteral( appender, unwrap( value, UUID.class, wrapperOptions ) );
 	}
 }

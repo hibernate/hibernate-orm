@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Inheritance;
 
@@ -19,21 +19,21 @@ public class InheritanceJpaAnnotation implements Inheritance {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public InheritanceJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public InheritanceJpaAnnotation(ModelsContext modelContext) {
 		this.strategy = jakarta.persistence.InheritanceType.SINGLE_TABLE;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public InheritanceJpaAnnotation(Inheritance annotation, SourceModelBuildingContext modelContext) {
+	public InheritanceJpaAnnotation(Inheritance annotation, ModelsContext modelContext) {
 		this.strategy = annotation.strategy();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public InheritanceJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public InheritanceJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.strategy = (jakarta.persistence.InheritanceType) attributeValues.get( "strategy" );
 	}
 

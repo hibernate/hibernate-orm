@@ -1,15 +1,26 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.UUID;
-
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQueryReference;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -28,13 +39,14 @@ import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -46,30 +58,20 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
-import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
+import org.hibernate.type.format.FormatMapper;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.FindOption;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.LockOption;
-import jakarta.persistence.RefreshOption;
-import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaDelete;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.CriteriaSelect;
-import jakarta.persistence.criteria.CriteriaUpdate;
-import jakarta.persistence.metamodel.Metamodel;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -137,11 +139,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setAutoClear(boolean enabled) {
-		delegate.setAutoClear( enabled );
-	}
-
-	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
 	}
@@ -196,7 +193,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate.guessEntityName( entity );
 	}
 
-	@Override
+	@Override @Deprecated
 	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
 	}
@@ -222,8 +219,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void setCacheMode(CacheMode cm) {
-		delegate.setCacheMode( cm );
+	public void setCacheMode(CacheMode cacheMode) {
+		delegate.setCacheMode( cacheMode );
 	}
 
 	@Override
@@ -244,6 +241,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return delegate.isCriteriaCopyTreeEnabled();
+	}
+
+	@Override
+	public boolean isCriteriaPlanCacheEnabled() {
+		return delegate.isCriteriaPlanCacheEnabled();
+	}
+
+	@Override
+	public void setCriteriaPlanCacheEnabled(boolean jpaCriteriaCacheEnabled) {
+		delegate.setCriteriaPlanCacheEnabled( jpaCriteriaCacheEnabled );
 	}
 
 	@Override
@@ -364,16 +371,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public boolean isOpenOrWaitingForAutoClose() {
 		return delegate.isOpenOrWaitingForAutoClose();
-	}
-
-	@Override
-	public boolean shouldAutoClose() {
-		return delegate.shouldAutoClose();
-	}
-
-	@Override
-	public boolean isAutoCloseSessionEnabled() {
-		return delegate.isAutoCloseSessionEnabled();
 	}
 
 	@Override
@@ -529,15 +526,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insert) {
 		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
-	}
-
-	@Override
-	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
-		//noinspection resource
-		return delegate().createMutationQuery( insertSelect );
+		return delegate().createMutationQuery( insert );
 	}
 
 	@Override
@@ -545,13 +536,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaUpdate updateQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaUpdate updateQuery) {
 		return queryDelegate().createQuery( updateQuery );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createQuery(CriteriaDelete deleteQuery) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(CriteriaDelete deleteQuery) {
 		return queryDelegate().createQuery( deleteQuery );
 	}
 
@@ -560,18 +551,18 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( typedQueryReference );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor getNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor getNamedQuery(String name) {
 		return queryDelegate().getNamedQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name) {
 		return queryDelegate().getNamedNativeQuery( name );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor getNamedNativeQuery(String name, String resultSetMapping) {
 		return queryDelegate().getNamedNativeQuery( name, resultSetMapping );
 	}
 
@@ -591,6 +582,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <R> SelectionQuery<R> createSelectionQuery(String hqlString, EntityGraph<R> resultGraph) {
+		return queryDelegate().createSelectionQuery( hqlString, resultGraph );
+	}
+
+	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
 		return queryDelegate().createSelectionQuery( criteria );
 	}
@@ -600,8 +596,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createQuery( queryString, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public QueryImplementor createNamedQuery(String name) {
+	@Override
+	public @SuppressWarnings("rawtypes") QueryImplementor createNamedQuery(String name) {
 		return queryDelegate().createNamedQuery( name );
 	}
 
@@ -622,8 +618,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return delegate().createNamedSelectionQuery( name, resultType );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString) {
 		return queryDelegate().createNativeQuery( sqlString );
 	}
 
@@ -639,8 +635,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 		return queryDelegate().createNativeQuery( sqlString, resultClass, tableAlias );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
-	public NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
+	@Override
+	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
@@ -832,6 +828,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T merge(T object, EntityGraph<?> loadGraph) {
+		return delegate.merge( object, loadGraph );
+	}
+
+	@Override
 	public void persist(Object object) {
 		delegate.persist( object );
 	}
@@ -892,6 +893,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void lock(Object object, LockMode lockMode, LockOption... lockOptions) {
+		delegate.lock( object, lockMode, lockOptions );
+	}
+
+	@Override
 	public void lock(String entityName, Object object, LockOptions lockOptions) {
 		delegate.lock( entityName, object, lockOptions );
 	}
@@ -927,11 +933,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void refresh(Object object, LockMode lockMode) {
-		delegate.refresh( object, lockMode );
-	}
-
-	@Override
 	public void refresh(Object object, LockOptions lockOptions) {
 		delegate.refresh( object, lockOptions );
 	}
@@ -952,8 +953,13 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <E> List<E> findAll(Class<E> entityType, List<Object> ids, FindOption... options) {
-		return delegate.findAll( entityType, ids, options );
+	public <E> List<E> findMultiple(Class<E> entityType, List<?> ids, FindOption... options) {
+		return delegate.findMultiple( entityType, ids, options );
+	}
+
+	@Override
+	public <E> List<E> findMultiple(EntityGraph<E> entityGraph, List<?> ids, FindOption... options) {
+		return  delegate.findMultiple( entityGraph, ids, options );
 	}
 
 	@Override
@@ -967,11 +973,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T get(Class<T> theClass, Object id, LockOptions lockOptions) {
-		return delegate.get( theClass, id, lockOptions );
-	}
-
-	@Override
 	public Object get(String entityName, Object id) {
 		return delegate.get( entityName, id );
 	}
@@ -979,6 +980,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		return delegate.get( entityName, id, lockMode );
+	}
+
+	@Override
+	public <T> T get(Class<T> entityType, Object id, LockOptions lockOptions) {
+		return delegate.get( entityType, id, lockOptions );
 	}
 
 	@Override
@@ -1107,6 +1113,26 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Collection<?> getManagedEntities() {
+		return delegate.getManagedEntities();
+	}
+
+	@Override
+	public Collection<?> getManagedEntities(String entityName) {
+		return delegate.getManagedEntities( entityName );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(Class<E> entityType) {
+		return delegate.getManagedEntities( entityType );
+	}
+
+	@Override
+	public <E> Collection<E> getManagedEntities(EntityType<E> entityType) {
+		return delegate.getManagedEntities( entityType );
+	}
+
+	@Override
 	public void addEventListeners(SessionEventListener... listeners) {
 		delegate.addEventListeners( listeners );
 	}
@@ -1114,6 +1140,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public ActionQueue getActionQueue() {
 		return delegate.getActionQueue();
+	}
+
+	@Override
+	public void registerProcess(AfterTransactionCompletionProcess process) {
+		delegate.registerProcess( process );
 	}
 
 	@Override
@@ -1157,8 +1188,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EventManager getEventManager() {
-		return delegate.getEventManager();
+	public EventMonitor getEventMonitor() {
+		return delegate.getEventMonitor();
 	}
 
 	@Override
@@ -1189,5 +1220,25 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
+	}
+
+	@Override
+	public FormatMapper getXmlFormatMapper() {
+		return delegate.getXmlFormatMapper();
+	}
+
+	@Override
+	public Object loadFromSecondLevelCache(EntityPersister persister, EntityKey entityKey, Object instanceToLoad, LockMode lockMode) {
+		return delegate.loadFromSecondLevelCache( persister, entityKey, instanceToLoad, lockMode );
+	}
+
+	@Override
+	public boolean isIdentifierRollbackEnabled() {
+		return delegate.isIdentifierRollbackEnabled();
 	}
 }

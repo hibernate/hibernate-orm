@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
@@ -8,19 +8,24 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.BindableType;
-import org.hibernate.query.spi.QueryImplementor;
 
+import org.hibernate.query.Query;
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.BasicType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -48,16 +53,15 @@ import static org.junit.Assert.assertThat;
 )
 @DomainModel(annotatedClasses = EnumSetConverterTest.TableWithEnumSetConverter.class)
 @SessionFactory
-@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase or the driver are trimming trailing zeros in byte arrays")
 public class EnumSetConverterTest {
 
-	private BindableType<Set<MySpecialEnum>> enumSetType;
+	private BasicType<Set<MySpecialEnum>> enumSetType;
 
 	@BeforeAll
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//noinspection unchecked
-			enumSetType = (BindableType<Set<MySpecialEnum>>) em.unwrap( SessionImplementor.class )
+			enumSetType = (BasicType<Set<MySpecialEnum>>) em.unwrap( SessionImplementor.class )
 					.getFactory()
 					.getRuntimeMetamodels()
 					.getMappingMetamodel()
@@ -67,7 +71,7 @@ public class EnumSetConverterTest {
 			em.persist( new TableWithEnumSetConverter( 2L, EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ) ) );
 			em.persist( new TableWithEnumSetConverter( 3L, null ) );
 
-			QueryImplementor q;
+			Query q;
 			q = em.createNamedQuery( "TableWithEnumSetConverter.Native.insert" );
 			q.setParameter( "id", 4L );
 			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
@@ -128,11 +132,18 @@ public class EnumSetConverterTest {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL does not like plain parameters in the distinct from predicate")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle requires a special function to compare XML")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server requires a special function to compare XML")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			final String op = em.getJdbcServices().getDialect().supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
-			QueryImplementor<TableWithEnumSetConverter> tq = em.createNativeQuery(
-					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " :data",
+			final Dialect dialect = em.getDialect();
+			final String op = dialect.supportsDistinctFromPredicate() ? "IS NOT DISTINCT FROM" : "=";
+			final String param = enumSetType.getJdbcType().wrapWriteExpression( ":data", dialect );
+			Query<TableWithEnumSetConverter> tq = em.createNativeQuery(
+					"SELECT * FROM table_with_enum_set_convert t WHERE the_set " + op + " " + param,
 					TableWithEnumSetConverter.class
 			);
 			tq.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE1, MySpecialEnum.VALUE2 ), enumSetType );

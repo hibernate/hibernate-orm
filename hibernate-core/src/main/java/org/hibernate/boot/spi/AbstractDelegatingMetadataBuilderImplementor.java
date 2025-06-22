@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -22,8 +22,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
-
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.SharedCacheMode;
@@ -98,7 +96,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyIndexView(IndexView jandexView) {
+	public MetadataBuilder applyIndexView(Object jandexView) {
 		delegate.applyIndexView( jandexView );
 		return getThis();
 	}
@@ -206,7 +204,7 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyAttributeConverter(ConverterDescriptor descriptor) {
+	public MetadataBuilder applyAttributeConverter(ConverterDescriptor<?,?> descriptor) {
 		delegate.applyAttributeConverter( descriptor );
 		return getThis();
 	}

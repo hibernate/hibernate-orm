@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -50,7 +50,7 @@ import org.jboss.logging.Logger;
  * <tr>
  *   <td>{@value #CONNECTION_PROVIDER}</td>
  *   <td>name of a {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
- *   subclass (if not specified heuristics are used)</td>
+ *   subclass (if not specified, heuristics are used)</td>
  * </tr>
  * <tr><td>{@value #USER}</td><td>database username</td></tr>
  * <tr><td>{@value #PASS}</td><td>database password</td></tr>
@@ -163,7 +163,7 @@ public final class Environment implements AvailableSettings {
 		}
 
 		try {
-			Properties systemProperties = System.getProperties();
+			final Properties systemProperties = System.getProperties();
 			// Must be thread-safe in case an application changes System properties during Hibernate initialization.
 			// See HHH-8383.
 			synchronized (systemProperties) {
@@ -183,11 +183,11 @@ public final class Environment implements AvailableSettings {
 	}
 
 	/**
-	 * The {@link System#getProperties() system properties}, extended with all
-	 * additional properties specified in {@code hibernate.properties}.
+	 * The {@linkplain System#getProperties() system properties}, extended
+	 * with all additional properties specified in {@code hibernate.properties}.
 	 */
 	public static Properties getProperties() {
-		Properties copy = new Properties();
+		final Properties copy = new Properties();
 		copy.putAll(GLOBAL_PROPERTIES);
 		return copy;
 	}

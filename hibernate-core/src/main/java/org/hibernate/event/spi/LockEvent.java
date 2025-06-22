@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -9,9 +9,11 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 
 /**
- *  Defines an event class for the locking of an entity.
+ * Event class for {@link org.hibernate.Session#lock}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#lock
  */
 public class LockEvent extends AbstractEvent {
 
@@ -31,12 +33,24 @@ public class LockEvent extends AbstractEvent {
 
 	public LockEvent(Object object, LockMode lockMode, EventSource source) {
 		super(source);
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+		if (lockMode == null) {
+			throw new IllegalArgumentException( "LockMode may not be null" );
+		}
 		this.object = object;
 		this.lockOptions = lockMode.toLockOptions();
 	}
 
 	public LockEvent(Object object, LockOptions lockOptions, EventSource source) {
 		super(source);
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
+		if (lockOptions == null) {
+			throw new IllegalArgumentException( "LockOptions may not be null" );
+		}
 		this.object = object;
 		this.lockOptions = lockOptions;
 	}

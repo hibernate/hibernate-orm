@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable;
@@ -22,8 +22,8 @@ public interface AggregateEmbeddableResultGraphNode extends EmbeddableResultGrap
 	int[] getAggregateValuesArrayPositions();
 
 	static int[] determineAggregateValuesArrayPositions(@Nullable FetchParent parent, SqlSelection structSelection) {
-		if ( parent instanceof AggregateEmbeddableResultGraphNode ) {
-			final int[] parentAggregateValuesArrayPositions = ( (AggregateEmbeddableResultGraphNode) parent ).getAggregateValuesArrayPositions();
+		if ( parent instanceof AggregateEmbeddableResultGraphNode embeddableResultGraphNode ) {
+			final int[] parentAggregateValuesArrayPositions = embeddableResultGraphNode.getAggregateValuesArrayPositions();
 			final int[] aggregateValuesArrayPositions = new int[parentAggregateValuesArrayPositions.length + 1];
 			System.arraycopy(
 					parentAggregateValuesArrayPositions,
@@ -35,8 +35,8 @@ public interface AggregateEmbeddableResultGraphNode extends EmbeddableResultGrap
 			aggregateValuesArrayPositions[aggregateValuesArrayPositions.length - 1] = structSelection.getValuesArrayPosition();
 			return aggregateValuesArrayPositions;
 		}
-		else if ( parent instanceof Fetch && parent instanceof EmbeddableResultGraphNode ) {
-			return determineAggregateValuesArrayPositions( ( (Fetch) parent ).getFetchParent(), structSelection );
+		else if ( parent instanceof Fetch fetch && parent instanceof EmbeddableResultGraphNode ) {
+			return determineAggregateValuesArrayPositions( fetch.getFetchParent(), structSelection );
 		}
 		return new int[] { structSelection.getValuesArrayPosition() };
 	}

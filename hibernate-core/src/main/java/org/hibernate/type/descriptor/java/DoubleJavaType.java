@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -48,6 +48,11 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		return Double.valueOf( string.toString() );
 	}
 
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Double;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <X> X unwrap(Double value, Class<X> type, WrapperOptions options) {
@@ -89,37 +94,31 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Double ) {
-			return (Double) value;
+		if ( value instanceof Double doubleValue ) {
+			return doubleValue;
 		}
-		if ( value instanceof Number ) {
-			return ( (Number) value ).doubleValue();
+		if ( value instanceof Number number ) {
+			return number.doubleValue();
 		}
-		else if ( value instanceof String ) {
-			return Double.valueOf( ( (String) value ) );
+		else if ( value instanceof String string ) {
+			return Double.valueOf( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-			case "long":
-			case "java.lang.Long":
-			case "float":
-			case "java.lang.Float":
-			case "java.math.BigInteger":
-			case "java.math.BigDecimal":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case
+				"byte", "java.lang.Byte",
+				"short", "java.lang.Short",
+				"int", "java.lang.Integer",
+				"long", "java.lang.Long",
+				"float", "java.lang.Float",
+				"java.math.BigInteger",
+				"java.math.BigDecimal" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -164,41 +163,29 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 			return null;
 		}
 
-		if ( value instanceof Double ) {
-			return ( (Double) value );
+		if ( value instanceof Double doubleValue ) {
+			return doubleValue;
 		}
 
-		if ( value instanceof Byte ) {
-			return ( (Byte) value ).doubleValue();
+		if ( value instanceof Float floatValue ) {
+			return CoercionHelper.toDouble( floatValue );
 		}
 
-		if ( value instanceof Short ) {
-			return ( (Short) value ).doubleValue();
+		if ( value instanceof BigInteger bigInteger ) {
+			return CoercionHelper.toDouble( bigInteger );
 		}
 
-		if ( value instanceof Integer ) {
-			return ( (Integer) value ).doubleValue();
+		if ( value instanceof BigDecimal bigDecimal ) {
+			return CoercionHelper.toDouble( bigDecimal );
 		}
 
-		if ( value instanceof Long ) {
-			return ( (Long) value ).doubleValue();
+		if ( value instanceof Number number ) {
+			return number.doubleValue();
 		}
 
-		if ( value instanceof Float ) {
-			return CoercionHelper.toDouble( (Float) value );
-		}
-
-		if ( value instanceof BigInteger ) {
-			return CoercionHelper.toDouble( (BigInteger) value );
-		}
-
-		if ( value instanceof BigDecimal ) {
-			return CoercionHelper.toDouble( (BigDecimal) value );
-		}
-
-		if ( value instanceof String ) {
+		if ( value instanceof String string ) {
 			return CoercionHelper.coerceWrappingError(
-					() -> Double.parseDouble( (String) value )
+					() -> Double.parseDouble( string )
 			);
 		}
 

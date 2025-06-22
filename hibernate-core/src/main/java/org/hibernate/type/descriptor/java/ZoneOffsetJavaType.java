@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -30,6 +30,11 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 
 	public ZoneOffsetJavaType() {
 		super( ZoneOffset.class, ImmutableMutabilityPlan.instance(), ZoneOffsetComparator.INSTANCE );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof ZoneOffset;
 	}
 
 	@Override
@@ -73,14 +78,14 @@ public class ZoneOffsetJavaType extends AbstractClassJavaType<ZoneOffset> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof ZoneOffset ) {
-			return (ZoneOffset) value;
+		if ( value instanceof ZoneOffset zoneOffset ) {
+			return zoneOffset;
 		}
-		if ( value instanceof CharSequence ) {
-			return fromString( (CharSequence) value );
+		if ( value instanceof CharSequence charSequence ) {
+			return fromString( charSequence );
 		}
-		if ( value instanceof Integer ) {
-			return ZoneOffset.ofTotalSeconds( (Integer) value );
+		if ( value instanceof Integer integer ) {
+			return ZoneOffset.ofTotalSeconds( integer );
 		}
 		throw unknownWrap( value.getClass() );
 	}

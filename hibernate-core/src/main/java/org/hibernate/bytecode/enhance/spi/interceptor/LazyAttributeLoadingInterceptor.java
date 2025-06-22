@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
@@ -42,8 +42,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 			SharedSessionContractImplementor session) {
 		super( entityName, session );
 		this.identifier = identifier;
-		//Important optimisation to not actually do a Map lookup for entities which don't have any lazy fields at all:
-		this.lazyFields = org.hibernate.internal.util.collections.CollectionHelper.toSmallSet( lazyFields );
+		this.lazyFields = lazyFields;
 	}
 
 	@Override
@@ -157,7 +156,7 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 	}
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
-		if ( value instanceof Collection && isSelfDirtinessTracker( target ) ) {
+		if ( value instanceof Collection<?> collection && isSelfDirtinessTracker( target ) ) {
 			// This must be called first, so that we remember that there is a collection out there,
 			// even if we don't know its size (see below).
 			final SelfDirtinessTracker targetSDT = asSelfDirtinessTracker( target );
@@ -167,11 +166,12 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 				tracker = targetSDT.$$_hibernate_getCollectionTracker();
 			}
 
-			if ( value instanceof PersistentCollection && !( (PersistentCollection<?>) value ).wasInitialized() ) {
-				// Cannot take a snapshot of an un-initialized collection.
+			if ( value instanceof PersistentCollection<?> persistentCollection
+					&& !persistentCollection.wasInitialized() ) {
+				// Cannot take a snapshot of an uninitialized collection.
 				return;
 			}
-			tracker.add( fieldName, ( (Collection<?>) value ).size() );
+			tracker.add( fieldName, collection.size() );
 		}
 	}
 
@@ -197,5 +197,9 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 			lazyFields = mutableLazyFields;
 		}
 		mutableLazyFields.add( fieldName );
+	}
+
+	public void clearInitializedLazyFields() {
+		initializedLazyFields = null;
 	}
 }

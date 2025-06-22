@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql;
@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
-import jakarta.annotation.Nullable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Specialized SemanticQueryWalker (SQM visitor) for producing SQL AST.
@@ -33,7 +33,11 @@ import jakarta.annotation.Nullable;
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
 	Stack<Clause> getCurrentClauseStack();
 
-	SqmQueryPart<?> getCurrentSqmQueryPart();
+	Stack<SqmQueryPart> getSqmQueryPartStack();
+
+	default SqmQueryPart<?> getCurrentSqmQueryPart() {
+		return getSqmQueryPartStack().getCurrent();
+	}
 
 	void registerQueryTransformer(QueryTransformer transformer);
 
@@ -53,7 +57,7 @@ public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAs
 	 * Returns the function return type implied from the context within which it is used.
 	 * If there is no current function being processed or no context implied type, the return is <code>null</code>.
 	 */
-	MappingModelExpressible<?> resolveFunctionImpliedReturnType();
+	@Nullable MappingModelExpressible<?> resolveFunctionImpliedReturnType();
 
 	MappingModelExpressible<?> determineValueMapping(SqmExpression<?> sqmExpression);
 

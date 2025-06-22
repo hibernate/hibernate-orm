@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -7,9 +7,8 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.MySQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -52,9 +51,9 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	private final SingleStoreDialect dialect;
 
-	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, SingleStoreDialect dialect) {
 		super( sessionFactory, statement );
-		this.dialect = (SingleStoreDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -69,21 +68,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		else {
 			super.visitBinaryArithmeticExpression( arithmeticExpression );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	@Override
@@ -173,11 +157,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void visitConflictClause(ConflictClause conflictClause) {
 		visitOnDuplicateKeyConflictClause( conflictClause );
 	}
@@ -201,11 +180,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		else {
 			return null;
 		}
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		return false;
 	}
 
 	@Override
@@ -234,7 +208,7 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	protected boolean shouldEmulateLateralWithIntersect(QueryPart queryPart) {
-		return supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
+		return getDialect().supportsSimpleQueryGrouping() || !queryPart.hasOffsetOrFetchClause();
 	}
 
 	//SingleStore doesn't support 'FOR UPDATE' clause with distributed joins
@@ -251,11 +225,6 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	@Override
 	public void visitEvery(Every every) {
 		throw new UnsupportedOperationException( "SingleStore doesn't support ALL clause" );
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
 	}
 
 	@Override
@@ -426,18 +395,8 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		return false;
-	}
-
-	@Override
 	public SingleStoreDialect getDialect() {
-		return this.dialect;
+		return dialect;
 	}
 
 	private boolean supportsWindowFunctions() {

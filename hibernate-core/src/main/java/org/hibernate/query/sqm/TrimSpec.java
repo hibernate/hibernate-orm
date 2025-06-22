@@ -1,15 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
-import org.hibernate.AssertionFailure;
 
 import java.util.Locale;
 
 /**
+ * Variations of the {@code trim()} function.
+ *
+ * @apiNote This is an SPI type allowing collaboration
+ * between {@code org.hibernate.dialect} and
+ * {@code org.hibernate.sqm}. It should never occur in
+ * APIs visible to the application program.
+ *
  * @author Steve Ebersole
  */
 public enum TrimSpec {
@@ -21,17 +27,12 @@ public enum TrimSpec {
 		if ( jpaTs == null ) {
 			return null;
 		}
-
-		switch ( jpaTs ) {
-			case BOTH:
-				return BOTH;
-			case LEADING:
-				return LEADING;
-			case TRAILING:
-				return TRAILING;
-			default:
-				throw new AssertionFailure( "Unrecognized JPA TrimSpec" );
-
+		else {
+			return switch ( jpaTs ) {
+				case BOTH -> BOTH;
+				case LEADING -> LEADING;
+				case TRAILING -> TRAILING;
+			};
 		}
 	}
 

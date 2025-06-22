@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.spi;
@@ -11,7 +11,8 @@ import javax.sql.DataSource;
 import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
- * Basic support for implementations of {@link MultiTenantConnectionProvider} based on DataSources.
+ * Basic support for implementations of {@link MultiTenantConnectionProvider} based on {@link DataSource}s.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T> implements MultiTenantConnectionProvider<T> {

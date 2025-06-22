@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -16,7 +16,7 @@ import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
- * Implementation of ScrollableResults which can handle collection fetches.
+ * Implementation of {@link org.hibernate.ScrollableResults} which can handle collection fetches.
  *
  * @author Steve Ebersole
  */
@@ -44,7 +44,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				persistenceContext
 		);
 
-		this.maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
+		maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
 		beforeFirst = true;
 	}
 
@@ -67,13 +67,14 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		}
 		else if ( beforeFirst ) {
 			if ( !getRowProcessingState().next() ) {
+				// no rows to read
 				currentPosition = 0;
 				beforeFirst = false;
 				return false;
 			}
 		}
 
-		boolean last = prepareCurrentRow();
+		final boolean last = prepareCurrentRow();
 
 		beforeFirst = false;
 		currentPosition++;
@@ -130,15 +131,12 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				// we are interested in processing
 				boolean firstPass = true;
 				final EntityKey lastKey = getEntityKey();
-
 				while ( getRowProcessingState().previous() ) {
-					EntityKey checkKey = getEntityKey();
-
+					final EntityKey checkKey = getEntityKey();
 					if ( firstPass ) {
 						firstPass = false;
 						keyToRead = checkKey;
 					}
-
 					if ( !lastKey.equals( checkKey ) ) {
 						break;
 					}
@@ -148,8 +146,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			// Read backwards until we read past the first physical sequential
 			// row with the key we are interested in loading
 			while ( getRowProcessingState().previous() ) {
-				EntityKey checkKey = getEntityKey();
-
+				final EntityKey checkKey = getEntityKey();
 				if ( !keyToRead.equals( checkKey ) ) {
 					break;
 				}
@@ -201,14 +198,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public boolean position(int position) {
-		final boolean underlyingScrollSuccessful = getRowProcessingState().position( position );
-		if ( !underlyingScrollSuccessful ) {
-			currentRow = null;
-			return false;
-
-		}
-		currentPosition = position - 1;
-		return next();
+		return setRowNumber( position );
 	}
 
 	@Override
@@ -223,7 +213,6 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			}
 		}
 		else {
-			final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
 			if ( isResultSetEmpty() || afterLast ) {
 				// should not be able to reach last without maxPosition being set
 				// unless there are no results
@@ -243,10 +232,8 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	@Override
 	public boolean first() {
 		beforeFirst();
-		boolean more = next();
-
-		afterScrollOperation();
-
+		final boolean more = next();
+//		afterScrollOperation();
 		return more;
 	}
 
@@ -280,6 +267,11 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 
 	@Override
 	public int getRowNumber() {
+		return currentPosition - 1;
+	}
+
+	@Override
+	public int getPosition() {
 		return currentPosition;
 	}
 
@@ -288,13 +280,20 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		if ( rowNumber == 1 ) {
 			return first();
 		}
-		else if ( rowNumber == -1 ) {
+		else if ( rowNumber == -1 || maxPosition != null && rowNumber == maxPosition ) {
 			return last();
 		}
-		else if ( maxPosition != null && rowNumber == maxPosition ) {
-			return last();
+		else if ( rowNumber < 0 && maxPosition == null ) {
+			while ( next() ) {
+				// skip all the way to the end (inefficiently)
+			}
+			return scroll( rowNumber );
 		}
-		return scroll( rowNumber - currentPosition );
+		else {
+			// rowNumber -1 is the same as maxPosition
+			final int targetRowNumber = rowNumber < 0 ? maxPosition + rowNumber + 1 : rowNumber;
+			return scroll( targetRowNumber - currentPosition );
+		}
 	}
 
 	private boolean prepareCurrentRow() {

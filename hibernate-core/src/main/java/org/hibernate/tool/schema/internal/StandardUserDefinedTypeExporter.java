@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.internal;
@@ -36,11 +36,11 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 			UserDefinedType userDefinedType,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		if ( userDefinedType instanceof UserDefinedObjectType ) {
-			return getSqlCreateStrings( (UserDefinedObjectType) userDefinedType, metadata, context );
+		if ( userDefinedType instanceof UserDefinedObjectType userDefinedObjectType ) {
+			return getSqlCreateStrings( userDefinedObjectType, metadata, context );
 		}
-		else if ( userDefinedType instanceof UserDefinedArrayType ) {
-			return getSqlCreateStrings( (UserDefinedArrayType) userDefinedType, metadata, context );
+		else if ( userDefinedType instanceof UserDefinedArrayType userDefinedArrayType ) {
+			return getSqlCreateStrings( userDefinedArrayType, metadata, context );
 		}
 		else {
 			throw new IllegalArgumentException( "Unsupported user-defined type: " + userDefinedType );
@@ -129,11 +129,11 @@ public class StandardUserDefinedTypeExporter implements Exporter<UserDefinedType
 
 	@Override
 	public String[] getSqlDropStrings(UserDefinedType userDefinedType, Metadata metadata, SqlStringGenerationContext context) {
-		if ( userDefinedType instanceof UserDefinedObjectType ) {
-			return getSqlDropStrings( (UserDefinedObjectType) userDefinedType, metadata, context );
+		if ( userDefinedType instanceof UserDefinedObjectType userDefinedObjectType ) {
+			return getSqlDropStrings( userDefinedObjectType, metadata, context );
 		}
-		else if ( userDefinedType instanceof UserDefinedArrayType ) {
-			return getSqlDropStrings( (UserDefinedArrayType) userDefinedType, metadata, context );
+		else if ( userDefinedType instanceof UserDefinedArrayType userDefinedArrayType ) {
+			return getSqlDropStrings( userDefinedArrayType, metadata, context );
 		}
 		else {
 			throw new IllegalArgumentException( "Unsupported user-defined type: " + userDefinedType );

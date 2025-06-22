@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.internal;
@@ -11,7 +11,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serial;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,17 +21,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
-import org.hibernate.AssertionFailure;
+import jakarta.persistence.TypedQuery;
+import org.hibernate.ConnectionAcquisitionMode;
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
-import org.hibernate.MappingException;
 import org.hibernate.Session;
+import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -56,7 +58,10 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -64,8 +69,15 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.event.monitor.internal.EmptyEventMonitor;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventEngine;
+import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.generator.Generator;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
@@ -76,27 +88,27 @@ import org.hibernate.mapping.GeneratorSettings;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
-import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.query.hql.spi.SqmQueryImplementor;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
+import org.hibernate.query.sql.internal.SqlTranslationEngineImpl;
+import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
@@ -105,8 +117,9 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -123,10 +136,11 @@ import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQueryReference;
 
 import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
+import static java.util.Collections.addAll;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
-import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
+import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactorySettings.deprecationCheck;
 import static org.hibernate.internal.SessionFactorySettings.determineJndiName;
 import static org.hibernate.internal.SessionFactorySettings.getSessionFactoryName;
@@ -156,7 +170,7 @@ import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DEL
  * @author Steve Ebersole
  * @author Chris Cranford
  */
-public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl implements SessionFactoryImplementor {
+public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryImpl.class );
 
 	private final String name;
@@ -171,25 +185,25 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient Map<String,Object> settings;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
-	private final transient EventEngine eventEngine;//Needs to be closed!
+	private final transient EventEngine eventEngine;
 	private final transient JdbcServices jdbcServices;
 	private final transient SqlStringGenerationContext sqlStringGenerationContext;
-
-	// todo : org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor too?
 
 	private final transient RuntimeMetamodelsImplementor runtimeMetamodels;
 	private final PersistenceUnitUtil jpaPersistenceUnitUtil;
 	private final transient CacheImplementor cacheAccess;
 	private final transient QueryEngine queryEngine;
+	private final transient SqlTranslationEngine sqlTranslationEngine;
+	private final transient TypeConfiguration typeConfiguration;
 
 	private final transient CurrentSessionContext currentSessionContext;
 
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient java.util.Collection<FilterDefinition> autoEnabledFilters = new HashSet<>();
-	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
-	private final transient FastSessionServices fastSessionServices;
+	private final transient EventListenerGroups eventListenerGroups;
+
 	private final transient WrapperOptions wrapperOptions;
 	private final transient SessionBuilderImpl defaultSessionOpenOptions;
 	private final transient SessionBuilderImpl temporarySessionOpenOptions;
@@ -198,12 +212,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	private final transient SchemaManager schemaManager;
 
+	final transient ClassLoaderService classLoaderService;
+	final transient TransactionCoordinatorBuilder transactionCoordinatorBuilder;
+	final transient ConnectionProvider connectionProvider;
+	final transient MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
+	final transient ManagedBeanRegistry managedBeanRegistry;
+	final transient BatchBuilder batchBuilder;
+	final transient EventMonitor eventMonitor;
+	final transient EntityCopyObserverFactory entityCopyObserverFactory;
+	final transient ParameterMarkerStrategy parameterMarkerStrategy;
+	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
+
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
 		LOG.debug( "Building session factory" );
-		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
 
@@ -221,7 +246,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
 		deprecationCheck( settings );
-		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings );
+		LOG.instantiatingFactory( settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -234,7 +259,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		filters = new HashMap<>( bootMetamodel.getFilterDefinitions() );
-		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
 
 		final FilterDefinition tenantFilter = filters.get( TenantIdBinder.FILTER_NAME );
 		if ( tenantFilter == null ) {
@@ -255,6 +279,10 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
 
+		// used for initializing the MappingMetamodelImpl
+		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
+		jdbcValuesMappingProducerProvider = serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class );
+
 		final IntegratorObserver integratorObserver = new IntegratorObserver();
 		observer.addObserver( integratorObserver );
 		try {
@@ -265,29 +293,27 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 			primeSecondLevelCacheRegions( bootMetamodel );
 
-			// we build this before creating the runtime metamodel
-			// because the persisters need the SqmFunctionRegistry
-			// to translate SQL formulas ... but, if we fix Dialect
-			// as I proposed, so that it can contribute functions
-			// to the SqmFunctionRegistry before the QueryEngine is
-			// created, then we can split creation of QueryEngine
-			// and SqmFunctionRegistry, instantiating just the
-			// registry here, and doing the engine later
-			queryEngine = QueryEngineImpl.from( bootMetamodel, options, this, serviceRegistry, settings, name );
-
-			// create runtime metamodels (mapping and JPA)
-			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl();
+			// create the empty runtime metamodels object
+			final RuntimeMetamodelsImpl runtimeMetamodelsImpl = new RuntimeMetamodelsImpl( typeConfiguration );
 			runtimeMetamodels = runtimeMetamodelsImpl;
+
+			// we build this before creating the runtime metamodels
+			// because the SqlAstTranslators (unnecessarily, perhaps)
+			// use the SqmFunctionRegistry when rendering SQL for Loaders
+			queryEngine = new QueryEngineImpl( bootMetamodel, options, runtimeMetamodels, serviceRegistry, settings, name );
+			final Map<String, FetchProfile> fetchProfiles = new HashMap<>();
+			sqlTranslationEngine = new SqlTranslationEngineImpl( this, typeConfiguration, fetchProfiles );
+
+			// now actually create the mapping and JPA metamodels
 			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
-			fastSessionServices = new FastSessionServices( this );
 			mappingMetamodelImpl.finishInitialization(
 					new ModelCreationContext( bootstrapContext, bootMetamodel, mappingMetamodelImpl, typeConfiguration ) );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
 			// this needs to happen after the mapping metamodel is
 			// completely built, since we need to use the persisters
-			fetchProfiles = getFetchProfiles( bootMetamodel, runtimeMetamodelsImpl);
+			addFetchProfiles( bootMetamodel, runtimeMetamodelsImpl, fetchProfiles );
 
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
@@ -296,6 +322,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
 			currentSessionContext = buildCurrentSessionContext();
+
+			// cache references to some "hot" services:
+			transactionCoordinatorBuilder = serviceRegistry.requireService( TransactionCoordinatorBuilder.class );
+			entityCopyObserverFactory = serviceRegistry.requireService( EntityCopyObserverFactory.class );
+			parameterMarkerStrategy = serviceRegistry.requireService( ParameterMarkerStrategy.class );
+			batchBuilder = serviceRegistry.requireService( BatchBuilder.class );
+			managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+
+			final boolean multiTenancyEnabled = options.isMultiTenancyEnabled();
+			connectionProvider =
+					multiTenancyEnabled ? null : serviceRegistry.requireService( ConnectionProvider.class );
+			multiTenantConnectionProvider =
+					multiTenancyEnabled ? serviceRegistry.requireService( MultiTenantConnectionProvider.class ) : null;
+
+			eventMonitor = loadEventMonitor();
+
+			eventListenerGroups = new EventListenerGroups( serviceRegistry );
 
 			// re-scope the TypeConfiguration to this SessionFactory,
 			// now that we are (almost) fully-initialized ... note,
@@ -313,12 +356,17 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 				close();
 			}
 			catch (Exception closeException) {
-				LOG.debugf( "Eating error closing the SessionFactory after a failed attempt to start it" );
+				LOG.trace( "Eating error closing factory after failed instantiation" );
 			}
 			throw e;
 		}
 
-		LOG.debug( "Instantiated SessionFactory" );
+		LOG.debug( "Instantiated factory" );
+	}
+
+	private EventMonitor loadEventMonitor() {
+		final var eventMonitors = classLoaderService.loadJavaServices( EventMonitor.class );
+		return eventMonitors.isEmpty() ? new EmptyEventMonitor() : eventMonitors.iterator().next();
 	}
 
 	private static SqlStringGenerationContext createSqlStringGenerationContext(
@@ -338,9 +386,44 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			SessionFactoryImplementor self) {
 		return options.getServiceRegistry()
 				.requireService( SessionFactoryServiceRegistryFactory.class )
-				// it is not great how we pass in an instance to
+				// it is not great how we pass a reference to
 				// an incompletely-initialized instance here:
 				.buildServiceRegistry( self, options );
+	}
+
+	@Override
+	public EventListenerGroups getEventListenerGroups() {
+		return eventListenerGroups;
+	}
+
+	@Override
+	public ParameterMarkerStrategy getParameterMarkerStrategy() {
+		return parameterMarkerStrategy;
+	}
+
+	@Override
+	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
+		return jdbcValuesMappingProducerProvider;
+	}
+
+	@Override
+	public EntityCopyObserverFactory getEntityCopyObserver() {
+		return entityCopyObserverFactory;
+	}
+
+	@Override
+	public ClassLoaderService getClassLoaderService() {
+		return classLoaderService;
+	}
+
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return managedBeanRegistry;
+	}
+
+	@Override
+	public EventListenerRegistry getEventListenerRegistry() {
+		return eventEngine.getListenerRegistry();
 	}
 
 	class IntegratorObserver implements SessionFactoryObserver {
@@ -395,10 +478,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private void primeSecondLevelCacheRegions(MetadataImplementor mappingMetadata) {
 		final Map<String, DomainDataRegionConfigImpl.Builder> regionConfigBuilders = new ConcurrentHashMap<>();
 
-		// todo : ultimately this code can be made more efficient when we have a better intrinsic understanding of the hierarchy as a whole
+		// TODO: ultimately this code can be made more efficient when we have
+		//       a better intrinsic understanding of the hierarchy as a whole
 
 		for ( PersistentClass bootEntityDescriptor : mappingMetadata.getEntityBindings() ) {
-			final AccessType accessType = AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
+			final AccessType accessType =
+					AccessType.fromExternalName( bootEntityDescriptor.getCacheConcurrencyStrategy() );
 
 			if ( accessType != null ) {
 				if ( bootEntityDescriptor.isCached() ) {
@@ -409,14 +494,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 							.addEntityConfig( bootEntityDescriptor, accessType );
 				}
 
-				if ( bootEntityDescriptor instanceof RootClass
+				if ( bootEntityDescriptor instanceof RootClass rootClass
 						&& bootEntityDescriptor.hasNaturalId()
 						&& bootEntityDescriptor.getNaturalIdCacheRegionName() != null ) {
 					regionConfigBuilders.computeIfAbsent(
 							bootEntityDescriptor.getNaturalIdCacheRegionName(),
 							DomainDataRegionConfigImpl.Builder::new
 					)
-							.addNaturalIdConfig( (RootClass) bootEntityDescriptor, accessType );
+							.addNaturalIdConfig( rootClass, accessType );
 				}
 			}
 		}
@@ -447,29 +532,25 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public SessionImplementor openSession() throws HibernateException {
-		//The defaultSessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
-		if ( defaultSessionOpenOptions != null ) {
-			return defaultSessionOpenOptions.openSession();
-		}
-		else {
-			return withOptions().openSession();
-		}
+	public SessionImplementor openSession() {
+		// The defaultSessionOpenOptions can't be used in some cases;
+		// for example when using a TenantIdentifierResolver.
+		return defaultSessionOpenOptions != null
+				? defaultSessionOpenOptions.openSession()
+				: withOptions().openSession();
 	}
 
 	@Override
-	public SessionImpl openTemporarySession() throws HibernateException {
-		//The temporarySessionOpenOptions can't be used in some cases; for example when using a TenantIdentifierResolver.
-		if ( temporarySessionOpenOptions != null ) {
-			return temporarySessionOpenOptions.openSession();
-		}
-		else {
-			return buildTemporarySessionOpenOptions().openSession();
-		}
+	public SessionImpl openTemporarySession() {
+		// The temporarySessionOpenOptions can't be used in some cases;
+		// for example when using a TenantIdentifierResolver.
+		return temporarySessionOpenOptions != null
+				? temporarySessionOpenOptions.openSession()
+				: buildTemporarySessionOpenOptions().openSession();
 	}
 
 	@Override
-	public Session getCurrentSession() throws HibernateException {
+	public Session getCurrentSession() {
 		if ( currentSessionContext == null ) {
 			throw new HibernateException( "No CurrentSessionContext configured" );
 		}
@@ -488,12 +569,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public StatelessSession openStatelessSession() {
-		if ( defaultStatelessOptions != null ) {
-			return defaultStatelessOptions.openStatelessSession();
-		}
-		else {
-			return withStatelessOptions().openStatelessSession();
-		}
+		return defaultStatelessOptions != null
+				? defaultStatelessOptions.openStatelessSession()
+				: withStatelessOptions().openStatelessSession();
 	}
 
 	@Override
@@ -535,12 +613,17 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return runtimeMetamodels.getMappingMetamodel().getTypeConfiguration();
+		return typeConfiguration;
 	}
 
 	@Override
 	public QueryEngine getQueryEngine() {
 		return queryEngine;
+	}
+
+	@Override
+	public SqlTranslationEngine getSqlTranslationEngine() {
+		return sqlTranslationEngine;
 	}
 
 	@Override
@@ -558,9 +641,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return sqlStringGenerationContext;
 	}
 
-	@Override @SuppressWarnings({"rawtypes","unchecked"})
+	@Override
 	public <T> List<EntityGraph<? super T>> findEntityGraphsByType(Class<T> entityClass) {
-		return (List) getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
+		return getJpaMetamodel().findEntityGraphsByJavaType( entityClass );
 	}
 
 	// todo : (5.2) review synchronizationType, persistenceContextType, transactionType usage
@@ -616,7 +699,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		// JPA requires that we throw IllegalStateException in cases where:
 		//		1) the PersistenceUnitTransactionType (TransactionCoordinator) is non-JTA
 		//		2) an explicit SynchronizationType is specified
-		if ( !getServiceRegistry().requireService( TransactionCoordinatorBuilder.class ).isJta() ) {
+		if ( !transactionCoordinatorBuilder.isJta() ) {
 			throw new IllegalStateException(
 					"Illegal attempt to specify a SynchronizationType when building an EntityManager from an " +
 							"EntityManagerFactory defined as RESOURCE_LOCAL (as opposed to JTA)"
@@ -646,6 +729,17 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public boolean isOpen() {
 		return status != Status.CLOSED;
+	}
+
+	@Override
+	public RootGraph<Map<String, ?>> createGraphForDynamicEntity(String entityName) {
+		final EntityDomainType<?> entity = getJpaMetamodel().entity( entityName );
+		if ( entity.getRepresentationMode() != RepresentationMode.MAP ) {
+			throw new IllegalArgumentException( "Entity '" + entityName + "' is not a dynamic entity" );
+		}
+		@SuppressWarnings("unchecked") //Safe, because we just checked
+		final EntityDomainType<Map<String, ?>> dynamicEntity = (EntityDomainType<Map<String, ?>>) entity;
+		return new RootGraphImpl<>( null, dynamicEntity );
 	}
 
 	@Override
@@ -679,28 +773,13 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public Reference getReference() {
 		// from javax.naming.Referenceable
-		LOG.debug( "Returning a Reference to the SessionFactory" );
+		LOG.debug( "Returning a Reference to the factory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
 				new StringRefAddr( "uuid", getUuid() ),
 				SessionFactoryRegistry.ObjectFactoryImpl.class.getName(),
 				null
 		);
-	}
-
-	@Override
-	public Type getIdentifierType(String className) throws MappingException {
-		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierType();
-	}
-
-	@Override
-	public String getIdentifierPropertyName(String className) throws MappingException {
-		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getIdentifierPropertyName();
-	}
-
-	@Override
-	public Type getReferencedPropertyType(String className, String propertyName) throws MappingException {
-		return runtimeMetamodels.getMappingMetamodel().getEntityDescriptor( className ).getPropertyType( propertyName );
 	}
 
 	/**
@@ -718,7 +797,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 * collector release the memory.
 	 */
 	@Override
-	public void close() throws HibernateException {
+	public void close() {
 		synchronized (this) {
 			if ( status != Status.OPEN ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
@@ -733,7 +812,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		try {
-			LOG.closing();
+			LOG.closingFactory();
 			observer.sessionFactoryClosing( this );
 
 		// NOTE : the null checks below handle cases where close is called from
@@ -757,7 +836,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 							}
 						}
 				);
-				runtimeMetamodels.getMappingMetamodel().close();
+//				runtimeMetamodels.getMappingMetamodel().close();
 			}
 
 			if ( queryEngine != null ) {
@@ -789,67 +868,25 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public PersistenceUnitTransactionType getTransactionType() {
-		return fastSessionServices.transactionCoordinatorBuilder.isJta()
+		return transactionCoordinatorBuilder.isJta()
 				? PersistenceUnitTransactionType.JTA
 				: PersistenceUnitTransactionType.RESOURCE_LOCAL;
 
 	}
 
+	private NamedObjectRepository getNamedObjectRepository() {
+		validateNotClosed();
+		return getQueryEngine().getNamedObjectRepository();
+	}
+
 	@Override
 	public void addNamedQuery(String name, Query query) {
-		validateNotClosed();
+		getNamedObjectRepository().registerNamedQuery( name, query );
+	}
 
-		// NOTE : we use Query#unwrap here (rather than direct type checking)
-		//        to account for possibly wrapped query implementations
-
-		// first, handle StoredProcedureQuery
-		final NamedObjectRepository namedObjectRepository = getQueryEngine().getNamedObjectRepository();
-		try {
-			final ProcedureCallImplementor<?> unwrapped = query.unwrap( ProcedureCallImplementor.class );
-			if ( unwrapped != null ) {
-				namedObjectRepository.registerCallableQueryMemento( name, unwrapped.toMemento( name ) );
-				return;
-			}
-		}
-		catch ( PersistenceException ignore ) {
-			// this means 'query' is not a ProcedureCallImplementor
-		}
-
-		// then try as a native-SQL or JPQL query
-		try {
-			final QueryImplementor<?> queryImplementor = query.unwrap( QueryImplementor.class );
-			if ( queryImplementor != null ) {
-				// create and register the proper NamedQueryDefinition...
-				if ( queryImplementor instanceof NativeQueryImplementor<?> nativeQueryImplementor ) {
-					namedObjectRepository.registerNativeQueryMemento(
-							name,
-							nativeQueryImplementor.toMemento( name )
-					);
-
-				}
-				else if ( queryImplementor instanceof SqmQueryImplementor<?> sqmQueryImplementor ) {
-					namedObjectRepository.registerSqmQueryMemento(
-							name,
-							sqmQueryImplementor.toMemento( name )
-					);
-				}
-				else {
-					throw new AssertionFailure("unknown QueryImplementor");
-				}
-				return;
-			}
-		}
-		catch ( PersistenceException ignore ) {
-			// this means 'query' is not a native-SQL or JPQL query
-		}
-
-		// if we get here, we are unsure how to properly unwrap the incoming query to extract the needed information
-		throw new PersistenceException(
-				String.format(
-						"Unsure how to properly unwrap given Query [%s] as basis for named query",
-						query
-				)
-		);
+	@Override
+	public <R> TypedQueryReference<R> addNamedQuery(String name, TypedQuery<R> query) {
+		return getNamedObjectRepository().registerNamedQuery( name, query );
 	}
 
 	@Override
@@ -891,7 +928,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
-		getMappingMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+		getJpaMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
 	@Override
@@ -904,15 +941,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return getJpaMetamodel().getNamedEntityGraphs( entityType );
 	}
 
-	@Override @SuppressWarnings({"unchecked", "rawtypes"})
+	@Override
 	public void runInTransaction(Consumer<EntityManager> work) {
-		inTransaction( (Consumer) work );
+		inTransaction( work );
 	}
 
 	@Override
 	public <R> R callInTransaction(Function<EntityManager, R> work) {
-		//noinspection unchecked,rawtypes
-		return (R) fromTransaction( (Function) work );
+		return fromTransaction( work );
 	}
 
 	@Override
@@ -929,7 +965,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		return statistics;
 	}
 
-	public FilterDefinition getFilterDefinition(String filterName) throws HibernateException {
+	public FilterDefinition getFilterDefinition(String filterName) {
 		final FilterDefinition filterDefinition = filters.get( filterName );
 		if ( filterDefinition == null ) {
 			throw new UnknownFilterException( filterName );
@@ -943,18 +979,23 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public boolean containsFetchProfileDefinition(String name) {
-		return fetchProfiles.containsKey( name );
-	}
-
-	@Override
 	public Set<String> getDefinedFilterNames() {
 		return unmodifiableSet( filters.keySet() );
 	}
 
 	@Override
+	public FetchProfile getFetchProfile(String name) {
+		return sqlTranslationEngine.getFetchProfile( name );
+	}
+
+	@Override
+	public boolean containsFetchProfileDefinition(String name) {
+		return sqlTranslationEngine.containsFetchProfileDefinition( name );
+	}
+
+	@Override
 	public Set<String> getDefinedFetchProfileNames() {
-		return unmodifiableSet( fetchProfiles.keySet() );
+		return sqlTranslationEngine.getDefinedFetchProfileNames();
 	}
 
 	@Override @Deprecated
@@ -1001,7 +1042,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			default:
 				try {
 					return (CurrentSessionContext)
-							serviceRegistry.requireService( ClassLoaderService.class )
+							getClassLoaderService()
 									.classForName( sessionContextType )
 									.getConstructor( new Class[]{ SessionFactoryImplementor.class } )
 									.newInstance( this );
@@ -1025,11 +1066,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public Integer getMaximumFetchDepth() {
-		return getSessionFactoryOptions().getMaximumFetchDepth();
-	}
-
-	@Override
 	public ServiceRegistryImplementor getServiceRegistry() {
 		return serviceRegistry;
 	}
@@ -1037,11 +1073,6 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public EntityNotFoundDelegate getEntityNotFoundDelegate() {
 		return sessionFactoryOptions.getEntityNotFoundDelegate();
-	}
-
-	@Override
-	public FetchProfile getFetchProfile(String name) {
-		return fetchProfiles.get( name );
 	}
 
 	/**
@@ -1097,6 +1128,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		private boolean autoClose;
 		private boolean autoClear;
 		private Object tenantIdentifier;
+		private boolean identifierRollback;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
 		private final int defaultBatchFetchSize;
@@ -1120,6 +1152,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
 			defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
 			subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
+			identifierRollback = sessionFactoryOptions.isIdentifierRollbackEnabled();
 
 			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver =
 					sessionFactory.getCurrentTenantIdentifierResolver();
@@ -1204,6 +1237,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		@Override
+		public boolean isIdentifierRollbackEnabled() {
+			return identifierRollback;
+		}
+
+		@Override
 		public TimeZone getJdbcTimeZone() {
 			return jdbcTimeZone;
 		}
@@ -1236,9 +1274,15 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public SessionBuilderImpl statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder statementInspector(UnaryOperator<String> operator) {
+			this.statementInspector = operator::apply;
 			return this;
 		}
 
@@ -1248,9 +1292,15 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public SessionBuilderImpl connectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 			this.connectionHandlingMode = connectionHandlingMode;
+			return this;
+		}
+
+		@Override
+		public SessionBuilder connectionHandling(ConnectionAcquisitionMode acquisitionMode, ConnectionReleaseMode releaseMode) {
+			this.connectionHandlingMode = PhysicalConnectionHandlingMode.interpret( acquisitionMode, releaseMode);
 			return this;
 		}
 
@@ -1291,13 +1341,20 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		@Override
+		public SessionBuilder identifierRollback(boolean identifierRollback) {
+			this.identifierRollback = identifierRollback;
+			return this;
+		}
+
+		@Override
 		public SessionBuilderImpl eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
-				this.listeners = sessionFactory.getSessionFactoryOptions()
-						.getBaselineSessionEventsListenerBuilder()
-						.buildBaselineList();
+				final var baselineListeners =
+						sessionFactory.getSessionFactoryOptions().buildSessionEventListeners();
+				this.listeners = new ArrayList<>( baselineListeners.length + listeners.length );
+				addAll( this.listeners, baselineListeners );
 			}
-			Collections.addAll( this.listeners, listeners );
+			addAll( this.listeners, listeners );
 			return this;
 		}
 
@@ -1330,7 +1387,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			this.sessionFactory = sessionFactory;
 			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
 
-			CurrentTenantIdentifierResolver<Object> tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			final var tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( tenantIdentifierResolver != null ) {
 				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
@@ -1359,9 +1416,15 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			return this;
 		}
 
-		@Override
+		@Override @Deprecated
 		public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder statementInspector(UnaryOperator<String> operator) {
+			this.statementInspector = operator::apply;
 			return this;
 		}
 
@@ -1402,8 +1465,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		@Override
 		public Interceptor getInterceptor() {
-			return configuredInterceptor( EmptyInterceptor.INSTANCE, false, sessionFactory.getSessionFactoryOptions() );
+			return configuredInterceptor( EmptyInterceptor.INSTANCE, false,
+					sessionFactory.getSessionFactoryOptions() );
+		}
 
+		@Override
+		public boolean isIdentifierRollbackEnabled() {
+			// identifier rollback not yet implemented for StatelessSessions
+			return false;
 		}
 
 		@Override
@@ -1418,10 +1487,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		@Override
 		public String getTenantIdentifier() {
-			if ( tenantIdentifier == null ) {
-				return null;
-			}
-			return sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+			return tenantIdentifier == null ? null
+					: sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
 		}
 
 		@Override
@@ -1472,11 +1539,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 */
 	@Serial
 	private void writeObject(ObjectOutputStream out) throws IOException {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Serializing: %s", getUuid() );
-		}
+		LOG.serializingFactory( getUuid() );
 		out.defaultWriteObject();
-		LOG.trace( "Serialized" );
+		LOG.trace( "Serialized factory" );
 	}
 
 	/**
@@ -1489,11 +1554,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 */
 	@Serial
 	private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing" );
+		LOG.trace( "Deserializing factory" );
 		in.defaultReadObject();
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Deserialized: %s", getUuid() );
-		}
+		LOG.deserializedFactory( getUuid() );
 	}
 
 	/**
@@ -1509,7 +1572,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 */
 	@Serial
 	private Object readResolve() throws InvalidObjectException {
-		LOG.trace( "Resolving serialized SessionFactory" );
+		LOG.trace( "Resolving serialized factory" );
 		return locateSessionFactoryOnDeserialization( getUuid(), name );
 	}
 
@@ -1517,7 +1580,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			LOG.debugf( "Resolved SessionFactory by UUID [%s]", uuid );
+			LOG.debug( "Resolved factory by UUID: " + uuid );
 			return uuidResult;
 		}
 
@@ -1526,12 +1589,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				LOG.debugf( "Resolved SessionFactory by name [%s]", name );
+				LOG.debug( "Resolved factory by name: " + name );
 				return namedResult;
 			}
 		}
 
-		throw new InvalidObjectException( "Could not find a SessionFactory [uuid=" + uuid + ",name=" + name + "]" );
+		throw new InvalidObjectException( "No SessionFactory with uuid [" + uuid + "] and name [" + name + "]" );
 	}
 
 	/**
@@ -1556,19 +1619,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	 * @throws IOException indicates problems reading back serial data stream
 	 */
 	static SessionFactoryImpl deserialize(ObjectInputStream ois) throws IOException {
-		LOG.trace( "Deserializing SessionFactory from Session" );
+		LOG.trace( "Resolving factory from deserialized session" );
 		final String uuid = ois.readUTF();
 		boolean isNamed = ois.readBoolean();
 		final String name = isNamed ? ois.readUTF() : null;
 		return (SessionFactoryImpl) locateSessionFactoryOnDeserialization( uuid, name );
-	}
-
-	/**
-	 * @return the {@link FastSessionServices} for this {@code SessionFactory}.
-	 */
-	@Override
-	public FastSessionServices getFastSessionServices() {
-		return this.fastSessionServices;
 	}
 
 	@Override
@@ -1582,9 +1637,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public Class<?> classForName(String className) {
-		return serviceRegistry.requireService( ClassLoaderService.class )
-				.classForName( className );
+	public MappingMetamodelImplementor getMappingMetamodel() {
+		return getRuntimeMetamodels().getMappingMetamodel();
 	}
 
 	private enum Status {

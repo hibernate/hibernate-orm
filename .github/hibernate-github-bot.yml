@@ -5,6 +5,7 @@ jira:
   ignoreFiles:
     # Git
     - ".git*"
+    - "*/.git*"
     - ".mailmap"
     # Gradle
     - "gradlew*"
@@ -19,6 +20,7 @@ jira:
     - "ci/"
     - "databases/"
     - "*.sh"
+    - "*.bat"
     - "Jenkinsfile"
     - "*/Jenkinsfile"
     - "*.Jenkinsfile"
@@ -37,6 +39,8 @@ jira:
     - "release/"
     - "rules/"
     - "shared/"
+    - ".sdkmanrc"
+    - "*/.sdkmanrc"
 develocity:
   buildScan:
     addCheck: true
@@ -57,3 +61,5 @@ develocity:
         replacement: "$1"
       - pattern: "main|HEAD|\\d+.\\d+|PR-\\d+"
         replacement: "" # Just remove these tags
+licenseAgreement:
+  enabled: true

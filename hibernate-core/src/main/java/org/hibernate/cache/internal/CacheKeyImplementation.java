@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.internal;
@@ -26,7 +26,7 @@ public final class CacheKeyImplementation implements Serializable {
 	private final Object id;
 	private final String entityOrRoleName;
 	private final String tenantId;
-	private final int hashCode;
+	private final int hashCode; // not a record type because we want to cache this
 
 	//because of object alignment, we had "free space" in this key:
 	//this field isn't strictly necessary but convenient: watch for
@@ -79,9 +79,8 @@ public final class CacheKeyImplementation implements Serializable {
 	}
 
 	private static int calculateHashCode(Object id, Type type, String tenantId) {
-		int result = type.getHashCode( id );
-		result = 31 * result + ( tenantId != null ? tenantId.hashCode() : 0 );
-		return result;
+		return 31 * type.getHashCode( id )
+				+ ( tenantId != null ? tenantId.hashCode() : 0 );
 	}
 
 	public Object getId() {
@@ -106,25 +105,24 @@ public final class CacheKeyImplementation implements Serializable {
 		else if ( this == other ) {
 			return true;
 		}
-		else if ( other.getClass() != CacheKeyImplementation.class ) {
+		else if ( !(other instanceof CacheKeyImplementation that) ) {
 			return false;
 		}
 		else {
-			CacheKeyImplementation o = (CacheKeyImplementation) other;
 			//check this first, so we can short-cut following checks in a different order
 			if ( requiresDeepEquals ) {
 				//only in this case, leverage the hashcode comparison check first;
 				//this is typically unnecessary, still far cheaper than the other checks we need to perform
 				//so it should be worth it.
-				return this.hashCode == o.hashCode &&
-						entityOrRoleName.equals( o.entityOrRoleName ) &&
-						Objects.equals( this.tenantId, o.tenantId ) &&
-						Objects.deepEquals( this.id, o.id );
+				return this.hashCode == that.hashCode
+					&& this.entityOrRoleName.equals( that.entityOrRoleName )
+					&& Objects.equals( this.tenantId, that.tenantId )
+					&& Objects.deepEquals( this.id, that.id );
 			}
 			else {
-				return this.id.equals( o.id ) &&
-						entityOrRoleName.equals( o.entityOrRoleName ) &&
-						( this.tenantId != null ? this.tenantId.equals( o.tenantId ) : o.tenantId == null );
+				return this.id.equals( that.id )
+					&& entityOrRoleName.equals( that.entityOrRoleName )
+					&& Objects.equals( this.tenantId, that.tenantId );
 			}
 		}
 	}

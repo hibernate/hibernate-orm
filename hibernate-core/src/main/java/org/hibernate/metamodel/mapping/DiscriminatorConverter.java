@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -16,7 +16,6 @@ import java.util.function.Function;
  * @author Gavin King
  */
 public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter<O,R> {
-
 	private final String discriminatorName;
 	private final JavaType<O> domainJavaType;
 	private final JavaType<R> relationalJavaType;
@@ -60,25 +59,25 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		final EntityMappingType indicatedEntity = matchingValueDetails.getIndicatedEntity();
 		//noinspection unchecked
 		return indicatedEntity.getRepresentationStrategy().getMode() == RepresentationMode.POJO
-				&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
+			&& indicatedEntity.getEntityName().equals( indicatedEntity.getJavaType().getJavaTypeClass().getName() )
 				? (O) indicatedEntity.getJavaType().getJavaTypeClass()
 				: (O) indicatedEntity.getEntityName();
 	}
 
 	@Override
 	public R toRelationalValue(O domainForm) {
-		assert domainForm == null || domainForm instanceof String || domainForm instanceof Class;
-
+		final String entityName;
 		if ( domainForm == null ) {
 			return null;
 		}
-
-		final String entityName;
-		if ( domainForm instanceof Class ) {
-			entityName = ( (Class<?>) domainForm ).getName();
+		else if ( domainForm instanceof Class<?> clazz ) {
+			entityName = clazz.getName();
+		}
+		else if ( domainForm instanceof String name ) {
+			entityName = name;
 		}
 		else {
-			entityName = (String) domainForm;
+			throw new IllegalArgumentException( "Illegal discriminator value: " + domainForm );
 		}
 
 		final DiscriminatorValueDetails discriminatorValueDetails = getDetailsForEntityName( entityName );
@@ -86,7 +85,7 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 		return (R) discriminatorValueDetails.getValue();
 	}
 
-	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalForm);
+	public abstract DiscriminatorValueDetails getDetailsForDiscriminatorValue(Object relationalValue);
 
 	public abstract DiscriminatorValueDetails getDetailsForEntityName(String entityName);
 
@@ -97,5 +96,8 @@ public abstract class DiscriminatorConverter<O,R> implements BasicValueConverter
 
 	public abstract void forEachValueDetail(Consumer<DiscriminatorValueDetails> consumer);
 
+	/**
+	 * Find and return the first DiscriminatorValueDetails which matches the given {@code handler}
+	 */
 	public abstract <X> X fromValueDetails(Function<DiscriminatorValueDetails,X> handler);
 }

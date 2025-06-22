@@ -1,13 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
-import org.hibernate.query.sql.spi.NativeQueryImplementor;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -748,13 +748,13 @@ public class TupleNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@SuppressWarnings("unchecked")
 	private List<Tuple> getStreamedTupleResult(EntityManager entityManager) {
-		NativeQueryImplementor query = (NativeQueryImplementor) entityManager.createNativeQuery( "SELECT id, firstname FROM users", Tuple.class);
+		NativeQuery query = (NativeQuery) entityManager.createNativeQuery( "SELECT id, firstname FROM users", Tuple.class);
 		return (List<Tuple>) query.stream().collect(Collectors.toList());
 	}
 
 	@SuppressWarnings("unchecked")
 	private List<Tuple> getStreamedNamedTupleResult(EntityManager entityManager, String name) {
-		return (List<Tuple>)((NativeQueryImplementor) entityManager.createNamedQuery(name, Tuple.class)).stream().collect(Collectors.toList());
+		return (List<Tuple>)((NativeQuery) entityManager.createNamedQuery(name, Tuple.class)).stream().collect(Collectors.toList());
 	}
 
 	@Entity

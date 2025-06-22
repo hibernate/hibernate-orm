@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.entry;
@@ -33,13 +33,12 @@ class CacheEntryHelper {
 			final boolean[] nonCacheable,
 			final SharedSessionContractImplementor session,
 			final Object owner) {
-		Serializable[] disassembled = new Serializable[types.length];
+		final Serializable[] disassembled = new Serializable[types.length];
 		for ( int i = 0; i < row.length; i++ ) {
 			if ( nonCacheable!=null && nonCacheable[i] ) {
 				disassembled[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
 			}
-			else if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					| row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			else if ( isPlaceholder( row[i] ) ) {
 				disassembled[i] = (Serializable) row[i];
 			}
 			else {
@@ -63,10 +62,9 @@ class CacheEntryHelper {
 			final Type[] types,
 			final SharedSessionContractImplementor session,
 			final Object owner) {
-		Object[] assembled = new Object[row.length];
+		final Object[] assembled = new Object[row.length];
 		for ( int i = 0; i < types.length; i++ ) {
-			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+			if ( isPlaceholder( row[i] ) ) {
 				assembled[i] = row[i];
 			}
 			else {
@@ -76,21 +74,9 @@ class CacheEntryHelper {
 		return assembled;
 	}
 
-//	public static Object[] assemble(
-//			final Object[] row,
-//			final Type[] types,
-//			final SharedSessionContractImplementor session,
-//			final Object owner) {
-//		Object[] assembled = new Object[row.length];
-//		for ( int i = 0; i < types.length; i++ ) {
-//			if ( row[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY || row[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
-//				assembled[i] = row[i];
-//			}
-//			else {
-//				assembled[i] = types[i].assemble( (Serializable) row[i], session, owner );
-//			}
-//		}
-//		return assembled;
-//	}
+	private static boolean isPlaceholder(Object value) {
+		return value == LazyPropertyInitializer.UNFETCHED_PROPERTY
+			|| value == PropertyAccessStrategyBackRefImpl.UNKNOWN;
+	}
 
 }

@@ -33,7 +33,7 @@ And we'll need to pick a JDBC driver:
 | MariaDB                   | `org.mariadb.jdbc:mariadb-java-client`
 | DB2                       | `com.ibm.db2:jcc`
 | SQL Server                | `com.microsoft.sqlserver:mssql-jdbc`
-| Oracle                    | `com.oracle.database.jdbc:ojdbc11`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc17`
 | H2                        | `com.h2database:h2`
 | HSQLDB                    | `org.hsqldb:hsqldb`
 |===
@@ -45,7 +45,7 @@ In addition, we might add some of the following to the mix.
 | Optional dependency | Explanation
 
 | `org.hibernate.validator:hibernate-validator` +
-and `org.glassfish:jakarta.el` | Hibernate Validator
+and `org.glassfish.expressly:expressly` | Hibernate Validator
 | `org.apache.logging.log4j:log4j-core` | log4j
 | `org.jboss.weld:weld-core-impl` | Weld CDI
 |===
@@ -55,7 +55,7 @@ In Gradle, for example, you'll need to use `annotationProcessor`.
 
 [source,groovy]
 ----
-annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0'
+annotationProcessor 'org.hibernate.orm:hibernate-processor:7.0.0.Final'
 ----
 
 === Excluding classes from processing

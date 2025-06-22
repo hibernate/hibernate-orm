@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator;
 
 import org.hibernate.Internal;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.EnumSet;
 
@@ -30,7 +31,22 @@ public class Assigned implements Generator {
 	}
 
 	@Override
+	public boolean generatedOnExecution(Object entity, SharedSessionContractImplementor session) {
+		return false;
+	}
+
+	@Override
+	public boolean generatedBeforeExecution(Object entity, SharedSessionContractImplementor session) {
+		return false;
+	}
+
+	@Override
 	public boolean allowAssignedIdentifiers() {
+		return true;
+	}
+
+	@Override
+	public boolean allowMutation() {
 		return true;
 	}
 

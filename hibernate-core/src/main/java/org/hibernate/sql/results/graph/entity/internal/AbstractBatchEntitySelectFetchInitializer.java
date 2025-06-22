@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -8,6 +8,7 @@ import org.hibernate.EntityFilterException;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -29,7 +30,9 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
+import static org.hibernate.sql.results.graph.entity.internal.EntityInitializerImpl.getAttributeInterceptor;
 
 public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends AbstractBatchEntitySelectFetchInitializer.AbstractBatchEntitySelectFetchInitializerData>
 		extends EntitySelectFetchInitializer<Data> implements EntityInitializer<Data> {
@@ -109,6 +112,10 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 				return;
 			}
 		}
+		resolveInstanceFromIdentifier( data );
+	}
+
+	protected void resolveInstanceFromIdentifier(Data data) {
 		if ( data.batchDisabled ) {
 			initialize( data );
 		}
@@ -135,29 +142,47 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		// Only need to extract the identifier if the identifier has a many to one
 		final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
 		data.entityKey = null;
+		data.entityIdentifier = null;
 		if ( lazyInitializer == null ) {
-			// Entity is initialized
-			data.setState( State.INITIALIZED );
-			if ( keyIsEager ) {
+			// Entity is most probably initialized
+			data.setInstance( instance );
+			if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+					&& isPersistentAttributeInterceptable( instance )
+					&& getAttributeInterceptor( instance )
+							instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor ) {
+				if ( enhancementInterceptor.isInitialized() ) {
+					data.setState( State.INITIALIZED );
+				}
+				else {
+					data.setState( State.RESOLVED );
+					data.entityIdentifier = enhancementInterceptor.getIdentifier();
+				}
+			}
+			else {
+				// If the entity initializer is null, we know the entity is fully initialized,
+				// otherwise it will be initialized by some other initializer
+				data.setState( State.RESOLVED );
 				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
 			}
-			data.setInstance( instance );
+			if ( keyIsEager && data.entityIdentifier == null ) {
+				data.entityIdentifier = concreteDescriptor.getIdentifier( instance, rowProcessingState.getSession() );
+			}
 		}
 		else if ( lazyInitializer.isUninitialized() ) {
 			data.setState( State.RESOLVED );
-			if ( keyIsEager ) {
-				data.entityIdentifier = lazyInitializer.getIdentifier();
-			}
-			// Resolve and potentially create the entity instance
-			registerToBatchFetchQueue( data );
+			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 		}
 		else {
 			// Entity is initialized
 			data.setState( State.INITIALIZED );
 			if ( keyIsEager ) {
-				data.entityIdentifier = lazyInitializer.getIdentifier();
+				data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 			}
 			data.setInstance( lazyInitializer.getImplementation() );
+		}
+
+		if ( data.getState() == State.RESOLVED ) {
+			resolveInstanceFromIdentifier( data );
 		}
 		if ( keyIsEager ) {
 			final Initializer<?> initializer = keyAssembler.getInitializer();
@@ -215,7 +240,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				data.entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
+				data.entityKey = new EntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
 				registerToBatchFetchQueue( data );
 			}
 			data.setState( State.INITIALIZED );

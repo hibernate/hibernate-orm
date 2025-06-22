@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.spi;
@@ -13,6 +13,7 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Executable JDBC command
@@ -43,7 +44,7 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				JdbcLockStrategy.AUTO,
 				null,
 				null
-				);
+		);
 	}
 
 	public JdbcOperationQuerySelect(
@@ -100,7 +101,7 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 			if ( jdbcParameterBindings == null ) {
 				return false;
 			}
-			for ( Map.Entry<JdbcParameter, JdbcParameterBinding> entry : appliedParameters.entrySet() ) {
+			for ( var entry : appliedParameters.entrySet() ) {
 				final JdbcParameter parameter = entry.getKey();
 				final JdbcParameterBinding appliedBinding = entry.getValue();
 				// This is a special case where the rendered SQL depends on the presence of the parameter,
@@ -126,27 +127,22 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				// We handle limit and offset parameters below
 				if ( parameter != offsetParameter && parameter != limitParameter ) {
 					final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( parameter );
-					if ( binding == null || !appliedBinding.getBindType()
-							.getJavaTypeDescriptor()
-							.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
+					// TODO: appliedBinding can be null here, resulting in NPE
+					if ( binding == null || !areEqualBindings( appliedBinding, binding ) ) {
 						return false;
 					}
 				}
 			}
 		}
 		final Limit limit = queryOptions.getLimit();
-		if ( offsetParameter == null && limitParameter == null ) {
-			if ( limit != null && !limit.isEmpty() ) {
-				return false;
-			}
-		}
-		if ( !isCompatible( offsetParameter, limit == null ? null : limit.getFirstRow(), 0 ) ) {
-			return false;
-		}
-		if ( !isCompatible( limitParameter, limit == null ? null : limit.getMaxRows(), Integer.MAX_VALUE ) ) {
-			return false;
-		}
-		return true;
+		return ( offsetParameter != null || limitParameter != null || limit == null || limit.isEmpty() )
+			&& isCompatible( offsetParameter, limit == null ? null : limit.getFirstRow(), 0 )
+			&& isCompatible( limitParameter, limit == null ? null : limit.getMaxRows(), Integer.MAX_VALUE );
+	}
+
+	private static boolean areEqualBindings(JdbcParameterBinding appliedBinding, JdbcParameterBinding binding) {
+		final JavaType<Object> javaTypeDescriptor = appliedBinding.getBindType().getJavaTypeDescriptor();
+		return javaTypeDescriptor.areEqual( binding.getBindValue(), appliedBinding.getBindValue() );
 	}
 
 	private boolean isCompatible(JdbcParameter parameter, Integer requestedValue, int defaultValue) {
@@ -164,13 +160,7 @@ public class JdbcOperationQuerySelect extends AbstractJdbcOperationQuery {
 				return requestedValue != null;
 			}
 			else {
-				final int value;
-				if ( requestedValue == null ) {
-					value = defaultValue;
-				}
-				else {
-					value = requestedValue;
-				}
+				final int value = requestedValue == null ? defaultValue : requestedValue;
 				return value == (int) jdbcParameterBinding.getBindValue();
 			}
 		}

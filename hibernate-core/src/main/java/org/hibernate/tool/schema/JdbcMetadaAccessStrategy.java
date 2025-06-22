@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema;
@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY;
 
 /**
  * Determines how JDBC metadata is read by the schema management tooling.
@@ -39,7 +41,7 @@ public enum JdbcMetadaAccessStrategy {
 		return super.toString().toLowerCase(Locale.ROOT);
 	}
 
-	public static JdbcMetadaAccessStrategy interpretSetting(Map options) {
+	public static JdbcMetadaAccessStrategy interpretSetting(Map<String,Object> options) {
 		if ( options == null ) {
 			return interpretHbm2ddlSetting( null );
 		}
@@ -48,7 +50,7 @@ public enum JdbcMetadaAccessStrategy {
 			return INDIVIDUALLY;
 		}
 		else {
-			return interpretHbm2ddlSetting( options.get( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY ) );
+			return interpretHbm2ddlSetting( options.get( HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY ) );
 		}
 	}
 
@@ -66,7 +68,7 @@ public enum JdbcMetadaAccessStrategy {
 					return strategy;
 				}
 			}
-			throw new IllegalArgumentException( "Unrecognized '" + AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY + "' value: '" + value + "'");
+			throw new IllegalArgumentException( "Unrecognized '" + HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY + "' value: '" + value + "'");
 		}
 	}
 }

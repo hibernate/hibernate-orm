@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ResultCheckStyle;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -52,29 +51,19 @@ public enum ExecuteUpdateResultCheckStyle {
 	PARAM;
 
 	public String externalName() {
-		switch (this) {
-			case NONE:
-				return "none";
-			case COUNT:
-				return "rowcount";
-			case PARAM:
-				return "param";
-			default:
-				throw new AssertionFailure("Unrecognized ExecuteUpdateResultCheckStyle");
-		}
+		return switch ( this ) {
+			case NONE -> "none";
+			case COUNT -> "rowcount";
+			case PARAM -> "param";
+		};
 	}
 
-	public static @Nullable ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
-		switch (style) {
-			case NONE:
-				return NONE;
-			case COUNT:
-				return COUNT;
-			case PARAM:
-				return PARAM;
-			default:
-				return null;
-		}
+	public static ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
+		return switch ( style ) {
+			case NONE -> NONE;
+			case COUNT -> COUNT;
+			case PARAM -> PARAM;
+		};
 	}
 
 	public static @Nullable ExecuteUpdateResultCheckStyle fromExternalName(String name) {
@@ -92,28 +81,18 @@ public enum ExecuteUpdateResultCheckStyle {
 	}
 
 	public Supplier<? extends Expectation> expectationConstructor() {
-		switch (this) {
-			case NONE:
-				return Expectation.None::new;
-			case COUNT:
-				return Expectation.RowCount::new;
-			case PARAM:
-				return Expectation.OutParameter::new;
-			default:
-				throw new AssertionFailure( "Unrecognized ExecuteUpdateResultCheckStyle");
-		}
+		return switch ( this ) {
+			case NONE -> Expectation.None::new;
+			case COUNT -> Expectation.RowCount::new;
+			case PARAM -> Expectation.OutParameter::new;
+		};
 	}
 
 	public Class<? extends Expectation> expectationClass() {
-		switch (this) {
-			case NONE:
-				return Expectation.None.class;
-			case COUNT:
-				return Expectation.RowCount.class;
-			case PARAM:
-				return Expectation.OutParameter.class;
-			default:
-				throw new AssertionFailure( "Unrecognized ExecuteUpdateResultCheckStyle");
-		}
+		return switch ( this ) {
+			case NONE -> Expectation.None.class;
+			case COUNT -> Expectation.RowCount.class;
+			case PARAM -> Expectation.OutParameter.class;
+		};
 	}
 }

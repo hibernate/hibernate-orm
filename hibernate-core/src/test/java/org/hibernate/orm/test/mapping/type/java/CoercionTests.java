@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.java;
@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.CoercionHelper;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -242,7 +242,7 @@ public class CoercionTests {
 
 		scope.inTransaction(
 				(session) -> {
-					final QueryImplementor query = session.createQuery( qry );
+					final Query query = session.createQuery( qry );
 
 					query.setParameter( "id", 1L ).list();
 
@@ -257,7 +257,7 @@ public class CoercionTests {
 
 		scope.inTransaction(
 				(session) -> {
-					final QueryImplementor query = session.createQuery( qry );
+					final Query query = session.createQuery( qry );
 
 					query.setParameter( 1, 1 ).list();
 
@@ -272,7 +272,7 @@ public class CoercionTests {
 
 		scope.inTransaction(
 				(session) -> {
-					final QueryImplementor query = session.createQuery( qry );
+					final Query query = session.createQuery( qry );
 
 					query.setParameter( "p", 0.5f ).list();
 
@@ -287,7 +287,7 @@ public class CoercionTests {
 
 		scope.inTransaction(
 				(session) -> {
-					final QueryImplementor query = session.createQuery( qry );
+					final Query query = session.createQuery( qry );
 
 					query.setParameter( "p", 0.5 ).list();
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -8,9 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.criteria.JpaExpression;
@@ -19,6 +20,7 @@ import org.hibernate.query.criteria.JpaQueryGroup;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -99,12 +101,10 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		return Collections.unmodifiableList( queryParts );
 	}
 
-	@Override
 	public SetOperator getSetOperator() {
 		return setOperator;
 	}
 
-	@Override
 	public void setSetOperator(SetOperator setOperator) {
 		if ( setOperator == null ) {
 			throw new IllegalArgumentException();
@@ -168,13 +168,13 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
 					final SqmTypedNode<?> firstSqmSelection = typedNodes.get( j );
 					final JavaType<?> firstJavaType = firstSqmSelection.getNodeJavaType();
-					if ( firstJavaType != selections.get( j ).getNodeJavaType() ) {
+					final JavaType<?> nodeJavaType = selections.get( j ).getNodeJavaType();
+					if ( nodeJavaType != null && firstJavaType != null && firstJavaType != nodeJavaType ) {
 						throw new SemanticException(
 								"Select items of the same index must have the same java type across all query parts"
 						);
 					}
-					if ( firstSqmSelection instanceof SqmFrom<?, ?> ) {
-						final SqmFrom<?, ?> firstFrom = (SqmFrom<?, ?>) firstSqmSelection;
+					if ( firstSqmSelection instanceof SqmFrom<?, ?> firstFrom ) {
 						final SqmFrom<?, ?> from = (SqmFrom<?, ?>) selections.get( j ).getSelectableNode();
 						validateFetchesMatch( firstFrom, from );
 					}
@@ -188,14 +188,12 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		final Iterator<? extends SqmJoin<?, ?>> joinIter = from.getSqmJoins().iterator();
 		while ( firstJoinIter.hasNext() ) {
 			final SqmJoin<?, ?> firstSqmJoin = firstJoinIter.next();
-			if ( firstSqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> firstAttrJoin = (SqmAttributeJoin<?, ?>) firstSqmJoin;
+			if ( firstSqmJoin instanceof SqmAttributeJoin<?, ?> firstAttrJoin ) {
 				if ( firstAttrJoin.isFetched() ) {
 					SqmAttributeJoin<?, ?> matchingAttrJoin = null;
 					while ( joinIter.hasNext() ) {
 						final SqmJoin<?, ?> sqmJoin = joinIter.next();
-						if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-							final SqmAttributeJoin<?, ?> attrJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+						if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attrJoin ) {
 							if ( attrJoin.isFetched() ) {
 								matchingAttrJoin = attrJoin;
 								break;
@@ -214,8 +212,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		// At this point, the other iterator should only contain non-fetch joins
 		while ( joinIter.hasNext() ) {
 			final SqmJoin<?, ?> sqmJoin = joinIter.next();
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attrJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attrJoin ) {
 				if ( attrJoin.isFetched() ) {
 					throw new SemanticException(
 							"All query parts in a query group must have the same join fetches in the same order"
@@ -226,25 +223,38 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		appendQueryPart( queryParts.get( 0 ), sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		appendQueryPart( queryParts.get( 0 ), hql, context );
 		for ( int i = 1; i < queryParts.size(); i++ ) {
-			sb.append( ' ' );
-			sb.append( setOperator.sqlString() );
-			sb.append( ' ' );
-			appendQueryPart( queryParts.get( i ), sb );
+			hql.append( ' ' );
+			hql.append( setOperator.sqlString() );
+			hql.append( ' ' );
+			appendQueryPart( queryParts.get( i ), hql, context );
 		}
-		super.appendHqlString( sb );
+		super.appendHqlString( hql, context );
 	}
 
-	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb) {
+	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb, SqmRenderContext context) {
 		final boolean needsParenthesis = !queryPart.isSimpleQueryPart();
 		if ( needsParenthesis ) {
 			sb.append( '(' );
 		}
-		queryPart.appendHqlString( sb );
+		queryPart.appendHqlString( sb, context );
 		if ( needsParenthesis ) {
 			sb.append( ')' );
 		}
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmQueryGroup<?> that
+			&& super.equals( that )
+			&& this.setOperator == that.setOperator
+			&& Objects.equals( this.queryParts, that.queryParts );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(), queryParts, setOperator );
 	}
 }

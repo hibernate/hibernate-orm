@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.stateless;
@@ -11,7 +11,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = UpsertTest.Record.class)
@@ -22,15 +22,15 @@ public class UpsertTest {
 			s.upsert(new Record(456L,"hello mars"));
 		});
 		scope.inStatelessTransaction(s-> {
-			assertEquals("hello earth",s.get(Record.class,123L).message);
-			assertEquals("hello mars",s.get(Record.class,456L).message);
+			assertEquals("hello earth", s.get( Record.class,123L).message);
+			assertEquals("hello mars", s.get( Record.class,456L).message);
 		});
 		scope.inStatelessTransaction(s-> {
 			s.upsert(new Record(123L,"goodbye earth"));
 		});
 		scope.inStatelessTransaction(s-> {
-			assertEquals("goodbye earth",s.get(Record.class,123L).message);
-			assertEquals("hello mars",s.get(Record.class,456L).message);
+			assertEquals("goodbye earth", s.get( Record.class,123L).message);
+			assertEquals("hello mars", s.get( Record.class,456L).message);
 		});
 	}
 	@Entity

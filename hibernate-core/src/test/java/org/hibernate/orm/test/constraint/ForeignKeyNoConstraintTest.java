@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.constraint;
@@ -43,7 +43,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( "Car".equals( table.getName() ) ) {
-					assertEquals( 0, table.getForeignKeys().size() );
+					assertEquals( 0, table.getForeignKeyCollection().size() );
 				}
 			}
 		}
@@ -55,7 +55,7 @@ public class ForeignKeyNoConstraintTest extends BaseNonConfigCoreFunctionalTestC
 		for ( Namespace namespace : metadata().getDatabase().getNamespaces() ) {
 			for ( Table table : namespace.getTables() ) {
 				if ( "Post".equals( table.getName() ) ) {
-					assertEquals( 0, table.getForeignKeys().size() );
+					assertEquals( 0, table.getForeignKeyCollection().size() );
 				}
 			}
 		}

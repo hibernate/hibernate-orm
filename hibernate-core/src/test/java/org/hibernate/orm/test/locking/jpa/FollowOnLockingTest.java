@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.locking.jpa;
@@ -11,7 +11,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -73,7 +73,7 @@ public class FollowOnLockingTest {
 					session -> {
 						statementInspector.clear();
 
-						final QueryImplementor<Employee> query = session.createQuery(
+						final Query<Employee> query = session.createQuery(
 								"select e from Employee e where e.salary > 10",
 								Employee.class
 						);
@@ -115,9 +115,6 @@ public class FollowOnLockingTest {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete Employee" ).executeUpdate();
-			session.createMutationQuery( "delete Department" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

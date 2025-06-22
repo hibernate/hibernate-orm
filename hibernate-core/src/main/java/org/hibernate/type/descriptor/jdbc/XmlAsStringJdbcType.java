@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -109,25 +109,31 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 		if ( length > maxLength ) {
 			return true;
 		}
-
-		final DdlTypeRegistry ddlTypeRegistry = indicators.getTypeConfiguration().getDdlTypeRegistry();
-		final String typeName = ddlTypeRegistry.getTypeName( getDdlTypeCode(), dialect );
-		return typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.CLOB, dialect ) )
-				|| typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.NCLOB, dialect ) );
+		else {
+			final DdlTypeRegistry ddlTypeRegistry = indicators.getTypeConfiguration().getDdlTypeRegistry();
+			final String typeName = ddlTypeRegistry.getTypeName( getDdlTypeCode(), dialect );
+			return typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.CLOB, dialect ) )
+			|| typeName.equals( ddlTypeRegistry.getTypeName( SqlTypes.NCLOB, dialect ) );
+		}
 	}
 
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaType<X> javaType) {
 		if ( nationalized ) {
 			return new BasicBinder<>( javaType, this ) {
+
+				private XmlAsStringJdbcType getXmlAsStringJdbcType() {
+					return (XmlAsStringJdbcType) getJdbcType();
+				}
+
+				private String getXml(X value, WrapperOptions options) throws SQLException {
+					return getXmlAsStringJdbcType().toString( value, getJavaType(), options );
+				}
+
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
+					final String xml = getXml( value, options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( index, xml );
 					}
@@ -139,11 +145,7 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
+					final String xml = getXml( value, options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
 						st.setNString( name, xml );
 					}
@@ -155,26 +157,25 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 		}
 		else {
 			return new BasicBinder<>( javaType, this ) {
+
+				private XmlAsStringJdbcType getXmlAsStringJdbcType() {
+					return (XmlAsStringJdbcType) getJdbcType();
+				}
+
+				private String getXml(X value, WrapperOptions options) throws SQLException {
+					return getXmlAsStringJdbcType().toString( value, getJavaType(), options );
+				}
+
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
-					st.setString( index, xml );
+					st.setString( index, getXml( value, options ) );
 				}
 
 				@Override
 				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 						throws SQLException {
-					final String xml = ( (XmlAsStringJdbcType) getJdbcType() ).toString(
-							value,
-							getJavaType(),
-							options
-					);
-					st.setString( name, xml );
+					st.setString( name, getXml( value, options ) );
 				}
 			};
 		}
@@ -218,19 +219,20 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 				}
 
 				private X getObject(String xml, WrapperOptions options) throws SQLException {
-					if ( xml == null ) {
-						return null;
-					}
-					return ( (XmlAsStringJdbcType) getJdbcType() ).fromString(
-							xml,
-							getJavaType(),
-							options
-					);
+					return xml == null ? null : getXmlAsStringJdbcType().fromString( xml, getJavaType(), options );
+				}
+
+				private XmlAsStringJdbcType getXmlAsStringJdbcType() {
+					return (XmlAsStringJdbcType) getJdbcType();
 				}
 			};
 		}
 		else {
 			return new BasicExtractor<>( javaType, this ) {
+
+				private XmlAsStringJdbcType getXmlAsStringJdbcType() {
+					return (XmlAsStringJdbcType) getJdbcType();
+				}
 
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -249,14 +251,7 @@ public class XmlAsStringJdbcType extends XmlJdbcType implements AdjustableJdbcTy
 				}
 
 				private X getObject(String xml, WrapperOptions options) throws SQLException {
-					if ( xml == null ) {
-						return null;
-					}
-					return ( (XmlAsStringJdbcType) getJdbcType() ).fromString(
-							xml,
-							getJavaType(),
-							options
-					);
+					return xml == null ? null : getXmlAsStringJdbcType().fromString( xml, getJavaType(), options );
 				}
 			};
 		}

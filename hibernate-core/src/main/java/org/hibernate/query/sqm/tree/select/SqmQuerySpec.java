@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.select;
@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.Internal;
@@ -21,13 +22,14 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaQueryStructure;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
@@ -166,8 +168,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		while ( !fromNodes.isEmpty() ) {
 			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
 			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
-				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
 					if ( join.getAttribute().isCollection() ) {
 						// Collections joins always alter cardinality
 						return false;
@@ -189,8 +190,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		while ( !fromNodes.isEmpty() ) {
 			final SqmFrom<?, ?> fromNode = fromNodes.remove( fromNodes.size() - 1 );
 			for ( SqmJoin<?, ?> sqmJoin : fromNode.getSqmJoins() ) {
-				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-					final SqmAttributeJoin<?, ?> join = (SqmAttributeJoin<?, ?>) sqmJoin;
+				if ( sqmJoin instanceof SqmAttributeJoin<?, ?> join ) {
 					if ( join.isFetched() && join.getAttribute().isCollection() ) {
 						return true;
 					}
@@ -296,9 +296,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		// NOTE : this call comes from JPA which inherently supports just a
 		// single (possibly "compound") selection.
 		// We have this special case where we return the SqmSelectClause itself if it doesn't have exactly 1 item
-		if ( selection instanceof SqmSelectClause ) {
+		if ( selection instanceof SqmSelectClause sqmSelectClause ) {
 			if ( selection != selectClause ) {
-				final SqmSelectClause sqmSelectClause = (SqmSelectClause) selection;
 				final List<SqmSelection<?>> selections = sqmSelectClause.getSelections();
 				selectClause.setSelection( selections.get( 0 ).getSelectableNode() );
 				for ( int i = 1; i < selections.size(); i++ ) {
@@ -395,10 +394,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public SqmQuerySpec<T> setGroupingExpressions(List<? extends JpaExpression<?>> groupExpressions) {
+	public SqmQuerySpec<T> setGroupingExpressions(List<? extends Expression<?>> groupExpressions) {
 		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.size() );
-		for ( JpaExpression<?> groupExpression : groupExpressions ) {
+		for ( Expression<?> groupExpression : groupExpressions ) {
 			if ( groupExpression instanceof SqmAliasedNodeRef ) {
 				this.hasPositionalGroupItem = true;
 			}
@@ -408,10 +407,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public SqmQuerySpec<T> setGroupingExpressions(JpaExpression<?>... groupExpressions) {
+	public SqmQuerySpec<T> setGroupingExpressions(Expression<?>... groupExpressions) {
 		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.length );
-		for ( JpaExpression<?> groupExpression : groupExpressions ) {
+		for ( Expression<?> groupExpression : groupExpressions ) {
 			if ( groupExpression instanceof SqmAliasedNodeRef ) {
 				this.hasPositionalGroupItem = true;
 			}
@@ -494,22 +493,20 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 
 		for ( SqmRoot<?> root : roots ) {
-			validateFetchOwners( selectedFromSet, root, root );
+			validateFetchOwners( selectedFromSet, root );
 			for ( SqmFrom<?, ?> sqmTreat : root.getSqmTreats() ) {
-				validateFetchOwners( selectedFromSet, root, sqmTreat );
+				validateFetchOwners( selectedFromSet, sqmTreat );
 			}
 		}
 	}
 
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmSelectableNode<?> selectableNode) {
-		if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
-			final SqmJpaCompoundSelection<?> compoundSelection = (SqmJpaCompoundSelection<?>) selectableNode;
+		if ( selectableNode instanceof SqmJpaCompoundSelection<?> compoundSelection ) {
 			for ( SqmSelectableNode<?> selectionItem : compoundSelection.getSelectionItems() ) {
 				collectSelectedFromSet( selectedFromSet, selectionItem );
 			}
 		}
-		else if ( selectableNode instanceof SqmDynamicInstantiation<?> ) {
-			final SqmDynamicInstantiation<?> instantiation = (SqmDynamicInstantiation<?>) selectableNode;
+		else if ( selectableNode instanceof SqmDynamicInstantiation<?> instantiation ) {
 			for ( SqmDynamicInstantiationArgument<?> selectionItem : instantiation.getArguments() ) {
 				collectSelectedFromSet( selectedFromSet, selectionItem.getSelectableNode() );
 			}
@@ -517,15 +514,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		else if ( selectableNode instanceof SqmFrom<?, ?> ) {
 			collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) selectableNode );
 		}
-		else if ( selectableNode instanceof SqmEntityValuedSimplePath<?> ) {
-			final SqmEntityValuedSimplePath<?> path = (SqmEntityValuedSimplePath<?>) selectableNode;
+		else if ( selectableNode instanceof SqmEntityValuedSimplePath<?> path ) {
 			if ( CollectionPart.Nature.fromNameExact( path.getReferencedPathSource().getPathName() ) != null
 					&& path.getLhs() instanceof SqmFrom<?, ?> ) {
 				collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) path.getLhs() );
 			}
 		}
-		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> ) {
-			final SqmEmbeddedValuedSimplePath<?> path = (SqmEmbeddedValuedSimplePath<?>) selectableNode;
+		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> path ) {
 			assertEmbeddableCollections( path.getNavigablePath(), (EmbeddableDomainType<?>) path.getSqmType() );
 		}
 	}
@@ -533,7 +528,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
 		selectedFromSet.add( sqmFrom );
 		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
-			if ( sqmJoin.getReferencedPathSource().getSqmPathType() instanceof EmbeddableDomainType<?> ) {
+			if ( sqmJoin.getReferencedPathSource().getPathType() instanceof EmbeddableDomainType<?> ) {
 				collectSelectedFromSet( selectedFromSet, sqmJoin );
 			}
 		}
@@ -543,28 +538,26 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		}
 	}
 
-	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmFrom<?, ?> joinContainer) {
+	private void validateFetchOwners(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> joinContainer) {
 		for ( SqmJoin<?, ?> sqmJoin : joinContainer.getSqmJoins() ) {
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
-				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 				if ( attributeJoin.isFetched() ) {
-					assertFetchOwner( selectedFromSet, owner, sqmJoin );
+					assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), sqmJoin );
 					// Only need to check the first level
 					continue;
 				}
 			}
 			for ( SqmFrom<?, ?> sqmTreat : sqmJoin.getSqmTreats() ) {
-				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> ) {
-					final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmTreat;
+				if ( sqmTreat instanceof SqmAttributeJoin<?, ?> attributeJoin ) {
 					if ( attributeJoin.isFetched() ) {
-						assertFetchOwner( selectedFromSet, owner, attributeJoin );
+						assertFetchOwner( selectedFromSet, attributeJoin.getLhs(), attributeJoin );
 						// Only need to check the first level
 						continue;
 					}
 				}
-				validateFetchOwners( selectedFromSet, sqmJoin, sqmTreat );
+				validateFetchOwners( selectedFromSet, sqmTreat );
 			}
-			validateFetchOwners( selectedFromSet, sqmJoin, sqmJoin );
+			validateFetchOwners( selectedFromSet, sqmJoin );
 		}
 	}
 
@@ -595,41 +588,43 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( selectClause != null ) {
-			sb.append( "select " );
+			hql.append( "select " );
 			if ( selectClause.isDistinct() ) {
-				sb.append( "distinct " );
+				hql.append( "distinct " );
 			}
 			final List<SqmSelection<?>> selections = selectClause.getSelections();
-			selections.get( 0 ).appendHqlString( sb );
-			for ( int i = 1; i < selections.size(); i++ ) {
-				sb.append( ", " );
-				selections.get( i ).appendHqlString( sb );
+			if ( !selections.isEmpty() ) {
+				selections.get( 0 ).appendHqlString( hql, context );
+				for ( int i = 1; i < selections.size(); i++ ) {
+					hql.append( ", " );
+					selections.get( i ).appendHqlString( hql, context );
+				}
 			}
 		}
 		if ( fromClause != null ) {
-			sb.append( " from" );
-			fromClause.appendHqlString( sb );
+			hql.append( " from" );
+			fromClause.appendHqlString( hql, context );
 		}
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
-			sb.append( " where " );
-			whereClause.getPredicate().appendHqlString( sb );
+			hql.append( " where " );
+			whereClause.getPredicate().appendHqlString( hql, context );
 		}
 		if ( !groupByClauseExpressions.isEmpty() ) {
-			sb.append( " group by " );
-			groupByClauseExpressions.get( 0 ).appendHqlString( sb );
+			hql.append( " group by " );
+			groupByClauseExpressions.get( 0 ).appendHqlString( hql, context );
 			for ( int i = 1; i < groupByClauseExpressions.size(); i++ ) {
-				sb.append( ", " );
-				groupByClauseExpressions.get( i ).appendHqlString( sb );
+				hql.append( ", " );
+				groupByClauseExpressions.get( i ).appendHqlString( hql, context );
 			}
 		}
 		if ( havingClausePredicate != null ) {
-			sb.append( " having " );
-			havingClausePredicate.appendHqlString( sb );
+			hql.append( " having " );
+			havingClausePredicate.appendHqlString( hql, context );
 		}
 
-		super.appendHqlString( sb );
+		super.appendHqlString( hql, context );
 	}
 
 	@Internal
@@ -682,5 +677,23 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		return other instanceof SqmQuerySpec<?> that
+			&& super.equals( other )
+			&& Objects.equals( this.fromClause, that.fromClause )
+			&& Objects.equals( this.selectClause, that.selectClause )
+			&& Objects.equals( this.whereClause, that.whereClause )
+			&& Objects.equals( this.groupByClauseExpressions, that.groupByClauseExpressions )
+			&& Objects.equals( this.havingClausePredicate, that.havingClausePredicate );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( super.hashCode(),
+				fromClause, selectClause, whereClause,
+				groupByClauseExpressions, havingClausePredicate );
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -12,6 +12,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.GenericGeneratorAnnotation;
 import org.hibernate.boot.models.spi.GenericGeneratorRegistration;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.SequenceGeneratorRegistration;
@@ -58,6 +59,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final SequenceGenerator localizedMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				null,
 				null,
 				buildingContext
@@ -77,6 +80,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final SequenceGenerator localizedMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				SequenceGenerator::name,
 				generator,
 				buildingContext
@@ -147,6 +152,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final TableGenerator localizedMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				null,
 				null,
 				buildingContext
@@ -161,6 +168,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final TableGenerator localizedTableMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				TableGenerator::name,
 				generator,
 				buildingContext
@@ -229,6 +238,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final SequenceGenerator localizedSequenceMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				null,
 				null,
 				buildingContext
@@ -241,6 +252,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final TableGenerator localizedTableMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				null,
 				null,
 				buildingContext
@@ -253,6 +266,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final GenericGenerator localizedGenericMatch = findLocalizedMatch(
 				HibernateAnnotations.GENERIC_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				null,
 				null,
 				buildingContext
@@ -274,7 +289,13 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 
 		if ( idMember.getType().isImplementor( UUID.class )
 				|| idMember.getType().isImplementor( String.class ) ) {
-			GeneratorAnnotationHelper.handleUuidStrategy( idValue, idMember, buildingContext );
+			GeneratorAnnotationHelper.handleUuidStrategy(
+					idValue,
+					idMember,
+					buildingContext.getMetadataCollector().getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
+					buildingContext
+			);
 			return;
 		}
 
@@ -313,7 +334,13 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 
 		if ( idMember.getType().isImplementor( UUID.class )
 				|| idMember.getType().isImplementor( String.class ) ) {
-			GeneratorAnnotationHelper.handleUuidStrategy( idValue, idMember, buildingContext );
+			GeneratorAnnotationHelper.handleUuidStrategy(
+					idValue,
+					idMember,
+					buildingContext.getMetadataCollector().getClassDetailsRegistry()
+							.getClassDetails( entityMapping.getClassName() ),
+					buildingContext
+			);
 			return;
 		}
 
@@ -325,12 +352,29 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 	}
 
 	private boolean handleAsLocalAutoGenerator() {
+		if ( "increment".equals( generatedValue.generator() ) ) {
+			final GenericGeneratorAnnotation incrementGenerator = new GenericGeneratorAnnotation( buildingContext.getBootstrapContext().getModelsContext() );
+			incrementGenerator.name( "increment" );
+			incrementGenerator.strategy( "increment" );
+
+			GeneratorAnnotationHelper.handleGenericGenerator(
+					generatedValue.generator(),
+					incrementGenerator,
+					entityMapping,
+					idValue,
+					buildingContext
+			);
+			return true;
+		}
+
 		final String generator = generatedValue.generator();
 		assert !generator.isEmpty();
 
 		final SequenceGenerator localizedSequenceMatch = findLocalizedMatch(
 				JpaAnnotations.SEQUENCE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				SequenceGenerator::name,
 				generator,
 				buildingContext
@@ -343,6 +387,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final TableGenerator localizedTableMatch = findLocalizedMatch(
 				JpaAnnotations.TABLE_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				TableGenerator::name,
 				generator,
 				buildingContext
@@ -355,6 +401,8 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		final GenericGenerator localizedGenericMatch = findLocalizedMatch(
 				HibernateAnnotations.GENERIC_GENERATOR,
 				idMember,
+				buildingContext.getMetadataCollector().getClassDetailsRegistry()
+						.getClassDetails( entityMapping.getClassName() ),
 				GenericGenerator::name,
 				generator,
 				buildingContext
@@ -412,7 +460,6 @@ public class IdGeneratorResolverSecondPass extends AbstractEntityIdGeneratorReso
 		GeneratorAnnotationHelper.handleTableGenerator(
 				nameFromGeneratedValue,
 				generatorAnnotation,
-				entityMapping,
 				idValue,
 				idMember,
 				buildingContext

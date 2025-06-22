@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -80,7 +80,7 @@ public class BasicTypeRegistry implements Serializable {
 	private BasicType<?> createBasicType(String name, BasicTypeReference<?> typeReference) {
 		final JavaType<Object> javaType =
 				typeConfiguration.getJavaTypeRegistry()
-						.getDescriptor( typeReference.getBindableJavaType() );
+						.getDescriptor( typeReference.getJavaType() );
 		final JdbcType jdbcType =
 				typeConfiguration.getJdbcTypeRegistry()
 						.getDescriptor( typeReference.getSqlTypeCode() );
@@ -115,6 +115,10 @@ public class BasicTypeRegistry implements Serializable {
 
 	public <J> BasicType<J> getRegisteredType(Class<J> javaType) {
 		return getRegisteredType( javaType.getTypeName() );
+	}
+
+	public BasicType<?> getRegisteredArrayType(java.lang.reflect.Type javaElementType) {
+		return getRegisteredType( javaElementType.getTypeName() + "[]" );
 	}
 
 	public <J> BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {

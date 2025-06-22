@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.query;
@@ -16,10 +16,10 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -59,9 +59,7 @@ public class TypedValueParametersTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> entityManager.createQuery( "delete from Document" ).executeUpdate()
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -87,7 +85,7 @@ public class TypedValueParametersTest {
 						TagUserType.INSTANCE,
 						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
 				);
-				q.setParameter("tags", new TypedParameterValue<>( customType, Arrays.asList("important","business")));
+				q.setParameter("tags", TypedParameterValue.of(customType, Arrays.asList("important","business")));
 			}
 		);
 	}
@@ -140,7 +138,7 @@ public class TypedValueParametersTest {
 		public static final TagUserType INSTANCE = new TagUserType();
 
 		@Override
-		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, WrapperOptions options) throws HibernateException, SQLException {
 			if ( list == null ) {
 				statement.setNull( index, SqlTypes.VARCHAR );
 			}
@@ -159,7 +157,7 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public List<String> nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session)
+		public List<String> nullSafeGet(ResultSet rs, int position, WrapperOptions options)
 				throws SQLException {
 			String string = rs.getString( position );
 

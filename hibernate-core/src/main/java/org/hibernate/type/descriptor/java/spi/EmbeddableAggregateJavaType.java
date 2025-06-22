@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java.spi;
@@ -48,10 +48,21 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 				return new DelayedStructJdbcType( this, structName );
 			}
 		}
-		// prefer json by default for now
-		final JdbcType descriptor = context.getJdbcType( SqlTypes.JSON );
-		if ( descriptor != null ) {
-			return descriptor;
+		// When the column is mapped as XML array, the component type must be SQLXML
+		if ( context.getExplicitJdbcTypeCode() != null && context.getExplicitJdbcTypeCode() == SqlTypes.XML_ARRAY
+			// Also prefer XML is the Dialect prefers XML arrays
+			|| context.getDialect().getPreferredSqlTypeCodeForArray() == SqlTypes.XML_ARRAY ) {
+			final JdbcType descriptor = context.getJdbcType( SqlTypes.SQLXML );
+			if ( descriptor != null ) {
+				return descriptor;
+			}
+		}
+		else {
+			// Otherwise use json by default for now
+			final JdbcType descriptor = context.getJdbcType( SqlTypes.JSON );
+			if ( descriptor != null ) {
+				return descriptor;
+			}
 		}
 		throw new JdbcTypeRecommendationException(
 				"Could not determine recommended JdbcType for `" + getTypeName() + "`"

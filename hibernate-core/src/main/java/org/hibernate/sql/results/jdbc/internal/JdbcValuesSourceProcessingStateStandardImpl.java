@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.jdbc.internal;
@@ -145,8 +145,10 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 	}
 
-
-	private void finishLoadingCollections() {
+	/**
+	 * For Hibernate Reactive
+	 */
+	public void finishLoadingCollections() {
 		if ( loadingCollectionMap != null ) {
 			for ( LoadingCollectionEntry loadingCollectionEntry : loadingCollectionMap.values() ) {
 				loadingCollectionEntry.finishLoading( getExecutionContext() );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
@@ -26,6 +26,7 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
@@ -111,9 +112,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 	}
 
 	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
-		final EntityPersister entityDescriptor = sessionFactory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
+		final EntityPersister entityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( getSqmInsertStatement().getTarget().getEntityName() );
 
 		final MultiTableSqmMutationConverter converterDelegate = new MultiTableSqmMutationConverter(
 				entityDescriptor,
@@ -123,7 +124,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
 		final TableGroup insertingTableGroup = converterDelegate.getMutatingTableGroup();

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping;
@@ -16,7 +16,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,7 +29,6 @@ public class UserEntity implements Serializable{
 	@Column(name = "user_id")
 	private Long id;
 
-	@OrderColumn(name = "cnf_order")
 	@OneToMany(mappedBy="user", fetch = EAGER, cascade = ALL, orphanRemoval = true)
 	private Set<UserConfEntity> confs =  new HashSet<UserConfEntity>();
 

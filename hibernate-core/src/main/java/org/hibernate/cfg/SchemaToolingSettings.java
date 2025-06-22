@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -91,17 +91,19 @@ public interface SchemaToolingSettings {
 	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading
 	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
 	 * <p>
-	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
-	 * This setting is now preferred.
+	 * The script should contain mostly DDL {@code CREATE} statements. For importing data using DML,
+	 * use {@link #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE}.
 	 *
 	 * @see #JAKARTA_HBM2DDL_CREATE_SOURCE
-	 * @see #HBM2DDL_IMPORT_FILES
+	 * @see #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 */
 	String JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE = "jakarta.persistence.schema-generation.create-script-source";
 
 	/**
 	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading
 	 * the DDL script file or a string designating a file {@link java.net.URL} for the DDL script.
+	 * <p>
+	 * The script should contain mostly DDL {@code DROP} statements.
 	 *
 	 * @see #JAKARTA_HBM2DDL_DROP_SOURCE
 	 */
@@ -129,10 +131,23 @@ public interface SchemaToolingSettings {
 
 	/**
 	 * JPA-standard variant of {@link #HBM2DDL_IMPORT_FILES} for specifying a database
-	 * initialization script to be run as part of schema-export
+	 * initialization script to be run after {@linkplain org.hibernate.relational.SchemaManager
+	 * exporting or truncating the database schema}.
 	 * <p>
 	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script
 	 * or a string designating the {@link java.net.URL} for the SQL load script.
+	 * <p>
+	 * The script should contain mostly DML {@code INSERT} statements. For DDL schema creation,
+	 * use {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
+	 * <p>
+	 * Hibernate historically also accepted {@link #HBM2DDL_IMPORT_FILES} for a similar purpose.
+	 * This setting is now preferred.
+	 *
+	 * @see #JAKARTA_HBM2DDL_DATABASE_ACTION
+	 * @see #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
+	 * @see org.hibernate.relational.SchemaManager#populate
+	 * @see org.hibernate.relational.SchemaManager#exportMappedObjects
+	 * @see org.hibernate.relational.SchemaManager#truncateMappedObjects
 	 */
 	String JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE = "jakarta.persistence.sql-load-script-source";
 
@@ -278,10 +293,12 @@ public interface SchemaToolingSettings {
 	String HBM2DDL_DEFAULT_CONSTRAINT_MODE = "hibernate.hbm2ddl.default_constraint_mode";
 
 	/**
-	 * Specifies the default storage engine for a relational databases that supports
+	 * Specifies the default storage engine for a relational database that supports
 	 * multiple storage engines. This property must be set either as an {@link Environment}
 	 * variable or JVM System Property, since the {@link org.hibernate.dialect.Dialect} is
 	 * instantiated before Hibernate property resolution.
+	 * <p>
+	 * For MySQL, the legal values are {@code innodb} (the default) and {@code myisam}.
 	 *
 	 * @since 5.2.9
 	 */
@@ -384,10 +401,21 @@ public interface SchemaToolingSettings {
 	 * <p>
 	 * The default value is {@code /import.sql}.
 	 *
-	 * @deprecated The JPA-standard setting {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE} is now preferred.
+	 * @deprecated The JPA-standard setting {@link #JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE} is now preferred.
 	 */
 	@Deprecated
 	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
+
+	/**
+	 * Specifies that the default {@code /import.sql} script file should not be executed
+	 * when {@link #HBM2DDL_IMPORT_FILES} is not specified and {@value #HBM2DDL_AUTO}
+	 * is set to {@code create} or {@code create-drop}.
+	 *
+	 * @settingDefault {@code false}.
+	 *
+	 * @since 6.6
+	 */
+	String HBM2DDL_SKIP_DEFAULT_IMPORT_FILE = "hibernate.hbm2ddl.skip_default_import_file";
 
 	/**
 	 * Specifies whether to automatically create also the database schema/catalog.

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.extract.spi;
@@ -7,7 +7,6 @@ package org.hibernate.tool.schema.extract.spi;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
-import org.hibernate.boot.model.TruthValue;
 
 /**
  * Provides access to information about existing table columns
@@ -20,8 +19,8 @@ public interface ColumnTypeInformation {
 
 	ColumnTypeInformation EMPTY = new ColumnTypeInformation() {
 		@Override
-		public TruthValue getNullable() {
-			return TruthValue.UNKNOWN;
+		public Boolean getNullable() {
+			return null;
 		}
 
 		@Override
@@ -46,11 +45,13 @@ public interface ColumnTypeInformation {
 	};
 
 	/**
-	 * Is the column nullable.  The database is allowed to report unknown, hence the use of TruthValue
+	 * Is the column nullable?
+	 * <p>
+	 * The database is allowed to report unknown, hence the use of {@link Boolean}.
 	 *
-	 * @return nullability.
+	 * @return nullability, if known
 	 */
-	TruthValue getNullable();
+	Boolean getNullable();
 
 	/**
 	 * The JDBC type-code.
@@ -64,9 +65,9 @@ public interface ColumnTypeInformation {
 	 *
 	 * @return Type name
 	 */
-	public String getTypeName();
+	String getTypeName();
 
-	// todo : wrap these in org.hibernate.metamodel.spi.relational.Size ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// todo : wrap these in org.hibernate.metamodel.spi.relational.Size
 
 	/**
 	 * The column size (length).

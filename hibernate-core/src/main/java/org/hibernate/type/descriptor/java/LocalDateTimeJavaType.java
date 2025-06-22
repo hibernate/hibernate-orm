@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -38,6 +38,11 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	public LocalDateTimeJavaType() {
 		super( LocalDateTime.class, ImmutableMutabilityPlan.instance() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof LocalDateTime;
 	}
 
 	@Override
@@ -128,12 +133,11 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			return null;
 		}
 
-		if (value instanceof LocalDateTime) {
-			return (LocalDateTime) value;
+		if (value instanceof LocalDateTime localDateTime) {
+			return localDateTime;
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * Workaround for HHH-13266 (JDK-8061577).
 			 * We used to do LocalDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() ),
@@ -141,22 +145,20 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 			 * ts.toInstant() assumes the number of milliseconds since the epoch
 			 * means the same thing in Timestamp and Instant, but it doesn't, in particular before 1900.
 			 */
-			return ts.toLocalDateTime();
+			return timestamp.toLocalDateTime();
 		}
 
-		if (value instanceof Long) {
-			final Instant instant = Instant.ofEpochMilli( (Long) value );
+		if (value instanceof Long longValue) {
+			final Instant instant = Instant.ofEpochMilli( longValue );
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return LocalDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 
-		if (value instanceof Date) {
-			final Date ts = (Date) value;
-			final Instant instant = ts.toInstant();
+		if (value instanceof Date timestamp) {
+			final Instant instant = timestamp.toInstant();
 			return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
 		}
 
@@ -165,15 +167,10 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Date":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Date", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override

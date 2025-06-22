@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter;
@@ -33,7 +33,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
@@ -282,14 +282,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	public void dropTestData() {
-		scope.inTransaction( (session) -> {
-			session.disableFilter( "subDepartmentFilter" );
-			session.disableFilter( "departmentFilter" );
-			session.createMutationQuery( "delete EntityOne" ).executeUpdate();
-			session.createMutationQuery( "delete EntityTwo" ).executeUpdate();
-			session.createMutationQuery( "delete EntityThree" ).executeUpdate();
-			session.createMutationQuery( "delete EntityFour" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@FilterDef(

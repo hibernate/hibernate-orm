@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.jdbc;
@@ -175,8 +175,11 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		}
 	}
 
+	private static final Set<String> DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE = Set.of(
+			"org.h2.Driver", "org.hsqldb.jdbc.JDBCDriver", "org.firebirdsql.jdbc.FBDriver" );
+
 	public void onDefaultTimeZoneChange() {
-		if ( "org.h2.Driver".equals( config.driverClassName ) || "org.hsqldb.jdbc.JDBCDriver".equals( config.driverClassName ) ) {
+		if ( DRIVER_REQUIRES_NEW_CONNECTION_ON_TIMEZONE_CHANGE.contains( config.driverClassName ) ) {
 			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
 			super.stop();
 		}

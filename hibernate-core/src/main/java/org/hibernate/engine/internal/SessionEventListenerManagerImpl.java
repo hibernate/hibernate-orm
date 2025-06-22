@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 import org.hibernate.SessionEventListener;
@@ -21,6 +22,11 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 	public SessionEventListenerManagerImpl(SessionEventListener... initialListener) {
 		//no need for defensive copies until the array is mutated:
 		this.listeners = initialListener;
+	}
+
+	public SessionEventListenerManagerImpl(List<SessionEventListener> initialListener) {
+		//no need for defensive copies until the array is mutated:
+		this.listeners = initialListener.toArray( new SessionEventListener[0] );
 	}
 
 	@Override
@@ -42,232 +48,190 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 	@Override
 	public void transactionCompletion(boolean successful) {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.transactionCompletion( successful );
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.transactionCompletion( successful );
+			}
 		}
 	}
 
 	@Override
 	public void jdbcConnectionAcquisitionStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcConnectionAcquisitionStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcConnectionAcquisitionStart();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcConnectionAcquisitionEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcConnectionAcquisitionEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcConnectionAcquisitionEnd();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcConnectionReleaseStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcConnectionReleaseStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcConnectionReleaseStart();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcConnectionReleaseEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcConnectionReleaseEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcConnectionReleaseEnd();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcPrepareStatementStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcPrepareStatementStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcPrepareStatementStart();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcPrepareStatementEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcPrepareStatementEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcPrepareStatementEnd();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcExecuteStatementStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcExecuteStatementStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcExecuteStatementStart();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcExecuteStatementEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcExecuteStatementEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcExecuteStatementEnd();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcExecuteBatchStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcExecuteBatchStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcExecuteBatchStart();
+			}
 		}
 	}
 
 	@Override
 	public void jdbcExecuteBatchEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.jdbcExecuteBatchEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.jdbcExecuteBatchEnd();
+			}
 		}
 	}
 
 	@Override
 	public void cachePutStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.cachePutStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.cachePutStart();
+			}
 		}
 	}
 
 	@Override
 	public void cachePutEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.cachePutEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.cachePutEnd();
+			}
 		}
 	}
 
 	@Override
 	public void cacheGetStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.cacheGetStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.cacheGetStart();
+			}
 		}
 	}
 
 	@Override
 	public void cacheGetEnd(boolean hit) {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.cacheGetEnd( hit );
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.cacheGetEnd( hit );
+			}
 		}
 	}
 
 	@Override
 	public void flushStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.flushStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.flushStart();
+			}
 		}
 	}
 
 	@Override
 	public void flushEnd(int numberOfEntities, int numberOfCollections) {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.flushEnd( numberOfEntities, numberOfCollections );
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.flushEnd( numberOfEntities, numberOfCollections );
+			}
 		}
 	}
 
 	@Override
 	public void prePartialFlushStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.prePartialFlushStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.prePartialFlushStart();
+			}
 		}
 	}
 
 	@Override
 	public void prePartialFlushEnd() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.prePartialFlushEnd();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.prePartialFlushEnd();
+			}
 		}
 	}
 
 	@Override
 	public void partialFlushStart() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.partialFlushStart();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.partialFlushStart();
+			}
 		}
 	}
 
 	@Override
 	public void partialFlushEnd(int numberOfEntities, int numberOfCollections) {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.partialFlushEnd( numberOfEntities, numberOfCollections );
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.partialFlushEnd( numberOfEntities, numberOfCollections );
+			}
 		}
 	}
 
@@ -284,23 +248,19 @@ public class SessionEventListenerManagerImpl implements SessionEventListenerMana
 
 	@Override
 	public void dirtyCalculationEnd(boolean dirty) {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.dirtyCalculationEnd( dirty );
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.dirtyCalculationEnd( dirty );
+			}
 		}
 	}
 
 	@Override
 	public void end() {
-		if ( listeners == null ) {
-			return;
-		}
-
-		for ( SessionEventListener listener : listeners ) {
-			listener.end();
+		if ( listeners != null ) {
+			for ( SessionEventListener listener : listeners ) {
+				listener.end();
+			}
 		}
 	}
 }

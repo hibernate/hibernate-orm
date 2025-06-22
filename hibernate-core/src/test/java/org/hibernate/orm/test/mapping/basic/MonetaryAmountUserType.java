@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.basic;
@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.util.Currency;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.usertype.CompositeUserType;
 
@@ -22,17 +21,15 @@ public class MonetaryAmountUserType implements CompositeUserType<MonetaryAmount>
 
 	@Override
 	public Object getPropertyValue(MonetaryAmount component, int property) throws HibernateException {
-		switch ( property ) {
-			case 0:
-				return component.getAmount();
-			case 1:
-				return component.getCurrency();
-		}
-		throw new HibernateException( "Illegal property index: " + property );
+		return switch ( property ) {
+			case 0 -> component.getAmount();
+			case 1 -> component.getCurrency();
+			default -> throw new HibernateException( "Illegal property index: " + property );
+		};
 	}
 
 	@Override
-	public MonetaryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
+	public MonetaryAmount instantiate(ValueAccess valueAccess) {
 		final BigDecimal amount = valueAccess.getValue(0, BigDecimal.class);
 		final Currency currency = valueAccess.getValue(1, Currency.class);
 

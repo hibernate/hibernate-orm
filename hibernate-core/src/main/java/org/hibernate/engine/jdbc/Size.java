@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc;
@@ -9,17 +9,17 @@ import org.hibernate.Length;
 import java.io.Serializable;
 
 /**
- * Models size restrictions/requirements on a column's datatype.
+ * Models size restrictions/requirements on a column's data type.
  *
- * @implNote Since we do not necessarily know the datatype up front, and therefore do not necessarily know
+ * @implNote Since we do not necessarily know the data type up front, and therefore do not necessarily know
  * whether length or precision/scale sizing is needed, we simply account for both here. Additionally, LOB
- * sizes, by standard, are allowed a "multiplier", {@code K} (Kb), {@code M} (Mb) or {@code G} (Gb).
+ * sizes, by standard, are allowed a "multiplier": {@code K} (Kb), {@code M} (Mb), or {@code G} (Gb).
  *
  * @author Steve Ebersole
  */
 public class Size implements Serializable {
 
-	@Deprecated( forRemoval = true )
+	@Deprecated(forRemoval = true, since = "6.5")
 	public enum LobMultiplier {
 		NONE( 1 ),
 		K( NONE.factor * 1024 ),
@@ -62,7 +62,7 @@ public class Size implements Serializable {
 	 * @param lobMultiplier LOB length multiplier
 	 * @deprecated in favor of {@link Size#Size(Integer, Integer, Long)}
 	 */
-	@Deprecated( forRemoval = true )
+	@Deprecated(forRemoval = true, since = "6.5")
 	public Size(Integer precision, Integer scale, Long length, LobMultiplier lobMultiplier) {
 		this.precision = precision;
 		this.scale = scale;
@@ -73,7 +73,7 @@ public class Size implements Serializable {
 	/**
 	 * @deprecated in favor of {@link Size#Size(Integer, Integer, Long)}
 	 */
-	@Deprecated( forRemoval = true )
+	@Deprecated(forRemoval = true , since = "6.5")
 	public Size(Integer precision, Integer scale, Integer length, LobMultiplier lobMultiplier) {
 		this.precision = precision;
 		this.scale = scale;
@@ -121,7 +121,7 @@ public class Size implements Serializable {
 		return arrayLength;
 	}
 
-	@Deprecated( forRemoval = true )
+	@Deprecated(forRemoval = true, since = "6.5")
 	public LobMultiplier getLobMultiplier() {
 		return lobMultiplier;
 	}
@@ -152,7 +152,7 @@ public class Size implements Serializable {
 		return this;
 	}
 
-	@Deprecated( forRemoval = true )
+	@Deprecated(forRemoval = true, since = "6.5")
 	public Size setLobMultiplier(LobMultiplier lobMultiplier) {
 		this.lobMultiplier = lobMultiplier;
 		return this;

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
@@ -35,7 +35,6 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
@@ -72,7 +71,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 	protected HibernateSchemaManagementTool tool;
 
-	private Map configurationValues;
+	private Map<String,Object> configurationValues;
 
 	protected ExecutionOptions executionOptions;
 
@@ -82,7 +81,7 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 
 		tool = (HibernateSchemaManagementTool) ssr.getService( SchemaManagementTool.class );
 
-		configurationValues = ssr.getService( ConfigurationService.class ).getSettings();
+		configurationValues = ssr.requireService( ConfigurationService.class ).getSettings();
 
 		executionOptions = new ExecutionOptions() {
 			@Override
@@ -91,18 +90,13 @@ public class IndividuallySchemaValidatorImplTest extends BaseUnitTestCase {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationValues;
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 	}

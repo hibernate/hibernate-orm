@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.subclass.singletable;
@@ -60,9 +60,7 @@ public class SingleTableDefaultSchemaFilterTest extends AbstractStatefulStateles
 
 	@AfterEach
 	public void cleanup() {
-		scope.inTransaction(
-				session -> session.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

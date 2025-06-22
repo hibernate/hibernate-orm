@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +13,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.TimeZoneColumn;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
@@ -22,21 +21,16 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
-import org.jboss.logging.Logger;
-
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -47,13 +41,15 @@ import jakarta.persistence.MappedSuperclass;
 
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.isOffsetTimeClass;
 import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.useColumnForTimeZoneStorage;
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * @author Emmanuel Bernard
  */
 public abstract class AbstractPropertyHolder implements PropertyHolder {
-	private static final Logger log = CoreLogging.logger( AbstractPropertyHolder.class );
 
 	private final String path;
 	protected final AbstractPropertyHolder parent;
@@ -90,8 +86,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
 
 	@Override
-	public ConverterDescriptor resolveAttributeConverterDescriptor(MemberDetails attributeMember) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
+	public ConverterDescriptor<?,?> resolveAttributeConverterDescriptor(MemberDetails attributeMember, boolean autoApply) {
+		final AttributeConversionInfo info = locateAttributeConversionInfo( attributeMember );
 		if ( info != null ) {
 			if ( info.isConversionDisabled() ) {
 				return null;
@@ -106,9 +102,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 
-		log.debugf( "Attempting to locate auto-apply AttributeConverter for attributeMember [%s:%s]", path, attributeMember.getName() );
-
-		return context.getMetadataCollector()
+		return !autoApply ? null : context.getMetadataCollector()
 				.getConverterRegistry()
 				.getAttributeConverterAutoApplyHandler()
 				.findAutoApplyConverterForAttribute( attributeMember, context );
@@ -135,13 +129,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 	}
 
-	protected ConverterDescriptor makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
+	protected ConverterDescriptor<?,?> makeAttributeConverterDescriptor(AttributeConversionInfo conversion) {
 		try {
-			return new ClassBasedConverterDescriptor(
-					conversion.getConverterClass(),
-					false,
-					context.getBootstrapContext().getClassmateContext()
-			);
+			return ConverterDescriptors.of( conversion.getConverterClass(),
+					null, false,
+					context.getBootstrapContext().getClassmateContext() );
 		}
 		catch (Exception e) {
 			throw new AnnotationException( "Unable to create AttributeConverter instance", e );
@@ -153,10 +145,12 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		if ( isInIdClass != null ) {
 			return isInIdClass;
 		}
-		if ( parent != null ) {
+		else if ( parent != null ) {
 			return parent.isInIdClass();
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	@Override
@@ -178,8 +172,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return context;
 	}
 
-	protected SourceModelBuildingContext getSourceModelContext() {
-		return getContext().getMetadataCollector().getSourceModelBuildingContext();
+	protected ModelsContext getSourceModelContext() {
+		return getContext().getBootstrapContext().getModelsContext();
 	}
 
 	/**
@@ -441,13 +435,15 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			return result;
 		}
 
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final ModelsContext sourceModelContext =
+				context.getBootstrapContext().getModelsContext();
 		final Map<String, List<Column>> columnOverrideMap = new HashMap<>();
 
-		final AttributeOverride[] overrides = element.getRepeatedAnnotationUsages( AttributeOverride.class, sourceModelContext );
-		if ( CollectionHelper.isNotEmpty( overrides ) ) {
+		final AttributeOverride[] overrides =
+				element.getRepeatedAnnotationUsages( AttributeOverride.class, sourceModelContext );
+		if ( isNotEmpty( overrides ) ) {
 			for ( AttributeOverride depAttr : overrides ) {
-				final String qualifiedName = StringHelper.qualify( path, depAttr.name() );
+				final String qualifiedName = qualify( path, depAttr.name() );
 				final Column column = depAttr.column();
 
 				if ( columnOverrideMap.containsKey( qualifiedName ) ) {
@@ -494,7 +490,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			Column column,
 			MetadataBuildingContext context) {
 		final TimeZoneColumn timeZoneColumn = element.getDirectAnnotationUsage( TimeZoneColumn.class );
-		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
 		final String columnName = timeZoneColumn != null
 				? timeZoneColumn.name()
 				: column.name() + "_tz";
@@ -529,7 +525,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		int secondPrecision;
 		final Column annotatedColumn = element.getDirectAnnotationUsage( Column.class );
 		if ( annotatedColumn != null ) {
-			if ( StringHelper.isNotEmpty( annotatedColumn.name() ) ) {
+			if ( isNotBlank( annotatedColumn.name() ) ) {
 				return annotatedColumn;
 			}
 			precision = annotatedColumn.precision();
@@ -564,7 +560,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 				)
 		);
 
-		final ColumnJpaAnnotation created = JpaAnnotations.COLUMN.createUsage( context.getMetadataCollector().getSourceModelBuildingContext() );
+		final ColumnJpaAnnotation created =
+				JpaAnnotations.COLUMN.createUsage( context.getBootstrapContext().getModelsContext() );
 		if ( StringHelper.isNotEmpty( implicitName.getText() ) ) {
 			created.name( implicitName.getText() );
 		}
@@ -574,7 +571,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	}
 
 	private static Map<String, ColumnTransformer> buildColumnTransformerOverride(AnnotationTarget element, MetadataBuildingContext context) {
-		final SourceModelBuildingContext sourceModelContext = context.getMetadataCollector().getSourceModelBuildingContext();
+		final ModelsContext sourceModelContext = context.getBootstrapContext().getModelsContext();
 		final Map<String, ColumnTransformer> columnOverride = new HashMap<>();
 		if ( element != null ) {
 			element.forEachAnnotationUsage( ColumnTransformer.class, sourceModelContext, (usage) -> {
@@ -587,12 +584,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, JoinColumn[]> buildJoinColumnOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, JoinColumn[]> columnOverride = new HashMap<>();
 		if ( element != null ) {
-			final AssociationOverride[] overrides = buildAssociationOverrides( element, path, context );
-			for ( AssociationOverride override : overrides ) {
-				columnOverride.put(
-						qualify( path, override.name() ),
-						override.joinColumns()
-				);
+			for ( AssociationOverride override : buildAssociationOverrides( element, path, context ) ) {
+				columnOverride.put( qualify( path, override.name() ), override.joinColumns() );
 			}
 		}
 		return columnOverride;
@@ -601,32 +594,23 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private static Map<String, ForeignKey> buildForeignKeyOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, ForeignKey> foreignKeyOverride = new HashMap<>();
 		if ( element != null ) {
-			final AssociationOverride[] overrides = buildAssociationOverrides( element, path, context );
-			for ( AssociationOverride override : overrides ) {
-				foreignKeyOverride.put(
-						qualify( path, override.name() ),
-						override.foreignKey()
-				);
+			for ( AssociationOverride override : buildAssociationOverrides( element, path, context ) ) {
+				foreignKeyOverride.put( qualify( path, override.name() ), override.foreignKey() );
 			}
 		}
 		return foreignKeyOverride;
 	}
 
 	private static AssociationOverride[] buildAssociationOverrides(AnnotationTarget element, String path, MetadataBuildingContext context) {
-		return element.getRepeatedAnnotationUsages( AssociationOverride.class, context.getMetadataCollector().getSourceModelBuildingContext() );
+		return element.getRepeatedAnnotationUsages( AssociationOverride.class, context.getBootstrapContext().getModelsContext() );
 	}
 
 	private static Map<String, JoinTable> buildJoinTableOverride(AnnotationTarget element, String path, MetadataBuildingContext context) {
 		final Map<String, JoinTable> result = new HashMap<>();
 		if ( element != null ) {
-			final AssociationOverride[] overrides = buildAssociationOverrides( element, path, context );
-			for ( AssociationOverride override : overrides ) {
-				final JoinColumn[] joinColumns = override.joinColumns();
-				if ( CollectionHelper.isEmpty( joinColumns ) ) {
-					result.put(
-							qualify( path, override.name() ),
-							override.joinTable()
-					);
+			for ( AssociationOverride override : buildAssociationOverrides( element, path, context ) ) {
+				if ( isEmpty( override.joinColumns() ) ) {
+					result.put( qualify( path, override.name() ), override.joinTable() );
 				}
 			}
 		}
@@ -636,114 +620,5 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	@Override
 	public void setParentProperty(String parentProperty) {
 		throw new AssertionFailure( "Setting the parent property to a non component" );
-	}
-
-	private static class ColumnImpl implements Column {
-
-		private final String name;
-		private final boolean unique;
-		private final boolean nullable;
-		private final boolean insertable;
-		private final boolean updatable;
-		private final String columnDefinition;
-		private final String table;
-		private final int precision;
-		private final int secondPrecision;
-
-		private ColumnImpl(
-				String name,
-				boolean unique,
-				boolean nullable,
-				boolean insertable,
-				boolean updatable,
-				String columnDefinition,
-				String table,
-				int precision,
-				int secondPrecision) {
-			this.name = name;
-			this.unique = unique;
-			this.nullable = nullable;
-			this.insertable = insertable;
-			this.updatable = updatable;
-			this.columnDefinition = columnDefinition;
-			this.table = table;
-			this.precision = precision;
-			this.secondPrecision = secondPrecision;
-		}
-
-		@Override
-		public String name() {
-			return name;
-		}
-
-		@Override
-		public boolean unique() {
-			return unique;
-		}
-
-		@Override
-		public boolean nullable() {
-			return nullable;
-		}
-
-		@Override
-		public boolean insertable() {
-			return insertable;
-		}
-
-		@Override
-		public boolean updatable() {
-			return updatable;
-		}
-
-		@Override
-		public String columnDefinition() {
-			return columnDefinition;
-		}
-
-		@Override
-		public String options() {
-			return "";
-		}
-
-		@Override
-		public String table() {
-			return table;
-		}
-
-		@Override
-		public int length() {
-			return 255;
-		}
-
-		@Override
-		public int precision() {
-			return precision;
-		}
-
-		@Override
-		public int scale() {
-			return 0;
-		}
-
-		@Override
-		public int secondPrecision() {
-			return secondPrecision;
-		}
-
-		@Override
-		public CheckConstraint[] check() {
-			return new CheckConstraint[0];
-		}
-
-		@Override
-		public String comment() {
-			return "";
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Column.class;
-		}
 	}
 }

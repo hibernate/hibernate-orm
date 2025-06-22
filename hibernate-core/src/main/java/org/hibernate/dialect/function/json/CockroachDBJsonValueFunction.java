@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -8,11 +8,12 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
 import org.hibernate.sql.ast.tree.expression.JsonValueEmptyBehavior;
 import org.hibernate.sql.ast.tree.expression.JsonValueErrorBehavior;
@@ -47,18 +48,29 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 		catch (Exception ex) {
 			throw new QueryException( "CockroachDB json_value only support literal json paths, but got " + arguments.jsonPath() );
 		}
-		final List<JsonPathHelper.JsonPathElement> jsonPathElements = JsonPathHelper.parseJsonPathElements( jsonPath );
-		if ( arguments.returningType() != null ) {
+		appendJsonValue(
+				sqlAppender,
+				arguments.jsonDocument(),
+				JsonPathHelper.parseJsonPathElements( jsonPath ),
+				arguments.isJsonType(),
+				arguments.passingClause(),
+				arguments.returningType(),
+				walker
+		);
+	}
+
+	static void appendJsonValue(SqlAppender sqlAppender, Expression jsonDocument, List<JsonPathHelper.JsonPathElement> jsonPathElements, boolean isJsonType, JsonPathPassingClause jsonPathPassingClause, CastTarget castTarget, SqlAstTranslator<?> walker) {
+		if ( castTarget != null ) {
 			sqlAppender.appendSql( "cast(" );
 		}
-		final boolean needsCast = !arguments.isJsonType() && arguments.jsonDocument() instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType && AbstractSqlAstTranslator.isParameter( jsonDocument );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}
 		else {
 			sqlAppender.appendSql( '(' );
 		}
-		arguments.jsonDocument().accept( walker );
+		jsonDocument.accept( walker );
 		if ( needsCast ) {
 			sqlAppender.appendSql( " as jsonb)" );
 		}
@@ -74,12 +86,11 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 				dialect.appendLiteral( sqlAppender, attribute.attribute() );
 			}
 			else if ( jsonPathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final JsonPathPassingClause jsonPathPassingClause = arguments.passingClause();
 				assert jsonPathPassingClause != null;
 				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) jsonPathElement ).parameterName();
 				final Expression expression = jsonPathPassingClause.getPassingExpressions().get( parameterName );
 				if ( expression == null ) {
-					throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
+					throw new QueryException( "JSON path [" + JsonPathHelper.toJsonPath( jsonPathElements ) + "] uses parameter [" + parameterName + "] that is not passed" );
 				}
 
 				sqlAppender.appendSql( "cast(" );
@@ -93,11 +104,14 @@ public class CockroachDBJsonValueFunction extends JsonValueFunction {
 			}
 			separator = ',';
 		}
+		if ( jsonPathElements.isEmpty() ) {
+			sqlAppender.appendSql( '[' );
+		}
 		sqlAppender.appendSql( ']' );
 
-		if ( arguments.returningType() != null ) {
+		if ( castTarget != null ) {
 			sqlAppender.appendSql( " as " );
-			arguments.returningType().accept( walker );
+			castTarget.accept( walker );
 			sqlAppender.appendSql( ')' );
 		}
 	}

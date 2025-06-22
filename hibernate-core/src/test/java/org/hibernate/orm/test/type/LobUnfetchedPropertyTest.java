@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type;
@@ -14,7 +14,6 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.Arrays;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -27,6 +26,7 @@ import jakarta.persistence.Lob;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
@@ -65,9 +65,7 @@ public class LobUnfetchedPropertyTest {
 			assertFalse( Hibernate.isPropertyInitialized( file, "blob" ) );
 			Blob blob = file.getBlob();
 			try {
-				assertTrue(
-					Arrays.equals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) )
-				);
+				assertArrayEquals( "TEST CASE".getBytes(), blob.getBytes( 1, (int) file.getBlob().length() ) );
 			}
 			catch (SQLException ex) {
 				fail( "could not determine Lob length" );
@@ -76,6 +74,7 @@ public class LobUnfetchedPropertyTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Driver cannot determine clob length" )
 	public void testClob(SessionFactoryScope scope) throws SQLException {
 		final int id = scope.fromTransaction( s -> {
 			FileClob file = new FileClob();

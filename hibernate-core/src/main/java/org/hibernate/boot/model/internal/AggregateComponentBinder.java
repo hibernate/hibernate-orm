@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
@@ -55,8 +55,8 @@ public final class AggregateComponentBinder {
 			component.setStructColumnNames( determineStructAttributeNames( inferredData, componentClassDetails ) );
 
 			// Determine the aggregate column
-			BasicValueBinder basicValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
-			basicValueBinder.setPropertyName( inferredData.getPropertyName() );
+			final BasicValueBinder basicValueBinder =
+					new BasicValueBinder( BasicValueBinder.Kind.ATTRIBUTE, component, context );
 			basicValueBinder.setReturnedClassName( inferredData.getClassOrElementType().getName() );
 			basicValueBinder.setColumns( columns );
 			basicValueBinder.setPersistentClassName( propertyHolder.getClassName() );

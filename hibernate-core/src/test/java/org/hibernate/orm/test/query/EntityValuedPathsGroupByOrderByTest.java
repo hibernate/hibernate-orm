@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query;
@@ -186,6 +186,35 @@ public class EntityValuedPathsGroupByOrderByTest {
 						" (select a2.secondary from EntityA a2 group by a2.secondary)",
 				Tuple.class
 		).getResultList() ).hasSize( 2 ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select s.id from EntityB ignore) from EntityA a join a.secondary s group by s.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupByAndOrderBy(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select s.id from EntityB ignore) from EntityA a"
+						+ " join a.secondary s group by s.id order by s.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-18862" )
+	public void testSubquerySelectionGroupByAndOrderByImplicit(SessionFactoryScope scope) {
+		scope.inTransaction( session -> assertThat( session.createQuery(
+				"select (select a.secondary.id from EntityB ignore) from EntityA a"
+						+ " group by a.secondary.id order by a.secondary.id",
+				Long.class
+		).getSingleResult() ).isEqualTo( 1L ) );
 	}
 
 	@Entity( name = "EntityA" )

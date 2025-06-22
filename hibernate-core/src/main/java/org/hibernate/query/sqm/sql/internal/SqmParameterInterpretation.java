@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql.internal;
@@ -37,8 +37,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 			List<JdbcParameter> jdbcParameters,
 			MappingModelExpressible<?> valueMapping) {
 
-		if ( valueMapping instanceof EntityAssociationMapping ) {
-			final EntityAssociationMapping mapping = (EntityAssociationMapping) valueMapping;
+		if ( valueMapping instanceof EntityAssociationMapping mapping ) {
 			this.valueMapping = mapping.getForeignKeyDescriptor().getPart( mapping.getSideNature() );
 		}
 		else if ( valueMapping instanceof EntityValuedModelPart ) {
@@ -99,7 +98,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				resolvedExpression,
 				jdbcJavaType,
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicResult(
@@ -136,7 +135,7 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 				resolvedExpression,
 				resolvedExpression.getExpressionType().getSingleJdbcMapping().getMappedJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
+import org.hibernate.engine.spi.InstanceIdentity;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -52,7 +54,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  */
 @Incubating
-public interface PersistentCollection<E> extends LazyInitializable {
+public interface PersistentCollection<E> extends LazyInitializable, InstanceIdentity {
 	/**
 	 * Get the owning entity. Note that the owner is only
 	 * set during the flush cycle, and when a new collection
@@ -315,6 +317,17 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula);
 
 	/**
+	 * Does this collection have any elements which must be deleted?
+	 *
+	 * @param persister The collection persister
+	 *
+	 * @return {@code true} if elements were removed
+	 *
+	 * @since 7
+	 */
+	boolean hasDeletes(CollectionPersister persister);
+
+	/**
 	 * Is this the wrapper for the given collection instance?
 	 *
 	 * @param collection The collection to check whether this is wrapping it
@@ -358,7 +371,6 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	 *
 	 * @see #injectLoadedState
 	 */
-	@SuppressWarnings("UnusedReturnValue")
 	boolean endRead();
 
 	/**
@@ -509,6 +521,13 @@ public interface PersistentCollection<E> extends LazyInitializable {
 	Object elementByIndex(Object index);
 
 	void initializeEmptyCollection(CollectionPersister persister);
+
+	/**
+	 * Get the session currently associated with this collection.
+	 * Declared here for use by Hibernate Reactive.
+	 */
+	@Internal
+	SharedSessionContractImplementor getSession();
 
 	/**
 	 * Is the collection newly instantiated?

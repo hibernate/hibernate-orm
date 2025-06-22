@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
@@ -36,14 +36,7 @@ public class AccessTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Furniture" ).executeUpdate();
-					session.createQuery( "delete from Chair" ).executeUpdate();
-					session.createQuery( "delete from BigBed" ).executeUpdate();
-					session.createQuery( "delete from Gardenshed" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

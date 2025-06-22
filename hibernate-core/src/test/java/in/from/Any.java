@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package in.from;
@@ -20,6 +20,13 @@ public class Any {
 	private long id;
 
 	private String prop;
+
+	public Any() {
+	}
+
+	public Any( String prop) {
+		this.prop = prop;
+	}
 
 	public long getId() {
 		return id;

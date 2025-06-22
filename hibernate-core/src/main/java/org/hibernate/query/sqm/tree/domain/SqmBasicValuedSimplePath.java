@@ -1,16 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
@@ -18,13 +19,13 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Type.PersistenceType.BASIC;
 import static java.util.Arrays.asList;
 
 /**
@@ -32,7 +33,7 @@ import static java.util.Arrays.asList;
  */
 public class SqmBasicValuedSimplePath<T>
 		extends AbstractSqmSimplePath<T>
-		implements SqmExpressible<T> {
+		implements SqmBindableType<T> {
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
@@ -73,8 +74,13 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public SqmExpressible<T> getExpressible() {
+	public SqmBindableType<T> getExpressible() {
 		return this;
+	}
+
+	@Override
+	public PersistenceType getPersistenceType() {
+		return BASIC;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,31 +104,44 @@ public class SqmBasicValuedSimplePath<T>
 			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final SqmPathRegistry pathRegistry =
+				creationState.getCurrentProcessingState().getPathRegistry();
 		final String alias = selector.toHqlString();
-		final NavigablePath navigablePath = getNavigablePath().getParent().append(
-				CollectionPart.Nature.ELEMENT.getName(),
-				alias
-		);
+		final NavigablePath navigablePath =
+				getNavigablePath().getParent()
+						.append( CollectionPart.Nature.ELEMENT.getName(), alias );
 		final SqmFrom<?, ?> indexedPath = pathRegistry.findFromByPath( navigablePath );
 		if ( indexedPath != null ) {
 			return indexedPath;
 		}
-		final DomainType<T> sqmPathType = getNodeType().getSqmPathType();
-		final QueryEngine queryEngine = creationState.getCreationContext().getQueryEngine();
-		final SelfRenderingSqmFunction<?> result;
+		else {
+			final SqmFunctionPath<Object> path =
+					new SqmFunctionPath<>(
+							getIndexFunction(
+									selector,
+//									getNodeType().getPathType(),
+									getReferencedPathSource().getPathType(),
+									creationState.getCreationContext().getQueryEngine()
+							)
+					);
+			pathRegistry.register( path );
+			return path;
+		}
+	}
+
+	private SelfRenderingSqmFunction<?> getIndexFunction(
+			SqmExpression<?> selector, SqmDomainType<T> sqmPathType, QueryEngine queryEngine) {
+		final SqmFunctionRegistry registry = queryEngine.getSqmFunctionRegistry();
 		if ( sqmPathType instanceof BasicPluralType<?, ?> ) {
-			result = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "array_get" )
+			return registry.findFunctionDescriptor( "array_get" )
 					.generateSqmExpression(
 							asList( this, selector ),
 							null,
 							queryEngine
 					);
 		}
-		else if ( sqmPathType.getRelationalJavaType().getJavaTypeClass() == String.class ) {
-			result = queryEngine.getSqmFunctionRegistry()
-					.findFunctionDescriptor( "substring" )
+		else if ( getJavaTypeClass( sqmPathType ) == String.class ) {
+			return registry.findFunctionDescriptor( "substring" )
 					.generateSqmExpression(
 							asList( this, selector, nodeBuilder().literal( 1 ) ),
 							nodeBuilder().getCharacterType(),
@@ -132,24 +151,17 @@ public class SqmBasicValuedSimplePath<T>
 		else {
 			throw new UnsupportedOperationException( "Index access is only supported for basic plural and string types, but got: " + sqmPathType );
 		}
-		final SqmFunctionPath<Object> path = new SqmFunctionPath<>( result );
-		pathRegistry.register( path );
-		return path;
+	}
+
+	private Class<?> getJavaTypeClass(SqmDomainType<T> sqmPathType) {
+		return nodeBuilder().resolveExpressible( sqmPathType )
+				.getRelationalJavaType()
+				.getJavaTypeClass();
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SqmPath
-
-	@Override
-	public SqmPathSource<T> getReferencedPathSource() {
-		return super.getReferencedPathSource();
-	}
-
-	@Override
-	public SqmPathSource<T> getNodeType() {
-		return getReferencedPathSource();
-	}
 
 	@Override
 	public BasicJavaType<T> getJavaTypeDescriptor() {
@@ -177,14 +189,8 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public Class<T> getBindableJavaType() {
-		return getJavaType();
-	}
-
-	@Override
-	public DomainType<T> getSqmType() {
-		//noinspection unchecked
-		return (DomainType<T>) getResolvedModel().getSqmType();
+	public SqmDomainType<T> getSqmType() {
+		return getResolvedModel().getSqmType();
 	}
 
 

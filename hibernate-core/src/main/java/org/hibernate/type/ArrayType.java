@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -11,20 +11,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.persister.collection.CollectionPersister;
+
+import static org.hibernate.Hibernate.isInitialized;
+import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
 /**
  * A type for persistent arrays.
  * @author Gavin King
  */
+@AllowReflection
 public class ArrayType extends CollectionType {
 
 	private final Class<?> elementClass;
@@ -48,7 +51,7 @@ public class ArrayType extends CollectionType {
 
 	@Override
 	public PersistentCollection<?> instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key)
-	throws HibernateException {
+			throws HibernateException {
 		return new PersistentArrayHolder<>(session, persister);
 	}
 
@@ -75,20 +78,21 @@ public class ArrayType extends CollectionType {
 		if ( value == null ) {
 			return "null";
 		}
-		int length = Array.getLength(value);
-		List<String> list = new ArrayList<>(length);
-		Type elemType = getElementType(factory);
-		for ( int i=0; i<length; i++ ) {
-			Object element = Array.get(value, i);
-			if ( element == LazyPropertyInitializer.UNFETCHED_PROPERTY
-					|| !Hibernate.isInitialized( element ) ) {
-				list.add( "<uninitialized>" );
+		else {
+			final int length = Array.getLength( value );
+			final Type elemType = getElementType( factory );
+			final List<String> list = new ArrayList<>( length );
+			for ( int i = 0; i < length; i++ ) {
+				list.add( loggableString( factory, Array.get( value, i ), elemType ) );
 			}
-			else {
-				list.add( elemType.toLoggableString( element, factory ) );
-			}
+			return list.toString();
 		}
-		return list.toString();
+	}
+
+	private static String loggableString(SessionFactoryImplementor factory, Object element, Type elemType) {
+		return element == UNFETCHED_PROPERTY || !isInitialized( element )
+				? "<uninitialized>"
+				: elemType.toLoggableString( element, factory );
 	}
 
 	@Override
@@ -101,16 +105,16 @@ public class ArrayType extends CollectionType {
 		Object original,
 		Object target,
 		Object owner,
-		Map copyCache,
+		Map<Object, Object> copyCache,
 		SharedSessionContractImplementor session) throws HibernateException {
 
-		int length = Array.getLength(original);
+		final int length = Array.getLength(original);
 		if ( length!=Array.getLength(target) ) {
 			//note: this affects the return value!
 			target=instantiateResult(original);
 		}
 
-		Type elemType = getElementType( session.getFactory() );
+		final Type elemType = getElementType( session.getFactory() );
 		for ( int i=0; i<length; i++ ) {
 			Array.set( target, i, elemType.replace( Array.get(original, i), null, session, owner, copyCache ) );
 		}
@@ -126,10 +130,10 @@ public class ArrayType extends CollectionType {
 
 	@Override
 	public Object indexOf(Object array, Object element) {
-		int length = Array.getLength(array);
+		final int length = Array.getLength(array);
 		for ( int i=0; i<length; i++ ) {
 			//TODO: proxies!
-			if ( Array.get(array, i)==element ) {
+			if ( Array.get(array, i) == element ) {
 				return i;
 			}
 		}

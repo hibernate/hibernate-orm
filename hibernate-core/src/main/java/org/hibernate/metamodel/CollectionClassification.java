@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel;
@@ -25,30 +25,30 @@ public enum CollectionClassification {
 	 * An Object or primitive array.  Roughly follows the semantics
 	 * of {@link #LIST}
 	 */
-	ARRAY( PluralAttribute.CollectionType.COLLECTION, true ),
+	ARRAY,
 
 	/**
 	 * A non-unique, unordered collection.  Represented
 	 * as {@link java.util.Collection} or {@link java.util.List}
 	 */
-	BAG( PluralAttribute.CollectionType.COLLECTION, false ),
+	BAG,
 
 	/**
 	 * A {@link #BAG} with a generated id for each element
 	 */
-	ID_BAG( PluralAttribute.CollectionType.COLLECTION, false ),
+	ID_BAG,
 
 	/**
 	 * A non-unique, ordered collection following the requirements of {@link java.util.List}
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_LIST_SEMANTICS
 	 */
-	LIST( PluralAttribute.CollectionType.LIST, true ),
+	LIST,
 
 	/**
 	 * A unique, unordered collection following the requirements of {@link java.util.Set}
 	 */
-	SET( PluralAttribute.CollectionType.SET, false ),
+	SET,
 
 	/**
 	 * A sorted {@link #SET} using either natural sorting of the elements or a
@@ -58,7 +58,7 @@ public enum CollectionClassification {
 	 * @see org.hibernate.annotations.SortNatural
 	 * @see org.hibernate.annotations.SortComparator
 	 */
-	SORTED_SET( PluralAttribute.CollectionType.SET, false ),
+	SORTED_SET,
 
 	/**
 	 * A {@link #SET} that is ordered using an order-by fragment
@@ -67,14 +67,14 @@ public enum CollectionClassification {
 	 * as {@link java.util.Set}.
 	 *
 	 * @see jakarta.persistence.OrderBy
-	 * @see org.hibernate.annotations.OrderBy
+	 * @see org.hibernate.annotations.SQLOrder
 	 */
-	ORDERED_SET( PluralAttribute.CollectionType.SET, false ),
+	ORDERED_SET,
 
 	/**
 	 * A collection following the semantics of {@link java.util.Map}
 	 */
-	MAP( PluralAttribute.CollectionType.MAP, true ),
+	MAP,
 
 	/**
 	 * A sorted {@link #MAP} using either natural sorting of the keys or a
@@ -84,7 +84,7 @@ public enum CollectionClassification {
 	 * @see org.hibernate.annotations.SortNatural
 	 * @see org.hibernate.annotations.SortComparator
 	 */
-	SORTED_MAP( PluralAttribute.CollectionType.MAP, true ),
+	SORTED_MAP,
 
 	/**
 	 * A {@link #MAP} that is ordered using an order-by fragment
@@ -93,24 +93,24 @@ public enum CollectionClassification {
 	 * as {@link java.util.Map}.
 	 *
 	 * @see jakarta.persistence.OrderBy
-	 * @see org.hibernate.annotations.OrderBy
+	 * @see org.hibernate.annotations.SQLOrder
 	 */
-	ORDERED_MAP( PluralAttribute.CollectionType.MAP, true );
-
-	private final PluralAttribute.CollectionType jpaClassification;
-	private final boolean isIndexed;
-
-	CollectionClassification(PluralAttribute.CollectionType jpaClassification, boolean isIndexed) {
-		this.jpaClassification = jpaClassification;
-		this.isIndexed = isIndexed;
-	}
+	ORDERED_MAP;
 
 	public PluralAttribute.CollectionType toJpaClassification() {
-		return jpaClassification;
+		return switch ( this ) {
+			case ARRAY, BAG, ID_BAG -> PluralAttribute.CollectionType.COLLECTION;
+			case LIST -> PluralAttribute.CollectionType.LIST;
+			case SET, SORTED_SET, ORDERED_SET -> PluralAttribute.CollectionType.SET;
+			case MAP, SORTED_MAP, ORDERED_MAP -> PluralAttribute.CollectionType.MAP;
+		};
 	}
 
 	public boolean isIndexed() {
-		return isIndexed;
+		return switch ( this ) {
+			case ARRAY, LIST, MAP, SORTED_MAP, ORDERED_MAP -> true;
+			default -> false;
+		};
 	}
 
 	public boolean isRowUpdatePossible() {
@@ -129,11 +129,10 @@ public enum CollectionClassification {
 		if ( value == null ) {
 			return null;
 		}
-		else if ( value instanceof CollectionClassification ) {
-			return (CollectionClassification) value;
+		else if ( value instanceof CollectionClassification classification ) {
+			return classification;
 		}
-		else if ( value instanceof String ) {
-			final String string = (String) value;
+		else if ( value instanceof String string ) {
 			for ( CollectionClassification collectionClassification : values() ) {
 				if ( collectionClassification.name().equalsIgnoreCase( string ) ) {
 					return collectionClassification;
@@ -141,8 +140,8 @@ public enum CollectionClassification {
 			}
 			return null;
 		}
-		else if ( value instanceof Class ) {
-			return interpretClass( (Class<?>) value );
+		else if ( value instanceof Class<?> type ) {
+			return interpretClass( type );
 		}
 		else {
 			return null;

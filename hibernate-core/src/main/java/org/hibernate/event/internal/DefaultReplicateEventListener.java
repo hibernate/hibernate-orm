@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -85,8 +85,7 @@ public class DefaultReplicateEventListener
 
 		if ( oldVersion != null ) {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev("Found existing row for {0}",
-						infoString( persister, id, event.getFactory() ) );
+				LOG.trace( "Found existing row for " + infoString( persister, id, event.getFactory() ) );
 			}
 			// If the entity has no version, getCurrentVersion() just returns
 			// a meaningless value to indicate that the row exists (HHH-2378)
@@ -107,8 +106,8 @@ public class DefaultReplicateEventListener
 		else {
 			// no existing row - execute a SQL INSERT
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "No existing row, replicating new instance {0}",
-						infoString( persister, id, event.getFactory() ) );
+				LOG.trace( "No existing row, replicating new instance "
+							+ infoString( persister, id, event.getFactory() ) );
 			}
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
@@ -158,8 +157,7 @@ public class DefaultReplicateEventListener
 			EventSource source) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Replicating changes to {0}",
-					infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Replicating changes to " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		new OnReplicateVisitor( source, id, entity, true ).process( entity, persister );

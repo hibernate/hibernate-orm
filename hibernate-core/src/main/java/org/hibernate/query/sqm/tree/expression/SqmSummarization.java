@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.expression;
@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 
 /**
  * @author Christian Beikov
@@ -64,16 +65,17 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		ROLLUP,
 		CUBE
 	}
+
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( kind );
-		sb.append( " (" );
-		groupings.get( 0 ).appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( kind );
+		hql.append( " (" );
+		groupings.get( 0 ).appendHqlString( hql, context );
 		for ( int i = 1; i < groupings.size(); i++ ) {
-			sb.append(", ");
-			groupings.get( i ).appendHqlString( sb );
+			hql.append(", ");
+			groupings.get( i ).appendHqlString( hql, context );
 		}
-		sb.append( ')' );
+		hql.append( ')' );
 	}
 
 }

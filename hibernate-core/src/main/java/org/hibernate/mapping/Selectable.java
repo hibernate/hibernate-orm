@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -7,13 +7,12 @@ package org.hibernate.mapping;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Models the commonality between a {@link Column} and a {@link Formula} (computed value).
  */
-public interface Selectable {
+public sealed interface Selectable permits Column, Formula {
 	/**
 	 * The selectable's "canonical" text representation
 	 */
@@ -61,7 +60,7 @@ public interface Selectable {
 	@Deprecated(since = "6.0")
 	String getAlias(Dialect dialect, Table table);
 
-	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration, SqmFunctionRegistry functionRegistry);
+	String getTemplate(Dialect dialect, TypeConfiguration typeConfiguration);
 
 	@Incubating
 	default String getWriteExpr() {

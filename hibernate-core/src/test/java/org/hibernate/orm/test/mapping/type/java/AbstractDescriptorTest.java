@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.type.java;
@@ -11,13 +11,14 @@ import java.util.TimeZone;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,11 +49,6 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 	protected final WrapperOptions wrapperOptions = new WrapperOptions() {
 		@Override
 		public SharedSessionContractImplementor getSession() {
-			return null;
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
 			return null;
 		}
 
@@ -88,6 +84,21 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		@Override
 		public Dialect getDialect() {
 			return dialect;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getXmlFormatMapper() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getJsonFormatMapper() {
+			return null;
 		}
 	};
 

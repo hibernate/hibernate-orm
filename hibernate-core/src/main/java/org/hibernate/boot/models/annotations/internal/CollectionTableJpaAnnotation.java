@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.CollectionTable;
 
@@ -41,7 +41,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionTableJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionTableJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.catalog = "";
 		this.schema = "";
@@ -55,7 +55,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CollectionTableJpaAnnotation(CollectionTable annotation, SourceModelBuildingContext modelContext) {
+	public CollectionTableJpaAnnotation(CollectionTable annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.catalog = annotation.catalog();
 		this.schema = annotation.schema();
@@ -69,7 +69,7 @@ public class CollectionTableJpaAnnotation implements CollectionTable, CommonTabl
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionTableJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CollectionTableJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.catalog = (String) attributeValues.get( "catalog" );
 		this.schema = (String) attributeValues.get( "schema" );

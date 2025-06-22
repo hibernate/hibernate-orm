@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -54,6 +54,8 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	@Override
 	void executeQuery(StringBuilder declaration, List<String> paramTypes) {
+		createSpecification( declaration );
+		handleRestrictionParameters( declaration, paramTypes );
 		tryReturn(declaration);
 		createQuery( declaration );
 		execute( declaration );
@@ -75,9 +77,14 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 				: "createMutationQuery";
 	}
 
+	@Override
+	String specificationType() {
+		return "org.hibernate.query.specification.MutationSpecification";
+	}
+
 	private void execute(StringBuilder declaration) {
 		declaration
-				.append("\t\t\t.executeUpdate();\n");
+				.append("\t\t\t.executeUpdate()");
 	}
 
 	@Override

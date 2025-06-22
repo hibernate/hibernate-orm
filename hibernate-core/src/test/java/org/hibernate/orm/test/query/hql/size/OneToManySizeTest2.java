@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql.size;
@@ -594,13 +594,7 @@ public class OneToManySizeTest2 {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					session.createQuery( "delete from Student" ).executeUpdate();
-					session.createQuery( "delete from Teacher" ).executeUpdate();
-					session.createQuery( "delete from Skill" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	private static int countNumberOfJoins(String query) {

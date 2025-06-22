@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function;
@@ -7,158 +7,21 @@ package org.hibernate.dialect.function;
 import java.util.Date;
 import java.util.Arrays;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
-import org.hibernate.dialect.function.array.ArrayAggFunction;
-import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
-import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.ArrayConcatFunction;
-import org.hibernate.dialect.function.array.ArrayConstructorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayIncludesUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayIntersectsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayIntersectsUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
-import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
-import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
-import org.hibernate.dialect.function.array.ArrayToStringFunction;
-import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
-import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
-import org.hibernate.dialect.function.array.H2ArrayFillFunction;
-import org.hibernate.dialect.function.array.H2ArrayIncludesFunction;
-import org.hibernate.dialect.function.array.H2ArrayIntersectsFunction;
-import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
-import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
-import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
-import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
-import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
-import org.hibernate.dialect.function.array.H2ArraySetFunction;
-import org.hibernate.dialect.function.array.H2ArrayToStringFunction;
-import org.hibernate.dialect.function.array.HSQLArrayConstructorFunction;
-import org.hibernate.dialect.function.array.HSQLArrayFillFunction;
-import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.HSQLArrayPositionsFunction;
-import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
-import org.hibernate.dialect.function.array.HSQLArraySetFunction;
-import org.hibernate.dialect.function.array.HSQLArrayToStringFunction;
-import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
-import org.hibernate.dialect.function.array.OracleArrayFillFunction;
-import org.hibernate.dialect.function.array.OracleArrayIncludesFunction;
-import org.hibernate.dialect.function.array.OracleArrayIntersectsFunction;
-import org.hibernate.dialect.function.array.OracleArrayGetFunction;
-import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
-import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
-import org.hibernate.dialect.function.array.OracleArrayPositionsFunction;
-import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
-import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
-import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
-import org.hibernate.dialect.function.array.OracleArraySetFunction;
-import org.hibernate.dialect.function.array.OracleArraySliceFunction;
-import org.hibernate.dialect.function.array.OracleArrayToStringFunction;
-import org.hibernate.dialect.function.array.OracleArrayTrimFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayFillFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayConstructorFunction;
-import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
-import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
-import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
-import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
-import org.hibernate.dialect.function.json.CockroachDBJsonExistsFunction;
-import org.hibernate.dialect.function.json.CockroachDBJsonQueryFunction;
-import org.hibernate.dialect.function.json.CockroachDBJsonRemoveFunction;
-import org.hibernate.dialect.function.json.CockroachDBJsonValueFunction;
-import org.hibernate.dialect.function.json.DB2JsonArrayAggFunction;
-import org.hibernate.dialect.function.json.DB2JsonArrayFunction;
-import org.hibernate.dialect.function.json.DB2JsonObjectAggFunction;
-import org.hibernate.dialect.function.json.DB2JsonObjectFunction;
-import org.hibernate.dialect.function.json.H2JsonArrayAggFunction;
-import org.hibernate.dialect.function.json.H2JsonExistsFunction;
-import org.hibernate.dialect.function.json.H2JsonObjectAggFunction;
-import org.hibernate.dialect.function.json.H2JsonQueryFunction;
-import org.hibernate.dialect.function.json.H2JsonValueFunction;
-import org.hibernate.dialect.function.json.HANAJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.HANAJsonArrayFunction;
-import org.hibernate.dialect.function.json.HANAJsonExistsFunction;
-import org.hibernate.dialect.function.json.HANAJsonObjectAggFunction;
-import org.hibernate.dialect.function.json.HANAJsonObjectFunction;
-import org.hibernate.dialect.function.json.HSQLJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.HSQLJsonArrayFunction;
-import org.hibernate.dialect.function.json.HSQLJsonObjectFunction;
-import org.hibernate.dialect.function.json.JsonArrayFunction;
-import org.hibernate.dialect.function.json.JsonExistsFunction;
-import org.hibernate.dialect.function.json.JsonObjectFunction;
-import org.hibernate.dialect.function.json.JsonQueryFunction;
-import org.hibernate.dialect.function.json.JsonValueFunction;
-import org.hibernate.dialect.function.json.MariaDBJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.MariaDBJsonArrayAppendFunction;
-import org.hibernate.dialect.function.json.MariaDBJsonArrayFunction;
-import org.hibernate.dialect.function.json.MariaDBJsonObjectAggFunction;
-import org.hibernate.dialect.function.json.MariaDBJsonQueryFunction;
-import org.hibernate.dialect.function.json.MariaDBJsonValueFunction;
-import org.hibernate.dialect.function.json.MySQLJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.MySQLJsonArrayFunction;
-import org.hibernate.dialect.function.json.MySQLJsonExistsFunction;
-import org.hibernate.dialect.function.json.MySQLJsonObjectAggFunction;
-import org.hibernate.dialect.function.json.MySQLJsonObjectFunction;
-import org.hibernate.dialect.function.json.MySQLJsonQueryFunction;
-import org.hibernate.dialect.function.json.MySQLJsonValueFunction;
-import org.hibernate.dialect.function.json.OracleJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.OracleJsonArrayAppendFunction;
-import org.hibernate.dialect.function.json.OracleJsonArrayFunction;
-import org.hibernate.dialect.function.json.OracleJsonArrayInsertFunction;
-import org.hibernate.dialect.function.json.OracleJsonInsertFunction;
-import org.hibernate.dialect.function.json.OracleJsonMergepatchFunction;
-import org.hibernate.dialect.function.json.OracleJsonObjectAggFunction;
-import org.hibernate.dialect.function.json.OracleJsonObjectFunction;
-import org.hibernate.dialect.function.json.OracleJsonRemoveFunction;
-import org.hibernate.dialect.function.json.OracleJsonReplaceFunction;
-import org.hibernate.dialect.function.json.OracleJsonSetFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonArrayAppendFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonArrayFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonArrayInsertFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonExistsFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonInsertFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonMergepatchFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonObjectAggFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonObjectFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonQueryFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonRemoveFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonReplaceFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonSetFunction;
-import org.hibernate.dialect.function.json.PostgreSQLJsonValueFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonArrayAggFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonArrayAppendFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonArrayFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonArrayInsertFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonExistsFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonInsertFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonObjectAggFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonObjectFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonQueryFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonRemoveFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonReplaceFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonSetFunction;
-import org.hibernate.dialect.function.json.SQLServerJsonValueFunction;
+import org.hibernate.dialect.function.array.*;
+import org.hibernate.dialect.function.json.*;
+import org.hibernate.dialect.function.xml.DB2XmlTableFunction;
 import org.hibernate.dialect.function.xml.H2XmlConcatFunction;
 import org.hibernate.dialect.function.xml.H2XmlElementFunction;
 import org.hibernate.dialect.function.xml.H2XmlForestFunction;
 import org.hibernate.dialect.function.xml.H2XmlPiFunction;
+import org.hibernate.dialect.function.xml.HANAXmlTableFunction;
 import org.hibernate.dialect.function.xml.LegacyDB2XmlExistsFunction;
 import org.hibernate.dialect.function.xml.LegacyDB2XmlQueryFunction;
+import org.hibernate.dialect.function.xml.OracleXmlTableFunction;
 import org.hibernate.dialect.function.xml.PostgreSQLXmlQueryFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlAggFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlConcatFunction;
@@ -167,6 +30,8 @@ import org.hibernate.dialect.function.xml.SQLServerXmlExistsFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlForestFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlPiFunction;
 import org.hibernate.dialect.function.xml.SQLServerXmlQueryFunction;
+import org.hibernate.dialect.function.xml.SQLServerXmlTableFunction;
+import org.hibernate.dialect.function.xml.SybaseASEXmlTableFunction;
 import org.hibernate.dialect.function.xml.XmlAggFunction;
 import org.hibernate.dialect.function.xml.XmlConcatFunction;
 import org.hibernate.dialect.function.xml.XmlElementFunction;
@@ -174,6 +39,7 @@ import org.hibernate.dialect.function.xml.XmlExistsFunction;
 import org.hibernate.dialect.function.xml.XmlForestFunction;
 import org.hibernate.dialect.function.xml.XmlPiFunction;
 import org.hibernate.dialect.function.xml.XmlQueryFunction;
+import org.hibernate.dialect.function.xml.XmlTableFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
@@ -202,6 +68,7 @@ public class CommonFunctionFactory {
 	private final BasicType<Boolean> booleanType;
 	private final BasicType<Character> characterType;
 	private final BasicType<String> stringType;
+	private final BasicType<byte[]> binaryType;
 	private final BasicType<Integer> integerType;
 	private final BasicType<Long> longType;
 	private final BasicType<Double> doubleType;
@@ -224,6 +91,7 @@ public class CommonFunctionFactory {
 		characterType = basicTypeRegistry.resolve(StandardBasicTypes.CHARACTER);
 		booleanType = basicTypeRegistry.resolve(StandardBasicTypes.BOOLEAN);
 		stringType = basicTypeRegistry.resolve(StandardBasicTypes.STRING);
+		binaryType = basicTypeRegistry.resolve(StandardBasicTypes.BINARY);
 		integerType = basicTypeRegistry.resolve(StandardBasicTypes.INTEGER);
 		doubleType = basicTypeRegistry.resolve(StandardBasicTypes.DOUBLE);
 	}
@@ -521,7 +389,8 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * CockroachDB lacks implicit casting: https://github.com/cockroachdb/cockroach/issues/89965
+	 * CockroachDB lacks
+	 * <a href="https://github.com/cockroachdb/cockroach/issues/89965">implicit casting</a>
 	 */
 	public void median_percentileCont_castDouble() {
 		functionRegistry.patternDescriptorBuilder(
@@ -878,7 +747,11 @@ public class CommonFunctionFactory {
 	}
 
 	public void repeat_rpad() {
-		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*length(?1),?1)" )
+		repeat_rpad( "length" );
+	}
+
+	public void repeat_rpad(String lengthFunctionName) {
+		functionRegistry.patternDescriptorBuilder( "repeat", "rpad(?1,?2*" + lengthFunctionName + "(?1),?1)" )
 				.setInvariantType(stringType)
 				.setExactArgumentCount( 2 )
 				.setParameterTypes(STRING, INTEGER)
@@ -947,6 +820,7 @@ public class CommonFunctionFactory {
 		functionRegistry.registerAlternateKey( "repeat", "replicate" );
 	}
 
+	@Deprecated(since = "7")
 	public void md5() {
 		functionRegistry.namedDescriptorBuilder( "md5" )
 				.setInvariantType(stringType)
@@ -2447,6 +2321,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void crc32() {
 		functionRegistry.namedDescriptorBuilder( "crc32" )
 				.setInvariantType(integerType)
@@ -2455,6 +2330,31 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	public void hex(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "hex", pattern )
+				.setInvariantType(stringType)
+				.setParameterTypes( BINARY )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void md5(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "md5", pattern )
+				.setInvariantType(binaryType)
+				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void sha(String pattern) {
+		functionRegistry.patternDescriptorBuilder( "sha", pattern )
+				.setInvariantType(binaryType)
+				.setParameterTypes( STRING )
+				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	@Deprecated(since = "7")
 	public void sha1() {
 		functionRegistry.namedDescriptorBuilder( "sha1" )
 				.setInvariantType(stringType)
@@ -2463,6 +2363,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void sha2() {
 		functionRegistry.namedDescriptorBuilder( "sha2" )
 				.setInvariantType(stringType)
@@ -2471,6 +2372,7 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	@Deprecated(since = "7")
 	public void sha() {
 		functionRegistry.namedDescriptorBuilder( "sha" )
 				.setInvariantType(stringType)
@@ -3422,31 +3324,31 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * json_value() function
-	 */
-	public void jsonValue() {
-		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true, true ) );
-	}
-
-	/**
-	 * json_value() function that doesn't support the passing clause
+	 * HANA json_value() function
 	 */
 	public void jsonValue_no_passing() {
-		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, true, false ) );
+		functionRegistry.register( "json_value", new HANAJsonValueFunction( typeConfiguration ) );
 	}
 
 	/**
 	 * Oracle json_value() function
 	 */
 	public void jsonValue_oracle() {
-		functionRegistry.register( "json_value", new JsonValueFunction( typeConfiguration, false, false ) );
+		functionRegistry.register( "json_value", new OracleJsonValueFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_value() function
+	 */
+	public void jsonValue_db2() {
+		functionRegistry.register( "json_value", new DB2JsonValueFunction( typeConfiguration ) );
 	}
 
 	/**
 	 * PostgreSQL json_value() function
 	 */
-	public void jsonValue_postgresql() {
-		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( typeConfiguration ) );
+	public void jsonValue_postgresql(boolean supportsStandard) {
+		functionRegistry.register( "json_value", new PostgreSQLJsonValueFunction( supportsStandard, typeConfiguration ) );
 	}
 
 	/**
@@ -3627,8 +3529,8 @@ public class CommonFunctionFactory {
 	/**
 	 * Oracle json_object() function
 	 */
-	public void jsonObject_oracle() {
-		functionRegistry.register( "json_object", new OracleJsonObjectFunction( typeConfiguration ) );
+	public void jsonObject_oracle(boolean colonSyntax) {
+		functionRegistry.register( "json_object", new OracleJsonObjectFunction( colonSyntax, typeConfiguration ) );
 	}
 
 	/**
@@ -4293,5 +4195,216 @@ public class CommonFunctionFactory {
 	 */
 	public void xmlagg_sqlserver() {
 		functionRegistry.register( "xmlagg", new SQLServerXmlAggFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Standard unnest() function
+	 */
+	public void unnest(@Nullable String defaultBasicArrayElementColumnName, String defaultIndexSelectionExpression) {
+		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
+	}
+
+	/**
+	 * Standard unnest() function for databases that don't support arrays natively
+	 */
+	public void unnest_emulated() {
+		// Pass an arbitrary value
+		unnest( "v", "i" );
+	}
+
+	/**
+	 * H2 unnest() function
+	 */
+	public void unnest_h2(int maxArraySize) {
+		functionRegistry.register( "unnest", new H2UnnestFunction( maxArraySize ) );
+	}
+
+	/**
+	 * Oracle unnest() function
+	 */
+	public void unnest_oracle() {
+		functionRegistry.register( "unnest", new OracleUnnestFunction() );
+	}
+
+	/**
+	 * PostgreSQL unnest() function
+	 */
+	public void unnest_postgresql(boolean supportsJsonTable) {
+		functionRegistry.register( "unnest", new PostgreSQLUnnestFunction( supportsJsonTable ) );
+	}
+
+	/**
+	 * SQL Server unnest() function
+	 */
+	public void unnest_sqlserver() {
+		functionRegistry.register( "unnest", new SQLServerUnnestFunction() );
+	}
+
+	/**
+	 * Sybase ASE unnest() function
+	 */
+	public void unnest_sybasease() {
+		functionRegistry.register( "unnest", new SybaseASEUnnestFunction() );
+	}
+
+	/**
+	 * HANA unnest() function
+	 */
+	public void unnest_hana() {
+		functionRegistry.register( "unnest", new HANAUnnestFunction() );
+	}
+
+	/**
+	 * DB2 unnest() function
+	 */
+	public void unnest_db2(int maximumArraySize) {
+		functionRegistry.register( "unnest", new DB2UnnestFunction( maximumArraySize ) );
+	}
+
+	/**
+	 * Standard generate_series() function
+	 */
+	public void generateSeries(@Nullable String defaultValueColumnName, String defaultIndexSelectionExpression, boolean coerceToTimestamp) {
+		functionRegistry.register( "generate_series", new GenerateSeriesFunction( defaultValueColumnName, defaultIndexSelectionExpression, coerceToTimestamp, typeConfiguration ) );
+	}
+
+	/**
+	 * Recursive CTE generate_series() function
+	 */
+	public void generateSeries_recursive(int maxSeriesSize, boolean supportsInterval, boolean coerceToTimestamp) {
+		functionRegistry.register( "generate_series", new CteGenerateSeriesFunction( maxSeriesSize, supportsInterval, coerceToTimestamp, typeConfiguration ) );
+	}
+
+	/**
+	 * H2 generate_series() function
+	 */
+	public void generateSeries_h2(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new H2GenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server generate_series() function
+	 */
+	public void generateSeries_sqlserver(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new SQLServerGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * Sybase ASE generate_series() function
+	 */
+	public void generateSeries_sybasease(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new SybaseASEGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * HANA generate_series() function
+	 */
+	public void generateSeries_hana(int maxSeriesSize) {
+		functionRegistry.register( "generate_series", new HANAGenerateSeriesFunction( maxSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * Standard json_table() function
+	 */
+	public void jsonTable() {
+		functionRegistry.register( "json_table", new JsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle json_table() function
+	 */
+	public void jsonTable_oracle() {
+		functionRegistry.register( "json_table", new OracleJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * PostgreSQL json_table() function
+	 */
+	public void jsonTable_postgresql() {
+		functionRegistry.register( "json_table", new PostgreSQLJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB json_table() function
+	 */
+	public void jsonTable_cockroachdb() {
+		functionRegistry.register( "json_table", new CockroachDBJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * MySQL json_table() function
+	 */
+	public void jsonTable_mysql() {
+		functionRegistry.register( "json_table", new MySQLJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 json_table() function
+	 */
+	public void jsonTable_db2(int maximumSeriesSize) {
+		functionRegistry.register( "json_table", new DB2JsonTableFunction( maximumSeriesSize, typeConfiguration ) );
+	}
+
+	/**
+	 * HANA json_table() function
+	 */
+	public void jsonTable_hana() {
+		functionRegistry.register( "json_table", new HANAJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server json_table() function
+	 */
+	public void jsonTable_sqlserver() {
+		functionRegistry.register( "json_table", new SQLServerJsonTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 json_table() function
+	 */
+	public void jsonTable_h2(int maximumArraySize) {
+		functionRegistry.register( "json_table", new H2JsonTableFunction( maximumArraySize, typeConfiguration ) );
+	}
+
+	/**
+	 * Standard xmltable() function
+	 */
+	public void xmltable(boolean supportsParametersInDefault) {
+		functionRegistry.register( "xmltable", new XmlTableFunction( supportsParametersInDefault, typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle xmltable() function
+	 */
+	public void xmltable_oracle() {
+		functionRegistry.register( "xmltable", new OracleXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * DB2 xmltable() function
+	 */
+	public void xmltable_db2() {
+		functionRegistry.register( "xmltable", new DB2XmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HANA xmltable() function
+	 */
+	public void xmltable_hana() {
+		functionRegistry.register( "xmltable", new HANAXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * SQL Server xmltable() function
+	 */
+	public void xmltable_sqlserver() {
+		functionRegistry.register( "xmltable", new SQLServerXmlTableFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Sybase ASE xmltable() function
+	 */
+	public void xmltable_sybasease() {
+		functionRegistry.register( "xmltable", new SybaseASEXmlTableFunction( typeConfiguration ) );
 	}
 }

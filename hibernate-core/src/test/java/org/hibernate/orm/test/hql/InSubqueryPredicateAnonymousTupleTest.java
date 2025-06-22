@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.hql;
@@ -21,7 +21,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Marco Belladelli
@@ -29,6 +29,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = {
 		BasicEntity.class,
 		InSubqueryPredicateAnonymousTupleTest.TestEntity.class,
+		InSubqueryPredicateAnonymousTupleTest.MarketSale.class,
+		InSubqueryPredicateAnonymousTupleTest.Peach.class
 } )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17332" )
@@ -46,6 +48,8 @@ public class InSubqueryPredicateAnonymousTupleTest {
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> session.createMutationQuery( "delete from BasicEntity" ).executeUpdate() );
+		scope.inTransaction( session -> session.createMutationQuery( "delete from MarketSale" ).executeUpdate() );
+		scope.inTransaction( session -> session.createMutationQuery( "delete from Peach" ).executeUpdate() );
 	}
 
 	@Test
@@ -56,7 +60,7 @@ public class InSubqueryPredicateAnonymousTupleTest {
 							" where sub.data in (select e.data from BasicEntity e)",
 					String.class
 			).getSingleResult();
-			assertThat( result ).isEqualTo( "test" );
+			assertEquals( "test", result );
 		} );
 	}
 
@@ -69,7 +73,7 @@ public class InSubqueryPredicateAnonymousTupleTest {
 							" where (sub.id, sub.data) in (select e.id, e.data from BasicEntity e)",
 					String.class
 			).getSingleResult();
-			assertThat( result ).isEqualTo( "test" );
+			assertEquals( "test", result );
 		} );
 	}
 
@@ -81,7 +85,7 @@ public class InSubqueryPredicateAnonymousTupleTest {
 							"(select t2.id, t2.money from TestEntity t2)",
 					TestEntity.class
 			).getSingleResult();
-			assertThat( result.getMoney().getCents() ).isEqualTo( 100L );
+			assertEquals( 100L, result.getMoney().getCents() );
 		} );
 	}
 
@@ -90,11 +94,27 @@ public class InSubqueryPredicateAnonymousTupleTest {
 		scope.inTransaction( session -> {
 			final TestEntity result = session.createQuery(
 					"select t from TestEntity t where (t.id, t.status) in " +
-								"(select t2.id, t2.status from TestEntity t2)",
+							"(select t2.id, t2.status from TestEntity t2)",
 					TestEntity.class
 			).getSingleResult();
-			assertThat( result.getStatus() ).isEqualTo( Status.VALID );
+			assertEquals( Status.VALID, result.getStatus() );
 		} );
+	}
+
+	@Test
+	@Jira(value = "https://hibernate.atlassian.net/browse/HHH-17630")
+	public void testTupleInSubqueryPredicate2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.persist( new Peach(1, "Green peach", FruitColor.GREEN) );
+					session.persist( new MarketSale(1, "Green peach", FruitColor.GREEN) );
+
+					int count = session.createMutationQuery( "delete from MarketSale m where "
+							+ "(m.fruitColor, m.fruitName) in (select p.color, p.name from Peach p)" ).executeUpdate();
+					assertEquals( 1, count );
+				}
+		);
+
 	}
 
 	@Entity( name = "TestEntity" )
@@ -154,4 +174,47 @@ public class InSubqueryPredicateAnonymousTupleTest {
 			return dbData == null ? null : new Money( dbData );
 		}
 	}
+	@Entity(name = "MarketSale")
+	public static class MarketSale
+	{
+		@Id
+		private Integer id;
+		private String fruitName;
+		@Enumerated(EnumType.STRING)
+		private FruitColor fruitColor;
+
+		public MarketSale() {
+		}
+
+		public MarketSale(Integer id, String fruitName, FruitColor fruitColor) {
+			this.id = id;
+			this.fruitName = fruitName;
+			this.fruitColor = fruitColor;
+		}
+	}
+
+	@Entity(name = "Peach")
+	public static class Peach
+	{
+		@Id
+		private Integer id;
+		private String name;
+		@Enumerated(EnumType.STRING)
+		private FruitColor color;
+
+		public Peach() {
+		}
+
+		public Peach(Integer id, String name, FruitColor color) {
+			this.id = id;
+			this.name = name;
+			this.color = color;
+		}
+	}
+
+	public enum FruitColor
+	{
+		GREEN
+	}
+
 }

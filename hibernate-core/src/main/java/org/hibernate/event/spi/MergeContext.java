@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
@@ -275,7 +275,7 @@ public class MergeContext implements Map<Object,Object> {
 	 * @throws IllegalStateException if internal cross-references are out of sync,
 	 */
 	public void putAll(Map<?,?> map) {
-		for ( Entry<?,?> entry : map.entrySet() ) {
+		for ( var entry : map.entrySet() ) {
 			put( entry.getKey(), entry.getValue() );
 		}
 	}
@@ -363,5 +363,9 @@ public class MergeContext implements Map<Object,Object> {
 		}
 		// Entity was not found in current persistence context. Use Object#toString() method.
 		return "[" + entity + "]";
+	}
+
+	public EventSource getEventSource() {
+		return session;
 	}
 }

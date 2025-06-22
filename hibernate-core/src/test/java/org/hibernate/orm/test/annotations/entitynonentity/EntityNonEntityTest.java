@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.entitynonentity;
@@ -50,8 +50,8 @@ public class EntityNonEntityTest extends BaseCoreFunctionalTestCase {
 	@JiraKey( value = "HHH-9856" )
 	public void testGetAndFindNonEntityThrowsIllegalArgumentException() {
 		try {
-			sessionFactory().getMappingMetamodel().locateEntityPersister(Cellular.class);
-			sessionFactory().getRuntimeMetamodels().getMappingMetamodel().getEntityDescriptor( Cellular.class );
+			sessionFactory().getMappingMetamodel().findEntityDescriptor(Cellular.class);
+			sessionFactory().getMappingMetamodel().getEntityDescriptor( Cellular.class );
 
 		}
 		catch (UnknownEntityTypeException ignore) {

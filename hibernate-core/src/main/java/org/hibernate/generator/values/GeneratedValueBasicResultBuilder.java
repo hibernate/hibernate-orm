@@ -1,16 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.generator.values;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
+import org.hibernate.query.results.internal.ResultsHelper;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -20,8 +17,8 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
-import static org.hibernate.query.results.ResultsHelper.impl;
-import static org.hibernate.query.results.ResultsHelper.jdbcPositionToValuesArrayPosition;
+import static org.hibernate.query.results.internal.ResultsHelper.impl;
+import static org.hibernate.query.results.internal.ResultsHelper.jdbcPositionToValuesArrayPosition;
 
 /**
  * Simple implementation of {@link ResultBuilder} for retrieving generated basic values.
@@ -60,42 +57,46 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
-
-		final TableGroup tableGroup = creationStateImpl.getFromClauseAccess().resolveTableGroup(
-				navigablePath.getParent(),
-				path -> this.tableGroup
-		);
-		final TableReference tableReference = tableGroup.resolveTableReference(
-				navigablePath,
-				modelPart,
-				"t"
-		);
-
-		final int position = valuesArrayPosition != null ?
-				valuesArrayPosition :
-				columnIndex( jdbcResultsMetadata, modelPart );
-		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
-				ResultsHelper.resolveSqlExpression(
-						creationStateImpl,
-						tableReference,
-						modelPart,
-						position
-				),
-				modelPart.getJdbcMapping().getJdbcJavaType(),
-				null,
-				creationStateImpl.getSessionFactory().getTypeConfiguration()
-		);
-
 		return new BasicResult<>(
-				sqlSelection.getValuesArrayPosition(),
+				sqlSelection( jdbcResultsMetadata, domainResultCreationState )
+						.getValuesArrayPosition(),
 				null,
 				modelPart.getJdbcMapping(),
 				navigablePath,
 				false,
 				false
+		);
+	}
+
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata, DomainResultCreationState domainResultCreationState) {
+		final DomainResultCreationStateImpl creationStateImpl = impl( domainResultCreationState );
+		return sqlSelection( jdbcResultsMetadata, creationStateImpl, tableReference( creationStateImpl ) );
+	}
+
+	private TableReference tableReference(DomainResultCreationStateImpl creationStateImpl) {
+		return creationStateImpl.getFromClauseAccess()
+				.resolveTableGroup( navigablePath.getParent(), path -> this.tableGroup )
+				.resolveTableReference( navigablePath, modelPart, "t" );
+	}
+
+	private SqlSelection sqlSelection(
+			JdbcValuesMetadata jdbcResultsMetadata,
+			DomainResultCreationStateImpl creationStateImpl,
+			TableReference tableReference) {
+		return creationStateImpl.resolveSqlSelection(
+				ResultsHelper.resolveSqlExpression(
+						creationStateImpl,
+						tableReference,
+						modelPart,
+						valuesArrayPosition != null
+								? valuesArrayPosition
+								: columnIndex( jdbcResultsMetadata, modelPart )
+				),
+				modelPart.getJdbcMapping().getJdbcJavaType(),
+				null,
+				creationStateImpl.getSessionFactory().getTypeConfiguration()
 		);
 	}
 
@@ -105,15 +106,16 @@ public class GeneratedValueBasicResultBuilder implements ResultBuilder {
 
 	private static int columnIndex(JdbcValuesMetadata jdbcResultsMetadata, BasicValuedModelPart modelPart) {
 		if ( jdbcResultsMetadata.getColumnCount() == 1 ) {
-			assert modelPart.isEntityIdentifierMapping() || jdbcResultsMetadata.resolveColumnPosition(
-					getActualGeneratedModelPart( modelPart ).getSelectionExpression()
-			) == 1;
+			assert modelPart.isEntityIdentifierMapping()
+				|| getColumnPosition( jdbcResultsMetadata, modelPart ) == 1;
 			return 0;
 		}
 		else {
-			return jdbcPositionToValuesArrayPosition( jdbcResultsMetadata.resolveColumnPosition(
-					getActualGeneratedModelPart( modelPart ).getSelectionExpression()
-			) );
+			return jdbcPositionToValuesArrayPosition( getColumnPosition( jdbcResultsMetadata, modelPart ) );
 		}
+	}
+
+	private static int getColumnPosition(JdbcValuesMetadata valuesMetadata, BasicValuedModelPart modelPart) {
+		return valuesMetadata.resolveColumnPosition( getActualGeneratedModelPart( modelPart ).getSelectionExpression() );
 	}
 }

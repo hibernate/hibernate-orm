@@ -1,22 +1,51 @@
-This project coordinates the tasks that need to be performed as part of creating a release for Hibernate.
+= ORM Releases
+:toc:
 
-== Artifacts
+== Where is the information
 
-Both snapshot and release artifacts are published to Sonatype https://oss.sonatype.org/[OSSRH].
+If you're looking for information about how to release Hibernate ORM, see link:/MAINTAINERS.md[MAINTAINERS.md]
 
-The "official" detials about OSSRH + Gradle can be found at https://central.sonatype.org/publish/publish-gradle/.
-However, its content is way out of date as of the time of this writing.
-https://dev.to/kengotoda/deploying-to-ossrh-with-gradle-in-2020-1lhi presents a much better guide.  Regardless,
-This is all just for background; all of this information is "backed into" the build scripts.
+If you're looking for information about how releases are implemented technically, read on.
 
-After release, be sure to manage the staging repository created for it on https://oss.sonatype.org/[OSSRH].
+== How it works
+
+Releases are triggered as a link:../ci/release/Jenkinsfile[Jenkins pipeline].
+Hibernate ORM also publishes SNAPSHOT releases using an automated link:../ci/snapshot-publish.Jenkinsfile[Jenkins pipeline],
+which is triggered on a merge to the main branch. This job requires no user interactions.
+
+When a release job is started,
+the job coordinates with the unified Hibernate https://github.com/hibernate/hibernate-release-scripts[release scripts] in a number of stages and steps,
+calling tasks on this module's link:./release.gradle[Gradle script] and leveraging link:../jreleaser.yml[JReleaser configuration].
+
+NOTE: Snapshot releases are not relying on JReleaser but on built-in Gradle publish plugin. See the link:../ci/snapshot-publish.Jenkinsfile[Jenkinsfile].
+
+At a high-level, this process:
+
+* builds and verifies the individual modules
+* produces artifacts and publishes them
+* tags the release
+* updates the website
+
+This process has a number of "outputs"...
 
 
-== Documentation
+=== Release Artifacts (jar)
 
-JBoss doc server...
+Release artifacts are published to https://oss.sonatype.org/[Sonatype OSSRH] (aka, Maven Central).  For each module, we publish:
+
+* The "main" jar
+* The sources jar
+* The javadoc jar
 
 
-== SourceForge
+=== Gradle Plugin
 
-Release bundles (as ZIP and TGZ) are uploaded to https://sourceforge.net/projects/hibernate/files/hibernate-orm/[SourceForge]
+The Gradle plugin gets published to Gradle's https://plugins.gradle.org/[Plugin Portal].
+
+See https://plugins.gradle.org/plugin/org.hibernate.orm
+
+
+=== Documentation
+
+All documentation for the release is generated, assembled and then published to the https://docs.jboss.org/hibernate/orm/[documentation server].
+

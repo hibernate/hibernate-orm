@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
@@ -21,7 +21,7 @@ import java.util.Locale;
  * <p>
  * A partial order of lock modes is defined such that every
  * optimistic lock mode is considered a weaker sort of lock than
- * evey pessimistic lock mode. If a session already holds a
+ * every pessimistic lock mode. If a session already holds a
  * stronger lock level on a given entity when a weaker lock level
  * is requested, then the request for the weaker lock level has
  * no effect.
@@ -38,8 +38,10 @@ import java.util.Locale;
  * @author Gavin King
  *
  * @see Session#lock(Object, LockMode)
+ * @see Session#lock(Object, LockMode, jakarta.persistence.LockOption...)
+ * @see Session#find(Class, Object, FindOption...)
+ * @see Session#refresh(Object, RefreshOption...)
  * @see LockModeType
- * @see LockOptions
  * @see org.hibernate.annotations.OptimisticLocking
  */
 public enum LockMode implements FindOption, RefreshOption {
@@ -50,7 +52,7 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * rather than pull it from a cache.
 	 * <p>
 	 * This is the "default" lock mode, the mode requested by calling
-	 * {@link Session#get(Class, Object)} without passing an explicit
+	 * {@link Session#find(Class, Object)} without passing an explicit
 	 * mode. It permits the state of an object to be retrieved from
 	 * the cache without the cost of database access.
 	 *
@@ -103,7 +105,7 @@ public enum LockMode implements FindOption, RefreshOption {
 	 * <p>
 	 * This lock mode is for internal use only and is not a legal
 	 * argument to {@link Session#get(Class, Object, LockMode)},
-	 * {@link Session#refresh(Object, LockMode)}, or
+	 * {@link Session#refresh(Object, RefreshOption...)}, or
 	 * {@link Session#lock(Object, LockMode)}. These methods throw
 	 * an exception if {@code WRITE} is given as an argument.
 	 * <p>
@@ -112,25 +114,6 @@ public enum LockMode implements FindOption, RefreshOption {
 	 */
 	@Internal
 	WRITE,
-
-	/**
-	 * A pessimistic upgrade lock, obtained using an Oracle-style
-	 * {@code select for update nowait}. The semantics of this
-	 * lock mode, if the lock is successfully obtained, are the same
-	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
-	 * available, an exception occurs.
-	 */
-	UPGRADE_NOWAIT,
-
-	/**
-	 * A pessimistic upgrade lock, obtained using an Oracle-style
-	 * {@code select for update skip locked}. The semantics of this
-	 * lock mode, if the lock is successfully obtained, are the same
-	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
-	 * immediately available, no exception occurs, but the locked
-	 * row is not returned from the database.
-	 */
-	UPGRADE_SKIPLOCKED,
 
 	/**
 	 * A pessimistic shared lock, which prevents concurrent
@@ -164,7 +147,34 @@ public enum LockMode implements FindOption, RefreshOption {
 	 *
 	 * @see LockModeType#PESSIMISTIC_FORCE_INCREMENT
 	 */
-	PESSIMISTIC_FORCE_INCREMENT;
+	PESSIMISTIC_FORCE_INCREMENT,
+
+	/**
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update nowait}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. If the lock is not immediately
+	 * available, an exception occurs.
+	 *
+	 * @apiNote To be removed in a future version.  A different approach to
+	 * specifying handling for locked rows will be introduced.
+	 */
+	@Remove
+	UPGRADE_NOWAIT,
+
+	/**
+	 * A pessimistic upgrade lock, obtained using an Oracle-style
+	 * {@code select for update skip locked}. The semantics of this
+	 * lock mode, if the lock is successfully obtained, are the same
+	 * as {@link #PESSIMISTIC_WRITE}. But if the lock is not
+	 * immediately available, no exception occurs, but the locked
+	 * row is not returned from the database.
+	 *
+	 * @apiNote To be removed in a future version.  A different approach to
+	 * specifying handling for locked rows will be introduced.
+	 */
+	@Remove
+	UPGRADE_SKIPLOCKED;
 
 	/**
 	 * @return an instance with the same semantics as the given JPA
@@ -273,9 +283,11 @@ public enum LockMode implements FindOption, RefreshOption {
 	}
 
 	/**
-	 * @return an instance of {@link LockOptions} with this lock mode, and
-	 *         all other settings defaulted.
+	 * @return an instance of {@link LockOptions} with this lock mode, and all other settings defaulted.
+	 *
+	 * @deprecated As LockOptions will become an SPI, this method will be removed with no replacement
 	 */
+	@Deprecated(since = "7", forRemoval = true)
 	public LockOptions toLockOptions() {
 		return switch (this) {
 			case NONE -> LockOptions.NONE;

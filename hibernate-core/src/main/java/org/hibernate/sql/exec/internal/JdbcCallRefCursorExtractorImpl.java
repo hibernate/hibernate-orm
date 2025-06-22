@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.internal;
@@ -30,10 +30,10 @@ public class JdbcCallRefCursorExtractorImpl implements JdbcCallRefCursorExtracto
 	public ResultSet extractResultSet(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		final boolean supportsNamedParameters = session.getJdbcServices()
-				.getJdbcEnvironment()
-				.getExtractedDatabaseMetaData()
-				.supportsNamedParameters();
+//		final boolean supportsNamedParameters = session.getJdbcServices()
+//				.getJdbcEnvironment()
+//				.getExtractedDatabaseMetaData()
+//				.supportsNamedParameters();
 		return session.getFactory()
 				.getServiceRegistry()
 				.requireService( RefCursorSupport.class )

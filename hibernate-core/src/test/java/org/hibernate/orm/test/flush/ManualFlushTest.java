@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
@@ -55,9 +55,8 @@ public class ManualFlushTest extends BaseEntityManagerFunctionalTestCase {
 				.createQuery("select count(id) from Person")
 				.getSingleResult()).intValue() == 0);
 
-			assertTrue(((Number) session
-				.createNativeQuery("select count(*) from Person", Integer.class)
-				.uniqueResult()).intValue() == 0);
+			assertTrue( session.createNativeQuery( "select count(*) from Person", Integer.class )
+					.uniqueResult() == 0);
 			//end::flushing-manual-flush-example[]
 		});
 	}

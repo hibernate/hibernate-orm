@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -237,18 +237,16 @@ public class ExecutableList<E extends ComparableExecutable>
 	 * if it's not null.
 	 */
 	public void sort() {
-		if ( sorted || !requiresSorting ) {
-			// nothing to do
-			return;
+		if ( !sorted && requiresSorting ) {
+			if ( sorter != null ) {
+				sorter.sort( executables );
+			}
+			else {
+				Collections.sort( executables );
+			}
+			sorted = true;
 		}
-
-		if ( sorter != null ) {
-			sorter.sort( executables );
-		}
-		else {
-			Collections.sort( executables );
-		}
-		sorted = true;
+		// else nothing to do
 	}
 
 	/**

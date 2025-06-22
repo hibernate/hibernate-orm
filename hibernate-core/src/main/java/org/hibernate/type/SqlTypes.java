@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -279,7 +279,7 @@ public class SqlTypes {
 	/**
 	 * A type code representing an Oracle-style nested table.
 	 *
-	 * @see org.hibernate.dialect.OracleNestedTableJdbcType
+	 * @see org.hibernate.dialect.type.OracleNestedTableJdbcType
 	 */
 	public final static int TABLE = 4000;
 
@@ -434,7 +434,7 @@ public class SqlTypes {
 	 * A type code representing the generic SQL type {@code INET} for IPv4
 	 * or IPv6 addresses.
 	 *
-	 * @see org.hibernate.dialect.PostgreSQLInetJdbcType
+	 * @see org.hibernate.dialect.type.PostgreSQLInetJdbcType
 	 */
 	public static final int INET = 3002;
 
@@ -585,7 +585,7 @@ public class SqlTypes {
 	/**
 	 * A type code representing an Oracle-style nested table for a struct.
 	 *
-	 * @see org.hibernate.dialect.OracleNestedTableJdbcType
+	 * @see org.hibernate.dialect.type.OracleNestedTableJdbcType
 	 */
 	public final static int STRUCT_TABLE = 3017;
 
@@ -606,8 +606,8 @@ public class SqlTypes {
 	 * for a temporal duration given terms of seconds and fractional seconds.
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
-	 * @see org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType
-	 * @see org.hibernate.dialect.H2DurationIntervalSecondJdbcType
+	 * @see org.hibernate.dialect.type.PostgreSQLIntervalSecondJdbcType
+	 * @see org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType
 	 */
 	public static final int INTERVAL_SECOND = 3100;
 
@@ -643,10 +643,15 @@ public class SqlTypes {
 
 	/**
 	 * A type code representing a SQL {@code ENUM} type for databases like
-	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} or
+	 * {@link org.hibernate.dialect.OracleDialect Oracle} where
 	 * {@code ENUM} types must have names.
+	 * <p>
+	 * A named enum type is declared in DDL using {@code create type ... as enum}
+	 * or {@code create type ... as domain}.
 	 *
-	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.type.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.type.OracleEnumJdbcType
 	 *
 	 * @since 6.3
 	 */
@@ -668,7 +673,7 @@ public class SqlTypes {
 	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} where
 	 * {@code ENUM} types must have names. Enum values are ordered by ordinal.
 	 *
-	 * @see org.hibernate.dialect.PostgreSQLEnumJdbcType
+	 * @see org.hibernate.dialect.type.PostgreSQLEnumJdbcType
 	 *
 	 * @since 6.5
 	 */
@@ -676,8 +681,9 @@ public class SqlTypes {
 
 
 	/**
-	 * A type code representing an {@code embedding vector} type for databases like
-	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} and {@link org.hibernate.dialect.OracleDialect Oracle 23ai}.
+	 * A type code representing an {@code embedding vector} type for databases
+	 * like {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL},
+	 * {@link org.hibernate.dialect.OracleDialect Oracle 23ai} and {@link org.hibernate.dialect.MariaDBDialect MariaDB}.
 	 * An embedding vector essentially is a {@code float[]} with a fixed size.
 	 *
 	 * @since 6.4
@@ -685,17 +691,17 @@ public class SqlTypes {
 	public static final int VECTOR = 10_000;
 
 	/**
-	 * A type code representing a single-byte integer vector type for oracle 23ai database.
+	 * A type code representing a single-byte integer vector type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_INT8 = 10_001;
 
 	/**
-	 * A type code representing a single-precision floating-point vector type for oracle 23ai database.
+	 * A type code representing a single-precision floating-point vector type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_FLOAT32 = 10_002;
 
 	/**
-	 * A type code representing a double-precision floating-point type for oracle 23ai database.
+	 * A type code representing a double-precision floating-point type for Oracle 23ai database.
 	 */
 	public static final int VECTOR_FLOAT64 = 10_003;
 

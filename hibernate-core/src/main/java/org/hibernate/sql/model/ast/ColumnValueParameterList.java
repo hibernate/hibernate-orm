@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast;
@@ -44,8 +44,8 @@ public class ColumnValueParameterList extends ArrayList<ColumnValueParameter> im
 	}
 
 	public void apply(Object parameterRef) {
-		if ( parameterRef instanceof ColumnValueParameterList ) {
-			addAll( (ColumnValueParameterList) parameterRef );
+		if ( parameterRef instanceof ColumnValueParameterList columnValueParameters ) {
+			addAll( columnValueParameters );
 		}
 		else {
 			add( (ColumnValueParameter) parameterRef );

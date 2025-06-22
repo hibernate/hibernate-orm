@@ -1,12 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityGraph;
+
+import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.RootGraph;
 
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +37,38 @@ import java.util.Optional;
  * @see SimpleNaturalIdLoadAccess
  */
 public interface NaturalIdLoadAccess<T> {
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 * @return {@code this}, for method chaining
+	 */
+	default NaturalIdLoadAccess<T> with(LockMode lockMode) {
+		return with( lockMode, PessimisticLockScope.NORMAL );
+	}
+
+	/**
+	 * Specify the {@linkplain LockMode lock mode} to use when
+	 * querying the database.
+	 *
+	 * @param lockMode The lock mode to apply
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NaturalIdLoadAccess<T> with(LockMode lockMode, PessimisticLockScope lockScope);
+
+	/**
+	 * Specify the {@linkplain Timeout timeout} to use when
+	 * querying the database.
+	 *
+	 * @param timeout The timeout to apply to the database operation
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NaturalIdLoadAccess<T> with(Timeout timeout);
+
 	/**
 	 * Specify the {@linkplain LockOptions lock options} to use when
 	 * querying the database.
@@ -41,7 +76,12 @@ public interface NaturalIdLoadAccess<T> {
 	 * @param lockOptions The lock options to use.
 	 *
 	 * @return {@code this}, for method chaining
+	 *
+	 * @deprecated Use one of {@linkplain #with(LockMode)},
+	 * {@linkplain #with(LockMode, PessimisticLockScope)}
+	 * and/or {@linkplain #with(Timeout)} instead.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
 	NaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
 	/**
@@ -51,7 +91,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+	default NaturalIdLoadAccess<T> withFetchGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.FETCH );
 	}
 
@@ -62,7 +102,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	default NaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+	default NaturalIdLoadAccess<T> withLoadGraph(EntityGraph<T> graph) {
 		return with( graph, GraphSemantic.LOAD );
 	}
 
@@ -73,7 +113,7 @@ public interface NaturalIdLoadAccess<T> {
 	 *
 	 * @since 6.3
 	 */
-	NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+	NaturalIdLoadAccess<T> with(EntityGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a
@@ -137,25 +177,6 @@ public interface NaturalIdLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	NaturalIdLoadAccess<T> using(Map<String,?> mappings);
-
-	/**
-	 * Set multiple {@link org.hibernate.annotations.NaturalId @NaturalId}
-	 * attribute values at once. An even number of arguments is expected,
-	 * with each attribute name followed by its value, for example:
-	 * <pre>
-	 * Book book =
-	 *         session.byNaturalId(Book.class)
-	 *             .using(Book_.ISBN, isbn, Book_.PRINTING, printing)
-	 *             .load();
-	 * </pre>
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @deprecated use {@link #using(Map)} with {@link Map#of}, which is
-	 *             slightly more typesafe
-	 */
-	@Deprecated(since = "6.3")
-	NaturalIdLoadAccess<T> using(Object... mappings);
 
 	/**
 	 * Determines if cached natural id cross-references are synchronized

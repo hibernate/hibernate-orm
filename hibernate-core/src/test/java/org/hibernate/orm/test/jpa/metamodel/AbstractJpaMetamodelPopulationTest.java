@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.metamodel;
@@ -58,7 +58,7 @@ public abstract class AbstractJpaMetamodelPopulationTest extends BaseEntityManag
 	@Override
 	protected String[] getMappings() {
 		return new String[] {
-				"org/hibernate/jpa/test/metamodel/SimpleEntity.hbm.xml",
+				"org/hibernate/jpa/test/metamodel/SimpleEntity.xml",
 				"org/hibernate/jpa/test/metamodel/CompositeIdEntity.hbm.xml",
 				"org/hibernate/jpa/test/metamodel/CompositeId2Entity.hbm.xml"
 		};

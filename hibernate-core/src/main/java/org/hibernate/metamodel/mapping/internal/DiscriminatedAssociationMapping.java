@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -89,6 +89,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				bootValueMapping.isPartitionKey(),
 				(BasicType<?>) metaType.getBaseType(),
 				metaType.getDiscriminatorValuesToEntityNameMap(),
+				metaType.getImplicitValueStrategy(),
 				creationProcess.getCreationContext().getSessionFactory().getMappingMetamodel()
 		);
 
@@ -231,9 +232,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		final String entityName = session == null
 				? sessionFactory.bestGuessEntityName( entity )
 				: session.bestGuessEntityName( entity );
-		return sessionFactory
-				.getRuntimeMetamodels()
-				.getEntityMappingType( entityName );
+		return sessionFactory.getMappingMetamodel()
+				.getEntityDescriptor( entityName );
 	}
 
 	public ModelPart findSubPart(String name, EntityMappingType treatTarget) {

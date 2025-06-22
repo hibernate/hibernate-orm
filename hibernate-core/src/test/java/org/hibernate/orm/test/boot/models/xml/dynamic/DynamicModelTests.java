@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml.dynamic;
@@ -21,8 +21,11 @@ import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedRes
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -46,14 +49,20 @@ import static org.hibernate.orm.test.boot.models.SourceModelTestHelper.createBui
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class DynamicModelTests {
 	@Test
+	@DomainModel(xmlMappings = "mappings/models/dynamic/dynamic-simple.xml")
+	void testSimpleDynamicModel2(DomainModelScope modelScope) {
+		assertThat( modelScope.getDomainModel().getEntityBinding( "SimpleEntity" ) ).isNotNull();
+	}
+
+	@Test
 	@ServiceRegistry
 	void testSimpleDynamicModel(ServiceRegistryScope registryScope) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-simple.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "SimpleEntity" );
 		assertThat( classDetails.getClassName() ).isNull();
@@ -72,14 +81,15 @@ public class DynamicModelTests {
 
 	@Test
 	@ServiceRegistry
+	@NotImplementedYet( reason = "Support for dynamic embeddables is not fully baked" )
 	void testSemiSimpleDynamicModel(ServiceRegistryScope registryScope) {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-semi-simple.xml" )
 				.build();
 
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( "Contact" );
 		assertThat( classDetails.getClassName() ).isNull();
@@ -99,9 +109,7 @@ public class DynamicModelTests {
 		final FieldDetails labels = classDetails.findFieldByName( "labels" );
 		assertThat( labels.getType().determineRawClass().getClassName() ).isEqualTo( Set.class.getName() );
 		final ElementCollection elementCollection = labels.getDirectAnnotationUsage( ElementCollection.class );
-		assertThat( elementCollection.targetClass() ).isEqualTo( void.class );
-		final Target targetUsage = labels.getDirectAnnotationUsage( Target.class );
-		assertThat( targetUsage.value() ).isEqualTo( "string" );
+		assertThat( elementCollection.targetClass() ).isEqualTo( String.class );
 
 		final CollectionClassification collectionClassification = labels.getDirectAnnotationUsage( CollectionClassification.class );
 		assertThat( collectionClassification.value() ).isEqualTo( LimitedCollectionClassification.SET );
@@ -124,9 +132,9 @@ public class DynamicModelTests {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-id-class.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
 
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 
 		final IdClass idClass = classDetails.getDirectAnnotationUsage( IdClass.class );
@@ -142,8 +150,8 @@ public class DynamicModelTests {
 		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/dynamic/dynamic-plurals.xml" )
 				.build();
-		final SourceModelBuildingContext sourceModelBuildingContext = createBuildingContext( managedResources, registryScope.getRegistry() );
-		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ModelsContext ModelsContext = createBuildingContext( managedResources, registryScope.getRegistry() );
+		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( Employee.class.getName() );
 		assertThat( classDetails.getName() ).isEqualTo( Employee.class.getName() );
@@ -153,7 +161,7 @@ public class DynamicModelTests {
 		final OneToMany oneToManyAnn = oneToMany.getDirectAnnotationUsage( OneToMany.class );
 		assertThat( oneToManyAnn.fetch() ).isEqualTo( FetchType.EAGER );
 		assertThat( oneToMany.getDirectAnnotationUsage( OnDelete.class ).action() ).isEqualTo( OnDeleteAction.CASCADE );
-		final JoinColumn joinColumn = oneToMany.getAnnotationUsage( JoinColumn.class, sourceModelBuildingContext );
+		final JoinColumn joinColumn = oneToMany.getAnnotationUsage( JoinColumn.class, ModelsContext );
 		assertThat( joinColumn.name() ).isEqualTo( "employee_id" );
 		assertThat( joinColumn.referencedColumnName() ).isEqualTo( "emp_num" );
 		assertThat( joinColumn.insertable() ).isEqualTo( Boolean.FALSE );

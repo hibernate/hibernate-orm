@@ -1,12 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
 
 /**
- * Defines the comparison operators.  We could also get away with
- * only 3 and use negation...
+ * Enumerates the binary comparison operators.
+ *
+ * @apiNote This is an SPI type allowing collaboration
+ * between {@code org.hibernate.dialect} and
+ * {@code org.hibernate.sqm}. It should never occur in
+ * APIs visible to the application program.
  *
  * @author Steve Ebersole
  */

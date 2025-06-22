@@ -134,6 +134,147 @@ include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
 ----
 ====
 
+[[embeddable-column-naming]]
+==== @EmbeddedColumnNaming
+
+The most common use case for `@AttributeOverride` in relation to an embeddable is to rename the associated columns.
+
+Consider a typical embeddable mapping -
+
+[[embeddable-column-naming-example-model]]
+.Typical embeddable mapping
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+    Address homeAddress;
+    @Embedded
+    Address workAddress;
+}
+
+@Embeddable
+class Address {
+	String street;
+	String city;
+	// ...
+}
+----
+====
+
+In strict Jakarta Persistence sense, this will lead to a bootstrapping error because
+Jakarta Persistence requires that the implicit names for the columns for both of the
+embedded `Address` mappings to be based on the attribute names from the embeddable -
+`street`, `city`, etc.  However, that will lead to duplicate column names here.
+
+The strict compliance way to accomplish this would be a tedious use of the `@AttributeOverride` annotation
+as <<embeddable-override,discussed previously>>.
+
+Since this is such a common pattern, Hibernate offers a much simpler solution through its `@EmbeddedColumnNaming` annotation
+which allows to "patternize" the column naming -
+
+[[embeddable-column-naming-example-basic]]
+.Simple `@EmbeddedColumnNaming` example
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+    @EmbeddedColumnNaming("home_%s")
+    Address homeAddress;
+    @Embedded
+    @EmbeddedColumnNaming("work_%s")
+    Address workAddress;
+}
+----
+====
+
+This mapping produces implicit column names `home_street`, `home_city`, `work_street`, `work_city`, etc.
+
+`@EmbeddedColumnNaming` also works in nested usages and plays nicely with explicit column names.
+
+[[embeddable-column-naming-example-column]]
+.Explicit @Column example
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+	@EmbeddedColumnNaming("home_%s")
+    Address homeAddress;
+    @Embedded
+    @EmbeddedColumnNaming("work_%s")
+    Address workAddress;
+}
+
+@Embeddable
+class Address {
+	String street;
+	String city;
+    @Embedded
+    private ZipPlus zip;
+	// ...
+}
+
+@Embeddable
+public static class ZipPlus {
+    @Column(name="zip_code")
+    private String code;
+    @Column(name="zip_plus4")
+    private String plus4;
+}
+----
+====
+
+This will produce implicit column names `home_street`, `home_city`, `home_zip_code`, `home_zip_plus4`, ...
+
+
+When `@EmbeddedColumnNaming` is used withing nested embeddables, the affect will be cumulative.
+Given the following model:
+
+[[embeddable-column-naming-example-cumulative]]
+.Cumulative @EmbeddedColumnNaming example
+====
+[source,java]
+----
+@Entity
+class Person {
+	// ...
+    @Embedded
+	@EmbeddedColumnNaming("home_%s")
+    Address homeAddress;
+    @Embedded
+    @EmbeddedColumnNaming("work_%s")
+    Address workAddress;
+}
+
+@Embeddable
+class Address {
+	String street;
+	String city;
+    @Embedded
+    @EmbeddedColumnNaming("zip_%s")
+    private ZipPlus zip;
+	// ...
+}
+
+@Embeddable
+public static class ZipPlus {
+    private String code;
+    private String plus4;
+}
+----
+====
+
+Here we will end up with the columns `home_street`, `home_city`, `home_zip_code`, `home_zip_plus4`, ...
+
+
 
 [[embeddable-collections]]
 ==== Collections of embeddable types
@@ -158,62 +299,46 @@ This usage is covered in detail in <<chapters/domain/identifiers.adoc#identifier
 Embeddable types that are used as collection entries, map keys or entity type identifiers cannot include their own collection mappings.
 ====
 
+
 [[embeddable-Target]]
-==== `@Target` mapping
+==== `@TargetEmbeddable` mapping
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Target.html[`@Target`] annotation is used to specify the implementation class of a given association that is mapped via an interface.
-The
-{jpaJavadocUrlPrefix}ManyToOne.html[`@ManyToOne`],
-{jpaJavadocUrlPrefix}OneToOne.html[`@OneToOne`],
-{jpaJavadocUrlPrefix}OneToMany.html[`@OneToMany`], and
-{jpaJavadocUrlPrefix}ManyToMany.html[`@ManyToMany`]
-feature a {jpaJavadocUrlPrefix}ManyToOne.html#targetEntity--[`targetEntity`] attribute to specify the actual class of the entity association when an interface is used for the mapping.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/TargetEmbeddable.html[`@TargetEmbeddable`] annotation is used to specify the implementation class of an embeddable-valued mapping when the declared type is a non-concrete type (interface, etc).
 
-The {jpaJavadocUrlPrefix}ElementCollection.html[`@ElementCollection`] association has a {jpaJavadocUrlPrefix}ElementCollection.html#targetClass--[`targetClass`] attribute for the same purpose.
-
-However, for simple embeddable types, there is no such construct and so you need to use the Hibernate-specific `@Target` annotation instead.
+As an example, consider an `@Embedded` attribute (`City.coordinates`) whose declared type (`Coordinates`) is an interface.  However, Hibernate needs to know about the concrete type to use, which is `GPS` in this case.  The `@TargetEmbeddable` annotation is used to provide this information.
 
 [[embeddable-Target-example]]
-.`@Target` mapping usage
+.Embedded mapping example
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-example]
+include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embeddable-Target-example]
 ----
 ====
 
-The `coordinates` embeddable type is mapped as the `Coordinates` interface.
-However, Hibernate needs to know the actual implementation type, which is `GPS` in this case,
-hence the `@Target` annotation is used to provide this information.
+The mapping works just like any embeddable-valued mapping at this point, with Hibernate using `GPS` "under the covers":
 
-Assuming we have persisted the following `City` entity:
-
-[[embeddable-Target-persist-example]]
-.`@Target` persist example
-====
-[source, java, indent=0]
-----
-include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-persist-example]
-----
-====
-
-When fetching the `City` entity, the `coordinates` property is mapped by the `@Target` expression:
 
 [[embeddable-Target-fetching-example]]
-.`@Target` fetching example
+.Usage example
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-fetching-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/embeddable/embeddable-Target-fetching-example.sql[]
+include::{example-dir-emeddable}/TargetEmbeddableOnEmbeddedTest.java[tags=embeddable-Target-fetching-example]
 ----
 ====
 
-Therefore, the `@Target` annotation is used to define a custom join association between the parent-child association.
+For `@Embedded` and `@EmbeddedId` cases, `@TargetEmbeddable` may be specified on the member's declared type instead of the member itself:
+
+[[embeddable-Target-example2]]
+.Interface mapping example
+====
+[source, java, indent=0]
+----
+include::{example-dir-emeddable}/TargetEmbeddableOnInterfaceTest.java[tags=embeddable-Target-example2]
+----
+====
+
 
 [[embeddable-Parent]]
 ==== `@Parent` mapping
@@ -466,28 +591,50 @@ The following table outlines the current support for the different aggregate typ
 |PostgreSQL
 |Yes
 |Yes
-|No (not yet)
+|Yes
 
 |Oracle
 |Yes
 |Yes
-|No (not yet)
+|Yes
+
+|MySQL/MariaDB
+|No
+|Yes
+|No
 
 |DB2
 |Yes
-|No (not yet)
-|No (not yet)
+|Yes
+|Yes
 
 |SQL Server
-|No (not yet)
-|No (not yet)
-|No (not yet)
+|No https://hibernate.atlassian.net/browse/HHH-16158[(not yet)]
+|Yes
+|Yes
+
+|Sybase ASE
+|No
+|No
+|Yes
+
+|H2
+|No
+|Yes
+|No
+
+|CockroachDB
+|No
+|Yes
+|No
+
+|SAP HANA
+|No
+|Yes
+|Yes
 |===
 
-Also note that embeddable types that are used in aggregate mappings do not yet support all kinds of attribute mappings, most notably:
-
-* Association mappings (`@ManyToOne`, `@OneToOne`, `@OneToMany`, `@ManyToMany`, `@ElementCollection`)
-* Basic array mappings
+Also note that embeddable types that are used in array aggregate mappings do not support association mappings.
 
 ===== `@Struct` aggregate embeddable mapping
 

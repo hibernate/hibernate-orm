@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
 
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -37,5 +38,10 @@ public class CustomMutabilityConvertedBasicTypeImpl<J> extends ConvertedBasicTyp
 	@Override
 	protected MutabilityPlan<J> getMutabilityPlan() {
 		return mutabilityPlan;
+	}
+
+	@Override
+	public JavaType<?> getRelationalJavaType() {
+		return getValueConverter().getRelationalJavaType();
 	}
 }

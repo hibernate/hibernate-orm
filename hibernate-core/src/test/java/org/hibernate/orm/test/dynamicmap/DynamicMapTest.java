@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dynamicmap;
@@ -20,7 +20,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 
 @JiraKey(value = "HHH-12539")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/dynamicmap/Test.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/dynamicmap/Test.xml"
 )
 @SessionFactory
 public class DynamicMapTest {

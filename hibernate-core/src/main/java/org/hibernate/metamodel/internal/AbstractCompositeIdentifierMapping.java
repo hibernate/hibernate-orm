@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.internal;
@@ -196,8 +196,7 @@ public abstract class AbstractCompositeIdentifierMapping
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = embeddableTypeDescriptor.getAttributeMapping( i );
 				final Object o = embeddableTypeDescriptor.getValue( value, i );
-				if ( attributeMapping instanceof ToOneAttributeMapping ) {
-					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+				if ( attributeMapping instanceof ToOneAttributeMapping toOneAttributeMapping ) {
 					final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
 					final Object identifier = fkDescriptor.getAssociationKeyFromSide(
 							o,
@@ -262,7 +261,7 @@ public abstract class AbstractCompositeIdentifierMapping
 
 	@Override
 	public Object instantiate() {
-		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate( sessionFactory );
+		return getEntityMapping().getRepresentationStrategy().getInstantiator().instantiate();
 	}
 
 	@Override

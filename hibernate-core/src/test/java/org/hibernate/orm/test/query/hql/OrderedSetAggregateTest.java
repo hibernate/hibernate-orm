@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,9 +95,7 @@ public class OrderedSetAggregateTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "delete from EntityOfBasics" ).executeUpdate()
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -135,9 +135,15 @@ public class OrderedSetAggregateTest {
 		);
 	}
 
+	/*
+	 * 	Skipped for MySQL 9.2: The test fails due to a regression in MySQL 9.2, which no longer supports NULLS FIRST/LAST in ORDER BY within LISTAGG as expected.
+	 *	See https://bugs.mysql.com/bug.php?id=117765 for more details.
+	 *	This is a MySQL issue, not a problem in the dialect implementation.
+	 */
 	@Test
 	@JiraKey( value = "HHH-15360")
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStringAggregation.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 9, minorVersion = 2, reason = "https://bugs.mysql.com/bug.php?id=117765")
 	public void testListaggWithNullsClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

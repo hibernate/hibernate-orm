@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -33,7 +33,7 @@ import java.util.UUID;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * References to common {@link BasicTypeReference} instances
+ * References to common instances of {@link BasicTypeReference}.
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -393,7 +393,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
-	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
+	 * This maps to {@link TimeZoneStorageStrategy#NATIVE}.
 	 */
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"OffsetDateTimeWithTimezone",
@@ -402,7 +402,7 @@ public final class StandardBasicTypes {
 	);
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP}.
-	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE}.
+	 * This maps to {@link TimeZoneStorageStrategy#NORMALIZE}.
 	 */
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
 			"OffsetDateTimeWithoutTimezone",
@@ -421,7 +421,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_UTC TIME_UTC}.
-	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE_UTC}.
+	 * This maps to {@link TimeZoneStorageStrategy#NORMALIZE_UTC}.
 	 */
 	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_UTC = new BasicTypeReference<>(
 			"OffsetTimeUtc",
@@ -431,7 +431,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link org.hibernate.type.SqlTypes#TIME_WITH_TIMEZONE TIME_WITH_TIMEZONE}.
-	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
+	 * This maps to {@link TimeZoneStorageStrategy#NATIVE}.
 	 */
 	public static final BasicTypeReference<OffsetTime> OFFSET_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"OffsetTimeWithTimezone",
@@ -460,7 +460,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
-	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
+	 * This maps to {@link TimeZoneStorageStrategy#NATIVE}.
 	 */
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"ZonedDateTimeWithTimezone",
@@ -470,7 +470,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link org.hibernate.type.SqlTypes#TIMESTAMP TIMESTAMP}.
-	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE}.
+	 * This maps to {@link TimeZoneStorageStrategy#NORMALIZE}.
 	 */
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
 			"ZonedDateTimeWithoutTimezone",

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.expression;
@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
@@ -20,6 +19,9 @@ import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.replace;
 import static org.hibernate.sql.Template.TEMPLATE;
 
@@ -31,11 +33,11 @@ import static org.hibernate.sql.Template.TEMPLATE;
  * @author Yanming Zhou
  */
 public class ColumnReference implements Expression, Assignable {
-	private final String qualifier;
+	private final @Nullable String qualifier;
 	private final String columnExpression;
-	private final SelectablePath selectablePath;
+	private final @Nullable SelectablePath selectablePath;
 	private final boolean isFormula;
-	private final String readExpression;
+	private final @Nullable String readExpression;
 	private final JdbcMapping jdbcMapping;
 
 	public ColumnReference(TableReference tableReference, SelectableMapping selectableMapping) {
@@ -60,7 +62,7 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(String qualifier, SelectableMapping selectableMapping) {
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
@@ -71,7 +73,7 @@ public class ColumnReference implements Expression, Assignable {
 		);
 	}
 
-	public ColumnReference(String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
+	public ColumnReference(@Nullable String qualifier, SelectableMapping selectableMapping, JdbcMapping jdbcMapping) {
 		this(
 				qualifier,
 				selectableMapping.getSelectionExpression(),
@@ -86,7 +88,7 @@ public class ColumnReference implements Expression, Assignable {
 			TableReference tableReference,
 			String columnExpression,
 			boolean isFormula,
-			String customReadExpression,
+			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
 		this(
 				tableReference.getIdentificationVariable(),
@@ -99,36 +101,35 @@ public class ColumnReference implements Expression, Assignable {
 	}
 
 	public ColumnReference(
-			String qualifier,
+			@Nullable String qualifier,
 			String columnExpression,
 			boolean isFormula,
-			String customReadExpression,
+			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
 		this( qualifier, columnExpression, null, isFormula, customReadExpression, jdbcMapping );
 	}
 
 	public ColumnReference(
-			String qualifier,
+			@Nullable String qualifier,
 			String columnExpression,
-			SelectablePath selectablePath,
+			@Nullable SelectablePath selectablePath,
 			boolean isFormula,
-			String customReadExpression,
+			@Nullable String customReadExpression,
 			JdbcMapping jdbcMapping) {
-		this.qualifier = StringHelper.nullIfEmpty( qualifier );
+		this.qualifier = nullIfEmpty( qualifier );
 
 		if ( isFormula ) {
-			assert qualifier != null;
-			this.columnExpression = replace( columnExpression, TEMPLATE, qualifier );
+			this.columnExpression = qualifier == null
+					? replace( columnExpression, TEMPLATE + '.', "" )
+					: replace( columnExpression, TEMPLATE, qualifier );
 		}
 		else {
 			this.columnExpression = columnExpression;
 		}
-		if ( selectablePath == null ) {
-			this.selectablePath = new SelectablePath( this.columnExpression );
-		}
-		else {
-			this.selectablePath = selectablePath;
-		}
+
+		this.selectablePath = selectablePath == null
+				? new SelectablePath( this.columnExpression )
+				: selectablePath;
 
 		this.isFormula = isFormula;
 		this.readExpression = customReadExpression;
@@ -140,7 +141,7 @@ public class ColumnReference implements Expression, Assignable {
 		return this;
 	}
 
-	public String getQualifier() {
+	public @Nullable String getQualifier() {
 		return qualifier;
 	}
 
@@ -148,15 +149,15 @@ public class ColumnReference implements Expression, Assignable {
 		return columnExpression;
 	}
 
-	protected String getReadExpression() {
+	public @Nullable String getReadExpression() {
 		return readExpression;
 	}
 
-	public String getSelectableName() {
-		return selectablePath.getSelectableName();
+	public @Nullable String getSelectableName() {
+		return selectablePath == null ? null : selectablePath.getSelectableName();
 	}
 
-	public SelectablePath getSelectablePath() {
+	public @Nullable SelectablePath getSelectablePath() {
 		return selectablePath;
 	}
 
@@ -174,17 +175,14 @@ public class ColumnReference implements Expression, Assignable {
 		appendReadExpression( appender, qualifier );
 	}
 
-	public void appendReadExpression(String qualifier, Consumer<String> appender) {
+	public void appendReadExpression(@Nullable String qualifier, Consumer<String> appender) {
 		if ( isFormula ) {
 			appender.accept( columnExpression );
 		}
 		else if ( readExpression != null ) {
-			if ( qualifier == null ) {
-				appender.accept( replace( readExpression, TEMPLATE + ".", "" ) );
-			}
-			else {
-				appender.accept( replace( readExpression, TEMPLATE, qualifier ) );
-			}
+			appender.accept( qualifier == null
+					? replace( readExpression, TEMPLATE + '.', "" )
+					: replace( readExpression, TEMPLATE, qualifier ) );
 		}
 		else {
 			if ( qualifier != null ) {
@@ -195,7 +193,7 @@ public class ColumnReference implements Expression, Assignable {
 		}
 	}
 
-	public void appendReadExpression(SqlAppender appender, String qualifier) {
+	public void appendReadExpression(SqlAppender appender, @Nullable String qualifier) {
 		appendReadExpression( qualifier, appender::appendSql );
 	}
 
@@ -203,7 +201,7 @@ public class ColumnReference implements Expression, Assignable {
 		appendColumnForWrite( appender, qualifier );
 	}
 
-	public void appendColumnForWrite(SqlAppender appender, String qualifier) {
+	public void appendColumnForWrite(SqlAppender appender, @Nullable String qualifier) {
 		if ( qualifier != null ) {
 			appender.append( qualifier );
 			appender.append( '.' );

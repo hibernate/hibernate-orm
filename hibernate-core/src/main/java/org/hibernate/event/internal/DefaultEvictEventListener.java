@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -18,9 +18,10 @@ import org.hibernate.event.spi.EvictEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Defines the default evict event listener used by hibernate for evicting entities
@@ -47,29 +48,29 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		if ( object == null ) {
 			throw new NullPointerException( "null passed to Session.evict()" );
 		}
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( object );
 		if ( lazyInitializer != null ) {
 			final Object id = lazyInitializer.getInternalIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}
-			final EntityPersister persister = source.getFactory()
-					.getMappingMetamodel()
-					.getEntityDescriptor( lazyInitializer.getEntityName() );
+			final EntityPersister persister =
+					source.getFactory().getMappingMetamodel()
+							.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
-			final EntityHolder holder = persistenceContext.removeEntityHolder( key );
+			final EntityHolder holder = persistenceContext.detachEntity( key );
 			// if the entity has been evicted then its holder is null
 			if ( holder != null && !lazyInitializer.isUninitialized() ) {
 				final Object entity = holder.getEntity();
 				if ( entity != null ) {
-					EntityEntry entry = persistenceContext.removeEntry( entity );
+					final EntityEntry entry = persistenceContext.removeEntry( entity );
 					doEvict( entity, key, entry.getPersister(), event.getSession() );
 				}
 			}
 			lazyInitializer.unsetSession();
 		}
 		else {
-			EntityEntry entry = persistenceContext.getEntry( object );
+			final EntityEntry entry = persistenceContext.getEntry( object );
 			if ( entry != null ) {
 				doEvict( object, entry.getEntityKey(), entry.getPersister(), source );
 			}
@@ -85,11 +86,12 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * requires with EntityManager.detach().
 	 */
 	private static void checkEntity(Object object, EventSource source) {
-		String entityName = source.getSession().guessEntityName( object );
+		final String entityName = source.getSession().guessEntityName( object );
 		if ( entityName != null ) {
 			try {
-				EntityPersister persister = source.getFactory().getMappingMetamodel()
-						.getEntityDescriptor( entityName );
+				final EntityPersister persister =
+						source.getFactory().getMappingMetamodel()
+								.getEntityDescriptor( entityName );
 				if ( persister != null ) {
 					return; //ALL GOOD
 				}
@@ -107,7 +109,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 			final EventSource session)
 			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Evicting {0}", MessageHelper.infoString( persister ) );
+			LOG.trace( "Evicting " + infoString( persister ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();

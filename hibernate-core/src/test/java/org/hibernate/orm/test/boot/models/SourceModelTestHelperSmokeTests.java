@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models;
@@ -9,7 +9,7 @@ import org.hibernate.models.jandex.internal.JandexClassDetails;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class SourceModelTestHelperSmokeTests {
 	@Test
 	void testIt() {
-		final SourceModelBuildingContext buildingContext = SourceModelTestHelper.createBuildingContext( AnEntity.class );
+		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( AnEntity.class );
 
 		final AnnotationDescriptor<Entity> entityAnnDescriptor = buildingContext
 				.getAnnotationDescriptorRegistry()

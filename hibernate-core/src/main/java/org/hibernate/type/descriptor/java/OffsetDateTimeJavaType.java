@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -13,15 +13,16 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -32,6 +33,7 @@ import jakarta.persistence.TemporalType;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+import static org.hibernate.internal.util.CharSequenceHelper.subSequence;
 
 /**
  * Java type descriptor for the {@link OffsetDateTime} type.
@@ -59,6 +61,11 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 
 	public OffsetDateTimeJavaType() {
 		super( OffsetDateTime.class, ImmutableMutabilityPlan.instance(), OffsetDateTime.timeLineOrder() );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof OffsetDateTime;
 	}
 
 	@Override
@@ -95,16 +102,19 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	}
 
 	@Override
-	public OffsetDateTime fromEncodedString(CharSequence string, int start, int end) {
-		final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse(
-				CharSequenceHelper.subSequence( string, start, end )
-		);
-		if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
-			return OffsetDateTime.from( temporalAccessor );
+	public OffsetDateTime fromEncodedString(CharSequence charSequence, int start, int end) {
+		try {
+			final TemporalAccessor temporalAccessor = PARSE_FORMATTER.parse( subSequence( charSequence, start, end ) );
+			if ( temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+				return OffsetDateTime.from( temporalAccessor );
+			}
+			else {
+				// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
+				return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+			}
 		}
-		else {
-			// For databases that don't have timezone support, we encode timestamps at UTC, so allow parsing that as well
-			return LocalDateTime.from( temporalAccessor ).atOffset( ZoneOffset.UTC );
+		catch ( DateTimeParseException pe) {
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 
@@ -177,22 +187,19 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			return null;
 		}
 
-		if (value instanceof OffsetDateTime) {
-			return (OffsetDateTime) value;
+		if (value instanceof OffsetDateTime offsetDateTime) {
+			return offsetDateTime;
 		}
 
-		if (value instanceof ZonedDateTime) {
-			ZonedDateTime zonedDateTime = (ZonedDateTime) value;
+		if (value instanceof ZonedDateTime zonedDateTime) {
 			return OffsetDateTime.of( zonedDateTime.toLocalDateTime(), zonedDateTime.getOffset() );
 		}
 
-		if (value instanceof Instant) {
-			Instant instant = (Instant) value;
+		if (value instanceof Instant instant) {
 			return instant.atOffset( ZoneOffset.UTC );
 		}
 
-		if (value instanceof Timestamp) {
-			final Timestamp ts = (Timestamp) value;
+		if (value instanceof Timestamp timestamp) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -203,25 +210,23 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 			 * (on DST end), so conversion must be done using the number of milliseconds since the epoch.
 			 * - around 1905, both methods are equally valid, so we don't really care which one is used.
 			 */
-			if ( ts.getYear() < 5 ) { // Timestamp year 0 is 1900
-				return ts.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
+			if ( timestamp.getYear() < 5 ) { // Timestamp year 0 is 1900
+				return timestamp.toLocalDateTime().atZone( ZoneId.systemDefault() ).toOffsetDateTime();
 			}
 			else {
-				return OffsetDateTime.ofInstant( ts.toInstant(), ZoneId.systemDefault() );
+				return OffsetDateTime.ofInstant( timestamp.toInstant(), ZoneId.systemDefault() );
 			}
 		}
 
-		if (value instanceof Date) {
-			final Date date = (Date) value;
+		if (value instanceof Date date) {
 			return OffsetDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Long) {
-			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( (Long) value ), ZoneId.systemDefault() );
+		if (value instanceof Long longValue) {
+			return OffsetDateTime.ofInstant( Instant.ofEpochMilli( longValue ), ZoneId.systemDefault() );
 		}
 
-		if (value instanceof Calendar) {
-			final Calendar calendar = (Calendar) value;
+		if (value instanceof Calendar calendar) {
 			return OffsetDateTime.ofInstant( calendar.toInstant(), calendar.getTimeZone().toZoneId() );
 		}
 

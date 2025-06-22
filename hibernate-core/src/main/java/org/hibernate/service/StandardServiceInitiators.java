@@ -1,11 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.cfgxml.internal.CfgXmlAccessServiceInitiator;
@@ -29,6 +28,7 @@ import org.hibernate.engine.jndi.internal.JndiServiceInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformInitiator;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaPlatformResolverInitiator;
 import org.hibernate.event.internal.EntityCopyObserverFactoryInitiator;
+import org.hibernate.internal.util.cache.InternalCacheFactoryInitiator;
 import org.hibernate.loader.ast.internal.BatchLoaderFactoryInitiator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.internal.PersisterFactoryInitiator;
@@ -41,6 +41,8 @@ import org.hibernate.sql.ast.internal.ParameterMarkerStrategyInitiator;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerProviderInitiator;
 import org.hibernate.tool.schema.internal.SchemaManagementToolInitiator;
 import org.hibernate.tool.schema.internal.script.SqlScriptExtractorInitiator;
+
+import static java.util.Collections.unmodifiableList;
 
 /**
  * Central definition of the standard set of service initiators defined by Hibernate.
@@ -155,8 +157,11 @@ public final class StandardServiceInitiators {
 		serviceInitiators.add( ParameterMarkerStrategyInitiator.INSTANCE );
 		serviceInitiators.add( BatchLoaderFactoryInitiator.INSTANCE );
 
+		// InternalCacheFactoryService
+		serviceInitiators.add( InternalCacheFactoryInitiator.INSTANCE );
+
 		serviceInitiators.trimToSize();
 
-		return Collections.unmodifiableList( serviceInitiators );
+		return unmodifiableList( serviceInitiators );
 	}
 }

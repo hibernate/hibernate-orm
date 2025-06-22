@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
@@ -24,7 +24,7 @@ public enum SqlAstJoinType {
 	RIGHT( "right " ),
 
 	/**
-	 * Represents a cross join (aka a cartesian product).
+	 * Represents a cross join (that is, a Cartesian product).
 	 */
 	CROSS( "cross " ),
 

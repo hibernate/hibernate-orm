@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -30,7 +31,6 @@ import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
@@ -43,6 +43,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
+import org.hibernate.metamodel.mapping.DiscriminatorType;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -58,7 +59,6 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.DiscriminatorMetadata;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -169,6 +169,11 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public String getEntityName() {
+			return null;
+		}
+
+		@Override
+		public @Nullable String getJpaEntityName() {
 			return null;
 		}
 
@@ -325,6 +330,26 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean hasCascadeDelete() {
+			return false;
+		}
+
+		@Override
+		public boolean hasToOnes() {
+			return false;
+		}
+
+		@Override
+		public boolean hasCascadePersist() {
+			return false;
+		}
+
+		@Override
+		public boolean hasOwnedCollections() {
+			return false;
+		}
+
+		@Override
 		public boolean isMutable() {
 			return false;
 		}
@@ -435,16 +460,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public List multiLoad(Object[] ids, EventSource session, MultiIdLoadOptions loadOptions) {
+		public List multiLoad(Object[] ids, SharedSessionContractImplementor session, MultiIdLoadOptions loadOptions) {
 			return Collections.emptyList();
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockMode lockMode, EventSource session) {
+		public void lock(Object id, Object version, Object object, LockMode lockMode, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void lock(Object id, Object version, Object object, LockOptions lockOptions, EventSource session) {
+		public void lock(Object id, Object version, Object object, LockOptions lockOptions, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -631,11 +656,6 @@ public class PersisterClassProviderTest {
 		@Override
 		public Class getMappedClass() {
 			return null;
-		}
-
-		@Override
-		public boolean implementsLifecycle() {
-			return false;
 		}
 
 		@Override
@@ -955,7 +975,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public DiscriminatorMetadata getTypeDiscriminatorMetadata() {
+		public DiscriminatorType<?> getDiscriminatorDomainType() {
 			return null;
 		}
 
@@ -1067,6 +1087,11 @@ public class PersisterClassProviderTest {
 		@Override
 		public String getAttributeMutationTableName(int i) {
 			return "";
+		}
+
+		@Override
+		public boolean managesColumns(String[] columnNames) {
+			return false;
 		}
 	}
 

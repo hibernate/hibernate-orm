@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.insertordering;
@@ -117,14 +117,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInse
 
 	@After
 	protected void cleanupTestData() {
-		sessionFactoryScope().inTransaction( session -> {
-			session.createMutationQuery( "delete Address" ).executeUpdate();
-			session.createMutationQuery( "delete Person" ).executeUpdate();
-			session.createMutationQuery( "delete SpecialPerson" ).executeUpdate();
-			session.createMutationQuery( "delete AnotherPerson" ).executeUpdate();
-			session.createMutationQuery( "delete Office" ).executeUpdate();
-			session.createMutationQuery( "delete President" ).executeUpdate();
-		} );
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity(name = "Address")

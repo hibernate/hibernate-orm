@@ -1,15 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.boot.models.xml;
 
-import java.util.List;
-import java.util.Map;
-
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.RootMappingDefaults;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.models.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.spi.FilterDefRegistration;
@@ -19,15 +19,17 @@ import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
 import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.orm.test.boot.models.XmlHelper;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
-
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
 
 import static jakarta.persistence.AccessType.FIELD;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,15 +45,15 @@ public class XmlProcessingSmokeTests {
 	@Test
 	void testGlobals() {
 		final XmlPreProcessingResultImpl collector = new XmlPreProcessingResultImpl();
-		collector.addDocument( XmlHelper.loadMapping( "mappings/models/globals.xml", SIMPLE_CLASS_LOADING ) );
+		collector.addDocument( XmlHelper.bindMapping( "mappings/models/globals.xml", SIMPLE_CLASS_LOADING ) );
 	}
 
 	@Test
 	void testPersistenceUnitDefaults1() {
 		final XmlPreProcessingResultImpl collector = new XmlPreProcessingResultImpl();
 
-		final JaxbEntityMappingsImpl simple1 = XmlHelper.loadMapping( "mappings/models/simple1.xml", SIMPLE_CLASS_LOADING );
-		final JaxbEntityMappingsImpl simple2 = XmlHelper.loadMapping( "mappings/models/simple2.xml", SIMPLE_CLASS_LOADING );
+		final Binding<JaxbEntityMappingsImpl> simple1 = XmlHelper.bindMapping( "mappings/models/simple1.xml", SIMPLE_CLASS_LOADING );
+		final Binding<JaxbEntityMappingsImpl> simple2 = XmlHelper.bindMapping( "mappings/models/simple2.xml", SIMPLE_CLASS_LOADING );
 		collector.addDocument( simple1 );
 		collector.addDocument( simple2);
 
@@ -75,8 +77,8 @@ public class XmlProcessingSmokeTests {
 	void testPersistenceUnitDefaults2() {
 		final XmlPreProcessingResultImpl collector = new XmlPreProcessingResultImpl();
 
-		collector.addDocument( XmlHelper.loadMapping( "mappings/models/simple2.xml", SIMPLE_CLASS_LOADING ) );
-		collector.addDocument( XmlHelper.loadMapping( "mappings/models/simple1.xml", SIMPLE_CLASS_LOADING ) );
+		collector.addDocument( XmlHelper.bindMapping( "mappings/models/simple2.xml", SIMPLE_CLASS_LOADING ) );
+		collector.addDocument( XmlHelper.bindMapping( "mappings/models/simple1.xml", SIMPLE_CLASS_LOADING ) );
 
 		final PersistenceUnitMetadata metadata = collector.getPersistenceUnitMetadata();
 		// xml-mappings-complete is a gated flag - once we see a true, it should always be considered true
@@ -98,8 +100,8 @@ public class XmlProcessingSmokeTests {
 	void testSimpleXmlDocumentBuilding() {
 		final XmlPreProcessingResultImpl collector = new XmlPreProcessingResultImpl();
 
-		final JaxbEntityMappingsImpl simple1 = XmlHelper.loadMapping( "mappings/models/simple1.xml", SIMPLE_CLASS_LOADING );
-		final JaxbEntityMappingsImpl simple2 = XmlHelper.loadMapping( "mappings/models/simple2.xml", SIMPLE_CLASS_LOADING );
+		final Binding<JaxbEntityMappingsImpl> simple1 = XmlHelper.bindMapping( "mappings/models/simple1.xml", SIMPLE_CLASS_LOADING );
+		final Binding<JaxbEntityMappingsImpl> simple2 = XmlHelper.bindMapping( "mappings/models/simple2.xml", SIMPLE_CLASS_LOADING );
 		collector.addDocument( simple1 );
 		collector.addDocument( simple2 );
 
@@ -123,21 +125,20 @@ public class XmlProcessingSmokeTests {
 	@Test
 	@ServiceRegistry
 	void testSimpleGlobalXmlProcessing(ServiceRegistryScope scope) {
-		final SourceModelBuildingContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
+		final ModelsContext buildingContext = SourceModelTestHelper.createBuildingContext( StringTypeDescriptor.class );
 		final XmlPreProcessingResultImpl collectedXmlResources = new XmlPreProcessingResultImpl();
 
 		final JaxbEntityMappingsImpl xmlMapping = XmlHelper.loadMapping( "mappings/models/globals.xml", SIMPLE_CLASS_LOADING );
-		collectedXmlResources.addDocument( xmlMapping );
+		final Binding<JaxbEntityMappingsImpl> binding = new Binding<>( xmlMapping, new Origin( SourceType.RESOURCE, "mappings/models/globals.xml" ) );
+		collectedXmlResources.addDocument( binding );
 
 		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
-				false,
 				new GlobalRegistrationsImpl( buildingContext, new BootstrapContextImpl() ),
-				null,
 				buildingContext
 		);
-		collectedXmlResources.getDocuments().forEach( jaxbEntityMappings -> {
+		collectedXmlResources.getDocuments().forEach( xmlDocument -> {
 			final XmlDocumentContextImpl xmlDocumentContext = new XmlDocumentContextImpl(
-					XmlDocumentImpl.consume( jaxbEntityMappings, collectedXmlResources.getPersistenceUnitMetadata() ),
+					xmlDocument,
 					new RootMappingDefaults(
 							new MetadataBuilderImpl.MappingDefaultsImpl( scope.getRegistry() ),
 							collectedXmlResources.getPersistenceUnitMetadata()
@@ -145,7 +146,7 @@ public class XmlProcessingSmokeTests {
 					buildingContext,
 					new BootstrapContextImpl()
 			);
-			collector.apply( jaxbEntityMappings, xmlDocumentContext );
+			collector.apply( xmlMapping, xmlDocumentContext );
 		} );
 
 		final GlobalRegistrationsImpl globalRegistrations = collector.getGlobalRegistrations();
@@ -175,7 +176,7 @@ public class XmlProcessingSmokeTests {
 		assertThat( amountFilter.getDefaultCondition() ).isEqualTo( "amount = :amount" );
 		assertThat( amountFilter.getParameterTypes() ).hasSize( 1 );
 		final ClassDetails amountParameterType = amountFilter.getParameterTypes().get( "amount" );
-		assertThat( amountParameterType.getClassName() ).isEqualTo( Integer.class.getName() );
+		assertThat( amountParameterType.getClassName() ).isEqualTo( int.class.getName() );
 
 		final FilterDefRegistration nameFilter = filterDefRegistrations.get( "name_filter" );
 		assertThat( nameFilter.getDefaultCondition() ).isEqualTo( "name = :name" );

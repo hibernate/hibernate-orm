@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.criteria;
@@ -16,11 +16,10 @@ import java.util.List;
 
 import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -116,7 +115,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from EntityOfBasics" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -273,7 +272,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	public void testLeftRight(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
 
@@ -293,7 +292,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplace(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
 
@@ -479,7 +478,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@JiraKey("HHH-16130")
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support any form of date truncation")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -521,7 +520,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 			CriteriaQuery<Tuple> query = cb.createTupleQuery();
 			Root<EntityOfBasics> from = query.from(EntityOfBasics.class);
-			ParameterExpression<List<Integer>> ids = cb.parameterList(Integer.class);
+			ParameterExpression<List<Integer>> ids = cb.listParameter(Integer.class);
 			query.where( from.get("id").in(ids));
 			assertEquals(3,
 					session.createQuery( query )

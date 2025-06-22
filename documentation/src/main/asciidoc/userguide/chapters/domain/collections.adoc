@@ -1,12 +1,11 @@
 [[collections]]
 === Collections
-:majorMinorVersion: 6.2
 :root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :core-test-base: {core-project-dir}/src/test/java
 :example-dir-collection: {core-test-base}/org/hibernate/orm/test/mapping/collections
 :docs-base: https://docs.jboss.org/hibernate/orm/{majorMinorVersion}
-:javadoc-base: {docs-base}/javadoc
+:javadoc-base: {docs-base}/javadocs
 :java-javadoc-base: https://docs.oracle.com/en/java/javase/11/docs/api/java.base
 :extrasdir: extras/collections
 
@@ -156,7 +155,7 @@ after the collection is loaded, the collection would need to be refreshed to re-
 the elements.  For this reason, ordered sets are not recommended - if the application
 needs ordering of the set elements, a sorted set should be preferred.  For this reason,
 it is not covered in the User Guide.  See the javadocs for `jakarta.persistence.OrderBy`
-or `org.hibernate.annotations.OrderBy` for details.
+or `org.hibernate.annotations.SQLOrder` for details.
 
 There are 2 options for sorting a set - naturally or using an explicit comparator.
 
@@ -285,7 +284,16 @@ is available to have Hibernate interpret a `List` with no `@OrderColumn` and no 
 
 
 An ID_BAG is similar to a BAG, except that it maps a generated, per-row identifier into the collection
-table.  `@CollectionId` is the annotation to configure this identifier
+table.  `@CollectionId` is the annotation to configure this identifier.
+
+For details about defining an id-bad identifier, see the Javadocs for:
+
+* link:{javadoc-base}/org/hibernate/annotations/CollectionId.html[@CollectionId]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJavaClass.html[@CollectionIdJavaClass]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJavaType.html[@CollectionIdJavaType]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJdbcType.html[@CollectionIdJdbcType]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdJdbcTypeCode.html[@CollectionIdJdbcTypeCode]
+* link:{javadoc-base}/org/hibernate/annotations/CollectionIdType.html[@CollectionIdType]
 
 
 // todo (6.0) - finish

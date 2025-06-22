@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.components.joins;
@@ -46,12 +46,7 @@ public class ComponentJoinTest {
 
 	@AfterEach
 	public void after(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete Entity" ).executeUpdate();
-					entityManager.createQuery( "delete ManyToOneType" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	private void doTest(EntityManagerFactoryScope scope, JoinBuilder joinBuilder) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.jaxb.internal.stax;
@@ -20,30 +20,19 @@ public final class XMLStreamConstantsUtils {
 	 * Get the human readable event name for the numeric event id
 	 */
 	public static String getEventName(int eventId) {
-		switch (eventId) {
-			case XMLStreamConstants.START_ELEMENT:
-				return "StartElementEvent";
-			case XMLStreamConstants.END_ELEMENT:
-				return "EndElementEvent";
-			case XMLStreamConstants.PROCESSING_INSTRUCTION:
-				return "ProcessingInstructionEvent";
-			case XMLStreamConstants.CHARACTERS:
-				return "CharacterEvent";
-			case XMLStreamConstants.COMMENT:
-				return "CommentEvent";
-			case XMLStreamConstants.START_DOCUMENT:
-				return "StartDocumentEvent";
-			case XMLStreamConstants.END_DOCUMENT:
-				return "EndDocumentEvent";
-			case XMLStreamConstants.ENTITY_REFERENCE:
-				return "EntityReferenceEvent";
-			case XMLStreamConstants.ATTRIBUTE:
-				return "AttributeBase";
-			case XMLStreamConstants.DTD:
-				return "DTDEvent";
-			case XMLStreamConstants.CDATA:
-				return "CDATA";
-		}
-		return "UNKNOWN_EVENT_TYPE";
+		return switch ( eventId ) {
+			case XMLStreamConstants.START_ELEMENT -> "StartElementEvent";
+			case XMLStreamConstants.END_ELEMENT -> "EndElementEvent";
+			case XMLStreamConstants.PROCESSING_INSTRUCTION -> "ProcessingInstructionEvent";
+			case XMLStreamConstants.CHARACTERS -> "CharacterEvent";
+			case XMLStreamConstants.COMMENT -> "CommentEvent";
+			case XMLStreamConstants.START_DOCUMENT -> "StartDocumentEvent";
+			case XMLStreamConstants.END_DOCUMENT -> "EndDocumentEvent";
+			case XMLStreamConstants.ENTITY_REFERENCE -> "EntityReferenceEvent";
+			case XMLStreamConstants.ATTRIBUTE -> "AttributeBase";
+			case XMLStreamConstants.DTD -> "DTDEvent";
+			case XMLStreamConstants.CDATA -> "CDATA";
+			default -> "UNKNOWN_EVENT_TYPE";
+		};
 	}
 }

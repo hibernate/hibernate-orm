@@ -1,14 +1,10 @@
 plugins {
-    id 'java-platform'
+    id "java-platform"
+    id "local.module"
+    id "local.publishing"
 }
 
-description = 'Gradle platform for Hibernate ORM'
-
-apply from: rootProject.file( 'gradle/releasable.gradle' )
-apply from: rootProject.file( "gradle/base-information.gradle" )
-apply from: rootProject.file( "gradle/publishing-pom.gradle" )
-
-apply plugin: 'signing'
+description = 'Platform (BOM) for Hibernate ORM dependencies'
 
 dependencies {
     constraints {
@@ -18,12 +14,11 @@ dependencies {
         api project( ":hibernate-envers" )
         api project( ":hibernate-spatial" )
         api project( ":hibernate-community-dialects" )
+        api project( ":hibernate-scan-jandex" )
 
         api project( ":hibernate-agroal" )
         api project( ":hibernate-c3p0" )
         api project( ":hibernate-hikaricp" )
-        api project( ":hibernate-proxool" )
-        api project( ":hibernate-vibur" )
 
         api project( ":hibernate-jcache" )
 
@@ -32,7 +27,7 @@ dependencies {
 
         api project( ":hibernate-processor" )
         api project( ":hibernate-gradle-plugin" )
-        api project( ":hibernate-enhance-maven-plugin" )
+        api project( ":hibernate-maven-plugin" )
         api project( ":hibernate-ant" )
 
         api libs.hibernateModels
@@ -58,8 +53,6 @@ dependencies {
         runtime libs.agroalPool
         runtime libs.c3p0
         runtime libs.hikaricp
-        runtime libs.proxool
-        runtime libs.vibur
 
         runtime libs.jcache
 
@@ -68,16 +61,7 @@ dependencies {
     }
 }
 
-publishing {
-    publications {
-        publishedArtifacts {
-            from components.javaPlatform
-        }
-    }
+var publishingExtension = project.getExtensions().getByType(PublishingExtension) as PublishingExtension
+publishingExtension.publications.named("publishedArtifacts", MavenPublication) {
+    from components.javaPlatform
 }
-
-project( ":release" ).getTasks().named( "publishReleaseArtifacts" ).configure {
-    dependsOn tasks.release
-}
-
-tasks.release.dependsOn tasks.publishToSonatype

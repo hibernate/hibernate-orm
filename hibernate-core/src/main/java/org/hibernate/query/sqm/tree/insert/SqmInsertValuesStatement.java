@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
@@ -9,8 +9,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
@@ -20,14 +20,13 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
-import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -48,7 +47,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
-						null,
+						"_0",
 						false,
 						nodeBuilder
 				),
@@ -86,7 +85,8 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				valuesList.add( sqmValues.copy( context ) );
 			}
 		}
-		return context.registerCopy(
+
+		final SqmInsertValuesStatement<T> sqmInsertValuesStatementCopy = context.registerCopy(
 				this,
 				new SqmInsertValuesStatement<>(
 						nodeBuilder(),
@@ -95,10 +95,16 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
-						getConflictClause() == null ? null : getConflictClause().copy( context ),
+						null,
 						valuesList
 				)
 		);
+
+		if ( getConflictClause() != null ) {
+			sqmInsertValuesStatementCopy.setConflictClause( getConflictClause().copy( context ) );
+		}
+
+		return sqmInsertValuesStatementCopy;
 	}
 
 	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
@@ -147,19 +153,6 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public Set<ParameterExpression<?>> getParameters() {
-		// At this level, the number of parameters may still be growing as
-		// nodes are added to the Criteria - so we re-calculate this every
-		// time.
-		//
-		// for a "finalized" set of parameters, use `#resolveParameters` instead
-		assert getQuerySource() == SqmQuerySource.CRITERIA;
-		return getSqmParameters().stream()
-				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
-				.collect( Collectors.toSet() );
-	}
-
-	@Override
 	public SqmInsertValuesStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
 		super.setInsertionTargetPaths( insertionTargetPaths );
 		return this;
@@ -190,30 +183,47 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		assert valuesList != null;
-		super.appendHqlString( sb );
-		sb.append( " values (" );
-		appendValues( valuesList.get( 0 ), sb );
+		super.appendHqlString( hql, context );
+		hql.append( " values (" );
+		appendValues( valuesList.get( 0 ), hql, context );
 		for ( int i = 1; i < valuesList.size(); i++ ) {
-			sb.append( ", " );
-			appendValues( valuesList.get( i ), sb );
+			hql.append( ", " );
+			appendValues( valuesList.get( i ), hql, context );
 		}
-		sb.append( ')' );
-		final SqmConflictClause conflictClause = getConflictClause();
+		hql.append( ')' );
+		final SqmConflictClause<?> conflictClause = getConflictClause();
 		if ( conflictClause != null ) {
-			conflictClause.appendHqlString( sb );
+			conflictClause.appendHqlString( hql, context );
 		}
 	}
 
-	private static void appendValues(SqmValues sqmValues, StringBuilder sb) {
+	private static void appendValues(SqmValues sqmValues, StringBuilder sb, SqmRenderContext context) {
 		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
 		sb.append( '(' );
-		expressions.get( 0 ).appendHqlString( sb );
+		expressions.get( 0 ).appendHqlString( sb, context );
 		for ( int i = 1; i < expressions.size(); i++ ) {
 			sb.append( ", " );
-			expressions.get( i ).appendHqlString( sb );
+			expressions.get( i ).appendHqlString( sb, context );
 		}
 		sb.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		if ( !(object instanceof SqmInsertValuesStatement<?> that) ) {
+			return false;
+		}
+		return Objects.equals( valuesList, that.valuesList )
+			&& Objects.equals( this.getTarget(), that.getTarget() )
+			&& Objects.equals( this.getInsertionTargetPaths(), that.getInsertionTargetPaths() )
+			&& Objects.equals( this.getConflictClause(), that.getConflictClause() )
+			&& Objects.equals( this.getCteStatements(), that.getCteStatements() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( valuesList, getTarget(), getInsertionTargetPaths(), getConflictClause(), getCteStatements() );
 	}
 }

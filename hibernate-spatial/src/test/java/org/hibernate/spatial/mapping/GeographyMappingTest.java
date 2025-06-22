@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.spatial.mapping;
@@ -8,7 +8,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -37,16 +36,11 @@ public class GeographyMappingTest {
 	@Test
 	public void testSimpleEntity(SessionFactoryScope scope) {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
-				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( PointEntity.class );
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-
-		final JavaTypeRegistry javaTypeRegistry = entityDescriptor.getFactory()
-				.getTypeConfiguration()
-				.getJavaTypeRegistry();
 
 		BasicValuedModelPart part = (BasicValuedModelPart) entityDescriptor.findSubPart( "location" );
 		assertThat( part.getJdbcMapping().getJdbcType(), equalTo( jdbcTypeRegistry.getDescriptor( SqlTypes.GEOGRAPHY ) ) );

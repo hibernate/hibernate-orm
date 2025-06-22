@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.action.internal;
@@ -7,7 +7,9 @@ package org.hibernate.action.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 import org.hibernate.event.spi.PreCollectionRecreateEvent;
@@ -42,19 +44,31 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection<?> collection = getCollection();
 		preRecreate();
 		final SharedSessionContractImplementor session = getSession();
-		getPersister().recreate( collection, getKey(), session);
+		final CollectionPersister persister = getPersister();
+		final Object key = getKey();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent event = eventMonitor.beginCollectionRecreateEvent();
+		boolean success = false;
+		try {
+			persister.recreate( collection, key, session );
+			success = true;
+		}
+		finally {
+			eventMonitor.completeCollectionRecreateEvent( event, key, persister.getRole(), success, session );
+		}
+
 		session.getPersistenceContextInternal().getCollectionEntry( collection ).afterAction( collection );
 		evict();
 		postRecreate();
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
-			statistics.recreateCollection( getPersister().getRole() );
+			statistics.recreateCollection( persister.getRole() );
 		}
 	}
 
 	private void preRecreate() {
-		getFastSessionServices().eventListenerGroup_PRE_COLLECTION_RECREATE
+		getEventListenerGroups().eventListenerGroup_PRE_COLLECTION_RECREATE
 				.fireLazyEventOnEachListener( this::newPreCollectionRecreateEvent,
 						PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
@@ -64,7 +78,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void postRecreate() {
-		getFastSessionServices().eventListenerGroup_POST_COLLECTION_RECREATE
+		getEventListenerGroups().eventListenerGroup_POST_COLLECTION_RECREATE
 				.fireLazyEventOnEachListener( this::newPostCollectionRecreateEvent,
 						PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.internal;
@@ -18,7 +18,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Emmanuel Bernard
  */
-public class MutableEntityEntryFactory implements EntityEntryFactory {
+@Deprecated(since = "7", forRemoval = true)
+public final class MutableEntityEntryFactory implements EntityEntryFactory {
 	/**
 	 * Singleton access
 	 */
@@ -39,7 +40,7 @@ public class MutableEntityEntryFactory implements EntityEntryFactory {
 			EntityPersister persister,
 			boolean disableVersionIncrement,
 			PersistenceContext persistenceContext) {
-		return new MutableEntityEntry(
+		return new EntityEntryImpl(
 				status,
 				loadedState,
 				rowId,

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -10,14 +10,20 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.*;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
+import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.type.MariaDBCastingJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.MariaDBCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.CastType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -29,8 +35,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -96,7 +101,13 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 			commonFunctionFactory.jsonArrayAgg_mariadb();
 			commonFunctionFactory.jsonObjectAgg_mariadb();
 			commonFunctionFactory.jsonArrayAppend_mariadb();
+
 			if ( getVersion().isSameOrAfter( 10, 3, 3 ) ) {
+				if ( getVersion().isSameOrAfter( 10, 6 ) ) {
+					commonFunctionFactory.unnest_emulated();
+					commonFunctionFactory.jsonTable_mysql();
+				}
+
 				commonFunctionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 				functionContributions.getFunctionRegistry().patternDescriptorBuilder( "median", "median(?1) over ()" )
 						.setInvariantType( functionContributions.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE ) )
@@ -114,6 +125,13 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		}
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return getVersion().isSameOrAfter( 10, 2 )
+				? MySQLAggregateSupport.forMariaDB( this )
+				: AggregateSupportImpl.INSTANCE;
 	}
 
 	@Override
@@ -144,8 +162,8 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
 		// Make sure we register the JSON type descriptor before calling super, because MariaDB does not need casting
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON_ARRAY, JsonArrayJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, MariaDBCastingJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addTypeConstructorIfAbsent( MariaDBCastingJsonArrayJdbcTypeConstructor.INSTANCE );
 
 		super.contributeTypes( typeContributions, serviceRegistry );
 		if ( getVersion().isSameOrAfter( 10, 7 ) ) {
@@ -154,12 +172,19 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
+	public String castPattern(CastType from, CastType to) {
+		return to == CastType.JSON
+				? "json_extract(?1,'$')"
+				: super.castPattern( from, to );
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement );
+				return new MariaDBLegacySqlAstTranslator<>( sessionFactory, statement, MariaDBLegacyDialect.this );
 			}
 		};
 	}
@@ -261,14 +286,14 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData metadata)
 			throws SQLException {
 
 		// some MariaDB drivers does not return case strategy info
 		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 
-		return super.buildIdentifierHelper( builder, dbMetaData );
+		return super.buildIdentifierHelper( builder, metadata );
 	}
 
 	@Override
@@ -280,4 +305,25 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	public String getFromDualForSelectOnly() {
 		return getVersion().isBefore( 10, 4 ) ? ( " from " + getDual() ) : "";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		return getVersion().isSameOrAfter( 10, 3 );
+	}
+
+	@Override
+	public boolean supportsSimpleQueryGrouping() {
+		return getVersion().isSameOrAfter( 10, 4 );
+	}
+
+	@Override
+	public boolean supportsWithClause() {
+		return getVersion().isSameOrAfter( 10, 2 );
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
 }

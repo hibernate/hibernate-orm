@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -25,7 +25,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
-		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
+		assert referencedPathSource.getPathType() instanceof AnyMappingDomainType;
 	}
 
 	@SuppressWarnings("unused")
@@ -37,7 +37,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );
 
-		assert referencedPathSource.getSqmPathType() instanceof AnyMappingDomainType;
+		assert referencedPathSource.getPathType() instanceof AnyMappingDomainType;
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class SqmAnyValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}

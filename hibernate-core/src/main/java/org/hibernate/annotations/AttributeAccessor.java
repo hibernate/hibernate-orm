@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -48,7 +48,7 @@ public @interface AttributeAccessor {
 	 *
 	 * @deprecated use {@link #strategy()}
 	 */
-	@Deprecated(since = "6.0")
+	@Deprecated(since = "6.0", forRemoval = true)
 	String value() default "";
 	/**
 	 * A class implementing {@link PropertyAccessStrategy}.

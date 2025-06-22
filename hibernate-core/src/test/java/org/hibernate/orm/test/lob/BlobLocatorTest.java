@@ -1,22 +1,21 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.lob;
 
-import java.sql.Blob;
-import java.util.Arrays;
-
-import org.hibernate.LockOptions;
+import junit.framework.AssertionFailedError;
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.dialect.SybaseDialect;
-
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
-import junit.framework.AssertionFailedError;
+
+import java.sql.Blob;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -70,7 +69,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		if ( getDialect().supportsLobValueChangePropagation() ) {
 			s = openSession();
 			s.beginTransaction();
-			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
+			entity = s.byId( LobHolder.class ).with( LockMode.PESSIMISTIC_WRITE ).load( entity.getId() );
 			entity.getBlobLocator().truncate( 1 );
 			entity.getBlobLocator().setBytes( 1, changed );
 			s.getTransaction().commit();
@@ -78,7 +77,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 			s = openSession();
 			s.beginTransaction();
-			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
+			entity = s.byId( LobHolder.class ).with( LockMode.PESSIMISTIC_WRITE ).load( entity.getId() );
 			assertNotNull( entity.getBlobLocator() );
 			Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 			assertEquals( changed, extractData( entity.getBlobLocator() ) );
@@ -91,7 +90,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// test mutation via supplying a new clob locator instance...
 		s = openSession();
 		s.beginTransaction();
-		entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
+		entity = s.byId( LobHolder.class ).with( LockMode.PESSIMISTIC_WRITE ).load( entity.getId() );
 		assertNotNull( entity.getBlobLocator() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
@@ -102,7 +101,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// test empty blob
 		s = openSession();
 		s.beginTransaction();
-		entity = s.get( LobHolder.class, entity.getId() );
+		entity = s.find( LobHolder.class, entity.getId() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( changed, extractData( entity.getBlobLocator() ) );
 		entity.setBlobLocator( s.getLobHelper().createBlob( empty ) );
@@ -111,7 +110,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		entity = s.get( LobHolder.class, entity.getId() );
+		entity = s.find( LobHolder.class, entity.getId() );
 		// Seems ASE does not support empty BLOBs
 		if ( entity.getBlobLocator() != null && !(sessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) ) {
 			Assert.assertEquals( empty.length, entity.getBlobLocator().length() );
@@ -147,7 +146,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		// at that point it is unbounded...
 		s = openSession();
 		s.beginTransaction();
-		entity = s.get( LobHolder.class, entity.getId() );
+		entity = s.find( LobHolder.class, entity.getId() );
 		s.getTransaction().commit();
 		s.close();
 

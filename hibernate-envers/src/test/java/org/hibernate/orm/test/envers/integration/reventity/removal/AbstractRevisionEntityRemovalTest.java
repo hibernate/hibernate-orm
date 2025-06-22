@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity.removal;
@@ -34,8 +34,7 @@ public abstract class AbstractRevisionEntityRemovalTest extends BaseEnversJPAFun
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class,
-				getRevisionEntityClass()
+				StrTestEntity.class, ListOwnedEntity.class, ListOwningEntity.class
 		};
 	}
 

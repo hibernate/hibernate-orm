@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -8,7 +8,6 @@ import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.spi.NavigablePath;
@@ -18,11 +17,9 @@ import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
 /**
@@ -33,7 +30,7 @@ public class SqmSetJoin<O, E>
 		implements JpaSetJoin<O, E> {
 	public SqmSetJoin(
 			SqmFrom<?,O> lhs,
-			SetPersistentAttribute<O, E> pluralValuedNavigable,
+			SqmSetPersistentAttribute<? super O, E> pluralValuedNavigable,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -44,7 +41,7 @@ public class SqmSetJoin<O, E>
 	protected SqmSetJoin(
 			SqmFrom<?, O> lhs,
 			NavigablePath navigablePath,
-			SetPersistentAttribute<O, E> pluralValuedNavigable,
+			SqmSetPersistentAttribute<O, E> pluralValuedNavigable,
 			String alias, SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
@@ -75,8 +72,9 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SetPersistentAttribute<O, E> getModel() {
-		return (SetPersistentAttribute<O, E>) super.getNodeType();
+	public SqmSetPersistentAttribute<O, E> getModel() {
+//		return (SqmSetPersistentAttribute<O, E>) super.getNodeType();
+		return (SqmSetPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override
@@ -85,7 +83,7 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SetPersistentAttribute<O, E> getAttribute() {
+	public SqmSetPersistentAttribute<O, E> getAttribute() {
 		return getModel();
 	}
 
@@ -140,7 +138,7 @@ public class SqmSetJoin<O, E>
 		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof TreatableDomainType<?> ) {
-				return addTreat( new SqmTreatedSetJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
+				return addTreat( new SqmTreatedSetJoin<>( this, (SqmTreatableDomainType<S>) treatTarget, alias, fetch ) );
 			}
 			else {
 				throw new IllegalArgumentException( "Not a treatable type: " + treatJavaType.getName() );
@@ -153,15 +151,8 @@ public class SqmSetJoin<O, E>
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedSetJoin<>( this, treatTarget, alias, fetch ) );
+			return addTreat( new SqmTreatedSetJoin<>( this, (SqmEntityDomainType<S>) treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}
-
-	@Override
-	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName) {
-		return fetch( attributeName, JoinType.INNER);
-	}
-
-
 }

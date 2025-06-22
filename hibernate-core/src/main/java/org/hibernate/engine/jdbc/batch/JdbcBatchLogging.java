@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.batch;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -15,8 +16,9 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
 
-import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 
 /**
  * Sub-system logging related to JDBC batch execution
@@ -29,21 +31,30 @@ import static org.jboss.logging.Logger.Level.INFO;
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 100501, max = 101000)
+@Internal
 public interface JdbcBatchLogging extends BasicLogger {
 	String NAME = "org.hibernate.orm.jdbc.batch";
 
 	Logger BATCH_LOGGER = Logger.getLogger( NAME );
 	JdbcBatchLogging BATCH_MESSAGE_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JdbcBatchLogging.class, NAME );
 
-	@LogMessage(level = ERROR)
-	@Message(id = 100501, value = "Exception executing batch [%s], SQL: %s")
-	void unableToExecuteBatch(Exception e, String sql );
-
-	@LogMessage(level = ERROR)
-	@Message(id = 100502, value = "Unable to release batch statement...")
+	@LogMessage(level = WARN)
+	@Message(id = 100502, value = "Unable to release batch statement")
 	void unableToReleaseBatchStatement();
 
 	@LogMessage(level = INFO)
 	@Message(id=100503, value = "On release of batch it still contained JDBC statements")
 	void batchContainedStatementsOnRelease();
+
+	@LogMessage(level = TRACE)
+	@Message("Created JDBC batch (%s) - [%s]")
+	void createBatch(int batchSize, String string);
+
+	@LogMessage(level = TRACE)
+	@Message("Adding to JDBC batch (%s / %s) - [%s]")
+	void addToBatch(int batchPosition, int batchSize, String string);
+
+	@LogMessage(level = TRACE)
+	@Message("Executing JDBC batch (%s / %s) - [%s]")
+	void executeBatch(int batchPosition, int batchSize, String string);
 }

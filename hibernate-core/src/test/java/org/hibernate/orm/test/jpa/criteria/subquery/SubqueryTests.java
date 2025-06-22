@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.subquery;
@@ -94,7 +94,8 @@ public class SubqueryTests {
 					assertEquals("Jack", entities.get(0).getName());
 					assertEquals("Black", entities.get(0).getSurName());
 					assertEquals("John", entities.get(1).getName());
-					assertEquals("Doe", entities.get(1).getSurName());
+					// Trim because in some dialects, the type is CHAR(5), leading to trailing spaces
+					assertEquals("Doe", entities.get(1).getSurName().trim());
 				}
 		);
 	}

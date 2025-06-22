@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.metadata;
@@ -80,7 +80,7 @@ public class StaticMetadataTest {
 		assertEquals( "temperature", Fridge_.temperature.getName() );
 		assertEquals( Fridge.class, Fridge_.temperature.getDeclaringType().getJavaType() );
 		assertEquals( int.class, Fridge_.temperature.getJavaType() );
-		assertEquals( int.class, Fridge_.temperature.getBindableJavaType() );
+		assertEquals( int.class, Fridge_.temperature.getJavaType() );
 		assertEquals( int.class, Fridge_.temperature.getType().getJavaType() );
 		assertEquals( Bindable.BindableType.SINGULAR_ATTRIBUTE, Fridge_.temperature.getBindableType() );
 		assertEquals( Type.PersistenceType.BASIC, Fridge_.temperature.getType().getPersistenceType() );
@@ -104,6 +104,7 @@ public class StaticMetadataTest {
 		assertTrue( House_.rooms.isCollection() );
 		assertEquals( Attribute.PersistentAttributeType.ELEMENT_COLLECTION, House_.rooms.getPersistentAttributeType() );
 		assertEquals( Room.class, House_.rooms.getBindableJavaType() );
+		assertEquals( Set.class, House_.rooms.getJavaType() );
 		assertEquals( Bindable.BindableType.PLURAL_ATTRIBUTE, House_.rooms.getBindableType() );
 		assertEquals( Set.class, House_.rooms.getJavaType() );
 		assertEquals( PluralAttribute.CollectionType.SET, House_.rooms.getCollectionType() );

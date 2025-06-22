@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -14,12 +14,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.hibernate.PessimisticLockException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -27,25 +28,30 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sql.ast.H2SqlAstTranslator;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
+import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.H2JsonJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -78,8 +84,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
-import static org.hibernate.query.sqm.TemporalUnit.SECOND;
+import static org.hibernate.internal.util.StringHelper.split;
+import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
@@ -89,7 +97,6 @@ import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTERVAL_SECOND;
 import static org.hibernate.type.SqlTypes.JSON;
-import static org.hibernate.type.SqlTypes.JSON_ARRAY;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
@@ -108,6 +115,10 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
 
 /**
  * A {@linkplain Dialect SQL dialect} for H2.
+ * <p>
+ * Please refer to the
+ * <a href="http://www.h2database.com/html/main.html">H2 documentation</a>.
+ *
  *
  * @author Thomas Mueller
  * @author Jürgen Kreitler
@@ -123,8 +134,6 @@ public class H2Dialect extends Dialect {
 	private final String querySequenceString;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
-	private final OptionalTableUpdateStrategy optionalTableUpdateStrategy;
-
 	public H2Dialect(DialectResolutionInfo info) {
 		this( staticDetermineDatabaseVersion( info ) );
 		registerKeywords( info );
@@ -135,7 +144,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	public H2Dialect(DatabaseVersion version) {
-		super(version);
+		super( version );
 
 		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
 		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
@@ -146,23 +155,21 @@ public class H2Dialect extends Dialect {
 		// 1.4.200 introduced changes in current_time and current_timestamp
 		useLocalTime = true;
 
-		this.sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
-		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
-		this.optionalTableUpdateStrategy = H2Dialect::usingMerge;
+		sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
+		querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
 	}
 
 	@Override
 	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
-		return staticDetermineDatabaseVersion(info);
+		return staticDetermineDatabaseVersion( info );
 	}
 
 	// Static version necessary to call from constructor
 	private static DatabaseVersion staticDetermineDatabaseVersion(DialectResolutionInfo info) {
-		DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
-		if ( info.getDatabaseVersion() != null ) {
-			version = DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) );
-		}
-		return version;
+		final DatabaseVersion version = info.makeCopyOrDefault( MINIMUM_VERSION );
+		return info.getDatabaseVersion() != null
+				? DatabaseVersion.make( version.getMajor(), version.getMinor(), parseBuildId( info ) )
+				: version;
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -170,9 +177,10 @@ public class H2Dialect extends Dialect {
 		if ( databaseVersion == null ) {
 			return 0;
 		}
-
-		final String[] bits = StringHelper.split( ". -", databaseVersion );
-		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+		else {
+			final String[] bits = split( ". -", databaseVersion );
+			return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+		}
 	}
 
 	@Override
@@ -224,12 +232,10 @@ public class H2Dialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
-
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON_ARRAY, "json", this ) );
 		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 		ddlTypeRegistry.addDescriptor( new NativeOrdinalEnumDdlTypeImpl( this ) );
 	}
@@ -237,18 +243,23 @@ public class H2Dialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
-
-		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
-				.getJdbcTypeRegistry();
-
+		final JdbcTypeRegistry jdbcTypeRegistry =
+				typeContributions.getTypeConfiguration()
+						.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( H2JsonArrayJdbcType.INSTANCE );
+		// Replace the standard array constructor
+		jdbcTypeRegistry.addTypeConstructor( H2JsonArrayJdbcTypeConstructor.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( EnumJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( OrdinalEnumJdbcType.INSTANCE );
+	}
+
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return H2AggregateSupport.valueOf( this );
 	}
 
 	@Override
@@ -263,9 +274,9 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
+		super.initializeFunctionRegistry( functionContributions );
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final var functionFactory = new CommonFunctionFactory( functionContributions );
 
 		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
@@ -358,6 +369,14 @@ public class H2Dialect extends Dialect {
 		functionFactory.xmlforest_h2();
 		functionFactory.xmlconcat_h2();
 		functionFactory.xmlpi_h2();
+
+		functionFactory.unnest_h2( getMaximumArraySize() );
+		functionFactory.generateSeries_h2( getMaximumSeriesSize() );
+		functionFactory.jsonTable_h2( getMaximumArraySize() );
+
+		functionFactory.hex( "rawtohex(?1)" );
+		functionFactory.sha( "hash('SHA-256', ?1)" );
+		functionFactory.md5( "hash('MD5', ?1)" );
 	}
 
 	/**
@@ -368,6 +387,21 @@ public class H2Dialect extends Dialect {
 	 */
 	protected int getMaximumArraySize() {
 		return 1000;
+	}
+
+	/**
+	 * Since H2 doesn't support ordinality for the {@code system_range} function or {@code lateral},
+	 * it's impossible to use {@code system_range} for non-constant cases.
+	 * Luckily, correlation can be emulated, but requires that there is an upper bound on the amount
+	 * of elements that the series can return.
+	 */
+	protected int getMaximumSeriesSize() {
+		return 10000;
+	}
+
+	@Override
+	public @Nullable String getDefaultOrdinalityColumnName() {
+		return "nord";
 	}
 
 	@Override
@@ -749,50 +783,51 @@ public class H2Dialect extends Dialect {
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
-			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				// 23000: Check constraint violation: {0}
-				// 23001: Unique index or primary key violation: {0}
-				if ( sqle.getSQLState().startsWith( "23" ) ) {
-					final String message = sqle.getMessage();
-					final int i = message.indexOf( "violation: " );
-					if ( i > 0 ) {
-						String constraintDescription =
-								message.substring( i + "violation: ".length() )
-										.replace( "\"", "" );
-						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintDescription = constraintDescription.substring( 1, constraintDescription.indexOf( ':' ) );
-						}
-						final int j = constraintDescription.indexOf(" ON ");
-						return j>0 ? constraintDescription.substring(0, j) : constraintDescription;
-					}
+			new TemplatedViolatedConstraintNameExtractor( sqle -> switch ( extractErrorCode( sqle ) ) {
+				case 23505 -> {
+					// Unique index or primary key violation
+					final String constraint =
+							extractUsingTemplate( "violation: \"", "\"", sqle.getMessage() );
+					final int onIndex = constraint == null ? -1 : constraint.indexOf( " ON " );
+					yield onIndex > 0 ? constraint.substring( 0, onIndex ) : constraint;
 				}
-				return null;
+				case 23502 ->
+					// NULL not allowed for column
+						extractUsingTemplate( "column \"", "\"", sqle.getMessage() );
+				case 23503, 23506, 23513, 23514 ->
+					// Referential integrity or check constraint violation
+						extractUsingTemplate( "constraint violation: \"", ":", sqle.getMessage() );
+				default -> null;
 			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) ->
 				switch ( extractErrorCode( sqlException ) ) {
-					case 23505 ->
-						// Unique constraint violation
-							new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-							);
 					case 40001 ->
 						// DEADLOCK DETECTED
 							new LockAcquisitionException(message, sqlException, sql);
 					case 50200 ->
 						// LOCK NOT AVAILABLE
-							new PessimisticLockException(message, sqlException, sql);
-					case 90006 ->
-						// NULL not allowed for column [90006-145]
-							new ConstraintViolationException( message, sqlException, sql,
-									getViolatedConstraintNameExtractor().extractConstraintName(sqlException) );
+							new LockTimeoutException(message, sqlException, sql);
+					case 23505 ->
+						// Unique index or primary key violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 23502 ->
+						// NULL not allowed for column
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 23503, 23506 ->
+						// Referential integrity constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case 23513, 23514 ->
+						// Check constraint violation
+							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 					case 57014 ->
+						// QUERY CANCELLED
 							new QueryTimeoutException( message, sqlException, sql );
 					default -> null;
 				};
@@ -902,7 +937,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String getQueryHintString(String query, String hints) {
-		return IndexQueryHintHandler.INSTANCE.addQueryHints( query, hints );
+		return addUseIndexQueryHint( query, hints );
 	}
 
 	@Override
@@ -972,28 +1007,13 @@ public class H2Dialect extends Dialect {
 		return BIGINT;
 	}
 
-	@FunctionalInterface
-	private interface OptionalTableUpdateStrategy {
-		MutationOperation buildMutationOperation(
-				EntityMutationTarget mutationTarget,
-				OptionalTableUpdate optionalTableUpdate,
-				SessionFactoryImplementor factory);
-	}
-
 	@Override
 	public MutationOperation createOptionalTableUpdateOperation(
 			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate optionalTableUpdate,
 			SessionFactoryImplementor factory) {
-		return optionalTableUpdateStrategy.buildMutationOperation( mutationTarget, optionalTableUpdate, factory );
-	}
-
-	private static MutationOperation usingMerge(
-			EntityMutationTarget mutationTarget,
-			OptionalTableUpdate optionalTableUpdate,
-			SessionFactoryImplementor factory) {
-		final H2SqlAstTranslator<?> translator = new H2SqlAstTranslator<>( factory, optionalTableUpdate );
-		return translator.createMergeOperation( optionalTableUpdate );
+		return new H2SqlAstTranslator<>( factory, optionalTableUpdate )
+				.createMergeOperation( optionalTableUpdate );
 	}
 
 //	private static MutationOperation withoutMerge(
@@ -1048,6 +1068,49 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getDual() {
 		return "dual";
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		// Introduction of FILTER clause https://github.com/h2database/h2database/commit/9e6dbf3baa57000f670826ede431dc7fb4cd9d9c
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsArrayConstructor() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntax() {
+		// Just a guess
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorDistinctFromSyntax() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWithClauseInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
+		// Just a guess
+		return true;
 	}
 
 }

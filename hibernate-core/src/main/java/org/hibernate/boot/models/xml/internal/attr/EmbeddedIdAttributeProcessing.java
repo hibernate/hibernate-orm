@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal.attr;
@@ -34,7 +34,7 @@ public class EmbeddedIdAttributeProcessing {
 			AccessType classAccessType,
 			XmlDocumentContext xmlDocumentContext) {
 		final AccessType accessType = coalesce( jaxbEmbeddedId.getAccess(), classAccessType );
-		final MutableMemberDetails memberDetails = XmlProcessingHelper.findAttributeMember(
+		final MutableMemberDetails memberDetails = XmlProcessingHelper.getAttributeMember(
 				jaxbEmbeddedId.getName(),
 				accessType,
 				classDetails

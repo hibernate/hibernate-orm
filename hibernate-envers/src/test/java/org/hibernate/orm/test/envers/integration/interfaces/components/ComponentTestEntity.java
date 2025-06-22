@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.interfaces.components;
@@ -9,7 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Target;
+import org.hibernate.annotations.TargetEmbeddable;
 import org.hibernate.envers.Audited;
 
 /**
@@ -23,7 +23,7 @@ public class ComponentTestEntity {
 	private Integer id;
 
 	@Embedded
-	@Target(Component1.class)
+	@TargetEmbeddable(Component1.class)
 	private IComponent comp1;
 
 	public ComponentTestEntity() {

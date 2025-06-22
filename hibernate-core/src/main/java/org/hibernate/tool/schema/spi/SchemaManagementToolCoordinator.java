@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.schema.spi;
@@ -196,7 +196,7 @@ public class SchemaManagementToolCoordinator {
 			final ExecutionOptions executionOptions,
 			ContributableMatcher contributableInclusionFilter) {
 
-		// IMPL NOTE : JPA binds source and target info..
+		// IMPL NOTE : JPA binds source and target info
 
 		switch ( action ) {
 			case CREATE_ONLY: {
@@ -291,6 +291,18 @@ public class SchemaManagementToolCoordinator {
 								serviceRegistry
 						)
 				);
+				break;
+			}
+			case POPULATE: {
+				tool.getSchemaPopulator( executionOptions.getConfigurationValues() ).doPopulation(
+						executionOptions,
+						buildDatabaseTargetDescriptor(
+								executionOptions.getConfigurationValues(),
+								CreateSettingSelector.INSTANCE,
+								serviceRegistry
+						)
+				);
+				break;
 			}
 		}
 	}

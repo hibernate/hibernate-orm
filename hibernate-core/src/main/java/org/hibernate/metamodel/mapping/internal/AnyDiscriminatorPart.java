@@ -1,29 +1,24 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import java.util.Map;
-import java.util.function.BiConsumer;
-
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.metamodel.mapping.DefaultDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappedDiscriminatorConverter;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.spi.ImplicitDiscriminatorStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -42,6 +37,9 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Acts as a ModelPart for the discriminator portion of an any-valued mapping
@@ -84,6 +82,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			boolean partitioned,
 			BasicType<?> underlyingJdbcMapping,
 			Map<Object,String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this.navigableRole = partRole;
 		this.declaringType = declaringType;
@@ -100,20 +99,29 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.partitioned = partitioned;
 
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
-		this.valueConverter = valueToEntityNameMap.isEmpty()
-				? DefaultDiscriminatorConverter.fromMappingMetamodel(
-						partRole,
-						ClassJavaType.INSTANCE,
-						underlyingJdbcMapping,
-						mappingMetamodel
-				)
-				: MappedDiscriminatorConverter.fromValueMappings(
-						partRole,
-						ClassJavaType.INSTANCE,
-						underlyingJdbcMapping,
-						valueToEntityNameMap,
-						mappingMetamodel
-				);
+		this.valueConverter = determineDiscriminatorConverter(
+				partRole,
+				underlyingJdbcMapping,
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
+	}
+
+	public static DiscriminatorConverter<?, ?> determineDiscriminatorConverter(
+			NavigableRole partRole,
+			BasicType<?> underlyingJdbcMapping,
+			Map<Object, String> valueToEntityNameMap,
+			ImplicitDiscriminatorStrategy implicitValueStrategy,
+			MappingMetamodelImplementor mappingMetamodel) {
+		return new UnifiedAnyDiscriminatorConverter<>(
+				partRole,
+				ClassJavaType.INSTANCE,
+				underlyingJdbcMapping.getJavaTypeDescriptor(),
+				valueToEntityNameMap,
+				implicitValueStrategy,
+				mappingMetamodel
+		);
 	}
 
 	public DiscriminatorConverter<?,?> getValueConverter() {
@@ -304,7 +312,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 
@@ -318,7 +325,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				columnReference,
 				jdbcMapping().getJdbcJavaType(),
 				fetchParent,
-				sessionFactory.getTypeConfiguration()
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
 		);
 
 		return new BasicFetch<>(
@@ -398,7 +405,7 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				resolveSqlExpression( navigablePath, null, tableGroup, sqlAstCreationState ),
 				jdbcMapping().getJdbcJavaType(),
 				null,
-				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				creationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration()
 		);
 	}
 }

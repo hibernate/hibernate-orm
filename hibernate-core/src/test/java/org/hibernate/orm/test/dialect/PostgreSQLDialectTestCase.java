@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.dialect;
@@ -9,6 +9,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
+import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -26,8 +27,12 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -138,9 +143,8 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 		PostgreSQLDialect dialect = new PostgreSQLDialect();
 		AlterTableUniqueDelegate alterTable = new AlterTableUniqueDelegate( dialect );
 		final Table table = new Table( "orm", "table_name" );
-		final UniqueKey uniqueKey = new UniqueKey();
+		final UniqueKey uniqueKey = new UniqueKey( table );
 		uniqueKey.setName( "unique_something" );
-		uniqueKey.setTable( table );
 		final String sql = alterTable.getAlterTableToDropUniqueKeyCommand(
 				uniqueKey,
 				null,
@@ -148,6 +152,41 @@ public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 		);
 
 		assertEquals("alter table if exists table_name drop constraint if exists unique_something", sql );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-18780" )
+	public void testTextVsVarchar() {
+		PostgreSQLDialect dialect = new PostgreSQLDialect();
+
+		final TypeConfiguration typeConfiguration = new TypeConfiguration();
+		final SqmFunctionRegistry functionRegistry = new SqmFunctionRegistry();
+		typeConfiguration.scope( new DialectFeatureChecks.FakeMetadataBuildingContext( typeConfiguration, functionRegistry ) );
+		final DialectFeatureChecks.FakeTypeContributions typeContributions = new DialectFeatureChecks.FakeTypeContributions( typeConfiguration );
+		final DialectFeatureChecks.FakeFunctionContributions functionContributions = new DialectFeatureChecks.FakeFunctionContributions(
+				dialect,
+				typeConfiguration,
+				functionRegistry
+		);
+		dialect.contribute( typeContributions, typeConfiguration.getServiceRegistry() );
+		dialect.initializeFunctionRegistry( functionContributions );
+		final String varcharNullString = dialect.getSelectClauseNullString(
+				new SqlTypedMappingImpl( typeConfiguration.getBasicTypeForJavaType( String.class ) ),
+				typeConfiguration
+		);
+		final String textNullString = dialect.getSelectClauseNullString(
+				new SqlTypedMappingImpl(
+						null,
+						(long) Length.LONG32,
+						null,
+						null,
+						null,
+						typeConfiguration.getBasicTypeForJavaType( String.class )
+				),
+				typeConfiguration
+		);
+		assertEquals("cast(null as varchar)", varcharNullString);
+		assertEquals("cast(null as text)", textNullString);
 	}
 
 	private static class MockSqlStringGenerationContext implements SqlStringGenerationContext {

@@ -96,44 +96,72 @@ Similarly, the Java-style postfix is case-insensitive.
 [[datetime-literals]]
 ==== Date and time literals
 
-According to the JPQL specification, date and time literals may be specified using the JDBC escape syntax.
-Since this syntax is rather unpleasant to look at, HQL provides not one, but two alternatives.
+According to the JPQL specification, literal dates and times may be specified using the JDBC escape syntax.
 
+[cols="~,~,~,^15"]
 |===
-| Date/time type | Recommended Java type | JDBC escape syntax 💀| Braced literal syntax | Explicitly typed literal syntax
+| Date/time type | Java type | JDBC escape syntax | JPA standard
 
-| Date | `LocalDate` | `{d 'yyyy-mm-dd'}` | `{yyyy-mm-dd}` | `date yyyy-mm-dd`
-| Time | `LocalTime` | `{t 'hh:mm'}` | `{hh:mm}` | `time hh:mm`
-| Time with seconds | `LocalTime` | `{t 'hh:mm:ss'}` | `{hh:mm:ss}` | `time hh:mm:ss`
-| Datetime | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss'}` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss`
-| Datetime with milliseconds | `LocalDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis`
-| Datetime with an offset | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm`
-| Datetime with a time zone | `OffsetDateTime` | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT`
-|===
-
-Literals referring to the current date and time are also provided.
-Again there is some flexibility.
-
-|===
-| Date/time type | Java type | Underscored syntax | Spaced syntax
-
-| Date | `java.time.LocalDate` | `local_date` | `local date`
-| Time | `java.time.LocalTime` | `local_time` | `local time`
-| Datetime | `java.time.LocalDateTime` | `local_datetime` | `local datetime`
-| Offset datetime | `java.time.OffsetDateTime`| `offset_datetime` | `offset datetime`
-| Instant | `java.time.Instant` | `instant` | `instant`
-| Date | `java.sql.Date` 💀| `current_date` | `current date`
-| Time | `java.sql.Time` 💀| `current_time` | `current time`
-| Datetime | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp`
+| Date | `java.sql.Date` 💀 | `{d 'yyyy-mm-dd'}` | ✔
+| Time | `java.sql.Time` 💀 | `{t 'hh:mm'}` | ✔
+| Time with seconds | `java.sql.Time` 💀 | `{t 'hh:mm:ss'}` | ✔
+| Timestamp | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss'}` | ✔
+| Timestamp with milliseconds | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss.millis'}` | ✔
+| Timestamp with an offset | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss+hh:mm'}` | ✔
+| Timestamp with a time zone | `java.sql.Timestamp` 💀 | `{ts 'yyyy-mm-ddThh:mm:ss GMT'}` | ✔
 |===
 
-Of these, only `local date`, `local time`, `local datetime`, `current_date`, `current_time`, and `current_timestamp` are defined by the JPQL specification.
+There's two problems here:
+
+1. this syntax is rather unpleasant to look at, and
+2. these literals are assigned types defined by JDBC, instead of date/time types defined in `java.time`.
 
 [IMPORTANT]
 ====
 The use of date and time types from the `java.sql` package is strongly discouraged!
+Jakarta Persistence 3.2 deprecates support for these types.
 Always use `java.time` types in new code.
 ====
+
+HQL provides not one, but two alternatives.
+
+[cols="~,~,~,~,^15"]
+|===
+| Date/time type | Java type| Braced literal syntax | Explicitly-typed literal syntax | JPA standard
+
+| Date | `LocalDate` | `{yyyy-mm-dd}` | `date yyyy-mm-dd` | ✖
+| Time | `LocalTime` | `{hh:mm}` | `time hh:mm` | ✖
+| Time with seconds | `LocalTime` | `{hh:mm:ss}` | `time hh:mm:ss` | ✖
+| Datetime | `LocalDateTime` | `{yyyy-mm-dd hh:mm:ss}` | `datetime yyyy-mm-dd hh:mm:ss` | ✖
+| Datetime with milliseconds | `LocalDateTime` | `{yyyy-mm-dd hh:mm:ss.millis}` | `datetime yyyy-mm-dd hh:mm:ss.millis` | ✖
+| Datetime with an offset | `OffsetDateTime` | `{yyyy-mm-dd hh:mm:ss +hh:mm}` | `datetime yyyy-mm-dd hh:mm:ss +hh:mm` | ✖
+| Datetime with a time zone | `OffsetDateTime` | `{yyyy-mm-dd hh:mm:ss GMT}` | `datetime yyyy-mm-dd hh:mm:ss GMT` | ✖
+|===
+
+Literals referring to the current date and time are also available.
+
+[cols="~,~,~,^15"]
+|===
+| Date/time type | Java type | Syntax | JPA standard
+
+| Date | `java.time.LocalDate` | `local date` | ✔
+| Time | `java.time.LocalTime` | `local time` | ✔
+| Datetime | `java.time.LocalDateTime` | `local datetime` | ✔
+| Offset datetime | `java.time.OffsetDateTime` | `offset datetime` | ✖
+| Instant | `java.time.Instant` | `instant` | ✖
+|===
+
+The following are deprecated in JPA 3.2.
+We include them here only for completeness:
+
+[cols="~,~,~,~,^15"]
+|===
+| Date/time type | Java type | JPA syntax ✔ | HQL syntax ✖ | JPA standard
+
+| JDBC date | `java.sql.Date` 💀| `current_date` | `current date` | 💀
+| JDBC time | `java.sql.Time` 💀| `current_time` | `current time` | 💀
+| JDBC timestamp | `java.sql.Timestamp` 💀| `current_timestamp` | `current timestamp` | 💀
+|===
 
 [[duration-literals]]
 ==== Duration literals
@@ -316,10 +344,10 @@ The operator precedence is given by this table, from highest to lowest precedenc
 [[concatenation]]
 ==== String concatenation
 
-HQL defines two ways to concatenate strings:
+JPQL defines two ways to concatenate strings:
 
 * the SQL-style concatenation operator, `||`, and
-* the JPQL-standard `concat()` function.
+* the standard `concat()` function.
 
 See <<string-functions, below>> for details of the `concat()` function.
 
@@ -545,8 +573,10 @@ The following special functions make it possible to discover or narrow expressio
 
 | `type()` | The (concrete) entity or embeddable type | `type(e)` | ✔
 | `treat()` | Narrow an entity or embeddable type | `treat(e as Entity)` | ✔
-| `cast()` | Narrow a basic type | `cast(x as Type)` | ✖
+| `cast()` | Narrow a basic type | `cast(x as Type)` | ✔
 | `str()` | Cast to a string | `str(x)` | ✖
+| `ordinal()` | Get the ordinal value of an enum | `ordinal(x)` | ✖
+| `string()` | Get the string-valued name of an enum | `string(x)` | ✖
 |===
 
 Let's see what these functions do.
@@ -615,6 +645,19 @@ The function `str(x)` is a synonym for `cast(x as String)`.
 ----
 select str(id) from Order
 ----
+
+[[function-ordinal]]
+[discrete]
+===== Extracting the ordinal value or name of an enum
+
+The function `ordinal(x)` extracts the ordinal value of an enum, and the function `string(x)` extracts the name of the enum value as a string.
+
+[source, hql]
+----
+select ordinal(p.type), string(p.type) from Phone p
+----
+
+Both functions work with enum fields mapped as `ORDINAL` and with enum fields mapped as `STRING`.
 
 [[functions-null]]
 ==== Functions for working with null values
@@ -823,11 +866,12 @@ Naturally, there are a good number of functions for working with strings.
 `pad(str with len leading)`, +
 `pad(str with len trailing)`, or +
 `pad(str with len leading char)` | ✖ / ✖
-| `left()` | The leftmost characters of a string | `left(str, len)` | ✖ / ✖
-| `right()` | The rightmost characters of a string | `right(str, len)`  | ✖ / ✖
-| `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✖ / ✖
+| `left()` | The leftmost characters of a string | `left(str, len)` | ✔ / ✖
+| `right()` | The rightmost characters of a string | `right(str, len)`  | ✔ / ✖
+| `replace()` | Replace every occurrence of a pattern in a string | `replace(str, patt, rep)` | ✔ / ✖
 | `repeat()` | Concatenate a string with itself multiple times | `repeat(str, times)` | ✖ / ✖
 | `collate()` | Select a collation | `collate(p.name as collation)` | ✖ / ✖
+| `hex()` | Encode a binary value as a hexadecimal string | `hex(image.bytes)` | ✖ / ✖
 |===
 
 Let's take a closer look at just some of these.
@@ -887,6 +931,18 @@ select substring(title, 1, position(' for Dummies' in title)) from Book         
 select substring(title from 1 for position(' for Dummies' in title)) from Book  /* ANSI SQL-style */
 ----
 
+Alternatively, slicing may be performed using an operator, which is just syntax sugar for the `substring()` function:
+
+[source, hql]
+----
+select title[1:position(' for Dummies' in title)] from Book         /* Operator-style */
+----
+
+[source,hql]
+----
+select name.first[1]||name.last[1] as initials from Author
+----
+
 [discrete]
 ===== Trimming strings
 The `trim()` function follows the syntax and semantics of ANSI SQL.
@@ -928,6 +984,7 @@ Its BNF is given by:
 "PAD" "(" expression "WITH" expression ("LEADING" | "TRAILING") padCharacter? ")"
 ----
 
+[[collations]]
 [discrete]
 ===== Collations
 
@@ -1148,12 +1205,55 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 |===
 | Function | Purpose | JPA standard
 
-| `id()` | The value of the entity `@Id` attribute. | ✖
-| `version()` | The value of the entity `@Version` attribute. | ✖
+| `id()` | The value of the entity `@Id` attribute. | ✔
+| `version()` | The value of the entity `@Version` attribute. | ✔
 | `naturalid()` | The value of the entity `@NaturalId` attribute. | ✖
 | `fk()` | The value of the foreign key column mapped by a `@ManyToOne` (or logical `@OneToOne`) association.
 Useful with associations annotated `@NotFound`. | ✖
 |===
+
+[[array-functions]]
+==== Array, XML, and JSON functions
+
+On supported platforms, HQL provides a rich suite of functions for working with:
+
+- link:{doc-user-guide-url}#hql-functions-arrays[SQL arrays],
+- link:{doc-user-guide-url}#hql-functions-json[JSON], and
+- link:{doc-user-guide-url}#hql-functions-xml[XML]
+
+The use of these functions is outside the scope of this guide.
+However, we note that the following language constructs work with arrays, and are implemented as syntactic sugar for the underlying functions:
+
+[[array-syntax-sugar]]
+|===
+| Syntax | Interpretation
+
+| `[1, 2]` | Instantiate an array
+| `array[1]` | Array element
+| `array[1:2]` | Array slice
+| `length(array)` | Length of an array
+| `position(element in array)` | Position of an element within an array
+| `cast(array as String)` | Typecast array to string
+| `element in array` or `array contains element` | Determine if an element belongs to an array
+| `array includes subarray` | Determine if the elements of one array include all the elements of a second array
+|===
+
+[[functions-hash]]
+==== Hash functions
+
+The following functions work on most supported platforms:
+
+[[hash-functions]]
+[cols="12,~,^15"]
+|===
+| Function | Purpose | JPA standard
+
+| `sha()` | The SHA256 hash of a string. | ✖
+| `md5()` | The MD5 hash of a string. | ✖
+|===
+
+These functions accept a string and return `byte[]`.
+The return value is compatible with the byte array produced by Java's `MessageDigest`.
 
 [[embedding-sql]]
 ==== Embedding SQL expressions
@@ -1428,8 +1528,9 @@ This less-than-lovely fragment of the HQL ANTLR grammar tells us that the thing 
 
 - a list of values enclosed in parentheses,
 - a subquery,
-- one of the collection-handling functions defined <<elements-indices,above>>, or
-- a query parameter,
+- one of the collection-handling functions defined <<elements-indices,above>>,
+- a query parameter, or
+- an expression evaluating to a link:{doc-introduction-url}#arrays[SQL array].
 
 The type of the expression on the left, and the types of all the values on the right must be compatible.
 

@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.archive.scan.spi;
+
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 
 /**
  * Defines the contract for Hibernate to be able to scan for classes, packages and resources inside a
@@ -29,4 +31,12 @@ public interface Scanner {
 	 * @param params The parameters for scanning
 	 */
 	ScanResult scan(ScanEnvironment environment, ScanOptions options, ScanParameters params);
+
+	/**
+	 * @deprecated (since 7.0) Not used; no replacement.
+	 */
+	@Deprecated
+	default void setArchiveDescriptorFactory(ArchiveDescriptorFactory archiveDescriptorFactory){
+		throw new UnsupportedOperationException();
+	}
 }

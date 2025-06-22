@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.boot.internal;
@@ -26,12 +26,11 @@ import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
@@ -52,6 +51,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -113,6 +113,7 @@ import static org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
@@ -231,7 +232,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			metamodelBuilder =
 					(MetadataBuilderImplementor)
 							metadataSources.getMetadataBuilder( standardServiceRegistry );
-			applyMetamodelBuilderSettings( mergedSettings, applyMappingResources( metadataSources ) );
+			applyMappingResources( metadataSources );
+			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
 			applyMetadataBuilderContributor();
 			setupMappingReferences( metadataSources );
 			managedResources =
@@ -393,8 +395,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		metamodelBuilder.getBootstrapContext().getServiceRegistry()
-				.requireService( ClassLoaderService.class )
+		metamodelBuilder.getBootstrapContext().getClassLoaderService()
 				.loadJavaServices( MetadataBuilderContributor.class )
 				.forEach( contributor -> contributor.contribute( metamodelBuilder ) );
 	}
@@ -423,6 +424,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final boolean dirtyTrackingEnabled,
 			final boolean lazyInitializationEnabled,
 			final boolean associationManagementEnabled ) {
+		final Object propValue = configurationValues.get( BYTECODE_PROVIDER_INSTANCE );
+		if ( propValue != null && ( ! ( propValue instanceof BytecodeProvider ) ) ) {
+			throw new PersistenceException( "Property " + BYTECODE_PROVIDER_INSTANCE + " was set to '" + propValue + "', which is not compatible with the expected type " + BytecodeProvider.class );
+		}
+		final BytecodeProvider overriddenBytecodeProvider = (BytecodeProvider) propValue;
 		return new DefaultEnhancementContext() {
 
 			@Override
@@ -461,6 +467,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			public boolean doExtendedEnhancement(UnloadedClass classDescriptor) {
 				// doesn't make any sense to have extended enhancement enabled at runtime. we only enhance entities anyway.
 				return false;
+			}
+
+			@Override
+			public BytecodeProvider getBytecodeProvider() {
+				return overriddenBytecodeProvider;
 			}
 		};
 	}
@@ -1236,8 +1247,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		return new PersistenceException( message.toString() );
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<ConverterDescriptor> applyMappingResources(MetadataSources metadataSources) {
+	private void applyMappingResources(MetadataSources metadataSources) {
 		// todo : where in the heck are `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor.getManagedClassNames` handled?!?
 
 //		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
@@ -1281,28 +1291,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 //			}
 //		}
 
-		List<ConverterDescriptor> converterDescriptors = null;
+		addMappingFiles( metadataSources );
+	}
 
-		// add any explicit Class references passed in
-		final List<Class<? extends AttributeConverter<?,?>>> loadedAnnotatedClasses =
-				(List<Class<? extends AttributeConverter<?,?>>>)
-						configurationValues.remove( AvailableSettings.LOADED_CLASSES );
-		if ( loadedAnnotatedClasses != null ) {
-			for ( Class<? extends AttributeConverter<?,?>> cls : loadedAnnotatedClasses ) {
-				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
-					if ( converterDescriptors == null ) {
-						converterDescriptors = new ArrayList<>();
-					}
-					final ClassmateContext classmateContext =
-							metamodelBuilder.getBootstrapContext().getClassmateContext();
-					converterDescriptors.add( new ClassBasedConverterDescriptor( cls, classmateContext ) );
-				}
-				else {
-					metadataSources.addAnnotatedClass( cls );
-				}
-			}
-		}
-
+	private void addMappingFiles(MetadataSources metadataSources) {
 		// add any explicit hbm.xml references passed in
 		final String explicitHbmXmls =
 				(String) configurationValues.remove( AvailableSettings.HBM_XML_FILES );
@@ -1313,18 +1305,45 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// add any explicit orm.xml references passed in
-		final List<String> explicitOrmXmlList =
-				(List<String>) configurationValues.remove( AvailableSettings.ORM_XML_FILES );
+		final List<?> explicitOrmXmlList =
+				(List<?>) configurationValues.remove( AvailableSettings.ORM_XML_FILES );
 		if ( explicitOrmXmlList != null ) {
-			explicitOrmXmlList.forEach( metadataSources::addResource );
+			for ( Object object : explicitOrmXmlList ) {
+				metadataSources.addResource( (String) object );
+			}
 		}
+	}
 
-		return converterDescriptors;
+	private List<ConverterDescriptor<?, ?>> getConverterDescriptors(MetadataSources metadataSources) {
+		final Object loadedClasses = configurationValues.remove( AvailableSettings.LOADED_CLASSES );
+		if ( loadedClasses instanceof List<?> loadedAnnotatedClasses) {
+			List<ConverterDescriptor<?, ?>> converterDescriptors = null;
+			for ( Object annotatedClass : loadedAnnotatedClasses ) {
+				if ( annotatedClass instanceof Class<?> converterClass ) {
+					if ( AttributeConverter.class.isAssignableFrom( converterClass ) ) {
+						if ( converterDescriptors == null ) {
+							converterDescriptors = new ArrayList<>();
+						}
+						@SuppressWarnings("unchecked") // Safe, because we just checked!
+						final var attributeConverterType = (Class<? extends AttributeConverter<?, ?>>) converterClass;
+						converterDescriptors.add( ConverterDescriptors.of( attributeConverterType,
+								metamodelBuilder.getBootstrapContext().getClassmateContext() ) );
+					}
+					else {
+						metadataSources.addAnnotatedClass( converterClass );
+					}
+				}
+			}
+			return converterDescriptors;
+		}
+		else {
+			return null;
+		}
 	}
 
 	private void applyMetamodelBuilderSettings(
 			MergedSettings mergedSettings,
-			List<ConverterDescriptor> converterDescriptors) {
+			List<ConverterDescriptor<?,?>> converterDescriptors) {
 		metamodelBuilder.getBootstrapContext().markAsJpaBootstrap();
 
 		if ( persistenceUnit.getTempClassLoader() != null ) {
@@ -1332,12 +1351,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		metamodelBuilder.applyScanEnvironment( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
-		metamodelBuilder.applyScanOptions(
-				new StandardScanOptions(
-						(String) configurationValues.get( SCANNER_DISCOVERY ),
-						persistenceUnit.isExcludeUnlistedClasses()
-				)
-		);
+		metamodelBuilder.applyScanOptions( getScanOptions() );
 
 		final List<CacheRegionDefinition> cacheRegionDefinitions = mergedSettings.getCacheRegionDefinitions();
 		if ( cacheRegionDefinitions != null ) {
@@ -1351,14 +1365,20 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 	}
 
+	private StandardScanOptions getScanOptions() {
+		return new StandardScanOptions(
+				(String) configurationValues.get( SCANNER_DISCOVERY ),
+				persistenceUnit.isExcludeUnlistedClasses()
+		);
+	}
+
 	private void applyTypeContributors() {
 		final TypeContributorList typeContributorList =
 				(TypeContributorList) configurationValues.remove( TYPE_CONTRIBUTORS );
 		if ( typeContributorList != null ) {
 			typeContributorList.getTypeContributors().forEach( metamodelBuilder::applyTypes );
 		}
-		metamodelBuilder.getBootstrapContext().getServiceRegistry()
-				.requireService( ClassLoaderService.class )
+		metamodelBuilder.getBootstrapContext().getClassLoaderService()
 				.loadJavaServices( TypeContributor.class )
 				.forEach( metamodelBuilder::applyTypes );
 	}

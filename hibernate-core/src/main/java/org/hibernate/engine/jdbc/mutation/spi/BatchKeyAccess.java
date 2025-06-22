@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.mutation.spi;
@@ -7,7 +7,8 @@ package org.hibernate.engine.jdbc.mutation.spi;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 
 /**
- * Provides access to a BatchKey as part of creating an {@linkplain MutationExecutorService#createExecutor executor}.
+ * Provides access to a {@link BatchKey} as part of creating an
+ * {@linkplain MutationExecutorService#createExecutor executor}.
  *
  * @author Steve Ebersole
  */

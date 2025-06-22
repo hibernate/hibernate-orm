@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.spi;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 import org.hibernate.Incubating;
 
 /**
- * Unification of Iterator and AutoCloseable
+ * Unification of {@link Iterator} and {@link AutoCloseable}.
  *
  * @author Steve Ebersole
  *

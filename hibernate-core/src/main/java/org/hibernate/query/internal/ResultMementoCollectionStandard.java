@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -10,7 +10,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.ModelPartResultMementoCollection;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderCollectionStandard;
 
 /**
  * @author Steve Ebersole

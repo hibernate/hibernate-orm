@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.processor.annotation;
@@ -13,11 +13,7 @@ import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 import org.hibernate.processor.validation.ProcessorSessionFactory;
 import org.hibernate.processor.validation.Validation;
-import org.hibernate.query.criteria.JpaEntityJoin;
-import org.hibernate.query.criteria.JpaRoot;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -26,11 +22,15 @@ import javax.lang.model.element.Element;
 import java.util.List;
 
 import static java.lang.Character.isJavaIdentifierStart;
+import static org.hibernate.processor.util.Constants.ENTITY_GRAPH;
+import static org.hibernate.processor.util.Constants.HIB_ENABLED_FETCH_PROFILE;
 import static org.hibernate.processor.util.Constants.JAVA_OBJECT;
 import static org.hibernate.processor.util.Constants.NAMED_QUERY;
+import static org.hibernate.processor.util.Constants.TYPED_QUERY_REFERENCE;
 import static org.hibernate.processor.util.TypeUtils.containsAnnotation;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.processor.util.SqmTypeUtils.resultType;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -73,7 +73,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final AnnotationValue value = getAnnotationValue( mirror, "value" );
+			final AnnotationValue value = getAnnotationValue( mirror );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
 				final List<? extends AnnotationValue> annotationValues =
@@ -92,68 +92,51 @@ public abstract class AnnotationMeta implements Metamodel {
 			final Context context = getContext();
 			final boolean reportErrors = context.checkNamedQuery( name );
 			final AnnotationValue value = getAnnotationValue( mirror, "query" );
-			if ( value != null ) {
-				if ( value.getValue() instanceof String hql ) {
-					final SqmStatement<?> statement =
-							Validation.validate(
-									hql,
-									null,
-									true,
-									// If we are in the scope of @CheckHQL, semantic errors in the
-									// query result in compilation errors. Otherwise, they only
-									// result in warnings, so we don't break working code.
-									new WarningErrorHandler( context, getElement(), mirror, value, hql,
-											reportErrors, checkHql ),
-									ProcessorSessionFactory.create( context.getProcessingEnvironment(),
-											context.getEntityNameMappings(), context.getEnumTypesByValue() )
-							);
-					if ( statement instanceof SqmSelectStatement<?> selectStatement ) {
-						if ( isQueryMethodName( name ) ) {
-							putMember( name,
-									new NamedQueryMethod(
-											this,
-											selectStatement,
-											name.substring(1),
-											isRepository(),
-											getSessionType(),
-											getSessionVariableName(),
-											context.addNonnullAnnotation()
-									)
-							);
-						}
-						if ( !isJakartaDataStyle()
-								&& getAnnotationValue( mirror, "resultClass" ) == null ) {
-							final String resultType = resultType( selectStatement );
-							if ( resultType != null ) {
-								putMember( "QUERY_" + name,
-										new TypedMetaAttribute( this, name, "QUERY_", resultType,
-												"jakarta.persistence.TypedQueryReference", hql ) );
-							}
+			if ( value != null && value.getValue() instanceof String hql ) {
+				final SqmStatement<?> statement =
+						Validation.validate(
+								hql,
+								null,
+								true,
+								// If we are in the scope of @CheckHQL, semantic errors in the
+								// query result in compilation errors. Otherwise, they only
+								// result in warnings, so we don't break working code.
+								new WarningErrorHandler( context, getElement(), mirror, value, hql,
+										reportErrors, checkHql ),
+								ProcessorSessionFactory.create( context.getProcessingEnvironment(),
+										context.getEntityNameMappings(), context.getEnumTypesByValue(),
+										context.isIndexing() )
+						);
+				if ( !isJakartaDataStyle()
+					&& statement instanceof SqmSelectStatement<?> selectStatement ) {
+					if ( isQueryMethodName( name ) ) {
+						final AnnotationValue annotationValue = getAnnotationValue( mirror, "resultClass" );
+						final String resultType = annotationValue != null
+								? annotationValue.getValue().toString()
+								: resultType( selectStatement );
+						putMember( name,
+								new NamedQueryMethod(
+										this,
+										selectStatement,
+										name.substring( 1 ),
+										isRepository(),
+										getSessionType(),
+										getSessionVariableName(),
+										context.addNonnullAnnotation(),
+										resultType
+								)
+						);
+					}
+					if ( getAnnotationValue( mirror, "resultClass" ) == null ) {
+						final String resultType = resultType( selectStatement );
+						if ( resultType != null ) {
+							putMember( "QUERY_" + name,
+									new TypedMetaAttribute( this, name, "QUERY_", resultType,
+											TYPED_QUERY_REFERENCE, hql ) );
 						}
 					}
 				}
 			}
-		}
-	}
-
-	private static @Nullable String resultType(SqmSelectStatement<?> selectStatement) {
-		final JpaSelection<?> selection = selectStatement.getSelection();
-		if (selection == null) {
-			return null;
-		}
-		else if (selection instanceof SqmSelectClause from) {
-			return from.getSelectionItems().size() > 1
-					? "Object[]"
-					: from.getSelectionItems().get(0).getJavaTypeName();
-		}
-		else if (selection instanceof JpaRoot<?> root) {
-			return root.getModel().getTypeName();
-		}
-		else if (selection instanceof JpaEntityJoin<?, ?> join) {
-			return join.getModel().getTypeName();
-		}
-		else {
-			return selection.getJavaTypeName();
 		}
 	}
 
@@ -167,7 +150,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			final AnnotationValue value = getAnnotationValue( mirror, "value" );
+			final AnnotationValue value = getAnnotationValue( mirror );
 			if ( value != null ) {
 				@SuppressWarnings("unchecked")
 				final List<? extends AnnotationValue> annotationValues =
@@ -200,22 +183,26 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private NameMetaAttribute auxiliaryMember(AnnotationMirror mirror, String prefix, String name) {
-		if ( "QUERY_".equals(prefix) ) {
-			final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
-			// if there is no explicit result class, we will infer it later by
-			// type checking the query (this is allowed but not required by JPA)
-			// and then we will replace this TypedMetaAttribute
-			return new TypedMetaAttribute( this, name, prefix,
-					resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString(),
-					"jakarta.persistence.TypedQueryReference", null );
-		}
-		else if ( "GRAPH_".equals(prefix) ) {
-			return new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
-					"jakarta.persistence.EntityGraph", null );
-		}
-		else {
-			return new NameMetaAttribute( this, name, prefix);
-		}
+		return switch (prefix) {
+			case "QUERY_" -> {
+				final AnnotationValue resultClass = getAnnotationValue( mirror, "resultClass" );
+				// if there is no explicit result class, we will infer it later by
+				// type checking the query (this is allowed but not required by JPA)
+				// and then we will replace this TypedMetaAttribute
+				final String resultTypeName =
+						resultClass == null ? JAVA_OBJECT : resultClass.getValue().toString();
+				yield new TypedMetaAttribute( this, name, prefix, resultTypeName,
+						TYPED_QUERY_REFERENCE, null );
+			}
+			case "GRAPH_" ->
+					new TypedMetaAttribute( this, name, prefix, getQualifiedName(),
+							ENTITY_GRAPH, null );
+			case "PROFILE_" ->
+					new EnabledFetchProfileMetaAttribute( this, name, prefix,
+							HIB_ENABLED_FETCH_PROFILE );
+			default ->
+					new NameMetaAttribute( this, name, prefix );
+		};
 	}
 
 	protected String getSessionVariableName() {

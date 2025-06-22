@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ops;
@@ -46,14 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class PersistTest {
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "update Node set parent = null" ).executeUpdate();
-					entityManager.createQuery( "delete from Node" ).executeUpdate();
-					entityManager.createQuery( "update NumberedNode set parent = null" ).executeUpdate();
-					entityManager.createQuery( "delete from NumberedNode" ).executeUpdate();
-				}
-		);
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test

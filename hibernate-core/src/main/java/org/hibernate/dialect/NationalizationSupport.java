@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -15,58 +15,57 @@ import java.sql.Types;
  * @see Dialect#getNationalizationSupport()
  */
 public enum NationalizationSupport {
+
 	/**
 	 * The {@code CHAR}, {@code VARCHAR}, and {@code CLOB}
 	 * types inherently handle nationalized character data.
 	 * Usually the database will not even define dedicated
 	 * nationalized data types like {@code NVARCHAR}.
 	 */
-	IMPLICIT( Types.CHAR, Types.VARCHAR, Types.LONGVARCHAR, Types.CLOB ),
+	IMPLICIT,
+
 	/**
 	 * The database does define and support distinct SQL types
 	 * for representing nationalized character data, typically
 	 * named {@code NCHAR}, {@code NVARCHAR}, and {@code NCLOB}.
 	 */
-	EXPLICIT( Types.NCHAR, Types.NVARCHAR, Types.LONGNVARCHAR, Types.NCLOB ),
+	EXPLICIT,
+
 	/**
 	 * The database does not even have support for nationalized
 	 * character data.
 	 */
 	UNSUPPORTED;
 
-	private final int charVariantCode;
-	private final int varcharVariantCode;
-	private final int longVarcharVariantCode;
-	private final int clobVariantCode;
-
-	NationalizationSupport() {
-		this( -1, -1, -1, -1 );
-	}
-
-	NationalizationSupport(
-			int charVariantCode,
-			int varcharVariantCode,
-			int longVarcharVariantCode,
-			int clobVariantCode) {
-		this.charVariantCode = charVariantCode;
-		this.varcharVariantCode = varcharVariantCode;
-		this.longVarcharVariantCode = longVarcharVariantCode;
-		this.clobVariantCode = clobVariantCode;
-	}
-
 	public int getCharVariantCode() {
-		return charVariantCode;
+		return switch ( this ) {
+			case IMPLICIT -> Types.CHAR;
+			case EXPLICIT -> Types.NCHAR;
+			case UNSUPPORTED -> throw new UnsupportedOperationException("Nationalized character data not supported on this database");
+		};
 	}
 
 	public int getVarcharVariantCode() {
-		return varcharVariantCode;
+		return switch ( this ) {
+			case IMPLICIT -> Types.VARCHAR;
+			case EXPLICIT -> Types.NVARCHAR;
+			case UNSUPPORTED -> throw new UnsupportedOperationException("Nationalized character data not supported on this database");
+		};
 	}
 
 	public int getLongVarcharVariantCode() {
-		return longVarcharVariantCode;
+		return switch ( this ) {
+			case IMPLICIT -> Types.LONGVARCHAR;
+			case EXPLICIT -> Types.LONGNVARCHAR;
+			case UNSUPPORTED -> throw new UnsupportedOperationException("Nationalized character data not supported on this database");
+		};
 	}
 
 	public int getClobVariantCode() {
-		return clobVariantCode;
+		return switch ( this ) {
+			case IMPLICIT -> Types.CLOB;
+			case EXPLICIT -> Types.NCLOB;
+			case UNSUPPORTED -> throw new UnsupportedOperationException("Nationalized character data not supported on this database");
+		};
 	}
 }

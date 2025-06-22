@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
@@ -17,7 +17,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.results.TableGroupImpl;
+import org.hibernate.query.results.internal.TableGroupImpl;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -79,9 +79,9 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 
 		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
 		final String rootEntityName = entityPersister.getRootEntityName();
-		final EntityPersister rootEntityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( rootEntityName );
+		final EntityPersister rootEntityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( rootEntityName );
 
 		final String hierarchyRootTableName = rootEntityDescriptor.getTableName();
 		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
@@ -153,8 +153,8 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 						tableExpression,
 						true
 				);
-				final List<Assignment> assignmentList = assignmentsByTable.get( updatingTableReference );
-				if ( assignmentList == null ) {
+				final List<Assignment> assignmentsForInsert = assignmentsByTable.get( updatingTableReference );
+				if ( assignmentsForInsert == null ) {
 					continue;
 				}
 				final String insertCteTableName = getInsertCteTableName( tableExpression );
@@ -229,7 +229,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 				// Collect the target column references from the key expressions
 				final List<ColumnReference> targetColumnReferences = new ArrayList<>( existsKeyColumns );
 				// And transform assignments to target column references and selections
-				for ( Assignment assignment : assignments ) {
+				for ( Assignment assignment : assignmentsForInsert ) {
 					targetColumnReferences.addAll( assignment.getAssignable().getColumnReferences() );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(

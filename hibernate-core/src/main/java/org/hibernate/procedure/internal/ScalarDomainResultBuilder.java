@@ -1,15 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.procedure.internal;
 
-import java.util.function.BiFunction;
-
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultSetMappingSqlSelection;
-import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.internal.ResultSetMappingSqlSelection;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -18,6 +15,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -38,10 +36,11 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 	public DomainResult<T> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
-			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState()
-				.getSqlExpressionResolver();
+		final SqlExpressionResolver sqlExpressionResolver =
+				domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
+		final TypeConfiguration typeConfiguration =
+				domainResultCreationState.getSqlAstCreationState().getCreationContext().getTypeConfiguration();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						SqlExpressionResolver.createColumnReferenceKey(
@@ -51,17 +50,14 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 							final BasicType<?> basicType = jdbcResultsMetadata.resolveType(
 									resultPosition + 1,
 									typeDescriptor,
-									processingState.getSqlAstCreationState().getCreationContext().getSessionFactory()
+									typeConfiguration
 							);
 							return new ResultSetMappingSqlSelection( resultPosition, (BasicValuedMapping) basicType );
 						}
 				),
 				typeDescriptor,
 				null,
-				domainResultCreationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
+				typeConfiguration
 		);
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),

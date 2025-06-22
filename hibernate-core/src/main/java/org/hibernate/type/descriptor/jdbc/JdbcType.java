@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -118,7 +118,8 @@ public interface JdbcType extends Serializable {
 	 */
 	// todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaType) {
-		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( value.toString() );
+		return (appender, value, dialect, wrapperOptions) ->
+				appender.appendSql( value.toString() );
 	}
 
 	/**
@@ -311,47 +312,24 @@ public interface JdbcType extends Serializable {
 	}
 
 	static CastType getCastType(int typeCode) {
-		switch ( typeCode ) {
-			case INTEGER:
-			case TINYINT:
-			case SMALLINT:
-				return CastType.INTEGER;
-			case BIGINT:
-				return CastType.LONG;
-			case FLOAT:
-			case REAL:
-				return CastType.FLOAT;
-			case DOUBLE:
-				return CastType.DOUBLE;
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONGVARCHAR:
-			case LONGNVARCHAR:
-				return CastType.STRING;
-			case CLOB:
-				return CastType.CLOB;
-			case BOOLEAN:
-				return CastType.BOOLEAN;
-			case DECIMAL:
-			case NUMERIC:
-				return CastType.FIXED;
-			case DATE:
-				return CastType.DATE;
-			case TIME:
-			case TIME_UTC:
-			case TIME_WITH_TIMEZONE:
-				return CastType.TIME;
-			case TIMESTAMP:
-				return CastType.TIMESTAMP;
-			case TIMESTAMP_WITH_TIMEZONE:
-				return CastType.OFFSET_TIMESTAMP;
-			case NULL:
-				return CastType.NULL;
-			default:
-				return CastType.OTHER;
-		}
+		return switch ( typeCode ) {
+			case INTEGER, TINYINT, SMALLINT -> CastType.INTEGER;
+			case BIGINT -> CastType.LONG;
+			case FLOAT, REAL -> CastType.FLOAT;
+			case DOUBLE -> CastType.DOUBLE;
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONGVARCHAR, LONGNVARCHAR -> CastType.STRING;
+			case CLOB -> CastType.CLOB;
+			case BOOLEAN -> CastType.BOOLEAN;
+			case DECIMAL, NUMERIC -> CastType.FIXED;
+			case DATE -> CastType.DATE;
+			case TIME, TIME_UTC, TIME_WITH_TIMEZONE -> CastType.TIME;
+			case TIMESTAMP -> CastType.TIMESTAMP;
+			case TIMESTAMP_WITH_TIMEZONE -> CastType.OFFSET_TIMESTAMP;
+			case JSON, JSON_ARRAY -> CastType.JSON;
+			case SQLXML, XML_ARRAY -> CastType.XML;
+			case NULL -> CastType.NULL;
+			default -> CastType.OTHER;
+		};
 	}
 
 	/**

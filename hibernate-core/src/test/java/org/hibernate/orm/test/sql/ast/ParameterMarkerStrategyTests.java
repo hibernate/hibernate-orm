@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.sql.ast;
@@ -153,11 +153,7 @@ public class ParameterMarkerStrategyTests {
 
 	@AfterEach
 	public void cleanUpTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete EntityOfBasics" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithFilters" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithVersion" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	public static class ParameterMarkerStrategyImpl implements ParameterMarkerStrategy {

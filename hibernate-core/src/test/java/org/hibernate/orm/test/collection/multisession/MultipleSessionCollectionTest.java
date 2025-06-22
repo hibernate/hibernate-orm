@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.collection.multisession;
@@ -19,6 +19,7 @@ import jakarta.persistence.OptimisticLockException;
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.CollectionEntry;
 
@@ -95,6 +96,7 @@ public class MultipleSessionCollectionTest {
 	@Test
 	@JiraKey("HHH-9518")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "The select triggered by the merge just hang without any exception")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The merge in the second session causes a deadlock")
 	public void testCopyPersistentCollectionReferenceAfterFlush(SessionFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();

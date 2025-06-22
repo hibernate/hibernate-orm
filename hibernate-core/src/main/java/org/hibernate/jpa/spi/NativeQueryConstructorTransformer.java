@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.spi;
@@ -8,17 +8,23 @@ import org.hibernate.InstantiationException;
 import org.hibernate.query.TupleTransformer;
 
 import java.lang.reflect.Constructor;
-import java.util.List;
 
 /**
- * A {@link TupleTransformer} for handling {@link List} results from native queries.
+ * A {@link TupleTransformer} which packages each native query result in
+ * an instance of the result class by calling an appropriate constructor.
+ *
+ * @implNote The result type must have exactly one constructor with the
+ * correct number of parameters. Constructors cannot be disambiguated by
+ * parameter type.
+ *
+ * @since 6.3
  *
  * @author Gavin King
  */
 public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T> {
 
 	private final Class<T> resultClass;
-	private Constructor<T> constructor;
+	private transient Constructor<T> constructor;
 
 	private Constructor<T> constructor(Object[] elements) {
 		if ( constructor == null ) {
@@ -68,5 +74,17 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 		catch (Exception e) {
 			throw new InstantiationException( "Cannot instantiate query result type", resultClass, e );
 		}
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof NativeQueryConstructorTransformer<?> that
+			&& this.resultClass == that.resultClass;
+			// should be safe to ignore the cached constructor here
+	}
+
+	@Override
+	public int hashCode() {
+		return resultClass.hashCode();
 	}
 }

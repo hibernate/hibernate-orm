@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.internal;
@@ -52,10 +52,12 @@ public class LegacySpecHelper {
 		if ( rawValue == null ) {
 			return null;
 		}
-		if ( rawValue instanceof Integer ) {
-			return ( (Integer) rawValue );
+		if ( rawValue instanceof Integer integer ) {
+			return integer;
 		}
-		return Integer.valueOf( rawValue.toString() );
+		else {
+			return Integer.valueOf( rawValue.toString() );
+		}
 	}
 
 	public static Integer getInteger(
@@ -67,10 +69,12 @@ public class LegacySpecHelper {
 		if ( rawValue == null ) {
 			return null;
 		}
-		if ( rawValue instanceof Integer ) {
-			return ( (Integer) rawValue );
+		if ( rawValue instanceof Integer integer ) {
+			return integer;
 		}
-		return Integer.valueOf( rawValue.toString() );
+		else {
+			return Integer.valueOf( rawValue.toString() );
+		}
 	}
 
 

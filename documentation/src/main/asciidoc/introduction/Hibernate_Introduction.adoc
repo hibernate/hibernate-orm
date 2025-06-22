@@ -6,7 +6,7 @@ include::{shared-attributes-dir}/filesystem-attributes.adoc[]
 include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 
-= An Introduction to Hibernate 6
+= A Short Guide to Hibernate 7
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
@@ -20,7 +20,8 @@ include::Configuration.adoc[]
 include::Entities.adoc[]
 include::Mapping.adoc[]
 include::Interacting.adoc[]
-include::Generator.adoc[]
+include::Querying.adoc[]
+include::Processor.adoc[]
 include::Tuning.adoc[]
 include::Advanced.adoc[]
 include::Credits.adoc[]

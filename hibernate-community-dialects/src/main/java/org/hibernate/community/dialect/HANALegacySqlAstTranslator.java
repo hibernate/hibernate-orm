@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -9,17 +9,22 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
@@ -33,6 +38,8 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+
+import static org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator.isLob;
 
 /**
  * An SQL AST translator for the Legacy HANA dialect.
@@ -148,12 +155,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected boolean supportsWithClauseInSubquery() {
-		// HANA doesn't seem to support correlation, so we just report false here for simplicity
-		return false;
-	}
-
-	@Override
 	protected boolean isCorrelated(CteStatement cteStatement) {
 		// Report false here, because apparently HANA does not need the "lateral" keyword to correlate a from clause subquery in a subquery
 		return false;
@@ -192,15 +193,35 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
-		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
-		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
 	}
 
 	@Override
-	public void visitFunctionTableReference(FunctionTableReference tableReference) {
-		tableReference.getFunctionExpression().accept( this );
-		renderTableReferenceIdentificationVariable( tableReference );
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "(select t.*, row_number() over() " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from " );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( " t)" );
+		}
+		else {
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+		}
+	}
+
+	@Override
+	protected SqlAstNodeRenderingMode getParameterRenderingMode() {
+		// HANA does not support parameters in lateral subqueries for some reason, so inline all the parameters in this case
+		return inLateral ? SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS : super.getParameterRenderingMode();
 	}
 
 	@Override
@@ -212,7 +233,38 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		// In SAP HANA, LOBs are not "comparable", so we have to use a like predicate for comparison
+		final boolean isLob = isLob( lhs.getExpressionType() );
 		if ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM ) {
+			if ( isLob ) {
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "case when " );
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 else 1 end=1" );
+						return;
+					case NOT_DISTINCT_FROM:
+						appendSql( "case when " );
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						appendSql( " or " );
+						lhs.accept( this );
+						appendSql( " is null and " );
+						rhs.accept( this );
+						appendSql( " is null then 0 else 1 end=0" );
+						return;
+					default:
+						// Fall through
+						break;
+				}
+			}
 			// HANA does not support plain parameters in the select clause of the intersect emulation
 			withParameterRenderingMode(
 					SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
@@ -220,7 +272,24 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 			);
 		}
 		else {
-			renderComparisonEmulateIntersect( lhs, operator, rhs );
+			if ( isLob ) {
+				switch ( operator ) {
+					case EQUAL:
+						lhs.accept( this );
+						appendSql( " like " );
+						rhs.accept( this );
+						return;
+					case NOT_EQUAL:
+						lhs.accept( this );
+						appendSql( " not like " );
+						rhs.accept( this );
+						return;
+					default:
+						// Fall through
+						break;
+				}
+			}
+			renderComparisonStandard( lhs, operator, rhs );
 		}
 	}
 
@@ -235,16 +304,6 @@ public class HANALegacySqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		else {
 			expression.accept( this );
 		}
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorGtLtSyntax() {
-		return false;
 	}
 
 	@Override

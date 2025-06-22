@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results;
 
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -30,6 +31,7 @@ import java.lang.invoke.MethodHandles;
 		name = ResultsLogger.LOGGER_NAME,
 		description = "Logging related to `DomainResult` graphs which build individual parts of the domain model from JDBC or from cache"
 )
+@Internal
 public interface ResultsLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".results";
 

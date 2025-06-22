@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
 
 import java.util.Objects;
 
-import org.hibernate.query.BindableType;
+import org.hibernate.type.BindableType;
 import org.hibernate.query.spi.AbstractQueryParameter;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -61,19 +61,20 @@ public class QueryParameterPositionalImpl<T> extends AbstractQueryParameter<T> {
 
 	@Override
 	public NamedQueryMemento.ParameterMemento toMemento() {
-		return session -> new QueryParameterPositionalImpl( getPosition(), allowsMultiValuedBinding(), getHibernateType() );
+		return session -> new QueryParameterPositionalImpl<>( getPosition(), allowsMultiValuedBinding(), getHibernateType() );
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
+	public boolean equals(Object object) {
+		if ( this == object ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		else if ( !(object instanceof QueryParameterPositionalImpl<?> that) ) {
 			return false;
 		}
-		QueryParameterPositionalImpl<?> that = (QueryParameterPositionalImpl<?>) o;
-		return position == that.position;
+		else {
+			return position == that.position;
+		}
 	}
 
 	@Override

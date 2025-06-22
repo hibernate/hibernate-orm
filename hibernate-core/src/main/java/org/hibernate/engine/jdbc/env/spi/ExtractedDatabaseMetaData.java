@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
@@ -121,6 +121,34 @@ public interface ExtractedDatabaseMetaData {
 	 * @see java.sql.DatabaseMetaData#getSQLStateType()
 	 */
 	SQLStateType getSqlStateType();
+
+	/**
+	 * Retrieve the JDBC URL.
+	 *
+	 * @see java.sql.DatabaseMetaData#getURL()
+	 */
+	String getUrl();
+
+	/**
+	 * Retrieve the JDBC driver name.
+	 *
+	 * @see java.sql.DatabaseMetaData#getDriverName()
+	 */
+	String getDriver();
+
+	/**
+	 * Retrieve the transaction isolation level.
+	 *
+	 * @see java.sql.Connection#getTransactionIsolation()
+	 */
+	int getTransactionIsolation();
+
+	/**
+	 * Retrieve the default transaction isolation level.
+	 *
+	 * @see java.sql.DatabaseMetaData#getDefaultTransactionIsolation()
+	 */
+	int getDefaultTransactionIsolation();
 
 	/**
 	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.

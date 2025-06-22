@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -28,6 +28,10 @@ public @interface DiscriminatorOptions {
 	 * instances of a root entity and its subtypes. This is useful if
 	 * there are discriminator column values which do <em>not</em>
 	 * map to any subtype of the root entity type.
+	 * <p>
+	 * This setting has the side effect of suppressing the generation
+	 * of a {@code check} constraint in the DDL for the discriminator
+	 * column.
 	 *
 	 * @return {@code true} if allowed discriminator values must always
 	 *         be explicitly enumerated

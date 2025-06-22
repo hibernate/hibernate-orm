@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.xml.internal.attr;
@@ -84,12 +84,15 @@ public class CommonAttributeProcessing {
 			JaxbLockableAttribute jaxbAttribute,
 			MutableMemberDetails memberDetails,
 			XmlDocumentContext xmlDocumentContext) {
-		final boolean includeInOptimisticLock = jaxbAttribute.isOptimisticLock();
-		final OptimisticLockAnnotation optLockAnn = (OptimisticLockAnnotation) memberDetails.applyAnnotationUsage(
-				HibernateAnnotations.OPTIMISTIC_LOCK,
-				xmlDocumentContext.getModelBuildingContext()
-		);
-		optLockAnn.excluded( !includeInOptimisticLock );
+		final Boolean includeInOptimisticLock = jaxbAttribute.isOptimisticLock();
+
+		if ( includeInOptimisticLock != null ) {
+			final OptimisticLockAnnotation optLockAnn = (OptimisticLockAnnotation) memberDetails.applyAnnotationUsage(
+					HibernateAnnotations.OPTIMISTIC_LOCK,
+					xmlDocumentContext.getModelBuildingContext()
+			);
+			optLockAnn.excluded( !includeInOptimisticLock );
+		}
 	}
 
 	public static void applyFetching(

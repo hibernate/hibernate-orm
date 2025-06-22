@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.relational;
@@ -11,7 +11,7 @@ import org.hibernate.boot.model.naming.Identifier;
  */
 public class QualifiedNameImpl extends QualifiedNameParser.NameParts implements QualifiedName {
 	public QualifiedNameImpl(Namespace.Name schemaName, Identifier objectName) {
-		this( schemaName.getCatalog(), schemaName.getSchema(), objectName );
+		this( schemaName.catalog(), schemaName.schema(), objectName );
 	}
 
 	public QualifiedNameImpl(Identifier catalogName, Identifier schemaName, Identifier objectName) {

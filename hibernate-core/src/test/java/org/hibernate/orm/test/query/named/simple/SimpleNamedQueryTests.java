@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.named.simple;
@@ -9,7 +9,6 @@ import jakarta.persistence.FlushModeType;
 import org.hibernate.CacheMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.named.NamedObjectRepository;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -94,7 +93,7 @@ public class SimpleNamedQueryTests {
 
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<SimpleEntityWithNamedQueries> query = session.createNamedQuery( "options", SimpleEntityWithNamedQueries.class );
+					final Query<SimpleEntityWithNamedQueries> query = session.createNamedQuery( "options", SimpleEntityWithNamedQueries.class );
 					assertThat( query.getFetchSize(), is( 20 ) );
 					assertThat( query.getFirstResult(), is( 20 ) );
 					assertThat( query.getMaxResults(), is( 20 ) );

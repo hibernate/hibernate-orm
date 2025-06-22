@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.insert;
@@ -33,10 +33,10 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
-		return dialect().getIdentityColumnSupport().appendIdentitySelectToInsert(
-				( (BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping() ).getSelectionExpression(),
-				insertSQL
-		);
+		final BasicEntityIdentifierMapping identifierMapping =
+				(BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping();
+		return dialect().getIdentityColumnSupport()
+				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );
 	}
 
 	@Override
@@ -49,7 +49,7 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 
 		ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
 		try {
-			return getGeneratedValues( resultSet, persister, getTiming(), session );
+			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

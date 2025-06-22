@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.batch.internal;
@@ -21,18 +21,19 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
+import static java.util.Objects.requireNonNull;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
- * Standard implementation of Batch
+ * Standard implementation of {@link Batch}
  *
  * @author Steve Ebersole
  */
@@ -56,26 +57,21 @@ public class BatchImpl implements Batch {
 			PreparedStatementGroup statementGroup,
 			int batchSizeToUse,
 			JdbcCoordinator jdbcCoordinator) {
-		if ( key == null ) {
-			throw new IllegalArgumentException( "Batch key cannot be null" );
-		}
-		if ( jdbcCoordinator == null ) {
-			throw new IllegalArgumentException( "JDBC coordinator cannot be null" );
-		}
+		requireNonNull( key, "Batch key cannot be null" );
+		requireNonNull( jdbcCoordinator, "JDBC coordinator cannot be null" );
 
+		this.batchSizeToUse = batchSizeToUse;
 		this.key = key;
 		this.jdbcCoordinator = jdbcCoordinator;
 		this.statementGroup = statementGroup;
 
-		final JdbcServices jdbcServices = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getJdbcServices();
-		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
-		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
-
-		this.batchSizeToUse = batchSizeToUse;
+		final JdbcServices jdbcServices =
+				jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getJdbcServices();
+		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
+		sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
 		if ( BATCH_LOGGER.isTraceEnabled() ) {
-			BATCH_LOGGER.tracef(
-					"Created Batch (%s) - `%s`",
+			BATCH_MESSAGE_LOGGER.createBatch(
 					batchSizeToUse,
 					key.toLoggableString()
 			);
@@ -114,16 +110,17 @@ public class BatchImpl implements Batch {
 	public void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker) {
 		final boolean loggerTraceEnabled = BATCH_LOGGER.isTraceEnabled();
 		if ( loggerTraceEnabled ) {
-			BATCH_LOGGER.tracef(
-					"Adding to JDBC batch (%s) - `%s`",
+			BATCH_MESSAGE_LOGGER.addToBatch(
 					batchPosition + 1,
+					batchSizeToUse,
 					getKey().toLoggableString()
 			);
 		}
 
 		try {
 			getStatementGroup().forEachStatement( (tableName, statementDetails) -> {
-				if ( inclusionChecker != null && !inclusionChecker.include( statementDetails.getMutatingTableDetails() ) ) {
+				if ( inclusionChecker != null
+						&& !inclusionChecker.include( statementDetails.getMutatingTableDetails() ) ) {
 					if ( loggerTraceEnabled ) {
 						MODEL_MUTATION_LOGGER.tracef(
 								"Skipping addBatch for table : %s (batch-position=%s)",
@@ -131,27 +128,27 @@ public class BatchImpl implements Batch {
 								batchPosition+1
 						);
 					}
-					return;
 				}
-
-				//noinspection resource
-				final PreparedStatement statement = statementDetails.resolveStatement();
-				sqlStatementLogger.logStatement( statementDetails.getSqlString() );
-				jdbcValueBindings.beforeStatement( statementDetails );
-
-				try {
-					statement.addBatch();
-				}
-				catch (SQLException e) {
-					BATCH_LOGGER.debug( "SQLException escaped proxy", e );
-					throw sqlExceptionHelper.convert(
-							e,
-							"Could not perform addBatch",
-							statementDetails.getSqlString()
-					);
-				}
-				finally {
-					jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+				else {
+					//noinspection resource
+					final PreparedStatement statement = statementDetails.resolveStatement();
+					final String sqlString = statementDetails.getSqlString();
+					sqlStatementLogger.logStatement( sqlString );
+					jdbcValueBindings.beforeStatement( statementDetails );
+					try {
+						statement.addBatch();
+					}
+					catch (SQLException e) {
+						BATCH_LOGGER.debug( "SQLException escaped proxy", e );
+						throw sqlExceptionHelper.convert(
+								e,
+								"Could not perform addBatch",
+								sqlString
+						);
+					}
+					finally {
+						jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+					}
 				}
 			} );
 		}
@@ -164,26 +161,11 @@ public class BatchImpl implements Batch {
 		if ( batchPosition == batchSizeToUse ) {
 			notifyObserversImplicitExecution();
 			performExecution();
-			batchPosition = 0;
-			batchExecuted = true;
 		}
 	}
 
 	protected void releaseStatements() {
-		statementGroup.forEachStatement( (tableName, statementDetails) -> {
-			if ( statementDetails.getStatement() == null ) {
-				BATCH_LOGGER.debugf(
-						"PreparedStatementDetails did not contain PreparedStatement on #releaseStatements : %s",
-						statementDetails.getSqlString()
-				);
-				return;
-			}
-
-			clearBatch( statementDetails );
-		} );
-
 		statementGroup.release();
-		jdbcCoordinator.afterStatementExecution();
 	}
 
 	protected void clearBatch(PreparedStatementDetails statementDetails) {
@@ -236,34 +218,29 @@ public class BatchImpl implements Batch {
 	@Override
 	public void execute() {
 		notifyObserversExplicitExecution();
-		if ( getStatementGroup().getNumberOfStatements() == 0 ) {
-			return;
-		}
-
-		try {
-			if ( batchPosition == 0 ) {
-				if( !batchExecuted) {
-					if ( BATCH_LOGGER.isDebugEnabled() ) {
+		if ( getStatementGroup().getNumberOfStatements() != 0 ) {
+			try {
+				if ( batchPosition == 0 ) {
+					if ( !batchExecuted && BATCH_LOGGER.isDebugEnabled() ) {
 						BATCH_LOGGER.debugf(
 								"No batched statements to execute - %s",
 								getKey().toLoggableString()
 						);
 					}
 				}
+				else {
+					performExecution();
+				}
 			}
-			else {
-				performExecution();
+			finally {
+				releaseStatements();
 			}
-		}
-		finally {
-			releaseStatements();
 		}
 	}
 
 	protected void performExecution() {
 		if ( BATCH_LOGGER.isTraceEnabled() ) {
-			BATCH_LOGGER.tracef(
-					"Executing JDBC batch (%s / %s) - `%s`",
+			BATCH_MESSAGE_LOGGER.executeBatch(
 					batchPosition,
 					batchSizeToUse,
 					getKey().toLoggableString()
@@ -276,43 +253,40 @@ public class BatchImpl implements Batch {
 			getStatementGroup().forEachStatement( (tableName, statementDetails) -> {
 				final String sql = statementDetails.getSqlString();
 				final PreparedStatement statement = statementDetails.getStatement();
-
-				if ( statement == null ) {
-					return;
-				}
-
-				try {
-					if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
-						final int[] rowCounts;
-						final EventManager eventManager = jdbcSessionOwner.getEventManager();
-						final HibernateMonitoringEvent jdbcBatchExecutionEvent = eventManager.beginJdbcBatchExecutionEvent();
-						try {
-							eventHandler.jdbcExecuteBatchStart();
-							rowCounts = statement.executeBatch();
+				if ( statement != null ) {
+					try {
+						if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
+							final int[] rowCounts;
+							final EventMonitor eventMonitor = jdbcSessionOwner.getEventMonitor();
+							final DiagnosticEvent executionEvent = eventMonitor.beginJdbcBatchExecutionEvent();
+							try {
+								eventHandler.jdbcExecuteBatchStart();
+								rowCounts = statement.executeBatch();
+							}
+							finally {
+								eventMonitor.completeJdbcBatchExecutionEvent( executionEvent, sql );
+								eventHandler.jdbcExecuteBatchEnd();
+							}
+							checkRowCounts( rowCounts, statementDetails );
 						}
-						finally {
-							eventManager.completeJdbcBatchExecutionEvent( jdbcBatchExecutionEvent, sql );
-							eventHandler.jdbcExecuteBatchEnd();
+						else {
+							statement.executeBatch();
 						}
-						checkRowCounts( rowCounts, statementDetails );
 					}
-					else {
-						statement.executeBatch();
+					catch (SQLException e) {
+						abortBatch( e );
+						throw sqlExceptionHelper.convert( e, "could not execute batch", sql );
 					}
-				}
-				catch (SQLException e) {
-					abortBatch( e );
-					BATCH_MESSAGE_LOGGER.unableToExecuteBatch( e, sql );
-					throw sqlExceptionHelper.convert( e, "could not execute batch", sql );
-				}
-				catch (RuntimeException re) {
-					abortBatch( re );
-					BATCH_MESSAGE_LOGGER.unableToExecuteBatch( re, sql );
-					throw re;
+					catch (RuntimeException re) {
+						abortBatch( re );
+						throw re;
+					}
 				}
 			} );
+			batchExecuted = true;
 		}
 		finally {
+			jdbcCoordinator.afterStatementExecution();
 			batchPosition = 0;
 		}
 	}
@@ -320,20 +294,19 @@ public class BatchImpl implements Batch {
 	private void checkRowCounts(int[] rowCounts, PreparedStatementDetails statementDetails)
 			throws SQLException, HibernateException {
 		final int numberOfRowCounts = rowCounts.length;
-		if ( batchPosition != 0 ) {
-			if ( numberOfRowCounts != batchPosition ) {
-				JDBC_MESSAGE_LOGGER.unexpectedRowCounts(
-						statementDetails.getMutatingTableDetails().getTableName(),
-						numberOfRowCounts,
-						batchPosition
-				);
-			}
+		if ( batchPosition != 0 && numberOfRowCounts != batchPosition ) {
+			JDBC_MESSAGE_LOGGER.unexpectedRowCounts(
+					statementDetails.getMutatingTableDetails().getTableName(),
+					numberOfRowCounts,
+					batchPosition
+			);
 		}
 
+		final String sql = statementDetails.getSqlString();
 		for ( int i = 0; i < numberOfRowCounts; i++ ) {
 			try {
 				statementDetails.getExpectation()
-						.verifyOutcome( rowCounts[i], statementDetails.getStatement(), i, statementDetails.getSqlString() );
+						.verifyOutcome( rowCounts[i], statementDetails.getStatement(), i, sql );
 			}
 			catch ( StaleStateException staleStateException ) {
 				if ( staleStateMappers != null ) {
@@ -347,10 +320,9 @@ public class BatchImpl implements Batch {
 	public void release() {
 		if ( BATCH_MESSAGE_LOGGER.isInfoEnabled() ) {
 			final PreparedStatementGroup statementGroup = getStatementGroup();
-			if ( statementGroup.getNumberOfStatements() != 0 ) {
-				if ( statementGroup.hasMatching( (statementDetails) -> statementDetails.getStatement() != null ) ) {
-					BATCH_MESSAGE_LOGGER.batchContainedStatementsOnRelease();
-				}
+			if ( statementGroup.getNumberOfStatements() != 0
+					&& statementGroup.hasMatching( statementDetails -> statementDetails.getStatement() != null ) ) {
+				BATCH_MESSAGE_LOGGER.batchContainedStatementsOnRelease();
 			}
 		}
 		releaseStatements();

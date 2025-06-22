@@ -1,59 +1,201 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.graph.internal;
 
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
-
+import jakarta.persistence.metamodel.Attribute;
+import org.hibernate.AssertionFailure;
 import org.hibernate.graph.CannotContainSubGraphException;
-import org.hibernate.graph.SubGraph;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
-import org.jboss.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
 
+import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
+import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.MANY_TO_MANY;
+import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.MANY_TO_ONE;
+import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.ONE_TO_MANY;
+import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.ONE_TO_ONE;
 import static java.util.Collections.emptyMap;
-import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.findSubType;
+
 
 /**
  * Implementation of {@link jakarta.persistence.AttributeNode}.
  *
  * @author Steve Ebersole
+ * @author Gavin King
  */
-public class AttributeNodeImpl<J>
+public abstract sealed class AttributeNodeImpl<J, E, K>
 		extends AbstractGraphNode<J>
-		implements AttributeNodeImplementor<J> {
-	private final PersistentAttribute<?, J> attribute;
+		implements AttributeNodeImplementor<J, E, K>
+		permits AttributeNodeImpl.SingularAttributeNodeImpl,
+				AttributeNodeImpl.PluralAttributeNodeImpl,
+				AttributeNodeImpl.MapAttributeNodeImpl {
 
-	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap;
-	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap;
+	protected final PersistentAttribute<?, J> attribute;
+	protected final DomainType<E> valueGraphType;
+	protected final SimpleDomainType<K> keyGraphType;
 
-	public <X> AttributeNodeImpl(PersistentAttribute<X, J> attribute, boolean mutable) {
-		this(attribute, null, null, mutable);
+	protected SubGraphImplementor<E> valueSubgraph;
+	protected SubGraphImplementor<K> keySubgraph;
+
+	static <J> AttributeNodeImpl<J,?,?> create(
+			PersistentAttribute<?, J> attribute, boolean mutable) {
+		if ( attribute instanceof PluralPersistentAttribute<?, J, ?> pluralAttribute ) {
+			return create( pluralAttribute, mutable );
+		}
+		else if ( attribute instanceof SingularPersistentAttribute<?, J> singularAttribute ) {
+			return new SingularAttributeNodeImpl<>( singularAttribute, mutable,
+					singularAttribute.getValueGraphType() );
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized attribute type: " + attribute );
+		}
 	}
 
-	/**
-	 * Intended only for use from making a copy
-	 */
-	private AttributeNodeImpl(
-			PersistentAttribute<?, J> attribute,
-			Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap,
-			Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap,
-			boolean mutable) {
+	static <J,E> AttributeNodeImpl<J,E,?> create(
+			PluralPersistentAttribute<?, J, E> attribute, boolean mutable) {
+		if ( attribute instanceof MapPersistentAttribute<?, ?, ?> mapAttribute ) {
+			return create( attribute, mapAttribute, mutable );
+		}
+		else {
+			return new PluralAttributeNodeImpl<>( attribute, mutable,
+					attribute.getValueGraphType() );
+		}
+	}
+
+	static <K,V> AttributeNodeImpl<Map<K,V>,V,K> create(
+			MapPersistentAttribute<?, K, V> attribute, boolean mutable) {
+		return new MapAttributeNodeImpl<>( attribute, attribute, mutable,
+				attribute.getValueGraphType(), attribute.getKeyGraphType() );
+	}
+
+	private static <J,K,V> AttributeNodeImpl<J,V,K> create(
+			PluralPersistentAttribute<?, J, V> plural, MapPersistentAttribute<?, K, ?> attribute, boolean mutable) {
+		return new MapAttributeNodeImpl<>( plural, attribute, mutable,
+				plural.getValueGraphType(), attribute.getKeyGraphType() );
+	}
+
+	AttributeNodeImpl(
+			PersistentAttribute<?, J> attribute, boolean mutable,
+			DomainType<E> valueGraphType, SimpleDomainType<K> keyGraphType) {
 		super( mutable );
 		this.attribute = attribute;
-		this.subGraphMap = subGraphMap;
-		this.keySubGraphMap = keySubGraphMap;
+		this.valueGraphType = valueGraphType;
+		this.keyGraphType = keyGraphType;
+	}
+
+	private AttributeNodeImpl(AttributeNodeImpl<J, E, K> that, boolean mutable) {
+		super( mutable );
+		attribute = that.attribute;
+		valueGraphType = that.valueGraphType;
+		keyGraphType = that.keyGraphType;
+		valueSubgraph = that.valueSubgraph == null ? null : that.valueSubgraph.makeCopy( mutable );
+		keySubgraph = that.keySubgraph == null ? null : that.keySubgraph.makeCopy( mutable );
+	}
+
+	static final class SingularAttributeNodeImpl<J> extends AttributeNodeImpl<J, J, Void> {
+		private SingularAttributeNodeImpl(
+				SingularPersistentAttribute<?,J> attribute,
+				boolean mutable,
+				DomainType<J> valueGraphType) {
+			super( attribute, mutable, valueGraphType, null );
+		}
+
+		private SingularAttributeNodeImpl(AttributeNodeImpl<J, J, Void> that, boolean mutable) {
+			super( that, mutable );
+		}
+
+		@Override
+		public SubGraphImplementor<J> addSingularSubgraph() {
+			checkToOne();
+			verifyMutability();
+			if ( valueSubgraph == null ) {
+				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+			}
+			return valueSubgraph;
+		}
+
+		@Override
+		public AttributeNodeImplementor<J, J, Void> makeCopy(boolean mutable) {
+			return !mutable && !isMutable() ? this : new SingularAttributeNodeImpl<>( this, mutable );
+		}
+	}
+
+	static final class PluralAttributeNodeImpl<J,E> extends AttributeNodeImpl<J, E, Void> {
+		private PluralAttributeNodeImpl(
+				PluralPersistentAttribute<?,J,E> attribute,
+				boolean mutable,
+				DomainType<E> valueGraphType) {
+			super( attribute, mutable, valueGraphType, null );
+		}
+
+		private PluralAttributeNodeImpl(AttributeNodeImpl<J, E, Void> that, boolean mutable) {
+			super( that, mutable );
+		}
+
+		@Override
+		public SubGraphImplementor<E> addElementSubgraph() {
+			checkToMany();
+			verifyMutability();
+			if ( valueSubgraph == null ) {
+				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+			}
+			return valueSubgraph;
+		}
+
+		@Override
+		public AttributeNodeImplementor<J, E, Void> makeCopy(boolean mutable) {
+			return !mutable && !isMutable() ? this : new PluralAttributeNodeImpl<>( this, mutable );
+		}
+	}
+
+	static final class MapAttributeNodeImpl<J,K,V> extends AttributeNodeImpl<J, V, K> {
+		private MapAttributeNodeImpl(
+				PluralPersistentAttribute<?,J,V> pluralAttribute,
+				@SuppressWarnings("unused") // a "witness" that this is really a Map
+				MapPersistentAttribute<?,K,?> attribute,
+				boolean mutable,
+				DomainType<V> valueGraphType, SimpleDomainType<K> keyGraphType) {
+			super( pluralAttribute, mutable, valueGraphType, keyGraphType );
+		}
+
+		private MapAttributeNodeImpl(AttributeNodeImpl<J, V, K> that, boolean mutable) {
+			super( that, mutable );
+		}
+
+		@Override
+		public SubGraphImplementor<K> addKeySubgraph() {
+			verifyMutability();
+			if ( keySubgraph == null ) {
+				keySubgraph = new SubGraphImpl<>( asManagedType( keyGraphType ), true );
+			}
+			return keySubgraph;
+		}
+
+		@Override
+		public SubGraphImplementor<V> addElementSubgraph() {
+			checkToMany();
+			verifyMutability();
+			if ( valueSubgraph == null ) {
+				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+			}
+			return valueSubgraph;
+		}
+
+		@Override
+		public AttributeNodeImplementor<J, V, K> makeCopy(boolean mutable) {
+			return !mutable && !isMutable() ? this : new MapAttributeNodeImpl<>( this, mutable );
+		}
 	}
 
 	@Override
@@ -67,214 +209,173 @@ public class AttributeNodeImpl<J>
 	}
 
 	@Override
-	public Map<Class<? extends J>, SubGraphImplementor<? extends J>> getSubGraphMap() {
-		return subGraphMap == null ? emptyMap() : subGraphMap;
+	public SubGraphImplementor<E> addValueSubgraph() {
+		verifyMutability();
+		// this one is intentionally lenient and disfavored
+		if ( valueSubgraph == null ) {
+			valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+		}
+		return valueSubgraph;
 	}
 
 	@Override
-	public Map<Class<? extends J>, SubGraphImplementor<? extends J>> getKeySubGraphMap() {
-		return keySubGraphMap == null ? emptyMap() : keySubGraphMap;
+	public SubGraphImplementor<J> addSingularSubgraph() {
+		throw new UnsupportedOperationException("Not a singular attribute node");
 	}
 
 	@Override
-	public SubGraphImplementor<J> makeSubGraph() {
-		return internalMakeSubgraph( (Class<J>) null );
+	public SubGraphImplementor<E> addElementSubgraph() {
+		throw new UnsupportedOperationException( "Not a collection-valued attribute node" );
 	}
 
 	@Override
-	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subtype) {
-		return internalMakeSubgraph( subtype );
+	public SubGraphImplementor<K> addKeySubgraph() {
+		throw new UnsupportedOperationException( "Not a Map-valued attribute node" );
 	}
 
-	@Override
-	public <S extends J> SubGraphImplementor<S> makeSubGraph(ManagedDomainType<S> subtype) {
-		return internalMakeSubgraph( subtype );
+	protected void checkToOne() {
+		final Attribute.PersistentAttributeType attributeType = attribute.getPersistentAttributeType();
+		if ( attributeType != MANY_TO_ONE && attributeType != ONE_TO_ONE && attributeType != EMBEDDED ) {
+			throw new CannotContainSubGraphException( "Attribute '" + attribute.getName() + "' is not a to-one association" );
+		}
 	}
 
-	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(ManagedDomainType<S> type) {
-		assert type != null;
-		log.debugf( "Making sub-graph : ( (%s) %s )", type.getTypeName(), getAttributeName() );
-		final SubGraphImplementor<S> subGraph = DomainModelHelper.makeSubGraph( type, type.getBindableJavaType() );
-		internalAddSubGraph( subGraph );
-		return subGraph;
+	protected void checkToMany() {
+		final Attribute.PersistentAttributeType attributeType = attribute.getPersistentAttributeType();
+		if ( attributeType != MANY_TO_MANY && attributeType != ONE_TO_MANY ) {
+			throw new CannotContainSubGraphException( "Attribute '" + attribute.getName() + "' is not a to-many association" );
+		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private <T extends J> ManagedDomainType<T> valueGraphTypeAsManaged() {
-		final DomainType<?> valueGraphType = getAttributeDescriptor().getValueGraphType();
-		if ( valueGraphType instanceof ManagedDomainType ) {
-			return (ManagedDomainType<T>) valueGraphType;
+	@Override @Deprecated
+	public SubGraphImplementor<E> makeSubGraph() {
+		verifyMutability();
+		if ( valueSubgraph == null ) {
+			valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+		}
+		return valueSubgraph;
+	}
+
+	@Override @Deprecated
+	public <S> SubGraphImplementor<S> makeSubGraph(Class<S> subtype) {
+		final ManagedDomainType<E> managedType = asManagedType( valueGraphType );
+		if ( !managedType.getJavaType().isAssignableFrom( subtype ) ) {
+			throw new IllegalArgumentException( "Not a subtype: " + subtype.getName() );
+		}
+		@SuppressWarnings("unchecked")
+		final Class<? extends E> castSuptype = (Class<? extends E>) subtype;
+		final SubGraphImplementor<? extends E> result = makeSubGraph().addTreatedSubgraph( castSuptype );
+		//noinspection unchecked
+		return (SubGraphImplementor<S>) result;
+	}
+
+	@Override @Deprecated
+	public SubGraphImplementor<K> makeKeySubGraph() {
+		verifyMutability();
+		checkMap();
+		if ( keySubgraph == null ) {
+			keySubgraph = new SubGraphImpl<>( asManagedType( keyGraphType ), true );
+		}
+		return keySubgraph;
+	}
+
+	@Override @Deprecated
+	public <S> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype) {
+		checkMap();
+		final ManagedDomainType<K> type = asManagedType( keyGraphType );
+		if ( !type.getJavaType().isAssignableFrom( subtype ) ) {
+			throw new IllegalArgumentException( "Not a key subtype: " + subtype.getName() );
+		}
+		@SuppressWarnings("unchecked")
+		final Class<? extends K> castType = (Class<? extends K>) subtype;
+		final SubGraphImplementor<? extends K> result = makeKeySubGraph().addTreatedSubgraph( castType );
+		//noinspection unchecked
+		return (SubGraphImplementor<S>) result;
+	}
+
+	private void checkMap() {
+		if ( keyGraphType == null ) {
+			throw new CannotContainSubGraphException( "Attribute '" + description() + "' is not a Map" );
+		}
+	}
+
+	protected <T> ManagedDomainType<T> asManagedType(DomainType<T> domainType) {
+		if ( domainType instanceof ManagedDomainType<T> managedDomainType ) {
+			return managedDomainType;
 		}
 		else {
-			throw new CannotContainSubGraphException(
-					String.format(
-							Locale.ROOT,
-							"Attribute [%s] (%s) cannot contain value sub-graphs",
-							getAttributeName(),
-							getAttributeDescriptor().getPersistentAttributeType().name()
-					)
-			);
+			throw new CannotContainSubGraphException( "Attribute '" + description()
+					+ "' is of type '" + domainType.getTypeName()
+					+ "' which is not a managed type" );
 		}
 	}
 
-	private static final Logger log = Logger.getLogger( AttributeNodeImpl.class );
-
-	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(Class<S> subType) {
-		verifyMutability();
-		final ManagedDomainType<S> managedType = valueGraphTypeAsManaged();
-		return internalMakeSubgraph( findSubType( managedType, subType == null ? managedType.getJavaType() : subType ) );
+	private String description() {
+		return attribute.getDeclaringType().getTypeName() + "." + attribute.getName();
 	}
 
-	protected void internalAddSubGraph(SubGraphImplementor<? extends J> subGraph) {
-		log.tracef( "Adding sub-graph : ( (%s) %s )", subGraph.getGraphedType().getTypeName(), getAttributeName() );
-		if ( subGraphMap == null ) {
-			subGraphMap = new HashMap<>();
+	@Override
+	public String toString() {
+		return "AttributeNode[" + description() + "]";
+	}
+
+	@Override
+	public void merge(AttributeNodeImplementor<J, E, K> that) {
+		assert that.isMutable() == isMutable();
+		assert that.getAttributeDescriptor() == attribute;
+		final SubGraphImplementor<E> otherValueSubgraph = that.getValueSubgraph();
+		if ( otherValueSubgraph != null ) {
+			if ( valueSubgraph == null ) {
+				valueSubgraph = otherValueSubgraph.makeCopy( isMutable() );
+			}
+			else {
+				// even if immutable, we need to merge here
+				valueSubgraph.mergeInternal( otherValueSubgraph );
+			}
 		}
-		final SubGraphImplementor<? extends J> previous = subGraphMap.put( subGraph.getClassType(), subGraph );
-		if ( previous != null ) {
-			log.debugf( "Adding sub-graph [%s] over-wrote existing [%s]", subGraph, previous );
+		final SubGraphImplementor<K> otherKeySubgraph = that.getKeySubgraph();
+		if ( otherKeySubgraph != null ) {
+			if ( keySubgraph == null ) {
+				keySubgraph = otherKeySubgraph.makeCopy( isMutable() );
+			}
+			else {
+				// even if immutable, we need to merge here
+				keySubgraph.mergeInternal( otherKeySubgraph );
+			}
 		}
 	}
 
 	@Override
-	public <S extends J> void addSubGraph(Class<S> subType, SubGraph<S> subGraph) {
-		verifyMutability();
-		assert subGraph.getClassType() == subType;
-		internalAddSubGraph( (SubGraphImplementor<S>) subGraph );
-	}
-
-	@Override
-	public void addSubGraph(SubGraphImplementor<? extends J> subGraph) {
-		internalAddSubGraph( subGraph );
-	}
-
-	@Override
-	public SubGraphImplementor<J> makeKeySubGraph() {
-		return internalMakeKeySubgraph( (Class<J>) null );
-	}
-
-	@Override
-	public <S extends J> SubGraphImplementor<S> makeKeySubGraph(Class<S> subtype) {
-		return internalMakeKeySubgraph( subtype );
-	}
-
-	@Override
-	public <S extends J> SubGraphImplementor<S> makeKeySubGraph(ManagedDomainType<S> subtype) {
-		return internalMakeKeySubgraph( subtype );
-	}
-
-	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(ManagedDomainType<S> type) {
-		assert type != null;
-		log.debugf( "Making key sub-graph : ( (%s) %s )", type.getTypeName(), getAttributeName() );
-		final SubGraphImplementor<S> subGraph = DomainModelHelper.makeSubGraph( type, type.getBindableJavaType() );
-		internalAddKeySubGraph( subGraph );
-		return subGraph;
-	}
-
-	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(Class<S> type) {
-		verifyMutability();
-		final ManagedDomainType<S> managedType = keyGraphTypeAsManaged();
-		return internalMakeKeySubgraph( type == null ? managedType : findSubType( managedType, type ) );
-	}
-
-	protected void internalAddKeySubGraph(SubGraph<? extends J> subGraph) {
-		log.tracef( "Adding key sub-graph : ( (%s) %s )", subGraph.getClassType().getName(), getAttributeName() );
-		if ( keySubGraphMap == null ) {
-			keySubGraphMap = new HashMap<>();
-		}
-		final SubGraphImplementor<? extends J> previous =
-				keySubGraphMap.put( subGraph.getClassType(), (SubGraphImplementor<? extends J>) subGraph );
-		if ( previous != null ) {
-			log.debugf( "Adding key sub-graph [%s] over-wrote existing [%]", subGraph, previous );
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T extends J> ManagedDomainType<T> keyGraphTypeAsManaged() {
-		final SimpleDomainType<?> keyGraphType = getAttributeDescriptor().getKeyGraphType();
-		if ( keyGraphType instanceof ManagedDomainType ) {
-			return (ManagedDomainType<T>) keyGraphType;
+	public Map<Class<?>, SubGraphImplementor<?>> getSubGraphs() {
+		if ( valueSubgraph == null ) {
+			return emptyMap();
 		}
 		else {
-			throw new CannotContainSubGraphException(
-					String.format(
-							Locale.ROOT,
-							"Attribute [%s#%s] (%s) cannot contain key sub-graphs - %s",
-							getAttributeDescriptor().getDeclaringType().getTypeName(),
-							getAttributeName(),
-							getAttributeDescriptor().getPersistentAttributeType().name(),
-							keyGraphType
-					)
-			);
+			final HashMap<Class<?>, SubGraphImplementor<?>> map = new HashMap<>( valueSubgraph.getTreatedSubgraphs() );
+			map.put( attribute.getValueGraphType().getJavaType(), valueSubgraph );
+			return map;
 		}
 	}
 
 	@Override
-	public <S extends J> void addKeySubGraph(Class<S> subType, SubGraph<S> subGraph) {
-		assert subGraph.getClassType() == subType;
-		internalAddKeySubGraph( subGraph );
-	}
-
-	@Override
-	public AttributeNodeImplementor<J> makeCopy(boolean mutable) {
-		return new AttributeNodeImpl<>(
-				this.attribute, makeMapCopy( mutable, subGraphMap ), makeMapCopy( mutable, keySubGraphMap ), mutable
-		);
-	}
-
-	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> makeMapCopy(
-			boolean mutable,
-			Map<Class<? extends J>, SubGraphImplementor<? extends J>> nodeMap) {
-		if ( nodeMap == null ) {
-			return null;
+	public Map<Class<?>, SubGraphImplementor<?>> getKeySubGraphs() {
+		if ( keySubgraph == null ) {
+			return emptyMap();
 		}
 		else {
-			return nodeMap.entrySet().stream()
-					.map(entry -> Map.entry( entry.getKey(), entry.getValue().makeCopy( mutable ) ))
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+			final HashMap<Class<?>, SubGraphImplementor<?>> map = new HashMap<>( keySubgraph.getTreatedSubgraphs() );
+			map.put( attribute.getKeyGraphType().getJavaType(), keySubgraph );
+			return map;
 		}
 	}
 
 	@Override
-	public void merge(AttributeNodeImplementor<?> attributeNode) {
-		attributeNode.visitSubGraphs(
-				(incomingSubType, incomingGraph) -> {
-					SubGraphImplementor<?> existing;
-					if ( subGraphMap == null ) {
-						subGraphMap = new HashMap<>();
-						existing = null;
-					}
-					else {
-						existing = subGraphMap.get( incomingSubType );
-					}
+	public SubGraphImplementor<E> getValueSubgraph() {
+		return valueSubgraph;
+	}
 
-					if ( existing != null ) {
-						existing.merge( (GraphImplementor) incomingGraph );
-					}
-					else {
-						internalAddSubGraph( (SubGraphImplementor) incomingGraph.makeCopy( true ) );
-					}
-				}
-		);
-
-		attributeNode.visitKeySubGraphs(
-				(incomingSubType, incomingGraph) -> {
-					SubGraphImplementor<?> existing;
-					if ( keySubGraphMap == null ) {
-						keySubGraphMap = new HashMap<>();
-						existing = null;
-					}
-					else {
-						existing = keySubGraphMap.get( incomingSubType );
-					}
-
-					if ( existing != null ) {
-						existing.merge( (GraphImplementor) incomingGraph );
-					}
-					else {
-						internalAddKeySubGraph( (SubGraphImplementor) incomingGraph.makeCopy( true ) );
-					}
-				}
-		);
+	@Override
+	public SubGraphImplementor<K> getKeySubgraph() {
+		return keySubgraph;
 	}
 }

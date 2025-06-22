@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.cascade.circle;
@@ -49,15 +49,7 @@ public class CascadeMergeToChildBeforeParentTest {
 
 	@AfterEach
 	public void cleanupTest(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from Transport" );
-					session.createQuery( "delete from Tour" );
-					session.createQuery( "delete from Node" );
-					session.createQuery( "delete from Route" );
-					session.createQuery( "delete from Vehicle" );
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

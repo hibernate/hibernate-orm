@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -25,7 +25,7 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
-import static org.hibernate.query.results.ResultsHelper.attributeName;
+import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
 /**
  * Contains state related to building {@link DomainResult} and
@@ -92,7 +92,7 @@ public interface DomainResultCreationState {
 		final EntityIdentifierMapping identifierMapping = fetchParent.getReferencedMappingContainer()
 				.getIdentifierMapping();
 		return fetchParent.generateFetchableFetch(
-				(Fetchable) identifierMapping,
+				identifierMapping,
 				new EntityIdentifierNavigablePath( fetchParent.getNavigablePath(), attributeName( identifierMapping ) ),
 				FetchTiming.IMMEDIATE,
 				true,

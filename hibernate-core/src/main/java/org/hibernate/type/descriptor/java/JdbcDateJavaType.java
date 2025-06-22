@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -187,24 +187,24 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return null;
 		}
 
-		if ( value instanceof java.sql.Date ) {
-			return (java.sql.Date) value;
+		if ( value instanceof java.sql.Date date ) {
+			return date;
 		}
 
-		if ( value instanceof Long ) {
-			return new java.sql.Date( toDateEpoch( (Long) value ) );
+		if ( value instanceof Long longValue ) {
+			return new java.sql.Date( toDateEpoch( longValue ) );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new java.sql.Date( toDateEpoch( ( (Calendar) value ).getTimeInMillis() ) );
+		if ( value instanceof Calendar calendar ) {
+			return new java.sql.Date( toDateEpoch( calendar.getTimeInMillis() ) );
 		}
 
-		if ( value instanceof Date ) {
-			return unwrapSqlDate( (Date) value );
+		if ( value instanceof Date date ) {
+			return unwrapSqlDate( date );
 		}
 
-		if ( value instanceof LocalDate ) {
-			return java.sql.Date.valueOf( (LocalDate) value );
+		if ( value instanceof LocalDate localDate ) {
+			return java.sql.Date.valueOf( localDate );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -238,7 +238,7 @@ public class JdbcDateJavaType extends AbstractTemporalJavaType<Date> {
 			return java.sql.Date.valueOf( accessor.query( LocalDate::from ) );
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse time string " + charSequence, pe );
+			throw new HibernateException( "could not parse time string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

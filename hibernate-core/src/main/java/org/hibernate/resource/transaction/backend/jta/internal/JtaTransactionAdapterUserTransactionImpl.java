@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
@@ -86,10 +86,14 @@ public class JtaTransactionAdapterUserTransactionImpl implements JtaTransactionA
 	@Override
 	public TransactionStatus getStatus() {
 		try {
-			return StatusTranslator.translate( userTransaction.getStatus() );
+			final TransactionStatus status = StatusTranslator.translate( userTransaction.getStatus() );
+			if ( status == null ) {
+				throw new TransactionException( "UserTransaction reported transaction status as unknown" );
+			}
+			return status;
 		}
 		catch (SystemException e) {
-			throw new TransactionException( "JTA TransactionManager#getStatus failed", e );
+			throw new TransactionException( "JTA UserTransaction#getStatus failed", e );
 		}
 	}
 

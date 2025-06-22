@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.internal;
@@ -9,7 +9,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.hibernate.internal.util.StringHelper;
+import static java.lang.Character.isJavaIdentifierStart;
+import static org.hibernate.internal.util.StringHelper.WHITESPACE;
 
 /**
  * Performs formatting of basic SQL statements (DML + query).
@@ -37,7 +38,6 @@ public class BasicFormatterImpl implements Formatter {
 		boolean afterByOrSetOrFromOrSelect;
 		int afterOn;
 		boolean afterBetween;
-		boolean afterExtract;
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
@@ -58,7 +58,7 @@ public class BasicFormatterImpl implements Formatter {
 
 			tokens = new StringTokenizer(
 					sql,
-					"()+*/-=<>'`\"[]," + StringHelper.WHITESPACE,
+					"()+*/-=<>'`\"[]," + WHITESPACE,
 					true
 			);
 		}
@@ -69,32 +69,28 @@ public class BasicFormatterImpl implements Formatter {
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
-				lcToken = token.toLowerCase(Locale.ROOT);
 
-				switch (lcToken) {
+				if ( "-".equals( token ) && result.toString().endsWith( "-" ) ) {
+					do {
+						result.append( token );
+						token = tokens.nextToken();
+					}
+					while ( !"\n".equals( token ) && tokens.hasMoreTokens() );
+					result.append( "\n" );
+				}
 
+				lcToken = token.toLowerCase( Locale.ROOT );
+				switch ( lcToken ) {
 					case "'":
 					case "`":
 					case "\"":
-						String t;
-						do {
-							t = tokens.nextToken();
-							token += t;
-						}
-						while ( !lcToken.equals( t ) && tokens.hasMoreTokens() );
-						lcToken = token;
+						appendUntilToken( lcToken );
 						misc();
 						break;
 					// SQL Server uses "[" and "]" to escape reserved words
 					// see SQLServerDialect.openQuote and SQLServerDialect.closeQuote
 					case "[":
-						String tt;
-						do {
-							tt = tokens.nextToken();
-							token += tt;
-						}
-						while ( !"]".equals( tt ) && tokens.hasMoreTokens() );
-						lcToken = token;
+						appendUntilToken( "]" );
 						misc();
 						break;
 
@@ -109,13 +105,22 @@ public class BasicFormatterImpl implements Formatter {
 						closeParen();
 						break;
 
+					case "for":
+						forUpdate();
+						break;
+
 					case "select":
 						select();
 						break;
-					case "merge":
-					case "insert":
 					case "update":
+						if ( "for".equals( lastToken ) ) {
+							out();
+							break;
+						}
+						// else fall through
+					case "insert":
 					case "delete":
+					case "merge":
 						updateOrInsertOrDelete();
 						break;
 
@@ -129,11 +134,6 @@ public class BasicFormatterImpl implements Formatter {
 
 					case "between":
 						afterBetween = true;
-						misc();
-						break;
-					case "trim":
-					case "extract":
-						afterExtract = true;
 						misc();
 						break;
 
@@ -205,6 +205,19 @@ public class BasicFormatterImpl implements Formatter {
 			return result.toString();
 		}
 
+		private void forUpdate() {
+			if ( inFunction==0 ) {
+				decrementIndent();
+				newline();
+				out();
+				incrementIndent();
+				newline();
+			}
+			else {
+				misc();
+			}
+		}
+
 		private void or() {
 			logical();
 		}
@@ -220,17 +233,16 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void from() {
-			if ( afterExtract ) {
-				misc();
-				afterExtract = false;
+			if ( inFunction == 0 ) {
+				endNewClause();
 			}
 			else {
-				endNewClause();
+				misc();
 			}
 		}
 
 		private void comma() {
-			if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {
+			if ( afterByOrSetOrFromOrSelect && inFunction == 0 ) {
 				commaAfterByOrFromOrSelect();
 			}
 //			else if ( afterOn && inFunction==0 ) {
@@ -305,7 +317,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void misc() {
 			out();
-			if ( afterInsert && inFunction==0 ) {
+			if ( afterInsert && inFunction == 0 ) {
 				newline();
 				afterInsert = false;
 			}
@@ -321,7 +333,7 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void updateOrInsertOrDelete() {
-			if ( indent>1  ) {
+			if ( indent > 1 ) {
 				//probably just the insert SQL function
 				out();
 			}
@@ -359,7 +371,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void out() {
 			if ( result.charAt( result.length() - 1 ) == ',' ) {
-				result.append(" ");
+				result.append( " " );
 			}
 			result.append( token );
 		}
@@ -382,8 +394,8 @@ public class BasicFormatterImpl implements Formatter {
 			newline();
 			afterBeginBeforeEnd = false;
 			afterByOrSetOrFromOrSelect = "by".equals( lcToken )
-					|| "set".equals( lcToken )
-					|| "from".equals( lcToken );
+										|| "set".equals( lcToken )
+										|| "from".equals( lcToken );
 		}
 
 		private void beginNewClause() {
@@ -484,23 +496,36 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private static boolean isFunctionName(String tok) {
-			if ( tok == null || tok.length() == 0 ) {
+			if ( tok == null || tok.isEmpty() ) {
 				return false;
 			}
-
-			final char begin = tok.charAt( 0 );
-			final boolean isIdentifier = Character.isJavaIdentifierStart( begin ) || '"' == begin;
-			return isIdentifier && !NON_FUNCTION_NAMES.contains( tok );
+			else {
+				final char begin = tok.charAt( 0 );
+				final boolean isIdentifier = isJavaIdentifierStart( begin ) || '"' == begin;
+				return isIdentifier && !NON_FUNCTION_NAMES.contains( tok );
+			}
 		}
 
 		private static boolean isWhitespace(String token) {
-			return StringHelper.WHITESPACE.contains( token );
+			return WHITESPACE.contains( token );
 		}
 
 		private void newline() {
 			result.append( System.lineSeparator() )
-					.append( INDENT_STRING.repeat(indent) );
+					.append( INDENT_STRING.repeat( indent ) );
 			beginLine = true;
+		}
+
+		private void appendUntilToken(String stopToken) {
+			final StringBuilder quoted = new StringBuilder( this.token );
+			String t;
+			do {
+				t = tokens.nextToken();
+				quoted.append( t );
+			}
+			while ( !stopToken.equals( t ) && tokens.hasMoreTokens() );
+			this.token = quoted.toString();
+			lcToken = this.token;
 		}
 	}
 

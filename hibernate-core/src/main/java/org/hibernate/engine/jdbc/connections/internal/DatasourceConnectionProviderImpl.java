@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
@@ -14,14 +14,18 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
@@ -38,6 +42,7 @@ import static org.hibernate.cfg.JdbcSettings.DATASOURCE;
  * @author Steve Ebersole
  */
 public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+
 	private DataSource dataSource;
 	private String user;
 	private String pass;
@@ -69,7 +74,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( ConnectionProvider.class.equals( unwrapType )
 				|| DatasourceConnectionProviderImpl.class.isAssignableFrom( unwrapType ) ) {
@@ -87,26 +92,32 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	public void configure(Map<String, Object> configValues) {
 		if ( dataSource == null ) {
 			final Object dataSourceSetting = configValues.get( DATASOURCE );
-			if ( dataSourceSetting instanceof DataSource ) {
-				dataSource = (DataSource) dataSourceSetting;
+			if ( dataSourceSetting instanceof DataSource instance ) {
+				dataSource = instance;
+			}
+			else if ( dataSourceSetting instanceof String jndiName ) {
+				dataSourceJndiName = jndiName;
+				if ( jndiService == null ) {
+					throw new ConnectionProviderConfigurationException( "Unable to locate JndiService to lookup Datasource" );
+				}
+				dataSource = (DataSource) jndiService.locate( jndiName );
 			}
 			else {
-				final String dataSourceJndiName = (String) dataSourceSetting;
-				if ( dataSourceJndiName == null ) {
-					throw new HibernateException(
-							"DataSource to use was not injected nor specified by [" + DATASOURCE
-									+ "] configuration property"
-					);
-				}
-				this.dataSourceJndiName = dataSourceJndiName;
-				if ( jndiService == null ) {
-					throw new HibernateException( "Unable to locate JndiService to lookup Datasource" );
-				}
-				dataSource = (DataSource) jndiService.locate( dataSourceJndiName );
+				throw new ConnectionProviderConfigurationException(
+						"DataSource to use was not injected nor specified by '" + DATASOURCE + "'" );
 			}
 		}
 		if ( dataSource == null ) {
-			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
+			throw new ConnectionProviderConfigurationException( "Unable to determine appropriate DataSource to use" );
+		}
+
+		if ( configValues.containsKey( AvailableSettings.AUTOCOMMIT ) ) {
+			ConnectionInfoLogger.INSTANCE.ignoredSetting( AvailableSettings.AUTOCOMMIT,
+					DatasourceConnectionProviderImpl.class );
+		}
+		if ( configValues.containsKey( AvailableSettings.ISOLATION ) ) {
+			ConnectionInfoLogger.INSTANCE.ignoredSetting( AvailableSettings.ISOLATION,
+					DatasourceConnectionProviderImpl.class );
 		}
 
 		user = (String) configValues.get( AvailableSettings.USER );
@@ -141,20 +152,41 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect) {
+		return getDatabaseConnectionInfo( dialect, null );
+	}
+
+	@Override
+	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
+		final String url;
+		final String driver;
+		final String isolationLevel;
+		if ( metaData != null ) {
+			url = metaData.getUrl();
+			driver = metaData.getDriver();
+			isolationLevel = toIsolationNiceName( metaData.getTransactionIsolation() )
+							+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
+		}
+		else {
+			url = null;
+			driver = null;
+			isolationLevel = null;
+		}
+
 		return new DatabaseConnectionInfoImpl(
-				null,
-				null,
+				DatasourceConnectionProviderImpl.class,
+				url,
+				driver,
 				dialect.getVersion(),
 				null,
-				null,
+				isolationLevel,
 				null,
 				null
 		) {
 			@Override
 			public String toInfoString() {
 				return dataSourceJndiName != null
-						? "\tDatasource JNDI name [" + dataSourceJndiName + "]"
-						: "\tProvided DataSource";
+						? "\tDataSource JNDI name [" + dataSourceJndiName + "]\n" + super.toInfoString()
+						: super.toInfoString();
 			}
 		};
 	}

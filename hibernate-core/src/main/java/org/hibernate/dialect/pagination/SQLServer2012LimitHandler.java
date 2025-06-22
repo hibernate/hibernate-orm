@@ -1,10 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.dialect.pagination.SQLServer2005LimitHandler.Keyword;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.compile;
 
 /**
  * A {@link LimitHandler} compatible with SQL Server 2012 which
@@ -27,6 +32,72 @@ public class SQLServer2012LimitHandler extends OffsetFetchLimitHandler {
 
 	public static final SQLServer2012LimitHandler INSTANCE = new SQLServer2012LimitHandler();
 
+	private enum Keyword {
+
+		SELECT ("select(\\s+(distinct|all))?"),
+		FROM ("from"),
+		ORDER_BY ("order\\s+by"),
+		AS ("as"),
+		WITH ("with");
+
+		Pattern pattern;
+		Keyword(String keyword) {
+			pattern = compile( "^\\b" + keyword + "\\b", CASE_INSENSITIVE );
+		}
+
+		/**
+		 * Look for a "root" occurrence of this keyword in
+		 * the given SQL fragment, that is, an offset where
+		 * the keyword occurs unquoted and not parenthesized.
+		 *
+		 * @param sql a fragment of SQL
+		 * @return the offset at which the keyword occurs, or
+		 *         0 if it never occurs outside of quotes or
+		 *         parentheses.
+		 */
+		int rootOffset(String sql) {
+
+			//TODO: does not handle comments
+
+			//use a regex here for its magical ability
+			//to match word boundaries and whitespace
+			Matcher matcher = pattern.matcher( sql ).useTransparentBounds( true );
+
+			int depth = 0;
+			boolean quoted = false;
+			boolean doubleQuoted = false;
+			for ( int offset = 0, end = sql.length(); offset < end; ) {
+				int nextQuote = sql.indexOf('\'', offset);
+				if ( nextQuote<0 ) {
+					nextQuote = end;
+				}
+				if ( !quoted ) {
+					for ( int index=offset; index<nextQuote; index++ ) {
+						switch ( sql.charAt( index ) ) {
+							case '(' -> depth++;
+							case ')' -> depth--;
+							case '"' -> doubleQuoted = !doubleQuoted;
+							case '[' -> doubleQuoted = true;
+							case ']' -> doubleQuoted = false;
+							default -> {
+								if ( depth == 0 && !doubleQuoted ) {
+									matcher.region( index, nextQuote );
+									if ( matcher.find() ) {
+										//we found the keyword!
+										return index;
+									}
+								}
+							}
+
+						}
+					}
+				}
+				quoted = !quoted;
+				offset = nextQuote + 1;
+			}
+			return 0; //none found
+		}
+	}
 	public SQLServer2012LimitHandler() {
 		super(true);
 	}

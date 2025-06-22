@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.filter.subclass;
@@ -30,7 +30,7 @@ public abstract class SubClassTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
 	protected void cleanupTest() throws Exception {
-		scope.inTransaction( session -> session.createQuery( "delete from Human" ).executeUpdate() );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.mutability.attribute;
@@ -7,7 +7,6 @@ package org.hibernate.orm.test.mapping.mutability.attribute;
 import java.util.Map;
 
 import org.hibernate.annotations.Immutable;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -171,7 +170,7 @@ public class ImmutableMapAsBasicTests {
 		scope.inTransaction( (session) -> {
 			session.persist( new TestEntity(
 					1,
-					CollectionHelper.toMap(
+					Map.of(
 							"abc", "123",
 							"def", "456"
 					)
@@ -181,9 +180,7 @@ public class ImmutableMapAsBasicTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> {
-			session.createMutationQuery( "delete TestEntity" ).executeUpdate();
-		} );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "TestEntity" )

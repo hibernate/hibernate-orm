@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.criteria;
@@ -15,7 +15,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
@@ -53,7 +53,7 @@ import java.util.function.Function;
  *     List&lt;Book&gt; books
  *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class,
  *                     "from Book left join fetch authors where type = BOOK") {{
- *                 var book = (JpaRoot&lt;Book&gt;) getSelection();
+ *                 var book = getRoot(0, Book.class);
  *                 where(getRestriction(), like(book.get(Book_.title), "%Hibernate%"));
  *                 orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
  *             }}
@@ -148,8 +148,10 @@ public abstract class CriteriaDefinition<R>
 	 */
 	public CriteriaDefinition(CriteriaDefinition<?> template, Class<R> resultType) {
 		super( template.getCriteriaBuilder() );
-		query = ((SqmSelectStatement<?>) template.query)
-				.createCopy( SqmCopyContext.simpleContext(), resultType );
+		if ( !(template.query instanceof SqmSelectStatement<?> selectStatement) ) {
+			throw new IllegalArgumentException( "Not a SqmSelectStatement" );
+		}
+		query = selectStatement.createCopy( SqmCopyContext.simpleContext(), resultType );
 	}
 
 	public CriteriaDefinition(SessionFactory factory, Class<R> resultType) {
@@ -164,6 +166,11 @@ public abstract class CriteriaDefinition<R>
 
 	public CriteriaDefinition(SessionFactory factory, CriteriaQuery<R> baseQuery) {
 		super( factory.getCriteriaBuilder() );
+		query = (JpaCriteriaQuery<R>) baseQuery;
+	}
+
+	public CriteriaDefinition(CriteriaQuery<R> baseQuery) {
+		super( ((JpaCriteriaQuery<R>) baseQuery).getCriteriaBuilder() );
 		query = (JpaCriteriaQuery<R>) baseQuery;
 	}
 
@@ -221,16 +228,21 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
+	public HibernateCriteriaBuilder getCriteriaBuilder() {
+		return query.getCriteriaBuilder();
+	}
+
+	@Override
 	public JpaCriteriaQuery<R> select(Selection<? extends R> selection) {
 		return query.select(selection);
 	}
 
-	@Override
+	@Override @Deprecated
 	public JpaCriteriaQuery<R> multiselect(Selection<?>... selections) {
 		return query.multiselect(selections);
 	}
 
-	@Override
+	@Override @Deprecated
 	public JpaCriteriaQuery<R> multiselect(List<Selection<?>> list) {
 		return query.multiselect(list);
 	}
@@ -401,8 +413,18 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
-	public List<Root<?>> getRootList() {
+	public List<? extends JpaRoot<?>> getRootList() {
 		return query.getRootList();
+	}
+
+	@Override
+	public <E> JpaRoot<? extends E> getRoot(int position, Class<E> type) {
+		return query.getRoot( position, type );
+	}
+
+	@Override
+	public <E> JpaRoot<? extends E> getRoot(String alias, Class<E> type) {
+		return query.getRoot( alias, type );
 	}
 
 	@Override
@@ -470,7 +492,17 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
+	public <X> JpaFunctionRoot<X> from(JpaSetReturningFunction<X> function) {
+		return query.from( function );
+	}
+
+	@Override
 	public JpaCriteriaQuery<Long> createCountQuery() {
 		return query.createCountQuery();
+	}
+
+	@Override
+	public JpaCriteriaQuery<Boolean> createExistsQuery() {
+		return query.createExistsQuery();
 	}
 }

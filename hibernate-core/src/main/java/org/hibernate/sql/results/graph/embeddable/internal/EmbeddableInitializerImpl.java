@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
@@ -10,7 +10,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.internal.ManagedTypeHelper;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -57,7 +56,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	private final @Nullable InitializerParent<InitializerData> parent;
 	private final boolean isResultInitializer;
 	private final boolean isPartOfKey;
-	private final SessionFactoryImplementor sessionFactory;
 
 	protected final DomainResultAssembler<?>[][] assemblers;
 	protected final BasicResultAssembler<?> discriminatorAssembler;
@@ -115,7 +113,6 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 		this.isPartOfKey = embedded.isEntityIdentifierMapping() || Initializer.isPartOfKey( navigablePath, parent );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
-		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		final Collection<EmbeddableMappingType.ConcreteEmbeddableType> concreteEmbeddableTypes = embeddableMappingType.getConcreteEmbeddableTypes();
 		final DomainResultAssembler<?>[][] assemblers = new DomainResultAssembler[concreteEmbeddableTypes.isEmpty() ? 1 : concreteEmbeddableTypes.size()][];
 		final @Nullable Initializer<InitializerData>[][] subInitializers = new Initializer[assemblers.length][];
@@ -400,9 +397,9 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 					// NOTE: `valuesAccess` is set to null to indicate that all values are null,
 					//		as opposed to returning the all-null value array.  the instantiator
 					//		interprets that as the values are not known or were all null.
-					final Object target = embeddableMappingType.getRepresentationStrategy()
-							.getInstantiator()
-							.instantiate( data, sessionFactory );
+					final Object target =
+							embeddableMappingType.getRepresentationStrategy().getInstantiator()
+									.instantiate( data );
 					lazyInitializer.setImplementation( target );
 				}
 			}
@@ -520,7 +517,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		final EmbeddableInstantiator instantiator = data.concreteEmbeddableType == null
 				? embeddableMappingType.getRepresentationStrategy().getInstantiator()
 				: data.concreteEmbeddableType.getInstantiator();
-		final Object instance = instantiator.instantiate( data, sessionFactory );
+		final Object instance = instantiator.instantiate( data );
 		data.setState( State.RESOLVED );
 		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
 		return instance;

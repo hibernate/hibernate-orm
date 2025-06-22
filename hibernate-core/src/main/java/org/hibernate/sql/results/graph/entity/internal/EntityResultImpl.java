@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.entity.internal;
@@ -82,7 +82,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode
 	public DomainResultAssembler createResultAssembler(
 			InitializerParent parent,
 			AssemblerCreationState creationState) {
-		return new EntityAssembler(
+		return new EntityAssembler<>(
 				this.getResultJavaType(),
 				creationState.resolveInitializer( this, parent, this ).asEntityInitializer()
 		);

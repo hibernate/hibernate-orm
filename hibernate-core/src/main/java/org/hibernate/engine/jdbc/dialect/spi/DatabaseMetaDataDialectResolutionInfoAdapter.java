@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.spi;
@@ -8,9 +8,9 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 /**
- * An implementation of DialectResolutionInfo that delegates calls to a wrapped {@link DatabaseMetaData}.
+ * An implementation of {@link DialectResolutionInfo} that delegates calls to a wrapped {@link DatabaseMetaData}.
  * <p>
- * All {@link SQLException}s resulting from calls on the DatabaseMetaData are converted to the Hibernate
+ * All {@link SQLException}s resulting from calls on the {@link DatabaseMetaData} are converted to the Hibernate
  * {@link org.hibernate.JDBCException} hierarchy.
  *
  * @author Steve Ebersole

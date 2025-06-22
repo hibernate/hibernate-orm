@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.associations;
@@ -57,11 +57,7 @@ public class NotFoundTest {
 
 	@AfterEach
 	public void dropTestData(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete Person" ).executeUpdate();
-					entityManager.createQuery( "delete City" ).executeUpdate();
-				} );
+		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -125,7 +121,7 @@ public class NotFoundTest {
 					assertThat( nullResults ).isEmpty();
 
 					final List<String> nonNullResults = entityManager
-							.createQuery( "select p.name from Person p where fk( p.city ) is not null", String.class )
+							.createQuery( "select p.name from Person p left join p.city c where fk( c ) is not null", String.class )
 							.getResultList();
 					assertThat( nonNullResults ).hasSize( 1 );
 					assertThat( nonNullResults.get( 0 ) ).isEqualTo( "John Doe" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers;
@@ -8,7 +8,7 @@ import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.DefaultRevisionEntity;
+import org.hibernate.envers.RevisionMapping;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.RevisionListener;
 
@@ -124,7 +124,7 @@ public class CustomRevisionEntityTest {
 	@Entity(name = "CustomRevisionEntity")
 	@Table(name = "CUSTOM_REV_INFO")
 	@RevisionEntity(CustomRevisionEntityListener.class)
-	public static class CustomRevisionEntity extends DefaultRevisionEntity {
+	public static class CustomRevisionEntity extends RevisionMapping {
 
 		private String username;
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.complete.CompleteFetchBuilderEntityValuedModelPart;
+import org.hibernate.query.results.internal.complete.CompleteFetchBuilderEntityValuedModelPart;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**

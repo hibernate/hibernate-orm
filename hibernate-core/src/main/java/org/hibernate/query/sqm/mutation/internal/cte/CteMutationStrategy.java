@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
@@ -126,9 +126,9 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 
 	protected void checkMatch(SqmDeleteOrUpdateStatement<?> sqmStatement) {
 		final String targetEntityName = sqmStatement.getTarget().getEntityName();
-		final EntityPersister targetEntityDescriptor = sessionFactory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( targetEntityName );
+		final EntityPersister targetEntityDescriptor =
+				sessionFactory.getMappingMetamodel()
+						.getEntityDescriptor( targetEntityName );
 
 		if ( targetEntityDescriptor != rootDescriptor && ! rootDescriptor.isSubclassEntityName( targetEntityDescriptor.getEntityName() ) ) {
 			throw new IllegalArgumentException(

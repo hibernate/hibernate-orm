@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.internal;
@@ -11,7 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.named.ResultMementoInstantiation;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.complete.CompleteResultBuilderInstantiation;
+import org.hibernate.query.results.internal.complete.CompleteResultBuilderInstantiation;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**

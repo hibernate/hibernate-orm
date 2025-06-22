@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.spi;
@@ -10,6 +10,8 @@ import java.util.List;
 
 /**
  * A {@link TupleTransformer} for handling {@link List} results from native queries.
+ *
+ * @since 6.3
  *
  * @author Gavin King
  */

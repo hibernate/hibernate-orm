@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -50,7 +50,7 @@ public final class FetchOptionsHelper {
 		}
 
 		if ( type instanceof EntityType ) {
-			EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
+			final EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
 			}

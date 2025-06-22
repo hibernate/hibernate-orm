@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sql.spi;
@@ -18,13 +18,12 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
-import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.query.results.internal.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.transform.ResultTransformer;
 
@@ -33,6 +32,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
@@ -60,7 +60,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	}
 
 	@Override
-	NamedNativeQueryMemento<?> toMemento(String name);
+	NamedNativeQueryMemento<R> toMemento(String name);
 
 	@Override
 	NativeQueryImplementor<R> addScalar(String columnAlias);
@@ -174,7 +174,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setReadOnly(boolean readOnly);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setLockOptions(LockOptions lockOptions);
 
 	@Override
@@ -190,7 +190,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setComment(String comment);
 
 	@Override
-	NativeQueryImplementor<R> setMaxResults(int maxResult);
+	NativeQueryImplementor<R> setMaxResults(int maxResults);
 
 	@Override
 	NativeQueryImplementor<R> setFirstResult(int startPosition);
@@ -208,18 +208,18 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(String name, Object val);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(String name, P val, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameter(String name, P val, Type<P> type);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(String name, P val, Class<P> type);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(String name, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -229,15 +229,15 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameter(int position, P val, Class<P> type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(int position, P val, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameter(int position, P val, Type<P> type);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -247,15 +247,15 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Class<P> type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(Parameter<P> param, P value);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated
 	NativeQueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -265,7 +265,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Object[] values);
@@ -274,7 +274,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Class<P> type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -283,7 +283,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, Object[] values);
@@ -292,7 +292,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(int position, P[] values, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameterList(int position, P[] values, Type<P> type);
 
 
 	@Override
@@ -302,7 +302,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -311,7 +311,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> NativeQueryImplementor<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	NativeQueryImplementor<R> setProperties(Object bean);
@@ -319,5 +319,6 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	@Override
 	NativeQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 
+	@SuppressWarnings("unused") // Used by Hibernate Reactive
 	void addResultTypeClass(Class<?> resultClass);
 }

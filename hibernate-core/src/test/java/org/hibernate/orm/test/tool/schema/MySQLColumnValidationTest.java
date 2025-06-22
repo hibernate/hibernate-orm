@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.tool.schema;
@@ -23,7 +23,6 @@ import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.IndividuallySchemaValidatorImpl;
 import org.hibernate.tool.schema.spi.ExceptionHandler;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.SchemaFilter;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.SchemaValidator;
@@ -138,8 +137,8 @@ public class MySQLColumnValidationTest {
 				}
 		);
 
-		ConfigurationService configurationService = scope.getSessionFactory().getServiceRegistry().getService(
-				ConfigurationService.class );
+		ConfigurationService configurationService = scope.getSessionFactory().getServiceRegistry()
+				.requireService( ConfigurationService.class );
 		ExecutionOptions executionOptions = new ExecutionOptions() {
 			@Override
 			public boolean shouldManageNamespaces() {
@@ -147,18 +146,13 @@ public class MySQLColumnValidationTest {
 			}
 
 			@Override
-			public Map getConfigurationValues() {
+			public Map<String,Object> getConfigurationValues() {
 				return configurationService.getSettings();
 			}
 
 			@Override
 			public ExceptionHandler getExceptionHandler() {
 				return ExceptionHandlerLoggedImpl.INSTANCE;
-			}
-
-			@Override
-			public SchemaFilter getSchemaFilter() {
-				return SchemaFilter.ALL;
 			}
 		};
 

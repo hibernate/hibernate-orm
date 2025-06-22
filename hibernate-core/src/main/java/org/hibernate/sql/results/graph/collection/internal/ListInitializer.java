@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.collection.internal;
@@ -121,10 +121,13 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer<Abst
 		final Initializer<?> initializer = elementAssembler.getInitializer();
 		if ( initializer != null ) {
 			final RowProcessingState rowProcessingState = data.getRowProcessingState();
-			final Integer index = listIndexAssembler.assemble( rowProcessingState );
+			Integer index = listIndexAssembler.assemble( rowProcessingState );
 			if ( index != null ) {
 				final PersistentList<?> list = getCollectionInstance( data );
 				assert list != null;
+				if ( listIndexBase != 0 ) {
+					index -= listIndexBase;
+				}
 				initializer.resolveInstance( list.get( index ), rowProcessingState );
 			}
 		}

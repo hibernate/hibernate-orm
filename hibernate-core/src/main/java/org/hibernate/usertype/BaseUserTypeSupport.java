@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.usertype;
@@ -11,9 +11,9 @@ import java.sql.SQLException;
 import java.util.function.BiConsumer;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -33,19 +33,17 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	protected abstract void resolve(BiConsumer<BasicJavaType<T>, JdbcType> resolutionConsumer);
 
 	private void ensureResolved() {
-		if ( resolved ) {
-			return;
+		if ( !resolved ) {
+			resolve( (javaType, jdbcType) -> {
+				this.javaType = javaType;
+				this.jdbcType = jdbcType;
+
+				jdbcValueExtractor = jdbcType.getExtractor( javaType );
+				jdbcValueBinder = jdbcType.getBinder( javaType );
+
+				resolved = true;
+			} );
 		}
-
-		resolve( (javaType,jdbcType) -> {
-			this.javaType = javaType;
-			this.jdbcType = jdbcType;
-
-			jdbcValueExtractor = jdbcType.getExtractor( javaType );
-			jdbcValueBinder = jdbcType.getBinder( javaType );
-
-			resolved = true;
-		});
 	}
 
 	protected JdbcType jdbcType() {
@@ -80,15 +78,15 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	}
 
 	@Override
-	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, WrapperOptions options) throws SQLException {
 		ensureResolved();
-		return jdbcValueExtractor.extract( rs, position, session );
+		return jdbcValueExtractor.extract( rs, position, options );
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
 		ensureResolved();
-		jdbcValueBinder.bind( st, value, index, session );
+		jdbcValueBinder.bind( st, value, index, options );
 	}
 
 	@Override

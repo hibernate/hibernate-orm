@@ -1,12 +1,13 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
 
 import java.util.List;
 
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.Incubating;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -145,6 +146,15 @@ public interface MetadataBuildingOptions {
 	boolean isMultiTenancyEnabled();
 
 	/**
+	 * Whether to use the legacy format for serializing/deserializing XML data.
+	 *
+	 * @since 7.0
+	 * @see org.hibernate.cfg.MappingSettings#XML_FORMAT_MAPPER_LEGACY_FORMAT
+	 */
+	@Incubating
+	boolean isXmlFormatMapperLegacyFormatEnabled();
+
+	/**
 	 * @return the {@link TypeConfiguration} belonging to the {@link BootstrapContext}
 	 */
 	TypeConfiguration getTypeConfiguration();
@@ -194,8 +204,6 @@ public interface MetadataBuildingOptions {
 	 * @return {@code true} if nationalized character data should be used by default; {@code false} otherwise.
 	 */
 	boolean useNationalizedCharacterData();
-
-	boolean isSpecjProprietarySyntaxEnabled();
 
 	/**
 	 * Should we <em>disable</em> constraint creation when

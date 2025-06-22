@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
@@ -7,6 +7,7 @@ package org.hibernate.orm.test.jpa.ejb3configuration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -18,7 +19,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
@@ -33,6 +33,8 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -216,6 +218,13 @@ public class ConfigurationObjectSettingTest {
 		);
 	}
 
+	public static void applyToProperties(Properties properties, Object... pairs) {
+		assert pairs.length % 2 == 0;
+		for ( int i = 0; i < pairs.length; i+=2 ) {
+			properties.put( pairs[i], pairs[i+1] );
+		}
+	}
+
 	private void verifyJdbcSettings(String jdbcUrl, String jdbcDriver, String jdbcUser, String jdbcPassword) {
 		final String urlValue = "some:url";
 		final String driverValue = "some.jdbc.Driver";
@@ -228,7 +237,7 @@ public class ConfigurationObjectSettingTest {
 		{
 			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					CollectionHelper.toMap(
+					Map.of(
 							jdbcUrl, urlValue,
 							jdbcDriver, driverValue,
 							jdbcUser, userValue,
@@ -246,7 +255,7 @@ public class ConfigurationObjectSettingTest {
 		}
 
 		PersistenceUnitInfoAdapter pui = new PersistenceUnitInfoAdapter();
-		CollectionHelper.applyToProperties(
+		applyToProperties(
 				pui.getProperties(),
 				jdbcUrl, urlValue,
 				jdbcDriver, driverValue,
@@ -286,6 +295,22 @@ public class ConfigurationObjectSettingTest {
 //		verifySchemaGenSettingsPrecedence();
 	}
 
+	public static Map<String,String> toMap(String... pairs) {
+		assert pairs.length % 2 == 0;
+		switch ( pairs.length ) {
+			case 0:
+				return emptyMap();
+			case 2:
+				return singletonMap( pairs[0], pairs[1] );
+			default:
+				final Map<String,String> result = new HashMap<>();
+				for ( int i = 0; i < pairs.length; i+=2 ) {
+					result.put( pairs[i], pairs[i+1] );
+				}
+				return result;
+		}
+	}
+
 	private void verifySchemaGenSettings(
 			String dbActionSettingName,
 			String scriptActionSettingName,
@@ -296,7 +321,7 @@ public class ConfigurationObjectSettingTest {
 		final boolean createSchemas = true;
 		final String dbName = "H2";
 
-		final Map<String, String> settings = CollectionHelper.toMap(
+		final Map<String, String> settings = toMap(
 				dbActionSettingName, dbAction.getExternalJpaName(),
 				scriptActionSettingName, scriptAction.getExternalJpaName(),
 				createSchemasSettingName, Boolean.toString( createSchemas ),

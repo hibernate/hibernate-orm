@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -11,14 +11,19 @@ import org.hibernate.LockOptions;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -26,10 +31,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
@@ -112,11 +116,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
-	}
-
-	@Override
 	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
 		if ( statement.getFromClause().getRoots().isEmpty() ) {
 			appendSql( " from " );
@@ -138,11 +137,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 
 	@Override
 	protected boolean needsRecursiveKeywordInWithClause() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClauseInSubquery() {
 		return false;
 	}
 
@@ -180,17 +174,24 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 	}
 
-	protected boolean renderPrimaryTableReference(TableGroup tableGroup, LockMode lockMode) {
-		if ( shouldInlineCte( tableGroup ) ) {
-			inlineCteTableGroup( tableGroup, lockMode );
-			return false;
-		}
-		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		if ( tableReference instanceof NamedTableReference ) {
-			return renderNamedTableReference( (NamedTableReference) tableReference, lockMode );
-		}
+	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
 		tableReference.accept( this );
-		return false;
+	}
+
+	@Override
+	public void renderNamedSetReturningFunction(String functionName, List<? extends SqlAstNode> sqlAstArguments, AnonymousTupleTableGroupProducer tupleType, String tableIdentifierVariable, SqlAstNodeRenderingMode argumentRenderingMode) {
+		final ModelPart ordinalitySubPart = tupleType.findSubPart( CollectionPart.Nature.INDEX.getName(), null );
+		if ( ordinalitySubPart != null ) {
+			appendSql( "(select t.*, row_number() over(order by (select 1)) " );
+			appendSql( ordinalitySubPart.asBasicValuedModelPart().getSelectionExpression() );
+			appendSql( " from " );
+			renderSimpleNamedFunction( functionName, sqlAstArguments, argumentRenderingMode );
+			append( " t)" );
+		}
+		else {
+			super.renderNamedSetReturningFunction( functionName, sqlAstArguments, tupleType, tableIdentifierVariable, argumentRenderingMode );
+		}
 	}
 
 	@Override
@@ -345,14 +346,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		}
 	}
 
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		// SQL Server is quite strict i.e. it requires `select .. union all select * from (select ...)`
-		// rather than `select .. union all (select ...)` because parenthesis followed by select
-		// is always treated as a subquery, which is not supported in a set operation
-		return false;
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return getQueryPartForRowNumbering() != queryPart && getOffsetFetchClauseMode( queryPart ) == OffsetFetchClauseMode.EMULATED;
@@ -481,10 +474,28 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
 			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
-				case EQUAL:
-				case NOT_DISTINCT_FROM:
-				case NOT_EQUAL:
 				case DISTINCT_FROM:
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
+						appendSql( "not " );
+					}
+				case NOT_DISTINCT_FROM: {
+					if ( !getDialect().supportsDistinctFromPredicate() ) {
+						appendSql( "exists (select cast(" );
+						getClauseStack().push( Clause.SELECT );
+						visitSqlSelectExpression( lhs );
+						appendSql( " as nvarchar(max))" );
+						appendSql( getFromDualForSelectOnly() );
+						appendSql( " intersect select cast(" );
+						visitSqlSelectExpression( rhs );
+						appendSql( " as nvarchar(max))" );
+						appendSql( getFromDualForSelectOnly() );
+						getClauseStack().pop();
+						appendSql( CLOSE_PARENTHESIS );
+						return;
+					}
+				}
+				case EQUAL:
+				case NOT_EQUAL:
 					appendSql( "cast(" );
 					lhs.accept( this );
 					appendSql( " as nvarchar(max))" );
@@ -498,7 +509,12 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 					break;
 			}
 		}
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		if ( getDialect().supportsDistinctFromPredicate() ) {
+			renderComparisonStandard( lhs, operator, rhs );
+		}
+		else {
+			renderComparisonEmulateIntersect( lhs, operator, rhs );
+		}
 	}
 
 	@Override
@@ -532,21 +548,6 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		appendSql( arithmeticExpression.getOperator().getOperatorSqlTextString() );
 		visitArithmeticOperand( arithmeticExpression.getRightHandOperand() );
 		appendSql( CLOSE_PARENTHESIS );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntax() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
 	}
 
 	enum OffsetFetchClauseMode {

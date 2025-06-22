@@ -1,13 +1,17 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.spi;
 
 /**
- *  Defines an event class for the evicting of an entity.
+ * Event class for {@link org.hibernate.Session#evict}
+ * and {@link org.hibernate.Session#detach}.
  *
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.Session#evict
+ * @see org.hibernate.Session#detach
  */
 public class EvictEvent extends AbstractEvent {
 
@@ -15,6 +19,9 @@ public class EvictEvent extends AbstractEvent {
 
 	public EvictEvent(Object object, EventSource source) {
 		super(source);
+		if (object == null) {
+			throw new IllegalArgumentException( "Entity may not be null" );
+		}
 		this.object = object;
 	}
 

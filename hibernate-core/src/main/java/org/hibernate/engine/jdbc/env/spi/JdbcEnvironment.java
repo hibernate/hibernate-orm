@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.spi;
@@ -35,17 +35,20 @@ public interface JdbcEnvironment extends Service {
 	ExtractedDatabaseMetaData getExtractedDatabaseMetaData();
 
 	/**
-	 * Get the current database catalog.  Typically will come from either {@link java.sql.Connection#getCatalog()}
-	 * or {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * Get the current database catalog.  Typically, will come from either
+	 * {@link java.sql.Connection#getCatalog()} or
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current catalog.
 	 */
 	Identifier getCurrentCatalog();
 
 	/**
-	 * Get the current database catalog.  Typically will come from either
-	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, Dialect)} or
-	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
+	 * Get the current database catalog.  Typically, will come from either
+	 * {@link java.sql.Connection#getSchema()} or
+	 * {@value org.hibernate.cfg.AvailableSettings#DEFAULT_SCHEMA}.
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.SchemaNameResolver
 	 *
 	 * @return The current schema
 	 */

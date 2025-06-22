@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -24,7 +24,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -167,24 +166,24 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Timestamp ) {
-			return (Timestamp) value;
+		if ( value instanceof Timestamp timestamp ) {
+			return timestamp;
 		}
 
-		if ( value instanceof Date ) {
-			return new Timestamp( ( (Date) value ).getTime() );
+		if ( value instanceof Date date ) {
+			return new Timestamp( date.getTime() );
 		}
 
-		if ( value instanceof LocalDateTime ) {
-			return Timestamp.valueOf( (LocalDateTime) value );
+		if ( value instanceof LocalDateTime localDateTime ) {
+			return Timestamp.valueOf( localDateTime );
 		}
 
-		if ( value instanceof Long ) {
-			return new Timestamp( (Long) value );
+		if ( value instanceof Long longValue ) {
+			return new Timestamp( longValue );
 		}
 
-		if ( value instanceof Calendar ) {
-			return new Timestamp( ( (Calendar) value ).getTimeInMillis() );
+		if ( value instanceof Calendar calendar ) {
+			return new Timestamp( calendar.getTimeInMillis() );
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -192,15 +191,10 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 
 	@Override
 	public boolean isWider(JavaType<?> javaType) {
-		switch ( javaType.getTypeName() ) {
-			case "java.sql.Date":
-			case "java.sql.Timestamp":
-			case "java.util.Date":
-			case "java.util.Calendar":
-				return true;
-			default:
-				return false;
-		}
+		return switch ( javaType.getTypeName() ) {
+			case "java.sql.Date", "java.sql.Timestamp", "java.util.Date", "java.util.Calendar" -> true;
+			default -> false;
+		};
 	}
 
 	@Override
@@ -229,7 +223,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 	@Override
 	public Date fromEncodedString(CharSequence charSequence, int start, int end) {
 		try {
-			final TemporalAccessor accessor = DateTimeUtils.DATE_TIME.parse( subSequence( charSequence, start, end ) );
+			final TemporalAccessor accessor = ENCODED_FORMATTER.parse( subSequence( charSequence, start, end ) );
 			final Timestamp timestamp;
 			if ( accessor.isSupported( ChronoField.INSTANT_SECONDS ) ) {
 				timestamp = new Timestamp( accessor.getLong( ChronoField.INSTANT_SECONDS ) * 1000L );
@@ -241,7 +235,7 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 			return timestamp;
 		}
 		catch ( DateTimeParseException pe) {
-			throw new HibernateException( "could not parse timestamp string " + charSequence, pe );
+			throw new HibernateException( "could not parse timestamp string " + subSequence( charSequence, start, end ), pe );
 		}
 	}
 

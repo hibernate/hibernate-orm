@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.enhance.spi.interceptor;
 
+import org.hibernate.Internal;
 import org.hibernate.bytecode.BytecodeLogging;
 import org.hibernate.internal.log.SubSystemLogging;
 
@@ -27,6 +28,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = BytecodeInterceptorLogging.LOGGER_NAME,
 		description = "Logging related to bytecode-based interception"
 )
+@Internal
 public interface BytecodeInterceptorLogging extends BasicLogger {
 	String SUB_NAME = "interceptor";
 	String LOGGER_NAME = BytecodeLogging.LOGGER_NAME + "." + SUB_NAME;

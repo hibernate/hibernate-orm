@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -22,6 +22,11 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 
 	public ZoneIdJavaType() {
 		super( ZoneId.class );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof ZoneId;
 	}
 
 	@Override
@@ -64,11 +69,11 @@ public class ZoneIdJavaType extends AbstractClassJavaType<ZoneId> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof ZoneId ) {
-			return (ZoneId) value;
+		if ( value instanceof ZoneId zoneId ) {
+			return zoneId;
 		}
-		if ( value instanceof String ) {
-			return fromString( (String) value );
+		if ( value instanceof String string ) {
+			return fromString( string );
 		}
 		throw unknownWrap( value.getClass() );
 	}

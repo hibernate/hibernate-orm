@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -27,6 +27,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 
 	public LocaleJavaType() {
 		super( Locale.class, ImmutableMutabilityPlan.instance(), LocaleComparator.INSTANCE );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof Locale;
 	}
 
 	@Override
@@ -107,11 +112,11 @@ public class LocaleJavaType extends AbstractClassJavaType<Locale> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( value instanceof Locale ) {
-			return (Locale) value;
+		if ( value instanceof Locale locale ) {
+			return locale;
 		}
-		if (value instanceof CharSequence) {
-			return fromString( (CharSequence) value );
+		if (value instanceof CharSequence charSequence) {
+			return fromString( charSequence );
 		}
 		throw unknownWrap( value.getClass() );
 	}

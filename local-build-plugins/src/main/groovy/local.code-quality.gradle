@@ -1,0 +1,139 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+
+plugins {
+    id "org.checkerframework"
+    id "de.thetaphi.forbiddenapis"
+    id "com.diffplug.spotless"
+}
+
+tasks.register( "ciCheck" ) {
+    // Task used by CI builds
+    group "verification"
+    description "Checks for CI environments"
+    dependsOn tasks.check
+}
+
+gradle.taskGraph.whenReady {
+    if ( it.hasTask( tasks.ciCheck ) ) {
+        // These are already enforced by the formatChecks task
+        tasks.spotlessApply.enabled = false
+        tasks.spotlessJavaApply.enabled = false
+        tasks.enforceRules.enabled = false
+    }
+}
+
+tasks.register( "formatChecks" ) {
+    // Only runs static code analysis, doesn't require compilation
+    group "verification"
+    description "Code style and formatting checks"
+
+    dependsOn tasks.spotlessCheck
+    dependsOn tasks.enforceRules
+}
+
+
+def enforceRulesTask = tasks.register('enforceRules') {
+    inputs.dir("src/main/java")
+    doLast {
+        def illegalImport = ~/^import (sun|java.awt|org.slf4j)/
+        def missingNewline = ~/^\s*}\s*(else|catch|finally)/
+        def lowerEll = ~/\b\d+l\b/
+        def equals = ~/boolean +equals\((@?\w+ )*Object \w+\)/
+        def hashCode = ~/int +hashCode\(\)/
+        def errors = 0
+        def tree = fileTree("src/main/java/")
+        tree.include "**/*.java"
+        tree.each { file ->
+            def lineNum = 0
+            def shortName = file.path.substring(rootDir.path.length())
+            def equalsMinusHashcode = 0
+            file.eachLine { line ->
+                lineNum++
+                if (line =~ illegalImport) {
+                    errors++
+                    logger.error("Illegal import in ${shortName}\n${lineNum}: ${line}")
+                }
+                if (line =~ missingNewline) {
+                    errors++
+                    logger.error("Missing newline in ${shortName}\n${lineNum}: ${line}")
+                }
+                if (line =~ lowerEll) {
+                    errors++
+                    logger.error("Lowercase long literal in ${shortName}\n${lineNum}: ${line}")
+                }
+                if (!line.startsWith("//")) { //ignore commented-out code
+                    if (line =~ equals) {
+                        equalsMinusHashcode++
+                    }
+                    if (line =~ hashCode) {
+                        equalsMinusHashcode--
+                    }
+                }
+            }
+            if (equalsMinusHashcode > 0) {
+                errors++
+                logger.error("Equals with missing hash code in ${shortName}")
+            }
+            if (equalsMinusHashcode < 0) {
+                errors++
+                logger.error("Hash code with missing equals in ${shortName}")
+            }
+        }
+        if (errors > 0) {
+            throw new GradleException("Code rules were violated ($errors problems)")
+        }
+    }
+}
+
+tasks.check.dependsOn enforceRulesTask
+
+spotless {
+    //Don't fail during the check: rather than enforcing guidelines, we use this plugin to fix mistakes automatically.
+    enforceCheck false
+    java {
+        targetExclude( "target/**/*.java" )
+        licenseHeaderFile rootProject.file("shared/config/spotless/license.java")
+        removeUnusedImports()
+        leadingSpacesToTabs( 4 )
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+tasks.compileJava.dependsOn tasks.spotlessJavaApply
+
+checkerFramework {
+    excludeTests = true
+    checkers = [
+            'org.checkerframework.checker.nullness.NullnessChecker'
+    ]
+    extraJavacArgs = [
+            '-AsuppressWarnings=initialization',
+            // stubs is passed directly through options.compilerArgumentProviders
+            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|processor|service|spi|pretty|property\\.access|stat|engine\\.(config|jndi|profile|spi|transaction)|(action|context|bytecode)\\.spi)\\.'
+    ]
+}
+
+tasks.forbiddenApisMain {
+    // unfortunately we currently have many uses of default Locale implicitly (~370)
+    // which need to be fixed before we can enable the "unsafe" check
+    //bundledSignatures += ["jdk-system-out", "jdk-non-portable", "jdk-unsafe-${jdkVersions.baseline}"]
+    bundledSignatures += ["jdk-system-out", "jdk-non-portable"]
+
+    signaturesFiles += rootProject.files('rules/forbidden-apis.txt')
+    ignoreSignaturesOfMissingClasses = true
+
+    suppressAnnotations += [
+            "org.hibernate.internal.build.AllowSysOut",
+            "org.hibernate.internal.build.AllowPrintStacktrace",
+            "org.hibernate.internal.build.AllowNonPortable",
+            "org.hibernate.internal.build.AllowReflection"
+    ]
+}
+
+tasks.forbiddenApisTest {
+    enabled = false
+}

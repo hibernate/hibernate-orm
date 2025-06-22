@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -10,14 +10,15 @@ import java.util.Objects;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.type.ForeignKeyDirection;
-import org.hibernate.type.Type;
+import org.hibernate.type.OneToOneType;
+import org.hibernate.type.SpecialOneToOneType;
 
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.OneToOne many-to-one association}.
  *
  * @author Gavin King
  */
-public class OneToOne extends ToOne {
+public final class OneToOne extends ToOne {
 
 	private boolean constrained;
 	private ForeignKeyDirection foreignKeyType;
@@ -59,9 +60,10 @@ public class OneToOne extends ToOne {
 		return entityName;
 	}
 
-	public Type getType() throws MappingException {
+	public OneToOneType getType() throws MappingException {
 		if ( getColumnSpan()>0 ) {
-			return MappingHelper.specialOneToOne(
+			return new SpecialOneToOneType(
+					getTypeConfiguration(),
 					getReferencedEntityName(),
 					getForeignKeyType(),
 					isReferenceToPrimaryKey(),
@@ -70,12 +72,12 @@ public class OneToOne extends ToOne {
 					isUnwrapProxy(),
 					getEntityName(),
 					getPropertyName(),
-					isConstrained(),
-					getBuildingContext()
+					isConstrained()
 			);
 		}
 		else {
-			return MappingHelper.oneToOne(
+			return new OneToOneType(
+					getTypeConfiguration(),
 					getReferencedEntityName(),
 					getForeignKeyType(),
 					isReferenceToPrimaryKey(),
@@ -84,8 +86,7 @@ public class OneToOne extends ToOne {
 					isUnwrapProxy(),
 					entityName,
 					propertyName,
-					isConstrained(),
-					getBuildingContext()
+					isConstrained()
 			);
 		}
 	}
@@ -99,17 +100,17 @@ public class OneToOne extends ToOne {
 
 	@Override
 	public List<Selectable> getVirtualSelectables() {
-		List<Selectable> selectables = super.getVirtualSelectables();
+		final List<Selectable> selectables = super.getVirtualSelectables();
 		if ( selectables.isEmpty() ) {
-			selectables = identifier.getSelectables();
+			return identifier.getSelectables();
 		}
 		return selectables;
 	}
 
 	public List<Column> getConstraintColumns() {
-		List<Column> columns = super.getColumns();
+		final List<Column> columns = super.getColumns();
 		if ( columns.isEmpty() ) {
-			columns = identifier.getColumns();
+			return identifier.getColumns();
 		}
 		return columns;
 	}
@@ -172,16 +173,17 @@ public class OneToOne extends ToOne {
 
 	@Override
 	public boolean isSame(ToOne other) {
-		return other instanceof OneToOne && isSame( (OneToOne) other );
+		return other instanceof OneToOne oneToOne
+			&& isSame( oneToOne );
 	}
 
 	public boolean isSame(OneToOne other) {
 		return super.isSame( other )
-				&& Objects.equals( foreignKeyType, other.foreignKeyType )
-				&& isSame( identifier, other.identifier )
-				&& Objects.equals( propertyName, other.propertyName )
-				&& Objects.equals( entityName, other.entityName )
-				&& constrained == other.constrained;
+			&& Objects.equals( foreignKeyType, other.foreignKeyType )
+			&& isSame( identifier, other.identifier )
+			&& Objects.equals( propertyName, other.propertyName )
+			&& Objects.equals( entityName, other.entityName )
+			&& constrained == other.constrained;
 	}
 
 	public String getMappedByProperty() {

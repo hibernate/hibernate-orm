@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -416,8 +416,9 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 			if ( o == this ) {
 				return true;
 			}
-			else if ( o instanceof SoftLockImpl ) {
-				return ( lockId == ( (SoftLockImpl) o ).lockId ) && sourceUuid.equals( ( (SoftLockImpl) o ).sourceUuid );
+			else if ( o instanceof SoftLockImpl that ) {
+				return this.lockId == that.lockId
+					&& this.sourceUuid.equals( that.sourceUuid );
 			}
 			else {
 				return false;

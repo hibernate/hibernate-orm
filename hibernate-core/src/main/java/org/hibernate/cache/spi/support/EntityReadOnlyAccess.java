@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cache.spi.support;
@@ -31,7 +31,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			EntityDataCachingConfig config) {
 		super( region, cacheKeysFactory, storageAccess );
 		if ( config.isMutable() ) {
-			L2CACHE_LOGGER.readOnlyCachingMutableEntity( config.getNavigableRole() );
+			L2CACHE_LOGGER.readOnlyCachingMutableEntity( config.getNavigableRole().getFullPath() );
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.RepeatableContainer;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.MapKeyJoinColumns;
@@ -25,14 +25,14 @@ public class MapKeyJoinColumnsJpaAnnotation implements MapKeyJoinColumns, Repeat
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public MapKeyJoinColumnsJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public MapKeyJoinColumnsJpaAnnotation(ModelsContext modelContext) {
 		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public MapKeyJoinColumnsJpaAnnotation(MapKeyJoinColumns annotation, SourceModelBuildingContext modelContext) {
+	public MapKeyJoinColumnsJpaAnnotation(MapKeyJoinColumns annotation, ModelsContext modelContext) {
 		this.value = extractJdkValue( annotation, JpaAnnotations.MAP_KEY_JOIN_COLUMNS, "value", modelContext );
 		this.foreignKey = extractJdkValue(
 				annotation,
@@ -47,7 +47,7 @@ public class MapKeyJoinColumnsJpaAnnotation implements MapKeyJoinColumns, Repeat
 	 */
 	public MapKeyJoinColumnsJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.value = (MapKeyJoinColumn[]) attributeValues.get( "value" );
 		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );
 	}

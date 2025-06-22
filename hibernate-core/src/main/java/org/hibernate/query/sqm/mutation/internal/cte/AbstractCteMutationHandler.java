@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -119,7 +120,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
-				factory
+				factory.getSqlTranslationEngine()
 		);
 		final Map<SqmParameter<?>, List<JdbcParameter>> parameterResolutions;
 		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
@@ -214,12 +215,12 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 	protected Expression createCountStar(
 			SessionFactoryImplementor factory,
 			MultiTableSqmMutationConverter sqmConverter) {
-		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
-				arg,
-				null,
-				factory.getQueryEngine()
-		).convertToSqlAst( sqmConverter );
+		final QueryEngine queryEngine = factory.getQueryEngine();
+		final SqmExpression<?> arg = new SqmStar( queryEngine.getCriteriaBuilder() );
+		return queryEngine.getSqmFunctionRegistry()
+				.findFunctionDescriptor( "count" )
+				.generateSqmExpression( arg, null, queryEngine )
+				.convertToSqlAst( sqmConverter );
 	}
 
 	protected Predicate createIdSubQueryPredicate(

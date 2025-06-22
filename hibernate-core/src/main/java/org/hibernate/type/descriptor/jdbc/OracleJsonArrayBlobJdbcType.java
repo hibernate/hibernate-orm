@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -24,16 +24,18 @@ import java.sql.SQLException;
  * @author Christian Beikov
  */
 public class OracleJsonArrayBlobJdbcType extends JsonArrayJdbcType {
-	/**
-	 * Singleton access
-	 */
-	public static final OracleJsonArrayBlobJdbcType INSTANCE = new OracleJsonArrayBlobJdbcType();
 
-	protected OracleJsonArrayBlobJdbcType() {
+	public OracleJsonArrayBlobJdbcType(JdbcType elementJdbcType) {
+		super( elementJdbcType );
 	}
 
 	@Override
 	public int getJdbcTypeCode() {
+		return SqlTypes.BLOB;
+	}
+
+	@Override
+	public int getDdlTypeCode() {
 		return SqlTypes.BLOB;
 	}
 

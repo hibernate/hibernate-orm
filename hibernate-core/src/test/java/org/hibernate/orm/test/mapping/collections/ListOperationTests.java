@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.collections;
 
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfLists;
@@ -58,19 +58,14 @@ public class ListOperationTests {
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete from EntityOfLists" ).executeUpdate();
-					session.createQuery( "delete from SimpleEntity" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
 	public void listBaselineTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<EntityOfLists> query = session.createQuery(
+					final Query<EntityOfLists> query = session.createQuery(
 							"select e from EntityOfLists e",
 							EntityOfLists.class
 					);
@@ -87,7 +82,7 @@ public class ListOperationTests {
 	public void listEagerBasicTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final QueryImplementor<EntityOfLists> query = session.createQuery(
+					final Query<EntityOfLists> query = session.createQuery(
 							"select e from EntityOfLists e join fetch e.listOfBasics",
 							EntityOfLists.class
 					);

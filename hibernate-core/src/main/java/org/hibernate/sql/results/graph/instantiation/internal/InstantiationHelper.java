@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
@@ -80,9 +80,11 @@ public class InstantiationHelper {
 			for (int i = 0; i < argumentTypes.size(); i++ ) {
 				final Type parameterType = genericParameterTypes[i];
 				final Class<?> argumentType = argumentTypes.get( i );
-				final Class<?> type = parameterType instanceof Class<?>
-						? (Class<?>) parameterType
-						: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType ).getJavaTypeClass();
+				final Class<?> type =
+						parameterType instanceof Class<?> classParameter
+								? classParameter
+								: typeConfiguration.getJavaTypeRegistry().resolveDescriptor( parameterType )
+										.getJavaTypeClass();
 
 				if ( !areAssignmentCompatible( type, argumentType ) ) {
 					if ( log.isDebugEnabled() ) {

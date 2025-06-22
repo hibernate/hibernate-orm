@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -11,10 +11,15 @@ import java.lang.reflect.Member;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPersistentAttribute;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -25,24 +30,24 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,J>, Serializable {
+public abstract class AbstractAttribute<D,J,B>
+		implements SqmPersistentAttribute<D,J>, Serializable {
 	private final ManagedDomainType<D> declaringType;
 	private final String name;
 	private final JavaType<J> attributeJtd;
 
 	private final AttributeClassification attributeClassification;
 
-	private final DomainType<B> valueType;
-	private transient Member member;
+	private final SqmDomainType<B> valueType;
+	private final transient Member member;
 
 	protected AbstractAttribute(
 			ManagedDomainType<D> declaringType,
 			String name,
 			JavaType<J> attributeJtd,
 			AttributeClassification attributeClassification,
-			DomainType<B> valueType,
-			Member member,
-			MetadataContext metadataContext) {
+			SqmDomainType<B> valueType,
+			Member member) {
 		this.declaringType = declaringType;
 		this.name = name;
 		this.attributeJtd = attributeJtd;
@@ -58,13 +63,12 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 
 	@Override
 	public Class<J> getJavaType() {
-		if ( valueType instanceof BasicTypeImpl ) {
-			return ( (BasicTypeImpl) valueType ).getJavaType();
-		}
-		return attributeJtd.getJavaTypeClass();
+		return valueType instanceof BasicTypeImpl basicType
+				? basicType.getJavaType()
+				: attributeJtd.getJavaTypeClass();
 	}
 
-	public DomainType<B> getSqmPathType() {
+	public SqmDomainType<B> getPathType() {
 		return valueType;
 	}
 
@@ -96,6 +100,26 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	@Override
 	public DomainType<?> getValueGraphType() {
 		return valueType;
+	}
+
+	NavigablePath getParentNavigablePath(SqmPath<?> parent) {
+		final var parentPathSource = parent.getResolvedModel();
+		final var parentType = parentPathSource.getPathType();
+		final NavigablePath parentNavigablePath =
+				parentPathSource instanceof PluralPersistentAttribute<?, ?, ?>
+						// for collections, implicitly navigate to the element
+						? parent.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
+						: parent.getNavigablePath();
+		if ( parentType != declaringType
+				&& parentType instanceof EntityDomainType<?> entityDomainType
+				&& entityDomainType.findAttribute( name ) == null ) {
+			// If the parent path is an entity type which does not contain the
+			// joined attribute add an implicit treat to the parent's navigable path
+			return parentNavigablePath.treatAs( declaringType.getTypeName() );
+		}
+		else {
+			return parentNavigablePath;
+		}
 	}
 
 	@Override

@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,8 +28,10 @@ public class FunctionTableGroup extends AbstractTableGroup {
 			FunctionExpression functionExpression,
 			String sourceAlias,
 			List<String> columnNames,
+			Set<String> compatibleTableExpressions,
 			boolean lateral,
 			boolean canUseInnerJoins,
+			boolean rendersIdentifierVariable,
 			SessionFactoryImplementor sessionFactory) {
 		super(
 				canUseInnerJoins,
@@ -43,6 +46,8 @@ public class FunctionTableGroup extends AbstractTableGroup {
 				sourceAlias,
 				columnNames,
 				lateral,
+				rendersIdentifierVariable,
+				compatibleTableExpressions,
 				sessionFactory
 		);
 	}
@@ -57,7 +62,7 @@ public class FunctionTableGroup extends AbstractTableGroup {
 			NavigablePath navigablePath,
 			String tableExpression,
 			boolean resolve) {
-		if ( tableExpression == null ) {
+		if ( getPrimaryTableReference().containsAffectedTableName( tableExpression ) ) {
 			return getPrimaryTableReference();
 		}
 		for ( TableGroupJoin tableGroupJoin : getNestedTableGroupJoins() ) {
@@ -81,7 +86,7 @@ public class FunctionTableGroup extends AbstractTableGroup {
 
 	@Override
 	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		functionTableReference.applyAffectedTableNames( nameCollector );
+		getPrimaryTableReference().applyAffectedTableNames( nameCollector );
 	}
 
 	@Override

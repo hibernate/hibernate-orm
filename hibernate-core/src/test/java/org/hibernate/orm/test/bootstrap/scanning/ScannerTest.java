@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.bootstrap.scanning;
@@ -14,9 +14,10 @@ import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import org.hibernate.archive.scan.internal.StandardScanner;
+import org.hibernate.boot.archive.scan.internal.DisabledScanner;
 import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -152,5 +153,32 @@ public class ScannerTest extends PackagingTestCase {
 			assertThat( descriptor.getStreamAccess() ).isNotNull();
 			assertThat( descriptor.getName() ).isNotBlank();
 		} );
+	}
+
+	@Test
+	@JiraKey("HHH-18987")
+	public void testDisabledScanner() throws Exception {
+		File defaultPar = buildDefaultPar();
+		addPackageToClasspath( defaultPar );
+
+		PersistenceUnitDescriptor descriptor = new ParsedPersistenceXmlDescriptor( defaultPar.toURL() );
+		ScanEnvironment env = new StandardJpaScanEnvironmentImpl( descriptor );
+		ScanOptions options = new StandardScanOptions( "hbm,class", descriptor.isExcludeUnlistedClasses() );
+		Scanner scanner = new DisabledScanner();
+		ScanResult scanResult = scanner.scan(
+				env,
+				options,
+				StandardScanParameters.INSTANCE
+		);
+
+		assertEquals( 0, scanResult.getLocatedClasses().size() );
+
+		assertEquals( 1, scanResult.getLocatedMappingFiles().size() );
+		MappingFileDescriptor mappingFileDescriptor = scanResult.getLocatedMappingFiles().iterator().next();
+		assertEquals( "META-INF/orm.xml", mappingFileDescriptor.getName() );
+		assertNotNull( mappingFileDescriptor.getStreamAccess() );
+		InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
+		assertNotNull( stream );
+		stream.close();
 	}
 }

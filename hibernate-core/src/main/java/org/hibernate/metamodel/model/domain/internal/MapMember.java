@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -13,7 +13,7 @@ import java.lang.reflect.Modifier;
  * @author Brad Koehn
  */
 public class MapMember implements Member {
-	private String name;
+	private final String name;
 	private final Class<?> type;
 
 	public MapMember(String name, Class<?> type) {

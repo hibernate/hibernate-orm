@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -130,10 +130,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 						+ "' because it has a null identifier" );
 			}
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Refreshing transient {0}",
-						infoString( persister, id, event.getFactory() )
-				);
+				LOG.trace( "Refreshing transient " + infoString( persister, id, event.getFactory() ) );
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
 				throw new NonUniqueObjectException( id, persister.getEntityName() );
@@ -141,10 +138,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 		else {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Refreshing ",
-						infoString( entry.getPersister(), entry.getId(), event.getFactory() )
-				);
+				LOG.trace( "Refreshing " + infoString( entry.getPersister(), entry.getId(), event.getFactory() ) );
 			}
 			if ( !entry.isExistsInDatabase() ) {
 				throw new UnresolvableObjectException(
@@ -189,6 +183,16 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			EntityEntry entry,
 			Object id,
 			PersistenceContext persistenceContext) {
+		if ( object != null ) {
+			final var instrumentationMetadata = persister.getBytecodeEnhancementMetadata();
+			if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
+				final var interceptor = instrumentationMetadata.extractInterceptor( object );
+				if ( interceptor != null ) {
+					// The list of initialized lazy fields have to be cleared in order to refresh them from the database.
+					interceptor.clearInitializedLazyFields();
+				}
+			}
+		}
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.REFRESH,

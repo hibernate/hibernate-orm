@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect;
@@ -13,21 +13,25 @@ import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.SybaseASEAggregateSupport;
+import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.dialect.sql.ast.SybaseASESqlAstTranslator;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.ConstraintViolationException.ConstraintKind;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -45,13 +49,19 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_ANSI_NULL;
+import static org.hibernate.cfg.DialectSpecificSettings.SYBASE_PAGE_SIZE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
+import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.NCLOB;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.XML_ARRAY;
 
 /**
  * A {@linkplain Dialect SQL dialect} for Sybase Adaptive Server Enterprise 16 and above.
@@ -59,6 +69,8 @@ import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 public class SybaseASEDialect extends SybaseDialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 16, 0 );
+
+	public static final int MAX_PAGE_SIZE = 16_384;
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
 		@Override
@@ -90,6 +102,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	};
 
 	private final boolean ansiNull;
+	private final int pageSize;
 
 	public SybaseASEDialect() {
 		this( MINIMUM_VERSION );
@@ -98,37 +111,29 @@ public class SybaseASEDialect extends SybaseDialect {
 	public SybaseASEDialect(DatabaseVersion version) {
 		super(version);
 		ansiNull = false;
+		pageSize = MAX_PAGE_SIZE;
 	}
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		super(info);
 		ansiNull = isAnsiNull( info );
+		pageSize = pageSize( info );
 	}
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN: {
-				// On Sybase ASE, the 'bit' type cannot be null,
-				// and cannot have indexes (while we don't use
-				// tinyint to store signed bytes, we can use it
-				// to store boolean values)
-				return "tinyint";
-			}
-			case DATE: {
-				return "date";
-			}
-			case TIME: {
-				return "time";
-			}
-			case NCLOB: {
-				// Sybase uses `unitext` instead of the T-SQL `ntext` type name
-				return "unitext";
-			}
-			default: {
-				return super.columnType( sqlTypeCode );
-			}
-		}
+		return switch ( sqlTypeCode ) {
+			// On Sybase ASE, the 'bit' type cannot be null,
+			// and cannot have indexes (while we don't use
+			// tinyint to store signed bytes, we can use it
+			// to store boolean values)
+			case BOOLEAN -> "tinyint";
+			case DATE -> "date";
+			case TIME -> "time";
+			// Sybase uses `unitext` instead of the T-SQL `ntext` type name
+			case NCLOB -> "unitext";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -158,6 +163,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public int getPreferredSqlTypeCodeForArray() {
+		return XML_ARRAY;
+	}
+
+	@Override
 	public int getMaxVarcharLength() {
 		// the maximum length of a VARCHAR or VARBINARY
 		// column depends on the page size and ASE version
@@ -165,7 +175,27 @@ public class SybaseASEDialect extends SybaseDialect {
 		// not the individual column length -- anyway, the
 		// largest possible page size is 16k, so that's a
 		// hard upper limit
-		return 16_384;
+		return pageSize;
+	}
+
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry( functionContributions );
+
+		final var functionFactory = new CommonFunctionFactory( functionContributions);
+		functionFactory.unnest_sybasease();
+		functionFactory.generateSeries_sybasease( getMaximumSeriesSize() );
+		functionFactory.xmltable_sybasease();
+	}
+
+	/**
+	 * Sybase ASE doesn't support the {@code generate_series} function or {@code lateral} recursive CTEs,
+	 * so it has to be emulated with the {@code xmltable} and {@code replicate} functions.
+	 */
+	protected int getMaximumSeriesSize() {
+		// The maximum possible value for replicating an XML tag, so that the resulting string stays below the 16K limit
+		// https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug31.htm
+		return 4094;
 	}
 
 	@Override
@@ -176,10 +206,10 @@ public class SybaseASEDialect extends SybaseDialect {
 	private static boolean isAnsiNull(DialectResolutionInfo info) {
 		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
-			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
-				final ResultSet rs = s.executeQuery( "SELECT @@options" );
-				if ( rs.next() ) {
-					final byte[] optionBytes = rs.getBytes( 1 );
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT @@options" );
+				if ( resultSet.next() ) {
+					final byte[] optionBytes = resultSet.getBytes( 1 );
 					// By trial and error, enabling and disabling ansinull revealed that this bit is the indicator
 					return ( optionBytes[4] & 2 ) == 2;
 				}
@@ -189,10 +219,26 @@ public class SybaseASEDialect extends SybaseDialect {
 			}
 		}
 		// default to the dialect-specific configuration setting
-		return ConfigurationHelper.getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
+		return getBoolean( SYBASE_ANSI_NULL, info.getConfigurationValues(), false );
 	}
 
-	@Override
+	private int pageSize(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
+		if ( databaseMetaData != null ) {
+			try ( var statement = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet resultSet = statement.executeQuery( "SELECT @@maxpagesize" );
+				if ( resultSet.next() ) {
+					return resultSet.getInt( 1 );
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		// default to the dialect-specific configuration setting
+		return getInt( SYBASE_PAGE_SIZE, info.getConfigurationValues(), MAX_PAGE_SIZE );
+	}
+
 	public boolean isAnsiNullOn() {
 		return ansiNull;
 	}
@@ -223,6 +269,11 @@ public class SybaseASEDialect extends SybaseDialect {
 		};
 	}
 
+	@Override
+	public AggregateSupport getAggregateSupport() {
+		return SybaseASEAggregateSupport.valueOf( this );
+	}
+
 	/**
 	 * The Sybase ASE {@code BIT} type does not allow
 	 * null values, so we don't use it.
@@ -246,10 +297,7 @@ public class SybaseASEDialect extends SybaseDialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
-		// At least the jTDS driver does not support this type code
-		if ( getDriverKind() == SybaseDriverKind.JTDS ) {
-			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
-		}
+		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -616,28 +664,28 @@ public class SybaseASEDialect extends SybaseDialect {
 		return EXTRACTOR;
 	}
 
-	/**
-	 * Constraint-name extractor for Sybase ASE constraint violation exceptions.
-	 * Orginally contributed by Denny Bartelt.
-	 */
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState != null ) {
-					switch ( sqlState ) {
-						case "S1000":
-						case "23000":
-							switch ( errorCode ) {
-								case 2601:
-									// UNIQUE VIOLATION
-									return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
-								case 546:
-									// Foreign key violation
-									return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
-							}
-							break;
-					}
+					return switch ( sqlState ) {
+						case "S1000", "23000" -> switch ( extractErrorCode( sqle ) ) {
+							case 2601 ->
+								// Unique constraint violation
+									extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
+							case 546, 548 ->
+								// Foreign key or check constraint violation
+									extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
+							case 515 ->
+								// Not null violation
+									extractUsingTemplate( "column '", "'", sqle.getMessage() );
+							case 233 ->
+								// Not null violation
+									extractUsingTemplate( "The column ", " ", sqle.getMessage() );
+							default -> null;
+						};
+						default -> null;
+					};
 				}
 				return null;
 			} );
@@ -645,59 +693,53 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "HY008":
-						return new QueryTimeoutException( message, sqlException, sql );
-					case "JZ0TO":
-					case "JZ006":
-						return new LockTimeoutException( message, sqlException, sql );
-					case "S1000":
-					case "23000":
-						switch ( errorCode ) {
-							case 515:
-								// Attempt to insert NULL value into column; column does not allow nulls.
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
-							case 546:
-								// Foreign key violation
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
-							case 2601:
-								// Unique constraint violation
-								return new ConstraintViolationException(
-										message,
-										sqlException,
-										sql,
-										ConstraintViolationException.ConstraintKind.UNIQUE,
-										getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-								);
-						}
-						break;
-					case "ZZZZZ":
+				final int errorCode = extractErrorCode( sqlException );
+				return switch ( sqlState ) {
+					case "HY008" ->
+						new QueryTimeoutException( message, sqlException, sql );
+					case "JZ0TO", "JZ006" ->
+						new LockTimeoutException( message, sqlException, sql );
+					case "S1000", "23000" ->
+						convertConstraintViolation( sqlException, message, sql, errorCode );
+					case "ZZZZZ" -> {
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
-							return new ConstraintViolationException(
-									message,
-									sqlException,
-									sql,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
-							);
+							yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
 						}
-						break;
-				}
+						else {
+							yield null;
+						}
+					}
+					default -> null;
+				};
 			}
 			return null;
+		};
+	}
+
+	private ConstraintViolationException convertConstraintViolation(
+			SQLException sqlException, String message, String sql, int errorCode) {
+		return switch ( errorCode ) {
+			case 515, 233 ->
+				// Attempt to insert NULL value into column; column does not allow nulls.
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 546 ->
+				// Foreign key violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 548 ->
+				// Check constraint violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			case 2601 ->
+				// Unique constraint violation
+					new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+			default -> null;
 		};
 	}
 
@@ -710,4 +752,16 @@ public class SybaseASEDialect extends SybaseDialect {
 	public String getDual() {
 		return "(select 1 c1)";
 	}
+
+	@Override
+	public boolean supportsIntersect() {
+		// At least the version that
+		return false;
+	}
+
+	@Override
+	public boolean supportsJoinsInDelete() {
+		return true;
+	}
+
 }

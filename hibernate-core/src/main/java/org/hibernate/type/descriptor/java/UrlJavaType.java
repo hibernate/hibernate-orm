@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -7,7 +7,6 @@ package org.hibernate.type.descriptor.java;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.hibernate.HibernateException;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -23,6 +22,11 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 
 	public UrlJavaType() {
 		super( URL.class );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof URL;
 	}
 
 	@Override
@@ -44,7 +48,7 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 			return new URL( string.toString() );
 		}
 		catch ( MalformedURLException e ) {
-			throw new HibernateException( "Unable to convert string [" + string + "] to URL : " + e );
+			throw new CoercionException( "Unable to convert string [" + string + "] to URL : " + e );
 		}
 	}
 
@@ -66,11 +70,11 @@ public class UrlJavaType extends AbstractClassJavaType<URL> {
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof URL) {
-			return (URL) value;
+		if (value instanceof URL url) {
+			return url;
 		}
-		if (value instanceof CharSequence) {
-			return fromString( (CharSequence) value );
+		if (value instanceof CharSequence charSequence) {
+			return fromString( charSequence );
 		}
 		throw unknownWrap( value.getClass() );
 	}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -24,8 +24,7 @@ import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
-import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper.PersistenceContextEntry;
+import org.hibernate.loader.internal.CacheLoadHelper.PersistenceContextEntry;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -34,13 +33,15 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSecondLevelCache;
+import static org.hibernate.loader.internal.CacheLoadHelper.loadFromSessionCache;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -226,10 +227,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 */
 	private Object proxyOrLoad(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Loading entity: {0}",
-					infoString( persister, event.getEntityId(), persister.getFactory() )
-			);
+			LOG.trace( "Loading entity: " + infoString( persister, event.getEntityId(), persister.getFactory() ) );
 		}
 		if ( hasBytecodeProxy( persister, options ) ) {
 			return loadWithBytecodeProxy( event, persister, keyToLoad, options );
@@ -309,7 +307,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final Object proxy = holder == null ? null : holder.getProxy();
 			if ( proxy != null ) {
 				LOG.trace( "Entity proxy found in session cache" );
-				if ( LOG.isDebugEnabled() && HibernateProxy.extractLazyInitializer( proxy ).isUnwrap() ) {
+				if ( LOG.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
 					LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 				}
 				return persistenceContext.narrowProxy( proxy, persister, keyToLoad, null );
@@ -331,15 +329,17 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			EventSource session) {
 		if ( keyToLoad.isBatchLoadable( session.getLoadQueryInfluencers() ) ) {
 			// Add a batch-fetch entry into the queue for this entity
-			session.getPersistenceContextInternal().getBatchFetchQueue().addBatchLoadableEntityKey( keyToLoad );
+			session.getPersistenceContextInternal().getBatchFetchQueue()
+					.addBatchLoadableEntityKey( keyToLoad );
 		}
 		// This is the crux of HHH-11147
 		// create the (uninitialized) entity instance - has only id set
-		return persister.getBytecodeEnhancementMetadata().createEnhancedProxy( keyToLoad, true, session );
+		return persister.getBytecodeEnhancementMetadata()
+				.createEnhancedProxy( keyToLoad, true, session );
 	}
 
 	private static Object proxyOrCached(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final Object cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+		final Object cachedEntity = loadFromSecondLevelCache(
 				event.getSession(),
 				null,
 				LockMode.NONE,
@@ -369,7 +369,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace( "Entity proxy found in session cache" );
 		}
-		final LazyInitializer li = HibernateProxy.extractLazyInitializer( proxy );
+		final LazyInitializer li = extractLazyInitializer( proxy );
 		if ( li.isUnwrap() ) {
 			return li.getImplementation();
 		}
@@ -391,7 +391,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			return entity;
 		}
 		else {
-			if ( options != LoadEventListener.INTERNAL_LOAD_NULLABLE ) {
+			if ( options != INTERNAL_LOAD_NULLABLE ) {
 				// throw an appropriate exception
 				event.getFactory().getEntityNotFoundDelegate()
 						.handleEntityNotFound( persister.getEntityName(), keyToLoad.getIdentifier() );
@@ -515,19 +515,16 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		final EventSource session = event.getSession();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Attempting to resolve: {0}",
-					infoString( persister, event.getEntityId(), event.getFactory() )
-			);
+			LOG.trace( "Attempting to resolve: " + infoString( persister, event.getEntityId(), event.getFactory() ) );
 		}
 
 		if ( session.getPersistenceContextInternal().containsDeletedUnloadedEntityKey( keyToLoad ) ) {
 			return null;
 		}
 		else {
-			final PersistenceContextEntry persistenceContextEntry
-					= CacheEntityLoaderHelper.INSTANCE.loadFromSessionCache( event, keyToLoad, options );
-			final Object entity = persistenceContextEntry.getEntity();
+			final PersistenceContextEntry persistenceContextEntry =
+					loadFromSessionCache( keyToLoad, event.getLockOptions(), options, event.getSession() );
+			final Object entity = persistenceContextEntry.entity();
 			if ( entity != null ) {
 				if ( persistenceContextEntry.isManaged() ) {
 					initializeIfNecessary( entity );
@@ -547,8 +544,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		if ( isPersistentAttributeInterceptable( entity ) ) {
 			final PersistentAttributeInterceptable interceptable = asPersistentAttributeInterceptable( entity );
 			final PersistentAttributeInterceptor interceptor = interceptable.$$_hibernate_getInterceptor();
-			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				( (EnhancementAsProxyLazinessInterceptor) interceptor ).forceInitialize( entity, null );
+			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor lazinessInterceptor ) {
+				lazinessInterceptor.forceInitialize( entity, null );
 			}
 		}
 	}
@@ -567,24 +564,17 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	}
 
 	private Object loadFromCacheOrDatasource(LoadEvent event, EntityPersister persister, EntityKey keyToLoad) {
-		final Object entity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache( event, persister, keyToLoad );
-		if ( entity != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Resolved object in second-level cache: {0}",
-						infoString( persister, event.getEntityId(), event.getFactory() )
-				);
-			}
-			return entity;
+		final Object entity = event.getSession()
+				.loadFromSecondLevelCache( persister, keyToLoad, event.getInstanceToLoad(), event.getLockMode() );
+		if ( entity == null ) {
+			return loadFromDatasource( event, persister );
 		}
 		else {
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev(
-						"Object not resolved in any cache: {0}",
-						infoString( persister, event.getEntityId(), event.getFactory() )
-				);
+				LOG.trace( "Resolved entity in second-level cache: "
+							+ infoString( persister, event.getEntityId(), event.getFactory() ) );
 			}
-			return loadFromDatasource( event, persister );
+			return entity;
 		}
 	}
 
@@ -598,7 +588,12 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 * @return The object loaded from the datasource, or null if not found.
 	 */
 	protected Object loadFromDatasource(final LoadEvent event, final EntityPersister persister) {
-		Object entity = persister.load(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Entity not resolved in any cache, loading from datastore: "
+						+ infoString( persister, event.getEntityId(), event.getFactory() ) );
+		}
+
+		final Object entity = persister.load(
 				event.getEntityId(),
 				event.getInstanceToLoad(),
 				event.getLockOptions(),
@@ -612,17 +607,15 @@ public class DefaultLoadEventListener implements LoadEventListener {
 		//		persister/loader/initializer sensitive to this fact - possibly
 		//		passing LoadType along
 
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
-		if ( lazyInitializer != null ) {
-			entity = lazyInitializer.getImplementation();
-		}
+		final LazyInitializer lazyInitializer = extractLazyInitializer( entity );
+		final Object impl = lazyInitializer != null ? lazyInitializer.getImplementation() : entity;
 
 		final StatisticsImplementor statistics = event.getFactory().getStatistics();
 		if ( event.isAssociationFetch() && statistics.isStatisticsEnabled() ) {
 			statistics.fetchEntity( event.getEntityClassName() );
 		}
 
-		return entity;
+		return impl;
 	}
 
 }

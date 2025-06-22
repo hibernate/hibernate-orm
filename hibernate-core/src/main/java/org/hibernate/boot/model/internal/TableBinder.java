@@ -1,10 +1,9 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -20,10 +19,7 @@ import org.hibernate.boot.model.source.spi.AttributePath;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Any;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -38,17 +34,18 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.SortableValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
-
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
+import static org.hibernate.internal.util.StringHelper.isNotBlank;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 import static org.hibernate.internal.util.StringHelper.unquote;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Stateful binder responsible for producing instances of {@link Table}.
@@ -56,7 +53,6 @@ import static org.hibernate.internal.util.StringHelper.unquote;
  * @author Emmanuel Bernard
  */
 public class TableBinder {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( MethodHandles.lookup(), CoreMessageLogger.class, TableBinder.class.getName() );
 
 	private MetadataBuildingContext buildingContext;
 
@@ -267,7 +263,7 @@ public class TableBinder {
 				}
 
 				if ( ownerEntityTableQuoted || associatedEntityTableQuoted ) {
-					name = Identifier.quote( name );
+					name = name.quoted();
 				}
 
 				return name;
@@ -492,8 +488,8 @@ public class TableBinder {
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
 		final Table table = addTable(
-				nullIfEmpty( schema ),
-				nullIfEmpty( catalog ),
+				nullIfBlank( schema ),
+				nullIfBlank( catalog ),
 				logicalName,
 				isAbstract,
 				buildingContext,
@@ -577,11 +573,11 @@ public class TableBinder {
 			// if columns are implicit, then create the columns based
 			// on the referenced entity id columns
 			bindImplicitColumns( referencedEntity, joinColumns, value );
-			if ( value instanceof ToOne ) {
+			if ( value instanceof ToOne toOne ) {
 				// in the case of implicit foreign-keys, make sure the columns making up
 				// the foreign-key do not get resorted since the order is already properly
 				// ascertained from the referenced identifier
-				( (ToOne) value ).setSorted( true );
+				toOne.setSorted( true );
 			}
 		}
 		else {
@@ -632,8 +628,8 @@ public class TableBinder {
 				joinColumns,
 				value
 		);
-		if ( value instanceof SortableValue ) {
-			( (SortableValue) value).sortProperties();
+		if ( value instanceof SortableValue sortableValue ) {
+			sortableValue.sortProperties();
 		}
 	}
 
@@ -646,8 +642,8 @@ public class TableBinder {
 		// ensure the composite key is sorted so that we can simply
 		// set sorted to true on the ToOne (below)
 		final KeyValue key = referencedEntity.getKey();
-		if ( key instanceof Component ) {
-			( (Component) key).sortProperties();
+		if ( key instanceof Component component ) {
+			component.sortProperties();
 		}
 		// works because the pk has to be on the primary table
 		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
@@ -662,11 +658,11 @@ public class TableBinder {
 				);
 			}
 		}
-		if ( value instanceof ToOne ) {
-			( (ToOne) value ).setSorted( true );
+		if ( value instanceof ToOne toOne ) {
+			toOne.setSorted( true );
 		}
-		else if ( value instanceof DependantValue ) {
-			( (DependantValue) value ).setSorted( true );
+		else if ( value instanceof DependantValue dependantValue ) {
+			dependantValue.setSorted( true );
 		}
 		else {
 			throw new AssertionError(
@@ -731,8 +727,8 @@ public class TableBinder {
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
 		final String referencedPropertyName;
-		if ( value instanceof ToOne ) {
-			referencedPropertyName = ( (ToOne) value).getReferencedPropertyName();
+		if ( value instanceof ToOne toOne ) {
+			referencedPropertyName = toOne.getReferencedPropertyName();
 		}
 		else if ( value instanceof DependantValue ) {
 			final String propertyName = joinColumns.getPropertyName();
@@ -757,19 +753,48 @@ public class TableBinder {
 					+ referencedEntity.getEntityName() + "." + referencedPropertyName );
 		}
 		linkJoinColumnWithValueOverridingNameIfImplicit( referencedEntity, synthProp.getValue(), joinColumns, value );
-		( (SortableValue) value).sortProperties();
+		checkReferenceToUniqueKey( value, synthProp );
+		( (SortableValue) value ).sortProperties();
+	}
+
+	// This code is good but unnecessary, because BinderHelper.referencedProperty()
+	// automatically marks the referenced property unique (but is this actually good?)
+	private static void checkReferenceToUniqueKey(SimpleValue value, Property synthProp) {
+		final Table table = synthProp.getValue().getTable();
+		final List<Column> columns = synthProp.getValue().getConstraintColumns();
+		if ( columns.size() == 1 ) {
+			final Column column = columns.get( 0 );
+			assert column.isUnique();
+//			if ( !column.isUnique() ) {
+//				throw new MappingException( "Referenced column '" + column.getName()
+//											+ "' in table '" + table.getName() + "' is not unique"
+//											+ " ('@JoinColumn' must reference a unique key)" );
+//			}
+		}
+		else {
+			final UniqueKey uniqueKey = new UniqueKey( table );
+			for ( Column column : columns ) {
+				uniqueKey.addColumn( column );
+			}
+			assert table.isRedundantUniqueKey( uniqueKey );
+//			if ( !table.isRedundantUniqueKey( uniqueKey ) ) {
+//				throw new MappingException( "Referenced columns in table '" + table.getName() + "' are not unique"
+//						+ " ('@JoinColumn's must reference a unique key" );
+//			}
+		}
 	}
 
 	private static void bindImplicitColumns(
 			PersistentClass referencedEntity,
 			AnnotatedJoinColumns joinColumns,
 			SimpleValue value) {
-		final KeyValue keyValue = referencedEntity instanceof JoinedSubclass
-				? referencedEntity.getKey()
-				: referencedEntity.getIdentifier();
-		final List<Column> idColumns = keyValue.getColumns();
-		for ( int i = 0; i < idColumns.size(); i++ ) {
-			final Column column = idColumns.get(i);
+		final KeyValue keyValue =
+				referencedEntity instanceof JoinedSubclass
+						? referencedEntity.getKey()  // a joined subclass is referenced via the key of the subclass table
+						: referencedEntity.getIdentifier();
+		final List<Column> referencedKeyColumns = keyValue.getColumns();
+		for ( int i = 0; i < referencedKeyColumns.size(); i++ ) {
+			final Column column = referencedKeyColumns.get(i);
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
@@ -789,10 +814,10 @@ public class TableBinder {
 				}
 			}
 		}
-		if ( keyValue instanceof Component
-				&& ( (Component) keyValue ).isSorted()
-				&& value instanceof DependantValue ) {
-			( (DependantValue) value ).setSorted( true );
+		if ( keyValue instanceof Component component
+				&& component.isSorted()
+				&& value instanceof DependantValue dependantValue ) {
+			dependantValue.setSorted( true );
 		}
 	}
 
@@ -809,18 +834,17 @@ public class TableBinder {
 	}
 
 	private static List<Column> mappedByColumns(PersistentClass associatedClass, String mappedByProperty) {
-		LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
 		final Value value = associatedClass.getRecursiveProperty( mappedByProperty ).getValue();
-		if ( value instanceof Collection ) {
-			final Value element = ((Collection) value).getElement();
+		if ( value instanceof Collection collection ) {
+			final Value element = collection.getElement();
 			if ( element == null ) {
 				throw new AnnotationException( "Both sides of the bidirectional association '"
 						+ associatedClass.getEntityName() + "." + mappedByProperty + "' specify 'mappedBy'" );
 			}
 			return element.getColumns();
 		}
-		else if (value instanceof Any) {
-			return ( (Any) value ).getKeyDescriptor().getColumns();
+		else if ( value instanceof Any any ) {
+			return any.getKeyDescriptor().getColumns();
 		}
 		else {
 			return value.getColumns();
@@ -868,7 +892,7 @@ public class TableBinder {
 	static void addTableCheck(
 			Table table,
 			jakarta.persistence.CheckConstraint[] checkConstraintAnnotationUsages) {
-		if ( CollectionHelper.isNotEmpty( checkConstraintAnnotationUsages ) ) {
+		if ( isNotEmpty( checkConstraintAnnotationUsages ) ) {
 			for ( jakarta.persistence.CheckConstraint checkConstraintAnnotationUsage : checkConstraintAnnotationUsages ) {
 				table.addCheck(
 						new CheckConstraint(
@@ -882,13 +906,13 @@ public class TableBinder {
 	}
 
 	static void addTableComment(Table table, String comment) {
-		if ( StringHelper.isNotEmpty( comment ) ) {
+		if ( isNotBlank( comment ) ) {
 			table.setComment( comment );
 		}
 	}
 
 	static void addTableOptions(Table table, String options) {
-		if ( StringHelper.isNotEmpty( options ) ) {
+		if ( isNotBlank( options ) ) {
 			table.setOptions( options );
 		}
 	}

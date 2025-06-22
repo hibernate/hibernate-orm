@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.transaction.spi;
@@ -37,7 +37,7 @@ public interface TransactionCoordinatorOwner {
 	}
 
 	/**
-	 * A after-begin callback from the coordinator to its owner.
+	 * An after-begin callback from the coordinator to its owner.
 	 */
 	void afterTransactionBegin();
 

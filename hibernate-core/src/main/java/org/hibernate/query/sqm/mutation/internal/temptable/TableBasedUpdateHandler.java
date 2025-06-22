@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -87,8 +88,9 @@ public class TableBasedUpdateHandler
 
 	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		final MappingMetamodel domainModel = sessionFactory.getRuntimeMetamodels().getMappingMetamodel();
-		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
+		final MappingMetamodel domainModel = sessionFactory.getMappingMetamodel();
+		final EntityPersister entityDescriptor =
+				domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
 
 		final String rootEntityName = entityDescriptor.getRootEntityName();
 		final EntityPersister rootEntityDescriptor = domainModel.getEntityDescriptor( rootEntityName );
@@ -103,7 +105,7 @@ public class TableBasedUpdateHandler
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
-				sessionFactory
+				sessionFactory.getSqlTranslationEngine()
 		);
 
 		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();

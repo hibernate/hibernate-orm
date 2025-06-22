@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -27,7 +27,9 @@ public class IdentifierBag extends IdentifierCollection {
 	/**
 	 * annotation binding
 	 */
-	public IdentifierBag(Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner, MetadataBuildingContext buildingContext) {
+	public IdentifierBag(
+			Supplier<ManagedBean<? extends UserCollectionType>> customTypeBeanResolver, PersistentClass owner,
+			MetadataBuildingContext buildingContext) {
 		super( customTypeBeanResolver, owner, buildingContext );
 	}
 

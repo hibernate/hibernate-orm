@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.community.dialect;
@@ -7,9 +7,8 @@ package org.hibernate.community.dialect;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.dialect.DialectDelegateWrapper;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.MySQLSqlAstTranslator;
+import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -23,6 +22,8 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -46,8 +47,11 @@ import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
  */
 public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	private final MySQLLegacyDialect dialect;
+
+	public MySQLLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, MySQLLegacyDialect dialect) {
 		super( sessionFactory, statement );
+		this.dialect = dialect;
 	}
 
 	@Override
@@ -143,11 +147,6 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
 			renderTableReferenceIdentificationVariable( tableReference );
 		}
-	}
-
-	@Override
-	protected boolean supportsJoinsInDelete() {
-		return true;
 	}
 
 	@Override
@@ -270,6 +269,27 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
+	protected void renderDerivedTableReference(DerivedTableReference tableReference) {
+		if ( tableReference instanceof FunctionTableReference && tableReference.isLateral() ) {
+			// No need for a lateral keyword for functions
+			tableReference.accept( this );
+		}
+		else {
+			super.renderDerivedTableReference( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderDerivedTableReferenceIdentificationVariable(DerivedTableReference tableReference) {
+		if ( getDialect().getVersion().isSameOrAfter( 8 ) ) {
+			super.renderDerivedTableReferenceIdentificationVariable( tableReference );
+		}
+		else {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
 			renderCombinedLimitClause( queryPart );
@@ -347,49 +367,8 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getDialect().getVersion().isSameOrAfter( 5, 7 );
-	}
-
-	@Override
-	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsIntersect() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsDistinctFromPredicate() {
-		// It supports a proprietary operator
-		return true;
-	}
-
-	@Override
-	protected boolean supportsSimpleQueryGrouping() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
-	protected boolean supportsNestedSubqueryCorrelation() {
-		return false;
-	}
-
-	@Override
-	protected boolean supportsWithClause() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
-	}
-
-	@Override
 	public MySQLLegacyDialect getDialect() {
-		return (MySQLLegacyDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
+		return dialect;
 	}
 
 	@Override

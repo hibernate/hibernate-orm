@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.event.internal;
@@ -120,10 +120,7 @@ public class DefaultLockEventListener implements LockEventListener {
 	protected final EntityEntry reassociate(AbstractEvent event, Object object, Object id, EntityPersister persister) {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Reassociating transient instance: {0}",
-					infoString( persister, id, event.getFactory() )
-			);
+			LOG.trace( "Reassociating transient instance: " + infoString( persister, id, event.getFactory() ) );
 		}
 
 		final EventSource source = event.getSession();

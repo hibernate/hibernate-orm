@@ -3,6 +3,7 @@
 :root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-association: {core-project-dir}/src/test/java/org/hibernate/orm/test/associations
+:example-dir-any: {core-project-dir}/src/test/java/org/hibernate/orm/test/any
 :extrasdir: extras/associations
 
 Associations describe how two or more entities form a relationship based on a database joining semantics.
@@ -541,7 +542,7 @@ Hibernate does support a means to refer specifically to the key column (`Person.
 using the special `fk(..)` function.  E.g.
 
 [[associations-not-found-fk-function-example]]
-.Implicit join example
+.FK example
 ====
 [source,java]
 ----
@@ -559,7 +560,7 @@ The `@Any` mapping is useful to emulate a unidirectional `@ManyToOne` associatio
 
 Because the `@Any` mapping defines a polymorphic association to classes from multiple tables,
 this association type requires the FK column which provides the associated parent identifier and
-a metadata information for the associated entity type.
+a discriminator which identifies the associated entity type.
 
 [NOTE]
 ====
@@ -568,16 +569,33 @@ This is not the usual way of mapping polymorphic associations and you should use
 
 To map such an association, Hibernate needs to understand 3 things:
 
-1. The column and mapping for the discriminator
-2. The column and mapping for the key
-3. The mapping between discriminator values and entity classes
+1. The column and mapping for the <<associations-any-discriminator,discriminator>>
+2. The column and mapping for the <<associations-any-key,key>>
+3. The mapping between discriminator values and entity types which may be <<associations-any-explicit-discriminator,explicit>>
+<<associations-any-implicit-discriminator,implicit>> or <<associations-any-mixed-discriminator,mixed>>.
+
+For the rest of this discussion, consider the following model which will be the target types for the `@Any` associations:
+
+[[associations-any-target-example]]
+.`Payment` class hierarchy
+====
+[source, java, indent=0]
+----
+include::{example-dir-any}/discriminator/Payment.java[tags=associations-any-example]
+
+include::{example-dir-any}/discriminator/CardPayment.java[tags=associations-any-example]
+
+include::{example-dir-any}/discriminator/CashPayment.java[tags=associations-any-example]
+
+include::{example-dir-any}/discriminator/CheckPayment.java[tags=associations-any-example]
+----
+====
 
 
 [[associations-any-discriminator]]
 ===== The discriminator
 
-The discriminator of an any-style association holds the value that indicates which entity is
-referred to by a row.
+The discriminator is the value that indicates which entity is referred to by a row.
 
 Its "column" can be specified with either `@Column` or `@Formula`.  The mapping type can be influenced by any of:
 
@@ -601,89 +619,83 @@ type can be influenced by any of:
 4. `@AnyKeyJdbcTypeCode`
 
 
-[[associations-any-values]]
-===== The discriminator value mappings
 
-`@AnyDiscriminatorValue` is used to map the discriminator values to the corresponding entity classes
+[[associations-any-explicit-discriminator]]
+===== Explicit discriminator mappings
+
+Explicit discriminator mappings are defined using one-or-more `@AnyDiscriminatorValue` annotations.  E.g.
 
 
-[[associations-any-property]]
-==== Example using @Any mapping
-
-For this example, consider the following `Property` class hierarchy:
-
-[[associations-any-property-example]]
-.`Property` class hierarchy
+[[associations-any-discriminator-explicit-example]]
+.Explicit @AnyDiscriminatorValue annotations
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-association}/any/Property.java[tags=associations-any-property-example]
-
-include::{example-dir-association}/any/IntegerProperty.java[tags=associations-any-property-example]
-
-include::{example-dir-association}/any/StringProperty.java[tags=associations-any-property-example]
+include::{example-dir-any}/discriminator/explicit/Order.java[tags=associations-any-explicit-discriminator-example]
 ----
 ====
 
-A `PropertyHolder` entity defines an attribute of type `Property`:
+Here, we map 2 explicit discriminator value mappings:
 
-[[associations-any-example]]
-.`@Any` mapping usage
-====
-[source, java, indent=0]
-----
-include::{example-dir-association}/any/PropertyHolder.java[tags=associations-any-example]
-----
+1. `CARD` <-> `CardPayment`
+2. `CHECK` <-> `CheckPayment`
 
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-any-example.sql[]
-----
-====
+Notice that `CashPayment` is not explicitly mapped.  An attempt to use `CashPayment` for this attribute will result
+in an exception.
 
-`PropertyHolder#property` can refer to either `StringProperty` or `IntegerProperty` references, as indicated
-by the associated discriminator according to the `@DiscriminatorValue` annotations.
 
-As you can see, there are two columns used to reference a `Property` instance: `property_id` and `property_type`.
-The `property_id` is used to match the `id` column of either the `string_property` or `integer_property` tables,
-while the `property_type` is used to match the `string_property` or the `integer_property` table.
+[[associations-any-implicit-discriminator]]
+===== Implicit discriminator mappings
 
-To see the `@Any` annotation in action, consider the next examples.
+Implicit discriminator mappings define no `@AnyDiscriminatorValue` annotations.  E.g.
 
-If we persist an `IntegerProperty` as well as a `StringProperty` entity, and associate
-the `StringProperty` entity with a `PropertyHolder`,
-Hibernate will generate the following SQL queries:
-
-[[associations-any-persist-example]]
-.`@Any` mapping persist example
+[[associations-any-discriminator-implicit-example]]
+.Implicit @Any discriminator mappings
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-association}/any/AnyTest.java[tags=associations-any-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-any-persist-example.sql[]
+include::{example-dir-any}/discriminator/implicit/Order.java[tags=associations-any-implicit-discriminator-example]
 ----
 ====
 
-When fetching the `PropertyHolder` entity and navigating its `property` association,
-Hibernate will fetch the associated `StringProperty` entity like this:
+Here all `Payment` subtypes are allowed.  By default Hibernate will use the entity's full-name (which is generally the class's FQN).
 
-[[associations-any-query-example]]
-.`@Any` mapping query example
+Hibernate also offers a `@AnyDiscriminatorImplicitValues` annotation which allows configuration of how this implicit
+mapping works.  E.g., to use the entity's short-name instead of the full-name -
+
+
+[[associations-any-discriminator-implicit-short-example]]
+.Implicit @Any discriminator mappings (short name)
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-association}/any/AnyTest.java[tags=associations-any-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-any-query-example.sql[]
+include::{example-dir-any}/discriminator/implicit/Order.java[tags=associations-any-implicit-discriminator-short-example]
 ----
 ====
+
+[NOTE]
+====
+`@AnyDiscriminatorImplicitValues` also offers the ability to define a custom strategy for determining the
+discriminator-value <-> entity-type mapping, but its use is not covered here.
+====
+
+
+[[associations-any-mixed-discriminator]]
+===== Mixed discriminator mappings
+
+A mixed strategy combines `@AnyDiscriminatorValue` and `@AnyDiscriminatorImplicitValues`.  Mappings
+explicitly defined using `@AnyDiscriminatorValue` take precedence.  E.g.
+
+
+[[associations-any-discriminator-mixed-example]]
+.Mixed @Any discriminator mappings (short name)
+====
+[source, java, indent=0]
+----
+include::{example-dir-any}/discriminator/mixed/Order.java[tags=associations-any-mixed-discriminator-short-example]
+----
+====
+
 
 
 [[associations-any-meta-annotations]]
@@ -692,22 +704,19 @@ include::{extrasdir}/associations-any-query-example.sql[]
 As mentioned in <<basic-mapping>>, Hibernate's ANY-related annotations can be composed using meta-annotations
 to re-use ANY mapping details.
 
-Looking back at <<associations-any-example>>, we can see how cumbersome it would be to duplicate that
-information every time `Property` is mapped in the domain model.  This description can also be moved
+Given all the details needed to define an ANY mapping, we can see how cumbersome it would be to duplicate that
+information every time `Payment` is mapped in the domain model.  This description can also be moved
 into a single annotation that we can apply in each usage.
 
 
 [[associations-any-composed-example]]
-.`@Any` mapping usage
+.`@Any` mapping with meta-annotation
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-association}/any/PropertyHolder2.java[tags=associations-any-def-example]
+include::{example-dir-any}/discriminator/meta/Order.java[tags=associations-any-discriminator-meta-example]
 ----
 ====
-
-Though the mapping has been "simplified", the mapping works exactly as shown in <<associations-any-example>>.
-
 
 
 
@@ -724,58 +733,21 @@ The mapping details are the same between `@Any` and `@ManyToAny` except for:
     of just `@JoinColumn`
 
 
-In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
+In the following example, the `Loan` entity has a collection of `Payments` objects.
 
-The `repository_properties` link table holds the associations between `PropertyRepository` and `Property` entities.
+The `loan_payments` table holds the associations between `Loan` and `Payment` references.
 
 [[associations-many-to-any-example]]
 .`@ManyToAny` mapping usage
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-association}/any/PropertyRepository.java[tags=associations-many-to-any-example]
+include::{example-dir-any}/discriminator/many/Loan.java[tags=associations-many-to-any-example]
 ----
 
 [source, SQL, indent=0]
 ----
 include::{extrasdir}/associations-many-to-any-example.sql[]
-----
-====
-
-To see the `@ManyToAny` annotation in action, consider the next examples.
-
-If we persist an `IntegerProperty` as well as a `StringProperty` entity,
-and associate both of them with a `PropertyRepository` parent entity,
-Hibernate will generate the following SQL queries:
-
-[[associations-many-to-any-persist-example]]
-.`@ManyToAny` mapping persist example
-====
-[source, java, indent=0]
-----
-include::{example-dir-association}/any/ManyToAnyTest.java[tags=associations-many-to-any-persist-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-many-to-any-persist-example.sql[]
-----
-====
-
-When fetching the `PropertyRepository` entity and navigating its `properties` association,
-Hibernate will fetch the associated `IntegerProperty` and `StringProperty` entities like this:
-
-[[associations-many-to-any-query-example]]
-.`@ManyToAny` mapping query example
-====
-[source, java, indent=0]
-----
-include::{example-dir-association}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/associations-many-to-any-query-example.sql[]
 ----
 ====
 

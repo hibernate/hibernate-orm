@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.flush;
@@ -15,7 +15,6 @@ import jakarta.persistence.TransactionRequiredException;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.query.sqm.internal.QuerySqmImpl;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -144,7 +143,7 @@ public class NonTransactionalDataAccessTest extends BaseCoreFunctionalTestCase {
 			MyEntity entity = new MyEntity("N1");
 			entityManager.persist(entity);
 
-			QuerySqmImpl q = (QuerySqmImpl)entityManager.createNamedQuery("deleteByName");
+			var q = entityManager.createNamedQuery("deleteByName");
 			q.setParameter("name", "N1");
 			int d = q.executeUpdate();
 			assertEquals(0, d);

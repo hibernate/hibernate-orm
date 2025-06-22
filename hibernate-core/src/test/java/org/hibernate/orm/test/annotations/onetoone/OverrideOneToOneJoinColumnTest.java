@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.onetoone;
@@ -52,7 +52,7 @@ public class OverrideOneToOneJoinColumnTest {
 
 			final Table personTable = metadata.getDatabase().getDefaultNamespace().locateTable(
 					Identifier.toIdentifier( "PERSON_TABLE" ) );
-			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeys().values();
+			final Collection<ForeignKey> foreignKeys = personTable.getForeignKeyCollection();
 			assertThat( foreignKeys.size(), is( 1 ) );
 			final Optional<ForeignKey> foreignKey = foreignKeys.stream().findFirst();
 

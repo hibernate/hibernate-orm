@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -7,7 +7,10 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import java.util.Objects;
 
 /**
  * @author Gavin King
@@ -59,14 +62,26 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( isNegated() ) {
-			sb.append( "not exists " );
+			hql.append( "not exists " );
 		}
 		else {
-			sb.append( "exists " );
+			hql.append( "exists " );
 		}
-		expression.appendHqlString( sb );
+		expression.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmExistsPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& Objects.equals( this.expression, that.expression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), expression );
 	}
 
 	@Override

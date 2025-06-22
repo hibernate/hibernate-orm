@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.query.hql;
@@ -40,7 +40,7 @@ public class HHH17416Test extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void teardown() {
-		inTransaction(session -> session.createMutationQuery("delete from Person").executeUpdate());
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

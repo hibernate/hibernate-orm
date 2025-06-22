@@ -1,10 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.expression.JsonPathPassingClause;
@@ -36,7 +36,12 @@ public class MySQLJsonValueFunction extends JsonValueFunction {
 		}
 		else {
 			if ( arguments.returningType() != null ) {
-				sqlAppender.append( "cast(" );
+				if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
+					sqlAppender.append( "case " );
+				}
+				else {
+					sqlAppender.append( "cast(" );
+				}
 			}
 			sqlAppender.appendSql( "json_unquote(nullif(json_extract(" );
 			arguments.jsonDocument().accept( walker );
@@ -54,9 +59,14 @@ public class MySQLJsonValueFunction extends JsonValueFunction {
 			}
 			sqlAppender.appendSql( "),cast('null' as json)))" );
 			if ( arguments.returningType() != null ) {
-				sqlAppender.appendSql( " as " );
-				arguments.returningType().accept( walker );
-				sqlAppender.appendSql( ')' );
+				if ( arguments.returningType().getJdbcMapping().getJdbcType().isBoolean() ) {
+					sqlAppender.append( " when 'true' then true when 'false' then false end " );
+				}
+				else {
+					sqlAppender.appendSql( " as " );
+					arguments.returningType().accept( walker );
+					sqlAppender.appendSql( ')' );
+				}
 			}
 		}
 	}

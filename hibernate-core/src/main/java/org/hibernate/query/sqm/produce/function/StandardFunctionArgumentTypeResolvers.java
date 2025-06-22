@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.produce.function;
@@ -10,7 +10,10 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.query.sqm.produce.function.internal.AbstractFunctionArgumentTypeResolver;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -25,44 +28,59 @@ public final class StandardFunctionArgumentTypeResolvers {
 	private StandardFunctionArgumentTypeResolvers() {
 	}
 
-	public static final FunctionArgumentTypeResolver NULL = (function, argumentIndex, converter) -> {
-		return null;
+	public static final FunctionArgumentTypeResolver NULL = new AbstractFunctionArgumentTypeResolver() {
+		@Override
+		public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+			return null;
+		}
 	};
 
-	public static final FunctionArgumentTypeResolver IMPLIED_RESULT_TYPE = (function, argumentIndex, converter) -> {
-		return converter.resolveFunctionImpliedReturnType();
+	public static final FunctionArgumentTypeResolver IMPLIED_RESULT_TYPE = new AbstractFunctionArgumentTypeResolver() {
+		@Override
+		public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+			return converter.resolveFunctionImpliedReturnType();
+		}
 	};
 
-	public static final FunctionArgumentTypeResolver ARGUMENT_OR_IMPLIED_RESULT_TYPE = (function, argumentIndex, converter) -> {
-		final List<? extends SqmTypedNode<?>> arguments = function.getArguments();
-		final int argumentsSize = arguments.size();
-		for ( int i = 0 ; i < argumentIndex; i++ ) {
-			final SqmTypedNode<?> node = arguments.get( i );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
-				if ( expressible != null ) {
-					return expressible;
+	public static final FunctionArgumentTypeResolver ARGUMENT_OR_IMPLIED_RESULT_TYPE = new AbstractFunctionArgumentTypeResolver() {
+		@Override
+		public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+			final int argumentsSize = arguments.size();
+			for ( int i = 0; i < argumentIndex; i++ ) {
+				final SqmTypedNode<?> node = arguments.get( i );
+				if ( node instanceof SqmExpression<?> ) {
+					final MappingModelExpressible<?> expressible = converter.determineValueMapping(
+							(SqmExpression<?>) node );
+					if ( expressible != null ) {
+						return expressible;
+					}
 				}
 			}
-		}
-		for ( int i = argumentIndex + 1 ; i < argumentsSize; i++ ) {
-			final SqmTypedNode<?> node = arguments.get( i );
-			if ( node instanceof SqmExpression<?> ) {
-				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
-				if ( expressible != null ) {
-					return expressible;
+			for ( int i = argumentIndex + 1; i < argumentsSize; i++ ) {
+				final SqmTypedNode<?> node = arguments.get( i );
+				if ( node instanceof SqmExpression<?> ) {
+					final MappingModelExpressible<?> expressible = converter.determineValueMapping(
+							(SqmExpression<?>) node );
+					if ( expressible != null ) {
+						return expressible;
+					}
 				}
 			}
-		}
 
-		return converter.resolveFunctionImpliedReturnType();
+			return converter.resolveFunctionImpliedReturnType();
+		}
 	};
 
 	public static FunctionArgumentTypeResolver invariant(
 			TypeConfiguration typeConfiguration,
 			FunctionParameterType type) {
 		final MappingModelExpressible<?> expressible = getMappingModelExpressible( typeConfiguration, type );
-		return (function, argumentIndex, converter) -> expressible;
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				return expressible;
+			}
+		};
 	}
 
 	public static FunctionArgumentTypeResolver invariant(
@@ -73,82 +91,110 @@ public final class StandardFunctionArgumentTypeResolvers {
 			expressibles[i] = getMappingModelExpressible( typeConfiguration, types[i] );
 		}
 
-		return (function, argumentIndex, converter) -> expressibles[argumentIndex];
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				return argumentIndex < expressibles.length ? expressibles[argumentIndex] : null;
+			}
+		};
 	}
 
 	public static FunctionArgumentTypeResolver invariant(FunctionParameterType... types) {
-		return (function, argumentIndex, converter) -> getMappingModelExpressible(
-				function.nodeBuilder().getTypeConfiguration(),
-				types[argumentIndex]
-		);
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				if ( argumentIndex >= types.length ) {
+					return null;
+				}
+				return getMappingModelExpressible(
+						converter.getCreationContext().getTypeConfiguration(),
+						types[argumentIndex]
+				);
+			}
+		};
 	}
 
 	public static FunctionArgumentTypeResolver impliedOrInvariant(
 			TypeConfiguration typeConfiguration,
 			FunctionParameterType type) {
 		final MappingModelExpressible<?> expressible = getMappingModelExpressible( typeConfiguration, type );
-		return (function, argumentIndex, converter) -> {
-			final MappingModelExpressible<?> mappingModelExpressible = converter.resolveFunctionImpliedReturnType();
-			if ( mappingModelExpressible != null ) {
-				return mappingModelExpressible;
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				final MappingModelExpressible<?> mappingModelExpressible = converter.resolveFunctionImpliedReturnType();
+				if ( mappingModelExpressible != null ) {
+					return mappingModelExpressible;
+				}
+				return expressible;
 			}
-			return expressible;
 		};
 	}
 
 	public static FunctionArgumentTypeResolver argumentsOrImplied(int... indices) {
-		return (function, argumentIndex, converter) -> {
-			final List<? extends SqmTypedNode<?>> arguments = function.getArguments();
-			final int argumentsSize = arguments.size();
-			for ( int index : indices ) {
-				if ( index >= argumentIndex || index >= argumentsSize ) {
-					break;
-				}
-				final SqmTypedNode<?> node = arguments.get( index );
-				if ( node instanceof SqmExpression<?> ) {
-					final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
-					if ( expressible != null ) {
-						return expressible;
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				final int argumentsSize = arguments.size();
+				for ( int index : indices ) {
+					if ( index >= argumentIndex || index >= argumentsSize ) {
+						break;
+					}
+					final SqmTypedNode<?> node = arguments.get( index );
+					if ( node instanceof SqmExpression<?> ) {
+						final MappingModelExpressible<?> expressible = converter.determineValueMapping(
+								(SqmExpression<?>) node );
+						if ( expressible != null ) {
+							return expressible;
+						}
 					}
 				}
-			}
-			for ( int index : indices ) {
-				if ( index <= argumentIndex || index >= argumentsSize ) {
-					break;
-				}
-				final SqmTypedNode<?> node = arguments.get( index );
-				if ( node instanceof SqmExpression<?> ) {
-					final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
-					if ( expressible != null ) {
-						return expressible;
+				for ( int index : indices ) {
+					if ( index <= argumentIndex || index >= argumentsSize ) {
+						break;
+					}
+					final SqmTypedNode<?> node = arguments.get( index );
+					if ( node instanceof SqmExpression<?> ) {
+						final MappingModelExpressible<?> expressible = converter.determineValueMapping(
+								(SqmExpression<?>) node );
+						if ( expressible != null ) {
+							return expressible;
+						}
 					}
 				}
-			}
 
-			return converter.resolveFunctionImpliedReturnType();
+				return converter.resolveFunctionImpliedReturnType();
+			}
 		};
 	}
 
 	public static FunctionArgumentTypeResolver composite(FunctionArgumentTypeResolver... resolvers) {
-		return (function, argumentIndex, converter) -> {
-			for ( FunctionArgumentTypeResolver resolver : resolvers ) {
-				final MappingModelExpressible<?> result = resolver.resolveFunctionArgumentType(
-						function,
-						argumentIndex,
-						converter
-				);
-				if ( result != null ) {
-					return result;
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				for ( FunctionArgumentTypeResolver resolver : resolvers ) {
+					final MappingModelExpressible<?> result = resolver.resolveFunctionArgumentType(
+							arguments,
+							argumentIndex,
+							converter
+					);
+					if ( result != null ) {
+						return result;
+					}
 				}
-			}
 
-			return null;
+				return null;
+			}
 		};
 	}
 
 	public static FunctionArgumentTypeResolver byArgument(FunctionArgumentTypeResolver... resolvers) {
-		return (function, argumentIndex, converter) -> {
-			return resolvers[argumentIndex].resolveFunctionArgumentType( function, argumentIndex, converter );
+		return new AbstractFunctionArgumentTypeResolver() {
+			@Override
+			public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
+				return argumentIndex < resolvers.length
+						? resolvers[argumentIndex].resolveFunctionArgumentType( arguments, argumentIndex, converter )
+						: null;
+			}
 		};
 	}
 

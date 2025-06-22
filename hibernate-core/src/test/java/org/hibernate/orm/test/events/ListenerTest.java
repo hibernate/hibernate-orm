@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.events;
@@ -23,7 +23,6 @@ import jakarta.persistence.Transient;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
@@ -54,10 +53,7 @@ public class ListenerTest extends BaseEntityManagerFunctionalTestCase {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::events-interceptors-load-listener-example-part1[]
 			EntityManagerFactory entityManagerFactory = entityManagerFactory();
-			SessionFactoryImplementor sessionFactory = entityManagerFactory.unwrap( SessionFactoryImplementor.class );
-			sessionFactory
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
+			entityManagerFactory.unwrap( SessionFactoryImplementor.class ).getEventListenerRegistry()
 				.prependListeners( EventType.LOAD, new SecuredLoadEntityListener() );
 
 			Customer customer = entityManager.find( Customer.class, customerId );

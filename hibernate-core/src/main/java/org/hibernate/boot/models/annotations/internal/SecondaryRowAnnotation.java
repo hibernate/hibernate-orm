@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.SecondaryRow;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -20,7 +20,7 @@ public class SecondaryRowAnnotation implements SecondaryRow {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SecondaryRowAnnotation(SourceModelBuildingContext modelContext) {
+	public SecondaryRowAnnotation(ModelsContext modelContext) {
 		this.table = "";
 		this.owned = true;
 		this.optional = true;
@@ -29,7 +29,7 @@ public class SecondaryRowAnnotation implements SecondaryRow {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SecondaryRowAnnotation(SecondaryRow annotation, SourceModelBuildingContext modelContext) {
+	public SecondaryRowAnnotation(SecondaryRow annotation, ModelsContext modelContext) {
 		this.table = annotation.table();
 		this.owned = annotation.owned();
 		this.optional = annotation.optional();
@@ -38,7 +38,7 @@ public class SecondaryRowAnnotation implements SecondaryRow {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SecondaryRowAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public SecondaryRowAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.table = (String) attributeValues.get( "table" );
 		this.owned = (boolean) attributeValues.get( "owned" );
 		this.optional = (boolean) attributeValues.get( "optional" );

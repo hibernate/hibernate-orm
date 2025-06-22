@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type;
@@ -57,22 +57,25 @@ public class MapType extends CollectionType {
 				: new HashMap<>( anticipatedSize + (int) ( anticipatedSize * .75f ), .75f );
 	}
 
-	@Override @SuppressWarnings("rawtypes")
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public Object replaceElements(
 			final Object original,
 			final Object target,
 			final Object owner,
-			final Map copyCache,
+			final Map<Object, Object> copyCache,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		CollectionPersister cp = session.getFactory().getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( getRole() );
+		final CollectionPersister persister =
+				session.getFactory().getMappingMetamodel()
+						.getCollectionDescriptor( getRole() );
 
-		Map result = (Map) target;
+		final Map source = (Map) original;
+		final Map result = (Map) target;
 		result.clear();
 
-		for ( Object o : ( (Map) original ).entrySet() ) {
-			Map.Entry me = (Map.Entry) o;
-			Object key = cp.getIndexType().replace( me.getKey(), null, session, owner, copyCache );
-			Object value = cp.getElementType().replace( me.getValue(), null, session, owner, copyCache );
+		for ( Object entry : source.entrySet() ) {
+			final Map.Entry me = (Map.Entry) entry;
+			final Object key = persister.getIndexType().replace( me.getKey(), null, session, owner, copyCache );
+			final Object value = persister.getElementType().replace( me.getValue(), null, session, owner, copyCache );
 			result.put( key, value );
 		}
 
@@ -82,8 +85,9 @@ public class MapType extends CollectionType {
 
 	@Override @SuppressWarnings("rawtypes")
 	public Object indexOf(Object collection, Object element) {
-		for ( Object o : ( (Map) collection ).entrySet() ) {
-			Map.Entry me = (Map.Entry) o;
+		final Map map = (Map) collection;
+		for ( Object entry : map.entrySet() ) {
+			final Map.Entry me = (Map.Entry) entry;
 			//TODO: proxies!
 			if ( me.getValue() == element ) {
 				return me.getKey();

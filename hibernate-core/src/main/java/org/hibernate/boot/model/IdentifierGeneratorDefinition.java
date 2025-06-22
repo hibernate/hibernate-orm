@@ -1,17 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model;
 
 import jakarta.persistence.GenerationType;
 import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.TypeDetails;
 
 import java.io.Serializable;
@@ -27,6 +25,7 @@ import static org.hibernate.boot.model.internal.GeneratorParameters.interpretTab
 import static org.hibernate.boot.model.internal.GeneratorStrategies.generatorStrategy;
 import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
@@ -49,7 +48,9 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			final Map<String, String> parameters) {
 		this.name = name;
 		this.strategy = strategy;
-		this.parameters = isEmpty( parameters ) ? emptyMap() : unmodifiableMap( parameters );
+		this.parameters = isEmpty( parameters )
+				? emptyMap()
+				: unmodifiableMap( parameters );
 	}
 
 	public IdentifierGeneratorDefinition(
@@ -98,52 +99,37 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		// If we were unable to locate an actual matching named generator assume
 		// a sequence/table of the given name, make one based on GenerationType.
 
-		if ( generationType == null ) {
-			generationType = GenerationType.SEQUENCE;
-		}
-
-		switch ( generationType ) {
-			case SEQUENCE:
-				return buildSequenceGeneratorDefinition( name );
-			case TABLE:
-				return buildTableGeneratorDefinition( name );
-			case IDENTITY:
-				throw new AnnotationException(
-						"@GeneratedValue annotation specified 'strategy=IDENTITY' and 'generator'"
-								+ " but the generator name is unnecessary"
-				);
-			case UUID:
-				throw new AnnotationException(
-						"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
-								+ " but the generator name is unnecessary"
-				);
-			case AUTO:
-				return new IdentifierGeneratorDefinition(
-						name,
-						generatorStrategy( generationType, generatorName, idType ),
-						singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
-				);
-			default:
-				throw new AssertionFailure( "unknown generator type: " + generationType );
-		}
+		return switch ( generationType == null ? GenerationType.SEQUENCE : generationType ) {
+			case SEQUENCE -> buildSequenceGeneratorDefinition( name );
+			case TABLE -> buildTableGeneratorDefinition( name );
+			case AUTO -> new IdentifierGeneratorDefinition(
+					name,
+					generatorStrategy( generationType, generatorName, idType ),
+					singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
+			);
+			case IDENTITY, UUID -> throw new AnnotationException(
+					"@GeneratedValue annotation specified 'strategy=" + generationType
+					+ "' and 'generator' but the generator name is unnecessary"
+			);
+		};
 	}
 
 	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
-		final Builder builder = new Builder();
 		final TableGeneratorJpaAnnotation tableGeneratorUsage = TABLE_GENERATOR.createUsage( null );
-		if ( StringHelper.isNotEmpty( name ) ) {
+		if ( isNotEmpty( name ) ) {
 			tableGeneratorUsage.name( name );
 		}
+		final Builder builder = new Builder();
 		interpretTableGenerator( tableGeneratorUsage, builder );
 		return builder.build();
 	}
 
 	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
-		final Builder builder = new Builder();
 		final SequenceGeneratorJpaAnnotation sequenceGeneratorUsage = SEQUENCE_GENERATOR.createUsage( null );
-		if ( StringHelper.isNotEmpty( name ) ) {
+		if ( isNotEmpty( name ) ) {
 			sequenceGeneratorUsage.name( name );
 		}
+		final Builder builder = new Builder();
 		interpretSequenceGenerator( sequenceGeneratorUsage, builder );
 		return builder.build();
 	}
@@ -153,11 +139,10 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof IdentifierGeneratorDefinition ) ) {
+		if ( !(o instanceof IdentifierGeneratorDefinition that) ) {
 			return false;
 		}
 
-		IdentifierGeneratorDefinition that = (IdentifierGeneratorDefinition) o;
 		return Objects.equals(name, that.name)
 			&& Objects.equals(strategy, that.strategy)
 			&& Objects.equals(parameters, that.parameters);
@@ -165,10 +150,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int result = name != null ? name.hashCode() : 0;
-		result = 31 * result + ( strategy != null ? strategy.hashCode() : 0 );
-		result = 31 * result + ( parameters != null ? parameters.hashCode() : 0 );
-		return result;
+		return Objects.hash( name, strategy, parameters );
 	}
 
 	@Override

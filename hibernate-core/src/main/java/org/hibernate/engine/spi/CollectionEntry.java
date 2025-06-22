@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
@@ -9,7 +9,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.persister.collection.CollectionPersister;
 
 import java.io.IOException;
@@ -20,6 +19,7 @@ import java.util.Collection;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
@@ -68,11 +68,12 @@ public final class CollectionEntry implements Serializable {
 		// during flush shouldn't be ignored
 		ignore = false;
 
-		collection.clearDirty(); //a newly wrapped collection is NOT dirty (or we get unnecessary version updates)
+		// a newly wrapped collection is NOT dirty
+		// (or we get unnecessary version updates)
+		collection.clearDirty();
 
-		snapshot = persister.isMutable() ?
-				collection.getSnapshot( persister ) :
-				null;
+		snapshot = persister.isMutable() ? collection.getSnapshot( persister ) : null;
+		role = persister.getRole();
 		collection.setSnapshot( loadedKey, role, snapshot );
 	}
 
@@ -91,7 +92,7 @@ public final class CollectionEntry implements Serializable {
 		this.loadedKey = loadedKey;
 
 		this.loadedPersister = loadedPersister;
-		this.role = ( loadedPersister == null ? null : loadedPersister.getRole() );
+		this.role = loadedPersister == null ? null : loadedPersister.getRole();
 
 		collection.setSnapshot( loadedKey, role, null );
 
@@ -123,7 +124,7 @@ public final class CollectionEntry implements Serializable {
 
 		loadedKey = collection.getKey();
 		role = collection.getRole();
-		loadedPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( NullnessUtil.castNonNull( role ) );
+		loadedPersister = factory.getMappingMetamodel().getCollectionDescriptor( castNonNull( role ) );
 
 		snapshot = collection.getStoredSnapshot();
 	}
@@ -156,12 +157,11 @@ public final class CollectionEntry implements Serializable {
 		final CollectionPersister loadedPersister = getLoadedPersister();
 		final boolean forceDirty =
 				collection.wasInitialized()
-			&& !collection.isDirty() //optimization
-			&& loadedPersister != null
-			&& loadedPersister.isMutable() //optimization
-			&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
-			&& !collection.equalsSnapshot( loadedPersister );
-
+						&& !collection.isDirty() //optimization
+						&& loadedPersister != null
+						&& loadedPersister.isMutable() //optimization
+						&& ( collection.isDirectlyAccessible() || loadedPersister.getElementType().isMutable() ) //optimization
+						&& !collection.equalsSnapshot( loadedPersister );
 		if ( forceDirty ) {
 			collection.dirty();
 		}
@@ -174,23 +174,19 @@ public final class CollectionEntry implements Serializable {
 		}
 
 		final CollectionPersister loadedPersister = getLoadedPersister();
-		boolean nonMutableChange = collection.isDirty()
-				&& loadedPersister != null
-				&& !loadedPersister.isMutable();
+		final boolean nonMutableChange =
+				collection.isDirty()
+						&& loadedPersister != null
+						&& !loadedPersister.isMutable();
 		if ( nonMutableChange ) {
-			throw new HibernateException(
-					"changed an immutable collection instance: " +
-					collectionInfoString( NullnessUtil.castNonNull( loadedPersister ).getRole(), getLoadedKey() )
-			);
+			throw new HibernateException( "changed an immutable collection instance: " +
+					collectionInfoString( castNonNull( loadedPersister ).getRole(), getLoadedKey() ) );
 		}
 
 		dirty( collection );
 
 		if ( LOG.isDebugEnabled() && collection.isDirty() && loadedPersister != null ) {
-			LOG.debugf(
-					"Collection dirty: %s",
-					collectionInfoString( loadedPersister.getRole(), getLoadedKey() )
-			);
+			LOG.debug( "Collection dirty: " + collectionInfoString( loadedPersister.getRole(), getLoadedKey() ) );
 		}
 
 		setReached( false );
@@ -208,9 +204,9 @@ public final class CollectionEntry implements Serializable {
 				? collection.getSnapshot( loadedPersister )
 				: null;
 		collection.setSnapshot( loadedKey, role, snapshot );
-		if ( loadedPersister != null && session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
-			session.getPersistenceContextInternal()
-					.getBatchFetchQueue()
+		if ( loadedPersister != null
+				&& session.getLoadQueryInfluencers().effectivelyBatchLoadable( loadedPersister ) ) {
+			session.getPersistenceContextInternal().getBatchFetchQueue()
 					.removeBatchLoadableCollection( this );
 		}
 	}
@@ -236,12 +232,12 @@ public final class CollectionEntry implements Serializable {
 		loadedKey = getCurrentKey();
 		setLoadedPersister( getCurrentPersister() );
 
-		boolean resnapshot = collection.wasInitialized()
+		final boolean resnapshot = collection.wasInitialized()
 				&&  ( isDoremove() || isDorecreate() || isDoupdate() );
 		if ( resnapshot ) {
-			snapshot = loadedPersister == null || !loadedPersister.isMutable() ?
-					null :
-					collection.getSnapshot( NullnessUtil.castNonNull( loadedPersister ) ); //re-snapshot
+			snapshot = loadedPersister != null && loadedPersister.isMutable()
+					? collection.getSnapshot( castNonNull( loadedPersister ) )
+					: null; //re-snapshot
 		}
 
 		collection.postAction();
@@ -271,13 +267,11 @@ public final class CollectionEntry implements Serializable {
 	public void resetStoredSnapshot(PersistentCollection<?> collection, Serializable storedSnapshot) {
 		LOG.debugf("Reset storedSnapshot to %s for %s", storedSnapshot, this);
 
-		if ( fromMerge ) {
-			return; // EARLY EXIT!
+		if ( !fromMerge ) {
+			snapshot = storedSnapshot;
+			collection.setSnapshot( loadedKey, role, snapshot );
+			fromMerge = true;
 		}
-
-		snapshot = storedSnapshot;
-		collection.setSnapshot( loadedKey, role, snapshot );
-		fromMerge = true;
 	}
 
 	private void setLoadedPersister(@Nullable CollectionPersister persister) {
@@ -286,12 +280,9 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	void afterDeserialize(@Nullable SessionFactoryImplementor factory) {
-		if ( factory == null ) {
-			loadedPersister = null;
-		}
-		else {
-			loadedPersister = factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( NullnessUtil.castNonNull( role ) );
-		}
+		loadedPersister = factory == null ? null
+				: factory.getMappingMetamodel()
+						.getCollectionDescriptor( castNonNull( role ) );
 	}
 
 	public boolean wasDereferenced() {
@@ -379,13 +370,15 @@ public final class CollectionEntry implements Serializable {
 
 	@Override
 	public String toString() {
-		String result = "CollectionEntry" +
-				collectionInfoString( role, loadedKey );
-		if ( currentPersister != null ) {
-			result += "->" +
-					collectionInfoString( currentPersister.getRole(), currentKey );
+		final StringBuilder result =
+				new StringBuilder( "CollectionEntry" )
+						.append( collectionInfoString( role, loadedKey ) );
+		final CollectionPersister persister = currentPersister;
+		if ( persister != null ) {
+			result.append( "->" )
+					.append( collectionInfoString( persister.getRole(), currentKey ) );
 		}
-		return result;
+		return result.toString();
 	}
 
 	/**
@@ -432,9 +425,8 @@ public final class CollectionEntry implements Serializable {
 	 *
 	 * @return The deserialized CollectionEntry
 	 */
-	public static CollectionEntry deserialize(
-			ObjectInputStream ois,
-			SessionImplementor session) throws IOException, ClassNotFoundException {
+	public static CollectionEntry deserialize(ObjectInputStream ois, SessionImplementor session)
+			throws IOException, ClassNotFoundException {
 		return new CollectionEntry(
 				(String) ois.readObject(),
 				(Serializable) ois.readObject(),

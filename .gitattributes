@@ -1,1 +1,17 @@
-* text eol=lf
+# By default, detect text files automatically, and use whatever line terminators make sense for the OS
+* text=auto eol=lf
+
+# Java files are text, and we want Java-friendly readable hunk headers for diff
+*.java text diff=java eol=lf
+
+# Force LF/CRLF format for files that are known to require it.
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# For some reason the above is not enough, in particular for gradlew.bat,
+# as some commands (git status, git add --renormalize) will still change its line endings to LF.
+# So, we explicitly tell git not to mess with *.bat line endings.
+# It's annoying as git won't show diffs for these files anymore,
+# but that's the best I could come up with after an hour of head-scratching.
+*.bat binary
+

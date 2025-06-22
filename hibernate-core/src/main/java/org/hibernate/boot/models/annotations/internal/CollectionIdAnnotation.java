@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -10,7 +10,7 @@ import java.util.Map;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,7 +24,7 @@ public class CollectionIdAnnotation implements CollectionId {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public CollectionIdAnnotation(SourceModelBuildingContext modelContext) {
+	public CollectionIdAnnotation(ModelsContext modelContext) {
 		this.column = JpaAnnotations.COLUMN.createUsage( modelContext );
 		this.generatorImplementation = org.hibernate.id.IdentifierGenerator.class;
 		this.generator = "";
@@ -33,7 +33,7 @@ public class CollectionIdAnnotation implements CollectionId {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public CollectionIdAnnotation(CollectionId annotation, SourceModelBuildingContext modelContext) {
+	public CollectionIdAnnotation(CollectionId annotation, ModelsContext modelContext) {
 		this.column = extractJdkValue( annotation, HibernateAnnotations.COLLECTION_ID, "column", modelContext );
 		this.generatorImplementation = annotation.generatorImplementation();
 		this.generator = annotation.generator();
@@ -42,7 +42,7 @@ public class CollectionIdAnnotation implements CollectionId {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public CollectionIdAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public CollectionIdAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.column = (jakarta.persistence.Column) attributeValues.get( "column" );
 		this.generatorImplementation = (Class<? extends org.hibernate.id.IdentifierGenerator>) attributeValues
 				.get( "generatorImplementation" );

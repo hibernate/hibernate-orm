@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -80,7 +80,7 @@ public @interface NamedNativeQuery {
 	 *
 	 * @deprecated use {@link #flush()}
 	 */
-	@Deprecated(since = "7")
+	@Deprecated(since = "7", forRemoval = true)
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**
@@ -171,17 +171,4 @@ public @interface NamedNativeQuery {
 	 * @see Synchronize
 	 */
 	String[] querySpaces() default {};
-
-	/**
-	 * Is the {@linkplain #query() SQL query} a call to a stored procedure
-	 * or function?
-	 *
-	 * @deprecated Calling database procedures and functions through
-	 *             {@link org.hibernate.query.NativeQuery} is no longer supported;
-	 *             use {@link jakarta.persistence.NamedStoredProcedureQuery} instead.
-	 *
-	 * @see org.hibernate.jpa.HibernateHints#HINT_CALLABLE_FUNCTION
-	 */
-	@Deprecated( since = "6.0" )
-	boolean callable() default false;
 }

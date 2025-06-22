@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.internal;
@@ -74,8 +74,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		}
 		catch (InvocationTargetException e) {
 			final Throwable target = e.getTargetException();
-			if ( target instanceof HibernateException ) {
-				throw (HibernateException) target;
+			if ( target instanceof HibernateException hibernateException ) {
+				throw hibernateException;
 			}
 			else {
 				throw new MappingException(
@@ -127,8 +127,8 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 		}
 		catch (InvocationTargetException e) {
 			final Throwable target = e.getTargetException();
-			if ( target instanceof HibernateException ) {
-				throw (HibernateException) target;
+			if ( target instanceof HibernateException hibernateException ) {
+				throw hibernateException;
 			}
 			else {
 				throw new MappingException(

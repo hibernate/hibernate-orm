@@ -1,8 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
+
+import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 /**
  *
@@ -14,6 +22,13 @@ package org.hibernate.metamodel.mapping;
  * @author Steve Ebersole
  */
 public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, SqlExpressible {
+	String ROLE_NAME = "{soft-delete}";
+
+	/**
+	 * The soft-delete strategy - how to interpret indicator values
+	 */
+	SoftDeleteType getSoftDeleteStrategy();
+
 	/**
 	 * The name of the soft-delete indicator column.
 	 */
@@ -25,26 +40,44 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	String getTableName();
 
 	/**
-	 * The SQL literal value which indicates a deleted row
-	 */
-	Object getDeletedLiteralValue();
-
-	/**
-	 * The String representation of the SQL literal value which indicates a deleted row
-	 */
-	String getDeletedLiteralText();
-
-	/**
-	 * The SQL literal value which indicates a non-deleted row
+	 * Create a SQL AST Assignment for setting the soft-delete column to its indicated "deleted" value
 	 *
-	 * @apiNote The inverse of {@linkplain #getDeletedLiteralValue()}
+	 * @param tableReference Reference for the table containing the soft-delete column
 	 */
-	Object getNonDeletedLiteralValue();
+	Assignment createSoftDeleteAssignment(TableReference tableReference);
 
 	/**
-	 * The String representation of the SQL literal value which indicates a non-deleted row
+	 * Create a SQL AST Predicate for restricting matches to non-deleted rows
+	 *
+	 * @param tableReference Reference for the table containing the soft-delete column
 	 */
-	String getNonDeletedLiteralText();
+	Predicate createNonDeletedRestriction(TableReference tableReference);
+
+	/**
+	 * Create a SQL AST Predicate for restricting matches to non-deleted rows
+	 *
+	 * @param tableReference Reference for the table containing the soft-delete column
+	 * @param expressionResolver Resolver for SQL AST Expressions
+	 */
+	Predicate createNonDeletedRestriction(TableReference tableReference, SqlExpressionResolver expressionResolver);
+
+	/**
+	 * Create a ColumnValueBinding for non-deleted indicator.
+	 *
+	 * @param softDeleteColumnReference Reference to the soft-delete column
+	 *
+	 * @apiNote Generally used as a restriction in a SQL AST
+	 */
+	ColumnValueBinding createNonDeletedValueBinding(ColumnReference softDeleteColumnReference);
+
+	/**
+	 * Create a ColumnValueBinding for deleted indicator.
+	 *
+	 * @param softDeleteColumnReference Reference to the soft-delete column
+	 *
+	 * @apiNote Generally used as an assignment in a SQL AST
+	 */
+	ColumnValueBinding createDeletedValueBinding(ColumnReference softDeleteColumnReference);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -58,11 +91,6 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	@Override
 	default String getSelectableName() {
 		return getColumnName();
-	}
-
-	@Override
-	default String getWriteExpression() {
-		return getNonDeletedLiteralText();
 	}
 
 	@Override

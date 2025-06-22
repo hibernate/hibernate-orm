@@ -1,15 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
-
-import java.sql.Types;
 
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.sql.Types;
 
 /**
  * Descriptor for {@link Types#LONGVARCHAR LONGVARCHAR} handling.
@@ -19,14 +19,14 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class LongVarcharJdbcType extends VarcharJdbcType {
 	public static final LongVarcharJdbcType INSTANCE = new LongVarcharJdbcType();
 
-	private final int jdbcTypeCode;
+	private final int defaultSqlTypeCode;
 
 	public LongVarcharJdbcType() {
-		this(Types.LONGVARCHAR);
+		this( Types.LONGVARCHAR );
 	}
 
-	public LongVarcharJdbcType(int jdbcTypeCode) {
-		this.jdbcTypeCode = jdbcTypeCode;
+	public LongVarcharJdbcType(int defaultSqlTypeCode) {
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
 	}
 
 	@Override
@@ -36,7 +36,12 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeCode;
+		return Types.LONGVARCHAR;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override

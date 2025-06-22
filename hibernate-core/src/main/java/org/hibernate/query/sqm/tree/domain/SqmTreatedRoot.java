@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -7,10 +7,13 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Objects;
 
 /**
  * @author Steve Ebersole
@@ -18,12 +21,12 @@ import org.hibernate.spi.NavigablePath;
 @SuppressWarnings("rawtypes")
 public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	private final SqmRoot wrappedPath;
-	private final EntityDomainType treatTarget;
+	private final SqmEntityDomainType treatTarget;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmTreatedRoot(
 			SqmRoot wrappedPath,
-			EntityDomainType treatTarget) {
+			SqmEntityDomainType treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
@@ -36,11 +39,11 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 		this.treatTarget = treatTarget;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings("unchecked")
 	private SqmTreatedRoot(
 			NavigablePath navigablePath,
 			SqmRoot wrappedPath,
-			EntityDomainType treatTarget) {
+			SqmEntityDomainType treatTarget) {
 		super(
 				navigablePath,
 				(EntityDomainType) wrappedPath.getReferencedPathSource(),
@@ -85,13 +88,13 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 	}
 
 	@Override
-	public SqmPathSource getNodeType() {
+	public SqmBindableType getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType getReferencedPathSource() {
-		return getTreatTarget();
+	public SqmEntityDomainType getReferencedPathSource() {
+		return treatTarget;
 	}
 
 	@Override
@@ -110,17 +113,30 @@ public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
+		final SqmPath<?> sqmPath = get( name, true );
 		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
 		return sqmPath;
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		sb.append( "treat(" );
-		wrappedPath.appendHqlString( sb );
-		sb.append( " as " );
-		sb.append( treatTarget.getName() );
-		sb.append( ')' );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		hql.append( "treat(" );
+		wrappedPath.appendHqlString( hql, context );
+		hql.append( " as " );
+		hql.append( treatTarget.getName() );
+		hql.append( ')' );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmTreatedRoot that
+			&& Objects.equals( this.getExplicitAlias(), that.getExplicitAlias() )
+			&& Objects.equals( this.treatTarget.getName(), that.treatTarget.getName() )
+			&& Objects.equals( this.wrappedPath.getNavigablePath(), that.wrappedPath.getNavigablePath() );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( wrappedPath.getNavigablePath(), treatTarget.getName() );
 	}
 }

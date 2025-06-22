@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.component;
@@ -33,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 @JiraKey( "HHH-15831" )
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructAggregate.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
 public class StructComponentAssociationErrorTest {
 
 	@Test

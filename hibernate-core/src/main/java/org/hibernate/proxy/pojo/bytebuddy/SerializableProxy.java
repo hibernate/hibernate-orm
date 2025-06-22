@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.proxy.pojo.bytebuddy;
@@ -143,8 +143,8 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 	}
 
 	private static BytecodeProviderImpl castBytecodeProvider(BytecodeProvider bytecodeProvider) {
-		if ( bytecodeProvider instanceof BytecodeProviderImpl ) {
-			return (BytecodeProviderImpl) bytecodeProvider;
+		if ( bytecodeProvider instanceof BytecodeProviderImpl impl ) {
+			return impl;
 		}
 		else {
 			throw new IllegalStateException( "Unable to deserialize a SerializableProxy proxy: the bytecode provider is not ByteBuddy." );

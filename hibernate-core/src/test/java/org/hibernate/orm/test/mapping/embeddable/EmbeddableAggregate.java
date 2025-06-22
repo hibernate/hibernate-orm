@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.embeddable;
@@ -292,6 +292,14 @@ public class EmbeddableAggregate {
 		this.mutableValue = mutableValue;
 	}
 
+	static void assertArraysEquals(EmbeddableAggregate [] a1, EmbeddableAggregate []a2) {
+		Assertions.assertTrue( (a1 == null && a2 == null) || (a1 != null && a2 != null) );
+		Assertions.assertEquals( a1.length, a2.length );
+		for (int i = 0; i < a1.length; i++) {
+			assertEquals(a1[i], a2[i]);
+		}
+	}
+
 	static void assertEquals(EmbeddableAggregate a1, EmbeddableAggregate a2) {
 		Assertions.assertEquals( a1.theInt, a2.theInt );
 		Assertions.assertEquals( a1.theDouble, a2.theDouble );
@@ -338,6 +346,13 @@ public class EmbeddableAggregate {
 		}
 	}
 
+	public static EmbeddableAggregate[] createAggregateArray1() {
+		return new EmbeddableAggregate[] {createAggregate1(),createAggregate2()};
+	}
+	public static EmbeddableAggregate[] createAggregateArray2() {
+		return new EmbeddableAggregate[] {createAggregate3()};
+	}
+
 	public static EmbeddableAggregate createAggregate1() {
 		final EmbeddableAggregate aggregate = new EmbeddableAggregate();
 		aggregate.theBoolean = true;
@@ -357,7 +372,7 @@ public class EmbeddableAggregate {
 		aggregate.theBinary = new byte[] { 1 };
 		aggregate.theDate = new java.sql.Date( 2000 - 1900, 0, 1 );
 		aggregate.theTime = new Time( 1, 0, 0 );
-		aggregate.theTimestamp = new Timestamp( 2000 - 1900, 0, 1, 1, 0, 0, 1000 );
+		aggregate.theTimestamp = new Timestamp( 2000 - 1900, 0, 1, 1, 0, 0, 3000000 ); // Use 3 millis to allow representation on Sybase
 		aggregate.theInstant = LocalDateTime.of( 2000, 1, 1, 0, 0, 0 ).toInstant( ZoneOffset.UTC );
 		aggregate.theUuid = UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" );
 		aggregate.gender = EntityOfBasics.Gender.FEMALE;

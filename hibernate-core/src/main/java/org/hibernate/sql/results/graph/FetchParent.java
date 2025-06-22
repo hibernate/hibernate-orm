@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph;
@@ -48,8 +48,8 @@ public interface FetchParent extends DomainResultGraphNode {
 					|| referencedMappingContainer instanceof EmbeddableValuedModelPart ) {
 				fetchParentType = referencedMappingContainer.findContainingEntityMapping();
 			}
-			else if ( referencedMappingContainer instanceof EntityMappingType ) {
-				fetchParentType = (EntityMappingType) referencedMappingContainer;
+			else if ( referencedMappingContainer instanceof EntityMappingType entityMappingType ) {
+				fetchParentType = entityMappingType;
 			}
 			else {
 				fetchParentType = fetchableEntityType;
@@ -107,10 +107,7 @@ public interface FetchParent extends DomainResultGraphNode {
 	Initializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState);
 
 	default FetchParent getRoot() {
-		if ( this instanceof Fetch ) {
-			return ( (Fetch) this ).getFetchParent().getRoot();
-		}
-		return this;
+		return this instanceof Fetch fetch ? fetch.getFetchParent().getRoot() : this;
 	}
 
 	default Fetch generateFetchableFetch(

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.dialect.spi;
@@ -11,7 +11,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
 
 /**
- * A factory for generating Dialect instances.
+ * A factory for generating {@link Dialect} instances.
  *
  * @author Steve Ebersole
  */

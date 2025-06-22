@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.event.entity;
@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertEquals;
  * @author Gail Badner
  */
 @JiraKey( value = "HHH-9979")
+@Exclude
 public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 
 	protected Class[] getAnnotatedClasses() {
@@ -128,8 +130,7 @@ public class MergeListPreAndPostPersistTest extends BaseCoreFunctionalTestCase {
 
 	private void addEntityListeners(final Order order) {
 
-		EventListenerRegistry registry = sessionFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		registry.setListeners(
 				EventType.PRE_INSERT,
 				new PreInsertEventListener() {

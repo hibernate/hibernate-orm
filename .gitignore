@@ -16,10 +16,7 @@ lib
 
 # IntelliJ specific files/directories
 out
-.idea/modules
-.idea/shelf
-.idea/*.xml
-.idea/.gitignore
+# See .idea/.gitignore for more precise rules in that directory
 *.ipr
 *.iws
 *.iml
@@ -48,10 +45,9 @@ ObjectStore
 *.hprof
 /.nb-gradle/
 
-# Additional databases used in local envs
-databases/mysql/
-databases/postgis/
-
 # Vim
 *.swp
 *.swo
+
+# SDKman, used by some module maintainers
+.sdkmanrc

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.onetoone.singletable;
@@ -51,14 +51,7 @@ public class SingleTableOneToOneTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createMutationQuery( "delete from SubClass2" ).executeUpdate();
-					session.createMutationQuery( "delete from SubClass1" ).executeUpdate();
-					session.createMutationQuery( "delete from Container1" ).executeUpdate();
-					session.createMutationQuery( "delete from Container2" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

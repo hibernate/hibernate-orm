@@ -1,12 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
 
 import java.util.List;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -28,7 +28,7 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 				FunctionKind.NORMAL,
 				null,
 				StandardFunctionReturnTypeResolvers.invariant(
-						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON_ARRAY )
+						typeConfiguration.getBasicTypeRegistry().resolve( String.class, SqlTypes.JSON )
 				),
 				null
 		);
@@ -44,13 +44,14 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 		char separator = '(';
 		if ( sqlAstArguments.isEmpty() ) {
 			sqlAppender.appendSql( separator );
+			renderReturningClause( sqlAppender, walker );
 		}
 		else {
 			final SqlAstNode lastArgument = sqlAstArguments.get( sqlAstArguments.size() - 1 );
 			final JsonNullBehavior nullBehavior;
 			final int argumentsCount;
-			if ( lastArgument instanceof JsonNullBehavior ) {
-				nullBehavior = (JsonNullBehavior) lastArgument;
+			if ( lastArgument instanceof JsonNullBehavior jsonNullBehavior ) {
+				nullBehavior = jsonNullBehavior;
 				argumentsCount = sqlAstArguments.size() - 1;
 			}
 			else {
@@ -65,11 +66,16 @@ public class JsonArrayFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			if ( nullBehavior == JsonNullBehavior.NULL ) {
 				sqlAppender.appendSql( " null on null" );
 			}
+			renderReturningClause( sqlAppender, walker );
 		}
 		sqlAppender.appendSql( ')' );
 	}
 
 	protected void renderValue(SqlAppender sqlAppender, SqlAstNode value, SqlAstTranslator<?> walker) {
 		value.accept( walker );
+	}
+
+	protected void renderReturningClause(SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
+		// No-op
 	}
 }

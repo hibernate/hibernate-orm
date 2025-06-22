@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
-import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.jdbc.internal.ArrayBackedBinaryStream;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.RowVersionComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -28,15 +28,19 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		implements VersionJavaType<byte[]> {
 	public static final PrimitiveByteArrayJavaType INSTANCE = new PrimitiveByteArrayJavaType();
 
-	@SuppressWarnings("unchecked")
 	public PrimitiveByteArrayJavaType() {
-		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
+		super( byte[].class, new ArrayMutabilityPlan(), RowVersionComparator.INSTANCE );
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return value instanceof byte[];
 	}
 
 	@Override
 	public boolean areEqual(byte[] one, byte[] another) {
 		return one == another
-				|| ( one != null && another != null && Arrays.equals( one, another ) );
+			|| one != null && another != null && Arrays.equals( one, another );
 	}
 
 	@Override
@@ -107,7 +111,7 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			return (X) new ByteArrayInputStream( value );
 		}
 		if ( BinaryStream.class.isAssignableFrom( type ) ) {
-			return (X) new BinaryStreamImpl( value );
+			return (X) new ArrayBackedBinaryStream( value );
 		}
 		if ( Blob.class.isAssignableFrom( type ) ) {
 			return (X) options.getLobCreator().createBlob( value );
@@ -120,23 +124,23 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 		if ( value == null ) {
 			return null;
 		}
-		if (value instanceof byte[]) {
-			return (byte[]) value;
+		if (value instanceof byte[] bytes) {
+			return bytes;
 		}
-		if (value instanceof InputStream) {
-			return DataHelper.extractBytes( (InputStream) value );
+		if (value instanceof InputStream inputStream) {
+			return DataHelper.extractBytes( inputStream );
 		}
-		if ( value instanceof Blob || DataHelper.isNClob( value.getClass() ) ) {
+		if ( value instanceof Blob blob ) {
 			try {
-				return DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() );
+				return DataHelper.extractBytes( blob.getBinaryStream() );
 			}
 			catch ( SQLException e ) {
 				throw new HibernateException( "Unable to access lob stream", e );
 			}
 		}
-		else if ( value instanceof Byte ) {
+		else if ( value instanceof Byte byteValue ) {
 			// Support binding a single element as parameter value
-			return new byte[]{ (byte) value };
+			return new byte[]{ byteValue };
 		}
 
 		throw unknownWrap( value.getClass() );
@@ -159,5 +163,12 @@ public class PrimitiveByteArrayJavaType extends AbstractClassJavaType<byte[]>
 			Integer precision,
 			Integer scale, SharedSessionContractImplementor session) {
 		return current;
+	}
+
+	private static class ArrayMutabilityPlan extends MutableMutabilityPlan<byte[]> {
+		@Override
+		protected byte[] deepCopyNotNull(byte[] value) {
+			return value.clone();
+		}
 	}
 }

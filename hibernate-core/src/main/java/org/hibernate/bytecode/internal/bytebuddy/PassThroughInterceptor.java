@@ -1,17 +1,18 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.proxy.ProxyConfiguration;
 
 public class PassThroughInterceptor implements ProxyConfiguration.Interceptor {
 
-	private HashMap<Object, Object> data = new HashMap<>();
+	private final Map<Object, Object> data = new HashMap<>();
 	private final String proxiedClassName;
 
 	public PassThroughInterceptor(String proxiedClassName) {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -8,12 +8,12 @@ import java.util.List;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -33,7 +33,7 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			SqlAstTranslator<?> translator) {
 		final Expression json = (Expression) arguments.get( 0 );
 		final Expression jsonPath = (Expression) arguments.get( 1 );
-		final boolean needsCast = !isJsonType( json ) && json instanceof JdbcParameter;
+		final boolean needsCast = !isJsonType( json ) && AbstractSqlAstTranslator.isParameter( json );
 		if ( needsCast ) {
 			sqlAppender.appendSql( "cast(" );
 		}
@@ -51,8 +51,8 @@ public class PostgreSQLJsonRemoveFunction extends AbstractJsonRemoveFunction {
 			if ( pathElement instanceof JsonPathHelper.JsonAttribute attribute ) {
 				sqlAppender.appendSingleQuoteEscapedString( attribute.attribute() );
 			}
-			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess ) {
-				final String parameterName = ( (JsonPathHelper.JsonParameterIndexAccess) pathElement ).parameterName();
+			else if ( pathElement instanceof JsonPathHelper.JsonParameterIndexAccess parameterIndexAccess ) {
+				final String parameterName = parameterIndexAccess.parameterName();
 				throw new QueryException( "JSON path [" + jsonPath + "] uses parameter [" + parameterName + "] that is not passed" );
 			}
 			else {

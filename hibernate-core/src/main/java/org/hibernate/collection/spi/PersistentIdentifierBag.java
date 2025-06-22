@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.collection.spi;
@@ -41,13 +41,20 @@ import static org.hibernate.generator.EventType.INSERT;
  */
 @Incubating
 public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> implements List<E> {
+	/**
+	 * @deprecated Use {@link #bagAsList()} or {@link #collection} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "7")
 	protected List<E> values;
 	protected Map<Integer, Object> identifiers;
 
 	/**
-	 * The Collection provided to a PersistentIdentifierBag constructor
+	 * The actual bag.
+	 * For backwards compatibility reasons, the {@link #values} field remains as {@link List},
+	 * but might be {@code null} when the bag does not implement the {@link List} interface,
+	 * whereas this collection field will always contain the actual bag instance.
 	 */
-	private Collection<E> providedValues;
+	protected Collection<E> collection;
 
 	/**
 	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
@@ -73,16 +80,22 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	 */
 	public PersistentIdentifierBag(SharedSessionContractImplementor session, Collection<E> coll) {
 		super( session );
-		providedValues = coll;
-		if (coll instanceof List) {
-			values = (List<E>) coll;
-		}
-		else {
-			values = new ArrayList<>( coll );
-		}
+		setCollection( coll );
 		setInitialized();
 		setDirectlyAccessible( true );
 		identifiers = new HashMap<>();
+	}
+
+	private void setCollection(Collection<E> bag) {
+		this.collection = bag;
+		this.values = bag instanceof List<E> list ? list : null;
+	}
+
+	protected List<E> bagAsList() {
+		if ( values == null ) {
+			throw new IllegalStateException( "Bag is not a list: " + collection.getClass().getName() );
+		}
+		return values;
 	}
 
 	@Override
@@ -92,19 +105,18 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 		final int size = array.length;
 
 		assert identifiers == null;
-		assert values == null;
+		assert collection == null;
 
 		identifiers = new HashMap<>();
-		values = size <= 0
-				? new ArrayList<>()
-				: new ArrayList<>( size );
+		//noinspection unchecked
+		setCollection( (Collection<E>) persister.getCollectionSemantics().instantiateRaw( size, persister ) );
 
 		for ( int i = 0; i < size; i+=2 ) {
 			identifiers.put(
 				(i/2),
 				persister.getIdentifierType().assemble( array[i], getSession(), owner )
 			);
-			values.add( (E) persister.getElementType().assemble( array[i+1], getSession(), owner ) );
+			collection.add( (E) persister.getElementType().assemble( array[i+1], getSession(), owner ) );
 		}
 	}
 
@@ -115,26 +127,21 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public boolean isWrapper(Object collection) {
-		return values == collection;
-	}
-
-	@Override
-	public boolean isDirectlyProvidedCollection(Object collection) {
-		return isDirectlyAccessible() && providedValues == collection;
+		return this.collection == collection;
 	}
 
 	@Override
 	public boolean add(E o) {
 		write();
-		values.add( o );
+		collection.add( o );
 		return true;
 	}
 
 	@Override
 	public void clear() {
 		initialize( true );
-		if ( ! values.isEmpty() || ! identifiers.isEmpty() ) {
-			values.clear();
+		if ( ! collection.isEmpty() || ! identifiers.isEmpty() ) {
+			collection.clear();
 			identifiers.clear();
 			dirty();
 		}
@@ -143,33 +150,33 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public boolean contains(Object o) {
 		read();
-		return values.contains( o );
+		return collection.contains( o );
 	}
 
 	@Override
 	public boolean containsAll(Collection<?> c) {
 		read();
-		return values.containsAll( c );
+		return collection.containsAll( c );
 	}
 
 	@Override
 	public boolean isEmpty() {
-		return readSize() ? getCachedSize()==0 : values.isEmpty();
+		return readSize() ? getCachedSize()==0 : collection.isEmpty();
 	}
 
 	@Override
 	public Iterator<E> iterator() {
 		read();
-		return new IteratorProxy<>( values.iterator() );
+		return new IteratorProxy<>( collection.iterator() );
 	}
 
 	@Override
 	public boolean remove(Object o) {
 		initialize( true );
-		final int index = values.indexOf( o );
+		final int index = bagAsList().indexOf( o );
 		if ( index >= 0 ) {
 			beforeRemove( index );
-			values.remove( index );
+			bagAsList().remove( index );
 			elementRemoved = true;
 			dirty();
 			return true;
@@ -198,7 +205,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public boolean retainAll(Collection<?> c) {
 		initialize( true );
-		if ( values.retainAll( c ) ) {
+		if ( collection.retainAll( c ) ) {
 			dirty();
 			return true;
 		}
@@ -209,41 +216,42 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public int size() {
-		return readSize() ? getCachedSize() : values.size();
+		return readSize() ? getCachedSize() : collection.size();
 	}
 
 	@Override
 	public Object[] toArray() {
 		read();
-		return values.toArray();
+		return collection.toArray();
 	}
 
 	@Override
 	public <A> A[] toArray(A[] a) {
 		read();
-		return values.toArray( a );
+		return collection.toArray( a );
 	}
 
 	@Override
 	public Object disassemble(CollectionPersister persister) {
-		final Serializable[] result = new Serializable[ values.size() * 2 ];
+		final Serializable[] result = new Serializable[ collection.size() * 2 ];
 		int i = 0;
-		for ( int j=0; j< values.size(); j++ ) {
-			final Object value = values.get( j );
+		int j = 0;
+		for ( E value : collection ) {
 			result[i++] = persister.getIdentifierType().disassemble( identifiers.get( j ), getSession(), null );
 			result[i++] = persister.getElementType().disassemble( value, getSession(), null );
+			j++;
 		}
 		return result;
 	}
 
 	@Override
 	public boolean empty() {
-		return values.isEmpty();
+		return collection.isEmpty();
 	}
 
 	@Override
 	public Iterator<E> entries(CollectionPersister persister) {
-		return values.iterator();
+		return collection.iterator();
 	}
 
 	@Override
@@ -255,12 +263,12 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
 		final Map<?,?> snap = (Map<?,?>) getSnapshot();
-		if ( snap.size()!= values.size() ) {
+		if ( snap.size()!= collection.size() ) {
 			return false;
 		}
-		for ( int i=0; i<values.size(); i++ ) {
-			final Object value = values.get( i );
-			final Object id = identifiers.get( i );
+		int i = 0;
+		for ( E value : collection ) {
+			final Object id = identifiers.get( i++ );
 			if ( id == null ) {
 				return false;
 			}
@@ -281,12 +289,26 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	public Iterator<?> getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		final Map<?,?> snap = (Map<?,?>) getSnapshot();
 		final List<Object> deletes = new ArrayList<>( snap.keySet() );
-		for ( int i=0; i<values.size(); i++ ) {
-			if ( values.get( i ) != null ) {
+		int i = 0;
+		for ( E value : collection ) {
+			if ( value != null ) {
 				deletes.remove( identifiers.get( i ) );
 			}
+			i++;
 		}
 		return deletes.iterator();
+	}
+
+	@Override
+	public boolean hasDeletes(CollectionPersister persister) {
+		final Map<?,?> snap = (Map<?,?>) getSnapshot();
+		int deletes = snap.size();
+		for ( E value : collection ) {
+			if ( value != null ) {
+				deletes --;
+			}
+		}
+		return deletes > 0;
 	}
 
 	@Override
@@ -333,8 +355,8 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	@Override
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		final HashMap<Object,E> map = CollectionHelper.mapOfSize( values.size() );
-		final Iterator<E> iter = values.iterator();
+		final HashMap<Object,E> map = CollectionHelper.mapOfSize( collection.size() );
+		final Iterator<E> iter = collection.iterator();
 		int i=0;
 		while ( iter.hasNext() ) {
 			final Object value = iter.next();
@@ -349,20 +371,21 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public Collection<E> getOrphans(Serializable snapshot, String entityName) throws HibernateException {
 		final Map<Object,E> sn = (Map<Object,E>) snapshot;
-		return getOrphans( sn.values(), values, entityName, getSession() );
+		return getOrphans( sn.values(), collection, entityName, getSession() );
 	}
 
 	@Override
 	public void initializeEmptyCollection(CollectionPersister persister) {
 		assert identifiers == null;
 		identifiers = new HashMap<>();
-		values = new ArrayList<>();
+		//noinspection unchecked
+		setCollection( (Collection<E>) persister.getCollectionSemantics().instantiateRaw( 0, persister ) );
 		endRead();
 	}
 
 	@Override
 	public void preInsert(CollectionPersister persister) throws HibernateException {
-		final Iterator<E> itr = values.iterator();
+		final Iterator<E> itr = collection.iterator();
 		int i = 0;
 		while ( itr.hasNext() ) {
 			final E entry = itr.next();
@@ -379,7 +402,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	public void add(int index, E element) {
 		write();
 		beforeAdd( index );
-		values.add( index, element );
+		bagAsList().add( index, element );
 	}
 
 	@Override
@@ -398,36 +421,36 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	@Override
 	public E get(int index) {
 		read();
-		return values.get( index );
+		return bagAsList().get( index );
 	}
 
 	@Override
 	public int indexOf(Object o) {
 		read();
-		return values.indexOf( o );
+		return bagAsList().indexOf( o );
 	}
 
 	@Override
 	public int lastIndexOf(Object o) {
 		read();
-		return values.lastIndexOf( o );
+		return bagAsList().lastIndexOf( o );
 	}
 
 	@Override
 	public ListIterator<E> listIterator() {
 		read();
-		return new ListIteratorProxy( values.listIterator() );
+		return new ListIteratorProxy( bagAsList().listIterator() );
 	}
 
 	@Override
 	public ListIterator<E> listIterator(int index) {
 		read();
-		return new ListIteratorProxy( values.listIterator( index ) );
+		return new ListIteratorProxy( bagAsList().listIterator( index ) );
 	}
 
 	private void beforeRemove(int index) {
 		final Object removedId = identifiers.get( index );
-		final int last = values.size()-1;
+		final int last = collection.size()-1;
 		for ( int i=index; i<last; i++ ) {
 			final Object id = identifiers.get( i+1 );
 			if ( id == null ) {
@@ -441,7 +464,7 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	}
 
 	private void beforeAdd(int index) {
-		for ( int i=index; i<values.size(); i++ ) {
+		for ( int i=index; i<collection.size(); i++ ) {
 			identifiers.put( i+1, identifiers.get( i ) );
 		}
 		identifiers.remove( index );
@@ -451,26 +474,26 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 	public E remove(int index) {
 		write();
 		beforeRemove( index );
-		return values.remove( index );
+		return bagAsList().remove( index );
 	}
 
 	@Override
 	public E set(int index, E element) {
 		write();
-		return values.set( index, element );
+		return bagAsList().set( index, element );
 	}
 
 	@Override
 	public List<E> subList(int fromIndex, int toIndex) {
 		read();
-		return new ListProxy( values.subList( fromIndex, toIndex ) );
+		return new ListProxy( bagAsList().subList( fromIndex, toIndex ) );
 	}
 
 	@Override
 	public boolean addAll(Collection<? extends E> c) {
 		if ( c.size()> 0 ) {
 			write();
-			return values.addAll( c );
+			return collection.addAll( c );
 		}
 		else {
 			return false;
@@ -487,20 +510,26 @@ public class PersistentIdentifierBag<E> extends AbstractPersistentCollection<E> 
 
 	public void injectLoadedState(PluralAttributeMapping attributeMapping, List<?> loadingState) {
 		assert identifiers == null;
-		assert values == null;
+		assert collection == null;
+
+		final CollectionPersister collectionDescriptor = attributeMapping.getCollectionDescriptor();
+		final CollectionSemantics<?,?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
+
+		final int elementCount = loadingState == null ? 0 : loadingState.size();
 
 		identifiers = new HashMap<>();
-		values = new ArrayList<>( loadingState.size() );
+		//noinspection unchecked
+		setCollection( (Collection<E>) collectionSemantics.instantiateRaw( elementCount, collectionDescriptor ) );
 
 		for ( int i = 0; i < loadingState.size(); i++ ) {
 			final Object[] row = (Object[]) loadingState.get( i );
 			final Object identifier = row[0];
 			final E element = (E) row[1];
 
-			Object old = identifiers.put( values.size(), identifier );
+			Object old = identifiers.put( collection.size(), identifier );
 			if ( old == null ) {
 				//maintain correct duplication if loaded in a cartesian product
-				values.add( element );
+				collection.add( element );
 			}
 		}
 	}

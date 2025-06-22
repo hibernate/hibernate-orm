@@ -1,10 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
 
 import org.jboss.logging.BasicLogger;
@@ -30,6 +31,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 		name = QueryLogging.LOGGER_NAME,
 		description = "Logging related to Query processing"
 )
+@Internal
 public interface QueryLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".query";
 
@@ -51,10 +53,6 @@ public interface QueryLogging extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Error in named query: %s", id = 90003001)
 	void namedQueryError(String queryName, @Cause HibernateException e);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Unable to determine lock mode value: %s -> %s", id = 90003002)
-	void unableToDetermineLockModeValue(String hintName, Object value);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Ignoring unrecognized query hint [%s]", id = 90003003)

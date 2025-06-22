@@ -1,20 +1,16 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id;
 
-import java.lang.reflect.Member;
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Properties;
-
-import org.hibernate.boot.model.internal.GeneratorParameters;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.AnnotationBasedGenerator;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -26,12 +22,14 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.id.uuid.UuidGenerator;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.persister.entity.EntityPersister;
 
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.SequenceGenerator;
+import java.lang.reflect.Member;
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Properties;
 
+import static org.hibernate.boot.model.internal.GeneratorParameters.collectParameters;
 import static org.hibernate.id.IdentifierGenerator.GENERATOR_NAME;
 import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
 
@@ -44,7 +42,8 @@ import static org.hibernate.id.OptimizableGenerator.INCREMENT_PARAM;
  * @author Steve Ebersole
  */
 public class NativeGenerator
-		implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer, AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
+		implements OnExecutionGenerator, BeforeExecutionGenerator, Configurable, ExportableProducer,
+						AnnotationBasedGenerator<org.hibernate.annotations.NativeGenerator> {
 	private GenerationType generationType;
 	private org.hibernate.annotations.NativeGenerator annotation;
 	private Generator dialectNativeGenerator;
@@ -84,7 +83,7 @@ public class NativeGenerator
 				break;
 			}
 			case UUID: {
-				dialectNativeGenerator = new UuidGenerator( new UuidGeneratorAnnotation( null ), member );
+				dialectNativeGenerator = new UuidGenerator( context.getType().getReturnedClass() );
 				break;
 			}
 			default: {
@@ -170,11 +169,12 @@ public class NativeGenerator
 	private static void applyCommonConfiguration(
 			Map<String, Object> mapRef,
 			GeneratorCreationContext context) {
-		GeneratorParameters.collectParameters(
-				(SimpleValue) context.getProperty().getValue(),
+		collectParameters(
+				context.getProperty().getValue(),
 				context.getDatabase().getDialect(),
 				context.getRootClass(),
-				mapRef::put
+				mapRef::put,
+				context.getServiceRegistry().requireService( ConfigurationService.class )
 		);
 		mapRef.put( INCREMENT_PARAM, 1 );
 	}

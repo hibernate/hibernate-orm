@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping;
@@ -102,24 +102,40 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * or <code>null</code> if there is no conversion.
 	 */
 	@Incubating
-	default BasicValueConverter getValueConverter() {
+	default BasicValueConverter<?,?> getValueConverter() {
 		return null;
 	}
 
 	//TODO: would it be better to just give JdbcMapping a
 	//      noop converter by default, instead of having
 	//      to deal with null here?
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	default Object convertToRelationalValue(Object value) {
-		BasicValueConverter valueConverter = getValueConverter();
-		return valueConverter == null ? value : valueConverter.toRelationalValue( value );
+	default <T> Object convertToRelationalValue(T value) {
+		final var converter = getValueConverter();
+		if ( converter == null ) {
+			return value;
+		}
+		else {
+			assert value == null
+				|| converter.getDomainJavaType().isInstance( value );
+			@SuppressWarnings( "unchecked" ) // safe, we just checked
+			final var valueConverter = (BasicValueConverter<T,?>) converter;
+			return valueConverter.toRelationalValue( value );
+		}
 	}
 
-	default Object convertToDomainValue(Object value) {
-		BasicValueConverter valueConverter = getValueConverter();
-		return valueConverter == null ? value : valueConverter.toDomainValue( value );
+	default <T> Object convertToDomainValue(T value) {
+		var converter = getValueConverter();
+		if ( converter == null ) {
+			return value;
+		}
+		else {
+			assert value == null
+				|| converter.getRelationalJavaType().isInstance( value );
+			@SuppressWarnings( "unchecked" ) // safe, we just checked
+			final var valueConverter = (BasicValueConverter<?, T>) converter;
+			return valueConverter.toDomainValue( value );
+		}
 	}
-
 
 	@Override
 	default int getJdbcTypeCount() {

@@ -1,9 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,9 +17,11 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.Helper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import static java.sql.Connection.TRANSACTION_NONE;
@@ -38,10 +41,10 @@ import static org.hibernate.cfg.JdbcSettings.ISOLATION;
 import static org.hibernate.cfg.JdbcSettings.POOL_SIZE;
 import static org.hibernate.cfg.JdbcSettings.URL;
 import static org.hibernate.cfg.JdbcSettings.USER;
-import static org.hibernate.cfg.ProxoolSettings.PROXOOL_CONFIG_PREFIX;
 import static org.hibernate.cfg.SchemaToolingSettings.ENABLE_SYNONYMS;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
-import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
@@ -64,24 +67,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static final String C3P0_STRATEGY = "c3p0";
 
 	/**
-	 * The strategy for proxool connection pooling
-	 */
-	public static final String PROXOOL_STRATEGY = "proxool";
-
-	/**
 	 * The strategy for hikari connection pooling
 	 */
 	public static final String HIKARI_STRATEGY = "hikari";
-
-	/**
-	 * The strategy for vibur connection pooling
-	 */
-	public static final String VIBUR_STRATEGY = "vibur";
-
-	/**
-	 * The strategy for oracle ucp connection pooling
-	 */
-	public static final String UCP_STRATEGY = "ucp";
 
 	/**
 	 * The strategy for agroal connection pooling
@@ -102,6 +90,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
+		final BeanContainer beanContainer = Helper.getBeanContainer( registry );
 		final StrategySelector strategySelector = registry.requireService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
@@ -111,36 +100,45 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			}
 			else if ( explicitSetting instanceof Class<?> providerClass ) {
 				LOG.instantiatingExplicitConnectionProvider( providerClass.getName() );
-				return instantiateExplicitConnectionProvider( providerClass );
+				return instantiateExplicitConnectionProvider( connectionProviderClass( providerClass ), beanContainer );
 			}
 			else {
-				final String providerName = nullIfEmpty( explicitSetting.toString() );
+				final String providerName = nullIfBlank( explicitSetting.toString() );
 				if ( providerName != null ) {
-					return instantiateNamedConnectionProvider(providerName, strategySelector);
+					return instantiateNamedConnectionProvider( providerName, strategySelector, beanContainer );
 				}
 			}
 		}
 
-		return instantiateConnectionProvider( configurationValues, strategySelector );
+		return instantiateConnectionProvider( configurationValues, strategySelector, beanContainer );
 	}
 
-	private ConnectionProvider instantiateNamedConnectionProvider(String providerName, StrategySelector strategySelector) {
+	private static Class<? extends ConnectionProvider> connectionProviderClass(Class<?> providerClass) {
+		if ( !ConnectionProvider.class.isAssignableFrom( providerClass ) ) {
+			throw new ConnectionProviderConfigurationException( "Class '" + providerClass.getName()
+																+ "' does not implement 'ConnectionProvider'" );
+		}
+		@SuppressWarnings("unchecked")
+		final Class<? extends ConnectionProvider> connectionProviderClass =
+				(Class<? extends ConnectionProvider>) providerClass;
+		return connectionProviderClass;
+	}
+
+	private ConnectionProvider instantiateNamedConnectionProvider(
+			String providerName, StrategySelector strategySelector, BeanContainer beanContainer) {
 		LOG.instantiatingExplicitConnectionProvider( providerName );
-		final Class<?> providerClass =
+		final Class<? extends ConnectionProvider> providerClass =
 				strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName );
 		try {
-			return instantiateExplicitConnectionProvider( providerClass );
+			return instantiateExplicitConnectionProvider( providerClass, beanContainer );
 		}
 		catch (Exception e) {
-			throw new HibernateException(
-					"Could not instantiate connection provider [" + providerName + "]",
-					e
-			);
+			throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
 		}
 	}
 
 	private ConnectionProvider instantiateConnectionProvider(
-			Map<String, Object> configurationValues, StrategySelector strategySelector) {
+			Map<String, Object> configurationValues, StrategySelector strategySelector, BeanContainer beanContainer) {
 		if ( configurationValues.containsKey( DATASOURCE ) ) {
 			return new DatasourceConnectionProviderImpl();
 		}
@@ -149,26 +147,17 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				getSingleRegisteredProvider( strategySelector );
 		if ( singleRegisteredProvider != null ) {
 			try {
-				return singleRegisteredProvider.newInstance();
+				return singleRegisteredProvider.getConstructor().newInstance();
 			}
-			catch (IllegalAccessException | InstantiationException e) {
+			catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | InstantiationException e) {
 				throw new HibernateException( "Could not instantiate singular-registered ConnectionProvider", e );
 			}
 		}
 		else if ( hasConfiguration( configurationValues, C3P0_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, C3P0_STRATEGY );
 		}
-		else if (hasConfiguration( configurationValues, PROXOOL_CONFIG_PREFIX )) {
-			return instantiateProvider( strategySelector, PROXOOL_STRATEGY );
-		}
 		else if ( hasConfiguration( configurationValues, HIKARI_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, HIKARI_STRATEGY );
-		}
-		else if ( hasConfiguration( configurationValues, "hibernate.vibur" ) ) {
-			return instantiateProvider( strategySelector, VIBUR_STRATEGY );
-		}
-		else if (hasConfiguration( configurationValues, "hibernate.oracleucp" ) ) {
-			return instantiateProvider( strategySelector, UCP_STRATEGY );
 		}
 		else if ( hasConfiguration( configurationValues, AGROAL_CONFIG_PREFIX ) ) {
 			return instantiateProvider( strategySelector, AGROAL_STRATEGY );
@@ -177,9 +166,25 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return new DriverManagerConnectionProviderImpl();
 		}
 		else {
-			LOG.noAppropriateConnectionProvider();
-			return new UserSuppliedConnectionProviderImpl();
+			if ( beanContainer != null ) {
+				return Helper.getBean(
+					beanContainer,
+					ConnectionProvider.class,
+					true,
+					true,
+					this::noAppropriateConnectionProvider
+				);
+			}
+			else {
+				return noAppropriateConnectionProvider();
+			}
+
 		}
+	}
+
+	private ConnectionProvider noAppropriateConnectionProvider() {
+		LOG.noAppropriateConnectionProvider();
+		return new UserSuppliedConnectionProviderImpl();
 	}
 
 	private Class<? extends ConnectionProvider> getSingleRegisteredProvider(StrategySelector strategySelector) {
@@ -190,9 +195,28 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				: null;
 	}
 
-	private ConnectionProvider instantiateExplicitConnectionProvider(Class<?> providerClass) {
+	private <T extends ConnectionProvider> T instantiateExplicitConnectionProvider(
+			Class<T> providerClass, BeanContainer beanContainer) {
 		try {
-			return (ConnectionProvider) providerClass.newInstance();
+			if ( beanContainer != null ) {
+				return Helper.getBean(
+					beanContainer,
+					providerClass,
+					true,
+					true,
+					() -> {
+						try {
+							return providerClass.getConstructor().newInstance();
+						}
+						catch (Exception e) {
+							throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
+						}
+					}
+				);
+			}
+			else {
+				return providerClass.getConstructor().newInstance();
+			}
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate connection provider [" + providerClass.getName() + "]", e );
@@ -201,7 +225,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static ConnectionProvider instantiateProvider(StrategySelector selector, String strategy) {
 		try {
-			return selector.selectStrategyImplementor( ConnectionProvider.class, strategy ).newInstance();
+			return selector.selectStrategyImplementor( ConnectionProvider.class, strategy ).getConstructor().newInstance();
 		}
 		catch ( Exception e ) {
 			LOG.providerClassNotFound(strategy);
@@ -222,9 +246,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 */
 	public static Properties getConnectionProperties(Map<String, Object> properties) {
 		final Properties result = new Properties();
-		for ( Map.Entry<?, Object> entry : properties.entrySet() ) {
-			if ( entry.getKey() instanceof String key
-					&& entry.getValue() instanceof String value ) {
+		for ( var entry : properties.entrySet() ) {
+			if ( entry.getValue() instanceof String value ) {
+				final String key = entry.getKey();
 				if ( key.startsWith( CONNECTION_PREFIX ) ) {
 					if ( SPECIAL_PROPERTIES.contains( key ) ) {
 						if ( USER.equals( key ) ) {
@@ -304,26 +328,35 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 		else if ( setting instanceof Number number ) {
-			return number.intValue();
+			final int isolationLevel = number.intValue();
+			checkIsolationLevel( isolationLevel );
+			return isolationLevel;
 		}
 		else {
 			final String string = setting.toString();
-			if ( StringHelper.isEmpty( string ) ) {
+			if ( isBlank( string ) ) {
 				return null;
 			}
 			else if ( ISOLATION_VALUE_MAP.containsKey( string ) ) {
 				return ISOLATION_VALUE_MAP.get( string );
 			}
 			else {
-				// it could be a String representation of the isolation numeric value...
+				// it could be a String representation of the isolation numeric value
 				try {
-					return Integer.valueOf( string );
+					final int isolationLevel = Integer.parseInt( string );
+					checkIsolationLevel( isolationLevel );
+					return isolationLevel;
 				}
 				catch (NumberFormatException ignore) {
+					throw new ConnectionProviderConfigurationException( "Unknown transaction isolation level: '" + string + "'" );
 				}
-
-				throw new HibernateException("Could not interpret transaction isolation setting [" + setting + "]");
 			}
+		}
+	}
+
+	private static void checkIsolationLevel(int isolationLevel) {
+		if ( !ISOLATION_VALUE_CONSTANT_NAME_MAP.containsKey( isolationLevel ) ) {
+			throw new ConnectionProviderConfigurationException( "Unknown transaction isolation level: " + isolationLevel );
 		}
 	}
 
@@ -378,8 +411,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	public static void consumeSetting(Map<String, Object> settings, SettingConsumer consumer, String... names) {
 		for ( String name : names ) {
-			if ( settings.containsKey(name) ) {
-				consumer.consumeSetting( name, (String) settings.get(name) );
+			final Object setting = settings.get( name );
+			if ( setting != null ) {
+				consumer.consumeSetting( name, setting.toString() );
 				return;
 			}
 		}

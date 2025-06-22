@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -13,7 +13,7 @@ import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.AbstractOverrider;
 import org.hibernate.boot.models.annotations.spi.DialectOverrider;
 import org.hibernate.models.spi.AnnotationDescriptor;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import static org.hibernate.boot.models.DialectOverrideAnnotations.DIALECT_OVERRIDE_SQL_SELECT;
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
@@ -30,7 +30,7 @@ public class OverriddenSQLSelectAnnotation
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OverriddenSQLSelectAnnotation(SourceModelBuildingContext modelContext) {
+	public OverriddenSQLSelectAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
@@ -38,7 +38,7 @@ public class OverriddenSQLSelectAnnotation
 	 */
 	public OverriddenSQLSelectAnnotation(
 			DialectOverride.SQLSelect annotation,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		dialect( annotation.dialect() );
 		before( annotation.before() );
 		sameOrAfter( annotation.sameOrAfter() );
@@ -48,7 +48,7 @@ public class OverriddenSQLSelectAnnotation
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OverriddenSQLSelectAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public OverriddenSQLSelectAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		super( attributeValues, DIALECT_OVERRIDE_SQL_SELECT, modelContext );
 		override( (SQLSelect) attributeValues.get( "override" ) );
 	}

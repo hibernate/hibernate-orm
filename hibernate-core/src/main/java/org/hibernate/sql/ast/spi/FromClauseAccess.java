@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast.spi;
@@ -9,6 +9,8 @@ import java.util.function.Function;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Access to TableGroup indexing.  The indexing is defined in terms
@@ -76,4 +78,6 @@ public interface FromClauseAccess {
 		}
 		return tableGroup;
 	}
+
+	@Nullable TableGroup findTableGroupByIdentificationVariable(String identificationVariable);
 }

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.dialect.function.json;
@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.query.ReturnableType;
+import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
@@ -131,10 +131,7 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 					walker
 			);
 		}
-		if ( arguments.returningType() != null ) {
-			sqlAppender.appendSql( " returning " );
-			arguments.returningType().accept( walker );
-		}
+		renderReturningClause( sqlAppender, arguments, walker );
 		if ( arguments.errorBehavior() != null ) {
 			if ( arguments.errorBehavior() == JsonValueErrorBehavior.ERROR ) {
 				sqlAppender.appendSql( " error on error" );
@@ -162,6 +159,13 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 		sqlAppender.appendSql( ')' );
 	}
 
+	protected void renderReturningClause(SqlAppender sqlAppender, JsonValueArguments arguments, SqlAstTranslator<?> walker) {
+		if ( arguments.returningType() != null ) {
+			sqlAppender.appendSql( " returning " );
+			arguments.returningType().accept( walker );
+		}
+	}
+
 	protected record JsonValueArguments(
 			Expression jsonDocument,
 			Expression jsonPath,
@@ -178,29 +182,29 @@ public class JsonValueFunction extends AbstractSqmSelfRenderingFunctionDescripto
 			JsonValueEmptyBehavior emptyBehavior = null;
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof CastTarget ) {
-					castTarget = (CastTarget) node;
+				if ( node instanceof CastTarget cast ) {
+					castTarget = cast;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonPathPassingClause ) {
-					passingClause = (JsonPathPassingClause) node;
+				if ( node instanceof JsonPathPassingClause jsonPathPassingClause ) {
+					passingClause = jsonPathPassingClause;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonValueErrorBehavior ) {
-					errorBehavior = (JsonValueErrorBehavior) node;
+				if ( node instanceof JsonValueErrorBehavior jsonValueErrorBehavior ) {
+					errorBehavior = jsonValueErrorBehavior;
 					nextIndex++;
 				}
 			}
 			if ( nextIndex < sqlAstArguments.size() ) {
 				final SqlAstNode node = sqlAstArguments.get( nextIndex );
-				if ( node instanceof JsonValueEmptyBehavior ) {
-					emptyBehavior = (JsonValueEmptyBehavior) node;
+				if ( node instanceof JsonValueEmptyBehavior jsonValueEmptyBehavior ) {
+					emptyBehavior = jsonValueEmptyBehavior;
 				}
 			}
 			final Expression jsonDocument = (Expression) sqlAstArguments.get( 0 );

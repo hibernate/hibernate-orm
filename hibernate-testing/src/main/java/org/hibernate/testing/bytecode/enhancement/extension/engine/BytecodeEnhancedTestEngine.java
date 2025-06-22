@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.testing.bytecode.enhancement.extension.engine;
@@ -28,24 +28,26 @@ import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.TestInstantiationAwareExtension;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDirFactory;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.engine.config.CachingJupiterConfiguration;
-import org.junit.jupiter.engine.config.DefaultJupiterConfiguration;
+import org.junit.jupiter.engine.JupiterTestEngine;
 import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
 import org.junit.jupiter.engine.descriptor.ClassTestDescriptor;
 import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
+import org.junit.jupiter.engine.descriptor.LauncherStoreFacade;
 import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
-import org.junit.jupiter.engine.discovery.DiscoverySelectorResolver;
 import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.reporting.OutputDirectoryProvider;
 import org.junit.platform.engine.support.hierarchical.EngineExecutionContext;
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
 import org.junit.platform.engine.support.hierarchical.ThrowableCollector;
@@ -59,10 +61,9 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		JupiterConfiguration configuration = new CachingJupiterConfiguration(
-				new DefaultJupiterConfiguration( discoveryRequest.getConfigurationParameters() ) );
-		JupiterEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor( uniqueId, configuration );
-		new DiscoverySelectorResolver().resolveSelectors( discoveryRequest, engineDescriptor );
+		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
+				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
+		);
 
 		for ( TestDescriptor testDescriptor : new HashSet<>( engineDescriptor.getChildren() ) ) {
 			if ( testDescriptor instanceof ClassBasedTestDescriptor ) {
@@ -126,6 +127,7 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 									descriptor.getTestClass().getName()
 							),
 					descriptor.getTestClass(),
+					descriptor::getEnclosingTestClasses,
 					jc,
 					enhance,
 					testEnhancedClasses
@@ -161,6 +163,7 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 								convertUniqueId( child.getUniqueId(), enhancementContextId ),
 								updated.getTestClass(),
 								findMethodReplacement( updated, testMethod ),
+								updated::getEnclosingTestClasses,
 								configuration
 						)
 				);
@@ -172,6 +175,7 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 						convertUniqueId( child.getUniqueId(), enhancementContextId ),
 						updated.getTestClass(),
 						findMethodReplacement( updated, testMethod ),
+						updated::getEnclosingTestClasses,
 						configuration
 				) );
 			}
@@ -212,7 +216,8 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 	protected JupiterEngineExecutionContext createExecutionContext(ExecutionRequest request) {
 		return new JupiterEngineExecutionContext(
 				request.getEngineExecutionListener(),
-				this.getJupiterConfiguration( request )
+				this.getJupiterConfiguration( request ),
+				new LauncherStoreFacade( request.getStore() )
 		);
 	}
 
@@ -250,6 +255,11 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 
 		@Override
+		public Predicate<Class<? extends Extension>> getFilterForAutoDetectedExtensions() {
+			return configuration.getFilterForAutoDetectedExtensions();
+		}
+
+		@Override
 		public Optional<String> getRawConfigurationParameter(String s) {
 			return configuration.getRawConfigurationParameter( s );
 		}
@@ -265,8 +275,18 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 
 		@Override
+		public boolean isClosingStoredAutoCloseablesEnabled() {
+			return configuration.isClosingStoredAutoCloseablesEnabled();
+		}
+
+		@Override
 		public boolean isExtensionAutoDetectionEnabled() {
 			return configuration.isExtensionAutoDetectionEnabled();
+		}
+
+		@Override
+		public boolean isThreadDumpOnTimeoutEnabled() {
+			return configuration.isThreadDumpOnTimeoutEnabled();
 		}
 
 		@Override
@@ -313,6 +333,16 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		public Supplier<TempDirFactory> getDefaultTempDirFactorySupplier() {
 			return configuration.getDefaultTempDirFactorySupplier();
 		}
+
+		@Override
+		public TestInstantiationAwareExtension.ExtensionContextScope getDefaultTestInstantiationExtensionContextScope() {
+			return configuration.getDefaultTestInstantiationExtensionContextScope();
+		}
+
+		@Override
+		public OutputDirectoryProvider getOutputDirectoryProvider() {
+			return configuration.getOutputDirectoryProvider();
+		}
 	}
 
 	private static class DelegatingDisplayNameGenerator implements DisplayNameGenerator {
@@ -335,13 +365,13 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 
 		@Override
-		public String generateDisplayNameForNestedClass(Class<?> aClass) {
-			return prefix() + delegate.generateDisplayNameForNestedClass( aClass );
+		public String generateDisplayNameForNestedClass(List<Class<?>> enclosingInstanceTypes, Class<?> nestedClass) {
+			return prefix() + delegate.generateDisplayNameForNestedClass( enclosingInstanceTypes, nestedClass );
 		}
 
 		@Override
-		public String generateDisplayNameForMethod(Class<?> aClass, Method method) {
-			return prefix() + delegate.generateDisplayNameForMethod( aClass, method );
+		public String generateDisplayNameForMethod(List<Class<?>> enclosingInstanceTypes, Class<?> testClass, Method testMethod) {
+			return prefix() + delegate.generateDisplayNameForMethod( enclosingInstanceTypes, testClass, testMethod );
 		}
 	}
 
@@ -350,12 +380,11 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		private final boolean enhanced;
 		private final String[] classes;
 
-		public EnhancementWorkedCheckMethodTestDescriptor(UniqueId uniqueId, Class<?> testClass,
-				JupiterConfiguration configuration,
-				boolean enhanced, String[] classes) {
+		public EnhancementWorkedCheckMethodTestDescriptor(UniqueId uniqueId, Class<?> testClass, Supplier<List<Class<?>>> enclosingInstanceTypes, JupiterConfiguration configuration, boolean enhanced, String[] classes) {
 			super(
 					prepareId( uniqueId, testMethod( enhanced ) ),
 					testClass, testMethod( enhanced ),
+					enclosingInstanceTypes,
 					configuration
 			);
 			this.enhanced = enhanced;

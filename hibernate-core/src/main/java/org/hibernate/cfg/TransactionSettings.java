@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.cfg;
@@ -157,8 +157,10 @@ public interface TransactionSettings {
 	 *
 	 * @settingDefault {@code false} (disabled)
 	 *
-	 * @apiNote Generally speaking, all access to transactional data should be done in a transaction.
+	 * @apiNote Generally speaking, all access to transactional data should be
+	 *          done in a transaction. Use of this setting is discouraged.
 	 *
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isInitializeLazyStateOutsideTransactionsEnabled
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyLazyInitializationOutsideTransaction(boolean)
 	 */
 	@Unsafe
@@ -177,9 +179,11 @@ public interface TransactionSettings {
 	 *
 	 * @settingDefault {@code false} (disabled)
 	 *
-	 * @apiNote Generally speaking, all access to transactional data should be done in a transaction.
-	 * Combining this with second-level caching, e.g., will cause problems.
+	 * @apiNote Generally speaking, all access to transactional data should be
+	 *          done in a transaction. Combining this with second-level caching
+	 *          is not safe. Use of this setting is discouraged.
 	 *
+	 * @see org.hibernate.boot.spi.SessionFactoryOptions#isAllowOutOfTransactionUpdateOperations
 	 * @see org.hibernate.boot.SessionFactoryBuilder#allowOutOfTransactionUpdateOperations(boolean)
 	 *
 	 * @since 5.2

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -11,7 +11,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTableImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.spi.CommonTableDetails;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Table;
 
@@ -38,7 +38,7 @@ public class TableJpaAnnotation implements Table, CommonTableDetails {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public TableJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public TableJpaAnnotation(ModelsContext modelContext) {
 		this.name = "";
 		this.catalog = "";
 		this.schema = "";
@@ -52,7 +52,7 @@ public class TableJpaAnnotation implements Table, CommonTableDetails {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public TableJpaAnnotation(Table annotation, SourceModelBuildingContext modelContext) {
+	public TableJpaAnnotation(Table annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.catalog = annotation.catalog();
 		this.schema = annotation.schema();
@@ -66,7 +66,7 @@ public class TableJpaAnnotation implements Table, CommonTableDetails {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public TableJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public TableJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.catalog = (String) attributeValues.get( "catalog" );
 		this.schema = (String) attributeValues.get( "schema" );

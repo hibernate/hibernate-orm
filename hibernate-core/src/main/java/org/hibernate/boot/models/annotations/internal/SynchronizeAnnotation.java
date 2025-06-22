@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Synchronize;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
@@ -19,14 +19,14 @@ public class SynchronizeAnnotation implements Synchronize {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public SynchronizeAnnotation(SourceModelBuildingContext modelContext) {
+	public SynchronizeAnnotation(ModelsContext modelContext) {
 		this.logical = true;
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public SynchronizeAnnotation(Synchronize annotation, SourceModelBuildingContext modelContext) {
+	public SynchronizeAnnotation(Synchronize annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 		this.logical = annotation.logical();
 	}
@@ -34,7 +34,7 @@ public class SynchronizeAnnotation implements Synchronize {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public SynchronizeAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public SynchronizeAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (String[]) attributeValues.get( "value" );
 		this.logical = (boolean) attributeValues.get( "logical" );
 	}

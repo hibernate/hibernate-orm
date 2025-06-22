@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -8,7 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 
 import jakarta.persistence.AssociationOverride;
@@ -28,7 +28,7 @@ public class AssociationOverrideJpaAnnotation implements AssociationOverride {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public AssociationOverrideJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public AssociationOverrideJpaAnnotation(ModelsContext modelContext) {
 		this.joinColumns = new jakarta.persistence.JoinColumn[0];
 		this.foreignKey = JpaAnnotations.FOREIGN_KEY.createUsage( modelContext );
 		this.joinTable = JpaAnnotations.JOIN_TABLE.createUsage( modelContext );
@@ -37,7 +37,7 @@ public class AssociationOverrideJpaAnnotation implements AssociationOverride {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public AssociationOverrideJpaAnnotation(AssociationOverride annotation, SourceModelBuildingContext modelContext) {
+	public AssociationOverrideJpaAnnotation(AssociationOverride annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.joinColumns = extractJdkValue( annotation, ASSOCIATION_OVERRIDE, "joinColumns", modelContext );
 		this.foreignKey = extractJdkValue( annotation, ASSOCIATION_OVERRIDE, "foreignKey", modelContext );
@@ -49,7 +49,7 @@ public class AssociationOverrideJpaAnnotation implements AssociationOverride {
 	 */
 	public AssociationOverrideJpaAnnotation(
 			Map<String, Object> attributeValues,
-			SourceModelBuildingContext modelContext) {
+			ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.joinColumns = (jakarta.persistence.JoinColumn[]) attributeValues.get( "joinColumns" );
 		this.foreignKey = (jakarta.persistence.ForeignKey) attributeValues.get( "foreignKey" );

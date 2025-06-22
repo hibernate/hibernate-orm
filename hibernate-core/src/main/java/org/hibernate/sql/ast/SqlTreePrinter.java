@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.ast;
@@ -18,7 +18,6 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
-import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -51,15 +50,13 @@ public class SqlTreePrinter {
 	}
 
 	private void visitStatement(Statement sqlAstStatement) {
-		if ( sqlAstStatement instanceof SelectStatement ) {
-			final SelectStatement selectStatement = (SelectStatement) sqlAstStatement;
+		if ( sqlAstStatement instanceof SelectStatement selectStatement ) {
 			logNode(
 					"SelectStatement",
 					() -> visitQueryPart( selectStatement.getQueryPart() )
 			);
 		}
-		else if ( sqlAstStatement instanceof DeleteStatement ) {
-			final DeleteStatement deleteStatement = (DeleteStatement) sqlAstStatement;
+		else if ( sqlAstStatement instanceof DeleteStatement deleteStatement ) {
 			logNode(
 					"DeleteStatement",
 					() -> logWithIndentation(
@@ -67,8 +64,7 @@ public class SqlTreePrinter {
 					)
 			);
 		}
-		else if ( sqlAstStatement instanceof UpdateStatement ) {
-			final UpdateStatement updateStatement = (UpdateStatement) sqlAstStatement;
+		else if ( sqlAstStatement instanceof UpdateStatement updateStatement ) {
 			logNode(
 					"UpdateStatement",
 					() -> logWithIndentation(
@@ -76,8 +72,7 @@ public class SqlTreePrinter {
 					)
 			);
 		}
-		else if ( sqlAstStatement instanceof InsertSelectStatement ) {
-			final InsertStatement insertStatement = (InsertStatement) sqlAstStatement;
+		else if ( sqlAstStatement instanceof InsertSelectStatement insertStatement ) {
 			logNode(
 					"InsertStatement",
 					() -> logWithIndentation(
@@ -91,11 +86,14 @@ public class SqlTreePrinter {
 	}
 
 	private void visitQueryPart(QueryPart queryPart) {
-		if ( queryPart instanceof QueryGroup ) {
-			visitQueryGroup( (QueryGroup) queryPart );
+		if ( queryPart instanceof QueryGroup queryGroup ) {
+			visitQueryGroup( queryGroup );
+		}
+		else if ( queryPart instanceof QuerySpec querySpec ) {
+			visitQuerySpec( querySpec );
 		}
 		else {
-			visitQuerySpec( (QuerySpec) queryPart );
+			throw new IllegalArgumentException( "Unexpected query part" );
 		}
 	}
 

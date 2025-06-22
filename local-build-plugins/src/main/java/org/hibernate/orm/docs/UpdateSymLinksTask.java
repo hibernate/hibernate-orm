@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.docs;
 
@@ -78,7 +76,7 @@ public class UpdateSymLinksTask extends DefaultTask {
 
 		ExecutorService service = Executors.newFixedThreadPool( 2 );
 		try ( InputStream is = sftpProcess.getInputStream(); InputStream es = sftpProcess.getErrorStream();
-			  Closeable pool = service::shutdownNow ) {
+			Closeable pool = service::shutdownNow ) {
 			service.submit( () -> drain( is, System.out::println ) );
 			service.submit( () -> drain( es, System.err::println ) );
 			service.shutdown();
@@ -93,7 +91,7 @@ public class UpdateSymLinksTask extends DefaultTask {
 
 	private static void drain(InputStream stream, Consumer<String> consumer) {
 		try (InputStreamReader in = new InputStreamReader( stream, StandardCharsets.UTF_8 );
-			 BufferedReader bufferedReader = new BufferedReader( in ); ) {
+			BufferedReader bufferedReader = new BufferedReader( in ); ) {
 			bufferedReader.lines().forEach( consumer );
 		}
 		catch (IOException e) {

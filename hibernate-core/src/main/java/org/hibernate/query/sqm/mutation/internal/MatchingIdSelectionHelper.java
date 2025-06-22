@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.mutation.internal;
@@ -226,10 +226,11 @@ public class MatchingIdSelectionHelper {
 			DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final EntityMappingType entityDescriptor = factory.getRuntimeMetamodels().getEntityMappingType(
-				sqmMutationStatement.getTarget().getModel().getHibernateEntityName()
-		);
-		final SqmSelectStatement<?> sqmSelectStatement = generateMatchingIdSelectStatement( sqmMutationStatement, entityDescriptor );
+		final EntityMappingType entityDescriptor =
+				factory.getMappingMetamodel()
+						.getEntityDescriptor( sqmMutationStatement.getTarget().getModel().getHibernateEntityName() );
+		final SqmSelectStatement<?> sqmSelectStatement =
+				generateMatchingIdSelectStatement( sqmMutationStatement, entityDescriptor );
 		final SqmQuerySpec<?> sqmQuerySpec = sqmSelectStatement.getQuerySpec();
 
 		if ( sqmMutationStatement instanceof SqmDeleteStatement<?> ) {
@@ -265,7 +266,7 @@ public class MatchingIdSelectionHelper {
 						domainParameterXref,
 						executionContext.getQueryParameterBindings(),
 						executionContext.getSession().getLoadQueryInfluencers(),
-						factory,
+						factory.getSqlTranslationEngine(),
 						true
 				);
 		final SqmTranslation<SelectStatement> translation = translator.translate();

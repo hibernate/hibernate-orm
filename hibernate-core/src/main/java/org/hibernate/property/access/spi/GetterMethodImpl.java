@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.property.access.spi;
@@ -46,10 +46,10 @@ public class GetterMethodImpl implements Getter {
 			return getterMethod.invoke( owner, ArrayHelper.EMPTY_OBJECT_ARRAY );
 		}
 		catch (InvocationTargetException ite) {
-			Throwable cause = ite.getCause();
-			if ( cause instanceof Error ) {
+			final Throwable cause = ite.getCause();
+			if ( cause instanceof Error error ) {
 				// HHH-16403 Don't wrap Error
-				throw (Error) cause;
+				throw error;
 			}
 			throw new PropertyAccessException(
 					cause,

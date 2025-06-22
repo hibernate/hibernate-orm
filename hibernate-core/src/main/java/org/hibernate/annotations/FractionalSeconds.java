@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -32,11 +32,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see java.sql.Timestamp
  * @see java.util.Calendar
  *
+ * @since 6.5
+ *
+ * @deprecated Use {@link jakarta.persistence.Column#secondPrecision} which was introduced
+ *             in JPA 3.2
+ *
  * @author Steve Ebersole
  */
 @Target({METHOD, FIELD})
 @Retention( RUNTIME)
 @Incubating
+@Deprecated(since = "7.0", forRemoval = true)
 public @interface FractionalSeconds {
 	/**
 	 * The fractional precision for the associated seconds.  Generally this will be one of<ul>

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.persister.internal;
@@ -32,14 +32,15 @@ public class PersisterFactoryInitiator implements StandardServiceInitiator<Persi
 			return new PersisterFactoryImpl();
 		}
 
-		if ( customImpl instanceof PersisterFactory ) {
-			return (PersisterFactory) customImpl;
+		if ( customImpl instanceof PersisterFactory persisterFactory ) {
+			return persisterFactory;
 		}
 
 		@SuppressWarnings("unchecked")
-		final Class<? extends PersisterFactory> customImplClass = customImpl instanceof Class
-				? ( Class<? extends PersisterFactory> ) customImpl
-				: locate( registry, customImpl.toString() );
+		final Class<? extends PersisterFactory> customImplClass =
+				customImpl instanceof Class
+						? ( Class<? extends PersisterFactory> ) customImpl
+						: locate( registry, customImpl.toString() );
 		try {
 			return customImplClass.newInstance();
 		}

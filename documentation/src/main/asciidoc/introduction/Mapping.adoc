@@ -4,7 +4,7 @@
 Given a domain model—that is, a collection of entity classes decorated with all the fancy annotations we <<entities-summary,just met>> in the previous chapter—Hibernate will happily go away and infer a complete relational schema, and even <<automatic-schema-export,export it to your database>> if you ask politely.
 
 The resulting schema will be entirely sane and reasonable, though if you look closely, you'll find some flaws.
-For example, every `VARCHAR` column will have the same length, `VARCHAR(255)`.
+For example, by default, every `VARCHAR` column will have the same length, `VARCHAR(255)`.
 
 But the process I just described—which we call _top down_ mapping—simply doesn't fit the most common scenario for the use of O/R mapping.
 It's only rarely that the Java classes precede the relational schema.
@@ -220,6 +220,8 @@ The `@Table` annotation can do more than just specify a name:
 | `catalog` 💀 | The catalog to which the table belongs
 | `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
 | `indexes` | One or more `@Index` annotations each declaring an index
+| `check` | One or more `@CheckConstraint` annotations declaring multi-column check constraints
+| `comment` | A DDL comment
 |===
 
 [%unbreakable]
@@ -249,6 +251,8 @@ The `@SecondaryTable` annotation is even more interesting:
 | `indexes` | One or more `@Index` annotations each declaring an index
 | `pkJoinColumns` | One or more `@PrimaryKeyJoinColumn` annotations, specifying <<primary-key-column-mappings,primary key column mappings>>
 | `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
+| `check` | One or more `@CheckConstraint` annotations declaring multi-column check constraints
+| `comment` | A DDL comment
 |===
 
 [TIP]
@@ -324,6 +328,8 @@ Here, there should be a `UNIQUE` constraint on _both_ columns of the association
 | `inverseJoinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the unowned side
 | `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``joinColumns``s
 | `inverseForeignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``inverseJoinColumns``s
+| `check` | One or more `@CheckConstraint` annotations declaring multi-column check constraints
+| `comment` | A DDL comment
 |===
 
 To better understand these annotations, we must first discuss column mappings in general.
@@ -345,6 +351,8 @@ These annotations specify how elements of the domain model map to columns of tab
 | `@MapKeyColumn` | Specified a column that should be used to persist the keys of a `Map`.
 |===
 
+We'll come back to the last two annotations much later, in <<ordered-sorted>>.
+
 We use the `@Column` annotation to map basic attributes.
 
 [[regular-column-mappings]]
@@ -360,13 +368,16 @@ The `@Column` annotation is not only useful for specifying the column name.
 | `name` | The name of the mapped column
 | `table` | The name of the table to which this column belongs
 | `length` | The length of a `VARCHAR`, `CHAR`, or `VARBINARY` column type
-| `precision` | The decimal digits of precision of a `FLOAT`, `DECIMAL`, `NUMERIC`, or `TIME`, or `TIMESTAMP` column type
+| `precision` | The decimal digits of precision of a `FLOAT`, `DECIMAL`, or `NUMERIC` type
 | `scale` | The scale of a `DECIMAL` or `NUMERIC` column type, the digits of precision that occur to the right of the decimal point
+| `secondPrecision` | The digits of precision occurring to the right of the decimal point in the seconds field of a `TIME`, or `TIMESTAMP` column type
 | `unique` | Whether the column has a `UNIQUE` constraint
 | `nullable` | Whether the column has a `NOT NULL` constraint
 | `insertable` | Whether the column should appear in generated SQL `INSERT` statements
 | `updatable` | Whether the column should appear in generated SQL `UPDATE` statements
 | `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+| `check` | One or more `@CheckConstraint` annotations declaring single-column check constraints
+| `comment` | A DDL comment
 |===
 
 [TIP]
@@ -420,6 +431,8 @@ The `@JoinColumn` annotation is used to customize a foreign key column.
 | `updatable` | Whether the column should appear in generated SQL `UPDATE` statements
 | `columnDefinition` 💀| A DDL fragment that should be used to declare the column
 | `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
+| `check` | One or more `@CheckConstraint` annotations declaring single-column check constraints
+| `comment` | A DDL comment
 |===
 
 A foreign key column doesn't necessarily have to refer to the primary key of the referenced table.
@@ -457,6 +470,7 @@ Note that the `foreignKey` member is completely optional and only affects DDL ge
 If you don't supply an explicit name using `@ForeignKey`, Hibernate will generate a quite ugly name.
 The reason for this is that the maximum length of foreign key names on some databases is extremely constrained, and we need to avoid collisions.
 To be fair, this is perfectly fine if you're only using the generated DDL for testing.
+You can customize the generated constraint names by writing your own <<naming-strategies,`ImplicitNamingStrategy`>>.
 ====
 
 For composite foreign keys we might have multiple `@JoinColumn` annotations:
@@ -593,7 +607,7 @@ class Book {
 === Column lengths and adaptive column types
 
 Hibernate automatically adjusts the column type used in generated DDL based on the column length specified by the `@Column` annotation.
-So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`—or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL—because Hibernate will automatically select one of those types if required to accommodate a string of the `length` we specify.
+So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`—or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL—because Hibernate automatically selects one of those types if required to accommodate a string of the `length` we specify.
 
 The constant values defined in the class link:{doc-javadoc-url}org/hibernate/Length.html[`Length`] are very helpful here:
 
@@ -711,7 +725,7 @@ In principle, the `Blob` and `Clob` objects provide efficient ways to read or st
 ----
 Book book = session.find(Book.class, bookId);
 String text = book.text.getSubString(1, textLength);
-InputStream bytes = book.images.getBinaryStream();
+InputStream bytes = book.coverArt.getBinaryStream();
 ----
 
 Of course, the behavior here depends very much on the JDBC driver, and so we really can't promise that this is a sensible thing to do on your database.
@@ -721,6 +735,7 @@ Of course, the behavior here depends very much on the JDBC driver, and so we rea
 
 There's a couple of alternative ways to represent an embeddable type on the database side.
 
+[[embeddable-udt]]
 [discrete]
 ==== Embeddables as UDTs
 
@@ -805,30 +820,33 @@ Here we summarize the ones we've just seen in the second half of this chapter, a
 |===
 | Annotation | Interpretation
 
-| `@Enumerated` | Specify how an `enum` type should be persisted
-| `@Nationalized` | Use a nationalized character type: `NCHAR`, `NVARCHAR`, or `NCLOB`
-| `@Lob` 💀 | Use JDBC LOB APIs to read and write the annotated attribute
-| `@Array` | Map a collection to a SQL `ARRAY` type of the specified length
-| `@Struct` | Map an embeddable to a SQL UDT with the given name
-| `@TimeZoneStorage` | Specify how the time zone information should be persisted
-| `@JdbcType` or `@JdbcTypeCode` | Use an implementation of `JdbcType` to map an arbitrary SQL type
+| `@Enumerated`, `@EnumeratedValue` | Specify how an <<enums,`enum` type should be persisted>>
+| `@Nationalized` | Use a <<nationalized-chars,nationalized character type>>: `NCHAR`, `NVARCHAR`, or `NCLOB`
+| `@Lob` 💀 | Use <<lobs,JDBC LOB APIs>> to read and write the annotated attribute
+| `@Array` | Map a collection to a <<arrays,SQL `ARRAY` type>> of the specified length
+| `@Struct` | Map an <<embeddable-udt,embeddable to a SQL UDT>> with the given name
+| `@TimeZoneStorage` | Specify how the link:{doc-javadoc-url}org/hibernate/annotations/TimeZoneStorageType.html[time zone information should be persisted]
+| `@JdbcType` or `@JdbcTypeCode` | Use an implementation of <<jdbc-type,`JdbcType`>> to map an arbitrary SQL type
 | `@Collate` | Specify a collation for a column
 |===
 
-In addition, there are some configuration properties which have a _global_ affect on how basic types map to SQL column types:
+In addition, there are link:{doc-javadoc-url}org/hibernate/cfg/MappingSettings.html[some configuration properties] which have a _global_ effect on how basic types map to SQL column types:
 
 .Type mapping settings
 [%autowidth.stretch]
 |===
 | Configuration property name | Purpose
 
-| `hibernate.use_nationalized_character_data` | Enable use of nationalized character types by default
-| `hibernate.type.preferred_boolean_jdbc_type` | Specify the default SQL column type for mapping `boolean`
-| `hibernate.type.preferred_uuid_jdbc_type` | Specify the default SQL column type for mapping `UUID`
-| `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for mapping `Duration`
-| `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for mapping `Instant`
-| `hibernate.timezone.default_storage` | Specify the default strategy for storing time zone information
+| `hibernate.use_nationalized_character_data` | Enable use of <<nationalized-chars,nationalized character types>> by default
+| `hibernate.type.preferred_boolean_jdbc_type` | Specify the default SQL column type for storing a `boolean`
+| `hibernate.type.preferred_uuid_jdbc_type` | Specify the default SQL column type for storing a `UUID`
+| `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for storing a `Duration`
+| `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for storing an `Instant`
+| `hibernate.timezone.default_storage` | Specify the default strategy for link:{doc-javadoc-url}org/hibernate/annotations/TimeZoneStorageType.html[storing time zone information]
+| `hibernate.type.prefer_native_enum_types` | Use <<named-enums,named enum types>> on PostgreSQL and Oracle
 |===
+
+Earlier, we saw how to use these settings to control the default mappings for <<datetime-types,`Instant` and `Duration`>>.
 
 [TIP]
 ====
@@ -849,7 +867,7 @@ Thus, the attribute is a sort of "derived" value.
 |===
 | Annotation | Purpose
 
-| `@Formula` | Map an attribute to a SQL formula
+| link:{doc-javadoc-url}org/hibernate/annotations/Formula.html[`@Formula`] | Map an attribute to a SQL formula
 | `@JoinFormula` | Map an association to a SQL formula
 | `@DiscriminatorFormula` | Use a SQL formula as the discriminator in <<mapping-inheritance,single table inheritance>>.
 |===
@@ -872,6 +890,8 @@ class Order {
     ...
 }
 ----
+
+The formula is evaluated every time the entity is read from the database.
 
 [[derived-identity]]
 === Derived Identity
@@ -1035,7 +1055,7 @@ But it's common to need to:
 
 We've <<join-column-mappings,already seen>> how to use `@ForeignKey` to specify the name of a foreign key constraint.
 
-There's two ways to add a unique constraint to a table:
+There are two ways to add a unique constraint to a table:
 
 - using `@Column(unique=true)` to indicate a single-column unique key, or
 - using the `@UniqueConstraint` annotation to define a uniqueness constraint on a combination of columns.

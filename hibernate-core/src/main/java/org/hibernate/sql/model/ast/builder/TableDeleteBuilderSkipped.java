@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.model.ast.builder;
@@ -7,6 +7,7 @@ package org.hibernate.sql.model.ast.builder;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableDelete;
@@ -19,6 +20,10 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 
 	public TableDeleteBuilderSkipped(TableMapping tableMapping) {
 		tableReference = new MutatingTableReference( tableMapping );
+	}
+
+	@Override
+	public void addNonKeyRestriction(ColumnValueBinding valueBinding) {
 	}
 
 	@Override

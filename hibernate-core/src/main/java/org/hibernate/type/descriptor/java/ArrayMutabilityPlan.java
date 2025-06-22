@@ -1,8 +1,10 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.java;
+import org.hibernate.internal.build.AllowReflection;
+
 import java.lang.reflect.Array;
 
 /**
@@ -10,11 +12,17 @@ import java.lang.reflect.Array;
  * are immutable, a shallow copy is enough.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link ImmutableObjectArrayMutabilityPlan#get()} for object arrays,
+ * or implement a dedicated mutability plan for primitive arrays
+ * (see for example {@link ShortPrimitiveArrayJavaType}'s mutability plan).
  */
+@Deprecated
 public class ArrayMutabilityPlan<T> extends MutableMutabilityPlan<T> {
 	public static final ArrayMutabilityPlan INSTANCE = new ArrayMutabilityPlan();
 
 	@SuppressWarnings({ "unchecked", "SuspiciousSystemArraycopy" })
+	@AllowReflection
 	public T deepCopyNotNull(T value) {
 		if ( ! value.getClass().isArray() ) {
 			// ugh!  cannot find a way to properly define the type signature here

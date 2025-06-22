@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor.jdbc;
@@ -14,14 +14,19 @@ import java.sql.Types;
 public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 	public static final LongVarbinaryJdbcType INSTANCE = new LongVarbinaryJdbcType();
 
-	private final int jdbcTypeCode;
+	private final int defaultSqlTypeCode;
 
 	public LongVarbinaryJdbcType() {
-		this(Types.LONGVARBINARY);
+		this( Types.LONGVARBINARY );
 	}
 
-	public LongVarbinaryJdbcType(int jdbcTypeCode) {
-		this.jdbcTypeCode = jdbcTypeCode;
+	public LongVarbinaryJdbcType(int defaultSqlTypeCode) {
+		this.defaultSqlTypeCode = defaultSqlTypeCode;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return defaultSqlTypeCode;
 	}
 
 	@Override
@@ -31,6 +36,6 @@ public class LongVarbinaryJdbcType extends VarbinaryJdbcType {
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeCode;
+		return Types.LONGVARBINARY;
 	}
 }

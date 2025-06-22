@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.id.enhanced;
@@ -23,16 +23,19 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateMonitoringEvent;
-import org.hibernate.id.ExportableColumn;
+import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.event.monitor.spi.DiagnosticEvent;
+import org.hibernate.mapping.Column;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
+import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
@@ -108,6 +111,13 @@ public class TableStructure implements DatabaseStructure {
 	@Override
 	public QualifiedName getPhysicalName() {
 		return physicalTableName;
+	}
+
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	public Identifier getLogicalValueColumnNameIdentifier() {
+		return logicalValueColumnNameIdentifier;
 	}
 
 	@Override
@@ -229,15 +239,22 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent creationEvent = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent creationEvent = eventMonitor.beginJdbcPreparedStatementCreationEvent();
+		final StatisticsImplementor stats = session.getFactory().getStatistics();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.prepareStatement();
+			}
 			return connection.prepareStatement( sql );
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementCreationEvent( creationEvent, sql );
 			statsCollector.jdbcPrepareStatementEnd();
+			if ( stats != null && stats.isStatisticsEnabled() ) {
+				stats.closeStatement();
+			}
 		}
 	}
 
@@ -246,14 +263,14 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 
@@ -264,14 +281,14 @@ public class TableStructure implements DatabaseStructure {
 			SessionEventListenerManager statsCollector,
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
-		final EventManager eventManager = session.getEventManager();
-		final HibernateMonitoringEvent executionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final DiagnosticEvent executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
-			eventManager.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
+			eventMonitor.completeJdbcPreparedStatementExecutionEvent( executionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 	}
@@ -305,11 +322,15 @@ public class TableStructure implements DatabaseStructure {
 
 		valueColumnNameText = logicalValueColumnNameIdentifier.render( database.getJdbcEnvironment().getDialect() );
 		if ( tableCreated ) {
-			final ExportableColumn valueColumn = new ExportableColumn(
+			final TypeConfiguration typeConfiguration = database.getTypeConfiguration();
+			final BasicType<Long> type = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG );
+			final Column valueColumn = ExportableColumnHelper.column(
 					database,
 					table,
 					valueColumnNameText,
-					database.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
+					type,
+					typeConfiguration.getDdlTypeRegistry()
+							.getTypeName( type.getJdbcType().getDdlTypeCode(), database.getDialect() )
 			);
 
 			table.addColumn( valueColumn );

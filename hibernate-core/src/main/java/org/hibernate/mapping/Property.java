@@ -1,24 +1,27 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
-import org.hibernate.engine.spi.Mapping;
+import org.hibernate.jpa.event.internal.EmbeddableCallback;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -38,6 +41,8 @@ import org.hibernate.type.MappingContext;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static org.hibernate.boot.model.internal.BinderHelper.renderCascadeTypeList;
+import static org.hibernate.internal.util.StringHelper.isBlank;
 
 /**
  * A mapping model object representing a property or field of an {@linkplain PersistentClass entity}
@@ -135,13 +140,17 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	public OnDeleteAction getOnDeleteAction() {
+		return value instanceof ToOne toOne ? toOne.getOnDeleteAction() : null;
+	}
+
 	public CascadeStyle getCascadeStyle() throws MappingException {
 		final Type type = value.getType();
 		if ( type instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		if ( type instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) type, cascade );
+		if ( type instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else if ( type instanceof CollectionType ) {
 			final Collection collection = (Collection) value;
@@ -175,8 +184,8 @@ public class Property implements Serializable, MetaAttributable {
 		if ( elementType instanceof AnyType ) {
 			return getCascadeStyle( cascade );
 		}
-		else if ( elementType instanceof ComponentType ) {
-			return getCompositeCascadeStyle( (ComponentType) elementType, cascade );
+		else if ( elementType instanceof ComponentType componentType ) {
+			return getCompositeCascadeStyle( componentType, cascade );
 		}
 		else {
 			return getCascadeStyle( cascade );
@@ -184,17 +193,23 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	private static CascadeStyle getCascadeStyle(String cascade) {
-		if ( cascade==null || cascade.equals("none") ) {
+		if ( cascade==null || cascade.equals("none") || isBlank(cascade) ) {
 			return CascadeStyles.NONE;
 		}
 		else {
 			final StringTokenizer tokens = new StringTokenizer(cascade, ", ");
-			final CascadeStyle[] styles = new CascadeStyle[ tokens.countTokens() ] ;
-			int i=0;
-			while ( tokens.hasMoreTokens() ) {
-				styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+			final int length = tokens.countTokens();
+			if ( length == 1) {
+				return CascadeStyles.getCascadeStyle( tokens.nextToken() );
 			}
-			return new CascadeStyles.MultipleCascadeStyle(styles);
+			else {
+				final CascadeStyle[] styles = new CascadeStyle[length];
+				int i = 0;
+				while ( tokens.hasMoreTokens() ) {
+					styles[i++] = CascadeStyles.getCascadeStyle( tokens.nextToken() );
+				}
+				return new CascadeStyles.MultipleCascadeStyle( styles );
+			}
 		}
 	}
 
@@ -204,6 +219,10 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setCascade(String cascade) {
 		this.cascade = cascade;
+	}
+
+	public void setCascade(EnumSet<CascadeType> cascadeTypes) {
+		cascade = cascadeTypes == null ? null : renderCascadeTypeList( cascadeTypes );
 	}
 
 	public void setName(String name) {
@@ -276,17 +295,9 @@ public class Property implements Serializable, MetaAttributable {
 		this.metaAttributes = metas;
 	}
 
-	/**
-	 * @deprecated use {@link #isValid(MappingContext)}
-	 */
-	@Deprecated(since = "7.0")
-	public boolean isValid(Mapping mapping) throws MappingException {
-		return isValid( (MappingContext) mapping);
-	}
-
 	public boolean isValid(MappingContext mappingContext) throws MappingException {
 		final Value value = getValue();
-		if ( value instanceof BasicValue && ( (BasicValue) value ).isDisallowedWrapperArray() ) {
+		if ( value instanceof BasicValue basicValue && basicValue.isDisallowedWrapperArray() ) {
 			throw new MappingException(
 					"The property " + persistentClass.getEntityName() + "#" + name +
 							" uses a wrapper type Byte[]/Character[] which indicates an issue in your domain model. " +
@@ -450,6 +461,10 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
 		if ( callbackDefinitions != null && !callbackDefinitions.isEmpty() ) {
 			if ( this.callbackDefinitions == null ) {
@@ -459,6 +474,10 @@ public class Property implements Serializable, MetaAttributable {
 		}
 	}
 
+	/**
+	 * @deprecated See discussion in {@link EmbeddableCallback}.
+	 */
+	@Deprecated(since = "7")
 	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
 		return callbackDefinitions == null ? emptyList() : unmodifiableList( callbackDefinitions );
 	}

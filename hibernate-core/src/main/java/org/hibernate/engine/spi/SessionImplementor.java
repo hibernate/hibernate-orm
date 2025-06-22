@@ -1,11 +1,12 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.spi;
 
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
@@ -82,6 +83,7 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	ActionQueue getActionQueue();
 
+	@Override
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
 
 	/**
@@ -93,19 +95,29 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	 */
 	void forceFlush(EntityKey e) throws HibernateException;
 
-	/**
-	 * Cascade the lock operation to the given child entity.
-	 */
-	void lock(String entityName, Object child, LockOptions lockOptions);
-
 	@Override
-	default SessionImplementor asSessionImplementor() {
-		return this;
+	default <C> void runWithConnection(ConnectionConsumer<C> action) {
+		doWork( connection -> {
+			try {
+				//noinspection unchecked
+				action.accept( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
 	}
 
 	@Override
-	default boolean isSessionImplementor() {
-		return true;
+	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+		return doReturningWork( connection -> {
+			try {
+				//noinspection unchecked
+				return function.apply( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
 	}
-
 }

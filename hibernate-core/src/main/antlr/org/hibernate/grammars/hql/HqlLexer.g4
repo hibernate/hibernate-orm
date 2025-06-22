@@ -3,10 +3,8 @@ lexer grammar HqlLexer;
 
 @header {
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.grammars.hql;
 }
@@ -161,6 +159,7 @@ CASE				: [cC] [aA] [sS] [eE];
 CAST				: [cC] [aA] [sS] [tT];
 COLLATE				: [cC] [oO] [lL] [lL] [aA] [tT] [eE];
 COLUMN				: [cC] [oO] [lL] [uU] [mM] [nN];
+COLUMNS				: [cC] [oO] [lL] [uU] [mM] [nN] [sS];
 CONDITIONAL			: [cC] [oO] [nN] [dD] [iI] [tT] [iI] [oO] [nN] [aA] [lL];
 CONFLICT			: [cC] [oO] [nN] [fF] [lL] [iI] [cC] [tT];
 CONSTRAINT			: [cC] [oO] [nN] [sS] [tT] [rR] [aA] [iI] [nN] [tT];
@@ -224,12 +223,14 @@ INTERSECTS			: [iI] [nN] [tT] [eE] [rR] [sS] [eE] [cC] [tT] [sS];
 INTO 				: [iI] [nN] [tT] [oO];
 IS					: [iI] [sS];
 JOIN				: [jJ] [oO] [iI] [nN];
+JSON			    : [jJ] [sS] [oO] [nN];
 JSON_ARRAY			: [jJ] [sS] [oO] [nN] '_' [aA] [rR] [rR] [aA] [yY];
 JSON_ARRAYAGG		: [jJ] [sS] [oO] [nN] '_' [aA] [rR] [rR] [aA] [yY] [aA] [gG] [gG];
 JSON_EXISTS			: [jJ] [sS] [oO] [nN] '_' [eE] [xX] [iI] [sS] [tT] [sS];
 JSON_OBJECT			: [jJ] [sS] [oO] [nN] '_' [oO] [bB] [jJ] [eE] [cC] [tT];
 JSON_OBJECTAGG		: [jJ] [sS] [oO] [nN] '_' [oO] [bB] [jJ] [eE] [cC] [tT] [aA] [gG] [gG];
 JSON_QUERY			: [jJ] [sS] [oO] [nN] '_' [qQ] [uU] [eE] [rR] [yY];
+JSON_TABLE  		: [jJ] [sS] [oO] [nN] '_' [tT] [aA] [bB] [lL] [eE];
 JSON_VALUE			: [jJ] [sS] [oO] [nN] '_' [vV] [aA] [lL] [uU] [eE];
 KEY					: [kK] [eE] [yY];
 KEYS				: [kK] [eE] [yY] [sS];
@@ -260,6 +261,7 @@ MINUTE				: [mM] [iI] [nN] [uU] [tT] [eE];
 MONTH				: [mM] [oO] [nN] [tT] [hH];
 NAME				: [nN] [aA] [mM] [eE];
 NANOSECOND			: [nN] [aA] [nN] [oO] [sS] [eE] [cC] [oO] [nN] [dD];
+NESTED  			: [nN] [eE] [sS] [tT] [eE] [dD];
 NEW					: [nN] [eE] [wW];
 NEXT				: [nN] [eE] [xX] [tT];
 NO					: [nN] [oO];
@@ -274,6 +276,7 @@ ON					: [oO] [nN];
 ONLY				: [oO] [nN] [lL] [yY];
 OR					: [oO] [rR];
 ORDER				: [oO] [rR] [dD] [eE] [rR];
+ORDINALITY			: [oO] [rR] [dD] [iI] [nN] [aA] [lL] [iI] [tT] [yY];
 OTHERS				: [oO] [tT] [hH] [eE] [rR] [sS];
 OUTER				: [oO] [uU] [tT] [eE] [rR];
 OVER				: [oO] [vV] [eE] [rR];
@@ -282,6 +285,7 @@ OVERLAY				: [oO] [vV] [eE] [rR] [lL] [aA] [yY];
 PAD					: [pP] [aA] [dD];
 PARTITION			: [pP] [aA] [rR] [tT] [iI] [tT] [iI] [oO] [nN];
 PASSING				: [pP] [aA] [sS] [sS] [iI] [nN] [gG];
+PATH    			: [pP] [aA] [tT] [hH];
 PERCENT				: [pP] [eE] [rR] [cC] [eE] [nN] [tT];
 PLACING				: [pP] [lL] [aA] [cC] [iI] [nN] [gG];
 POSITION			: [pP] [oO] [sS] [iI] [tT] [iI] [oO] [nN];
@@ -301,7 +305,7 @@ SET					: [sS] [eE] [tT];
 SIZE				: [sS] [iI] [zZ] [eE];
 SOME				: [sS] [oO] [mM] [eE];
 SUBSTRING			: [sS] [uU] [bB] [sS] [tT] [rR] [iI] [nN] [gG];
-SUM					: [sS] [uM] [mM];
+SUM					: [sS] [uU] [mM];
 THEN				: [tT] [hH] [eE] [nN];
 TIES				: [tT] [iI] [eE] [sS];
 TIME				: [tT] [iI] [mM] [eE];
@@ -330,6 +334,7 @@ WITH				: [wW] [iI] [tT] [hH];
 WITHIN				: [wW] [iI] [tT] [hH] [iI] [nN];
 WITHOUT				: [wW] [iI] [tT] [hH] [oO] [uU] [tT];
 WRAPPER				: [wW] [rR] [aA] [pP] [pP] [eE] [rR];
+XML 				: [xX] [mM] [lL];
 XMLAGG				: [xX] [mM] [lL] [aA] [gG] [gG];
 XMLATTRIBUTES		: [xX] [mM] [lL] [aA] [tT] [tT] [rR] [iI] [bB] [uU] [tT] [eE] [sS];
 XMLELEMENT			: [xX] [mM] [lL] [eE] [lL] [eE] [mM] [eE] [nN] [tT];
@@ -337,6 +342,7 @@ XMLEXISTS			: [xX] [mM] [lL] [eE] [xX] [iI] [sS] [tT] [sS];
 XMLFOREST			: [xX] [mM] [lL] [fF] [oO] [rR] [eE] [sS] [tT];
 XMLPI				: [xX] [mM] [lL] [pP] [iI];
 XMLQUERY			: [xX] [mM] [lL] [qQ] [uU] [eE] [rR] [yY];
+XMLTABLE			: [xX] [mM] [lL] [tT] [aA] [bB] [lL] [eE];
 YEAR				: [yY] [eE] [aA] [rR];
 ZONED				: [zZ] [oO] [nN] [eE] [dD];
 

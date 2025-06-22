@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.mapping.naturalid;
@@ -43,7 +43,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @SessionFactory
 public class CompoundNaturalIdTests {
 	public static final Object[] VALUE_ARRAY = new Object[] { "matrix", "neo" };
-	public static final Map<String,String> VALUE_NAP = toMap( "system", "matrix", "username", "neo" );
+	public static final Map<String,String> VALUE_MAP = toMap( "system", "matrix", "username", "neo" );
 
 	private static Map<String, String> toMap(String... values) {
 		assert values.length % 2 == 0;
@@ -68,11 +68,7 @@ public class CompoundNaturalIdTests {
 
 	@AfterEach
 	public void releaseTestData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery( "delete Account" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -126,7 +122,7 @@ public class CompoundNaturalIdTests {
 					assertThat( id, is( 1 ) );
 
 					// and by Map
-					id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_NAP, session );
+					id = accountMapping.getNaturalIdLoader().resolveNaturalIdToId( VALUE_MAP, session );
 					assertThat( id, is( 1 ) );
 				}
 		);
@@ -161,7 +157,7 @@ public class CompoundNaturalIdTests {
 					accountMapping.getNaturalIdLoader().load( VALUE_ARRAY, NaturalIdLoadOptions.NONE, session );
 
 					// and by Map
-					accountMapping.getNaturalIdLoader().load( VALUE_NAP, NaturalIdLoadOptions.NONE, session );
+					accountMapping.getNaturalIdLoader().load( VALUE_MAP, NaturalIdLoadOptions.NONE, session );
 				}
 		);
 	}
@@ -193,7 +189,7 @@ public class CompoundNaturalIdTests {
 					);
 					assertThat( accounts.size(), is( 2 ) );
 
-					final List<Account> byMap = loadAccess.multiLoad( VALUE_NAP );
+					final List<Account> byMap = loadAccess.multiLoad( VALUE_MAP );
 					assertThat( byMap.size(), is( 1 ) );
 
 					final List<Account> byArray = loadAccess.multiLoad( new Object[] { VALUE_ARRAY } );

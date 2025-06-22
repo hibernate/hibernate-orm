@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.domain;
@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.tree.domain;
 import jakarta.persistence.criteria.PluralJoin;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -28,7 +29,7 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 
 	public AbstractSqmPluralJoin(
 			SqmFrom<?, L> lhs,
-			PluralPersistentAttribute<L,C,E> joinedNavigable,
+			SqmPluralPersistentAttribute<? super L,C,E> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -52,11 +53,12 @@ public abstract class AbstractSqmPluralJoin<L,C,E>
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
-		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		super( lhs, navigablePath, (SqmPathSource<E>) joinedNavigable, alias, joinType, fetched, nodeBuilder );
 	}
 
 	@Override
-	public PluralPersistentAttribute<L, C, E> getModel() {
-		return (PluralPersistentAttribute<L, C, E>) super.getNodeType();
+	public SqmPluralPersistentAttribute<L, C, E> getModel() {
+//		return (SqmPluralPersistentAttribute<L, C, E>) super.getNodeType();
+		return (SqmPluralPersistentAttribute<L, C, E>) super.getModel();
 	}
 }

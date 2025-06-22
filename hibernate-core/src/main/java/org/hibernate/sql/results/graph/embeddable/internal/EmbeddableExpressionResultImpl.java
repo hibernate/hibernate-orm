@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
@@ -52,9 +52,7 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 		final EmbeddableMappingType mappingType = modelPart.getEmbeddableTypeDescriptor();
 		final int numberOfAttributeMappings = mappingType.getNumberOfAttributeMappings();
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
-				.getSessionFactory()
-				.getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext().getTypeConfiguration();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) mappingType.getAttributeMapping( i );

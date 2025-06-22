@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -7,6 +7,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
@@ -19,7 +20,8 @@ import org.hibernate.boot.model.source.spi.SecondaryTableSource;
 import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.internal.util.StringHelper;
+
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +32,6 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	private final String logicalTableName;
 	private final List<ColumnSource> keyColumnSources;
 
-	@SuppressWarnings("unchecked")
 	public SecondaryTableSourceImpl(
 			MappingDocument sourceMappingDocument,
 			final JaxbHbmSecondaryTableType jaxbSecondaryTableMapping,
@@ -44,8 +45,8 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 				inLineViewNameInferrer
 		);
 
-		if ( joinTable instanceof TableSource ) {
-			if ( StringHelper.isEmpty( ( (TableSource) joinTable ).getExplicitTableName() ) ) {
+		if ( joinTable instanceof TableSource tableSource ) {
+			if ( isEmpty( tableSource.getExplicitTableName() ) ) {
 				throw new MappingException(
 						String.format(
 								Locale.ENGLISH,
@@ -58,9 +59,15 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 			}
 		}
 
-		this.logicalTableName = joinTable instanceof TableSource
-					? ( (TableSource) joinTable ).getExplicitTableName()
-					: ( (InLineViewSource) joinTable ).getLogicalName();
+		if ( joinTable instanceof TableSource tableSource ) {
+			logicalTableName = tableSource.getExplicitTableName();
+		}
+		else if ( joinTable instanceof InLineViewSource inLineViewSource ) {
+			logicalTableName = inLineViewSource.getLogicalName();
+		}
+		else {
+			throw new AssertionFailure( "Unrecognized TableSpecificationSource" );
+		}
 
 		this.keyColumnSources = RelationalValueSourceHelper.buildColumnSources(
 				sourceMappingDocument,

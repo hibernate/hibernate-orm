@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.manytomany.mapkey;
@@ -41,16 +41,7 @@ public class ManyToManyMapKeyTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					MapContainer container = session.find( MapContainer.class, 1l );
-					session.remove( container );
-
-					container.getMap().keySet().stream().forEach( key-> {
-						session.remove( key );
-					});
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

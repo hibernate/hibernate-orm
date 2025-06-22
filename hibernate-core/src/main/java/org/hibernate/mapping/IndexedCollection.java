@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.mapping;
@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.MappingContext;
 import org.hibernate.usertype.UserCollectionType;
@@ -18,7 +17,7 @@ import org.hibernate.usertype.UserCollectionType;
  * primitive arrays.
  * @author Gavin King
  */
-public abstract class IndexedCollection extends Collection {
+public sealed abstract class IndexedCollection extends Collection permits Map, List  {
 
 	public static final String DEFAULT_INDEX_COLUMN_NAME = "idx";
 
@@ -40,27 +39,33 @@ public abstract class IndexedCollection extends Collection {
 	public Value getIndex() {
 		return index;
 	}
+
 	public void setIndex(Value index) {
 		this.index = index;
 	}
+
 	public final boolean isIndexed() {
 		return true;
 	}
 
+	public boolean hasMapKeyProperty() {
+		return false;
+	}
+
 	@Override
 	public boolean isSame(Collection other) {
-		return other instanceof IndexedCollection
-				&& isSame( (IndexedCollection) other );
+		return other instanceof IndexedCollection indexedCollection
+			&& isSame( indexedCollection );
 	}
 
 	public boolean isSame(IndexedCollection other) {
 		return super.isSame( other )
-				&& isSame( index, other.index );
+			&& isSame( index, other.index );
 	}
 
 	void createPrimaryKey() {
 		if ( !isOneToMany() ) {
-			PrimaryKey pk = new PrimaryKey( getCollectionTable() );
+			final PrimaryKey pk = new PrimaryKey( getCollectionTable() );
 			pk.addColumns( getKey() );
 
 			// index should be last column listed
@@ -88,10 +93,6 @@ public abstract class IndexedCollection extends Collection {
 			list.addAll( getIndex().getConstraintColumns() );
 			getCollectionTable().createUniqueKey(list);*/
 //		}
-	}
-
-	public void validate(Mapping mapping) throws MappingException {
-		validate( (MappingContext) mapping);
 	}
 
 	public void validate(MappingContext mappingContext) throws MappingException {

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.type.descriptor.sql;
@@ -13,8 +13,7 @@ import java.util.TimeZone;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.NonContextualLobCreator;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -27,6 +26,8 @@ import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -46,11 +47,6 @@ public class StringValueMappingTest {
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
 		@Override
 		public SharedSessionContractImplementor getSession() {
-			return null;
-		}
-
-		@Override
-		public SessionFactoryImplementor getSessionFactory() {
 			return null;
 		}
 
@@ -86,6 +82,21 @@ public class StringValueMappingTest {
 		@Override
 		public Dialect getDialect() {
 			return dialect;
+		}
+
+		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getXmlFormatMapper() {
+			return null;
+		}
+
+		@Override
+		public FormatMapper getJsonFormatMapper() {
+			return null;
 		}
 	};
 

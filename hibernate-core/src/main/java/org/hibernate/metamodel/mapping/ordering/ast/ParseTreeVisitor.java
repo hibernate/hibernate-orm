@@ -1,16 +1,14 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.internal.util.QuotingHelper;
-import org.hibernate.query.NullPrecedence;
+import jakarta.persistence.criteria.Nulls;
 import org.hibernate.query.SortDirection;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;
@@ -21,6 +19,9 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import static java.util.Collections.singletonList;
+import static org.hibernate.internal.util.QuotingHelper.unquoteIdentifier;
 
 /**
  * @author Steve Ebersole
@@ -41,18 +42,16 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		final int size = ctx.getChildCount();
 		// Shift 1 bit instead of division by 2
 		final int specificationCount = ( size + 1 ) >> 1;
-
 		if ( specificationCount == 1 ) {
-			return Collections.singletonList( visitSortSpecification( (OrderingParser.SortSpecificationContext) ctx.getChild( 0 ) ) );
+			return singletonList( visitSortSpecification( (OrderingParser.SortSpecificationContext) ctx.getChild( 0 ) ) );
 		}
-
-		final List<OrderingSpecification> specifications = new ArrayList<>( specificationCount );
-
-		for ( int i = 0; i < size; i += 2 ) {
-			specifications.add( visitSortSpecification( (OrderingParser.SortSpecificationContext) ctx.getChild( i ) ) );
+		else {
+			final List<OrderingSpecification> specifications = new ArrayList<>( specificationCount );
+			for ( int i = 0; i < size; i += 2 ) {
+				specifications.add( visitSortSpecification( (OrderingParser.SortSpecificationContext) ctx.getChild( i ) ) );
+			}
+			return specifications;
 		}
-
-		return specifications;
 	}
 
 	@Override
@@ -89,8 +88,7 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		}
 		if ( parsedSpec.getChildCount() > i ) {
 			final ParseTree parseTree = parsedSpec.getChild( i );
-			if ( parseTree instanceof OrderingParser.DirectionContext ) {
-				final OrderingParser.DirectionContext directionCtx = (OrderingParser.DirectionContext) parseTree;
+			if ( parseTree instanceof OrderingParser.DirectionContext directionCtx ) {
 				if ( ( (TerminalNode) directionCtx.getChild( 0 ) ).getSymbol().getType() == OrderingParser.ASC ) {
 					result.setSortOrder( SortDirection.ASCENDING );
 				}
@@ -102,13 +100,12 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 		}
 		if ( parsedSpec.getChildCount() > i ) {
 			final ParseTree parseTree = parsedSpec.getChild( i );
-			if ( parseTree instanceof OrderingParser.NullsPrecedenceContext ) {
-				final OrderingParser.NullsPrecedenceContext nullsCtx = (OrderingParser.NullsPrecedenceContext) parseTree;
+			if ( parseTree instanceof OrderingParser.NullsPrecedenceContext nullsCtx ) {
 				if ( ( (TerminalNode) nullsCtx.getChild( 1 ) ).getSymbol().getType() == OrderingParser.FIRST ) {
-					result.setNullPrecedence( NullPrecedence.FIRST );
+					result.setNullPrecedence( Nulls.FIRST );
 				}
 				else {
-					result.setNullPrecedence( NullPrecedence.LAST );
+					result.setNullPrecedence( Nulls.LAST );
 				}
 			}
 		}
@@ -218,16 +215,11 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 
 	@Override
 	public Object visitTerminal(TerminalNode node) {
-		if ( node.getSymbol().getType() == OrderingParser.EOF ) {
-			return null;
-		}
-		switch ( node.getSymbol().getType() ) {
-			case OrderingParser.IDENTIFIER:
-				return node.getText();
-			case OrderingParser.QUOTED_IDENTIFIER:
-				return QuotingHelper.unquoteIdentifier( node.getText() );
-			default:
-				throw new ParsingException( "Unexpected terminal node [" + node.getText() + "]");
-		}
+		return switch ( node.getSymbol().getType() ) {
+			case OrderingParser.EOF -> null;
+			case OrderingParser.IDENTIFIER -> node.getText();
+			case OrderingParser.QUOTED_IDENTIFIER -> unquoteIdentifier( node.getText() );
+			default -> throw new ParsingException( "Unexpected terminal node [" + node.getText() + "]" );
+		};
 	}
 }

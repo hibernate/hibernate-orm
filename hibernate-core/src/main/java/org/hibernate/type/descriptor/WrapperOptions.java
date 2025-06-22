@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.descriptor;
@@ -8,6 +8,8 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.format.FormatMapper;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.TimeZone;
 
@@ -31,7 +33,9 @@ public interface WrapperOptions {
 	/**
 	 * Access to the current session factory.
 	 */
-	SessionFactoryImplementor getSessionFactory();
+	default SessionFactoryImplementor getSessionFactory() {
+		return getSession().getSessionFactory();
+	}
 
 	/**
 	 * Access to the current dialect.
@@ -47,25 +51,31 @@ public interface WrapperOptions {
 	 *
 	 * @see org.hibernate.dialect.Dialect#useInputStreamToInsertBlob()
 	 */
-	boolean useStreamForLobBinding();
+	default boolean useStreamForLobBinding() {
+		return getDialect().useInputStreamToInsertBlob();
+	}
 
 	/**
 	 * The JDBC {@link java.sql.Types type code} used to bind a null boolean value.
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#PREFERRED_BOOLEAN_JDBC_TYPE
+	 * @see org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE
 	 * @see org.hibernate.dialect.Dialect#getPreferredSqlTypeCodeForBoolean()
 	 */
-	int getPreferredSqlTypeCodeForBoolean();
+	default int getPreferredSqlTypeCodeForBoolean() {
+		return getSessionFactory().getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean();
+	}
 
 	/**
 	 * Obtain access to the {@link LobCreator}.
 	 *
 	 * @return The LOB creator
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#NON_CONTEXTUAL_LOB_CREATION
+	 * @see org.hibernate.cfg.JdbcSettings#NON_CONTEXTUAL_LOB_CREATION
 	 * @see org.hibernate.dialect.Dialect#getDefaultNonContextualLobCreation()
 	 */
-	LobCreator getLobCreator();
+	default LobCreator getLobCreator() {
+		return getSession().getLobCreator();
+	}
 
 	/**
 	 * The JDBC {@link TimeZone} used when writing a value of type {@link java.sql.Time}
@@ -88,7 +98,32 @@ public interface WrapperOptions {
 	 *
 	 * @return the JDBC {@link TimeZone}, or null if no JDBC timezone was explicitly set
 	 *
-	 * @see org.hibernate.cfg.AvailableSettings#JDBC_TIME_ZONE
+	 * @see org.hibernate.cfg.JdbcSettings#JDBC_TIME_ZONE
 	 */
-	TimeZone getJdbcTimeZone();
+	default TimeZone getJdbcTimeZone() {
+		return getSessionFactory().getSessionFactoryOptions().getJdbcTimeZone();
+	}
+
+	/**
+	 * Obtain the {@link TypeConfiguration}.
+	 *
+	 * @since 7.0
+	 */
+	default TypeConfiguration getTypeConfiguration() {
+		return getSessionFactory().getTypeConfiguration();
+	}
+
+	/**
+	 * Obtain the XML {@link FormatMapper}.
+	 *
+	 * @since 7.0
+	 */
+	FormatMapper getXmlFormatMapper();
+
+	/**
+	 * Obtain the JSON {@link FormatMapper}.
+	 *
+	 * @since 7.0
+	 */
+	FormatMapper getJsonFormatMapper();
 }

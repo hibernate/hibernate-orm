@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.insert;
@@ -8,6 +8,7 @@ import org.hibernate.query.criteria.JpaConflictUpdateAction;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
@@ -156,13 +157,13 @@ public class SqmConflictUpdateAction<T> implements SqmNode, JpaConflictUpdateAct
 		return insertStatement.getTarget();
 	}
 
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder sb, SqmRenderContext context) {
 		sb.append( " do update" );
-		setClause.appendHqlString( sb );
+		setClause.appendHqlString( sb, context );
 
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
 			sb.append( " where " );
-			whereClause.getPredicate().appendHqlString( sb );
+			whereClause.getPredicate().appendHqlString( sb, context );
 		}
 	}
 }

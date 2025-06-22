@@ -20,7 +20,11 @@ Soft delete support is defined by 3 main parts -
 [[soft-delete-type]]
 ==== Strategy - SoftDeleteType
 
-Given truth values, there are 2 valid ways to interpret the values stored in the database.  This
+Hibernate supports timestamp and truth-based soft delete strategies, configured by the `strategy` attribute of the `@SoftDelete` annotation.
+
+The TIMESTAMP strategy tracks the timestamp at which the row was deleted.
+
+For truth-based strategies, there are 2 valid ways to interpret the values stored in the database.  This
 interpretation is defined by the SoftDeleteType enumeration and can be configured per-usage using
 `@SoftDelete(..., strategy=ACTIVE)` or `@SoftDelete(..., strategy=DELETED)` -
 
@@ -43,6 +47,8 @@ ACTIVE::
     The default column name is `active`.
 DELETED::
     The default column name is `deleted`.
+TIMESTAMP::
+    The default column name is `deleted`.
 
 See <<soft-delete-basic-example>> for an example of customizing the column name.
 
@@ -52,8 +58,11 @@ Depending on the conversion type, an appropriate check constraint may be applied
 [[soft-delete-conversion]]
 ==== Indicator conversion
 
-The conversion is defined using a Jakarta Persistence <<basic-jpa-convert,AttributeConverter>>.  The domain-type is always
-`boolean`.  The relational-type can be any type, as defined by the converter; generally `BOOLEAN`, `BIT`, `INTEGER` or `CHAR`.
+When using a truth-based strategy, a conversion can be specified using a Jakarta Persistence <<basic-jpa-convert,AttributeConverter>>.
+The domain-type is always `boolean`.
+The relational-type can be any type, as defined by the converter; generally `BOOLEAN`, `BIT`, `INTEGER` or `CHAR`.
+
+NOTE: It is considered an error to specify a conversion with the TIMESTAMP strategy and an exception will be thrown.
 
 An explicit conversion can be specified using `@SoftDelete#converter`.  See <<soft-delete-basic-example>>
 for an example of specifying an explicit conversion.  Explicit conversions can specify a custom converter or leverage

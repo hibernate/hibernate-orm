@@ -263,7 +263,7 @@ This is useful for frequently executed queries with fixed parameter values.
 
 [NOTE]
 ====
-Caching of query results introduces some overhead in terms of your applications normal transactional processing.
+Caching of query results introduces some overhead in terms of your application's normal transactional processing.
 For example, if you cache results of a query against `Person`,
 Hibernate will need to keep track of when those results should be invalidated because changes have been committed against any `Person` entity.
 
@@ -392,7 +392,7 @@ include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-regi
 [[caching-query-cache-layout]]
 === Query cache layout
 
-The query cache usually contains the same data that is read from the original queries JDBC `ResultSet`,
+The query cache usually contains the same data that is read from the original query's JDBC `ResultSet`,
 but for entities and collections the cached information can vary depending on configuration.
 
 An entity or collection in the query cache can either be represented with all its fetched data (`FULL` cache layout),
@@ -648,4 +648,4 @@ Infinispan is a distributed in-memory key/value data store, available as a cache
 It supports advanced functionality such as transactions, events, querying, distributed processing, off-heap and geographical failover.
 
 For more details, check out the
-https://infinispan.org/docs/stable/titles/integrating/integrating.html#integrating_jpa_hibernate[Infinispan User Guide].
+https://infinispan.org/docs/stable/titles/hibernate/hibernate.html[Infinispan User Guide].

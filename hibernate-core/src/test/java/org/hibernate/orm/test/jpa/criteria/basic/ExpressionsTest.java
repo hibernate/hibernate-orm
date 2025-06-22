@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -27,7 +28,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaDerivedRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.common.TemporalUnit;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jira;
@@ -78,12 +79,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@AfterEach
 	public void cleanupTestData() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		entityManagerFactory().unwrap(SessionFactory.class).getSchemaManager().truncate();
 	}
 
 	@Test

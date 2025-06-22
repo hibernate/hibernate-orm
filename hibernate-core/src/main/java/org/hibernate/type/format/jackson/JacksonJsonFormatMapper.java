@@ -1,14 +1,19 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.format.jackson;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.format.AbstractJsonFormatMapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 
 /**
@@ -22,11 +27,33 @@ public final class JacksonJsonFormatMapper extends AbstractJsonFormatMapper {
 	private final ObjectMapper objectMapper;
 
 	public JacksonJsonFormatMapper() {
-		this(new ObjectMapper().findAndRegisterModules());
+		this( new ObjectMapper().findAndRegisterModules() );
 	}
 
 	public JacksonJsonFormatMapper(ObjectMapper objectMapper) {
 		this.objectMapper = objectMapper;
+	}
+
+	@Override
+	public <T> void writeToTarget(T value, JavaType<T> javaType, Object target, WrapperOptions options)
+			throws IOException {
+		objectMapper.writerFor( objectMapper.constructType( javaType.getJavaType() ) )
+				.writeValue( (JsonGenerator) target, value );
+	}
+
+	@Override
+	public <T> T readFromSource(JavaType<T> javaType, Object source, WrapperOptions options) throws IOException {
+		return objectMapper.readValue( (JsonParser) source, objectMapper.constructType( javaType.getJavaType() ) );
+	}
+
+	@Override
+	public boolean supportsSourceType(Class<?> sourceType) {
+		return JsonParser.class.isAssignableFrom( sourceType );
+	}
+
+	@Override
+	public boolean supportsTargetType(Class<?> targetType) {
+		return JsonGenerator.class.isAssignableFrom( targetType );
 	}
 
 	@Override

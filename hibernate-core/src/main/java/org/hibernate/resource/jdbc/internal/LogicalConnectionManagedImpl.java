@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.resource.jdbc.internal;
@@ -14,12 +14,13 @@ import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.ConnectionAcquisitionMode.IMMEDIATELY;
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
@@ -28,15 +29,15 @@ import static org.hibernate.ConnectionReleaseMode.ON_CLOSE;
 import static org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
 
 /**
- * Represents a LogicalConnection where we manage obtaining and releasing the Connection as needed.
+ * Represents a {@link LogicalConnection} where we manage obtaining and releasing the {@link Connection} as needed.
  * This implementation does not claim to be thread-safe and is not designed to be used by multiple
- * threads, yet we do apply a limited amount of care to be able to void obscure exceptions when
+ * threads, yet we do apply a limited amount of care to be able to avoid obscure exceptions when
  * this class is used in the wrong way.
  *
  * @author Steve Ebersole
  */
 public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImplementor {
-	private static final Logger log = Logger.getLogger( LogicalConnectionManagedImpl.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( LogicalConnectionManagedImpl.class );
 
 	private final transient JdbcConnectionAccess jdbcConnectionAccess;
 	private final transient JdbcEventHandler jdbcEventHandler;
@@ -71,13 +72,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 		this.providerDisablesAutoCommit = jdbcSessionContext.doesConnectionProviderDisableAutoCommit();
 		if ( providerDisablesAutoCommit ) {
-			log.debug(
-					"`hibernate.connection.provider_disables_autocommit` was enabled.  This setting should only be " +
-							"enabled when you are certain that the Connections given to Hibernate by the " +
-							"ConnectionProvider have auto-commit disabled.  Enabling this setting when the " +
-							"Connections do not have auto-commit disabled will lead to Hibernate executing " +
-							"SQL operations outside of any JDBC/SQL transaction."
-			);
+			log.connectionProviderDisablesAutoCommitEnabled();
 		}
 	}
 
@@ -97,12 +92,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	private PhysicalConnectionHandlingMode determineConnectionHandlingMode(
 			PhysicalConnectionHandlingMode connectionHandlingMode,
 			JdbcConnectionAccess jdbcConnectionAccess) {
-		if ( connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT
-				&& !jdbcConnectionAccess.supportsAggressiveRelease() ) {
-			return DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION;
-		}
-
-		return connectionHandlingMode;
+		return connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT
+			&& !jdbcConnectionAccess.supportsAggressiveRelease()
+				? DELAYED_ACQUISITION_AND_RELEASE_AFTER_TRANSACTION
+				: connectionHandlingMode;
 	}
 
 	private LogicalConnectionManagedImpl(
@@ -158,7 +151,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	@Override
 	public void afterStatement() {
 		super.afterStatement();
-
 		if ( connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT ) {
 			if ( getResourceRegistry().hasRegisteredResources() ) {
 				log.debug( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
@@ -182,7 +174,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	@Override
 	public void afterTransaction() {
 		super.afterTransaction();
-
 		if ( connectionHandlingMode.getReleaseMode() != ON_CLOSE ) {
 			// NOTE : we check for !ON_CLOSE here (rather than AFTER_TRANSACTION) to also catch:
 			// - AFTER_STATEMENT cases that were circumvented due to held resources
@@ -198,9 +189,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		if ( closed ) {
 			throw new ResourceClosedException( "Logical connection is closed" );
 		}
-		final Connection c = physicalConnection;
+		final Connection connection = physicalConnection;
 		releaseConnection();
-		return c;
+		return connection;
 	}
 
 	@Override
@@ -208,40 +199,37 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		if ( closed ) {
 			throw new ResourceClosedException( "Logical connection is closed" );
 		}
-
 		throw new IllegalStateException( "Cannot manually reconnect unless Connection was originally supplied by user" );
 	}
 
 	private void releaseConnection() {
-		final Connection localVariableConnection = this.physicalConnection;
-		if ( localVariableConnection == null ) {
-			return;
-		}
-
-		// We need to set the connection to null before we release resources,
-		// in order to prevent recursion into this method.
-		// Recursion can happen when we release resources and when batch statements are in progress:
-		// when releasing resources, we'll abort the batch statement,
-		// which will trigger "logicalConnection.afterStatement()",
-		// which in some configurations will release the connection.
-		this.physicalConnection = null;
-		try {
+		final Connection localVariableConnection = physicalConnection;
+		if ( localVariableConnection != null ) {
+			// We need to set the connection to null before we release resources,
+			// in order to prevent recursion into this method.
+			// Recursion can happen when we release resources and when batch statements are in progress:
+			// when releasing resources, we'll abort the batch statement,
+			// which will trigger "logicalConnection.afterStatement()",
+			// which in some configurations will release the connection.
+			physicalConnection = null;
 			try {
-				getResourceRegistry().releaseResources();
-				if ( !localVariableConnection.isClosed() ) {
-					sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
+				try {
+					getResourceRegistry().releaseResources();
+					if ( !localVariableConnection.isClosed() ) {
+						sqlExceptionHelper.logAndClearWarnings( localVariableConnection );
+					}
+				}
+				finally {
+					jdbcEventHandler.jdbcConnectionReleaseStart();
+					jdbcConnectionAccess.releaseConnection( localVariableConnection );
 				}
 			}
-			finally {
-				jdbcEventHandler.jdbcConnectionReleaseStart();
-				jdbcConnectionAccess.releaseConnection( localVariableConnection );
+			catch (SQLException e) {
+				throw sqlExceptionHelper.convert( e, "Unable to release JDBC Connection" );
 			}
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "Unable to release JDBC Connection" );
-		}
-		finally {
-			jdbcEventHandler.jdbcConnectionReleaseEnd();
+			finally {
+				jdbcEventHandler.jdbcConnectionReleaseEnd();
+			}
 		}
 	}
 
@@ -260,20 +248,17 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	public Connection close() {
-		if ( closed ) {
-			return null;
-		}
-
-		getResourceRegistry().releaseResources();
-
-		log.trace( "Closing logical connection" );
-		try {
-			releaseConnection();
-		}
-		finally {
-			// no matter what
-			closed = true;
-			log.trace( "Logical connection closed" );
+		if ( !closed ) {
+			getResourceRegistry().releaseResources();
+			log.closingLogicalConnection();
+			try {
+				releaseConnection();
+			}
+			finally {
+				// no matter what
+				closed = true;
+				log.logicalConnectionClosed();
+			}
 		}
 		return null;
 	}
@@ -299,7 +284,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	protected void afterCompletion() {
 		resetConnection( initiallyAutoCommit );
 		initiallyAutoCommit = false;
-
 		afterTransaction();
 	}
 

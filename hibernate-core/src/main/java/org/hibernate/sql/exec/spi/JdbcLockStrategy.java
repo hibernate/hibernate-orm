@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.exec.spi;
@@ -12,7 +12,7 @@ package org.hibernate.sql.exec.spi;
 public enum JdbcLockStrategy {
 
 	/**
-	 * Use a dialect specific check to determine how to apply locks.
+	 * Use a dialect-specific check to determine how to apply locks.
 	 */
 	AUTO,
 	/**
@@ -22,5 +22,5 @@ public enum JdbcLockStrategy {
 	/**
 	 * Do not apply locks.
 	 */
-	NONE;
+	NONE
 }

@@ -8,6 +8,7 @@
 :array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
 :json-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/json
 :xml-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/xml
+:srf-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/srf
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -820,7 +821,23 @@ The function `str(x)` is a synonym for `cast(x as String)`.
 ----
 include::{example-dir-hql}/HQLTest.java[tags=hql-str-function-example]
 ----
+
 ====
+
+[[hql-function-ordinal]]
+===== `ordinal()`
+
+The function `ordinal(x)` extracts the ordinal value of an enum.
+It supports both enum fields mapped as `ORDINAL` and `STRING`.
+
+====
+[source, java, indent=0]
+----
+include::{example-dir-hql}/EnumTest.java[tags=hql-ordinal-function-example]
+----
+
+====
+
 
 [[hql-functions-null]]
 ==== Functions for working with null values
@@ -1181,32 +1198,33 @@ The following functions deal with SQL array types, which are not supported on ev
 |===
 | Function | Purpose
 
-| `array()` | Creates an array based on the passed arguments
-| `array_list()` | Like `array`, but returns the result as `List<?>`
-| `array_agg()` | Aggregates row values into an array
-| `array_position()` | Determines the position of an element in an array
-| `array_positions()` | Determines all positions of an element in an array
-| `array_positions_list()` | Like `array_positions`, but returns the result as `List<Integer>`
-| `array_length()` | Determines the length of an array
-| `array_concat()` | Concatenates array with each other in order
-| `array_prepend()` | Prepends element to array
-| `array_append()` | Appends element to array
-| `array_contains()` | Whether an array contains an element
-| `array_contains_nullable()` | Whether an array contains an element, supporting `null` element
-| `array_includes()` | Whether an array contains another array
-| `array_includes_nullable()` | Whether an array contains another array, supporting `null` elements
-| `array_intersects()` | Whether an array holds at least one element of another array
-| `array_intersects_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
-| `array_get()` | Accesses the element of an array by index
-| `array_set()` | Creates array copy with given element at given index
-| `array_remove()` | Creates array copy with given element removed
-| `array_remove_index()` | Creates array copy with the element at the given index removed
-| `array_slice()` | Creates a sub-array of the based on lower and upper index
-| `array_replace()` | Creates array copy replacing a given element with another
-| `array_trim()` | Creates array copy trimming the last _N_ elements
-| `array_fill()` | Creates array filled with the same element _N_ times
-| `array_fill_list()` | Like `array_fill`, but returns the result as `List<?>`
-| `array_to_string()` | String representation of array
+| <<hql-array-constructor-functions,`array()`>> | Creates an array based on the passed arguments
+| <<hql-array-constructor-functions,`array_list()`>> | Like `array`, but returns the result as `List<?>`
+| <<hql-array-aggregate-functions,`array_agg()`>> | Aggregates row values into an array
+| <<hql-array-position-functions,`array_position()`>> | Determines the position of an element in an array
+| <<hql-array-positions-functions,`array_positions()`>> | Determines all positions of an element in an array
+| <<hql-array-positions-functions,`array_positions_list()`>> | Like `array_positions`, but returns the result as `List<Integer>`
+| <<hql-array-length-functions,`array_length()`>> | Determines the length of an array
+| <<hql-array-concat-functions,`array_concat()`>> | Concatenates array with each other in order
+| <<hql-array-prepend-functions,`array_prepend()`>> | Prepends element to array
+| <<hql-array-append-functions,`array_append()`>> | Appends element to array
+| <<hql-array-contains-functions,`array_contains()`>> | Whether an array contains an element
+| <<hql-array-contains-functions,`array_contains_nullable()`>> | Whether an array contains an element, supporting `null` element
+| <<hql-array-includes-example,`array_includes()`>> | Whether an array contains another array
+| <<hql-array-includes-example,`array_includes_nullable()`>> | Whether an array contains another array, supporting `null` elements
+| <<hql-array-intersects-functions,`array_intersects()`>> | Whether an array holds at least one element of another array
+| <<hql-array-intersects-functions,`array_intersects_nullable()`>> | Whether an array holds at least one element of another array, supporting `null` elements
+| <<hql-array-get-functions,`array_get()`>> | Accesses the element of an array by index
+| <<hql-array-set-functions,`array_set()`>> | Creates array copy with given element at given index
+| <<hql-array-remove-functions,`array_remove()`>> | Creates array copy with given element removed
+| <<hql-array-remove-index-functions,`array_remove_index()`>> | Creates array copy with the element at the given index removed
+| <<hql-array-slice-functions,`array_slice()`>> | Creates a sub-array of the based on lower and upper index
+| <<hql-array-replace-functions,`array_replace()`>> | Creates array copy replacing a given element with another
+| <<hql-array-trim-functions,`array_trim()`>> | Creates array copy trimming the last _N_ elements
+| <<hql-array-fill-functions,`array_fill()`>> | Creates array filled with the same element _N_ times
+| <<hql-array-fill-functions,`array_fill_list()`>> | Like `array_fill`, but returns the result as `List<?>`
+| <<hql-array-to-string-functions,`array_to_string()`>> | String representation of array
+| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
 |===
 
 [[hql-array-constructor-functions]]
@@ -1621,6 +1639,32 @@ include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string
 ----
 ====
 
+[[hql-array-unnest]]
+===== `unnest()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns the single array argument into rows.
+Returns no rows if the array argument is `null` or an empty array.
+The `index()` function can be used to access the 1-based array index of an array element.
+
+[[hql-array-unnest-struct-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArrayUnnestStructTest.java[tags=hql-array-unnest-aggregate-with-ordinality-example]
+----
+====
+
+The `lateral` keyword is mandatory if the argument refers to a from node item of the same query level.
+Basic plural attributes can also be joined directly, which is syntax sugar for `lateral unnest(...)`.
+
+[[hql-array-unnest-example]]
+====
+[source, java, indent=0]
+----
+include::{array-example-dir-hql}/ArrayUnnestTest.java[tags=hql-array-unnest-example]
+----
+====
+
 [[hql-functions-json]]
 ==== Functions for dealing with JSON
 
@@ -1633,18 +1677,19 @@ it is necessary to enable the `hibernate.query.hql.json_functions_enabled` confi
 |===
 | Function | Purpose
 
-| `json_object()` | Constructs a JSON object from pairs of key and value arguments
-| `json_array()` | Constructs a JSON array from arguments
-| `json_value()` | Extracts a value from a JSON document by JSON path
-| `json_exists()` | Checks if a JSON path exists in a JSON document
-| `json_query()` | Queries non-scalar values by JSON path in a JSON document
-| `json_arrayagg()` | Creates a JSON array by aggregating values
-| `json_objectagg()` | Creates a JSON object by aggregating values
-| `json_set()` | Inserts/Replaces a value by JSON path within a JSON document
-| `json_remove()` | Removes a value by JSON path within a JSON document
-| `json_mergepatch()` | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
-| `json_array_append()` | Appends to a JSON array of a JSON document by JSON path
-| `json_array_insert()` | Inserts a value by JSON path to a JSON array within a JSON document
+| <<hql-json-object-function,`json_object()`>> | Constructs a JSON object from pairs of key and value arguments
+| <<hql-json-array-function,`json_array()`>> | Constructs a JSON array from arguments
+| <<hql-json-value-function,`json_value()`>> | Extracts a value from a JSON document by JSON path
+| <<hql-json-exists-function,`json_exists()`>> | Checks if a JSON path exists in a JSON document
+| <<hql-json-query-function,`json_query()`>> | Queries non-scalar values by JSON path in a JSON document
+| <<hql-json-arrayagg-function,`json_arrayagg()`>> | Creates a JSON array by aggregating values
+| <<hql-json-objectagg-function,`json_objectagg()`>> | Creates a JSON object by aggregating values
+| <<hql-json-set-function,`json_set()`>> | Inserts/Replaces a value by JSON path within a JSON document
+| <<hql-json-remove-function,`json_remove()`>> | Removes a value by JSON path within a JSON document
+| <<hql-json-mergepatch-function,`json_mergepatch()`>> | Merges JSON documents by performing an https://tools.ietf.org/html/rfc7396[RFC 7396] compliant merge
+| <<hql-json-array-append-function,`json_array_append()`>> | Appends to a JSON array of a JSON document by JSON path
+| <<hql-json-array-insert-function,`json_array_insert()`>> | Inserts a value by JSON path to a JSON array within a JSON document
+| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
 |===
 
 
@@ -2159,6 +2204,47 @@ include::{json-example-dir-hql}/JsonArrayInsertTest.java[tags=hql-json-array-ins
 
 WARNING: SAP HANA, DB2, H2 and HSQLDB do not support this function.
 
+[[hql-json-table-function]]
+===== `json_table()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns a JSON document argument into rows.
+Returns no rows if the document is `null` or an empty JSON array.
+
+[[hql-json-table-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/json_table_bnf.txt[]
+----
+
+The first argument is the JSON document. The second optional argument represents the JSON path expression to use
+in order to obtain JSON nodes for further processing. The default for the optional second argument is `$[*]`
+i.e. access of root array elements.
+
+NOTE: If the root of the JSON document is an object, it is recommended to pass `$` as JSON path for portability.
+
+The `passing` clause can be used to pass values for variables in the JSON path.
+
+Attributes/columns that ought to be accessible via the `from` node alias are defined in the `columns` clause,
+which can be of varying forms:
+
+* Value attributes - denoted by a `castTarget` after the name, behaves like <<hql-json-value-function,`json_value()`>>
+* Query attributes - denoted by the `json` type after the name, behaves like <<hql-json-query-function,`json_query()`>>
+* Exists attributes - denoted by the `exists` keyword after the name, behaves like <<hql-json-exists-function,`json_exists()`>>
+* Ordinal attributes - denoted by the `for ordinality` syntax after the name, gives access to the 1-based index of the currently processed array element
+* Nested paths - declare a JSON path for processing of a nested `columns` clause
+
+[[hql-json-table-simple-example]]
+====
+[source, java, indent=0]
+----
+include::{json-example-dir-hql}/JsonTableTest.java[tags=hql-json-table-example]
+----
+====
+
+The `lateral` keyword is mandatory if one of the arguments refer to a from node item of the same query level.
+
+WARNING: H2 support is limited and HSQLDB as well as Sybase ASE do not support this function.
+
 [[hql-functions-xml]]
 ==== Functions for dealing with XML
 
@@ -2171,14 +2257,15 @@ it is necessary to enable the `hibernate.query.hql.xml_functions_enabled` config
 |===
 | Function | Purpose
 
-| `xmlelement()` | Constructs an XML element from arguments
-| `xmlcomment()` | Constructs an XML comment from the single argument
-| `xmlforest()` | Constructs an XML forest from the arguments
-| `xmlconcat()` | Concatenates multiple XML fragments to each other
-| `xmlpi()` | Constructs an XML processing instruction
-| `xmlquery()` | Extracts content from XML document using XQuery or XPath
-| `xmlexists()` | Checks if an XQuery or XPath expression exists in an XML document
-| `xmlagg()` | Aggregates XML elements by concatenation
+| <<hql-xmlelement-function,`xmlelement()`>> | Constructs an XML element from arguments
+| <<hql-xmlcomment-function,`xmlcomment()`>> | Constructs an XML comment from the single argument
+| <<hql-xmlforest-function,`xmlforest()`>> | Constructs an XML forest from the arguments
+| <<hql-xmlconcat-function,`xmlconcat()`>> | Concatenates multiple XML fragments to each other
+| <<hql-xmlpi-function,`xmlpi()`>> | Constructs an XML processing instruction
+| <<hql-xmlquery-function,`xmlquery()`>> | Extracts content from XML document using XQuery or XPath
+| <<hql-xmlexists-function,`xmlexists()`>> | Checks if an XQuery or XPath expression exists in an XML document
+| <<hql-xmlagg-function,`xmlagg()`>> | Aggregates XML elements by concatenation
+| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
 |===
 
 
@@ -2374,6 +2461,39 @@ include::{xml-example-dir-hql}/XmlAggTest.java[tags=hql-xmlagg-example]
 ====
 
 WARNING: SAP HANA, MySQL, MariaDB and HSQLDB do not support this function.
+
+[[hql-xmltable-function]]
+===== `xmltable()`
+
+A <<hql-from-set-returning-functions,set-returning function>>, which turns an XML document argument into rows.
+Returns no rows if the document is `null` or the XPath expression resolves to no nodes.
+
+[[hql-xmltable-bnf]]
+[source, antlrv4, indent=0]
+----
+include::{extrasdir}/xmltable_bnf.txt[]
+----
+
+The first argument is the XPath expression. The second argument represents the XML document expression.
+
+Columns that ought to be accessible via the `from` node alias are defined in the `columns` clause,
+which can be of varying forms:
+
+* Value attributes - denoted by a `castTarget` after the name, will cast the content of the XML node matching the XPath expression of the column
+* Query attributes - denoted by the `xml` type after the name, returns the XML node matching the XPath expression of the column
+* Ordinal attributes - denoted by the `for ordinality` syntax after the name, gives access to the 1-based index of the currently processed XML node
+
+[[hql-xmltable-simple-example]]
+====
+[source, java, indent=0]
+----
+include::{xml-example-dir-hql}/XmlTableTest.java[tags=hql-xml-table-example]
+----
+====
+
+The `lateral` keyword is mandatory if one of the arguments refer to a from node item of the same query level.
+
+WARNING: H2, MySQL, MariaDB and HSQLDB do not support this function.
 
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
@@ -2900,6 +3020,87 @@ The CTE name can be used for a `from` clause root or a `join`, similar to entity
 
 Refer to the <<hql-with-cte,with clause>> chapter for details about CTEs.
 
+[[hql-from-set-returning-functions]]
+==== Set-returning functions in `from` clause
+
+A set-returning function is a function that produces rows instead of a single scalar value
+and is exclusively used in the `from` clause, either as root node or join target.
+
+The `index()` function can be used to access the 1-based index of a returned row.
+
+The following set-returning functions are available on many platforms:
+
+|===
+| Function | purpose
+
+| <<hql-array-unnest,`unnest()`>> | Turns an array into rows
+| <<hql-from-set-returning-functions-generate-series,`generate_series()`>> | Creates a series of values as rows
+| <<hql-json-table-function,`json_table()`>> | Turns a JSON document into rows
+| <<hql-xmltable-function,`xmltable()`>> | Turns an XML document into rows
+|===
+
+To use set returning functions defined in the database, it is required to register them in a `FunctionContributor`:
+
+[[hql-from-set-returning-functions-contributor-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-returning-function-contributor-example]
+----
+====
+
+After that, the function can be used in the `from` clause:
+
+[[hql-from-set-returning-functions-custom-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/CustomSetReturningFunctionTest.java[tags=hql-set-returning-function-custom-example]
+----
+====
+
+NOTE: The `index()` function represents the idea of the `with ordinality` SQL syntax,
+which is not supported on some databases for user defined functions.
+Hibernate ORM tries to emulate this feature by wrapping invocations as lateral subqueries and using `row_number()`,
+which may lead to worse performance.
+
+[[hql-from-set-returning-functions-generate-series]]
+==== `generate_series` set-returning function
+
+A <<hql-from-set-returning-functions,set-returning function>>, which generates rows from a given start value (inclusive)
+up to a given stop value (inclusive). The function has 2 variants:
+
+* `generate_series(numeric, numeric [,numeric])` - Arguments are `start`, `stop` and `step` with a default of `1` for the optional `step` argument
+* `generate_series(temporal, temporal, duration)` - Like the numeric variant, but for temporal types and `step` is required
+
+[[hql-generate-series-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-example]
+----
+====
+
+To obtain the "row number" of a generated value i.e. ordinality, it is possible to use the `index()` function.
+
+[[hql-generate-series-ordinality-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-ordinality-example]
+----
+====
+
+The `step` argument can be a negative value and progress from a higher `start` value to a lower `stop` value.
+
+[[hql-generate-series-temporal-example]]
+====
+[source, java, indent=0]
+----
+include::{srf-example-dir-hql}/GenerateSeriesTest.java[tags=hql-set-returning-function-generate-series-temporal-example]
+----
+====
+
 [[hql-join]]
 === Declaring joined entities
 
@@ -3114,6 +3315,17 @@ Lateral joins are particularly useful for computing top-N elements of multiple g
 Most databases support some flavor of `join lateral`, and Hibernate emulates the feature for databases which don't.
 But emulation is neither very efficient, nor does it support all possible query shapes, so it's important to test on your target database.
 ====
+
+[[hql-join-set-returning-function]]
+==== Set-returning functions in joins
+
+A `join` clause may contain a set-returning function, either:
+
+- an uncorrelated set-returning function, which is almost the same as a <<hql-from-set-returning-functions,set-returning function in the `from` clause>>, except that it may have an `on` restriction, or
+- a _lateral join_, which is a correlated set-returning function, and may refer to other roots declared earlier in the same `from` clause.
+
+The `lateral` keyword just distinguishes the two cases.
+A lateral join may be an inner or left outer join, but not a right join, nor a full join.
 
 [[hql-implicit-join]]
 ==== Implicit association joins (path expressions)

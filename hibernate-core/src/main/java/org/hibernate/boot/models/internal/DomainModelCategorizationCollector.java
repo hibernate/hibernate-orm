@@ -1,61 +1,44 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.internal;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
-import org.hibernate.boot.models.categorize.internal.CategorizedDomainModelImpl;
-import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
-import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.boot.models.spi.GlobalRegistrations;
-import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
-import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
-import org.hibernate.models.spi.AnnotationDescriptorRegistry;
-import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ClassDetailsRegistry;
-import org.hibernate.models.spi.SourceModelBuildingContext;
-
-import org.jboss.jandex.IndexView;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
+import org.hibernate.boot.models.spi.GlobalRegistrations;
+import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * In-flight holder for various things as we process metadata sources
  *
  * @author Steve Ebersole
  */
-
 public class DomainModelCategorizationCollector {
-	private final boolean areIdGeneratorsGlobal;
-	private final IndexView jandexIndex;
-
 	private final GlobalRegistrationsImpl globalRegistrations;
-	private final SourceModelBuildingContext modelsContext;
+	private final ModelsContext modelsContext;
 
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
 
 	public DomainModelCategorizationCollector(
-			boolean areIdGeneratorsGlobal,
 			GlobalRegistrations globalRegistrations,
-			IndexView jandexIndex,
-			SourceModelBuildingContext modelsContext) {
-		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
-		this.jandexIndex = jandexIndex;
+			ModelsContext modelsContext) {
 		this.globalRegistrations = (GlobalRegistrationsImpl) globalRegistrations;
 		this.modelsContext = modelsContext;
 	}
@@ -166,22 +149,5 @@ public class DomainModelCategorizationCollector {
 
 		// if we hit no opt-outs we have a root
 		return true;
-	}
-
-	public CategorizedDomainModel createResult(
-			Set<EntityHierarchy> entityHierarchies,
-			PersistenceUnitMetadata persistenceUnitMetadata,
-			ClassDetailsRegistry classDetailsRegistry,
-			AnnotationDescriptorRegistry annotationDescriptorRegistry) {
-		return new CategorizedDomainModelImpl(
-				classDetailsRegistry,
-				annotationDescriptorRegistry,
-				jandexIndex,
-				persistenceUnitMetadata,
-				entityHierarchies,
-				mappedSuperclasses,
-				embeddables,
-				getGlobalRegistrations()
-		);
 	}
 }

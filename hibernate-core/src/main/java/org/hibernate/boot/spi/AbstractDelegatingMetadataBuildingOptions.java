@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.spi;
@@ -7,7 +7,7 @@ package org.hibernate.boot.spi;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -131,19 +131,14 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public boolean isSpecjProprietarySyntaxEnabled() {
-		return delegate.isSpecjProprietarySyntaxEnabled();
-	}
-
-	@Override
 	public boolean isNoConstraintByDefault() {
 		return delegate.isNoConstraintByDefault();
 	}
 
 	@Override
 	public void apply(JpaOrmXmlPersistenceUnitDefaults jpaOrmXmlPersistenceUnitDefaults) {
-		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
-			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( jpaOrmXmlPersistenceUnitDefaults );
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware persistenceUnitDefaultAware ) {
+			persistenceUnitDefaultAware.apply( jpaOrmXmlPersistenceUnitDefaults );
 		}
 		else {
 			throw new HibernateException(
@@ -156,8 +151,8 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 
 	@Override
 	public void apply(PersistenceUnitMetadata persistenceUnitMetadata) {
-		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware ) {
-			( (JpaOrmXmlPersistenceUnitDefaultAware) delegate ).apply( persistenceUnitMetadata );
+		if ( delegate instanceof JpaOrmXmlPersistenceUnitDefaultAware persistenceUnitDefaultAware ) {
+			persistenceUnitDefaultAware.apply( persistenceUnitMetadata );
 		}
 		else {
 			throw new HibernateException(
@@ -181,5 +176,10 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public boolean isAllowExtensionsInCdi() {
 		return delegate.isAllowExtensionsInCdi();
+	}
+
+	@Override
+	public boolean isXmlFormatMapperLegacyFormatEnabled() {
+		return delegate.isXmlFormatMapperLegacyFormatEnabled();
 	}
 }

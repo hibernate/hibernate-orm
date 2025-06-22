@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -30,11 +30,10 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.internal.EmptyEventManager;
-import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.monitor.internal.EmptyEventMonitor;
+import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.ConnectionInfoLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -50,6 +49,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
+import static java.lang.Integer.parseInt;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MINOR_VERSION;
@@ -69,6 +69,7 @@ import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMulti
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBooleanWrapper;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
@@ -100,8 +101,6 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 	@Override
 	public JdbcEnvironment initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		final DialectFactory dialectFactory = registry.requireService( DialectFactory.class );
-
 		final String explicitDatabaseName = getExplicitDatabaseName( configurationValues );
 		Integer explicitDatabaseMajorVersion = getExplicitDatabaseMajorVersion( configurationValues );
 		Integer explicitDatabaseMinorVersion = getExplicitDatabaseMinorVersion( configurationValues );
@@ -110,11 +109,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				getExplicitDatabaseVersion( configurationValues, explicitDatabaseMajorVersion, explicitDatabaseMinorVersion );
 
 		if ( explicitDatabaseMajorVersion == null && explicitDatabaseMinorVersion == null && explicitDatabaseVersion != null ) {
-			final String[] parts = StringHelper.split( ".", explicitDatabaseVersion );
+			final String[] parts = split( ".", explicitDatabaseVersion );
 			try {
-				final int potentialMajor = Integer.parseInt( parts[0] );
+				final int potentialMajor = parseInt( parts[0] );
 				if ( parts.length > 1 ) {
-					explicitDatabaseMinorVersion = Integer.parseInt( parts[1] );
+					explicitDatabaseMinorVersion = parseInt( parts[1] );
 				}
 				explicitDatabaseMajorVersion = potentialMajor;
 			}
@@ -123,8 +122,27 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			}
 		}
 
+		return getJdbcEnvironment(
+				configurationValues,
+				registry,
+				explicitDatabaseName,
+				explicitDatabaseMajorVersion,
+				explicitDatabaseMinorVersion,
+				explicitDatabaseVersion
+		);
+	}
+
+	private JdbcEnvironment getJdbcEnvironment(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			String explicitDatabaseName,
+			Integer explicitDatabaseMajorVersion,
+			Integer explicitDatabaseMinorVersion,
+			String explicitDatabaseVersion) {
+		final DialectFactory dialectFactory = registry.requireService( DialectFactory.class );
+
 		final JdbcEnvironment jdbcEnvironment;
-		DatabaseConnectionInfo databaseConnectionInfo;
+		final DatabaseConnectionInfo databaseConnectionInfo;
 		if ( allowJdbcMetadataAccess( configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentUsingJdbcMetadata(
 					configurationValues,
@@ -133,8 +151,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseName,
 					explicitDatabaseMajorVersion,
 					explicitDatabaseMinorVersion,
-					explicitDatabaseVersion);
-			databaseConnectionInfo = buildDbInfo( registry, jdbcEnvironment.getDialect() );
+					explicitDatabaseVersion
+			);
+			databaseConnectionInfo = buildInfo( registry, jdbcEnvironment );
 		}
 		else if ( explicitDialectConfiguration( explicitDatabaseName, configurationValues ) ) {
 			jdbcEnvironment = getJdbcEnvironmentWithExplicitConfiguration(
@@ -146,36 +165,40 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 					explicitDatabaseMinorVersion,
 					explicitDatabaseVersion
 			);
-			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
+			databaseConnectionInfo = buildInfo( configurationValues, jdbcEnvironment );
 		}
 		else {
 			jdbcEnvironment = getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
-			databaseConnectionInfo = buildDbInfo( configurationValues, jdbcEnvironment.getDialect() );
+			databaseConnectionInfo = buildInfo( configurationValues, jdbcEnvironment );
 		}
 
-		// Standardized DB info logging
-		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
-
+		logConnectionInfo( databaseConnectionInfo );
 		return jdbcEnvironment;
 	}
 
-	private DatabaseConnectionInfo buildDbInfo(ServiceRegistryImplementor registry, Dialect dialect) {
-		if ( !isMultiTenancyEnabled( registry ) ) {
-			return registry.requireService( ConnectionProvider.class )
-					.getDatabaseConnectionInfo( dialect );
+	// For Hibernate Reactive: it needs to disable or customize the log
+	protected void logConnectionInfo(DatabaseConnectionInfo databaseConnectionInfo) {
+		// Standardized info logging
+		ConnectionInfoLogger.INSTANCE.logConnectionInfoDetails( databaseConnectionInfo.toInfoString() );
+	}
+
+	private DatabaseConnectionInfo buildInfo(ServiceRegistryImplementor registry, JdbcEnvironment environment) {
+		if ( isMultiTenancyEnabled( registry ) ) {
+			return registry.requireService( MultiTenantConnectionProvider.class )
+					.getDatabaseConnectionInfo( environment.getDialect() );
 		}
 		else {
-			final MultiTenantConnectionProvider<?> mcp =
-					registry.requireService( MultiTenantConnectionProvider.class );
-			return mcp.getDatabaseConnectionInfo( dialect );
+			return registry.requireService( ConnectionProvider.class )
+					.getDatabaseConnectionInfo( environment.getDialect(), environment.getExtractedDatabaseMetaData() );
 		}
 	}
 
-	private DatabaseConnectionInfo buildDbInfo(Map<String, Object> configurationValues, Dialect dialect) {
-		return new DatabaseConnectionInfoImpl( configurationValues, dialect );
+	private DatabaseConnectionInfo buildInfo(Map<String, Object> configurationValues, JdbcEnvironment environment) {
+		return new DatabaseConnectionInfoImpl( configurationValues, environment.getDialect() );
 	}
 
-	private static JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithDefaults(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory) {
@@ -183,7 +206,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
 
-	private static JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory,
@@ -204,6 +228,15 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				null,
 				configurationValues
 		);
+		return getJdbcEnvironmentWithExplicitConfiguration( configurationValues, registry, dialectFactory, dialectResolutionInfo );
+	}
+
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentWithExplicitConfiguration(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry,
+			DialectFactory dialectFactory,
+			DialectResolutionInfo dialectResolutionInfo) {
 		final Dialect dialect = dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo );
 		return new JdbcEnvironmentImpl( registry, dialect );
 	}
@@ -216,7 +249,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	 *
 	 * @see JdbcSettings#ALLOW_METADATA_ON_BOOT
 	 */
-	private static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
+	public static boolean allowJdbcMetadataAccess(Map<String, Object> configurationValues) {
 		final Boolean allow = getBooleanWrapper( ALLOW_METADATA_ON_BOOT, configurationValues, null );
 		if ( allow != null ) {
 			return allow;
@@ -296,7 +329,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		);
 	}
 
-	private JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
+	// Used by Hibernate Reactive
+	protected JdbcEnvironmentImpl getJdbcEnvironmentUsingJdbcMetadata(
 			Map<String, Object> configurationValues,
 			ServiceRegistryImplementor registry,
 			DialectFactory dialectFactory, String explicitDatabaseName,
@@ -368,11 +402,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 							final String version = metadata.getDatabaseProductVersion();
 							final String prefix =
 									metadata.getDatabaseMajorVersion() + "." + metadata.getDatabaseMinorVersion() + ".";
-							if ( version.startsWith(prefix) ) {
+							final int versionIndex = version.indexOf( prefix );
+							if ( versionIndex >= 0 ) {
 								try {
-									final String substring = version.substring( prefix.length() );
-									final String micro = new StringTokenizer(substring," .,-:;/()[]").nextToken();
-									return Integer.parseInt(micro);
+									final String substring = version.substring( versionIndex + prefix.length() );
+									final String micro = new StringTokenizer( substring, " .,-:;/()[]" ).nextToken();
+									return parseInt(micro);
 								}
 								catch (NumberFormatException nfe) {
 									return 0;
@@ -426,8 +461,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		return isNotEmpty( explicitDatabaseName ) || isNotNullAndNotEmpty( configurationValues.get( DIALECT ) );
 	}
 
-	private static boolean isNotNullAndNotEmpty(Object o) {
-		return o != null && ( !(o instanceof String) || !((String) o).isEmpty() );
+	private static boolean isNotNullAndNotEmpty(Object object) {
+		return object != null
+			&& ( !(object instanceof String string) || !string.isEmpty() );
 	}
 
 	private JdbcConnectionAccess buildJdbcConnectionAccess(ServiceRegistryImplementor registry) {
@@ -619,7 +655,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final JpaCompliance jpaCompliance;
 		private final SqlExceptionHelper sqlExceptionHelper;
 		TransactionCoordinator transactionCoordinator;
-		private final EmptyEventManager eventManager;
+		private final EmptyEventMonitor eventManager;
 
 		public TemporaryJdbcSessionOwner(
 				JdbcConnectionAccess jdbcConnectionAccess,
@@ -643,7 +679,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 							.getDefaultConnectionHandlingMode();
 
 			this.jpaCompliance = new MutableJpaComplianceImpl( Collections.emptyMap(), false );
-			this.eventManager = new EmptyEventManager();
+			this.eventManager = new EmptyEventMonitor();
 		}
 
 		@Override
@@ -692,7 +728,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 
 		@Override
-		public EventManager getEventManager() {
+		public EventMonitor getEventMonitor() {
 			return eventManager;
 		}
 

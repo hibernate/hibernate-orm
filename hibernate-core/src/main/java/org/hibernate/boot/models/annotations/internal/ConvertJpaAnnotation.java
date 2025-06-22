@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.models.annotations.internal;
@@ -7,7 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.models.spi.SourceModelBuildingContext;
+import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.Convert;
 
@@ -22,7 +22,7 @@ public class ConvertJpaAnnotation implements Convert {
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public ConvertJpaAnnotation(SourceModelBuildingContext modelContext) {
+	public ConvertJpaAnnotation(ModelsContext modelContext) {
 		this.converter = jakarta.persistence.AttributeConverter.class;
 		this.attributeName = "";
 		this.disableConversion = false;
@@ -31,7 +31,7 @@ public class ConvertJpaAnnotation implements Convert {
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public ConvertJpaAnnotation(Convert annotation, SourceModelBuildingContext modelContext) {
+	public ConvertJpaAnnotation(Convert annotation, ModelsContext modelContext) {
 		this.converter = annotation.converter();
 		this.attributeName = annotation.attributeName();
 		this.disableConversion = annotation.disableConversion();
@@ -40,7 +40,7 @@ public class ConvertJpaAnnotation implements Convert {
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public ConvertJpaAnnotation(Map<String, Object> attributeValues, SourceModelBuildingContext modelContext) {
+	public ConvertJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.converter = (Class<? extends jakarta.persistence.AttributeConverter>) attributeValues.get( "converter" );
 		this.attributeName = (String) attributeValues.get( "attributeName" );
 		this.disableConversion = (boolean) attributeValues.get( "disableConversion" );

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -47,10 +47,10 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 		super( mappingDocument );
 		this.attributeRoleBase = container.getAttributeRoleBase();
 		this.attributePathBase = container.getAttributePathBase();
-		if ( jaxbEmbeddableMapping instanceof ToolingHintContainer ) {
+		if ( jaxbEmbeddableMapping instanceof ToolingHintContainer toolingHintContainer ) {
 			this.toolingHintContext = Helper.collectToolingHints(
 					container.getToolingHintContextBaselineForEmbeddable(),
-					(ToolingHintContainer) jaxbEmbeddableMapping
+					toolingHintContainer
 			);
 		}
 		else {

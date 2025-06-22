@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.sql;
@@ -44,14 +44,14 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 
 	@Override
 	public SqmTranslator<? extends MutationStatement> createMutationTranslator(
-			SqmDmlStatement<?> sqmDeleteStatement,
+			SqmDmlStatement<?> sqmDmlStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
 			SqlAstCreationContext creationContext) {
 		return new StandardSqmTranslator<>(
-				sqmDeleteStatement,
+				sqmDmlStatement,
 				queryOptions,
 				domainParameterXref,
 				domainParameterBindings,

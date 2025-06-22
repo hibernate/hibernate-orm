@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -172,7 +172,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final boolean isLob;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
-			columnExpression = selectable.getTemplate( dialect, typeConfiguration, sqmFunctionRegistry );
+			columnExpression = selectable.getTemplate( dialect, typeConfiguration );
 			columnDefinition = null;
 			length = null;
 			precision = null;
@@ -191,7 +191,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			scale = column.getScale();
 			temporalPrecision = column.getTemporalPrecision();
 
-			isNullable = forceNotNullable ? false : column.isNullable();
+			isNullable = !forceNotNullable && column.isNullable();
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 			selectableName = column.getQuotedName( dialect );
 		}

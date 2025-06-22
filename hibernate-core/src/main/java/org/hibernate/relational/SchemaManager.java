@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.relational;
@@ -15,18 +15,29 @@ import org.hibernate.Incubating;
  *
  * @see org.hibernate.SessionFactory#getSchemaManager()
  *
+ * @apiNote This interface was added to JPA 3.2 as
+ * {@link jakarta.persistence.SchemaManager}, which it now inherits,
+ * with a minor change to the naming of its operations. It is retained
+ * for backward compatibility and as a place to define additional
+ * functionality such as {@link #populate()}.
+ *
  * @since 6.2
  * @author Gavin King
  */
 @Incubating
 public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
-	 * Export database objects mapped by Hibernate entities.
+	 * Export database objects mapped by Hibernate entities, and then
+	 * import initial data from {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaCreator}.
 	 *
 	 * @param createSchemas if {@code true}, attempt to create schemas,
 	 *                      otherwise, assume the schemas already exist
+	 *
+	 * @apiNote This operation is a synonym for {@link #create}.
 	 */
 	void exportMappedObjects(boolean createSchemas);
 
@@ -38,6 +49,8 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 *
 	 * @param dropSchemas if {@code true}, drop schemas,
 	 *                    otherwise, leave them be
+	 *
+	 * @apiNote This operation is a synonym for {@link #drop}.
 	 */
 	void dropMappedObjects(boolean dropSchemas);
 
@@ -46,26 +59,39 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 * have the expected definitions.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaValidator}.
+	 *
+	 * @apiNote This operation is a synonym for {@link #validate}.
 	 */
 	void validateMappedObjects();
 
 	/**
-	 * Truncate the database tables mapped by Hibernate entities, and
-	 * then re-import initial data from any configured
+	 * Truncate the database tables mapped by Hibernate entities, and then
+	 * reimport initial data from {@code /import.sql} and any other configured
 	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
 	 * load script}.
 	 * <p>
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
+	 * <p>
+	 * This operation does not affect the {@linkplain org.hibernate.Cache second-level cache}.
+	 * Therefore, after calling {@code truncate()}, it might be necessary to also call
+	 * {@link org.hibernate.Cache#evictAllRegions} to clean up data held in the second-level
+	 * cache.
+	 *
+	 * @apiNote This operation is a synonym for {@link #truncate}.
 	 */
 	void truncateMappedObjects();
 
-	@Override
-	default void create(boolean createSchemas) {
-		exportMappedObjects( createSchemas );
-	}
-
-	@Override
-	default void drop(boolean dropSchemas) {
-		dropMappedObjects( dropSchemas );
-	}
+	/**
+	 * Populate the database by executing {@code /import.sql} and any other configured
+	 * {@linkplain org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 * load script}.
+	 * <p>
+	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaPopulator}.
+	 *
+	 * @since 7.0
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+	 */
+	@Incubating
+	void populate();
 }

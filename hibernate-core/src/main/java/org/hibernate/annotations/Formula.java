@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
@@ -32,18 +32,29 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Character middleInitial;
  * </pre>
  * <p>
+ * By default, the fields of an entity are not updated with the results of evaluating
+ * the formula after an {@code insert} or {@code update}. The {@link Generated @Generated}
+ * annotation may be used to specify that this should happen:
+ * <pre>
+ * &#64;Generated  // evaluate the formula after an insert
+ * &#64;Formula("sub_total * (1.0 + tax)")
+ * BigDecimal totalWithTax;
+ * </pre>
+ * <p>
  * For an entity with {@linkplain jakarta.persistence.SecondaryTable secondary tables},
  * a formula may involve columns of the primary table, or columns of any one of the
  * secondary tables. But it may not involve columns of more than one table.
  * <p>
- * The {@link ColumnTransformer} annotation is an alternative in certain cases, allowing
- * the use of native SQL to read <em>and write</em> values to a column.
+ * The {@link ColumnTransformer @ColumnTransformer} annotation is an alternative in
+ * certain cases, allowing the use of native SQL to read <em>and write</em> values to
+ * a column.
  * <pre>
  * // it might be better to use &#64;ColumnTransformer in this case
  * &#064;Formula("decrypt(credit_card_num)")
  * String getCreditCardNumber() { ... }
  * </pre>
  *
+ * @see Generated
  * @see ColumnTransformer
  * @see DiscriminatorFormula
  * @see JoinFormula

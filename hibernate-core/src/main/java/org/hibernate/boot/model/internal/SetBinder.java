@@ -1,12 +1,11 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.internal;
 
 import java.util.function.Supplier;
 
-import org.hibernate.annotations.OrderBy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
@@ -34,10 +33,4 @@ public class SetBinder extends CollectionBinder {
 		return new Set( getCustomTypeBeanResolver(), persistentClass, getBuildingContext() );
 	}
 
-	@Override
-	public void setSqlOrderBy(OrderBy orderByAnn) {
-		if ( orderByAnn != null ) {
-			super.setSqlOrderBy( orderByAnn );
-		}
-	}
 }

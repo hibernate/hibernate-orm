@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.type.internal;
@@ -10,10 +10,12 @@ import java.util.Comparator;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -29,48 +31,43 @@ import org.hibernate.usertype.UserType;
 public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	protected final UserType<J> userType;
 	private final MutabilityPlan<J> mutabilityPlan;
+	private final CustomType<J> customType;
 
 	private final Comparator<J> comparator;
 
-	public UserTypeJavaTypeWrapper(UserType<J> userType) {
+	public UserTypeJavaTypeWrapper(UserType<J> userType, CustomType<J> customType) {
 		this.userType = userType;
-
-		MutabilityPlan<J> resolvedMutabilityPlan = null;
-
-		if ( userType instanceof MutabilityPlanExposer ) {
-			//noinspection unchecked
-			resolvedMutabilityPlan = ( (MutabilityPlanExposer<J>) userType ).getExposedMutabilityPlan();
-		}
-
-		if ( resolvedMutabilityPlan == null ) {
-			final Class<J> jClass = userType.returnedClass();
-			if ( jClass != null ) {
-				if ( jClass.getAnnotation( Immutable.class ) != null ) {
-					resolvedMutabilityPlan = ImmutableMutabilityPlan.instance();
-				}
-			}
-		}
-
-		if ( resolvedMutabilityPlan == null ) {
-			resolvedMutabilityPlan = new MutabilityPlanWrapper<>( userType );
-		}
-
-		this.mutabilityPlan = resolvedMutabilityPlan;
-
+		mutabilityPlan = resolveMutabilityPlan( userType );
+		this.customType = customType;
 		if ( userType instanceof Comparator ) {
 			//noinspection unchecked
-			this.comparator = ( (Comparator<J>) userType );
+			comparator = ( (Comparator<J>) userType );
 		}
 		else {
-			this.comparator = this::compare;
+			comparator = this::compare;
+		}
+	}
+
+	private MutabilityPlan<J> resolveMutabilityPlan(UserType<J> userType) {
+		if ( userType instanceof MutabilityPlanExposer ) {
+			//noinspection unchecked
+			return ( (MutabilityPlanExposer<J>) userType).getExposedMutabilityPlan();
+		}
+		else {
+			final Class<J> jClass = userType.returnedClass();
+			if ( jClass != null && jClass.getAnnotation( Immutable.class ) != null ) {
+				return ImmutableMutabilityPlan.instance();
+			}
+			else {
+				return new MutabilityPlanWrapper( userType );
+			}
 		}
 	}
 
 	private int compare(J first, J second) {
-		if ( userType.equals( first, second ) ) {
-			return 0;
-		}
-		return Comparator.<J, Integer>comparing( userType::hashCode ).compare( first, second );
+		return userType.equals( first, second ) ? 0
+				: Comparator.<J, Integer>comparing( userType::hashCode )
+						.compare( first, second );
 	}
 
 	@Override
@@ -115,40 +112,52 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 
 	@Override
 	public J fromString(CharSequence string) {
-		if ( userType instanceof EnhancedUserType<?> ) {
-			return ( (EnhancedUserType<J>) userType ).fromStringValue( string );
+		if ( userType instanceof EnhancedUserType<J> enhancedUserType ) {
+			return enhancedUserType.fromStringValue( string );
 		}
 		throw new UnsupportedOperationException( "No support for parsing UserType values from String: " + userType );
 	}
 
 	@Override
 	public String toString(J value) {
-		if ( userType.returnedClass().isInstance( value ) && userType instanceof EnhancedUserType<?> ) {
-			return ( (EnhancedUserType<J>) userType ).toString( value );
-		}
-		return value == null ? "null" : value.toString();
+		return userType.returnedClass().isInstance( value )
+			&& userType instanceof EnhancedUserType<J> enhancedUserType
+				? enhancedUserType.toString( value )
+				: value == null ? "null" : value.toString();
 	}
 
 	@Override
 	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
-		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-		if ( value != null && !type.isInstance( value ) && valueConverter != null ) {
-			final Object relationalValue = valueConverter.toRelationalValue( value );
-			return valueConverter.getRelationalJavaType().unwrap( relationalValue, type, options );
+		return unwrap( value, type, customType.getValueConverter(), options );
+	}
+
+	private <X,R> X unwrap(J value, Class<X> type, BasicValueConverter<J, R> converter, WrapperOptions options) {
+		if ( value != null && !type.isInstance( value ) && converter != null ) {
+			final Object relationalValue = customType.convertToRelationalValue( value );
+			final JavaType<R> relationalJavaType = converter.getRelationalJavaType();
+			assert relationalJavaType.isInstance( relationalValue );
+			//noinspection unchecked
+			return relationalJavaType.unwrap( (R) relationalValue, type, options );
 		}
-		//noinspection unchecked
-		return (X) value;
+		else {
+			//noinspection unchecked
+			return (X) value;
+		}
 	}
 
 	@Override
 	public <X> J wrap(X value, WrapperOptions options) {
-		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-		if ( value != null && !userType.returnedClass().isInstance( value ) && valueConverter != null ) {
-			final J domainValue = valueConverter.toDomainValue( value );
-			return valueConverter.getDomainJavaType().wrap( domainValue, options );
+		final BasicValueConverter<J, ?> converter = customType.getValueConverter();
+		if ( value != null && !userType.returnedClass().isInstance( value ) && converter != null ) {
+			final JavaType<J> domainJavaType = converter.getDomainJavaType();
+			final Object domainValue = customType.convertToDomainValue( value );
+			assert domainJavaType.isInstance( value );
+			return domainJavaType.wrap( domainValue, options );
 		}
-		//noinspection unchecked
-		return (J) value;
+		else {
+			//noinspection unchecked
+			return (J) value;
+		}
 	}
 
 	@Override
@@ -156,7 +165,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 		return userType.returnedClass();
 	}
 
-	public static class MutabilityPlanWrapper<J> implements MutabilityPlan<J> {
+	public class MutabilityPlanWrapper implements MutabilityPlan<J> {
 		private final UserType<J> userType;
 
 		public MutabilityPlanWrapper(UserType<J> userType) {
@@ -180,19 +189,20 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 			// we have to handle the fact that it could produce a null value,
 			// in which case we will try to use a converter for disassembling,
 			// or if that doesn't exist, simply use the domain value as is
-			if ( disassembled == null && value != null ) {
-				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-				if ( valueConverter == null ) {
-					return (Serializable) value;
-				}
-				else {
-					return valueConverter.getRelationalJavaType().getMutabilityPlan().disassemble(
-							valueConverter.toRelationalValue( value ),
-							session
-					);
-				}
+			return disassembled == null && value != null
+					? disassemble( value, customType.getValueConverter(), session )
+					: disassembled;
+		}
+
+		private <R> Serializable disassemble(J value, BasicValueConverter<J, R> converter, SharedSessionContract session) {
+			if ( converter == null ) {
+				return (Serializable) value;
 			}
-			return disassembled;
+			else {
+				final Object converted = customType.convertToRelationalValue( value );
+				return converter.getRelationalJavaType().getMutabilityPlan()
+						.disassemble( (R) converted, session );
+			}
 		}
 
 		@Override
@@ -202,16 +212,22 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 			// we have to handle the fact that it could produce a null value,
 			// in which case we will try to use a converter for assembling,
 			// or if that doesn't exist, simply use the relational value as is
-			if ( assembled == null && cached != null ) {
-				final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
-				if ( valueConverter == null ) {
-					return (J) cached;
-				}
-				else {
-					return valueConverter.toDomainValue( cached );
-				}
+			return assembled == null && cached != null
+					? disassemble( cached, customType.getValueConverter(), session )
+					: assembled;
+		}
+
+		private J disassemble(Serializable cached, BasicValueConverter<J, ?> converter, SharedSessionContract session) {
+			if ( converter == null ) {
+				//noinspection unchecked
+				return (J) cached;
 			}
-			return assembled;
+			else {
+				final Object assembled =
+						converter.getRelationalJavaType().getMutabilityPlan()
+								.assemble( cached, session );
+				return (J) customType.convertToDomainValue( assembled );
+			}
 		}
 	}
 }

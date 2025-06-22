@@ -1,8 +1,6 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later
- * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.tooling.gradle;
 
@@ -17,10 +15,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
@@ -29,18 +24,13 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  */
 public class Helper {
 
-	public static ClassLoader toClassLoader(SourceSet sourceSet, Project project) {
+	public static ClassLoader toClassLoader(FileCollection classesDirs, Set<File> dependencyFiles) {
 		final List<URL> urls = new ArrayList<>();
 
-		final FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
 		for ( File classesDir : classesDirs ) {
 			urls.add( toUrl( classesDir ) );
 		}
 
-		final Configuration compileConfig = project
-				.getConfigurations()
-				.getByName( sourceSet.getCompileClasspathConfigurationName() );
-		final Set<File> dependencyFiles = compileConfig.getResolvedConfiguration().getFiles();
 		for ( File dependencyFile : dependencyFiles ) {
 			urls.add( toUrl( dependencyFile ) );
 		}

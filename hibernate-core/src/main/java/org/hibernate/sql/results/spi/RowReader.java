@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.sql.results.spi;
@@ -22,9 +22,9 @@ public interface RowReader<R> {
 	 * The type actually returned from this reader's {@link #readRow} call,
 	 * accounting for any transformers.
 	 * <p>
-	 * May be null to indicate that no transformation is applied.
+	 * May be {@code null} to indicate that no transformation is applied.
 	 * <p>
-	 * Ultimately intended for use in comparing values are being de-duplicated
+	 * Ultimately intended for use in comparing values that are being de-duplicated
 	 */
 	Class<R> getDomainResultResultJavaType();
 

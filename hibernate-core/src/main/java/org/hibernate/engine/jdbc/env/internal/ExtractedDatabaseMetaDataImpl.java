@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.engine.jdbc.env.internal;
@@ -24,7 +24,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import static java.util.stream.StreamSupport.stream;
 
 /**
- * Standard implementation of ExtractedDatabaseMetaData
+ * Standard implementation of {@link ExtractedDatabaseMetaData}
  *
  * @author Steve Ebersole
  */
@@ -44,6 +44,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean supportsDataDefinitionInTransaction;
 	private final boolean doesDataDefinitionCauseTransactionCommit;
 	private final SQLStateType sqlStateType;
+	private final int transactionIsolation;
+	private final int defaultTransactionIsolation;
+	private final String url;
+	private final String driver;
 	private final boolean jdbcMetadataAccessible;
 
 
@@ -65,6 +69,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			boolean supportsDataDefinitionInTransaction,
 			boolean doesDataDefinitionCauseTransactionCommit,
 			SQLStateType sqlStateType,
+			int transactionIsolation,
+			int defaultTransactionIsolation,
+			String url,
+			String driver,
 			boolean jdbcMetadataIsAccessible) {
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.connectionAccess = connectionAccess;
@@ -78,6 +86,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
 		this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
 		this.sqlStateType = sqlStateType;
+		this.transactionIsolation = transactionIsolation;
+		this.defaultTransactionIsolation = defaultTransactionIsolation;
+		this.url = url;
+		this.driver = driver;
 		this.jdbcMetadataAccessible = jdbcMetadataIsAccessible;
 	}
 
@@ -137,6 +149,26 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	public String getUrl() {
+		return url;
+	}
+
+	@Override
+	public String getDriver() {
+		return driver;
+	}
+
+	@Override
+	public int getTransactionIsolation() {
+		return transactionIsolation;
+	}
+
+	@Override
+	public int getDefaultTransactionIsolation() {
+		return defaultTransactionIsolation;
+	}
+
+	@Override
 	public synchronized List<SequenceInformation> getSequenceInformationList() {
 		if ( jdbcMetadataAccessible ) {
 			//Loading the sequence information can take a while on large databases,
@@ -175,6 +207,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private boolean supportsDataDefinitionInTransaction;
 		private boolean doesDataDefinitionCauseTransactionCommit;
 		private SQLStateType sqlStateType;
+		private String url;
+		private String driver;
+		private int defaultTransactionIsolation;
+		private int transactionIsolation;
 
 		public Builder(JdbcEnvironment jdbcEnvironment, boolean jdbcMetadataIsAccessible, JdbcConnectionAccess connectionAccess) {
 			this.jdbcEnvironment = jdbcEnvironment;
@@ -193,6 +229,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			supportsDataDefinitionInTransaction = !databaseMetaData.dataDefinitionIgnoredInTransactions();
 			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
 			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
+			url = databaseMetaData.getURL();
+			driver = databaseMetaData.getDriverName();
+			defaultTransactionIsolation = databaseMetaData.getDefaultTransactionIsolation();
+			transactionIsolation = databaseMetaData.getConnection().getTransactionIsolation();
 			return this;
 		}
 
@@ -260,6 +300,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					supportsDataDefinitionInTransaction,
 					doesDataDefinitionCauseTransactionCommit,
 					sqlStateType,
+					transactionIsolation,
+					defaultTransactionIsolation,
+					url,
+					driver,
 					jdbcMetadataIsAccessible
 			);
 		}

@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.boot.model.source.internal.hbm;
@@ -20,9 +20,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmToolingHintType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.TableInformationContainer;
 import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
-import org.hibernate.boot.model.Caching;
+import org.hibernate.boot.model.source.spi.Caching;
 import org.hibernate.boot.model.CustomSql;
-import org.hibernate.boot.model.TruthValue;
 import org.hibernate.boot.model.source.spi.InheritanceType;
 import org.hibernate.boot.model.source.spi.SizeSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
@@ -75,32 +74,26 @@ public class Helper {
 	}
 
 	public static Caching createCaching(JaxbHbmCacheType cacheElement) {
-		if ( cacheElement == null ) {
-			return new Caching( TruthValue.UNKNOWN );
-		}
-		else {
-			return new Caching(
-					cacheElement.getRegion(),
-					cacheElement.getUsage(),
-					cacheElement.getInclude() == null
-							|| !"non-lazy".equals( cacheElement.getInclude().value() ),
-					TruthValue.TRUE
-			);
-		}
+		return cacheElement == null
+				? new Caching()
+				: new Caching(
+						cacheElement.getRegion(),
+						cacheElement.getUsage(),
+						cacheElement.getInclude() == null
+								|| !"non-lazy".equals( cacheElement.getInclude().value() ),
+						true
+				);
 	}
 
 	public static Caching createNaturalIdCaching(JaxbHbmNaturalIdCacheType cacheElement) {
-		if ( cacheElement == null ) {
-			return new Caching( TruthValue.UNKNOWN );
-		}
-		else {
-			return new Caching(
-					nullIfEmpty( cacheElement.getRegion() ),
-					null,
-					false,
-					TruthValue.TRUE
-			);
-		}
+		return cacheElement == null
+				? new Caching()
+				: new Caching(
+						nullIfEmpty( cacheElement.getRegion() ),
+						null,
+						false,
+						true
+				);
 	}
 
 	public static String getPropertyAccessorName(String access, boolean isEmbedded, String defaultAccess) {

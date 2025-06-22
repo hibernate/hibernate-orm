@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm;
@@ -13,18 +13,20 @@ import java.util.Map;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
-import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.SqmQuery;
 
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
+public interface SqmSelectionQuery<R> extends SqmQuery<R>, SelectionQuery<R> {
 
 	@Override
 	SqmSelectionQuery<R> setParameter(String name, Object value);
@@ -33,15 +35,15 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameter(String name, P value, Class<P> type);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameter(String name, P value, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameter(String name, P value, Type<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(String name, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(String name, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(String name, Date value, TemporalType temporalType);
 
 	@Override
@@ -51,15 +53,15 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameter(int position, P value, Class<P> type);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameter(int position, P value, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameter(int position, P value, Type<P> type);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(int position, Instant value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(int position, Date value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(int position, Calendar value, TemporalType temporalType);
 
 	@Override
@@ -69,15 +71,15 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameter(QueryParameter<P> parameter, P value, Class<P> type);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameter(QueryParameter<P> parameter, P val, Type<P> type);
 
 	@Override
 	<T> SqmSelectionQuery<R> setParameter(Parameter<T> param, T value);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
 
-	@Override
+	@Override @Deprecated(since = "7")
 	SqmSelectionQuery<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
@@ -87,7 +89,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(String name, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	SqmSelectionQuery<R> setParameterList(String name, Object[] values);
@@ -96,7 +98,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(String name, P[] values, Type<P> type);
 
 	@Override
 	SqmSelectionQuery<R> setParameterList(int position, @SuppressWarnings("rawtypes") Collection values);
@@ -105,7 +107,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(int position, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	SqmSelectionQuery<R> setParameterList(int position, Object[] values);
@@ -114,7 +116,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(int position, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameterList(int position, P[] values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(int position, P[] values, Type<P> type);
 
 	@Override
 	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values);
@@ -123,7 +125,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, Collection<? extends P> values, Type<P> type);
 
 	@Override
 	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values);
@@ -132,7 +134,7 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Class<P> javaType);
 
 	@Override
-	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, BindableType<P> type);
+	<P> SqmSelectionQuery<R> setParameterList(QueryParameter<P> parameter, P[] values, Type<P> type);
 
 	@Override
 	SqmSelectionQuery<R> setProperties(Object bean);
@@ -163,4 +165,10 @@ public interface SqmSelectionQuery<R> extends SqmQuery, SelectionQuery<R> {
 
 	@Override
 	SqmSelectionQuery<R> setReadOnly(boolean readOnly);
+
+	@Override
+	<T> SqmSelectionQuery<T> setTupleTransformer(TupleTransformer<T> transformer);
+
+	@Override
+	SqmSelectionQuery<R> setResultListTransformer(ResultListTransformer<R> transformer);
 }

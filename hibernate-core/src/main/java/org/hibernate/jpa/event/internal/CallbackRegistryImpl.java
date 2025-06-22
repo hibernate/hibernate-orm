@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.jpa.event.internal;
@@ -7,8 +7,8 @@ package org.hibernate.jpa.event.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.persistence.PersistenceException;
 
+import org.hibernate.internal.build.AllowReflection;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.MapBackedClassValue;
 import org.hibernate.internal.util.collections.ReadOnlyMap;
@@ -25,13 +25,13 @@ import org.hibernate.jpa.event.spi.CallbackType;
  */
 final class CallbackRegistryImpl implements CallbackRegistry {
 
-	private final ReadOnlyMap<Class,Callback[]> preCreates;
-	private final ReadOnlyMap<Class,Callback[]> postCreates;
-	private final ReadOnlyMap<Class,Callback[]> preRemoves;
-	private final ReadOnlyMap<Class,Callback[]> postRemoves;
-	private final ReadOnlyMap<Class,Callback[]> preUpdates;
-	private final ReadOnlyMap<Class,Callback[]> postUpdates;
-	private final ReadOnlyMap<Class,Callback[]> postLoads;
+	private final ReadOnlyMap<Class<?>,Callback[]> preCreates;
+	private final ReadOnlyMap<Class<?>,Callback[]> postCreates;
+	private final ReadOnlyMap<Class<?>,Callback[]> preRemoves;
+	private final ReadOnlyMap<Class<?>,Callback[]> postRemoves;
+	private final ReadOnlyMap<Class<?>,Callback[]> preUpdates;
+	private final ReadOnlyMap<Class<?>,Callback[]> postUpdates;
+	private final ReadOnlyMap<Class<?>,Callback[]> postLoads;
 
 	public CallbackRegistryImpl(
 			Map<Class<?>, Callback[]> preCreates,
@@ -50,19 +50,15 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 		this.postLoads = createBackingMap( postLoads );
 	}
 
-	private static ReadOnlyMap<Class, Callback[]> createBackingMap(final Map<Class<?>, Callback[]> src) {
-		if ( src == null || src.isEmpty() ) {
-			return ReadOnlyMap.EMPTY;
-		}
-		else {
-			return new MapBackedClassValue<>( src );
-		}
+	private static ReadOnlyMap<Class<?>, Callback[]> createBackingMap(final Map<Class<?>, Callback[]> src) {
+		return src == null || src.isEmpty()
+				? ReadOnlyMap.EMPTY
+				: new MapBackedClassValue<>( src );
 	}
 
 	@Override
 	public boolean hasRegisteredCallbacks(Class<?> entityClass, CallbackType callbackType) {
-		final ReadOnlyMap<Class,Callback[]> map = determineAppropriateCallbackMap( callbackType );
-		return notEmpty( map.get( entityClass ) );
+		return notEmpty( getCallbackMap( callbackType ).get( entityClass ) );
 	}
 
 	@Override
@@ -127,39 +123,21 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 		}
 	}
 
-	private ReadOnlyMap<Class,Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
-		if ( callbackType == CallbackType.PRE_PERSIST ) {
-			return preCreates;
-		}
-
-		if ( callbackType == CallbackType.POST_PERSIST ) {
-			return postCreates;
-		}
-
-		if ( callbackType == CallbackType.PRE_REMOVE ) {
-			return preRemoves;
-		}
-
-		if ( callbackType == CallbackType.POST_REMOVE ) {
-			return postRemoves;
-		}
-
-		if ( callbackType == CallbackType.PRE_UPDATE ) {
-			return preUpdates;
-		}
-
-		if ( callbackType == CallbackType.POST_UPDATE ) {
-			return postUpdates;
-		}
-
-		if ( callbackType == CallbackType.POST_LOAD ) {
-			return postLoads;
-		}
-
-		throw new PersistenceException( "Unrecognized JPA callback type [" + callbackType + "]" );
+	private ReadOnlyMap<Class<?>,Callback[]> getCallbackMap(CallbackType callbackType) {
+		return switch ( callbackType ) {
+			case PRE_PERSIST -> preCreates;
+			case POST_PERSIST -> postCreates;
+			case PRE_REMOVE -> preRemoves;
+			case POST_REMOVE -> postRemoves;
+			case PRE_UPDATE -> preUpdates;
+			case POST_UPDATE -> postUpdates;
+			case POST_LOAD -> postLoads;
+		};
 	}
 
 	public static class Builder {
+		private static final Callback[] NO_CALLBACKS = new Callback[0];
+
 		private final Map<Class<?>, Callback[]> preCreates = new HashMap<>();
 		private final Map<Class<?>, Callback[]> postCreates = new HashMap<>();
 		private final Map<Class<?>, Callback[]> preRemoves = new HashMap<>();
@@ -168,55 +146,34 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 		private final Map<Class<?>, Callback[]> postUpdates = new HashMap<>();
 		private final Map<Class<?>, Callback[]> postLoads = new HashMap<>();
 
+		@AllowReflection
 		public void registerCallbacks(Class<?> entityClass, Callback[] callbacks) {
-			if ( callbacks == null || callbacks.length == 0 ) {
-				return;
-			}
-
-			for ( Callback callback : callbacks ) {
-				final Map<Class<?>, Callback[]> map = determineAppropriateCallbackMap( callback.getCallbackType() );
-				Callback[] entityCallbacks = map.get( entityClass );
-				if ( entityCallbacks == null ) {
-					entityCallbacks = new Callback[0];
+			if ( callbacks != null ) {
+				for ( Callback callback : callbacks ) {
+					addCallback( entityClass, callback );
 				}
-				entityCallbacks = ArrayHelper.join( entityCallbacks, callback );
-				map.put( entityClass, entityCallbacks );
 			}
 		}
 
-		private Map<Class<?>, Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
-			if ( callbackType == CallbackType.PRE_PERSIST ) {
-				return preCreates;
-			}
-
-			if ( callbackType == CallbackType.POST_PERSIST ) {
-				return postCreates;
-			}
-
-			if ( callbackType == CallbackType.PRE_REMOVE ) {
-				return preRemoves;
-			}
-
-			if ( callbackType == CallbackType.POST_REMOVE ) {
-				return postRemoves;
-			}
-
-			if ( callbackType == CallbackType.PRE_UPDATE ) {
-				return preUpdates;
-			}
-
-			if ( callbackType == CallbackType.POST_UPDATE ) {
-				return postUpdates;
-			}
-
-			if ( callbackType == CallbackType.POST_LOAD ) {
-				return postLoads;
-			}
-
-			throw new PersistenceException( "Unrecognized JPA callback type [" + callbackType + "]" );
+		public void addCallback(Class<?> entityClass, Callback callback) {
+			final var callbackMap = getCallbackMap( callback.getCallbackType() );
+			final Callback[] existingCallbacks = callbackMap.getOrDefault( entityClass, NO_CALLBACKS );
+			callbackMap.put( entityClass, ArrayHelper.add( existingCallbacks, callback ) );
 		}
 
-		protected CallbackRegistryImpl build() {
+		private Map<Class<?>, Callback[]> getCallbackMap(CallbackType callbackType) {
+			return switch ( callbackType ) {
+				case PRE_PERSIST -> preCreates;
+				case POST_PERSIST -> postCreates;
+				case PRE_REMOVE -> preRemoves;
+				case POST_REMOVE -> postRemoves;
+				case PRE_UPDATE -> preUpdates;
+				case POST_UPDATE -> postUpdates;
+				case POST_LOAD -> postLoads;
+			};
+		}
+
+		protected CallbackRegistry build() {
 			return new CallbackRegistryImpl( preCreates, postCreates, preRemoves, postRemoves, preUpdates, postUpdates, postLoads );
 		}
 

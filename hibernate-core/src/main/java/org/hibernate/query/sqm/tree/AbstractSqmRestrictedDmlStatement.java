@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree;
@@ -93,11 +93,9 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	public void applyPredicate(SqmPredicate predicate) {
-		if ( predicate == null ) {
-			return;
+		if ( predicate != null ) {
+			initAndGetWhereClause().applyPredicate( predicate );
 		}
-
-		initAndGetWhereClause().applyPredicate( predicate );
 	}
 
 	public void setWhereClause(SqmWhereClause whereClause) {
@@ -131,10 +129,10 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
 		if ( whereClause != null && whereClause.getPredicate() != null ) {
-			sb.append( " where " );
-			whereClause.getPredicate().appendHqlString( sb );
+			hql.append( " where " );
+			whereClause.getPredicate().appendHqlString( hql, context );
 		}
 	}
 }

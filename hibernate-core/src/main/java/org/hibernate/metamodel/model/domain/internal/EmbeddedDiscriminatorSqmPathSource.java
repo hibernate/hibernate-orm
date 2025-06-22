@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.model.domain.internal;
@@ -24,11 +24,12 @@ public class EmbeddedDiscriminatorSqmPathSource<D> extends AbstractDiscriminator
 
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
+		//noinspection unchecked
 		return new EmbeddedDiscriminatorSqmPath<>(
 				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,
-				embeddableDomainType,
+				(EmbeddableDomainType<D>) embeddableDomainType,
 				lhs.nodeBuilder()
 		);
 	}

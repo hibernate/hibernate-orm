@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.query.sqm.tree.predicate;
@@ -7,10 +7,13 @@ package org.hibernate.query.sqm.tree.predicate;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import java.util.Objects;
 
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
@@ -43,7 +46,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 
 		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder );
 
-		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
+		final SqmBindableType<?> expressibleType = QueryHelper.highestPrecedenceType(
 				leftHandExpression.getExpressible(),
 				rightHandExpression.getExpressible()
 		);
@@ -108,11 +111,25 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	}
 
 	@Override
-	public void appendHqlString(StringBuilder sb) {
-		leftHandExpression.appendHqlString( sb );
-		sb.append( ' ' );
-		sb.append( operator.sqlText() );
-		sb.append( ' ' );
-		rightHandExpression.appendHqlString( sb );
+	public void appendHqlString(StringBuilder hql, SqmRenderContext context) {
+		leftHandExpression.appendHqlString( hql, context );
+		hql.append( ' ' );
+		hql.append( operator.sqlText() );
+		hql.append( ' ' );
+		rightHandExpression.appendHqlString( hql, context );
+	}
+
+	@Override
+	public boolean equals(Object object) {
+		return object instanceof SqmComparisonPredicate that
+			&& this.isNegated() == that.isNegated()
+			&& this.operator == that.operator
+			&& Objects.equals( this.leftHandExpression, that.leftHandExpression )
+			&& Objects.equals( this.rightHandExpression, that.rightHandExpression );
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash( isNegated(), operator, leftHandExpression, rightHandExpression );
 	}
 }

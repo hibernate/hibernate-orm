@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.metamodel.mapping.internal;
@@ -7,6 +7,8 @@ package org.hibernate.metamodel.mapping.internal;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 /**
+ * Defines the ability to perform post-creation processing for entity mappings.
+ *
  * @author Steve Ebersole
  */
 public interface InFlightEntityMappingType extends EntityMappingType {

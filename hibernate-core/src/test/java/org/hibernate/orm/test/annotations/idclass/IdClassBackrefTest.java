@@ -1,5 +1,5 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.annotations.idclass;
@@ -51,13 +51,7 @@ public class IdClassBackrefTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createNativeMutationQuery( "delete from LINE" ).executeUpdate();
-					session.createNativeMutationQuery( "delete from ITEM " ).executeUpdate();
-					session.createNativeMutationQuery( "delete from BUCKET" ).executeUpdate();
-				}
-		);
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

@@ -18,7 +18,6 @@ import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
-import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
@@ -36,15 +35,19 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 	private Map<String, QueryParameterImplementor<?>> namedQueryParameters;
 	private Map<Integer, QueryParameterImplementor<?>> positionalQueryParameters;
 
-	private int parameterImplicitPosition;
+	private int ordinalParameterImplicitPosition;
+
+	private int nextParameterMarkerPosition;
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
 
 	private List<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
 	public ParameterRecognizerImpl(ParameterMarkerStrategy parameterMarkerStrategy) {
-		this.parameterMarkerStrategy = parameterMarkerStrategy == null ? ParameterMarkerStrategyStandard.INSTANCE : parameterMarkerStrategy;
-		parameterImplicitPosition = 1;
+		assert parameterMarkerStrategy != null;
+		ordinalParameterImplicitPosition = 1;
+		nextParameterMarkerPosition = 1;
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	@Override
@@ -61,13 +64,13 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 					if ( first ) {
 						throw new ParameterLabelException(
 								"Ordinal parameter labels start from '?" + position + "'"
-										+ " (ordinal parameters must be labelled from '?1')"
+								+ " (ordinal parameters must be labelled from '?1')"
 						);
 					}
 					else {
 						throw new ParameterLabelException(
 								"Gap between '?" + previous + "' and '?" + position + "' in ordinal parameter labels"
-										+ " (ordinal parameters must be labelled sequentially)"
+								+ " (ordinal parameters must be labelled sequentially)"
 						);
 					}
 				}
@@ -105,7 +108,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			throw new ParameterRecognitionException( "Cannot mix parameter styles between JDBC-style, ordinal and named in the same query" );
 		}
 
-		int implicitPosition = parameterImplicitPosition++;
+		int implicitPosition = ordinalParameterImplicitPosition++;
 
 		QueryParameterImplementor<?> parameter = null;
 
@@ -121,7 +124,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			positionalQueryParameters.put( implicitPosition, parameter );
 		}
 
-		recognizeParameter( parameter, implicitPosition );
+		recognizeParameter( parameter );
 	}
 
 	@Override
@@ -147,7 +150,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			namedQueryParameters.put( name, parameter );
 		}
 
-		recognizeParameter( parameter, parameterImplicitPosition++ );
+		recognizeParameter( parameter );
 	}
 
 	@Override
@@ -177,7 +180,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			positionalQueryParameters.put( position, parameter );
 		}
 
-		recognizeParameter( parameter, parameterImplicitPosition++ );
+		recognizeParameter( parameter );
 	}
 
 	@Override
@@ -185,8 +188,8 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		sqlStringBuffer.append( character );
 	}
 
-	private void recognizeParameter(QueryParameterImplementor parameter, int position) {
-		final String marker = parameterMarkerStrategy.createMarker( position, null );
+	private void recognizeParameter(QueryParameterImplementor<?> parameter) {
+		final String marker = parameterMarkerStrategy.createMarker( nextParameterMarkerPosition++, null );
 		final int markerLength = marker.length();
 		if ( parameterList == null ) {
 			parameterList = new ArrayList<>();

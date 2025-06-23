@@ -59,6 +59,7 @@ import org.hibernate.type.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.singleton;
+import static java.util.Collections.unmodifiableSet;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.ReflectHelper.isFinalClass;
@@ -193,10 +194,11 @@ public class EntityMetamodel implements Serializable {
 			final Set<String> idAttributeNames;
 			if ( identifierMapperComponent != null ) {
 				nonAggregatedCidMapper = identifierMapperComponent.getType();
-				idAttributeNames = new HashSet<>( );
+				HashSet<String> tmpSet = new HashSet<>();
 				for ( Property property : identifierMapperComponent.getProperties() ) {
-					idAttributeNames.add( property.getName() );
+					tmpSet.add( property.getName() );
 				}
+				idAttributeNames = toSmallSet( unmodifiableSet( tmpSet ) );
 			}
 			else {
 				nonAggregatedCidMapper = null;

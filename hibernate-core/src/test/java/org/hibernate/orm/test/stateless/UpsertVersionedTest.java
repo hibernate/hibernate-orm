@@ -15,8 +15,6 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.SkipForDialectGroup;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -53,13 +51,6 @@ public class UpsertVersionedTest {
 		});
 	}
 
-	@SkipForDialectGroup(
-			value = {
-					@SkipForDialect( dialectClass = MySQLDialect.class,
-							reason = "These dialects return a rowcount of 1 in a stale upsert, so no StaleStateException is thrown is such cases"),
-					@SkipForDialect( dialectClass = MariaDBDialect.class )
-			}
-	)
 	@Test void testStaleUpsert(SessionFactoryScope scope) {
 		scope.getSessionFactory().getSchemaManager().truncate();
 		scope.inStatelessTransaction( s -> {

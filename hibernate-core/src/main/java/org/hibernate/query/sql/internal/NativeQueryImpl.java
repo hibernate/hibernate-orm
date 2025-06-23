@@ -491,7 +491,7 @@ public class NativeQueryImpl<R>
 	private static ParameterInterpretationImpl parameterInterpretation(
 			String sqlString, SharedSessionContractImplementor session) {
 		final ServiceRegistryImplementor serviceRegistry = session.getFactory().getServiceRegistry();
-		final ParameterMarkerStrategy parameterMarkerStrategy = getNullSafeParameterMarkerStrategy(serviceRegistry);
+		final ParameterMarkerStrategy parameterMarkerStrategy = getNullSafeParameterMarkerStrategy( serviceRegistry );
 		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( parameterMarkerStrategy );
 		serviceRegistry
 				.requireService( NativeQueryInterpreter.class )
@@ -921,7 +921,8 @@ public class NativeQueryImpl<R>
 						expandedParameterPositionIncrement = bindValueCount;
 					}
 				}
-			} else if (expandedParameterPosition != originalParameterPosition) {
+			}
+			else if ( expandedParameterPosition != originalParameterPosition ) {
 				final String oldParameterMarker = parameterMarkerStrategy.createMarker( originalParameterPosition,
 						null );
 				final String newParameterMarker = parameterMarkerStrategy.createMarker( expandedParameterPosition,
@@ -937,7 +938,7 @@ public class NativeQueryImpl<R>
 					sql = new StringBuilder( sqlString.length() + 20 );
 					sql.append( sqlString );
 				}
-				sql.replace( start, end, occurenceReplacement);
+				sql.replace( start, end, occurenceReplacement );
 				offset += occurenceReplacement.length() - occurrence.length();
 			}
 			expandedParameterPosition += expandedParameterPositionIncrement;
@@ -967,7 +968,7 @@ public class NativeQueryImpl<R>
 		}
 		else {
 			final String firstParameterMarker = parameterMarkerStrategy.createMarker( parameterStartPosition, null );
-			final int estimatedLength = bindValueMaxCount * ( firstParameterMarker.length() + 1 ) - 1 + ( isEnclosedInParens ? 2 : 0 );
+			final int estimatedLength = bindValueMaxCount * ( firstParameterMarker.length() + 1 ) - 1 + ( isEnclosedInParens ? 0 : 2 );
 			final StringBuilder stringBuilder = new StringBuilder( estimatedLength );
 			if ( ! isEnclosedInParens ) {
 				stringBuilder.append( '(' );

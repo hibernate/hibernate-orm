@@ -72,7 +72,8 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 	private final CompositeType nonAggregatedCidMapper;
 	private final boolean enhancedForLazyLoading;
 	private final LazyAttributesMetadata lazyAttributesMetadata;
-	private final LazyAttributeLoadingInterceptor.EntityRelatedState loadingInterceptorState;
+	private final LazyAttributeLoadingInterceptor.EntityRelatedState lazyAttributeLoadingInterceptorState;
+	private volatile transient EnhancementAsProxyLazinessInterceptor.EntityRelatedState enhancementAsProxyInterceptorState;
 
 	BytecodeEnhancementMetadataPojoImpl(
 			String entityName,
@@ -90,7 +91,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 		this.identifierAttributeNames = identifierAttributeNames;
 		this.enhancedForLazyLoading = enhancedForLazyLoading;
 		this.lazyAttributesMetadata = lazyAttributesMetadata;
-		this.loadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
+		this.lazyAttributeLoadingInterceptorState = new LazyAttributeLoadingInterceptor.EntityRelatedState(
 				getEntityName(), lazyAttributesMetadata.getLazyAttributeNames() );
 	}
 
@@ -220,7 +221,7 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			);
 		}
 		final LazyAttributeLoadingInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				this.loadingInterceptorState,
+				this.lazyAttributeLoadingInterceptorState,
 				identifier,
 				session
 		);
@@ -235,17 +236,33 @@ public final class BytecodeEnhancementMetadataPojoImpl implements BytecodeEnhanc
 			Object entity,
 			EntityKey entityKey,
 			SharedSessionContractImplementor session) {
+		EnhancementAsProxyLazinessInterceptor.EntityRelatedState meta = getEnhancementAsProxyLazinessInterceptorMetastate( session );
 		injectInterceptor(
 				entity,
 				new EnhancementAsProxyLazinessInterceptor(
-						entityName,
-						identifierAttributeNames,
-						nonAggregatedCidMapper,
+						meta,
 						entityKey,
 						session
 				),
 				session
 		);
+	}
+
+	//This state object needs to be lazily initialized as it needs access to the Persister, but once
+	//initialized it can be reused across multiple sessions.
+	private EnhancementAsProxyLazinessInterceptor.EntityRelatedState getEnhancementAsProxyLazinessInterceptorMetastate(SharedSessionContractImplementor session) {
+		EnhancementAsProxyLazinessInterceptor.EntityRelatedState state = this.enhancementAsProxyInterceptorState;
+		if ( state == null ) {
+			final EntityPersister entityPersister = session.getFactory().getMappingMetamodel()
+					.getEntityDescriptor( entityName );
+			state = new EnhancementAsProxyLazinessInterceptor.EntityRelatedState(
+					entityPersister,
+					nonAggregatedCidMapper,
+					identifierAttributeNames
+			);
+			this.enhancementAsProxyInterceptorState = state;
+		}
+		return state;
 	}
 
 	@Override

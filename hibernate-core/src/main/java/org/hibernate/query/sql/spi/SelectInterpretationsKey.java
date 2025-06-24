@@ -20,21 +20,25 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String sql;
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
 	private final Collection<String> querySpaces;
-	private final TupleTransformer<?> tupleTransformer;
-	private final ResultListTransformer<?> resultListTransformer;
 	private final int hash;
 
+	@Deprecated(forRemoval = true)
 	public SelectInterpretationsKey(
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
 			TupleTransformer<?> tupleTransformer,
 			ResultListTransformer<?> resultListTransformer) {
+		this( sql, jdbcValuesMappingProducer, querySpaces );
+	}
+
+	public SelectInterpretationsKey(
+			String sql,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Collection<String> querySpaces) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.querySpaces = querySpaces;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
 		this.hash = generateHashCode();
 	}
 
@@ -42,14 +46,10 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 			String sql,
 			JdbcValuesMappingProducer jdbcValuesMappingProducer,
 			Collection<String> querySpaces,
-			TupleTransformer<?> tupleTransformer,
-			ResultListTransformer<?> resultListTransformer,
 			int hash) {
 		this.sql = sql;
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.querySpaces = querySpaces;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
 		this.hash = hash;
 	}
 
@@ -64,8 +64,6 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 				sql,
 				jdbcValuesMappingProducer.cacheKeyInstance(),
 				new HashSet<>( querySpaces ),
-				tupleTransformer,
-				resultListTransformer,
 				hash
 		);
 	}
@@ -89,8 +87,6 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 		}
 		return sql.equals( that.sql )
 			&& Objects.equals( jdbcValuesMappingProducer, that.jdbcValuesMappingProducer )
-			&& Objects.equals( querySpaces, that.querySpaces )
-			&& Objects.equals( tupleTransformer, that.tupleTransformer )
-			&& Objects.equals( resultListTransformer, that.resultListTransformer );
+			&& Objects.equals( querySpaces, that.querySpaces );
 	}
 }

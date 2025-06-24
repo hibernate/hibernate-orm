@@ -74,7 +74,6 @@ import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToRe
 public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement<?> sqm;
 	private final DomainParameterXref domainParameterXref;
-	private final RowTransformer<R> rowTransformer;
 	private final SqmInterpreter<Object, ResultsConsumer<?, R>> executeQueryInterpreter;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
@@ -90,8 +89,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			QueryOptions queryOptions) {
 		this.sqm = sqm;
 		this.domainParameterXref = domainParameterXref;
-
-		this.rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata, queryOptions );
 
 		final ListResultsConsumer.UniqueSemantic uniqueSemantic =
 				sqm.producesUniqueResults() && !containsCollectionFetches( queryOptions )
@@ -117,7 +114,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
-						rowTransformer,
+						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						null,
 						resultCountEstimate,
 						resultsConsumer
@@ -149,7 +146,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
-						rowTransformer,
+						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
 						resultCountEstimate
@@ -185,7 +182,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						scrollMode,
 						jdbcParameterBindings,
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
-						rowTransformer,
+						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
 						resultCountEstimate
 				);
 			}

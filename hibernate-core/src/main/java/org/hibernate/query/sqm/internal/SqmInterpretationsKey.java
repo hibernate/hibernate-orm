@@ -9,8 +9,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.hibernate.LockOptions;
-import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 
@@ -28,8 +26,6 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 					query.hashCode(),
 					keySource.getResultType(),
 					keySource.getQueryOptions().getLockOptions(),
-					keySource.getQueryOptions().getTupleTransformer(),
-					keySource.getQueryOptions().getResultListTransformer(),
 					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
 			);
 		}
@@ -86,8 +82,6 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	private final Object query;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
-	private final TupleTransformer<?> tupleTransformer;
-	private final ResultListTransformer<?> resultListTransformer;
 	private final Collection<String> enabledFetchProfiles;
 	private final int hashCode;
 
@@ -96,15 +90,11 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			int hash,
 			Class<?> resultType,
 			LockOptions lockOptions,
-			TupleTransformer<?> tupleTransformer,
-			ResultListTransformer<?> resultListTransformer,
 			Collection<String> enabledFetchProfiles) {
 		this.query = query;
 		this.hashCode = hash;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
 		this.enabledFetchProfiles = enabledFetchProfiles;
 	}
 
@@ -116,8 +106,6 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 				resultType,
 				// Since lock options might be mutable, we need a copy for the cache key
 				lockOptions.makeDefensiveCopy(),
-				tupleTransformer,
-				resultListTransformer,
 				enabledFetchProfiles
 		);
 	}
@@ -139,8 +127,6 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 			&& this.query.equals( that.query )
 			&& Objects.equals( this.resultType, that.resultType )
 			&& Objects.equals( this.lockOptions, that.lockOptions )
-			&& Objects.equals( this.tupleTransformer, that.tupleTransformer )
-			&& Objects.equals( this.resultListTransformer, that.resultListTransformer )
 			&& Objects.equals( this.enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 

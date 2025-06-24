@@ -7,15 +7,20 @@
 package org.hibernate.dialect.function;
 
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A function to pass through a SQL fragment.
@@ -29,7 +34,23 @@ public class SqlFunction
 		super(
 				"sql",
 				StandardArgumentsValidators.min( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( JavaObjectType.INSTANCE ),
+				new FunctionReturnTypeResolver() {
+					@Override
+					public ReturnableType<?> resolveFunctionReturnType(
+							ReturnableType<?> impliedType,
+							List<? extends SqmTypedNode<?>> arguments,
+							TypeConfiguration typeConfiguration) {
+						return impliedType != null
+								? impliedType
+								: typeConfiguration.getBasicTypeForJavaType( Object.class );
+					}
+
+					@Override
+					public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+						final BasicValuedMapping impliedType = impliedTypeAccess.get();
+						return impliedType != null ? impliedType : JavaObjectType.INSTANCE;
+					}
+				},
 				null
 		);
 	}

@@ -45,12 +45,10 @@ public class SqmWhereClause implements SqmPredicateCollection {
 
 	@Override
 	public void applyPredicate(SqmPredicate predicate) {
-		if ( this.predicate == null ) {
-			this.predicate = predicate;
-		}
-		else {
-			this.predicate = nodeBuilder.and( this.predicate, predicate );
-		}
+		this.predicate =
+				this.predicate == null
+						? predicate
+						: nodeBuilder.and( this.predicate, predicate );
 	}
 
 	@Override

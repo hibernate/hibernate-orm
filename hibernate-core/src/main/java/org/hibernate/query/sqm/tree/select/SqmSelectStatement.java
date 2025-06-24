@@ -28,7 +28,6 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import jakarta.persistence.Tuple;
@@ -43,7 +42,6 @@ import jakarta.persistence.metamodel.EntityType;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
-import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
@@ -298,7 +296,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectStatement<T> distinct(boolean distinct) {
-		return (SqmSelectStatement<T>) super.distinct( distinct );
+		super.distinct( distinct );
+		return this;
 	}
 
 	@Override
@@ -317,21 +316,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public <U> SqmSubQuery<U> subquery(EntityType<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
-	}
-
-	@Override
-	public SqmSelectStatement<T> where(List<Predicate> restrictions) {
-		//noinspection rawtypes,unchecked
-		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
-		//noinspection unchecked,rawtypes
-		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
-		getQuerySpec().setHavingClausePredicate( combined );
-		return this;
 	}
 
 	@Override
@@ -424,32 +408,50 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectStatement<T> where(Expression<Boolean> restriction) {
-		return (SqmSelectStatement<T>) super.where( restriction );
+		super.where( restriction );
+		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> where(Predicate... restrictions) {
-		return (SqmSelectStatement<T>) super.where( restrictions );
+		super.where( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSelectStatement<T> where(List<Predicate> restrictions) {
+		super.where( restrictions );
+		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> groupBy(Expression<?>... expressions) {
-		return (SqmSelectStatement<T>) super.groupBy( expressions );
+		super.groupBy( expressions );
+		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> groupBy(List<Expression<?>> grouping) {
-		return (SqmSelectStatement<T>) super.groupBy( grouping );
+		super.groupBy( grouping );
+		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> having(Expression<Boolean> booleanExpression) {
-		return (SqmSelectStatement<T>) super.having( booleanExpression );
+		super.having( booleanExpression );
+		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> having(Predicate... predicates) {
-		return (SqmSelectStatement<T>) super.having( predicates );
+		super.having( predicates );
+		return this;
+	}
+
+	@Override
+	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
+		super.having( restrictions );
+		return this;
 	}
 
 	@Override

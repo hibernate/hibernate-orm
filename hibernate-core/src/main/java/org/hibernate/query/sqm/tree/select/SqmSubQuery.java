@@ -76,7 +76,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 
-import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
 /**
  * @author Steve Ebersole
@@ -345,37 +344,56 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSubQuery<T> distinct(boolean distinct) {
-		return (SqmSubQuery<T>) super.distinct( distinct );
+		super.distinct( distinct );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> where(Expression<Boolean> restriction) {
-		return (SqmSubQuery<T>) super.where( restriction );
+		super.where( restriction );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> where(Predicate... restrictions) {
-		return (SqmSubQuery<T>) super.where( restrictions );
+		super.where( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSubQuery<T> where(List<Predicate> restrictions) {
+		super.where( restrictions );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> groupBy(Expression<?>... expressions) {
-		return (SqmSubQuery<T>) super.groupBy( expressions );
+		super.groupBy( expressions );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> groupBy(List<Expression<?>> grouping) {
-		return (SqmSubQuery<T>) super.groupBy( grouping );
+		super.groupBy( grouping );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> having(Expression<Boolean> booleanExpression) {
-		return (SqmSubQuery<T>) super.having( booleanExpression );
+		super.having( booleanExpression );
+		return this;
 	}
 
 	@Override
 	public SqmSubQuery<T> having(Predicate... predicates) {
-		return (SqmSubQuery<T>) super.having( predicates );
+		super.having( predicates );
+		return this;
+	}
+
+	@Override
+	public SqmSubQuery<T> having(List<Predicate> restrictions) {
+		super.having( restrictions );
+		return this;
 	}
 
 	@Override
@@ -717,21 +735,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public <U> Subquery<U> subquery(EntityType<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
-	}
-
-	@Override
-	public Subquery<T> where(List<Predicate> restrictions) {
-		//noinspection rawtypes,unchecked
-		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
-		return this;
-	}
-
-	@Override
-	public Subquery<T> having(List<Predicate> restrictions) {
-		//noinspection unchecked,rawtypes
-		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
-		getQuerySpec().setHavingClausePredicate( combined );
-		return this;
 	}
 
 	@Override

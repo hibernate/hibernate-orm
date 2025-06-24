@@ -972,8 +972,10 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 	@Override
 	SqmPredicate wrap(Expression<Boolean> expression);
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	SqmPredicate wrap(Expression<Boolean>... expressions);
+
+	SqmPredicate wrap(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	SqmExpression<?> fk(Path<?> path);

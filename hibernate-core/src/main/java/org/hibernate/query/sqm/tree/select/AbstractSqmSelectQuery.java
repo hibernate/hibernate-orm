@@ -377,6 +377,12 @@ public abstract class AbstractSqmSelectQuery<T>
 		return this;
 	}
 
+	@Override
+	public SqmSelectQuery<T> where(List<Predicate> restrictions) {
+		getQuerySpec().setRestriction( restrictions );
+		return this;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping
@@ -388,7 +394,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectQuery<T> groupBy(Expression<?>... expressions) {
-		getQuerySpec().setGroupingExpressions( List.of( expressions ) );
+		getQuerySpec().setGroupingExpressions( expressions );
 		return this;
 	}
 
@@ -405,13 +411,19 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public SqmSelectQuery<T> having(Expression<Boolean> booleanExpression) {
-		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( booleanExpression ) );
+		getQuerySpec().setGroupRestriction( booleanExpression );
 		return this;
 	}
 
 	@Override
 	public SqmSelectQuery<T> having(Predicate... predicates) {
-		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( predicates ) );
+		getQuerySpec().setGroupRestriction( predicates );
+		return this;
+	}
+
+	@Override
+	public AbstractQuery<T> having(List<Predicate> restrictions) {
+		getQuerySpec().setGroupRestriction( restrictions );
 		return this;
 	}
 

@@ -60,6 +60,8 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	JpaQueryStructure<T> setRestriction(Predicate... restrictions);
 
+	JpaQueryStructure<T> setRestriction(List<Predicate> restrictions);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping (group-by / having) clause
@@ -77,6 +79,8 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	JpaQueryStructure<T> setGroupRestriction(Expression<Boolean> restriction);
 
 	JpaQueryStructure<T> setGroupRestriction(Predicate... restrictions);
+
+	JpaQueryStructure<T> setGroupRestriction(List<Predicate> restrictions);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

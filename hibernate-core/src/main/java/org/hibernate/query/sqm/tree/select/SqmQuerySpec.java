@@ -374,18 +374,42 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			setWhereClause( null );
 		}
 		else {
-			SqmWhereClause whereClause = getWhereClause();
-			if ( whereClause == null ) {
-				setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
-			}
-			else {
-				whereClause.setPredicate( null );
-			}
+			final SqmWhereClause whereClause = resetWhereClause();
 			for ( Predicate restriction : restrictions ) {
 				whereClause.applyPredicate( (SqmPredicate) restriction );
 			}
 		}
 		return this;
+	}
+
+	@Override
+	public SqmQuerySpec<T> setRestriction(List<Predicate> restrictions) {
+		if ( restrictions == null ) {
+			throw new IllegalArgumentException( "The predicate list cannot be null" );
+		}
+		else if ( restrictions.isEmpty() ) {
+			setWhereClause( null );
+		}
+		else {
+			final SqmWhereClause whereClause = resetWhereClause();
+			for ( Predicate restriction : restrictions ) {
+				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
+		}
+		return this;
+	}
+
+	private SqmWhereClause resetWhereClause() {
+		final SqmWhereClause whereClause = getWhereClause();
+		if ( whereClause == null ) {
+			final SqmWhereClause newWhereClause = new SqmWhereClause( nodeBuilder() );
+			setWhereClause( newWhereClause );
+			return newWhereClause;
+		}
+		else {
+			whereClause.setPredicate( null );
+			return whereClause;
+		}
 	}
 
 	@Override
@@ -438,6 +462,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(Predicate... restrictions) {
+		havingClausePredicate = nodeBuilder().wrap( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmQuerySpec<T> setGroupRestriction(List<Predicate> restrictions) {
 		havingClausePredicate = nodeBuilder().wrap( restrictions );
 		return this;
 	}

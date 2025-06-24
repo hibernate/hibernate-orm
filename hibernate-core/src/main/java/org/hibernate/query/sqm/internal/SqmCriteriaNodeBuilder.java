@@ -598,6 +598,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 	}
 
+	@Override
+	public SqmPredicate wrap(List<? extends Expression<Boolean>> restrictions) {
+		if ( restrictions.size() == 1 ) {
+			return wrap( restrictions.get( 0 ) );
+		}
+
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
+		for ( Expression<Boolean> expression : restrictions ) {
+			predicates.add( wrap( expression ) );
+		}
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
+	}
+
 	@Override @SuppressWarnings("unchecked")
 	public <T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz) {
 		return (T) extensions.get( clazz );

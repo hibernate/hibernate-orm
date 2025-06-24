@@ -19,7 +19,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -57,7 +56,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		// per-row state
 		protected @Nullable Object entityIdentifier;
 
-		public EntitySelectFetchInitializerData(EntitySelectFetchInitializer<?> initializer, RowProcessingState rowProcessingState) {
+		public EntitySelectFetchInitializerData(RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
 		}
 
@@ -100,7 +99,7 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	@Override
 	protected InitializerData createInitializerData(RowProcessingState rowProcessingState) {
-		return new EntitySelectFetchInitializerData( this, rowProcessingState );
+		return new EntitySelectFetchInitializerData( rowProcessingState );
 	}
 
 	public ModelPart getInitializedPart(){
@@ -135,20 +134,17 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	@Override
 	public void resolveInstance(Data data) {
-		if ( data.getState() != State.KEY_RESOLVED ) {
-			return;
+		if ( data.getState() == State.KEY_RESOLVED ) {
+			data.entityIdentifier = keyAssembler.assemble( data.getRowProcessingState() );
+			if ( data.entityIdentifier == null ) {
+				data.setState( State.MISSING );
+				data.setInstance( null );
+			}
+			else {
+				data.setState( State.INITIALIZED );
+				initializeIfNecessary( data );
+			}
 		}
-
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
-		data.entityIdentifier = keyAssembler.assemble( rowProcessingState );
-
-		if ( data.entityIdentifier == null ) {
-			data.setState( State.MISSING );
-			data.setInstance( null );
-			return;
-		}
-		data.setState( State.INITIALIZED );
-		initialize( data );
 	}
 
 	@Override
@@ -194,43 +190,24 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 
 	@Override
 	public void initializeInstance(Data data) {
-		if ( data.getState() != State.RESOLVED ) {
-			return;
+		if ( data.getState() == State.RESOLVED ) {
+			data.setState( State.INITIALIZED );
+			Hibernate.initialize( data.getInstance() );
 		}
-		data.setState( State.INITIALIZED );
-		Hibernate.initialize( data.getInstance() );
 	}
 
-	protected void initialize(EntitySelectFetchInitializerData data) {
+	protected void initializeIfNecessary(EntitySelectFetchInitializerData data) {
+		final boolean found = alreadyInitialized( data );
+		data.setState( State.INITIALIZED );
+		if ( !found ) {
+			initialize( data );
+		}
+	}
+
+	private void initialize(EntitySelectFetchInitializerData data) {
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final EntityKey entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
-
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
-		if ( holder != null ) {
-			data.setInstance( persistenceContext.proxyFor( holder, concreteDescriptor ) );
-			if ( holder.getEntityInitializer() == null ) {
-				if ( data.getInstance() != null && Hibernate.isInitialized( data.getInstance() ) ) {
-					data.setState( State.INITIALIZED );
-					return;
-				}
-			}
-			else if ( holder.getEntityInitializer() != this ) {
-				// the entity is already being loaded elsewhere
-				data.setState( State.INITIALIZED );
-				return;
-			}
-			else if ( data.getInstance() == null ) {
-				// todo: maybe mark this as resolved instead?
-				assert holder.getProxy() == null : "How to handle this case?";
-				data.setState( State.INITIALIZED );
-				return;
-			}
-		}
-		data.setState( State.INITIALIZED );
 		final String entityName = concreteDescriptor.getEntityName();
-
 		final Object instance = session.internalLoad(
 				entityName,
 				data.entityIdentifier,
@@ -240,19 +217,8 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 		data.setInstance( instance );
 
 		if ( instance == null ) {
-			if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
-				if ( affectedByFilter ) {
-					throw new EntityFilterException(
-							entityName,
-							data.entityIdentifier,
-							toOneMapping.getNavigableRole().getFullPath()
-					);
-				}
-				if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
-					throw new FetchNotFoundException( entityName, data.entityIdentifier );
-				}
-			}
-			persistenceContext.claimEntityHolderIfPossible(
+			handleNotFound( data, entityName );
+			session.getPersistenceContextInternal().claimEntityHolderIfPossible(
 					new EntityKey( data.entityIdentifier, concreteDescriptor ),
 					instance,
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
@@ -260,10 +226,50 @@ public class EntitySelectFetchInitializer<Data extends EntitySelectFetchInitiali
 			);
 		}
 
-		final boolean unwrapProxy = toOneMapping.isUnwrapProxy() && isEnhancedForLazyLoading;
-		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( data.getInstance() );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( data.getInstance() );
 		if ( lazyInitializer != null ) {
-			lazyInitializer.setUnwrap( unwrapProxy );
+			lazyInitializer.setUnwrap( toOneMapping.isUnwrapProxy() && isEnhancedForLazyLoading );
+		}
+	}
+
+	void handleNotFound(EntitySelectFetchInitializerData data, String entityName) {
+		if ( toOneMapping.getNotFoundAction() != NotFoundAction.IGNORE ) {
+			if ( affectedByFilter ) {
+				final String fullPath = toOneMapping.getNavigableRole().getFullPath();
+				throw new EntityFilterException( entityName, data.entityIdentifier, fullPath );
+			}
+			if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
+				throw new FetchNotFoundException( entityName, data.entityIdentifier );
+			}
+		}
+	}
+
+	private boolean alreadyInitialized(EntitySelectFetchInitializerData data) {
+		final PersistenceContext persistenceContext =
+				data.getRowProcessingState().getSession().getPersistenceContextInternal();
+		final EntityHolder holder =
+				persistenceContext.getEntityHolder( new EntityKey( data.entityIdentifier, concreteDescriptor ) );
+		if ( holder == null ) {
+			return false;
+		}
+		else {
+			data.setInstance( persistenceContext.proxyFor( holder, concreteDescriptor ) ); // note side effect
+			if ( holder.getEntityInitializer() == null ) {
+				return data.getInstance() != null
+					&& Hibernate.isInitialized( data.getInstance() );
+			}
+			else if ( holder.getEntityInitializer() != this ) {
+				// the entity is already being loaded elsewhere
+				return true;
+			}
+			else if ( data.getInstance() == null ) {
+				// todo: maybe mark this as resolved instead?
+				assert holder.getProxy() == null : "How to handle this case?";
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 	}
 

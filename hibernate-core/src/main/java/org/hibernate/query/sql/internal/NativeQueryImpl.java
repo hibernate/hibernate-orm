@@ -1005,13 +1005,10 @@ public class NativeQueryImpl<R>
 	}
 
 	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping resultSetMapping) {
-		final QueryOptions options = getQueryOptions();
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
-				getSynchronizedQuerySpaces(),
-				options.getTupleTransformer(),
-				options.getResultListTransformer()
+				getSynchronizedQuerySpaces()
 		);
 	}
 

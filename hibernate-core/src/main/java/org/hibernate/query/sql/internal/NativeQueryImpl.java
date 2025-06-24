@@ -812,9 +812,7 @@ public class NativeQueryImpl<R>
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
-				getSynchronizedQuerySpaces(),
-				getQueryOptions().getTupleTransformer(),
-				getQueryOptions().getResultListTransformer()
+				getSynchronizedQuerySpaces()
 		);
 	}
 

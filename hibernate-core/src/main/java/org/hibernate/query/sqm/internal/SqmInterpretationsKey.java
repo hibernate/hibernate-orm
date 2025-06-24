@@ -10,8 +10,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -40,9 +38,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		return new SqmInterpretationsKey(
 				keySource.getQueryString(),
 				keySource.getResultType(),
-				keySource.getQueryOptions().getLockOptions(),
-				keySource.getQueryOptions().getTupleTransformer(),
-				keySource.getQueryOptions().getResultListTransformer()
+				keySource.getQueryOptions().getLockOptions()
 		);
 	}
 	@SuppressWarnings("RedundantIfStatement")
@@ -90,20 +86,14 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	private final String query;
 	private final Class<?> resultType;
 	private final LockOptions lockOptions;
-	private final TupleTransformer<?> tupleTransformer;
-	private final ResultListTransformer resultListTransformer;
 
 	private SqmInterpretationsKey(
 			String query,
 			Class<?> resultType,
-			LockOptions lockOptions,
-			TupleTransformer<?> tupleTransformer,
-			ResultListTransformer resultListTransformer) {
+			LockOptions lockOptions) {
 		this.query = query;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
-		this.tupleTransformer = tupleTransformer;
-		this.resultListTransformer = resultListTransformer;
 	}
 
 	@Override
@@ -112,9 +102,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 				query,
 				resultType,
 				// Since lock options are mutable, we need a copy for the cache key
-				lockOptions.makeCopy(),
-				tupleTransformer,
-				resultListTransformer
+				lockOptions.makeCopy()
 		);
 	}
 
@@ -135,9 +123,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		final SqmInterpretationsKey that = (SqmInterpretationsKey) o;
 		return query.equals( that.query )
 				&& areEqual( resultType, that.resultType )
-				&& areEqual( lockOptions, that.lockOptions )
-				&& areEqual( tupleTransformer, that.tupleTransformer )
-				&& areEqual( resultListTransformer, that.resultListTransformer );
+				&& areEqual( lockOptions, that.lockOptions );
 	}
 
 	private <T> boolean areEqual(T o1, T o2) {

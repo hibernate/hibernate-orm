@@ -7645,9 +7645,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			else if ( !dialect.supportsRowValueConstructorSyntaxInInList() ) {
-				final ComparisonOperator comparisonOperator = inListPredicate.isNegated() ?
-						ComparisonOperator.NOT_EQUAL :
-						ComparisonOperator.EQUAL;
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
 				if ( dialect.supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
 					inListPredicate.getTestExpression().accept( this );
@@ -7666,17 +7663,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( CLOSE_PARENTHESIS );
 				}
 				else {
-					String separator = NO_SEPARATOR;
+					final ComparisonOperator tupleComparisonOperator = inListPredicate.isNegated() ?
+							ComparisonOperator.NOT_EQUAL :
+							ComparisonOperator.EQUAL;
+					final String expressionJunction = inListPredicate.isNegated() ? " and " : " or ";
 					appendSql( OPEN_PARENTHESIS );
-					for ( Expression expression : listExpressions ) {
-						appendSql( separator );
+					String separator = NO_SEPARATOR;
+					for (Expression expression : listExpressions) {
+						appendSql(separator);
 						emulateTupleComparison(
 								lhsTuple.getExpressions(),
-								getSqlTuple( expression ).getExpressions(),
-								comparisonOperator,
+								SqlTupleContainer.getSqlTuple(expression).getExpressions(),
+								tupleComparisonOperator,
 								true
 						);
-						separator = " or ";
+						separator = expressionJunction;
 					}
 					appendSql( CLOSE_PARENTHESIS );
 				}

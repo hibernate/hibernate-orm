@@ -9,5 +9,5 @@ import org.hibernate.query.spi.QueryParameterImplementor;
 /**
  * @author Christian Beikov
  */
-public record ParameterOccurrence(QueryParameterImplementor<?> parameter, int sourcePosition) {
+public record ParameterOccurrence(QueryParameterImplementor<?> parameter, int sourcePosition, int length) {
 }

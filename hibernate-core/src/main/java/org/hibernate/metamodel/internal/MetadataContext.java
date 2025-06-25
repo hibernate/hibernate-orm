@@ -263,7 +263,6 @@ public class MetadataContext {
 			Property property,
 			IdentifiableDomainType<X> entityType,
 			BiFunction<IdentifiableDomainType<X>, Property, PersistentAttribute<X, ?>> factoryFunction) {
-		final PersistentAttribute<X, ?> attribute;
 		final Component component = property.getValue() instanceof Component comp ? comp : null;
 		if ( component != null && component.isGeneric() ) {
 			// This is an embeddable property that uses generics, we have to retrieve the generic
@@ -273,22 +272,22 @@ public class MetadataContext {
 			final Property genericProperty = property.copy();
 			genericProperty.setValue( genericComponent );
 			genericProperty.setGeneric( true );
-			attribute = factoryFunction.apply( entityType, genericProperty );
+			final PersistentAttribute<X, ?> attribute = factoryFunction.apply( entityType, genericProperty );
 			if ( !property.isGeneric() ) {
 				final PersistentAttribute<X, ?> concreteAttribute = factoryFunction.apply( entityType, property );
 				if ( concreteAttribute != null ) {
-					@SuppressWarnings("unchecked") final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
+					@SuppressWarnings("unchecked")
+					final AttributeContainer<X> attributeContainer = (AttributeContainer<X>) entityType;
 					attributeContainer.getInFlightAccess().addConcreteGenericAttribute( concreteAttribute );
 				}
 			}
+			return attribute;
 		}
 		else {
-			attribute = factoryFunction.apply( entityType, property );
+			return factoryFunction.apply( entityType, property );
 		}
-		return attribute;
 	}
 
-	@SuppressWarnings("unchecked")
 	public void wrapUp() {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Wrapping up metadata context..." );
@@ -306,8 +305,7 @@ public class MetadataContext {
 					log.trace( "Starting entity [" + safeMapping.getEntityName() + ']' );
 				}
 				try {
-					final EntityDomainType<Object> jpaMapping = (EntityDomainType<Object>)
-							entityTypesByPersistentClass.get( safeMapping );
+					final EntityDomainType<?> jpaMapping = entityTypesByPersistentClass.get( safeMapping );
 
 					applyIdMetadata( safeMapping, jpaMapping );
 					applyVersionAttribute( safeMapping, jpaMapping );
@@ -345,8 +343,7 @@ public class MetadataContext {
 					log.trace( "Starting mapped superclass [" + safeMapping.getMappedClass().getName() + ']' );
 				}
 				try {
-					final MappedSuperclassDomainType<Object> jpaType = (MappedSuperclassDomainType<Object>)
-							mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
+					final var jpaType = mappedSuperclassByMappedSuperclassMapping.get( safeMapping );
 
 					applyIdMetadata( safeMapping, jpaType );
 					applyVersionAttribute( safeMapping, jpaType );
@@ -446,7 +443,7 @@ public class MetadataContext {
 		final PersistentAttribute<T, ?> attribute =
 				buildAttribute( property, jpaType, attributeFactory::buildAttribute );
 		if ( attribute != null ) {
-			addAttribute(jpaType, attribute );
+			addAttribute( jpaType, attribute );
 			if ( property.isNaturalIdentifier() ) {
 				@SuppressWarnings("unchecked")
 				final AttributeContainer<T> attributeContainer = (AttributeContainer<T>) jpaType;
@@ -684,8 +681,9 @@ public class MetadataContext {
 	}
 
 	private MappedSuperclass getMappedSuperclass(MappedSuperclass mappedSuperclass) {
-		return mappedSuperclass.getSuperMappedSuperclass() != null
-				? mappedSuperclass.getSuperMappedSuperclass()
+		final MappedSuperclass superMappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		return superMappedSuperclass != null
+				? superMappedSuperclass
 				: getMappedSuperclass( mappedSuperclass.getSuperPersistentClass() );
 	}
 
@@ -700,19 +698,18 @@ public class MetadataContext {
 			}
 		}
 
-		final Property property = getMappedSuperclassProperty(
-				propertyName,
-				mappedSuperclass.getSuperMappedSuperclass()
-		);
+		final Property property =
+				getMappedSuperclassProperty( propertyName,
+						mappedSuperclass.getSuperMappedSuperclass() );
 		if ( property != null ) {
 			return property;
 		}
-
-		if ( mappedSuperclass.getSuperPersistentClass() != null ) {
+		else if ( mappedSuperclass.getSuperPersistentClass() != null ) {
 			return mappedSuperclass.getSuperPersistentClass().getProperty( propertyName );
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	private <X> Set<SingularPersistentAttribute<? super X, ?>> buildIdClassAttributes(
@@ -721,7 +718,7 @@ public class MetadataContext {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Building old-school composite identifier [" + ownerType.getJavaType().getName() + ']' );
 		}
-		Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
+		final Set<SingularPersistentAttribute<? super X, ?>> attributes = new HashSet<>();
 		for ( Property property : properties ) {
 			attributes.add( attributeFactory.buildIdAttribute( ownerType, property ) );
 		}
@@ -761,7 +758,13 @@ public class MetadataContext {
 	}
 
 	private static String metamodelClassName(ManagedDomainType<?> managedTypeClass) {
-		return managedTypeClass.getJavaType().getName() + '_';
+		return metamodelClassName( managedTypeClass.getJavaType() );
+	}
+
+	private static String metamodelClassName(Class<?> javaType) {
+		return javaType.isMemberClass()
+				? metamodelClassName( javaType.getEnclosingClass() ) + "$" + javaType.getSimpleName() + "_"
+				: javaType.getName() + '_';
 	}
 
 	public Class<?> metamodelClass(ManagedDomainType<?> managedDomainType) {

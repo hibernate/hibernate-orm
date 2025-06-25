@@ -11,6 +11,8 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -61,6 +63,11 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	public DB2zLegacyDialect(DatabaseVersion version) {
 		super(version);
+	}
+
+	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2z();
 	}
 
 	@Override
@@ -147,11 +154,6 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override

@@ -6,9 +6,12 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sql.ast.SQLServerSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -46,6 +49,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
+
 
 /**
  * A SQL AST translator for SQL Server.
@@ -162,15 +166,15 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				// We have to inject the lateral predicate into the sub-query
 				final Predicate lateralPredicate = this.lateralPredicate;
 				this.lateralPredicate = predicate;
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 				this.lateralPredicate = lateralPredicate;
 			}
 			else {
-				renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+				renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 			}
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 
@@ -223,85 +227,32 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		if ( getDialect().getVersion().isSameOrAfter( 9 ) ) {
-			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-			switch ( lockMode ) {
-				case PESSIMISTIC_WRITE:
-				case WRITE: {
-					switch ( effectiveLockTimeout ) {
-						case LockOptions.SKIP_LOCKED:
-							appendSql( " with (updlock,rowlock,readpast)" );
-							break;
-						case LockOptions.NO_WAIT:
-							appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-							break;
-						default:
-							appendSql( " with (updlock,holdlock,rowlock)" );
-							break;
-					}
-					break;
-				}
-				case PESSIMISTIC_READ: {
-					switch ( effectiveLockTimeout ) {
-						case LockOptions.SKIP_LOCKED:
-							appendSql( " with (updlock,rowlock,readpast)" );
-							break;
-						case LockOptions.NO_WAIT:
-							appendSql( " with (holdlock,rowlock,nowait)" );
-							break;
-						default:
-							appendSql( " with (holdlock,rowlock)" );
-							break;
-					}
-					break;
-				}
-				case UPGRADE_SKIPLOCKED: {
-					if ( effectiveLockTimeout == LockOptions.NO_WAIT ) {
-						appendSql( " with (updlock,rowlock,readpast,nowait)" );
-					}
-					else {
-						appendSql( " with (updlock,rowlock,readpast)" );
-					}
-					break;
-				}
-				case UPGRADE_NOWAIT: {
-					appendSql( " with (updlock,holdlock,rowlock,nowait)" );
-					break;
-				}
-			}
+		append( determineLockHint( lockMode, getEffectiveLockTimeout( lockMode ), getDialect() ) );
+	}
+
+	@Internal
+	public static String determineLockHint(LockMode lockMode, int effectiveLockTimeout, Dialect dialect) {
+		// NOTE: exposed for tests
+
+		if ( dialect.getVersion().isSameOrAfter( 9 ) ) {
+			return SQLServerSqlAstTranslator.determineLockHint( lockMode, effectiveLockTimeout );
 		}
 		else {
-			switch ( lockMode ) {
-				case UPGRADE_NOWAIT:
-				case PESSIMISTIC_WRITE:
-				case WRITE: {
-					appendSql( " with (updlock,rowlock)" );
-					break;
-				}
-				case PESSIMISTIC_READ: {
-					appendSql( " with (holdlock,rowlock)" );
-					break;
-				}
-				case UPGRADE_SKIPLOCKED: {
-					appendSql( " with (updlock,rowlock,readpast)" );
-					break;
-				}
-			}
+			return switch ( lockMode ) {
+				case UPGRADE_NOWAIT, PESSIMISTIC_WRITE, WRITE -> " with (updlock,rowlock)";
+				case PESSIMISTIC_READ -> " with (holdlock,rowlock)";
+				case UPGRADE_SKIPLOCKED -> " with (updlock,rowlock,readpast)";
+				default -> "";
+			};
 		}
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnLocking) {
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// SQL Server does not support the FOR UPDATE clause
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {

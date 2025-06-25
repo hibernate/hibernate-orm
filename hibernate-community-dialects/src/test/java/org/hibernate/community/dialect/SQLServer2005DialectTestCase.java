@@ -17,6 +17,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hibernate.Timeouts.NO_WAIT;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -510,8 +511,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintReadPastLockingNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,rowlock,readpast,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_SKIPLOCKED )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -533,8 +534,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintPessimisticReadNoTimeOut() {
 		final String expectedLockHint = "tab1 with (holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_READ )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -556,8 +557,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintWriteWithNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.WRITE );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.WRITE )
+				.setTimeout( NO_WAIT );
 
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
@@ -580,8 +581,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintUpgradeNoWaitNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.UPGRADE_NOWAIT )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -603,8 +604,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintUpgradeNoTimeout() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );
@@ -626,8 +627,8 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 	public void testAppendLockHintPessimisticWriteNoTimeOut() {
 		final String expectedLockHint = "tab1 with (updlock,holdlock,rowlock,nowait)";
 
-		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE );
-		lockOptions.setTimeOut( LockOptions.NO_WAIT );
+		LockOptions lockOptions = new LockOptions( LockMode.PESSIMISTIC_WRITE )
+				.setTimeout( NO_WAIT );
 		String lockHint = dialect.appendLockHint( lockOptions, "tab1" );
 
 		assertEquals( expectedLockHint, lockHint );

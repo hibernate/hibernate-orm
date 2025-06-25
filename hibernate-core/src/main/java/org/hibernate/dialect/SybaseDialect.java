@@ -15,6 +15,8 @@ import org.hibernate.dialect.function.SybaseTruncFunction;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseJconnIdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.TransactSQLLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.sql.ast.SybaseSqlAstTranslator;
 import org.hibernate.dialect.sql.ast.SybaseSqmToSqlAstConverter;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
@@ -205,6 +207,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				return new SybaseSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return TransactSQLLockingSupport.SYBASE;
 	}
 
 	@Override

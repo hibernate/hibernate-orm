@@ -4,11 +4,9 @@
  */
 package org.hibernate.dialect.sql.ast;
 
-import java.util.List;
-import java.util.function.Consumer;
-
+import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
+import org.hibernate.Locking;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -50,6 +48,11 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.SqlTypes;
+
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.hibernate.Timeouts.SKIP_LOCKED_MILLI;
 
 /**
  * A SQL AST translator for Sybase ASE.
@@ -198,28 +201,31 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	private void renderLockHint(LockMode lockMode) {
-		final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
+		append( determineLockHint( lockMode, getEffectiveLockTimeout( lockMode ) ) );
+	}
+
+	@Internal
+	public static String determineLockHint(LockMode lockMode, int effectiveLockTimeout) {
+		// NOTE: exposed for tests
 		switch ( lockMode ) {
 			case PESSIMISTIC_READ:
 			case PESSIMISTIC_WRITE:
 			case WRITE: {
-				switch ( effectiveLockTimeout ) {
-					case LockOptions.SKIP_LOCKED:
-						appendSql( " holdlock readpast" );
-						break;
-					default:
-						appendSql( " holdlock" );
-						break;
+				if ( effectiveLockTimeout == SKIP_LOCKED_MILLI ) {
+					return " holdlock readpast";
 				}
-				break;
+				else {
+					return " holdlock";
+				}
 			}
 			case UPGRADE_SKIPLOCKED: {
-				appendSql( " holdlock readpast" );
-				break;
+				return " holdlock readpast";
 			}
 			case UPGRADE_NOWAIT: {
-				appendSql( " holdlock" );
-				break;
+				return " holdlock";
+			}
+			default: {
+				return "";
 			}
 		}
 	}
@@ -241,25 +247,22 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			predicate = tableGroupJoin.getPredicate();
 		}
 		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 		}
 		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
+			renderJoinedTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
+			Locking.FollowOn followOnStrategy) {
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
 		// No need for follow on locking
 		return LockStrategy.CLAUSE;
-	}
-
-	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Sybase ASE does not really support the FOR UPDATE clause
 	}
 
 	@Override

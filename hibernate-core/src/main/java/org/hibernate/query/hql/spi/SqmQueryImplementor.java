@@ -13,7 +13,6 @@ import java.util.Map;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.query.QueryFlushMode;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
@@ -89,9 +88,6 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery<R>
 
 	@Override @Deprecated
 	SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions);
-
-	@Override
-	SqmQueryImplementor<R> setLockMode(String alias, LockMode lockMode);
 
 	@Override
 	<T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);

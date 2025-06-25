@@ -63,7 +63,7 @@ public class ByteArrayMappingTests {
 		}
 
 		{
-			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("wrapper");
+			final BasicAttributeMapping primitive = (BasicAttributeMapping) entityDescriptor.findAttributeMapping("boxed");
 			final JdbcMapping jdbcMapping = primitive.getJdbcMapping();
 			assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Byte[].class));
 			if ( dialect.supportsStandardArrays() ) {
@@ -132,7 +132,7 @@ public class ByteArrayMappingTests {
 		//tag::basic-bytearray-example[]
 		// mapped as VARBINARY
 		private byte[] primitive;
-		private Byte[] wrapper;
+		private Byte[] boxed;
 		@JavaType( ByteArrayJavaType.class )
 		private Byte[] wrapperOld;
 
@@ -149,7 +149,7 @@ public class ByteArrayMappingTests {
 		public EntityOfByteArrays(Integer id, byte[] primitive, Byte[] wrapper) {
 			this.id = id;
 			this.primitive = primitive;
-			this.wrapper = wrapper;
+			this.boxed = wrapper;
 			this.primitiveLob = primitive;
 			this.wrapperLob = wrapper;
 		}
@@ -157,7 +157,7 @@ public class ByteArrayMappingTests {
 		public EntityOfByteArrays(Integer id, byte[] primitive, Byte[] wrapper, byte[] primitiveLob, Byte[] wrapperLob) {
 			this.id = id;
 			this.primitive = primitive;
-			this.wrapper = wrapper;
+			this.boxed = wrapper;
 			this.primitiveLob = primitiveLob;
 			this.wrapperLob = wrapperLob;
 		}

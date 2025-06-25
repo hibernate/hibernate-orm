@@ -14,6 +14,8 @@ import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static org.hibernate.type.BasicArrayType.determineElementTypeName;
+
 /**
  * A type that maps between {@link java.sql.Types#ARRAY ARRAY} and {@code Collection<T>}
  *
@@ -36,18 +38,19 @@ public class BasicCollectionType<C extends Collection<E>, E>
 	}
 
 	private static String determineName(BasicCollectionJavaType<?, ?> collectionTypeDescriptor, BasicType<?> baseDescriptor) {
+		final String elementTypeName = determineElementTypeName( baseDescriptor );
 		switch ( collectionTypeDescriptor.getSemantics().getCollectionClassification() ) {
 			case BAG:
 			case ID_BAG:
-				return "Collection<" + baseDescriptor.getName() + ">";
+				return "Collection<" + elementTypeName + ">";
 			case LIST:
-				return "List<" + baseDescriptor.getName() + ">";
+				return "List<" + elementTypeName + ">";
 			case SET:
-				return "Set<" + baseDescriptor.getName() + ">";
+				return "Set<" + elementTypeName + ">";
 			case SORTED_SET:
-				return "SortedSet<" + baseDescriptor.getName() + ">";
+				return "SortedSet<" + elementTypeName + ">";
 			case ORDERED_SET:
-				return "OrderedSet<" + baseDescriptor.getName() + ">";
+				return "OrderedSet<" + elementTypeName + ">";
 		}
 		return null;
 	}

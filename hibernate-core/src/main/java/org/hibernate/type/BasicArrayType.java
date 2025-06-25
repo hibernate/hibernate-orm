@@ -26,7 +26,28 @@ public class BasicArrayType<T>
 	public BasicArrayType(BasicType<T> baseDescriptor, JdbcType arrayJdbcType, JavaType<T[]> arrayTypeDescriptor) {
 		super( arrayJdbcType, arrayTypeDescriptor );
 		this.baseDescriptor = baseDescriptor;
-		this.name = baseDescriptor.getName() + "[]";
+		this.name = determineArrayTypeName( baseDescriptor );
+	}
+
+	static String determineElementTypeName(BasicType<?> baseDescriptor) {
+		final String elementName = baseDescriptor.getName();
+		switch ( elementName ) {
+			case "boolean":
+			case "byte":
+			case "char":
+			case "short":
+			case "int":
+			case "long":
+			case "float":
+			case "double":
+				return Character.toUpperCase( elementName.charAt( 0 ) ) + elementName.substring( 1 );
+			default:
+				return elementName;
+		}
+	}
+
+	static String determineArrayTypeName(BasicType<?> baseDescriptor) {
+		return determineElementTypeName( baseDescriptor ) + "[]";
 	}
 
 	@Override

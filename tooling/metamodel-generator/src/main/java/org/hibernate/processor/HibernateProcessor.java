@@ -382,7 +382,7 @@ public class HibernateProcessor extends AbstractProcessor {
 			try {
 				final AnnotationMetaEntity metaEntity =
 						AnnotationMetaEntity.create( typeElement, context,
-								parentMetadata( typeElement, context::getMetaEntity ) );
+								parentMetadata( typeElement, context::getMetaEntity ), null );
 				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				context.removeElementToRedo( elementName );
 			}
@@ -662,7 +662,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					final AnnotationMetaEntity metaEntity =
 							AnnotationMetaEntity.create( typeElement, context,
 									requiresLazyMemberInitialization,
-									true, false, parentMetaEntity );
+									true, false, parentMetaEntity, typeElement );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
@@ -681,7 +681,7 @@ public class HibernateProcessor extends AbstractProcessor {
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,
-										true, true, parentDataEntity );
+										true, true, parentDataEntity, typeElement );
 //						final Metamodel alreadyExistingDataMetaEntity =
 //								tryGettingExistingDataEntityFromContext( mirror, '_' + qualifiedName );
 //						if ( alreadyExistingDataMetaEntity != null ) {
@@ -758,7 +758,8 @@ public class HibernateProcessor extends AbstractProcessor {
 		if ( element instanceof TypeElement ) {
 			final AnnotationMetaEntity metaEntity =
 					AnnotationMetaEntity.create( (TypeElement) element, context,
-							parentMetadata( element.getEnclosingElement(), context::getMetaEntity ) );
+							parentMetadata( element.getEnclosingElement(), context::getMetaEntity ),
+							null );
 			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( element instanceof PackageElement ) {

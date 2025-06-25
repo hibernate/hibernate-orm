@@ -90,8 +90,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
-		modifiers( paramTypes, declaration );
+		modifiers( declaration, paramTypes );
 		preamble( declaration, paramTypes );
+		nullChecks( declaration, paramTypes );
 		createSpecification( declaration );
 		handleRestrictionParameters( declaration, paramTypes );
 		collectOrdering( declaration, paramTypes, containerType );
@@ -301,7 +302,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append("\n **/\n");
 	}
 
-	private void modifiers(List<String> paramTypes, StringBuilder declaration) {
+	private void modifiers(StringBuilder declaration, List<String> paramTypes) {
 		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
 		if ( hasVarargs ) {
 			declaration
@@ -318,6 +319,16 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			declaration
 					.append("public static ");
+		}
+	}
+
+	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i<paramNames.size(); i++ ) {
+			final String paramType = paramTypes.get( i );
+			// we don't do null checks on query parameters
+			if ( isSessionParameter( paramType ) || isSpecialParam( paramType) ) {
+				nullCheck( declaration, paramNames.get(i) );
+			}
 		}
 	}
 

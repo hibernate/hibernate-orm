@@ -55,7 +55,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		modifiers( declaration );
 		preamble( declaration, paramTypes );
 		chainSession( declaration );
-		nullChecks( paramTypes, declaration );
+		nullChecks( declaration, paramTypes );
 		createBuilder(declaration);
 		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
@@ -145,12 +145,10 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 				.append(".getCriteriaBuilder();\n");
 	}
 
-	void nullChecks(List<String> paramTypes, StringBuilder declaration) {
-		for ( int i = 0; i< paramNames.size(); i++ ) {
-			final String paramName = paramNames.get(i);
-			final String paramType = paramTypes.get(i);
-			if ( !isNullable(i) && !isPrimitive(paramType) ) {
-				nullCheck( declaration, paramName );
+	void nullChecks(StringBuilder declaration, List<String> paramTypes) {
+		for ( int i = 0; i<paramNames.size(); i++ ) {
+			if ( isNonNull(i, paramTypes) ) {
+				nullCheck( declaration, paramNames.get(i) );
 			}
 		}
 	}

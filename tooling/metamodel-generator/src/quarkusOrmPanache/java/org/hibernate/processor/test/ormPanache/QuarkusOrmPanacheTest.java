@@ -4,6 +4,7 @@
  */
 package org.hibernate.processor.test.ormPanache;
 
+import org.hibernate.Session;
 import org.hibernate.processor.test.util.CompilationTest;
 import org.hibernate.processor.test.util.TestUtil;
 import org.hibernate.processor.test.util.WithClasses;
@@ -100,7 +101,7 @@ class QuarkusOrmPanacheTest {
 		Assertions.assertFalse( Modifier.isStatic( method.getModifiers() ) );
 
 		// Make sure we have the proper constructor
-		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( EntityManager.class );
+		Constructor<?> constructor = repositoryClass.getDeclaredConstructor( Session.class );
 		Assertions.assertNotNull( constructor );
 		Assertions.assertTrue( constructor.isAnnotationPresent( Inject.class ) );
 	}

@@ -162,6 +162,12 @@ public final class Constants {
 	public static final String SPRING_STATELESS_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_STATELESS_SESSION + ">";
 	public static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
 
+	public static final String PANACHE2_ENTITY_MARKER = "io.quarkus.hibernate.panache.PanacheEntityMarker";
+	public static final String PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE = "io.quarkus.hibernate.panache.managed.blocking.PanacheManagedBlockingRepositoryBase";
+	public static final String PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE = "io.quarkus.hibernate.panache.stateless.blocking.PanacheStatelessBlockingRepositoryBase";
+	public static final String PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.panache.managed.reactive.PanacheManagedReactiveRepositoryBase";
+	public static final String PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.panache.stateless.reactive.PanacheStatelessReactiveRepositoryBase";
+
 	public static final Map<String, String> COLLECTIONS = Map.of(
 			COLLECTION, COLLECTION_ATTRIBUTE,
 			SET, SET_ATTRIBUTE,

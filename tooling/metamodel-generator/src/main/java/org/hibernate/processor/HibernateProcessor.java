@@ -253,9 +253,16 @@ public class HibernateProcessor extends AbstractProcessor {
 		PackageElement quarkusOrmPanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm.panache" );
+		PackageElement quarkusPanache2Package =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "io.quarkus.hibernate.panache" );
 		PackageElement quarkusReactivePanachePackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
+		// This is imported automatically by Quarkus extensions when HR is also imported
+		PackageElement quarkusReactivePanacheCommonPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "io.quarkus.hibernate.reactive.panache.common" );
 
 		if ( packagePresent(quarkusReactivePanachePackage)
 				&& packagePresent(quarkusOrmPanachePackage) ) {
@@ -284,6 +291,8 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
 		context.setSpringInjection( packagePresent(springBeansPackage) );
 		context.setAddComponentAnnotation( packagePresent(springStereotypePackage) );
+		context.setUsesQuarkusPanache2( packagePresent(quarkusPanache2Package) );
+		context.setUsesQuarkusReactiveCommon( packagePresent(quarkusReactivePanacheCommonPackage) );
 
 		final Map<String, String> options = environment.getOptions();
 

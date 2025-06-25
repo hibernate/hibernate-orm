@@ -6,6 +6,28 @@ plugins {
     id "local.module"
 }
 
+configurations {
+    themezip
+}
+
+dependencies {
+    themezip 'org.hibernate.infra:hibernate-asciidoctor-theme:5.1.1.Final@zip'
+}
+
+tasks.register('unpackTheme', Copy) {
+    def unpackDir = rootProject.layout.buildDirectory.dir("unpacked-theme")
+
+    onlyIf {
+        !unpackDir.get().asFile.exists()
+    }
+    destinationDir = unpackDir.get().asFile
+
+    def zipFile = configurations.themezip.singleFile
+    from zipTree(zipFile)
+
+    dependsOn configurations.themezip
+}
+
 tasks.withType(Javadoc).configureEach {
     def currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
@@ -21,7 +43,9 @@ tasks.withType(Javadoc).configureEach {
     configure( options ) {
         windowTitle = "Hibernate Javadocs ($project.name)"
         docTitle = "Hibernate Javadocs ($project.name : $project.version)"
-        stylesheetFile = rootProject.file( "shared/javadoc/stylesheet.css" )
+        // Pick the styles for the JDK that is used to "build" the Javadocs:
+        stylesheetFile = rootProject.layout.buildDirectory.dir("unpacked-theme").get()
+                .dir("hibernate-asciidoctor-theme").dir("javadoc").dir("jdk21").file("stylesheet.css").asFile
         bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 
         // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down
@@ -47,4 +71,5 @@ tasks.withType(Javadoc).configureEach {
 
         addBooleanOption('Xdoclint:none', true)
     }
+    dependsOn tasks.unpackTheme
 }

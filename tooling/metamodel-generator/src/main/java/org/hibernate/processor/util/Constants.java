@@ -158,6 +158,12 @@ public final class Constants {
 	public static final String PANACHE_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase";
 	public static final String PANACHE_REACTIVE_ENTITY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheEntityBase";
 
+	public static final String PANACHE2_ENTITY_MARKER = "io.quarkus.hibernate.panache.PanacheEntityMarker";
+	public static final String PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE = "io.quarkus.hibernate.panache.managed.blocking.PanacheManagedBlockingRepositoryBase";
+	public static final String PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE = "io.quarkus.hibernate.panache.stateless.blocking.PanacheStatelessBlockingRepositoryBase";
+	public static final String PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.panache.managed.reactive.PanacheManagedReactiveRepositoryBase";
+	public static final String PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.panache.stateless.reactive.PanacheStatelessReactiveRepositoryBase";
+
 	public static final Map<String, String> COLLECTIONS = Map.of(
 			COLLECTION, Constants.COLLECTION_ATTRIBUTE,
 			SET, Constants.SET_ATTRIBUTE,

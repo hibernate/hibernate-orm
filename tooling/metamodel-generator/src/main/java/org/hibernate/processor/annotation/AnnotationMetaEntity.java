@@ -470,6 +470,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
 			addIdClassIfNeeded( fieldsOfClass, gettersAndSettersOfClass );
+
+			if( hasAnnotation( element, ENTITY) && isPanache2Type(element) && !jakartaDataStaticModel ) {
+				addRepositoryMembers( element );
+			}
 		}
 
 		addAuxiliaryMembers();
@@ -519,6 +523,41 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final List<MetaAttribute> components = getIdMemberNames( fields, methods );
 			if ( components.size() >= 2 ) {
 				putMember( ID_CLASS_MEMBER_NAME, new IdClassMetaAttribute( this, components ) );
+			}
+		}
+	}
+
+	private void addRepositoryMembers(TypeElement element) {
+		Element managedBlockingRepository = null;
+		Element statelessBlockingRepository = null;
+		Element managedReactiveRepository = null;
+		Element statelessReactiveRepository = null;
+		for ( Element enclosedElement : element.getEnclosedElements() ) {
+			if ( enclosedElement.getKind() == ElementKind.INTERFACE ) {
+				members.put( enclosedElement.getSimpleName().toString(), new CDIAccessorMetaAttribute( this, enclosedElement ) );
+				if ( implementsInterface( (TypeElement) enclosedElement, Constants.PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE ) ) {
+					managedBlockingRepository = enclosedElement;
+				}
+				else if ( implementsInterface( (TypeElement) enclosedElement, Constants.PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE ) ) {
+					statelessBlockingRepository = enclosedElement;
+				}
+				else if ( implementsInterface( (TypeElement) enclosedElement, Constants.PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE ) ) {
+					managedReactiveRepository = enclosedElement;
+				}
+				else if ( implementsInterface( (TypeElement) enclosedElement, Constants.PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE ) ) {
+					statelessReactiveRepository = enclosedElement;
+				}
+			}
+		}
+		if ( quarkusInjection ) {
+			// FIXME: perhaps import id type?
+			TypeMirror idType = findIdType();
+			addAccessors(managedBlockingRepository, idType, "managedBlocking", PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE);
+			addAccessors(statelessBlockingRepository, idType, "statelessBlocking", PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE);
+			// Only add those if HR is in the classpath, otherwise it causes a compilation issue
+			if( context.usesQuarkusReactiveCommon() ) {
+				addAccessors(managedReactiveRepository, idType, "managedReactive", PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE);
+				addAccessors(statelessReactiveRepository, idType, "statelessReactive", PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE);
 			}
 		}
 	}
@@ -648,6 +687,56 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean isEquivalentPrimitiveType(TypeMirror type, TypeMirror match) {
 		return type.getKind().isPrimitive()
 			&& isSameType( context.getTypeUtils().boxedClass( ((PrimitiveType) type) ).asType(), match );
+	}
+
+	private void addAccessors(@Nullable Element repositoryType, @Nullable TypeMirror idType,
+							String repositoryAccessor, String repositorySuperType) {
+		TypeElement finalPrimaryEntity = primaryEntity;
+		if ( repositoryType != null ) {
+			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,  repositoryType.getSimpleName().toString() ) );
+		}
+		else if ( idType != null && finalPrimaryEntity != null ) {
+			String repositoryTypeName = "Panache"+repositoryAccessor.substring(0,1).toUpperCase()+repositoryAccessor.substring(1)+"Repository";
+			members.put( repositoryAccessor, new CDIAccessorMetaAttribute( this, repositoryAccessor,  repositoryTypeName ) );
+			members.put( repositoryAccessor + "Repository", new CDITypeMetaAttribute( this, repositoryTypeName, repositorySuperType +"<"+ finalPrimaryEntity.getSimpleName()+", "+ idType.toString()+">" ) );
+		}
+	}
+
+	private @Nullable TypeMirror findIdType() {
+		Element idMember = findIdMember();
+		TypeElement primaryEntityForTest = primaryEntity;
+		if ( idMember != null && primaryEntityForTest != null ) {
+			TypeMirror typedIdMember = this.context.getTypeUtils().asMemberOf((DeclaredType) primaryEntityForTest.asType(), idMember);
+			return switch(typedIdMember.getKind()) {
+				case ARRAY, DECLARED, BOOLEAN, BYTE, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE -> typedIdMember;
+				case EXECUTABLE -> ((ExecutableType) typedIdMember).getReturnType();
+				default -> {
+					message( element,
+							"Unhandled id member kind: "+typedIdMember+" for id "+idMember,
+							Diagnostic.Kind.ERROR );
+					yield null;
+				}
+			};
+		}
+		return null;
+	}
+
+	private @Nullable Element findIdMember() {
+		if ( primaryEntity == null ) {
+			message( element,
+					"No primary entity defined to find id member",
+					Diagnostic.Kind.ERROR );
+			return null;
+		}
+		for ( Element member : context.getAllMembers( primaryEntity ) ) {
+			if ( hasAnnotation( member, ID, EMBEDDED_ID ) ) {
+				return member;
+			}
+		}
+		message( element,
+				"Could not find any member annotated with @Id or @EmbeddedId",
+				Diagnostic.Kind.ERROR );
+		return null;
 	}
 
 	private boolean checkEntities(List<ExecutableElement> lifecycleMethods, boolean hibernateRepo) {

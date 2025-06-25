@@ -766,23 +766,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final ExecutableElement getter = findSessionGetter( element );
 			if ( getter != null ) {
 				// Never make a DAO for Panache subtypes
-				if ( !isPanacheType( element ) ) {
+				if ( !isPanacheType( element ) && !isPanache2Type( element ) ) {
 					repository = true;
 					sessionType = addDaoConstructor( getter );
 				}
-				else {
-					// For Panache subtypes, we look at the session type, but no DAO,
+				else if ( ! isPanache2Repository( element ) && !isPanache2Type( element ) ) {
+					// For Panache 1 subtypes, we look at the session type, but no DAO,
 					// we want static methods
 					sessionType = fullReturnType(getter);
+				}
+				else {
+					// For Panache 2 repositories we want a repository
+					repository = true;
+					sessionType =  setupQuarkusDaoConstructor( getter, element );
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
 					&& !jakartaDataRepository
-					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
+					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() || context.usesQuarkusPanache2() ) ) {
 				// if we don't have a getter, and not a JD repository, but we're in Quarkus,
 				// we know how to find the default sessions
 				repository = true;
-				sessionType = setupQuarkusDaoConstructor();
+				sessionType = setupQuarkusDaoConstructor( null, element );
 			}
 			if ( !repository && jakartaDataRepository ) {
 				repository = true;
@@ -889,6 +894,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| extendsClass( type, PANACHE_REACTIVE_ENTITY_BASE );
 	}
 
+	private boolean isPanache2Type(TypeElement type) {
+		return implementsInterface( type, PANACHE2_ENTITY_MARKER )
+				|| isPanache2Repository( type );
+	}
+
+	private boolean isPanache2Repository(TypeElement type) {
+		return implementsInterface( type, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE )
+				|| implementsInterface( type, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE )
+				|| implementsInterface( type, PANACHE2_MANAGED_REACTIVE_REPOSITORY_BASE )
+				|| implementsInterface( type, PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE )
+				;
+	}
+
 	/**
 	 * If there is a session getter method, we generate an instance
 	 * variable backing it, together with a constructor that initializes
@@ -930,10 +948,31 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	/**
 	 * For Quarkus, we generate a constructor with injection for EntityManager in ORM,
 	 * and in HR, we define the static session getter.
+	 * For Panache 2, we can use the element to figure out what kind of session we want since this
+	 * is for repositories
 	 */
-	private String setupQuarkusDaoConstructor() {
-		if ( context.usesQuarkusOrm() ) {
-			String name = "getEntityManager";
+	private String setupQuarkusDaoConstructor(@Nullable ExecutableElement getter, @Nullable TypeElement element) {
+		if ( context.usesQuarkusOrm()
+				|| (context.usesQuarkusPanache2()
+					&& element != null
+					&& (implementsInterface(element, PANACHE2_MANAGED_BLOCKING_REPOSITORY_BASE)
+						|| implementsInterface(element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE)))
+			) {
+			String name;
+			String sessionType;
+			if ( getter != null ) {
+				name = getter.getSimpleName().toString();
+				sessionType = fullReturnType(getter);
+			}
+			else if(element != null
+					&& implementsInterface(element, PANACHE2_STATELESS_BLOCKING_REPOSITORY_BASE)) {
+				name = "getStatelessSession";
+				sessionType = HIB_STATELESS_SESSION;
+			}
+			else { // good default
+				name = "getSession";
+				sessionType = HIB_SESSION;
+			}
 			putMember( name,
 					new RepositoryConstructor(
 							this,
@@ -949,13 +988,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							true
 					)
 			);
-			return ENTITY_MANAGER;
+			return sessionType;
 		}
 		else {
 			importType( Constants.QUARKUS_SESSION_OPERATIONS );
 			// use this getter to get the method, do not generate an injection point for its type
-			sessionGetter = "SessionOperations.getSession()";
-			return UNI_MUTINY_SESSION;
+			if(element != null
+					&& implementsInterface(element, PANACHE2_STATELESS_REACTIVE_REPOSITORY_BASE)) {
+				sessionGetter = "SessionOperations.getStatelessSession()";
+				return UNI_MUTINY_STATELESS_SESSION;
+			}
+			else {
+				sessionGetter = "SessionOperations.getSession()";
+				return UNI_MUTINY_SESSION;
+			}
 		}
 	}
 

@@ -104,6 +104,8 @@ public final class Context {
 
 	private boolean usesQuarkusOrm = false;
 	private boolean usesQuarkusReactive = false;
+	private boolean usesQuarkusPanache2 = false;
+	private boolean usesQuarkusReactiveCommon = false;
 
 	private String[] includes = {"*"};
 	private String[] excludes = {};
@@ -459,6 +461,22 @@ public final class Context {
 
 	public boolean usesQuarkusReactive() {
 		return usesQuarkusReactive;
+	}
+
+	public void setUsesQuarkusPanache2(boolean b) {
+		usesQuarkusPanache2 = b;
+	}
+
+	public boolean usesQuarkusPanache2() {
+		return usesQuarkusPanache2;
+	}
+
+	public void setUsesQuarkusReactiveCommon(boolean b) {
+		usesQuarkusReactiveCommon = b;
+	}
+
+	public boolean usesQuarkusReactiveCommon() {
+		return usesQuarkusReactiveCommon;
 	}
 
 	public void setInclude(String include) {

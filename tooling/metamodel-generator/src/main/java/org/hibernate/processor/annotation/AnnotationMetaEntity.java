@@ -175,7 +175,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	public AnnotationMetaEntity(
 			TypeElement element, Context context, boolean managed,
 			boolean jakartaDataStaticMetamodel,
-			@Nullable AnnotationMeta parent) {
+			@Nullable AnnotationMeta parent,
+			@Nullable TypeElement primaryEntity) {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
@@ -184,6 +185,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		this.springInjection = context.isSpringInjection();
 		this.importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;
+		this.primaryEntity = primaryEntity;
 		importContext.importType(
 				getGeneratedClassFullyQualifiedName( element, getPackageName( context, element ),
 						jakartaDataStaticModel ) );
@@ -192,17 +194,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent,
+			@Nullable TypeElement primaryEntity) {
+		return create( element,context, false, false, false, parent, primaryEntity );
+	}
+
 	public static AnnotationMetaEntity create(TypeElement element, Context context, @Nullable AnnotationMetaEntity parent) {
-		return create( element,context, false, false, false, parent );
+		return create( element,context, false, false, false, parent, null );
 	}
 
 	public static AnnotationMetaEntity create(
 			TypeElement element, Context context,
 			boolean lazilyInitialised, boolean managed,
 			boolean jakartaData,
-			@Nullable AnnotationMetaEntity parent) {
+			@Nullable AnnotationMetaEntity parent,
+			@Nullable TypeElement primaryEntity) {
 		final AnnotationMetaEntity annotationMetaEntity =
-				new AnnotationMetaEntity( element, context, managed, jakartaData, parent );
+				new AnnotationMetaEntity( element, context, managed, jakartaData, parent, primaryEntity );
 		if ( parent != null ) {
 			parent.addInnerClass( annotationMetaEntity );
 		}
@@ -419,8 +427,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 
-			primaryEntity = primaryEntity( lifecycleMethods );
 			final boolean hibernateRepo = isExplicitlyHibernateRepository();
+			if ( primaryEntity == null ) {
+				primaryEntity = primaryEntity( lifecycleMethods );
+			}
 			if ( !checkEntity( primaryEntity, hibernateRepo )
 					|| !checkEntities( lifecycleMethods, hibernateRepo ) ) {
 				// NOTE EARLY EXIT with initialized = false

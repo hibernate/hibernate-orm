@@ -662,7 +662,7 @@ public class HibernateProcessor extends AbstractProcessor {
 					final AnnotationMetaEntity metaEntity =
 							AnnotationMetaEntity.create( typeElement, context,
 									requiresLazyMemberInitialization,
-									true, false, parentMetaEntity );
+									true, false, parentMetaEntity, typeElement );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
@@ -681,7 +681,7 @@ public class HibernateProcessor extends AbstractProcessor {
 						final AnnotationMetaEntity dataMetaEntity =
 								AnnotationMetaEntity.create( typeElement, context,
 										requiresLazyMemberInitialization,
-										true, true, parentDataEntity );
+										true, true, parentDataEntity, typeElement );
 //						final Metamodel alreadyExistingDataMetaEntity =
 //								tryGettingExistingDataEntityFromContext( mirror, '_' + qualifiedName );
 //						if ( alreadyExistingDataMetaEntity != null ) {

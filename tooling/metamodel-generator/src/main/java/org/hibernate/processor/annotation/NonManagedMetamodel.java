@@ -12,7 +12,7 @@ import javax.lang.model.element.TypeElement;
 public class NonManagedMetamodel extends AnnotationMetaEntity {
 
 	public NonManagedMetamodel(TypeElement element, Context context, boolean jakartaDataStaticMetamodel, @Nullable AnnotationMeta parent) {
-		super( element, context, false, jakartaDataStaticMetamodel, parent );
+		super( element, context, false, jakartaDataStaticMetamodel, parent, null );
 	}
 
 	public static NonManagedMetamodel create(

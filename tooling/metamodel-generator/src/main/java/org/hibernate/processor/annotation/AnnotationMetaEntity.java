@@ -416,6 +416,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else if ( method.getEnclosingElement().getKind().isInterface()
 						&& !method.isDefault()
+						&& !method.getModifiers().contains(Modifier.PRIVATE)
 						&& !isSessionGetter(method) ) {
 					final String companionClassName = element.getQualifiedName().toString() + '$';
 					if ( context.getElementUtils().getTypeElement(companionClassName) == null ) {

@@ -137,11 +137,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 	private void createBuilder(StringBuilder declaration) {
 		declaration
 				.append("\tvar _builder = ")
-				.append(localSessionName());
-		if ( isReactive() ) {
-			declaration.append(".getFactory()");
-		}
-		declaration
+				.append(localSessionName())
 				.append(".getCriteriaBuilder();\n");
 	}
 

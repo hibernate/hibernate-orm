@@ -1494,17 +1494,39 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addDeleteMethod(ExecutableElement method, @Nullable TypeMirror returnType) {
 		if ( returnType != null ) {
-			final TypeKind kind = returnType.getKind();
-			if ( kind != TypeKind.VOID
-					&& kind != TypeKind.INT
-					&& kind != TypeKind.LONG ) {
-				message(method,
-						"must be 'void' or return 'int' or 'long'",
-						Diagnostic.Kind.ERROR);
-			}
-			else {
+			if ( isReactive()
+					? isLegalReactiveDeleteReturnType(returnType)
+					: isLegalDeleteReturnType(returnType) ) {
 				createCriteriaDelete(method);
 			}
+			else {
+				message(method,
+						isReactive()
+								? "must be 'Uni<Void>' or 'Uni<Integer>'"
+								: "must be 'void' or return 'int' or 'long'",
+						Diagnostic.Kind.ERROR);
+			}
+		}
+	}
+
+	private static boolean isLegalDeleteReturnType(TypeMirror returnType) {
+		final TypeKind kind = returnType.getKind();
+		return kind == TypeKind.VOID
+			|| kind == TypeKind.INT
+			|| kind == TypeKind.LONG;
+	}
+
+	private static boolean isLegalReactiveDeleteReturnType(TypeMirror returnType) {
+		final TypeKind kind = returnType.getKind();
+		if ( kind == TypeKind.DECLARED ) {
+			final DeclaredType type = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) type.asElement();
+			final Name name = typeElement.getQualifiedName();
+			return name.contentEquals( Void.class.getName() )
+				|| name.contentEquals( Integer.class.getName() );
+		}
+		else {
+			return false;
 		}
 	}
 

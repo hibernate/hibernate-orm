@@ -886,16 +886,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			Label nextLabel = new Label();
 			for ( int index = 0; index < setters.length; index++ ) {
 				final Member setterMember = setters[index];
-				if ( enhanced && currentLabel != null ) {
+				if ( setterMember == EMBEDDED_MEMBER ) {
+					// The embedded property access does a no-op
+					continue;
+				}
+				if ( currentLabel != null ) {
 					methodVisitor.visitLabel( currentLabel );
 					implementationContext.getFrameGeneration().same(
 							methodVisitor,
 							instrumentedMethod.getParameters().asTypeList()
 					);
-				}
-				if ( setterMember == EMBEDDED_MEMBER ) {
-					// The embedded property access does a no-op
-					continue;
 				}
 				// Push entity on stack
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
@@ -1028,6 +1028,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				}
 				if ( enhanced ) {
 					final boolean compositeTracker = CompositeTracker.class.isAssignableFrom( type );
+					boolean alreadyHasFrame = false;
 					// The composite owner check and setting only makes sense if
 					//  * the value type is a composite tracker
 					//  * a value subtype can be a composite tracker
@@ -1109,6 +1110,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Clean stack after the if block
 						methodVisitor.visitLabel( compositeTrackerEndLabel );
 						implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
+						alreadyHasFrame = true;
 					}
 					if ( persistentAttributeInterceptable ) {
 						// Load the owner
@@ -1173,9 +1175,20 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Clean stack after the if block
 						methodVisitor.visitLabel( instanceofEndLabel );
 						implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
+						alreadyHasFrame = true;
 					}
 
-					currentLabel = nextLabel;
+					if ( alreadyHasFrame ) {
+						// Usually, the currentLabel is visited as well generating a frame,
+						// but if a frame was already generated, only visit the label here,
+						// otherwise two frames for the same bytecode index are generated,
+						// which is wrong and will produce an error when the JDK ClassFile API is used
+						methodVisitor.visitLabel( nextLabel );
+						currentLabel = null;
+					}
+					else {
+						currentLabel = nextLabel;
+					}
 					nextLabel = new Label();
 				}
 			}

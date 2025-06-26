@@ -925,10 +925,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		final Object result = getLoadQueryInfluencers().fromInternalFetchProfile(
-				CascadingFetchProfile.REFRESH,
-				() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this )
-		);
+		final Object result =
+				getLoadQueryInfluencers()
+						.fromInternalFetchProfile( CascadingFetchProfile.REFRESH,
+								() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this ) );
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();

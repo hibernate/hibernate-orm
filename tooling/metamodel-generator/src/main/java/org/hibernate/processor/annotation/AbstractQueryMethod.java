@@ -177,7 +177,6 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 	boolean isNonNull(int i, List<String> paramTypes) {
 		final String paramType = paramTypes.get(i);
 		return !isNullable(i) && !isPrimitive(paramType)
-			|| isSessionParameter(paramType)
 			|| isSpecialParam(paramType);
 	}
 

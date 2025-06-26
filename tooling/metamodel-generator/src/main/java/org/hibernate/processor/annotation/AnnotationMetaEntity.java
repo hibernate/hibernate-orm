@@ -2039,8 +2039,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String type = paramTypes.get(i);
-			final String name = paramNames.get(i);
 			if ( isSessionParameter(type) ) {
+				final String name = paramNames.get(i);
 				return new String[] { type, name };
 			}
 		}
@@ -2230,7 +2230,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					// else intentionally fall through
 				case BASIC:
 				case MULTIVALUED:
-					final List<Boolean> paramPatterns = parameterPatterns( method );
 					putMember( methodKey,
 							new CriteriaFinderMethod(
 									this, method,
@@ -2240,11 +2239,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									paramNames,
 									paramTypes,
 									parameterNullability(method, entity),
-									method.getParameters().stream()
-											.map(param -> isFinderParameterMappingToAttribute(param)
-													&& fieldType == FieldType.MULTIVALUED)
-											.collect(toList()),
-									paramPatterns,
+									parameterMultivalued( method, fieldType ),
+									parameterPatterns( method ),
 									repository,
 									sessionType[0],
 									sessionType[1],
@@ -2259,6 +2255,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					break;
 			}
 		}
+	}
+
+	private static List<Boolean> parameterMultivalued(ExecutableElement method, FieldType fieldType) {
+		return method.getParameters().stream()
+				.map( param -> isFinderParameterMappingToAttribute( param )
+							&& fieldType == FieldType.MULTIVALUED )
+				.collect( toList() );
 	}
 
 	private static FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {

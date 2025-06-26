@@ -423,15 +423,15 @@ public class DefaultMergeEventListener
 		final Object id = getDetachedEntityId( event, originalId, persister );
 		// we must clone embedded composite identifiers, or we will get back the same instance that we pass in
 		// apply the special MERGE fetch profile and perform the resolution (Session#get)
-		final Object result = session.getLoadQueryInfluencers().fromInternalFetchProfile(
-				CascadingFetchProfile.MERGE,
-				() -> session.get( entityName, clonedIdentifier )
-		);
+		final Object result =
+				session.getLoadQueryInfluencers()
+						.fromInternalFetchProfile( CascadingFetchProfile.MERGE,
+								() -> session.get( entityName, clonedIdentifier ) );
 
 		if ( result == null ) {
 			LOG.trace( "Detached instance not found in database" );
 			// we got here because we assumed that an instance
-			// with an assigned id and no version was detached,
+			// with an assigned id and no version was detached
 			// when it was really transient (or deleted)
 			final Boolean knownTransient = persister.isTransient( entity, session );
 			if ( knownTransient == Boolean.FALSE ) {

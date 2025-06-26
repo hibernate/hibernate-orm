@@ -62,8 +62,10 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 	}
 
 	void tryReturn(StringBuilder declaration) {
-		declaration
-				.append("\n\ttry {\n\t\t");
+		if ( !isReactive() ) {
+			declaration
+					.append("\n\ttry {\n\t\t");
+		}
 		if ( !"void".equals(fullReturnType) ) {
 			declaration
 					.append("return ");
@@ -72,7 +74,7 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 
 	@Override
 	String createQueryMethod() {
-		return isUsingEntityManager() || isReactive()
+		return isUsingEntityManager()
 				? "createQuery"
 				: "createMutationQuery";
 	}
@@ -85,6 +87,11 @@ public class CriteriaDeleteMethod extends AbstractCriteriaMethod {
 	private void execute(StringBuilder declaration) {
 		declaration
 				.append("\t\t\t.executeUpdate()");
+		if ( isReactive() ) {
+			if ( fullReturnType.endsWith("<java.lang.Void>") ) {}
+			declaration
+					.append(".replaceWithVoid()");
+		}
 	}
 
 	@Override

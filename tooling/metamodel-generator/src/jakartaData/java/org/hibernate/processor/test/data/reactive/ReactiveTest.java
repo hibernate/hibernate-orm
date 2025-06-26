@@ -16,7 +16,7 @@ import static org.hibernate.processor.test.util.TestUtil.getMetaModelSourceAsStr
  */
 public class ReactiveTest extends CompilationTest {
 	@Test
-	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class, Library2.class })
+	@WithClasses({ Publisher.class, Author.class, Address.class, Book.class, Library.class, Library2.class, RepoWithPrimary.class })
 	public void test() {
 		System.out.println( getMetaModelSourceAsString( Author.class ) );
 		System.out.println( getMetaModelSourceAsString( Book.class ) );

@@ -4,8 +4,6 @@
  */
 package org.hibernate.engine.spi;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.TransactionRequiredException;
@@ -586,31 +584,4 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating
 	SessionAssociationMarkers getSessionAssociationMarkers();
-
-	/**
-	 * Called after a non-contextual JDBC connection is obtained.
-	 * <p>
-	 * Sets the schema to the schema belonging to the current tenant if:
-	 * <ol>
-	 * <li>{@value org.hibernate.cfg.MultiTenancySettings#SET_TENANT_SCHEMA} is enabled, and
-	 * <li>this session has an active tenant id.
-	 * </ol>
-	 *
-	 * @param connection A JDBC connection which was just acquired
-	 *
-	 * @since 7.1
-	 */
-	void afterObtainConnection(Connection connection) throws SQLException;
-
-	/**
-	 * Called right before non-contextual a JDBC connection is released.
-	 * <p>
-	 * Unset the schema which was set by {@link #afterObtainConnection},
-	 * if any.
-	 * .
-	 * @param connection The JDBC connection which is about to be released
-	 *
-	 * @since 7.1
-	 */
-	void beforeReleaseConnection(Connection connection) throws SQLException;
 }

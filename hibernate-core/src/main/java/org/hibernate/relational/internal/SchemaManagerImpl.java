@@ -26,12 +26,33 @@ import jakarta.persistence.SchemaValidationException;
 public class SchemaManagerImpl implements SchemaManager {
 	private final SessionFactoryImplementor sessionFactory;
 	private final MetadataImplementor metadata;
+	private final String schemaName;
+	private final String catalogName;
 
 	public SchemaManagerImpl(
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor metadata) {
+		this( sessionFactory, metadata, null, null );
+	}
+
+	public SchemaManagerImpl(
+			SessionFactoryImplementor sessionFactory,
+			MetadataImplementor metadata,
+			String schemaName, String catalogName) {
 		this.sessionFactory = sessionFactory;
 		this.metadata = metadata;
+		this.schemaName = schemaName;
+		this.catalogName = catalogName;
+	}
+
+	@Override
+	public SchemaManager forSchema(String schemaName) {
+		return new SchemaManagerImpl( sessionFactory, metadata, schemaName, null );
+	}
+
+	@Override
+	public SchemaManager forSchemaAndCatalog(String schemaName, String catalogName) {
+		return new SchemaManagerImpl( sessionFactory, metadata, schemaName, catalogName );
 	}
 
 	@Override
@@ -40,6 +61,8 @@ public class SchemaManagerImpl implements SchemaManager {
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_ONLY );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, createSchemas );
+		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
+		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -54,6 +77,8 @@ public class SchemaManagerImpl implements SchemaManager {
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.DROP );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, dropSchemas );
+		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
+		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -68,6 +93,8 @@ public class SchemaManagerImpl implements SchemaManager {
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.VALIDATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, false );
+		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
+		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -81,6 +108,8 @@ public class SchemaManagerImpl implements SchemaManager {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.TRUNCATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
+		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -94,6 +123,8 @@ public class SchemaManagerImpl implements SchemaManager {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.POPULATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
+		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
+		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),

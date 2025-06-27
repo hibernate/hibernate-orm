@@ -120,12 +120,12 @@ public class SchemaManagementToolCoordinator {
 				StandardConverters.BOOLEAN,
 				false
 		);
-		final ExceptionHandler exceptionHandler = haltOnError ? ExceptionHandlerHaltImpl.INSTANCE : ExceptionHandlerLoggedImpl.INSTANCE;
 
-		final ExecutionOptions executionOptions = buildExecutionOptions(
-				configurationValues,
-				exceptionHandler
-		);
+		final ExecutionOptions executionOptions =
+				buildExecutionOptions( configurationValues,
+						haltOnError
+								? ExceptionHandlerHaltImpl.INSTANCE
+								: ExceptionHandlerLoggedImpl.INSTANCE );
 
 		if ( scriptActionMap != null ) {
 			scriptActionMap.forEach(

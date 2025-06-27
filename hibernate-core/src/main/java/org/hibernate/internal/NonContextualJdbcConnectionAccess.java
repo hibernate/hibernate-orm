@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
-import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
@@ -24,8 +23,6 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 	private final SessionEventListener listener;
 	private final ConnectionProvider connectionProvider;
 	private final SharedSessionContractImplementor session;
-
-	private static final Logger log = Logger.getLogger( NonContextualJdbcConnectionAccess.class );
 
 	public NonContextualJdbcConnectionAccess(
 			SessionEventListener listener,
@@ -42,40 +39,18 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 	public Connection obtainConnection() throws SQLException {
 		final EventMonitor eventMonitor = session.getEventMonitor();
 		final DiagnosticEvent connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
-		final Connection connection;
 		try {
 			listener.jdbcConnectionAcquisitionStart();
-			connection = connectionProvider.getConnection();
+			return connectionProvider.getConnection();
 		}
 		finally {
 			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, null );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
-
-		try {
-			session.afterObtainConnection( connection );
-		}
-		catch (SQLException e) {
-			try {
-				releaseConnection( connection );
-			}
-			catch (SQLException re) {
-				e.addSuppressed( re );
-			}
-			throw e;
-		}
-		return connection;
 	}
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
-		try {
-			session.beforeReleaseConnection( connection );
-		}
-		catch (SQLException e) {
-			log.warn( "Error before releasing JDBC connection", e );
-		}
-
 		final EventMonitor eventMonitor = session.getEventMonitor();
 		final DiagnosticEvent connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {

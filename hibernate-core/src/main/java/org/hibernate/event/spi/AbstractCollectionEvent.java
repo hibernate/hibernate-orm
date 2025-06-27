@@ -22,13 +22,13 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	private final String affectedOwnerEntityName;
 
 	/**
-	 * Constructs an AbstractCollectionEvent object.
-	 *  @param collection - the collection
+	 * Constructs an instance for a stateful session.
+	 * @param collection - the collection
 	 * @param source - the Session source
 	 * @param affectedOwner - the owner that is affected by this event;
- * can be null if unavailable
+	 * can be null if unavailable
 	 * @param affectedOwnerId - the ID for the owner that is affected
-* by this event; can be null if unavailable
+	 * by this event; can be null if unavailable
 	 */
 	public AbstractCollectionEvent(
 			CollectionPersister collectionPersister,
@@ -42,6 +42,27 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 		this.affectedOwnerId = affectedOwnerId;
 		this.affectedOwnerEntityName =
 				getAffectedOwnerEntityName( collectionPersister, affectedOwner, source );
+	}
+
+	/**
+	 * Constructs an instance for a stateless session.
+	 * @param collection - the collection
+	 * @param entityName - the name of the owning entity
+	 * @param affectedOwner - the owner that is affected by this event;
+	 * can be null if unavailable
+	 * @param affectedOwnerId - the ID for the owner that is affected
+	 * by this event; can be null if unavailable
+	 */
+	public AbstractCollectionEvent(
+			PersistentCollection<?> collection,
+			String entityName,
+			Object affectedOwner,
+			Object affectedOwnerId) {
+		super( null );
+		this.collection = collection;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
+		this.affectedOwnerEntityName = entityName;
 	}
 
 	protected static CollectionPersister getLoadedCollectionPersister( PersistentCollection<?> collection, EventSource source ) {
@@ -58,7 +79,7 @@ public abstract class AbstractCollectionEvent extends AbstractEvent {
 	}
 
 	protected static Object getOwnerIdOrNull(Object owner, EventSource source ) {
-		EntityEntry ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
+		final EntityEntry ownerEntry = source.getPersistenceContextInternal().getEntry( owner );
 		return ownerEntry == null ? null : ownerEntry.getId();
 	}
 

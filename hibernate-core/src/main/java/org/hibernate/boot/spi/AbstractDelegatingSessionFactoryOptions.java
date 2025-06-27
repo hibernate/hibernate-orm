@@ -17,6 +17,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -220,13 +221,13 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
-	public boolean isSetTenantSchemaEnabled() {
-		return delegate.isSetTenantSchemaEnabled();
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
+		return delegate.getCurrentTenantIdentifierResolver();
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
-		return delegate.getCurrentTenantIdentifierResolver();
+	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
+		return delegate.getTenantSchemaMapper();
 	}
 
 	@Override

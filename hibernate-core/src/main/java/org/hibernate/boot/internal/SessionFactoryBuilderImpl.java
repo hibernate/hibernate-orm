@@ -23,6 +23,7 @@ import org.hibernate.bytecode.internal.SessionFactoryObserverForBytecodeEnhancer
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -249,6 +250,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		this.optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+		this.optionsBuilder.applyTenantSchemaMapper( mapper );
 		return this;
 	}
 

@@ -84,22 +84,22 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			finally {
 				eventHandler.jdbcConnectionAcquisitionEnd( physicalConnection );
 			}
-		}
 
-
-		try {
-			jdbcSessionOwner.afterObtainConnection( physicalConnection );
-		}
-		catch (SQLException e) {
 			try {
-				// given the session a chance to set the schema
-				jdbcSessionOwner.getJdbcConnectionAccess().releaseConnection( physicalConnection );
+				jdbcSessionOwner.afterObtainConnection( physicalConnection );
 			}
-			catch (SQLException re) {
-				e.addSuppressed( re );
+			catch (SQLException e) {
+				try {
+					// given the session a chance to set the schema
+					jdbcSessionOwner.getJdbcConnectionAccess().releaseConnection( physicalConnection );
+				}
+				catch (SQLException re) {
+					e.addSuppressed( re );
+				}
+				throw jdbcSessionOwner.getSqlExceptionHelper()
+						.convert( e, "Error after acquiring JDBC Connection" );
 			}
-			throw jdbcSessionOwner.getSqlExceptionHelper()
-					.convert( e, "Error after acquiring JDBC Connection" );
+
 		}
 
 		return physicalConnection;
@@ -181,16 +181,16 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	}
 
 	private void releaseConnection() {
-		try {
-			// give the session a chance to change the schema back to null
-			jdbcSessionOwner.beforeReleaseConnection( physicalConnection );
-		}
-		catch (SQLException e) {
-			log.warn( "Error before releasing JDBC connection", e );
-		}
-
 		final Connection localVariableConnection = physicalConnection;
 		if ( localVariableConnection != null ) {
+			try {
+				// give the session a chance to change the schema back to null
+				jdbcSessionOwner.beforeReleaseConnection( physicalConnection );
+			}
+			catch (SQLException e) {
+				log.warn( "Error before releasing JDBC connection", e );
+			}
+
 			final JdbcEventHandler eventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
 			// We need to set the connection to null before we release resources,
 			// in order to prevent recursion into this method.

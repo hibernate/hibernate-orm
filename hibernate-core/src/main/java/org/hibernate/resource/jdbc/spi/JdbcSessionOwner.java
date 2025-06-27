@@ -86,7 +86,7 @@ public interface JdbcSessionOwner {
 	 * <p>
 	 * Sets the schema to the schema belonging to the current tenant if:
 	 * <ol>
-	 * <li>{@value org.hibernate.cfg.MultiTenancySettings#SET_TENANT_SCHEMA} is enabled, and
+	 * <li>{@value org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER} is enabled, and
 	 * <li>this session has an active tenant id.
 	 * </ol>
 	 *

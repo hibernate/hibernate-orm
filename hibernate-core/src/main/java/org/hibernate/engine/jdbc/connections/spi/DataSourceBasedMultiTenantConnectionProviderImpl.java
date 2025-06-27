@@ -87,14 +87,14 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 			throw new HibernateException( "JNDI name [" + this.jndiName + "] could not be resolved" );
 		}
 		else if ( namedObject instanceof DataSource datasource ) {
-			final int loc = this.jndiName.lastIndexOf( '/' );
-			baseJndiNamespace = this.jndiName.substring( 0, loc );
-			final String prefix = this.jndiName.substring( loc + 1);
+			final int loc = jndiName.lastIndexOf( '/' );
+			baseJndiNamespace = jndiName.substring( 0, loc );
+			final String prefix = jndiName.substring( loc + 1);
 			tenantIdentifierForAny = (T) prefix;
 			dataSourceMap().put( tenantIdentifierForAny, datasource );
 		}
 		else if ( namedObject instanceof Context ) {
-			baseJndiNamespace = this.jndiName;
+			baseJndiNamespace = jndiName;
 			final Object configuredTenantId =
 					configurationService.getSettings().get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
 			tenantIdentifierForAny = (T) configuredTenantId;

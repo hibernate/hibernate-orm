@@ -4,7 +4,6 @@
  */
 package org.hibernate.context.spi;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * A callback registered with the {@link org.hibernate.SessionFactory} that is
@@ -49,21 +48,5 @@ public interface CurrentTenantIdentifierResolver<T> {
 	 */
 	default boolean isRoot(T tenantId) {
 		return false;
-	}
-
-	/**
-	 * The name of the database schema for data belonging to the tenant with the
-	 * given identifier.
-	 * <p>
-	 * Called when {@value org.hibernate.cfg.MultiTenancySettings#SET_TENANT_SCHEMA}
-	 * is enabled.
-	 *
-	 * @param tenantIdentifier The tenant identifier
-	 * @return The name of the database schema belonging to that tenant
-	 *
-	 * @see org.hibernate.cfg.MultiTenancySettings#SET_TENANT_SCHEMA
-	 */
-	default @NonNull String schemaName(@NonNull T tenantIdentifier) {
-		return tenantIdentifier.toString();
 	}
 }

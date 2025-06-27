@@ -708,14 +708,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private boolean useSchemaBasedMultiTenancy() {
 		return tenantIdentifier != null
-			&& factory.getSessionFactoryOptions().isSetTenantSchemaEnabled();
+			&& factory.getSessionFactoryOptions().getTenantSchemaMapper() != null;
 	}
 
 	private String tenantSchema() {
-		final var tenantIdResolver = factory.getCurrentTenantIdentifierResolver();
-		return tenantIdResolver == null
-				? (String) tenantIdentifier
-				: tenantIdResolver.schemaName( tenantIdentifier );
+		final var tenantSchemaMapper = factory.getSessionFactoryOptions().getTenantSchemaMapper();
+		return tenantSchemaMapper == null ? null : tenantSchemaMapper.schemaName( tenantIdentifier );
 	}
 
 	@Override

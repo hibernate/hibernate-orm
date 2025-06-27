@@ -5,6 +5,7 @@
 package org.hibernate.context.spi;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.hibernate.Incubating;
 
 /**
  * Obtains the name of a database schema for a given tenant identifier when
@@ -17,6 +18,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  *
  * @author Gavin King
  */
+@Incubating
 public interface TenantSchemaMapper<T> {
 	/**
 	 * The name of the database schema for data belonging to the tenant with the

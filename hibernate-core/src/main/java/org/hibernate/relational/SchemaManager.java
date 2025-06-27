@@ -94,4 +94,23 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	 */
 	@Incubating
 	void populate();
+
+	/**
+	 * Obtain an instance which targets the given schema.
+	 * @param schemaName The name of the schema to target
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	SchemaManager forSchema(String schemaName);
+
+	/**
+	 * Obtain an instance which targets the given schema of the given catalog.
+	 * @param schemaName The name of the schema to target
+	 * @param catalogName The name of the catalog to target
+	 *
+	 * @since 7.1
+	 */
+	@Incubating
+	SchemaManager forSchemaAndCatalog(String schemaName, String catalogName);
 }

@@ -28,6 +28,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -187,7 +188,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// multi-tenancy
 	private boolean multiTenancyEnabled;
 	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
-	private boolean setTenantSchemaEnabled;
+	private TenantSchemaMapper<Object> tenantSchemaMapper;
 
 	// Queries
 	private SqmFunctionRegistry sqmFunctionRegistry;
@@ -372,7 +373,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				null
 			);
 		}
-		setTenantSchemaEnabled = configurationService.getSetting( SET_TENANT_SCHEMA, BOOLEAN, false );
+		tenantSchemaMapper =
+				strategySelector.resolveStrategy( TenantSchemaMapper.class,
+						settings.get( MULTI_TENANT_SCHEMA_MAPPER ) );
 
 		delayBatchFetchLoaderCreations =
 				configurationService.getSetting( DELAY_ENTITY_LOADER_CREATIONS, BOOLEAN, true );
@@ -1006,8 +1009,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public boolean isSetTenantSchemaEnabled() {
-		return setTenantSchemaEnabled;
+	public TenantSchemaMapper<Object> getTenantSchemaMapper() {
+		return tenantSchemaMapper;
 	}
 
 	@Override
@@ -1457,8 +1460,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.currentTenantIdentifierResolver = (CurrentTenantIdentifierResolver<Object>) resolver;
 	}
 
-	public void applySetTenantSchema(boolean enabled) {
-		this.setTenantSchemaEnabled = enabled;
+	public void applyTenantSchemaMapper(TenantSchemaMapper<?> mapper) {
+		//noinspection unchecked
+		this.tenantSchemaMapper = (TenantSchemaMapper<Object>) mapper;
 	}
 
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {

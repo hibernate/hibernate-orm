@@ -48,6 +48,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.EmptyInterceptor;
@@ -173,7 +174,8 @@ public class Configuration {
 	private EntityNotFoundDelegate entityNotFoundDelegate;
 	private SessionFactoryObserver sessionFactoryObserver;
 	private StatementInspector statementInspector;
-	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
+	private CurrentTenantIdentifierResolver<?> currentTenantIdentifierResolver;
+	private TenantSchemaMapper<?> tenantSchemaMapper;
 	private CustomEntityDirtinessStrategy customEntityDirtinessStrategy;
 	private ColumnOrderingStrategy columnOrderingStrategy;
 	private SharedCacheMode sharedCacheMode;
@@ -939,7 +941,7 @@ public class Configuration {
 	/**
 	 * The {@link CurrentTenantIdentifierResolver}, if any, that was added to this configuration.
 	 */
-	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<?> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
@@ -948,8 +950,29 @@ public class Configuration {
 	 *
 	 * @return {@code this} for method chaining
 	 */
-	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver) {
+	public Configuration setCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> currentTenantIdentifierResolver) {
 		this.currentTenantIdentifierResolver = currentTenantIdentifierResolver;
+		return this;
+	}
+
+	/**
+	 * The {@link TenantSchemaMapper}, if any, that was added to this configuration.
+	 *
+	 * @since 7.1
+	 */
+	public TenantSchemaMapper<?> getTenantSchemaMapper() {
+		return tenantSchemaMapper;
+	}
+
+	/**
+	 * Specify a {@link TenantSchemaMapper} to be added to this configuration.
+	 *
+	 * @return {@code this} for method chaining
+	 *
+	 * @since 7.1
+	 */
+	public Configuration setTenantSchemaMapper(TenantSchemaMapper<?> tenantSchemaMapper) {
+		this.tenantSchemaMapper = tenantSchemaMapper;
 		return this;
 	}
 
@@ -1080,6 +1103,10 @@ public class Configuration {
 
 		if ( currentTenantIdentifierResolver != null ) {
 			sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( currentTenantIdentifierResolver );
+		}
+
+		if ( tenantSchemaMapper != null ) {
+			sessionFactoryBuilder.applyTenantSchemaMapper( tenantSchemaMapper );
 		}
 
 		if ( customEntityDirtinessStrategy != null ) {

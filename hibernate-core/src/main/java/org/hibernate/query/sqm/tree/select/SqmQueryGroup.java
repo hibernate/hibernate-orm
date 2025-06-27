@@ -5,12 +5,11 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.AssertionFailure;
 import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SetOperator;
@@ -27,6 +26,9 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.util.Collections.unmodifiableList;
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
+
 /**
  * A grouped list of queries connected through a certain set operator.
  *
@@ -38,7 +40,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	private SetOperator setOperator;
 
 	public SqmQueryGroup(SqmQueryPart<T> queryPart) {
-		this( queryPart.nodeBuilder(), null, CollectionHelper.listOf( queryPart ) );
+		this( queryPart.nodeBuilder(), null, listOf( queryPart ) );
 	}
 
 	public SqmQueryGroup(
@@ -56,20 +58,17 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		if ( existing != null ) {
 			return existing;
 		}
-		final List<SqmQueryPart<T>> queryParts = new ArrayList<>( this.queryParts.size() );
-		for ( SqmQueryPart<T> queryPart : this.queryParts ) {
-			queryParts.add( queryPart.copy( context ) );
+		else {
+			final List<SqmQueryPart<T>> queryParts = new ArrayList<>( this.queryParts.size() );
+			for ( SqmQueryPart<T> queryPart : this.queryParts ) {
+				queryParts.add( queryPart.copy( context ) );
+			}
+			final SqmQueryGroup<T> queryGroup =
+					context.registerCopy( this,
+							new SqmQueryGroup<>( nodeBuilder(), setOperator, queryParts ) );
+			copyTo( queryGroup, context );
+			return queryGroup;
 		}
-		final SqmQueryGroup<T> queryGroup = context.registerCopy(
-				this,
-				new SqmQueryGroup<>(
-						nodeBuilder(),
-						setOperator,
-						queryParts
-				)
-		);
-		copyTo( queryGroup, context );
-		return queryGroup;
 	}
 
 	public List<SqmQueryPart<T>> queryParts() {
@@ -88,7 +87,9 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 
 	@Override
 	public boolean isSimpleQueryPart() {
-		return setOperator == null && queryParts.size() == 1 && queryParts.get( 0 ).isSimpleQueryPart();
+		return setOperator == null
+			&& queryParts.size() == 1
+			&& queryParts.get( 0 ).isSimpleQueryPart();
 	}
 
 	@Override
@@ -98,7 +99,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 
 	@Override
 	public List<SqmQueryPart<T>> getQueryParts() {
-		return Collections.unmodifiableList( queryParts );
+		return unmodifiableList( queryParts );
 	}
 
 	public SetOperator getSetOperator() {
@@ -156,12 +157,11 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		final int firstSelectionSize = typedNodes.size();
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			final SqmQueryPart<T> queryPart = queryParts.get( i );
-			if ( queryPart instanceof SqmQueryGroup<?> ) {
-				( (SqmQueryGroup<?>) queryPart ).validateQueryGroupFetchStructure( typedNodes );
+			if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
+				queryGroup.validateQueryGroupFetchStructure( typedNodes );
 			}
-			else {
-				final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;
-				final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
+			else if ( queryPart instanceof SqmQuerySpec<?> querySpec ) {
+				final var selections = querySpec.getSelectClause().getSelections();
 				if ( firstSelectionSize != selections.size() ) {
 					throw new SemanticException( "All query parts in a query group must have the same arity" );
 				}
@@ -175,31 +175,25 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 						);
 					}
 					if ( firstSqmSelection instanceof SqmFrom<?, ?> firstFrom ) {
-						final SqmFrom<?, ?> from = (SqmFrom<?, ?>) selections.get( j ).getSelectableNode();
+						final var from = (SqmFrom<?, ?>) selections.get( j ).getSelectableNode();
 						validateFetchesMatch( firstFrom, from );
 					}
 				}
+			}
+			else {
+				throw new AssertionFailure( "Unrecognized SqmQueryPart subtype" );
 			}
 		}
 	}
 
 	private void validateFetchesMatch(SqmFrom<?, ?> firstFrom, SqmFrom<?, ?> from) {
-		final Iterator<? extends SqmJoin<?, ?>> firstJoinIter = firstFrom.getSqmJoins().iterator();
-		final Iterator<? extends SqmJoin<?, ?>> joinIter = from.getSqmJoins().iterator();
+		final var firstJoinIter = firstFrom.getSqmJoins().iterator();
+		final var joinIter = from.getSqmJoins().iterator();
 		while ( firstJoinIter.hasNext() ) {
 			final SqmJoin<?, ?> firstSqmJoin = firstJoinIter.next();
 			if ( firstSqmJoin instanceof SqmAttributeJoin<?, ?> firstAttrJoin ) {
 				if ( firstAttrJoin.isFetched() ) {
-					SqmAttributeJoin<?, ?> matchingAttrJoin = null;
-					while ( joinIter.hasNext() ) {
-						final SqmJoin<?, ?> sqmJoin = joinIter.next();
-						if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attrJoin ) {
-							if ( attrJoin.isFetched() ) {
-								matchingAttrJoin = attrJoin;
-								break;
-							}
-						}
-					}
+					final var matchingAttrJoin = findFirstFetchJoin( joinIter );
 					if ( matchingAttrJoin == null || firstAttrJoin.getModel() != matchingAttrJoin.getModel() ) {
 						throw new SemanticException(
 								"All query parts in a query group must have the same join fetches in the same order"
@@ -211,15 +205,23 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		}
 		// At this point, the other iterator should only contain non-fetch joins
 		while ( joinIter.hasNext() ) {
-			final SqmJoin<?, ?> sqmJoin = joinIter.next();
-			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> attrJoin ) {
-				if ( attrJoin.isFetched() ) {
-					throw new SemanticException(
-							"All query parts in a query group must have the same join fetches in the same order"
-					);
-				}
+			if ( joinIter.next() instanceof SqmAttributeJoin<?, ?> attrJoin
+					&& attrJoin.isFetched() ) {
+				throw new SemanticException(
+						"All query parts in a query group must have the same join fetches in the same order"
+				);
 			}
 		}
+	}
+
+	private static SqmAttributeJoin<?, ?> findFirstFetchJoin(Iterator<? extends SqmJoin<?, ?>> joinIter) {
+		while ( joinIter.hasNext() ) {
+			if ( joinIter.next() instanceof SqmAttributeJoin<?, ?> attrJoin
+					&& attrJoin.isFetched() ) {
+				return attrJoin;
+			}
+		}
+		return null;
 	}
 
 	@Override

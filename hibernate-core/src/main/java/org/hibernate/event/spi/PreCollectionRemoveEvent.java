@@ -27,4 +27,12 @@ public class PreCollectionRemoveEvent extends AbstractCollectionEvent {
 				getOwnerIdOrNull( loadedOwner, source )
 		);
 	}
+
+	public PreCollectionRemoveEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
+	}
 }

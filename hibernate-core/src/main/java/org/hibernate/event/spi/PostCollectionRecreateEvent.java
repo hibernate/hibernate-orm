@@ -26,4 +26,12 @@ public class PostCollectionRecreateEvent extends AbstractCollectionEvent {
 				getOwnerIdOrNull( collection.getOwner(), source )
 		);
 	}
+
+	public PostCollectionRecreateEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
+	}
 }

@@ -145,13 +145,13 @@ public final class Template {
 
 		// IMPL NOTE: The basic process here is to tokenize the incoming string and to iterate over each token
 		//		in turn. As we process each token, we set a series of flags used to indicate the type of context in
-		// 		which the tokens occur. Depending on the state of those flags we decide whether we need to qualify
+		// 		which the tokens occur. Depending on the state of those flags, we decide whether we need to qualify
 		//		identifier references.
 
 		// WARNING TO MAINTAINERS: This is a simple scanner-based state machine. Please don't attempt to turn it into
 		//      a parser for SQL, no matter how "special" your case is. What I mean by this is: don't write code which
 		//      attempts to recognize the grammar of SQL, not even little bits of SQL. Previous "enhancements" to this
-		//      function did not respect this concept, and resulted in code which was fragile and unmaintainable. If
+		//      function did not respect this concept and resulted in code which was fragile and unmaintainable. If
 		//      lookahead is truly necessary, use the lookahead() function provided below.
 
 		final String symbols = PUNCTUATION + WHITESPACE + dialect.openQuote() + dialect.closeQuote();

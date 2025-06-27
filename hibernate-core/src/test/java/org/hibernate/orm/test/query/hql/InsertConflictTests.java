@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
 
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -127,6 +128,10 @@ public class InsertConflictTests {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
 					else {
 						assertEquals( 0, updated );
 					}
@@ -161,6 +166,10 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {
@@ -245,6 +254,10 @@ public class InsertConflictTests {
 					}
 					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SybaseASEDialect ) {
 						// Sybase seems to report all matched rows as affected and ignores additional predicates
+						assertEquals( 1, updated );
+					}
+					else if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof GaussDBDialect ) {
+						// GaussDB seems to report all matched rows as affected and ignores additional predicates
 						assertEquals( 1, updated );
 					}
 					else {

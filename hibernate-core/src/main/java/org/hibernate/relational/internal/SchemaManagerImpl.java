@@ -55,14 +55,22 @@ public class SchemaManagerImpl implements SchemaManager {
 		return new SchemaManagerImpl( sessionFactory, metadata, schemaName, catalogName );
 	}
 
+	private void addSchemaAndCatalog(Map<String, Object> properties) {
+		if ( schemaName != null ) {
+			properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
+		}
+		if ( catalogName != null ) {
+			properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
+		}
+	}
+
 	@Override
 	public void exportMappedObjects(boolean createSchemas) {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_ONLY );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, createSchemas );
-		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
-		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
+		addSchemaAndCatalog( properties );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -77,8 +85,7 @@ public class SchemaManagerImpl implements SchemaManager {
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.DROP );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, dropSchemas );
-		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
-		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
+		addSchemaAndCatalog( properties );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -93,8 +100,7 @@ public class SchemaManagerImpl implements SchemaManager {
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.VALIDATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, false );
-		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
-		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
+		addSchemaAndCatalog( properties );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -108,8 +114,7 @@ public class SchemaManagerImpl implements SchemaManager {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.TRUNCATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
-		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
-		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
+		addSchemaAndCatalog( properties );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),
@@ -123,8 +128,7 @@ public class SchemaManagerImpl implements SchemaManager {
 		Map<String, Object> properties = new HashMap<>( sessionFactory.getProperties() );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.POPULATE );
 		properties.put( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION, Action.NONE );
-		properties.put( AvailableSettings.DEFAULT_SCHEMA, schemaName );
-		properties.put( AvailableSettings.DEFAULT_CATALOG, catalogName );
+		addSchemaAndCatalog( properties );
 		SchemaManagementToolCoordinator.process(
 				metadata,
 				sessionFactory.getServiceRegistry(),

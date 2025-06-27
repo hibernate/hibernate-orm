@@ -25,4 +25,13 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 				getLoadedOwnerIdOrNull( collection, source )
 		);
 	}
+
+
+	public PostCollectionUpdateEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
+	}
 }

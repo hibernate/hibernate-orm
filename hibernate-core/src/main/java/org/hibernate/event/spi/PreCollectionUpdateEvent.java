@@ -26,4 +26,13 @@ public class PreCollectionUpdateEvent extends AbstractCollectionEvent {
 				getLoadedOwnerIdOrNull( collection, source )
 		);
 	}
+
+
+	public PreCollectionUpdateEvent(
+			PersistentCollection<?> collection,
+			Object id,
+			String entityName,
+			Object loadedOwner) {
+		super( collection, entityName, loadedOwner, id );
+	}
 }

@@ -716,9 +716,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return tenantSchemaMapper == null ? null : tenantSchemaMapper.schemaName( tenantIdentifier );
 	}
 
+	private transient String initialSchema;
+
 	@Override
 	public void afterObtainConnection(Connection connection) throws SQLException {
 		if ( useSchemaBasedMultiTenancy() ) {
+			initialSchema = connection.getSchema();
 			connection.setSchema( tenantSchema() );
 		}
 	}
@@ -726,7 +729,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public void beforeReleaseConnection(Connection connection) throws SQLException {
 		if ( useSchemaBasedMultiTenancy() ) {
-			connection.setSchema( null );
+			connection.setSchema( initialSchema );
 		}
 	}
 

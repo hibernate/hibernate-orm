@@ -44,17 +44,13 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 		}
 
 		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcConnectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
+		final DiagnosticEvent connectionAcquisitionEvent = eventMonitor.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection( tenantIdentifier );
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionAcquisitionEvent(
-					jdbcConnectionAcquisitionEvent,
-					session,
-					tenantIdentifier
-			);
+			eventMonitor.completeJdbcConnectionAcquisitionEvent( connectionAcquisitionEvent, session, tenantIdentifier );
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
@@ -66,13 +62,13 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 		}
 
 		final EventMonitor eventMonitor = session.getEventMonitor();
-		final DiagnosticEvent jdbcConnectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
+		final DiagnosticEvent connectionReleaseEvent = eventMonitor.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.releaseConnection( tenantIdentifier, connection );
 		}
 		finally {
-			eventMonitor.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, tenantIdentifier );
+			eventMonitor.completeJdbcConnectionReleaseEvent( connectionReleaseEvent, session, tenantIdentifier );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

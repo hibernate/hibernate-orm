@@ -76,23 +76,20 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			Connection userSuppliedConnection,
 			JdbcSessionOwner owner,
 			JdbcServices jdbcServices) {
-		this.isUserSuppliedConnection = userSuppliedConnection != null;
-
-		final ResourceRegistry resourceRegistry =
-				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
-		if ( isUserSuppliedConnection ) {
-			this.logicalConnection = new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
-		}
-		else {
-			this.logicalConnection = new LogicalConnectionManagedImpl(
-					owner.getJdbcConnectionAccess(),
-					owner.getJdbcSessionContext(),
-					owner.getSqlExceptionHelper(),
-					resourceRegistry
-			);
-		}
 		this.owner = owner;
 		this.jdbcServices = jdbcServices;
+		this.isUserSuppliedConnection = userSuppliedConnection != null;
+		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
+	}
+
+	private static LogicalConnectionImplementor createLogicalConnection(
+			Connection userSuppliedConnection,
+			JdbcSessionOwner owner) {
+		final ResourceRegistry resourceRegistry =
+				new ResourceRegistryStandardImpl( owner.getJdbcSessionContext().getEventHandler() );
+		return userSuppliedConnection == null
+				? new LogicalConnectionManagedImpl( owner, resourceRegistry )
+				: new LogicalConnectionProvidedImpl( userSuppliedConnection, resourceRegistry );
 	}
 
 	private JdbcCoordinatorImpl(
@@ -405,7 +402,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 */
 	@Override
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		if ( ! isReadyForSerialization() ) {
+		if ( !isReadyForSerialization() ) {
 			throw new HibernateException( "Cannot serialize Session while connected" );
 		}
 		oos.writeBoolean( isUserSuppliedConnection );
@@ -423,21 +420,13 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 * @throws IOException Trouble accessing the stream
 	 * @throws ClassNotFoundException Trouble reading the stream
 	 */
-	public static JdbcCoordinatorImpl deserialize(
-			ObjectInputStream ois,
-			JdbcSessionOwner owner) throws IOException, ClassNotFoundException {
+	public static JdbcCoordinatorImpl deserialize(ObjectInputStream ois, JdbcSessionOwner owner)
+			throws IOException, ClassNotFoundException {
 		final boolean isUserSuppliedConnection = ois.readBoolean();
-		final LogicalConnectionImplementor logicalConnection;
-		if ( isUserSuppliedConnection ) {
-			logicalConnection = LogicalConnectionProvidedImpl.deserialize( ois );
-		}
-		else {
-			logicalConnection = LogicalConnectionManagedImpl.deserialize(
-					ois,
-					owner.getJdbcConnectionAccess(),
-					owner.getJdbcSessionContext()
-			);
-		}
+		final var logicalConnection =
+				isUserSuppliedConnection
+						? LogicalConnectionProvidedImpl.deserialize( ois )
+						: LogicalConnectionManagedImpl.deserialize( ois, owner );
 		return new JdbcCoordinatorImpl( logicalConnection, isUserSuppliedConnection, owner );
 	}
 }

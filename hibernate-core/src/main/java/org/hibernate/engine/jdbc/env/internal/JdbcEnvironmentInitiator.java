@@ -806,5 +806,13 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		public SqlExceptionHelper getSqlExceptionHelper() {
 			return sqlExceptionHelper;
 		}
+
+		@Override
+		public void afterObtainConnection(Connection connection) {
+		}
+
+		@Override
+		public void beforeReleaseConnection(Connection connection) {
+		}
 	}
 }

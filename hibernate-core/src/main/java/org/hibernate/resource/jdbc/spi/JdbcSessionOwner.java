@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.spi.EventManager;
@@ -94,6 +95,7 @@ public interface JdbcSessionOwner {
 	 *
 	 * @since 7.1
 	 */
+	@Incubating
 	void afterObtainConnection(Connection connection) throws SQLException;
 
 	/**
@@ -106,6 +108,7 @@ public interface JdbcSessionOwner {
 	 *
 	 * @since 7.1
 	 */
+	@Incubating
 	void beforeReleaseConnection(Connection connection) throws SQLException;
 
 	/**

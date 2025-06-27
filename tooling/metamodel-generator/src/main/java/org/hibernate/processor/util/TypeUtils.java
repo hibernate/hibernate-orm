@@ -661,7 +661,7 @@ public final class TypeUtils {
 		if ( superclass != null && superclass.getKind() == TypeKind.DECLARED  ) {
 			final DeclaredType declaredType = (DeclaredType) superclass;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
-			if( implementsInterface( typeElement, interfaceName) ) {
+			if ( implementsInterface( typeElement, interfaceName) ) {
 				return true;
 			}
 		}

@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.records;
 
-import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;

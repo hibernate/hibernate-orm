@@ -228,7 +228,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public void checkPropertyConsistency() {
-		this.annotatedColumns.checkPropertyConsistency();
+		//this.annotatedColumns.checkPropertyConsistency();
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import org.hibernate.envers.NotAudited;
 @Embeddable
 @Audited
 public class Component3 {
+	@Column
 	private String str1;
 
 	@AttributeOverrides({

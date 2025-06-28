@@ -15,8 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -87,6 +89,8 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-11042")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTuple() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -108,6 +112,8 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey(value = "HHH-11042")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix allows only one column in count(distinct)")
 	public void testCountDistinctTupleSanity() {
 		doInHibernate( this::sessionFactory, session -> {
 			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case

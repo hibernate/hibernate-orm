@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Johannes Buehler
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @JiraKey( value = "HHH-10463")
 @DomainModel(annotatedClasses = org.hibernate.testing.orm.domain.gambit.EntityOfBasics.class)
 @SessionFactory

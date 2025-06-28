@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.annotations.manytoonewithformula;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -22,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Sharath Reddy
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 public class ManyToOneWithFormulaTest {
 	@Test
 	@DomainModel( annotatedClasses = { Menu.class, FoodItem.class } )
@@ -148,8 +148,9 @@ public class ManyToOneWithFormulaTest {
 	@Test
 	@DomainModel( annotatedClasses = Product.class )
 	@SessionFactory
-	@SkipForDialect( dialectClass =HSQLDialect.class, reason = "The used join conditions does not work in HSQLDB. See HHH-4497." )
-	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle do not support 'substring' function" )
+	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "The used join conditions does not work in HSQLDB. See HHH-4497." )
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle do not support 'substring' function JDBC escape" )
+	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Oracle do not support 'substring' function JDBC escape" )
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = " Altibase char type returns with trailing spaces")
 	public void testManyToOneFromNonPkToNonPk(SessionFactoryScope scope) {
 		// also tests usage of the stand-alone @JoinFormula annotation

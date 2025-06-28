@@ -255,6 +255,12 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		// columns to check the consistency after all properties are set.
 		if ( columns != null ) {
 			for ( AnnotatedColumn column : columns.getColumns() ) {
+				// The following has to be added otherwise every single
+				// property must be annotated with @Column
+				// Can be removed in version where the binder is stricter
+				if ( column.getExplicitTableName() == null ) {
+					column.setExplicitTableName( "" );
+				}
 				this.annotatedColumns.addColumn( column );
 			}
 		}

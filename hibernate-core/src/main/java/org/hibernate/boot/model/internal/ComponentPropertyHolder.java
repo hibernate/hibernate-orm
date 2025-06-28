@@ -7,7 +7,6 @@ package org.hibernate.boot.model.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import jakarta.persistence.AttributeOverride;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -18,7 +17,6 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
-import org.hibernate.models.internal.jdk.AbstractJdkAnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -70,6 +68,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
+	private final AnnotatedColumns annotatedColumns;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -95,6 +94,13 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		else {
 			this.embeddedAttributeName = "";
 			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
+		}
+
+		if ( parent instanceof ComponentPropertyHolder componentHolder ) {
+			this.annotatedColumns = componentHolder.annotatedColumns;
+		} else {
+			this.annotatedColumns = new AnnotatedColumns();
+			this.annotatedColumns.setPropertyName( inferredData.getPropertyName() );
 		}
 	}
 
@@ -221,6 +227,10 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getComponentClassName();
 	}
 
+	public void checkPropertyConsistency() {
+		this.annotatedColumns.checkPropertyConsistency();
+	}
+
 	@Override
 	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
 		//AnnotatedColumns.checkPropertyConsistency( ); //already called earlier
@@ -229,10 +239,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		// if a property is set already the core cannot support that
 		final Table table = property.getValue().getTable();
 		if ( !table.equals( getTable() ) ) {
-			if ( component.getPropertySpan() == 0
-				// In case of a nested component, checkPropertyConsistency() is not called
-				// since the columns are null. We check the overrides matches.
-				&& checkOverridesMatches( property, attributeMemberDetails )) {
+			if ( component.getPropertySpan() == 0 ) {
 				component.setTable( table );
 			}
 			else {
@@ -241,6 +248,14 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 						+ "' has properties mapped to two different tables"
 						+ " (all properties of the embeddable class must map to the same table)"
 				);
+			}
+		}
+		// In the case of a nested component, AnnotatedColumns.checkPropertyConsistency()
+		// is not called since we rely on the underlying value, we build a synthetic annotated
+		// columns to check the consistency after all properties are set.
+		if ( columns != null ) {
+			for ( AnnotatedColumn column : columns.getColumns() ) {
+				this.annotatedColumns.addColumn( column );
 			}
 		}
 		addProperty( property, attributeMemberDetails, declaringClass );
@@ -340,14 +355,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			}
 		}
 		return result;
-	}
-
-	private boolean checkOverridesMatches(Property property, MemberDetails memberDetails) {
-		if ( property.getValue() instanceof Component nested && memberDetails instanceof AbstractJdkAnnotationTarget target ) {
-			final AttributeOverride[] overrides = target.getRepeatedAnnotationUsages( AttributeOverride.class, target.getModelContext() );
-			return overrides.length == 0 || overrides.length == nested.getPropertySpan();
-		}
-		return true;
 	}
 
 	private String extractUserPropertyName(String redundantString, String propertyName) {

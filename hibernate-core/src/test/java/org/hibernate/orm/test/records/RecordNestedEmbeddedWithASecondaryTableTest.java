@@ -73,8 +73,6 @@ public class RecordNestedEmbeddedWithASecondaryTableTest {
 
 	@Embeddable
 	public record Person(
-			@AttributeOverride(name = "firstName", column = @Column(table = "Person"))
-			@AttributeOverride(name = "lastName", column = @Column(table = "Person"))
 			FullName fullName,
 			@Column(table = "Person")
 			Integer age) {
@@ -83,7 +81,9 @@ public class RecordNestedEmbeddedWithASecondaryTableTest {
 
 	@Embeddable
 	public record FullName(
+			@Column(table = "Person")
 			String firstName,
+			@Column(table = "Person")
 			String lastName) {
 
 	}

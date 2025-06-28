@@ -343,16 +343,11 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	private boolean checkOverridesMatches(Property property, MemberDetails memberDetails) {
-		boolean result = false;
 		if ( property.getValue() instanceof Component nested &&
 			memberDetails instanceof AbstractJdkAnnotationTarget target ) {
-			if ( target.getRepeatedAnnotationUsages( AttributeOverride.class, target.getModelContext() ).length == nested.getPropertySpan()) {
-				result = true;
-			}
-		} else {
-			result = true;
+			return target.getRepeatedAnnotationUsages( AttributeOverride.class, target.getModelContext() ).length == nested.getPropertySpan();
 		}
-		return result;
+		return true;
 	}
 
 	private String extractUserPropertyName(String redundantString, String propertyName) {

@@ -345,7 +345,10 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	private boolean checkOverridesMatches(Property property, MemberDetails memberDetails) {
 		if ( property.getValue() instanceof Component nested &&
 			memberDetails instanceof AbstractJdkAnnotationTarget target ) {
-			return target.getRepeatedAnnotationUsages( AttributeOverride.class, target.getModelContext() ).length == nested.getPropertySpan();
+			return nested.getPropertySpan() == 0 ||
+				nested.getPropertySpan() == target.getRepeatedAnnotationUsages(
+						AttributeOverride.class,
+						target.getModelContext() ).length;
 		}
 		return true;
 	}

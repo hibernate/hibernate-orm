@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.Table;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -52,6 +53,7 @@ public class RecordNestedEmbeddedWithASecondaryTableTest {
 	}
 
 	@Entity
+	@Table(name = "UserEntity")
 	@SecondaryTable(name = "Person")
 	public static class UserEntity {
 		@Id

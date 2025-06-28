@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.persistence.AttributeOverride;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -17,6 +18,7 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+import org.hibernate.models.internal.jdk.AbstractJdkAnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -221,20 +223,23 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
-		//AnnotatedColumn.checkPropertyConsistency( ); //already called earlier
+		//AnnotatedColumns.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
 		final Table table = property.getValue().getTable();
 		if ( !table.equals( getTable() ) ) {
-			if ( component.getPropertySpan() == 0 ) {
+			if ( component.getPropertySpan() == 0
+				// In case of a nested component, checkPropertyConsistency() is not called
+				// since the columns are null. We check the overrides matches.
+				&& checkOverridesMatches( property, attributeMemberDetails )) {
 				component.setTable( table );
 			}
 			else {
 				throw new AnnotationException(
 						"Embeddable class '" + component.getComponentClassName()
-								+ "' has properties mapped to two different tables"
-								+ " (all properties of the embeddable class must map to the same table)"
+						+ "' has properties mapped to two different tables"
+						+ " (all properties of the embeddable class must map to the same table)"
 				);
 			}
 		}
@@ -333,6 +338,19 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			if ( userPropertyName != null ) {
 				result = super.getOverriddenColumn( userPropertyName );
 			}
+		}
+		return result;
+	}
+
+	private boolean checkOverridesMatches(Property property, MemberDetails memberDetails) {
+		boolean result = false;
+		if ( property.getValue() instanceof Component nested &&
+			memberDetails instanceof AbstractJdkAnnotationTarget target ) {
+			if ( target.getRepeatedAnnotationUsages( AttributeOverride.class, target.getModelContext() ).length == nested.getPropertySpan()) {
+				result = true;
+			}
+		} else {
+			result = true;
 		}
 		return result;
 	}

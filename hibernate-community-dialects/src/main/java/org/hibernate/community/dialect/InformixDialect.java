@@ -24,6 +24,9 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -91,6 +94,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -563,45 +567,79 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) ->
+				switch ( extractErrorCode( sqlException ) ) {
+					case -378, -233, -107, -113, -134, -143, -144, -154 ->
+						//TODO: which of these are these are really LockTimeoutExceptions
+						//      rather than the more generic LockAcquisitionException?
+							new LockAcquisitionException( message, sqlException, sql );
+					case -239, -268 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -691, -692 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -703, -391 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					case -530 ->
+							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.CHECK,
+									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+					default -> null;
+				};
+	}
+
+	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return EXTRACTOR;
 	}
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				String constraintName;
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
-					case -268:
-						constraintName = extractUsingTemplate(
-								"Unique constraint (",
-								") violated.",
-								sqle.getMessage()
-						);
-						break;
-					case -691:
-						constraintName = extractUsingTemplate(
-								"Missing key in referenced table for referential constraint (",
-								").",
-								sqle.getMessage()
-						);
-						break;
-					case -692:
-						constraintName = extractUsingTemplate(
-								"Key value for constraint (",
-								") is still being referenced.",
-								sqle.getMessage()
-						);
-						break;
-					default:
-						return null;
-				}
+				final String constraintName =
+						switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+							case -239, -268 ->
+									extractUsingTemplate(
+											"Unique constraint (",
+											") violated.",
+											sqle.getMessage()
+									);
+							case -691 ->
+									extractUsingTemplate(
+											"Missing key in referenced table for referential constraint (",
+											").",
+											sqle.getMessage()
+									);
+							case -692 ->
+									extractUsingTemplate(
+											"Key value for constraint (",
+											") is still being referenced.",
+											sqle.getMessage()
+									);
+							case -530 ->
+									extractUsingTemplate(
+											"Check constraint (",
+											") failed",
+											sqle.getMessage()
+									);
+							case -391 ->
+									extractUsingTemplate(
+											"null into column (",
+											")",
+											sqle.getMessage()
+									);
+							default -> null;
+						};
 
-				// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
-				final int i = constraintName.indexOf( '.' );
-				if ( i != -1 ) {
-					constraintName = constraintName.substring( i + 1 );
+				if ( constraintName == null ) {
+					return null;
 				}
-				return constraintName;
+				else {
+					// strip table-owner because Informix always returns constraint names as "<table-owner>.<constraint-name>"
+					final int index = constraintName.indexOf( '.' );
+					return index > 0 ? constraintName.substring( index + 1 ) : constraintName;
+				}
 			} );
 
 	@Override

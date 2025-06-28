@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -43,6 +44,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialect( OracleDialect.class )
 @RequiresDialect( DB2Dialect.class )
 @RequiresDialect( HANADialect.class )
+@RequiresDialect( InformixDialect.class )
 public class ConstraintInterpretationTest2 {
 	@Test void testNotNullPrimaryKey(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {

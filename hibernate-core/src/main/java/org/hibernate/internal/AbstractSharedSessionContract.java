@@ -117,6 +117,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsSelectStatement;
 
@@ -712,8 +713,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private String tenantSchema() {
-		final var tenantSchemaMapper = factory.getSessionFactoryOptions().getTenantSchemaMapper();
-		return tenantSchemaMapper == null ? null : tenantSchemaMapper.schemaName( tenantIdentifier );
+		final var mapper = factory.getSessionFactoryOptions().getTenantSchemaMapper();
+		return mapper == null ? null : normalizeSchemaName( mapper.schemaName( tenantIdentifier ) );
+	}
+
+	private String normalizeSchemaName(String schemaName) {
+		return jdbcServices.getJdbcEnvironment().getIdentifierHelper()
+				.toMetaDataSchemaName( toIdentifier( schemaName ) );
 	}
 
 	private transient String initialSchema;

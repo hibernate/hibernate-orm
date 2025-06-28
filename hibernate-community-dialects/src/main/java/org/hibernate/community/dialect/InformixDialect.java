@@ -451,8 +451,7 @@ public class InformixDialect extends Dialect {
 			String[] primaryKey,
 			boolean referencesPrimaryKey) {
 		final StringBuilder result = new StringBuilder( 30 )
-				.append( " add constraint " )
-				.append( " foreign key (" )
+				.append( " add constraint foreign key (" )
 				.append( String.join( ", ", foreignKey ) )
 				.append( ") references " )
 				.append( referencedTable );

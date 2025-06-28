@@ -4,8 +4,11 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -68,7 +71,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
-	private final AnnotatedColumns annotatedColumns;
+	private final List<AnnotatedColumn> annotatedColumns;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -99,8 +102,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		if ( parent instanceof ComponentPropertyHolder componentHolder ) {
 			this.annotatedColumns = componentHolder.annotatedColumns;
 		} else {
-			this.annotatedColumns = new AnnotatedColumns();
-			this.annotatedColumns.setPropertyName( inferredData.getPropertyName() );
+			this.annotatedColumns = new ArrayList<>();
 		}
 	}
 
@@ -228,7 +230,19 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	public void checkPropertyConsistency() {
-		this.annotatedColumns.checkPropertyConsistency();
+		if ( annotatedColumns.size() > 1 ) {
+			for ( int currentIndex = 1; currentIndex < annotatedColumns.size(); currentIndex++ ) {
+				final AnnotatedColumn current = annotatedColumns.get( currentIndex );
+				final AnnotatedColumn previous = annotatedColumns.get( currentIndex - 1 );
+				if ( !Objects.equals( current.getExplicitTableName(), previous.getExplicitTableName() ) ) {
+					throw new AnnotationException(
+							"Embeddable class '" + component.getComponentClassName()
+							+ "' has properties mapped to two different tables"
+							+ " (all properties of the embeddable class must map to the same table)"
+					);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -261,7 +275,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				if ( column.getExplicitTableName() == null ) {
 					column.setExplicitTableName( "" );
 				}
-				this.annotatedColumns.addColumn( column );
+				this.annotatedColumns.add( column );
 			}
 		}
 		addProperty( property, attributeMemberDetails, declaringClass );

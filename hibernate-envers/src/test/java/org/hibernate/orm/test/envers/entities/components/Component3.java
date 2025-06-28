@@ -8,7 +8,6 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 
@@ -21,7 +20,6 @@ import org.hibernate.envers.NotAudited;
 @Embeddable
 @Audited
 public class Component3 {
-	@Column
 	private String str1;
 
 	@AttributeOverrides({

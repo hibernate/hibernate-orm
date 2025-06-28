@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -164,7 +163,7 @@ public class AnnotatedColumns {
 								"Column mappings for property '" + propertyName + "' mix updatable with 'updatable=false'"
 						);
 					}
-					if ( !Objects.equals( current.getExplicitTableName(), previous.getExplicitTableName() ) ) {
+					if ( !current.getExplicitTableName().equals( previous.getExplicitTableName() ) ) {
 						throw new AnnotationException(
 								"Column mappings for property '" + propertyName + "' mix distinct secondary tables"
 						);

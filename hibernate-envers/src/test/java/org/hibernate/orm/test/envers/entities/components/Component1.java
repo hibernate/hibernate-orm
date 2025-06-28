@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.envers.entities.components;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 
 /**
@@ -12,10 +11,8 @@ import jakarta.persistence.Embeddable;
  */
 @Embeddable
 public class Component1 {
-	@Column
 	private String str1;
 
-	@Column
 	private String str2;
 
 	public Component1(String str1, String str2) {

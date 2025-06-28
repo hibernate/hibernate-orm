@@ -33,6 +33,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.SqlTypes;
 
 import static java.util.Collections.addAll;
+import static java.util.Comparator.comparing;
 import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.tool.schema.internal.ColumnDefinitions.appendColumn;
 
@@ -64,8 +65,26 @@ public class StandardTableExporter implements Exporter<Table> {
 			final String viewQuery = table.getViewQuery();
 			if ( viewQuery != null ) {
 				createTable.append("create view ")
-						.append( formattedTableName )
-						.append(" as ")
+						.append( formattedTableName );
+				if ( dialect.requiresColumnListInCreateView() ) {
+					createTable.append(" (");
+					var sortedColumns =
+							table.getColumns().stream()
+									.sorted( comparing( c -> viewQuery.indexOf( c.getQuotedName( dialect ) ) ) )
+									.toList();
+					boolean isFirst = true;
+					for ( Column column : sortedColumns ) {
+						if ( isFirst ) {
+							isFirst = false;
+						}
+						else {
+							createTable.append( ", " );
+						}
+						createTable.append( column.getQuotedName( dialect ) );
+					}
+					createTable.append(")");
+				}
+				createTable.append(" as ")
 						.append( viewQuery );
 			}
 			else {

@@ -2927,10 +2927,21 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * The syntax used to add a primary key constraint to a table.
 	 *
 	 * @param constraintName The name of the PK constraint.
-	 * @return The "add PK" fragment
+	 *
+	 * @apiNote Currently unused, since we never use {@code alter table}
+	 * to add a primary key constraint.
 	 */
 	public String getAddPrimaryKeyConstraintString(String constraintName) {
 		return " add constraint " + constraintName + " primary key ";
+	}
+
+	/**
+	 * Is a list of column names required in the {@code create view} statement?
+	 *
+	 * @since 7.1
+	 */
+	public boolean requiresColumnListInCreateView() {
+		return false;
 	}
 
 	/**

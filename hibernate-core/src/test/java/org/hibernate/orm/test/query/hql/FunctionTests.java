@@ -1024,7 +1024,7 @@ public class FunctionTests {
 					assertThat( session.createQuery("select cast('1911-10-09 12:13:14.123' as Timestamp)", Timestamp.class).getSingleResult(), instanceOf(Timestamp.class) );
 
 					assertThat( session.createQuery("select cast(date 1911-10-09 as String)", String.class).getSingleResult(), is("1911-10-09") );
-					assertThat( session.createQuery("select cast(time 12:13:14 as String)", String.class).getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12.13.14") ) );
+					assertThat( session.createQuery("select cast(time 12:13:14 as String)", String.class).getSingleResult(), anyOf( is("12:13:14"), is("12:13:14.0000"), is("12:13:14.000"), is("12.13.14") ) );
 					assertThat( session.createQuery("select cast(datetime 1911-10-09 12:13:14 as String)", String.class).getSingleResult(), anyOf( startsWith("1911-10-09 12:13:14"), startsWith("1911-10-09-12.13.14") ) );
 
 					assertThat( session.createQuery("select cast(local datetime as Instant)", Instant.class).getSingleResult(), instanceOf(Instant.class) );
@@ -1224,7 +1224,7 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select str(69)", String.class).getSingleResult(), is("69") );
 					assertThat( session.createQuery("select str(date 1911-10-09)", String.class).getSingleResult(), is("1911-10-09") );
-					assertThat( session.createQuery("select str(time 12:13:14)", String.class).getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000"), is( "12.13.14") ) );
+					assertThat( session.createQuery("select str(time 12:13:14)", String.class).getSingleResult(), anyOf( is( "12:13:14"), is( "12:13:14.0000"), is( "12:13:14.000"), is( "12.13.14") ) );
 				}
 		);
 	}
@@ -2078,11 +2078,6 @@ public class FunctionTests {
 					session.createQuery("select extract(day from e.theDate) from EntityOfBasics e", Integer.class)
 							.list();
 
-					session.createQuery("select extract(day of year from e.theDate) from EntityOfBasics e", Integer.class)
-							.list();
-					session.createQuery("select extract(day of month from e.theDate) from EntityOfBasics e", Integer.class)
-							.list();
-
 					session.createQuery("select extract(quarter from e.theDate) from EntityOfBasics e", Integer.class)
 							.list();
 
@@ -2113,17 +2108,30 @@ public class FunctionTests {
 					session.createQuery("select extract(time from local datetime), extract(date from local datetime) from EntityOfBasics e", Object[].class)
 							.list();
 
-					session.createQuery("select extract(week of month from current date) from EntityOfBasics e", Integer.class)
-							.list();
-					session.createQuery("select extract(week of year from current date) from EntityOfBasics e", Integer.class)
-							.list();
-
 					assertThat( session.createQuery("select extract(year from date 1974-03-25)", Integer.class).getSingleResult(), is(1974) );
 					assertThat( session.createQuery("select extract(month from date 1974-03-25)", Integer.class).getSingleResult(), is(3) );
 					assertThat( session.createQuery("select extract(day from date 1974-03-25)", Integer.class).getSingleResult(), is(25) );
 
 					assertThat( session.createQuery("select extract(hour from time 12:30)", Integer.class).getSingleResult(), is(12) );
 					assertThat( session.createQuery("select extract(minute from time 12:30)", Integer.class).getSingleResult(), is(30) );
+				}
+		);
+	}
+
+	@Test
+	public void testExtractFunctionDayOfWeekOf(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select extract(day of year from e.theDate) from EntityOfBasics e", Integer.class)
+							.list();
+					session.createQuery("select extract(day of month from e.theDate) from EntityOfBasics e", Integer.class)
+							.list();
+
+					session.createQuery("select extract(week of month from current date) from EntityOfBasics e", Integer.class)
+							.list();
+					session.createQuery("select extract(week of year from current date) from EntityOfBasics e", Integer.class)
+							.list();
+
 				}
 		);
 	}

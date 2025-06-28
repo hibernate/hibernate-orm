@@ -47,11 +47,11 @@ public class SchemaManagerImpl implements SchemaManager {
 
 	@Override
 	public SchemaManager forSchema(String schemaName) {
-		return new SchemaManagerImpl( sessionFactory, metadata, schemaName, null );
+		return new SchemaManagerImpl( sessionFactory, metadata, schemaName, catalogName );
 	}
 
 	@Override
-	public SchemaManager forSchemaAndCatalog(String schemaName, String catalogName) {
+	public SchemaManager forCatalog(String catalogName) {
 		return new SchemaManagerImpl( sessionFactory, metadata, schemaName, catalogName );
 	}
 

@@ -21,6 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -105,6 +106,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to string")
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
@@ -158,6 +160,7 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );

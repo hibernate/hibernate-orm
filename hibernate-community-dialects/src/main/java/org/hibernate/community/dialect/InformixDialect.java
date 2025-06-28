@@ -27,6 +27,8 @@ import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -110,14 +112,10 @@ import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
-import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
-import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * Dialect for Informix 7.31.UD3 with Informix
@@ -285,8 +283,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public int getDefaultTimestampPrecision() {
-		//the maximum
-		return 5;
+		//the maximum is 5, but default to 3
+		//because Informix defaults to milliseconds
+		return 3;
 	}
 
 	@Override
@@ -424,21 +423,14 @@ public class InformixDialect extends Dialect {
 	 */
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		switch (unit) {
-			case SECOND:
-				return "to_number(to_char(?2,'%S'))";
-			case MINUTE:
-				return "to_number(to_char(?2,'%M'))";
-			case HOUR:
-				return "to_number(to_char(?2,'%H'))";
-			case DAY_OF_WEEK:
-				return "(weekday(?2)+1)";
-			case DAY_OF_MONTH:
-				return "day(?2)";
-			default:
-				//I think week() returns the ISO week number
-				return "?1(?2)";
-		}
+		return switch ( unit ) {
+			case SECOND -> "to_number(to_char(?2,'%S'))";
+			case MINUTE -> "to_number(to_char(?2,'%M'))";
+			case HOUR -> "to_number(to_char(?2,'%H'))";
+			case DAY_OF_WEEK -> "(weekday(?2)+1)";
+			case DAY_OF_MONTH -> "day(?2)";
+			default -> "?1(?2)";
+		};
 	}
 
 	@Override
@@ -543,6 +535,18 @@ public class InformixDialect extends Dialect {
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public String getCascadeConstraintsString() {
+		return getVersion().isSameOrAfter( 12, 10 )
+				? " cascade"
+				: "";
+	}
+
+	@Override
+	public boolean dropConstraints() {
+		return !getVersion().isSameOrAfter( 12, 10 );
 	}
 
 	@Override
@@ -664,7 +668,60 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select distinct current timestamp from informix.systables";
+		return "select sysdate";
+	}
+
+	@Override @SuppressWarnings("deprecation")
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		return intervalType != null ? "(?2 + ?3)" : "(?3 + " + intervalPattern( unit ) + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		return switch (unit) {
+			case NANOSECOND -> "?2/1e9 * interval (1) second to fraction";
+			case NATIVE, SECOND -> "?2 * interval (1) second to fraction";
+			case QUARTER -> "?2 * interval (3) month to month";
+			case WEEK -> "?2 * interval (7) day to day";
+			default -> "?2 * interval (1) " + unit + " to " + unit;
+		};
+	}
+
+	@Override
+	public long getFractionalSecondPrecisionInNanos() {
+		// Informix actually supports up to 10 microseconds
+		// but defaults to milliseconds (so use that)
+		return 1_000_000;
+	}
+
+	@Override @SuppressWarnings("deprecation")
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		return unit == null
+				? "(?3-?2)"
+				: extractPattern( unit )
+						.replace( "?1", unit.toString() )
+						.replace( "?2", "?3-?2" );
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( from == CastType.BOOLEAN ) {
+			switch ( to ) {
+				case STRING:
+					return "trim(case ?1 when 't' then 'true' when 'f' then 'false' else null end)";
+				case TF_BOOLEAN:
+					return "upper(cast(?1 as varchar))";
+				case YN_BOOLEAN:
+					return "case ?1 when 't' then 'Y' when 'f' then 'N' else null end";
+				case INTEGER_BOOLEAN:
+					return "case ?1 when 't' then 1 when 'f' then 0 else null end";
+			}
+		}
+		return super.castPattern( from, to );
+	}
+
+	@Override
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		throw new UnsupportedOperationException( "Informix does not support binary literals" );
 	}
 
 	@Override
@@ -764,7 +821,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( "cast(" );
 		appender.appendSql( bool ? "'t'" : "'f'" );
+		appender.appendSql( " as boolean)" );
 	}
 
 	@Override
@@ -774,7 +833,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String currentTime() {
-		return currentTimestamp();
+		return "current hour to fraction";
 	}
 
 	@Override
@@ -851,21 +910,19 @@ public class InformixDialect extends Dialect {
 			TemporalAccessor temporalAccessor,
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
+		appender.append( "datetime (" );
 		switch ( precision ) {
 			case DATE:
-				appender.appendSql( JDBC_ESCAPE_START_DATE );
 				appendAsDate( appender, temporalAccessor );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") year to day" );
 				break;
 			case TIME:
-				appender.appendSql( JDBC_ESCAPE_START_TIME );
 				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") hour to fraction" );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( ") year to fraction" );
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -874,21 +931,19 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		appender.append( "datetime (" );
 		switch ( precision ) {
 			case DATE:
-				appender.appendSql( JDBC_ESCAPE_START_DATE );
 				appendAsDate( appender, date );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") year to day" );
 				break;
 			case TIME:
-				appender.appendSql( JDBC_ESCAPE_START_TIME );
 				appendAsLocalTime( appender, date );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appender.appendSql( ") hour to fraction" );
 				break;
 			case TIMESTAMP:
-				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
-				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
-				appender.appendSql( JDBC_ESCAPE_END );
+				appendAsTimestampWithMillis( appender, date, jdbcTimeZone );
+				appender.appendSql( ") year to fraction" );
 				break;
 			default:
 				throw new IllegalArgumentException();
@@ -942,11 +997,6 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String getDual() {
 		return "(select 0 from systables where tabid=1)";
-	}
-
-	@Override
-	public String getFromDualForSelectOnly() {
-		return " from " + getDual() + " dual";
 	}
 
 	@Override

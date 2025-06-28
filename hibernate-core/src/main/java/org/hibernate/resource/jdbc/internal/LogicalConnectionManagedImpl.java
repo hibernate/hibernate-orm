@@ -11,11 +11,13 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.ResourceClosedException;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.LogicalConnection;
 import org.hibernate.resource.jdbc.ResourceRegistry;
-import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
@@ -70,39 +72,39 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this.closed = closed;
 	}
 
+	private JdbcSessionContext getJdbcSessionContext() {
+		return jdbcSessionOwner.getJdbcSessionContext();
+	}
+
+	private JdbcConnectionAccess getJdbcConnectionAccess() {
+		return jdbcSessionOwner.getJdbcConnectionAccess();
+	}
+
+	private SqlExceptionHelper getExceptionHelper() {
+		return jdbcSessionOwner.getSqlExceptionHelper();
+	}
+
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
-			final JdbcEventHandler eventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-			eventHandler.jdbcConnectionAcquisitionStart();
-			try {
-				physicalConnection = jdbcSessionOwner.getJdbcConnectionAccess().obtainConnection();
-			}
-			catch ( SQLException e ) {
-				throw jdbcSessionOwner.getSqlExceptionHelper()
-						.convert( e, "Unable to acquire JDBC Connection" );
-			}
-			finally {
-				eventHandler.jdbcConnectionAcquisitionEnd( physicalConnection );
-			}
-
-			try {
-				jdbcSessionOwner.afterObtainConnection( physicalConnection );
-			}
-			catch (SQLException e) {
-				try {
-					// given the session a chance to set the schema
-					jdbcSessionOwner.getJdbcConnectionAccess().releaseConnection( physicalConnection );
-				}
-				catch (SQLException re) {
-					e.addSuppressed( re );
-				}
-				throw jdbcSessionOwner.getSqlExceptionHelper()
-						.convert( e, "Error after acquiring JDBC Connection" );
-			}
-
+			physicalConnection = acquire();
+			afterAcquire();
 		}
-
 		return physicalConnection;
+	}
+
+	private void releaseConnectionIfNeeded() {
+		final Connection connection = physicalConnection;
+		if ( connection != null ) {
+			beforeRelease();
+			// Set the connection to null before releasing resources to prevent
+			// recursion into this method. Recursion can happen when we release
+			// resources and when batch statements are in progress: releasing
+			// resources aborts the batch statement, which then triggers
+			// logicalConnection.afterStatement(), which in some configurations
+			// releases the connection.
+			physicalConnection = null;
+			release( connection );
+		}
 	}
 
 	@Override
@@ -135,7 +137,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			}
 			else {
 				log.debug( "Initiating JDBC connection release from afterStatement" );
-				releaseConnection();
+				releaseConnectionIfNeeded();
 			}
 		}
 	}
@@ -145,7 +147,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		super.beforeTransactionCompletion();
 		if ( connectionHandlingMode.getReleaseMode() == BEFORE_TRANSACTION_COMPLETION ) {
 			log.debug( "Initiating JDBC connection release from beforeTransactionCompletion" );
-			releaseConnection();
+			releaseConnectionIfNeeded();
 		}
 	}
 
@@ -158,7 +160,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			// - BEFORE_TRANSACTION_COMPLETION cases that were circumvented because a rollback occurred
 			//   (we don't get a beforeTransactionCompletion event on rollback).
 			log.debug( "Initiating JDBC connection release from afterTransaction" );
-			releaseConnection();
+			releaseConnectionIfNeeded();
 		}
 	}
 
@@ -168,7 +170,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			throw new ResourceClosedException( "Logical connection is closed" );
 		}
 		final Connection connection = physicalConnection;
-		releaseConnection();
+		releaseConnectionIfNeeded();
 		return connection;
 	}
 
@@ -180,44 +182,65 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		throw new IllegalStateException( "Cannot manually reconnect unless Connection was originally supplied by user" );
 	}
 
-	private void releaseConnection() {
-		final Connection localVariableConnection = physicalConnection;
-		if ( localVariableConnection != null ) {
-			try {
-				// give the session a chance to change the schema back to null
-				jdbcSessionOwner.beforeReleaseConnection( physicalConnection );
-			}
-			catch (SQLException e) {
-				log.warn( "Error before releasing JDBC connection", e );
-			}
+	private Connection acquire() {
+		final var eventHandler = getJdbcSessionContext().getEventHandler();
+		eventHandler.jdbcConnectionAcquisitionStart();
+		try {
+			return getJdbcConnectionAccess().obtainConnection();
+		}
+		catch ( SQLException e ) {
+			throw getExceptionHelper().convert( e, "Unable to acquire JDBC Connection" );
+		}
+		finally {
+			eventHandler.jdbcConnectionAcquisitionEnd( physicalConnection );
+		}
+	}
 
-			final JdbcEventHandler eventHandler = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();
-			// We need to set the connection to null before we release resources,
-			// in order to prevent recursion into this method.
-			// Recursion can happen when we release resources and when batch statements are in progress:
-			// when releasing resources, we'll abort the batch statement,
-			// which will trigger "logicalConnection.afterStatement()",
-			// which in some configurations will release the connection.
-			physicalConnection = null;
+	private void release(Connection connection) {
+		final var eventHandler = getJdbcSessionContext().getEventHandler();
+		try {
 			try {
-				try {
-					getResourceRegistry().releaseResources();
-					if ( !localVariableConnection.isClosed() ) {
-						jdbcSessionOwner.getSqlExceptionHelper().logAndClearWarnings( localVariableConnection );
-					}
+				getResourceRegistry().releaseResources();
+				if ( !connection.isClosed() ) {
+					getExceptionHelper().logAndClearWarnings( connection );
 				}
-				finally {
-					eventHandler.jdbcConnectionReleaseStart();
-					jdbcSessionOwner.getJdbcConnectionAccess().releaseConnection( localVariableConnection );
-				}
-			}
-			catch (SQLException e) {
-				throw jdbcSessionOwner.getSqlExceptionHelper()
-						.convert( e, "Unable to release JDBC Connection" );
 			}
 			finally {
-				eventHandler.jdbcConnectionReleaseEnd();
+				eventHandler.jdbcConnectionReleaseStart();
+				getJdbcConnectionAccess().releaseConnection( connection );
 			}
+		}
+		catch (SQLException e) {
+			throw getExceptionHelper().convert( e, "Unable to release JDBC Connection" );
+		}
+		finally {
+			eventHandler.jdbcConnectionReleaseEnd();
+		}
+	}
+
+	private void afterAcquire() {
+		try {
+			// give the session a chance to set the schema
+			jdbcSessionOwner.afterObtainConnection( physicalConnection );
+		}
+		catch (SQLException e) {
+			try {
+				getJdbcConnectionAccess().releaseConnection( physicalConnection );
+			}
+			catch (SQLException re) {
+				e.addSuppressed( re );
+			}
+			throw getExceptionHelper().convert( e, "Error after acquiring JDBC Connection" );
+		}
+	}
+
+	private void beforeRelease() {
+		try {
+			// give the session a chance to change the schema back to null
+			jdbcSessionOwner.beforeReleaseConnection( physicalConnection );
+		}
+		catch (SQLException e) {
+			log.warn( "Error before releasing JDBC connection", e );
 		}
 	}
 
@@ -237,7 +260,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			getResourceRegistry().releaseResources();
 			log.closingLogicalConnection();
 			try {
-				releaseConnection();
+				releaseConnectionIfNeeded();
 			}
 			finally {
 				// no matter what
@@ -260,8 +283,9 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	public void begin() {
-		initiallyAutoCommit = !doConnectionsFromProviderHaveAutoCommitDisabled()
-				&& determineInitialAutoCommitMode( getConnectionForTransactionManagement() );
+		initiallyAutoCommit =
+				!doConnectionsFromProviderHaveAutoCommitDisabled()
+						&& determineInitialAutoCommitMode( getConnectionForTransactionManagement() );
 		super.begin();
 	}
 
@@ -274,6 +298,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 
 	@Override
 	protected boolean doConnectionsFromProviderHaveAutoCommitDisabled() {
-		return jdbcSessionOwner.getJdbcSessionContext().doesConnectionProviderDisableAutoCommit();
+		return getJdbcSessionContext().doesConnectionProviderDisableAutoCommit();
 	}
 }

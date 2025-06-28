@@ -19,7 +19,7 @@ import org.hibernate.Incubating;
  * {@link jakarta.persistence.SchemaManager}, which it now inherits,
  * with a minor change to the naming of its operations. It is retained
  * for backward compatibility and as a place to define additional
- * functionality such as {@link #populate()}.
+ * functionality such as {@link #populate} and {@link #forSchema}.
  *
  * @since 6.2
  * @author Gavin King
@@ -97,6 +97,11 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 
 	/**
 	 * Obtain an instance which targets the given schema.
+	 * <p>
+	 * This is especially useful when using multiple schemas, for example, in
+	 * {@linkplain org.hibernate.cfg.MultiTenancySettings#MULTI_TENANT_SCHEMA_MAPPER
+	 * schema-based multitenancy}.
+	 *
 	 * @param schemaName The name of the schema to target
 	 *
 	 * @since 7.1
@@ -105,12 +110,12 @@ public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	SchemaManager forSchema(String schemaName);
 
 	/**
-	 * Obtain an instance which targets the given schema of the given catalog.
-	 * @param schemaName The name of the schema to target
+	 * Obtain an instance which targets the given catalog.
+	 *
 	 * @param catalogName The name of the catalog to target
 	 *
 	 * @since 7.1
 	 */
 	@Incubating
-	SchemaManager forSchemaAndCatalog(String schemaName, String catalogName);
+	SchemaManager forCatalog(String catalogName);
 }

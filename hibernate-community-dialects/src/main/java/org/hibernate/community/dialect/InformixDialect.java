@@ -1014,4 +1014,8 @@ public class InformixDialect extends Dialect {
 		return false;
 	}
 
+	@Override
+	public boolean requiresColumnListInCreateView() {
+		return true;
+	}
 }

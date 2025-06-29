@@ -186,15 +186,15 @@ dependencies {
     annotationProcessor 'org.hibernate.orm:hibernate-processor:{fullVersion}'
 
     // Hibernate Validator
-    implementation 'org.hibernate.validator:hibernate-validator:9.0.0.Final'
+    implementation 'org.hibernate.validator:hibernate-validator:9.0.1.Final'
     implementation 'org.glassfish.expressly:expressly:6.0.0'
 
     // Agroal connection pool
     runtimeOnly 'org.hibernate.orm:hibernate-agroal:{fullVersion}'
-    runtimeOnly 'io.agroal:agroal-pool:2.5'
+    runtimeOnly 'io.agroal:agroal-pool:2.7.1'
 
     // logging via Log4j
-    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.1'
+    runtimeOnly 'org.apache.logging.log4j:log4j-core:2.24.3'
 
     // H2 database
     runtimeOnly 'com.h2database:h2:2.3.232'

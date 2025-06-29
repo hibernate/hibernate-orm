@@ -24,6 +24,7 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -155,6 +156,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps tinyint to number")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps tinyint to smallint")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "informix maps tinyint to smallint")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );
@@ -187,6 +189,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
 	public void numericType() {
 		createEntityManagerFactory(
 				NumericEntity.class
@@ -202,6 +205,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
 	public void decimalType() {
 		createEntityManagerFactory( DecimalEntity.class );
 		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );

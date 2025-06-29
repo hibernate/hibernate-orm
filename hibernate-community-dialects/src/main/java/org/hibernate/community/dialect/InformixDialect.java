@@ -252,7 +252,7 @@ public class InformixDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "varchar(255)",this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "lvarchar",this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
@@ -340,6 +340,7 @@ public class InformixDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.ceiling_ceil();
+		functionFactory.concat_pipeOperator();
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.addMonths();
@@ -354,14 +355,6 @@ public class InformixDialect extends Dialect {
 		final BasicType<String> stringBasicType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
 		functionRegistry.registerAlternateKey( "var_samp", "variance" );
-
-		// the pipe operator or concat() function returns strings with trailing whitespace
-		functionRegistry.patternDescriptorBuilder( "concat", "cast(?1||?2... as varchar(255))" )
-				.setInvariantType( stringBasicType )
-				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( impliedOrInvariant( typeConfiguration, STRING ) )
-				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
-				.register();
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.locate_charindex();
@@ -980,10 +973,10 @@ public class InformixDialect extends Dialect {
 		if ( descriptor == null ) {
 			// just cast it to an arbitrary SQL type,
 			// which we expect to be ignored by higher layers
-			return "null::int";
+			return "cast(null as int)";
 		}
 		else {
-			return "null::" + castType( descriptor );
+			return "cast(null as " + castType( descriptor ) + ")";
 		}
 	}
 

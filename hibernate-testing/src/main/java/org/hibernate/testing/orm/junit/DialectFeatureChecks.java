@@ -458,7 +458,8 @@ abstract public class DialectFeatureChecks {
 
 	public static class CurrentTimestampHasMicrosecondPrecision implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !dialect.currentTimestamp().contains( "6" );
+			return dialect.getDefaultTimestampPrecision() >= 6
+				&& !( dialect instanceof MySQLDialect ); // For MySQL you have to explicitly ask for microseconds
 		}
 	}
 

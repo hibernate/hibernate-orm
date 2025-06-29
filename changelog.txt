@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.39.Final (June 29, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34066
+
+** Bug
+    * [HHH-19577] - BytecodeProviderImpl.SetPropertyValues wrongly emits duplicate stack map frames
+    * [HHH-19573] - Presence of wrapper byte array pollutes BasicTypeRegistry
+    * [HHH-19571] - CloningPropertyCall causes non-deterministic bytecode for AccessOptimizer
+    * [HHH-19560] - TupleTransformer and ResultListTransformer trash the query interpretation cache
+
+
 Changes in 6.2.38.Final (May 26, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

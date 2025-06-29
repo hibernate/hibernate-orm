@@ -455,7 +455,7 @@ public class EmbeddableBinder {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debug( "Binding component with path: " + subpath );
 		}
-		final ComponentPropertyHolder subholder = buildPropertyHolder(
+		final PropertyHolder subholder = buildPropertyHolder(
 				component,
 				subpath,
 				inferredData,

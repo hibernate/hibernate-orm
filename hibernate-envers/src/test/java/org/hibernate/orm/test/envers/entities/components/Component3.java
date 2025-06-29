@@ -8,6 +8,7 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;
 

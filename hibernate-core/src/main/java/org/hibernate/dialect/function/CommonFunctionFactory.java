@@ -421,8 +421,8 @@ public class CommonFunctionFactory {
 	/**
 	 * Warning: the semantics of this function are inconsistent between DBs.
 	 * <ul>
-	 * <li>On Postgres it means {@code var_samp()}
-	 * <li>On Oracle, DB2, MySQL it means {@code var_pop()}
+	 * <li>On Postgres and Informix it means {@code var_samp()} (the unbiased estimator)
+	 * <li>On Oracle, DB2, MySQL it means {@code var_pop()} (the MLE)
 	 * </ul>
 	 */
 	public void variance() {
@@ -505,7 +505,16 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	private static final String VAR_POP_SUM_COUNT_PATTERN = "(sum(power(?1,2))-(power(sum(?1),2)/count(?1)))/nullif(count(?1),0)";
 	private static final String VAR_SAMP_SUM_COUNT_PATTERN = "(sum(power(?1,2))-(power(sum(?1),2)/count(?1)))/nullif(count(?1)-1,0)";
+
+	public void varPop_sumCount() {
+		functionRegistry.patternAggregateDescriptorBuilder( "var_pop", VAR_POP_SUM_COUNT_PATTERN )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
 
 	/**
 	 * DB2 before 11

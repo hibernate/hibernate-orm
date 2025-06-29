@@ -8,11 +8,11 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import jakarta.persistence.EnumType;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -75,13 +75,17 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	@Override
 	public int resolveColumnPosition(String columnName) {
 		try {
-			return getResultSet()
-					.findColumn( StringHelper.unquote( columnName, getDialect() ) );
+			return getResultSet().findColumn( normalizeColumnName( columnName ) );
 		}
 		catch (SQLException e) {
 			throw getSqlExceptionHelper()
 					.convert( e, "Unable to find column position by name: " + columnName );
 		}
+	}
+
+	private String normalizeColumnName(String columnName) {
+		return getFactory().getJdbcServices().getJdbcEnvironment().getIdentifierHelper()
+				.toMetaDataObjectName( Identifier.toIdentifier( columnName ) );
 	}
 
 	@Override

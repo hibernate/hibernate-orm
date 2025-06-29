@@ -1262,4 +1262,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsValuesListForInListExistsEmulation() {
+		return getVersion().isSameOrAfter( 10 );
+	}
 }

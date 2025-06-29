@@ -6224,4 +6224,20 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return supportsRowValueConstructorSyntaxInInList();
 	}
 
+	/**
+	 * This pattern avoids the SQL length and performance issues of large disjunctions,
+	 * and emulates tuple-based IN-list comparisons using a derived VALUES table.
+	 * <p>
+	 * For example:
+	 * <pre>
+	 *     SELECT * FROM EntityTable T
+	 *     WHERE EXISTS (
+	 *         SELECT 1 FROM (VALUES (?, ?), (?, ?)) AS V(FIELD1, FIELD2)
+	 *         WHERE T.FIELD1 = V.FIELD1 AND T.FIELD2 = V.FIELD2
+	 *     )
+	 * </pre>
+	 */
+	public boolean supportsValuesListForInListExistsEmulation() {
+		return false;
+	}
 }

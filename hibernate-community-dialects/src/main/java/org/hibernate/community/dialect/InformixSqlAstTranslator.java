@@ -10,11 +10,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
@@ -145,17 +147,17 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 	}
 
-	@Override
-	protected void renderNull(Literal literal) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
-			renderCasted( literal );
-		}
-		else {
-			int sqlType = literal.getExpressionType().getSingleJdbcMapping().getJdbcType().getJdbcTypeCode();
-			String nullString = getDialect().getSelectClauseNullString( sqlType, getSessionFactory().getTypeConfiguration() );
-			appendSql( nullString );
-		}
-	}
+//	@Override
+//	protected void renderNull(Literal literal) {
+//		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
+//			renderCasted( literal );
+//		}
+//		else {
+//			int sqlType = literal.getExpressionType().getSingleJdbcMapping().getJdbcType().getJdbcTypeCode();
+//			String nullString = getDialect().getSelectClauseNullString( sqlType, getSessionFactory().getTypeConfiguration() );
+//			appendSql( nullString );
+//		}
+//	}
 
 	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
@@ -194,5 +196,30 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
+
+	private void caseArgument(Expression expression) {
+		// concatenation inside a case must be cast to varchar(255)
+		// or we get a bunch of trailing whitespace
+		final boolean concat =
+				expression instanceof FunctionExpression fn
+						&& fn.getFunctionName().equals( "concat" );
+		if ( concat ) {
+			append( "cast(" );
+		}
+		expression.accept( this );
+		if ( concat ) {
+			append( " as varchar(255))");
+		}
+	}
+
+	@Override
+	protected void visitCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression, boolean inSelect) {
+		visitAnsiCaseSearchedExpression( caseSearchedExpression, this::caseArgument );
+	}
+
+	@Override
+	protected void visitCaseSimpleExpression(CaseSimpleExpression caseSimpleExpression, boolean inSelect) {
+		visitAnsiCaseSimpleExpression( caseSimpleExpression, this::caseArgument );
 	}
 }

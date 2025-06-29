@@ -18,8 +18,8 @@ import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.ContactsDomainModel;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.Jira;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -41,7 +41,7 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 		metadataSources.addAnnotatedClass( EntityWithNumericId.class );
 	}
 
-	@BeforeAll
+	@BeforeEach
 	public void prepareData() {
 		inTransaction(
 				session -> {
@@ -116,12 +116,9 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 		});
 	}
 
-	@AfterAll
+	@AfterEach
 	public void cleanupData() {
-		inTransaction( session -> {
-			session.createMutationQuery( "delete Contact" ).executeUpdate();
-			session.createMutationQuery( "delete EntityWithNumericId" ).executeUpdate();
-		} );
+		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "EntityWithNumericId" )

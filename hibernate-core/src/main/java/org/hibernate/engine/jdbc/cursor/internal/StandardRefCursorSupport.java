@@ -36,7 +36,8 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 			statement.registerOutParameter( position, refCursorTypeCode() );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Error registering REF_CURSOR parameter [" + position + "]" );
 		}
 	}
 
@@ -46,7 +47,8 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 			statement.registerOutParameter( name, refCursorTypeCode() );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Error registering REF_CURSOR parameter [" + name + "]" );
 		}
 	}
 

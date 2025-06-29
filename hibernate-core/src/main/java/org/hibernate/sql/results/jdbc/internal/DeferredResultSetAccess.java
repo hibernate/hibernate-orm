@@ -242,7 +242,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		try {
-			LOG.tracef( "Executing query to retrieve ResultSet : %s", finalSql );
+			LOG.tracef( "Executing query to retrieve ResultSet: %s", finalSql );
 			// prepare the query
 			preparedStatement = statementCreator.createStatement( executionContext, finalSql );
 
@@ -277,7 +277,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				exception.addSuppressed( suppressed );
 			}
 			throw session.getJdbcServices().getSqlExceptionHelper()
-					.convert( exception, "JDBC exception executing SQL [" + finalSql + "]" );
+					.convert( exception, "JDBC exception executing SQL", finalSql );
 		}
 	}
 

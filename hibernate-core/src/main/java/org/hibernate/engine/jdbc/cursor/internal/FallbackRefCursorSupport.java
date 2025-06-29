@@ -27,7 +27,8 @@ public class FallbackRefCursorSupport implements RefCursorSupport {
 			jdbcServices.getDialect().registerResultSetOutParameter( statement, position );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error asking dialect to register ref cursor parameter [" + position + "]" );
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Error asking dialect to register ref cursor parameter [" + position + "]" );
 		}
 	}
 
@@ -37,7 +38,8 @@ public class FallbackRefCursorSupport implements RefCursorSupport {
 			jdbcServices.getDialect().registerResultSetOutParameter( statement, name );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert( e, "Error asking dialect to register ref cursor parameter [" + name + "]" );
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Error asking dialect to register ref cursor parameter [" + name + "]" );
 		}
 	}
 

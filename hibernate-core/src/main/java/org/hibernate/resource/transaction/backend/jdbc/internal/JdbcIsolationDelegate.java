@@ -86,11 +86,11 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 				if ( e instanceof HibernateException ) {
 					throw (HibernateException) e;
 				}
-				else if ( e instanceof SQLException ) {
-					throw sqlExceptionHelper().convert( (SQLException) e, "error performing isolated work" );
+				else if ( e instanceof SQLException sqle ) {
+					throw sqlExceptionHelper().convert( sqle, "Error performing isolated work" );
 				}
 				else {
-					throw new HibernateException( "error performing isolated work", e );
+					throw new HibernateException( "Error performing isolated work", e );
 				}
 			}
 			finally {
@@ -111,7 +111,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw sqlExceptionHelper().convert( sqle, "unable to obtain isolated JDBC connection" );
+			throw sqlExceptionHelper().convert( sqle, "Unable to obtain isolated JDBC connection" );
 		}
 	}
 

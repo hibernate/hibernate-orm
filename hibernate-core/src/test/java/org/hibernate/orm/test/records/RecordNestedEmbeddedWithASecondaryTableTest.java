@@ -82,7 +82,7 @@ public class RecordNestedEmbeddedWithASecondaryTableTest {
 	public record FullName(
 			@Column(table = "Person")
 			String firstName,
-//			@Column(table = "Person")
+			@Column(table = "Person")
 			String lastName) {
 
 	}

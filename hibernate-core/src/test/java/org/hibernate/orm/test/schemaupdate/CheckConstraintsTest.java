@@ -56,6 +56,7 @@ public class CheckConstraintsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableCheck.class)
 	public void testCheckConstraintsAtEntityLevelAreApplied() throws Exception {
 		createSchema( EntityLevelCheck.class );
 		String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase()

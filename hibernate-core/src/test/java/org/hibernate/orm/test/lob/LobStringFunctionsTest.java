@@ -7,12 +7,14 @@ package org.hibernate.orm.test.lob;
 import java.sql.Clob;
 import java.util.List;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +36,7 @@ import static org.hamcrest.core.Is.is;
 		annotatedClasses = LobStringFunctionsTest.TestEntity.class
 )
 @SessionFactory
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not allow these functions for LOBs")
 public class LobStringFunctionsTest {
 
 	private static final int LONG_STRING_SIZE = 3999;

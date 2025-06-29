@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.hibernate.testing.orm.junit.JiraKey;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * @author Andrea Boriero
@@ -58,7 +58,7 @@ public class ConcatTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testSelectCaseWithConcat() throws Exception {
+	public void testSelectCaseWithConcat() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		try {
@@ -91,7 +91,7 @@ public class ConcatTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testConcat() throws Exception {
+	public void testConcat() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		try {

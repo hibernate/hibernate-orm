@@ -15,11 +15,12 @@ import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Test;
@@ -33,8 +34,9 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-@SkipForDialect(value = SybaseASEDialect.class, jiraKey = "HHH-6426")
-@SkipForDialect(value = PostgresPlusDialect.class, comment = "Almost all of the tests result in 'ambiguous column' errors.")
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "HHH-6426")
+@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+		reason = "Almost all of the tests result in 'ambiguous column' errors.")
 public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String getBaseForMappings() {
@@ -200,6 +202,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Ambiguous column")
 	public void testGetMultiColumnSameNameAsNoArgFunctionHQL() {
 		Assume.assumeFalse(
 				"current_date requires () but test is for noarg function that does not require ()",
@@ -254,6 +257,7 @@ public class FunctionNameAsColumnTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Ambiguous column")
 	public void testGetMultiColumnSameNameAsNoArgFunctionCriteria() {
 		Assume.assumeFalse(
 				"current_date requires () but test is for noarg function that does not require ()",

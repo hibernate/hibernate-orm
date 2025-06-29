@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.generator.EventType;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,18 +21,19 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 
 /**
  * @author Gavin King
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(annotatedClasses = ImmutableSqlGeneratedTest.OrderLine.class)
 @SessionFactory
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "The name 'current_timestamp' is illegal in this context. Only constants, constant expressions, or variables allowed here.")
+@SkipForDialect( dialectClass = InformixDialect.class,
+		reason = "No 'current_timestamp' function on Informix")
 public class ImmutableSqlGeneratedTest {
 
 	@Test
@@ -65,7 +67,7 @@ public class ImmutableSqlGeneratedTest {
 			entity.status = "old";
 			session.flush();
 			assertNotNull( entity.updated );
-			assertFalse( previous == entity.updated );
+			assertNotSame( previous, entity.updated );
 		} );
 		scope.inTransaction( session -> {
 			OrderLine entity = session.createQuery("from WithDefault", OrderLine.class ).getSingleResult();

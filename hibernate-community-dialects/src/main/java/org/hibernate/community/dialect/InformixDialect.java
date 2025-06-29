@@ -340,6 +340,9 @@ public class InformixDialect extends Dialect {
 		functionFactory.stddev();
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
+		functionFactory.varPop_sumCount();
+		functionContributions.getFunctionRegistry()
+				.registerAlternateKey( "var_samp", "variance" );
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.locate_charindex();

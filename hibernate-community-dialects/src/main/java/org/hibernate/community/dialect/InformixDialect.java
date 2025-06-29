@@ -29,6 +29,8 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -63,7 +65,6 @@ import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableIn
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
@@ -98,6 +99,7 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
+import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.FLOAT;
@@ -332,7 +334,6 @@ public class InformixDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.ceiling_ceil();
-		functionFactory.concat_pipeOperator();
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.addMonths();
@@ -341,8 +342,20 @@ public class InformixDialect extends Dialect {
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 		functionFactory.varPop_sumCount();
-		functionContributions.getFunctionRegistry()
-				.registerAlternateKey( "var_samp", "variance" );
+
+		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
+		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
+		final BasicType<String> stringBasicType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+
+		functionRegistry.registerAlternateKey( "var_samp", "variance" );
+
+		// the pipe operator or concat() function returns strings with trailing whitespace
+		functionRegistry.patternDescriptorBuilder( "concat", "cast(?1||?2... as varchar(255))" )
+				.setInvariantType( stringBasicType )
+				.setMinArgumentCount( 1 )
+				.setArgumentTypeResolver( impliedOrInvariant( typeConfiguration, STRING ) )
+				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
+				.register();
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.locate_charindex();
@@ -350,20 +363,12 @@ public class InformixDialect extends Dialect {
 
 		//coalesce() and nullif() both supported since Informix 12
 
-		functionContributions.getFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
-		functionContributions.getFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "matches" )
-				.setInvariantType( functionContributions.getTypeConfiguration()
-						.getBasicTypeRegistry()
-						.resolve( StandardBasicTypes.STRING )
-				)
+		functionRegistry.register( "least", new CaseLeastGreatestEmulation( true ) );
+		functionRegistry.register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		functionRegistry.namedDescriptorBuilder( "matches" )
+				.setInvariantType( stringBasicType )
 				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver(
-						StandardFunctionArgumentTypeResolvers.impliedOrInvariant(
-								functionContributions.getTypeConfiguration(),
-								STRING
-						)
-				)
+				.setArgumentTypeResolver( impliedOrInvariant( typeConfiguration, STRING ) )
 				.setArgumentListSignature( "(STRING string, STRING pattern)" )
 				.register();
 		if ( supportsWindowFunctions() ) {
@@ -537,6 +542,12 @@ public class InformixDialect extends Dialect {
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return getVersion().isSameOrAfter( 11, 70 );
+	}
+
+	@Override
+	public boolean supportsTableCheck() {
+		// multi-column check constraints are created using 'alter table'
+		return false;
 	}
 
 	@Override

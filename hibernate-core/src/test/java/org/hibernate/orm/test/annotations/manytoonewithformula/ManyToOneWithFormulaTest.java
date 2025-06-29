@@ -150,7 +150,7 @@ public class ManyToOneWithFormulaTest {
 	@SessionFactory
 	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "The used join conditions does not work in HSQLDB. See HHH-4497." )
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle do not support 'substring' function JDBC escape" )
-	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Oracle do not support 'substring' function JDBC escape" )
+	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Informix does not support 'substring' function JDBC escape" )
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = " Altibase char type returns with trailing spaces")
 	public void testManyToOneFromNonPkToNonPk(SessionFactoryScope scope) {
 		// also tests usage of the stand-alone @JoinFormula annotation

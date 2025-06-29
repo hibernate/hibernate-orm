@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.type;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -22,7 +23,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.BasicType;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -54,7 +56,7 @@ public class EnumArrayTest {
 
 	private BasicType<MyEnum[]> arrayType;
 
-	@BeforeAll
+	@BeforeEach
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			arrayType = em.getTypeConfiguration().getBasicTypeForJavaType( MyEnum[].class );
@@ -73,6 +75,11 @@ public class EnumArrayTest {
 			q.setParameter( "data", new MyEnum[] { MyEnum.TRUE, MyEnum.FALSE } );
 			q.executeUpdate();
 		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -132,6 +139,7 @@ public class EnumArrayTest {
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
 	@SkipForDialect(dialectClass = DerbyDialect.class )
 	@SkipForDialect(dialectClass = DB2Dialect.class )
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();

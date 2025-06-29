@@ -579,8 +579,6 @@ public class EmbeddableBinder {
 			}
 		}
 
-		subholder.checkPropertyConsistency();
-
 		if ( compositeUserType != null ) {
 			processCompositeUserType( component, compositeUserType );
 		}
@@ -983,7 +981,7 @@ public class EmbeddableBinder {
 			MetadataBuildingContext context) {
 		final Component component = new Component( context, propertyHolder.getPersistentClass() );
 		component.setEmbedded( isComponentEmbedded );
-		// yuk
+		//yuk
 		component.setTable( propertyHolder.getTable() );
 		if ( isIdentifierMapper
 				|| isComponentEmbedded && inferredData.getPropertyName() == null ) {

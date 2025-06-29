@@ -4,11 +4,8 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -71,7 +68,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
-	private final List<AnnotatedColumn> annotatedColumns;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -97,12 +93,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		else {
 			this.embeddedAttributeName = "";
 			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
-		}
-
-		if ( parent instanceof ComponentPropertyHolder componentHolder ) {
-			this.annotatedColumns = componentHolder.annotatedColumns;
-		} else {
-			this.annotatedColumns = new ArrayList<>();
 		}
 	}
 
@@ -229,22 +219,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		return component.getComponentClassName();
 	}
 
-	public void checkPropertyConsistency() {
-		if ( annotatedColumns.size() > 1 ) {
-			for ( int currentIndex = 1; currentIndex < annotatedColumns.size(); currentIndex++ ) {
-				final AnnotatedColumn current = annotatedColumns.get( currentIndex );
-				final AnnotatedColumn previous = annotatedColumns.get( currentIndex - 1 );
-				if ( !Objects.equals( current.getExplicitTableName(), previous.getExplicitTableName() ) ) {
-					throw new AnnotationException(
-							"Embeddable class '" + component.getComponentClassName()
-							+ "' has properties mapped to two different tables"
-							+ " (all properties of the embeddable class must map to the same table)"
-					);
-				}
-			}
-		}
-	}
-
 	@Override
 	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
 		//AnnotatedColumns.checkPropertyConsistency( ); //already called earlier
@@ -252,7 +226,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
 		final Table table = property.getValue().getTable();
-		if ( !table.equals( getTable() ) ) {
+		if ( !table.equals( getTable() ) || !columnTableIsExplicit( table, columns ) ) {
 			if ( component.getPropertySpan() == 0 ) {
 				component.setTable( table );
 			}
@@ -264,21 +238,19 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 				);
 			}
 		}
-		// In the case of a nested component, AnnotatedColumns.checkPropertyConsistency()
-		// is not called since we rely on the underlying value, we build a synthetic annotated
-		// columns to check the consistency after all properties are set.
+		addProperty( property, attributeMemberDetails, declaringClass );
+	}
+
+	private boolean columnTableIsExplicit(Table table, AnnotatedColumns columns) {
 		if ( columns != null ) {
-			for ( AnnotatedColumn column : columns.getColumns() ) {
-				// The following has to be added otherwise every single
-				// property must be annotated with @Column
-				// Can be removed in version where the binder is stricter
-				if ( column.getExplicitTableName() == null ) {
-					column.setExplicitTableName( "" );
+			for ( AnnotatedColumn current : columns.getColumns() ) {
+				final String explicitTableName = current.getExplicitTableName();
+				if ( columns.isSecondary() && !table.getName().equals( explicitTableName ) ) {
+					return false;
 				}
-				this.annotatedColumns.add( column );
 			}
 		}
-		addProperty( property, attributeMemberDetails, declaringClass );
+		return true;
 	}
 
 	@Override

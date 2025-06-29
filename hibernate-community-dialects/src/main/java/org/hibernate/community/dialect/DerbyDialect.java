@@ -486,7 +486,10 @@ public class DerbyDialect extends Dialect {
 					case FLOAT:
 					case DOUBLE:
 						// Derby can't cast to char directly, but needs to be cast to decimal first...
-						return "cast(trim(cast(cast(?1 as decimal(" + getDefaultDecimalPrecision() + "," + BigDecimalJavaType.INSTANCE.getDefaultSqlScale( this, null ) + ")) as char(254))) as ?2)";
+						return "cast(trim(cast(cast(?1 as decimal("
+								+ getDefaultDecimalPrecision() + ","
+								+ BigDecimalJavaType.INSTANCE.getDefaultSqlScale( this, null )
+								+ ")) as char(254))) as ?2)";
 					case INTEGER:
 					case LONG:
 					case FIXED:

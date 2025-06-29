@@ -168,7 +168,9 @@ public class SimpleQuerySpecificationTests {
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
-				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
+				.containsAnyOf( " where be1_0.position between ? and ?",
+						" where be1_0.\"position\" between ? and ?",
+						" where position between ? and ?" );
 	}
 
 	@Test
@@ -225,7 +227,9 @@ public class SimpleQuerySpecificationTests {
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
-				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
+				.containsAnyOf( " where be1_0.position between ? and ?",
+						" where be1_0.\"position\" between ? and ?",
+						" where position between ? and ?" );
 	}
 
 	@Test
@@ -242,7 +246,9 @@ public class SimpleQuerySpecificationTests {
 
 		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
 		assertThat( sqlCollector.getSqlQueries().get( 0 ) )
-				.containsAnyOf( " where be1_0.position between ? and ?", " where be1_0.\"position\" between ? and ?" );
+				.containsAnyOf( " where be1_0.position between ? and ?",
+						" where be1_0.\"position\" between ? and ?",
+						" where position between ? and ?" );
 	}
 
 	@Test

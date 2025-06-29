@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -62,11 +63,14 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 
 	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
-		if ( supportsSkipFirstClause() ) {
-			renderSkipFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
-		}
-		else {
-			renderFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );
+		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+		if ( isRowsOnlyFetchClauseType( querySpec ) ) {
+			if ( supportsSkipFirstClause() ) {
+				renderSkipFirstClause( querySpec );
+			}
+			else {
+				renderFirstClause( querySpec );
+			}
 		}
 		if ( selectClause.isDistinct() ) {
 			appendSql( "distinct " );
@@ -196,6 +200,32 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
+	}
+
+	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
+		// Check if current query part is already row numbering to avoid infinite recursion
+		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
+			   && getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+	}
+
+	@Override
+	public void visitQueryGroup(QueryGroup queryGroup) {
+		if ( shouldEmulateFetchClause( queryGroup ) ) {
+			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
+		}
+		else {
+			super.visitQueryGroup( queryGroup );
+		}
+	}
+
+	@Override
+	public void visitQuerySpec(QuerySpec querySpec) {
+		if ( shouldEmulateFetchClause( querySpec ) ) {
+			emulateFetchOffsetWithWindowFunctions( querySpec, true );
+		}
+		else {
+			super.visitQuerySpec( querySpec );
+		}
 	}
 
 	private void caseArgument(Expression expression) {

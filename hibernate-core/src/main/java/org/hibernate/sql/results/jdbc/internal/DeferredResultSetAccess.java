@@ -89,7 +89,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			final String sql = jdbcSelect.getSqlString();
 
 			limit = queryOptions.getLimit();
-			final boolean hasLimit = isHasLimit( jdbcSelect );
+			final boolean hasLimit = hasLimit( jdbcSelect );
 			limitHandler = hasLimit ? NoopLimitHandler.NO_LIMIT : dialect.getLimitHandler();
 			final String sqlWithLimit = hasLimit ? sql : limitHandler.processSql( sql, limit, queryOptions );
 
@@ -118,7 +118,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 	}
 
-	private boolean isHasLimit(JdbcOperationQuerySelect jdbcSelect) {
+	private boolean hasLimit(JdbcOperationQuerySelect jdbcSelect) {
 		return limit == null || limit.isEmpty() || jdbcSelect.usesLimitParameters();
 	}
 
@@ -183,7 +183,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	}
 
 	@Override
-	public SessionFactoryImplementor getFactory() {
+	protected SessionFactoryImplementor getFactory() {
 		return executionContext.getSession().getFactory();
 	}
 

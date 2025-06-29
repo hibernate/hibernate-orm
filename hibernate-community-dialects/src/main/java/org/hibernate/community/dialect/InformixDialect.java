@@ -424,7 +424,7 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return switch ( unit ) {
-			case SECOND -> "to_number(to_char(?2,'%S'))";
+			case SECOND -> "to_number(to_char(?2,'%S.%F3'))";
 			case MINUTE -> "to_number(to_char(?2,'%M'))";
 			case HOUR -> "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";

@@ -5603,7 +5603,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderExpressionAsClauseItem(Expression expression) {
-		// Most databases do not support predicates as top level items
+		// Most databases do not support predicates as top-level items
 		if ( expression instanceof Predicate ) {
 			appendSql( "case when " );
 			expression.accept( this );
@@ -5619,7 +5619,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderSelectExpressionWithCastedOrInlinedPlainParameters(Expression expression) {
-		// Null literals have to be casted in the select clause
+		// Null literals have to be cast in the select clause
 		if ( expression instanceof Literal literal ) {
 			if ( literal.getLiteralValue() == null ) {
 				renderCasted( literal );

@@ -20,7 +20,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -42,7 +43,7 @@ import jakarta.persistence.TypedQuery;
 @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 public class VarbinaryArrayTest {
 
-	@BeforeAll
+	@BeforeEach
 	void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			EntityWithArrays entity;
@@ -184,6 +185,11 @@ public class VarbinaryArrayTest {
 						(Function<EntityWithArrays, Serializable[]>) EntityWithArrays::getSerializableArray
 				)
 		);
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@ParameterizedTest

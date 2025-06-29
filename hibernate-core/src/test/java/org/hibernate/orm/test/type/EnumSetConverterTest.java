@@ -8,6 +8,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -26,7 +27,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.BasicType;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -57,7 +59,7 @@ public class EnumSetConverterTest {
 
 	private BasicType<Set<MySpecialEnum>> enumSetType;
 
-	@BeforeAll
+	@BeforeEach
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//noinspection unchecked
@@ -82,6 +84,11 @@ public class EnumSetConverterTest {
 			q.setParameter( "data", EnumSet.of( MySpecialEnum.VALUE2, MySpecialEnum.VALUE1, MySpecialEnum.VALUE3 ), enumSetType );
 			q.executeUpdate();
 		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -137,6 +144,7 @@ public class EnumSetConverterTest {
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();

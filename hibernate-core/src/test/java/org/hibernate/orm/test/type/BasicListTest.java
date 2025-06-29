@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -25,7 +26,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.BasicType;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -54,7 +56,7 @@ public class BasicListTest {
 
 	private BasicType<List<Integer>> integerListType;
 
-	@BeforeAll
+	@BeforeEach
 	public void startUp(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			integerListType = em.getTypeConfiguration().getBasicTypeForGenericJavaType( List.class, Integer.class );
@@ -73,6 +75,11 @@ public class BasicListTest {
 			q.setParameter( "data", Arrays.asList( null, null, 0 ), integerListType );
 			q.executeUpdate();
 		} );
+	}
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test
@@ -128,6 +135,7 @@ public class BasicListTest {
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE requires a special function to compare XML")
 	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA requires a special function to compare LOBs")
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL supports distinct from through a special operator")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix can't compare LOBs")
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final Dialect dialect = em.getDialect();

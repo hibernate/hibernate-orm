@@ -11,7 +11,7 @@ buildscript {
 	dependencies {
 //		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
 		classpath buildscriptLibs.forbiddenapis
-		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
+		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.3'
 	}
 }
 
@@ -21,18 +21,18 @@ plugins {
 
 	id "org.hibernate.build.version-injection" version "2.0.0" apply false
 	id 'org.hibernate.orm.database-service' apply false
-	id 'biz.aQute.bnd' version '7.0.0' apply false
+	id 'biz.aQute.bnd' version '7.1.0' apply false
 
-	id "com.diffplug.spotless" version "7.0.2"
-	id 'org.checkerframework' version '0.6.40'
+	id "com.diffplug.spotless" version "7.0.4"
+	id 'org.checkerframework' version '0.6.55'
 	id 'org.hibernate.orm.build.jdks'
 
 	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
 
 	id 'idea'
-	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
+	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.10'
 	id 'eclipse'
-	id "com.dorongold.task-tree" version "2.1.1"
+	id "com.dorongold.task-tree" version "4.0.1"
 }
 
 

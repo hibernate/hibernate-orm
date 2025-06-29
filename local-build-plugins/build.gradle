@@ -5,7 +5,7 @@
 plugins {
 	id "java-gradle-plugin"
 	id 'groovy-gradle-plugin'
-	id "com.diffplug.spotless" version "7.0.2"
+	id "com.diffplug.spotless" version "7.0.4"
 }
 
 repositories {
@@ -22,18 +22,18 @@ dependencies {
 	implementation "jakarta.inject:jakarta.inject-api:2.0.0"
 
 	implementation 'io.smallrye:jandex:3.1.2'
-	implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 	implementation 'jakarta.json.bind:jakarta.json.bind-api:2.0.0'
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'
 	implementation 'org.eclipse:yasson:2.0.4'
-	implementation 'org.jsoup:jsoup:1.15.3'
+	implementation 'org.jsoup:jsoup:1.21.1'
 
-	implementation "de.thetaphi:forbiddenapis:3.8"
+	implementation "de.thetaphi:forbiddenapis:3.9"
 
-	implementation "org.apache.maven:maven-embedder:3.9.9"
-	implementation "org.apache.maven:maven-compat:3.9.9"
-	implementation "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.18"
-	implementation "org.apache.maven.resolver:maven-resolver-transport-http:1.9.18"
+	implementation "org.apache.maven:maven-embedder:3.9.10"
+	implementation "org.apache.maven:maven-compat:3.9.10"
+	implementation "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.23"
+	implementation "org.apache.maven.resolver:maven-resolver-transport-http:1.9.23"
 	implementation "org.slf4j:slf4j-simple:1.7.36"
 }
 

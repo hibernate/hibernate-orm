@@ -184,7 +184,8 @@ public class Helper {
 			);
 		}
 		catch (SQLException e) {
-			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformation" );
+			throw jdbcEnvironment.getSqlExceptionHelper()
+					.convert( e, "Unable to build DatabaseInformation" );
 		}
 	}
 

@@ -63,7 +63,8 @@ public class ExtractionContextImpl implements ExtractionContext {
 				jdbcConnection = jdbcConnectionAccess.obtainConnection();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to obtain JDBC Connection" );
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC Connection" );
 			}
 		}
 		return jdbcConnection;
@@ -76,7 +77,8 @@ public class ExtractionContextImpl implements ExtractionContext {
 				jdbcDatabaseMetaData = getJdbcConnection().getMetaData();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to obtain JDBC DatabaseMetaData" );
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC DatabaseMetaData" );
 			}
 		}
 		return jdbcDatabaseMetaData;

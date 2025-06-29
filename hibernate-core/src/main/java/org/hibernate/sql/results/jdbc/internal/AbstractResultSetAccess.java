@@ -34,10 +34,8 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 				resultSetMetaData = getResultSet().getMetaData();
 			}
 			catch (SQLException e) {
-				throw persistenceContext.getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						"Unable to access ResultSetMetaData"
-				);
+				throw persistenceContext.getJdbcServices().getSqlExceptionHelper()
+						.convert( e, "Unable to access ResultSetMetaData" );
 			}
 		}
 
@@ -50,10 +48,8 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 			return getMetaData().getColumnCount();
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
-					e,
-					"Unable to access ResultSet column count"
-			);
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( e, "Unable to access ResultSet column count" );
 		}
 	}
 
@@ -65,10 +61,8 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 			);
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
-					e,
-					"Unable to find column position by name: " + columnName
-			);
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( e, "Unable to find column position by name: " + columnName );
 		}
 	}
 
@@ -80,10 +74,8 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 					.extractColumnAlias( getMetaData(), position );
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
-					e,
-					"Unable to find column name by position"
-			);
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( e, "Unable to find column name by position" );
 		}
 	}
 }

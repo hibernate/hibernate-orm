@@ -68,10 +68,8 @@ public class ImprovedExtractionContextImpl implements ExtractionContext {
 				jdbcDatabaseMetaData = getJdbcConnection().getMetaData();
 			}
 			catch (SQLException e) {
-				throw jdbcEnvironment.getSqlExceptionHelper().convert(
-						e,
-						"Unable to obtain JDBC DatabaseMetaData"
-				);
+				throw jdbcEnvironment.getSqlExceptionHelper()
+						.convert( e, "Unable to obtain JDBC DatabaseMetaData" );
 			}
 		}
 		return jdbcDatabaseMetaData;

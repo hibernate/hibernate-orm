@@ -52,10 +52,8 @@ public class JdbcCallParameterExtractorImpl<T> implements JdbcCallParameterExtra
 			return ormType.extract( callableStatement, parameterPosition, session );
 		}
 		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Unable to extract OUT/INOUT parameter value"
-			);
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( e, "Unable to extract OUT/INOUT parameter value" );
 		}
 	}
 }

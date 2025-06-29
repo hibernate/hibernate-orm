@@ -72,7 +72,8 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 				jdbcConnection = jdbcContext.getJdbcConnectionAccess().obtainConnection();
 			}
 			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to open JDBC Connection for DDL execution" );
+				throw jdbcContext.getSqlExceptionHelper()
+						.convert( e, "Unable to open JDBC Connection for DDL execution" );
 			}
 
 			try {
@@ -81,7 +82,8 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 				}
 			}
 			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to set JDBC Connection for DDL execution to autocommit" );
+				throw jdbcContext.getSqlExceptionHelper()
+						.convert( e, "Unable to set JDBC Connection for DDL execution to autocommit" );
 			}
 		}
 		return jdbcConnection;
@@ -94,7 +96,8 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 				jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
 			}
 			catch (SQLException e) {
-				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to release JDBC Connection used for DDL execution" );
+				throw jdbcContext.getSqlExceptionHelper()
+						.convert( e, "Unable to release JDBC Connection used for DDL execution" );
 			}
 		}
 

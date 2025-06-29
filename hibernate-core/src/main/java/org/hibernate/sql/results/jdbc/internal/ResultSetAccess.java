@@ -43,10 +43,8 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 			return getResultSet().getMetaData().getColumnCount();
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
-					e,
-					"Unable to access ResultSet column count"
-			);
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( e, "Unable to access ResultSet column count" );
 		}
 	}
 
@@ -55,10 +53,8 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 			return getResultSet().findColumn( columnName );
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
-					e,
-					"Unable to find column position by name"
-			);
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( e, "Unable to find column position by name" );
 		}
 	}
 
@@ -70,10 +66,8 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 					.extractColumnAlias( getResultSet().getMetaData(), position );
 		}
 		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
-					e,
-					"Unable to find column name by position"
-			);
+			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper()
+					.convert( e, "Unable to find column name by position" );
 		}
 	}
 
@@ -153,10 +147,8 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 			return typeConfiguration.getBasicTypeRegistry().resolve( javaType, jdbcType );
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					"Unable to determine JDBC type code for ResultSet position " + position
-			);
+			throw jdbcServices.getSqlExceptionHelper()
+					.convert( e, "Unable to determine JDBC type code for ResultSet position " + position );
 		}
 	}
 

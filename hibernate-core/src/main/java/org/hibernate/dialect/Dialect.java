@@ -1948,7 +1948,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper()
+							.convert( e, "unable to merge CLOB data" );
 				}
 			}
 			else {
@@ -1971,7 +1972,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					throw new HibernateException( "Unable to copy stream content", e );
 				}
 				catch (SQLException e ) {
-					throw session.getFactory().getJdbcServices().getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
+					throw session.getFactory().getJdbcServices().getSqlExceptionHelper()
+							.convert( e, "unable to merge NCLOB data" );
 				}
 			}
 			else {
@@ -1997,7 +1999,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						: lobCreator.createBlob( original.getBinaryStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge BLOB data" );
+				throw jdbcServices.getSqlExceptionHelper()
+						.convert( e, "unable to merge BLOB data" );
 			}
 		}
 
@@ -2014,7 +2017,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						: lobCreator.createClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge CLOB data" );
+				throw jdbcServices.getSqlExceptionHelper()
+						.convert( e, "unable to merge CLOB data" );
 			}
 		}
 
@@ -2031,7 +2035,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 						: lobCreator.createNClob( original.getCharacterStream(), original.length() );
 			}
 			catch (SQLException e) {
-				throw jdbcServices.getSqlExceptionHelper().convert( e, "unable to merge NCLOB data" );
+				throw jdbcServices.getSqlExceptionHelper()
+						.convert( e, "unable to merge NCLOB data" );
 			}
 		}
 	};

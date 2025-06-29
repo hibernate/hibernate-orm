@@ -99,7 +99,7 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			JdbcOperationQueryMutation jdbcMutation, SQLException sqle, JdbcServices jdbcServices, String finalSql) {
 		final JDBCException exception =
 				jdbcServices.getSqlExceptionHelper()
-						.convert( sqle, "JDBC exception executing SQL [" + finalSql + "]" );
+						.convert( sqle, "JDBC exception executing SQL", finalSql );
 		if ( exception instanceof ConstraintViolationException constraintViolationException
 			&& jdbcMutation instanceof JdbcOperationQueryInsert jdbcInsert ) {
 			if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {

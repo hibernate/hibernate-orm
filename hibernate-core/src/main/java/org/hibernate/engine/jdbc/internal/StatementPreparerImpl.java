@@ -71,7 +71,7 @@ class StatementPreparerImpl implements StatementPreparer {
 			return statement;
 		}
 		catch ( SQLException e ) {
-			throw sqlExceptionHelper().convert( e, "could not create statement" );
+			throw sqlExceptionHelper().convert( e, "Could not create statement" );
 		}
 	}
 

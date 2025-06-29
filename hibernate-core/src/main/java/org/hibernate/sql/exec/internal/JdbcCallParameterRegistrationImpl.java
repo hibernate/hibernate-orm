@@ -113,10 +113,8 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 			sqlTypeDescriptor.registerOutParameter( callableStatement, jdbcParameterPositionStart );
 		}
 		catch (SQLException e) {
-			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Unable to register CallableStatement out parameter"
-			);
+			throw session.getJdbcServices().getSqlExceptionHelper()
+					.convert( e, "Unable to register CallableStatement OUT parameter" );
 		}
 	}
 }

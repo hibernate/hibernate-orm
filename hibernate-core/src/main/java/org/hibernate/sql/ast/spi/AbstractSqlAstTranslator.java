@@ -8034,11 +8034,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " not" );
 			}
 			appendSql( " like " );
-			likePredicate.getPattern().accept( this );
-			if ( likePredicate.getEscapeCharacter() != null ) {
-				appendSql( " escape " );
-				likePredicate.getEscapeCharacter().accept( this );
-			}
+			renderLikePredicate( likePredicate );
 		}
 		else {
 			if ( dialect.supportsCaseInsensitiveLike() ) {
@@ -8049,15 +8045,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( WHITESPACE );
 				appendSql( dialect.getCaseInsensitiveLike() );
 				appendSql( WHITESPACE );
-				likePredicate.getPattern().accept( this );
-				if ( likePredicate.getEscapeCharacter() != null ) {
-					appendSql( " escape " );
-					likePredicate.getEscapeCharacter().accept( this );
-				}
+				renderLikePredicate( likePredicate );
 			}
 			else {
 				renderCaseInsensitiveLikeEmulation(likePredicate.getMatchExpression(), likePredicate.getPattern(), likePredicate.getEscapeCharacter(), likePredicate.isNegated());
 			}
+		}
+	}
+
+	protected void renderLikePredicate(LikePredicate likePredicate) {
+		likePredicate.getPattern().accept( this );
+		if ( likePredicate.getEscapeCharacter() != null ) {
+			appendSql( " escape " );
+			likePredicate.getEscapeCharacter().accept( this );
 		}
 	}
 
@@ -8147,13 +8147,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitNegatedPredicate(NegatedPredicate negatedPredicate) {
-		if ( negatedPredicate.isEmpty() ) {
-			return;
+		if ( !negatedPredicate.isEmpty() ) {
+			appendSql( "not(" );
+			negatedPredicate.getPredicate().accept( this );
+			appendSql( CLOSE_PARENTHESIS );
 		}
-
-		appendSql( "not(" );
-		negatedPredicate.getPredicate().accept( this );
-		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	@Override

@@ -50,6 +50,11 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
+	protected void renderSelectExpression(Expression expression) {
+		renderSelectExpressionWithCastedOrInlinedPlainParameters( expression );
+	}
+
+	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
 		if ( supportsSkipFirstClause() ) {
 			renderSkipFirstClause( (QuerySpec) getQueryPartStack().getCurrent() );

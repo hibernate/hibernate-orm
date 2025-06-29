@@ -7,6 +7,7 @@ package org.hibernate.orm.test.multitenancy;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.SQLServerDialect;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.AssertionsKt.assertNull;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 @SkipForDialect(dialectClass = SQLServerDialect.class, reason = "Warning: setSchema is a no-op in this driver version")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "getSchema() method not implemented by jTDS")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "setSchema() method is a noop")
 @JiraKey("HHH-19559")
 public class SchemaBasedMultitenancyTest {
 	private static String currentTenantIdentifier;

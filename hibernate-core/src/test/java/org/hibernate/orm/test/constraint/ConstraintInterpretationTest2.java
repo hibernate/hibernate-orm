@@ -27,6 +27,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -101,6 +102,9 @@ public class ConstraintInterpretationTest2 {
 			}
 		} );
 	}
+
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "multi-column check constraints must be created using 'alter table', and we don't have a StandardCheckConstraintExporter")
 	@Test void testCheck(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			try {

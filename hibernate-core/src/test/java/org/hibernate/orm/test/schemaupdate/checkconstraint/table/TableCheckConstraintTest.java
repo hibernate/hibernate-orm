@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @BaseUnitTest
 @JiraKey("HHH-18054")
-@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsColumnCheck.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableCheck.class)
 public class TableCheckConstraintTest {
 	static final String CONSTRAINTS = "NAME_COLUMN is not null";
 	static final String SECONDARY_TABLE_CONSTRAINTS = "SECOND_NAME is not null";
@@ -175,8 +175,8 @@ public class TableCheckConstraintTest {
 			String[] fileContent,
 			String tableName,
 			String secondaryTableConstraints) {
-		for ( int i = 0; i < fileContent.length; i++ ) {
-			String statement = fileContent[i].toUpperCase( Locale.ROOT );
+		for ( String string : fileContent ) {
+			String statement = string.toUpperCase( Locale.ROOT );
 			if ( statement.contains( "CREATE TABLE " + tableName.toUpperCase( Locale.ROOT ) ) ) {
 				if ( statement.contains( secondaryTableConstraints.toUpperCase( Locale.ROOT ) ) ) {
 					return true;
@@ -186,10 +186,10 @@ public class TableCheckConstraintTest {
 		return false;
 	}
 
-	private void createSchema(Class... annotatedClasses) {
+	private void createSchema(Class<?>... annotatedClasses) {
 		final MetadataSources metadataSources = new MetadataSources( ssr );
 
-		for ( Class c : annotatedClasses ) {
+		for ( Class<?> c : annotatedClasses ) {
 			metadataSources.addAnnotatedClass( c );
 		}
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();

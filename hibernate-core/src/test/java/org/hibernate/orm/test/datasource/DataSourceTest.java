@@ -8,7 +8,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 import org.hibernate.testing.logger.LogInspectionHelper;
@@ -35,7 +37,9 @@ public class DataSourceTest {
 		LogInspectionHelper.registerListener( listener, ConnectionInfoLogger.INSTANCE );
 		scope.getEntityManagerFactory();
 		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.INSTANCE );
-		assertTrue( scope.getDialect() instanceof OracleDialect dialect && dialect.isAutonomous()
+		Dialect dialect = scope.getDialect();
+		assertTrue( dialect instanceof OracleDialect od && od.isAutonomous()
+					|| dialect instanceof InformixDialect // Informix metadata does not include the URL
 					|| listener.seen );
 	}
 

@@ -8,12 +8,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.StaleStateException;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SessionFactory
@@ -66,6 +72,28 @@ public class UpsertVersionedTest {
 		scope.inStatelessTransaction( s-> {
 			assertEquals( "hello mars", s.get(Record.class,789L).message );
 		} );
+	}
+
+	@RequiresDialects(
+			value = {
+					@RequiresDialect( MySQLDialect.class ),
+					@RequiresDialect( MariaDBDialect.class )
+			}
+	)
+	@Test void testMySQLRowCounts(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
+
+		// insert => rowcount 1
+		scope.inStatelessTransaction(s-> assertDoesNotThrow(() -> s.upsert(new Record(123L, null, "hello earth"))) );
+
+		// Partial update => rowcount 2
+		scope.inStatelessTransaction(s-> assertDoesNotThrow(() -> s.upsert(new Record(123L,0L,"goodbye earth"))) );
+
+		// Only version updated rowcount 2
+		scope.inStatelessTransaction(s-> assertDoesNotThrow(() -> s.upsert(new Record(123L, 1L, "goodbye earth"))) );
+
+		// Stale upsert, should throw StaleStateException
+		scope.inStatelessTransaction(s-> assertThrows(StaleStateException.class, () -> s.upsert(new Record(123L,null, null))) );
 	}
 
 	@Entity(name = "Record")

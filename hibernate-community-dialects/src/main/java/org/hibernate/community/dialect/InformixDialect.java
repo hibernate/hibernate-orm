@@ -951,17 +951,22 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
-		DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
+		final DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
 		if ( descriptor == null ) {
-			return "null";
+			// just cast it to an arbitrary SQL type,
+			// which we expect to be ignored by higher layers
+			return "null::int";
 		}
-		String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
+		else {
+			return "null::" + castType( descriptor );
+		}
+	}
+
+	private static String castType(DdlType descriptor) {
+		final String typeName = descriptor.getTypeName( Size.length( Size.DEFAULT_LENGTH ) );
 		//trim off the length/precision/scale
 		final int loc = typeName.indexOf( '(' );
-		if ( loc > -1 ) {
-			typeName = typeName.substring( 0, loc );
-		}
-		return "null::" + typeName;
+		return loc < 0 ? typeName : typeName.substring( 0, loc );
 	}
 
 	@Override

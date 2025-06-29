@@ -117,6 +117,8 @@ public class EnumSetConverterTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithEnumSetConverter> tq = em.createNamedQuery( "TableWithEnumSetConverter.JPQL.getByData", TableWithEnumSetConverter.class );

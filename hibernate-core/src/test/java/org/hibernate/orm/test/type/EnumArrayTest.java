@@ -110,6 +110,8 @@ public class EnumArrayTest {
 
 	@Test
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "When length 0 byte array is inserted, Altibase returns with null")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.JPQL.getByData", TableWithEnumArrays.class );

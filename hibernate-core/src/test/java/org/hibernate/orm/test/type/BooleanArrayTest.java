@@ -114,6 +114,8 @@ public class BooleanArrayTest {
 
 	@Test
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
 	public void testQuery(SessionFactoryScope scope) {
 	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );

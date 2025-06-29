@@ -584,26 +584,35 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) ->
-				switch ( extractErrorCode( sqlException ) ) {
-					case -378, -233, -107, -113, -134, -143, -144, -154 ->
-						//TODO: which of these are these are really LockTimeoutExceptions
-						//      rather than the more generic LockAcquisitionException?
-							new LockAcquisitionException( message, sqlException, sql );
-					case -239, -268 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					case -691, -692 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					case -703, -391 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					case -530 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.CHECK,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					default -> null;
-				};
+		return (exception, message, sql) -> switch ( extractErrorCode( exception ) ) {
+			case -239, -268 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -691, -692 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -703, -391 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -530 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			default -> {
+				// unwrap the ISAM error, if any
+				if ( exception.getCause() instanceof SQLException cause && cause != exception ) {
+					yield switch ( extractErrorCode( cause ) ) {
+						case -107, -113, -134, -143, -144, -154 ->
+							//TODO: which of these are these are really LockTimeoutExceptions
+							//      rather than the more generic LockAcquisitionException?
+								new LockAcquisitionException( message, exception, sql );
+						default -> null;
+					};
+				}
+				else {
+					yield null;
+				}
+			}
+		};
 	}
 
 	@Override

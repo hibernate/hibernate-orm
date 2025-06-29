@@ -158,6 +158,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsTableCheck implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsTableCheck();
+		}
+	}
+
 	public static class SupportsNoColumnInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNoColumnsInsert();

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.mapping.formula;
 
 import java.sql.Types;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.mapping.BasicValue;
@@ -63,8 +64,12 @@ public class FormulaFromHbmTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase has no trim function which is used in the mapping", matchSubTypes = true)
-	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "The MySQL JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping", matchSubTypes = true)
+	@SkipForDialect(dialectClass = SybaseASEDialect.class,
+			reason = "Sybase has no trim function which is used in the mapping", matchSubTypes = true)
+	@SkipForDialect(dialectClass = MySQLDialect.class,
+			reason = "The MySQL JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping", matchSubTypes = true)
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The Informix JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping")
 	public void testBasicHqlUse(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> session.createQuery( "from EntityOfFormulas" ).list()

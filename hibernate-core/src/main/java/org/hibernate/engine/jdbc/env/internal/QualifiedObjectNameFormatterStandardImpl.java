@@ -55,9 +55,9 @@ public class QualifiedObjectNameFormatterStandardImpl implements QualifiedObject
 		}
 	}
 
-	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport) {
+	public QualifiedObjectNameFormatterStandardImpl(NameQualifierSupport nameQualifierSupport, String catalogSeparator) {
 		// most dbs simply do <catalog>.<schema>.<name>
-		this( nameQualifierSupport, ".", false );
+		this( nameQualifierSupport, catalogSeparator, false );
 	}
 
 	public QualifiedObjectNameFormatterStandardImpl(

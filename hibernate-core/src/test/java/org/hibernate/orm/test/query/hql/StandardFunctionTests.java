@@ -13,6 +13,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 
 import org.hamcrest.number.IsCloseTo;
@@ -566,7 +567,10 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Intervals or datetimes are incompatible for the operation")
 	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

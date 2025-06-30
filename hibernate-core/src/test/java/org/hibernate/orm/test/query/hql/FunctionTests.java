@@ -1093,6 +1093,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true)
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support offset of datetime")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support offset datetime")
 	public void testCastToOffsetDatetime(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.createQuery("select cast(datetime 1911-10-09 12:13:14-02:00 as String)", String.class).getSingleResult();
@@ -1490,8 +1491,6 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select e.theTime + 30 second from EntityOfBasics e", Date.class)
 							.list();
-					session.createQuery("select e.theTime + 300000000 nanosecond from EntityOfBasics e", Date.class)
-							.list();
 
 					session.createQuery("select e.theTimestamp + 1 year from EntityOfBasics e", Date.class)
 							.list();
@@ -1507,6 +1506,18 @@ public class FunctionTests {
 					session.createQuery("select e.theTimestamp + 30 second from EntityOfBasics e", Date.class)
 							.list();
 
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Adding nanoseconds to a time is weird anyway")
+	public void testAddNanosecondsToTime(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select e.theTime + 300000000 nanosecond from EntityOfBasics e", Date.class)
+							.list();
 				}
 		);
 	}
@@ -2067,7 +2078,10 @@ public class FunctionTests {
 
 
 	@Test
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "unsupported binary operator: <date> - <timestamp(6)>")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Intervals or datetimes are incompatible for the operation")
 	public void testIntervalDiffExpressionsDifferentTypes(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

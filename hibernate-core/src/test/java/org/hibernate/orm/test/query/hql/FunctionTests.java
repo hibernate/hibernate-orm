@@ -2045,7 +2045,16 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e", Long.class)
 							.list();
+				}
+		);
+	}
 
+	@Test
+	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
+			reason = "PT47H59M59.999999S instead of PT48H")
+	public void testIntervalDiffExpressionsWithAssertions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					assertThat( session.createQuery("select (local datetime + 2 day) - local datetime").getSingleResult(),
 							is( Duration.ofDays( 2 ) ) );
 					assertThat( session.createQuery("select (local datetime - 12 hour) - local datetime").getSingleResult(),

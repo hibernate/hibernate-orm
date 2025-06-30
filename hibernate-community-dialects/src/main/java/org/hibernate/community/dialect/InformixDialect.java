@@ -436,7 +436,6 @@ public class InformixDialect extends Dialect {
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";
 			case DAY_OF_MONTH -> "day(?2)";
 			case EPOCH -> "(to_number(cast(cast(sum(?2-datetime(1970-1-1) year to day) as interval day(9) to day) as varchar(12)))*86400+to_number(cast(cast(sum(cast(?2 as datetime hour to second)-datetime(00:00:00) hour to second) as interval second(6) to second) as varchar(9))))";
-			case NATIVE -> "((to_number(cast(cast(sum(?2) as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(sum(?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?2) as interval fraction to fraction) as varchar(6))))*1e3)";
 			default -> "?1(?2)";
 		};
 	}
@@ -695,16 +694,21 @@ public class InformixDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		return intervalType != null ? "(?2 + ?3)" : "(?3 + " + intervalPattern( unit ) + ")";
+		return intervalType != null ? "(?2 + ?3)" : "(?3 + " + intervalPattern( unit, temporalType ) + ")";
 	}
 
-	private static String intervalPattern(TemporalUnit unit) {
+	@SuppressWarnings("deprecation")
+	private static String intervalPattern(TemporalUnit unit, TemporalType temporalType) {
 		return switch (unit) {
-			case NANOSECOND -> "?2/1e9 * interval (1) second to fraction";
-			case NATIVE, SECOND -> "?2 * interval (1) second to fraction";
-			case QUARTER -> "?2 * interval (3) month to month";
-			case WEEK -> "?2 * interval (7) day to day";
-			default -> "?2 * interval (1) " + unit + " to " + unit;
+			case NANOSECOND -> "?2/1e9 * interval (1) second(9) to fraction";
+			case NATIVE -> "?2/1e3 * interval (1) second(9) to fraction"; // millis
+			case SECOND ->
+					temporalType == TemporalType.TIME
+							? "?2 * 1 units second" // times don't usually come equipped with fractional seconds
+							: "?2 * interval (1) second(9) to fraction"; // datetimes do have fractional seconds
+			case QUARTER -> "?2 * 3 units month";
+			case WEEK -> "?2 * 7 units day";
+			default -> "?2 * 1 units " + unit;
 		};
 	}
 
@@ -717,11 +721,21 @@ public class InformixDialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		return unit == null
-				? "(?3-?2)"
-				: extractPattern( unit )
-						.replace( "?1", unit.toString() )
-						.replace( "?2", "?3-?2" );
+		if ( unit == null ) {
+			return "(?3-?2)";
+		}
+		else {
+			return switch ( unit ) {
+				case NATIVE ->
+					fromTemporalType == TemporalType.TIME
+							// arguably, we don't really need to retain the milliseconds for a time, since times don't usually come with millis
+							? "((mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))*1e3)"
+							: "((to_number(cast(cast(sum(?3-?2) as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))*1e3)";
+				case SECOND -> "to_number(cast(cast(sum(?3-?2) as interval second(9) to fraction) as varchar(15)))";
+				case NANOSECOND -> "(to_number(cast(cast(sum(?3-?2) as interval second(9) to fraction) as varchar(15)))*1e9)";
+				default -> "to_number(cast(cast(sum(?3-?2) as interval ?1(9) to ?1) as varchar(12)))";
+			};
+		}
 	}
 
 	@Override
@@ -948,7 +962,7 @@ public class InformixDialect extends Dialect {
 				break;
 			case TIME:
 				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-				appender.appendSql( ") hour to fraction" );
+				appender.appendSql( ") hour to second" ); // we ignore the milliseconds
 				break;
 			case TIMESTAMP:
 				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );

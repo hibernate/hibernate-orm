@@ -123,7 +123,7 @@ ext {
                     'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                     'jdbc.user'  : 'hibernate_orm_test',
                     'jdbc.pass'  : 'hibernate_orm_test',
-                    'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true',
+                    'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true&useAffectedRows=true',
                     'jdbc.datasource' : 'com.mysql.jdbc.Driver',
 //                        'jdbc.datasource' : 'com.mysql.cj.jdbc.MysqlDataSource',
                     'connection.init_sql' : ''

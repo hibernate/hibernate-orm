@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CompositeInheritanceWorkingTest.TupAbstractEntity.class,
 				CompositeInheritanceWorkingTest.DummyEntity.class,
 				CompositeInheritanceWorkingTest.FooEntity.class, // And here the class is called FooEntity and this works for some reason
+				CompositeInheritanceWorkingTest.Test2Entity.class,
 		}
 )
 @ServiceRegistry(
@@ -53,10 +55,25 @@ public class CompositeInheritanceWorkingTest {
 		} );
 	}
 
+	@Test
+	void hhh19076FailingTest2(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Test2Entity e1 = new Test2Entity("foo", "xxxxxx");
+			em.persist(e1);
+
+			CompositeId2Class key = e1.getCompositeId();
+			Test2Entity e2 = em.find( Test2Entity.class, key);
+			assertNotNull(e2);
+		} );
+	}
+
 	@MappedSuperclass
 	public static abstract class TupAbstractEntity {
 		@Id
 		private String oid = null;
+
+		@Version
+		private long tanum = 0;
 
 
 		@SuppressWarnings("this-escape")
@@ -71,6 +88,9 @@ public class CompositeInheritanceWorkingTest {
 			return oid;
 		}
 
+		public long getTanum() {
+			return tanum;
+		}
 	}
 
 	@Entity
@@ -103,6 +123,32 @@ public class CompositeInheritanceWorkingTest {
 
 	}
 
+	@Entity
+	@IdClass(CompositeId2Class.class)
+	public static class Test2Entity extends TupAbstractEntity {
+
+		@Id
+		private String otherId;
+
+		protected Test2Entity() {
+			// for JPA
+		}
+
+		public Test2Entity(String oid, String otherId) {
+			super(oid);
+			this.otherId = otherId;
+		}
+
+		public String myId() {
+			return otherId;
+		}
+
+		public CompositeId2Class getCompositeId() {
+			return new CompositeId2Class(getOid(), otherId);
+		}
+
+	}
+
 	public static class CompositeIdClass {
 
 		private String oid;
@@ -122,6 +168,30 @@ public class CompositeInheritanceWorkingTest {
 
 		public String myId() {
 			return myId;
+		}
+
+	}
+
+
+	public static class CompositeId2Class {
+
+		private String oid;
+		private String otherId;
+
+		public CompositeId2Class(String oid, String otherId) {
+			this.oid = oid;
+			this.otherId = otherId;
+		}
+
+		public CompositeId2Class() {
+		}
+
+		public String oid() {
+			return oid;
+		}
+
+		public String otherId() {
+			return otherId;
 		}
 
 	}

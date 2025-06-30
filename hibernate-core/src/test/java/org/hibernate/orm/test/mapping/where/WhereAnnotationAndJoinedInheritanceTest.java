@@ -79,7 +79,8 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 
 					// the child
 					List<PrimaryObject> resultList = entityManager.createQuery( query ).getResultList();
-					assertThat( resultList.size() ).isEqualTo( 0 );
+					// @SQLRestriction should not be applied when joining FK association
+					assertThat( resultList.size() ).isEqualTo( 1 );
 				}
 		);
 	}
@@ -124,7 +125,8 @@ public class WhereAnnotationAndJoinedInheritanceTest {
 									root.get( "child" ).get( "data" ), DELETED_CHILD ) );
 
 					List<PrimaryObject> resultList = entityManager.createQuery( query ).getResultList();
-					assertThat( resultList.size() ).isEqualTo( 0 );
+					// @SQLRestriction should not be applied when joining FK association
+					assertThat( resultList.size() ).isEqualTo( 1 );
 
 					builder = entityManager.getCriteriaBuilder();
 					query = builder.createQuery( PrimaryObject.class );

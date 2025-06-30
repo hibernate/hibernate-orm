@@ -10,6 +10,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.WrongClassException;
 import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,7 +21,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -60,6 +60,7 @@ public class EntityConcreteTypeLoader {
 
 	public EntityMappingType getConcreteType(Object id, SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getSessionFactory();
+		final JdbcServices jdbcServices = factory.getJdbcServices();
 
 		final JdbcParameterBindings bindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		final int offset = bindings.registerParametersForEachJdbcValue(
@@ -70,14 +71,12 @@ public class EntityConcreteTypeLoader {
 		);
 		assert offset == jdbcParameters.size();
 
-		final JdbcOperationQuerySelect jdbcSelect =
-				factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
-						.buildSelectTranslator( factory, sqlSelect )
-						.translate( bindings, QueryOptions.NONE );
-		final List<Object> results =
-				session.getFactory().getJdbcServices().getJdbcSelectExecutor()
+		final List<?> results =
+				jdbcServices.getJdbcSelectExecutor()
 						.list(
-								jdbcSelect,
+								jdbcServices.getJdbcEnvironment().getSqlAstTranslatorFactory()
+										.buildSelectTranslator( factory, sqlSelect )
+										.translate( bindings, QueryOptions.NONE ),
 								bindings,
 								new BaseExecutionContext( session ),
 								RowTransformerStandardImpl.instance(),

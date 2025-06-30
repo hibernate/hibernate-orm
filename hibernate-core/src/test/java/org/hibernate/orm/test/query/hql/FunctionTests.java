@@ -1794,10 +1794,12 @@ public class FunctionTests {
 			reason = "numeric overflow")
 	@SkipForDialect(dialectClass = OracleDialect.class,
 			reason = "numeric overflow")
-	@SkipForDialect( dialectClass = TiDBDialect.class,
+	@SkipForDialect(dialectClass = TiDBDialect.class,
 			reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
-	@SkipForDialect( dialectClass = AltibaseDialect.class,
+	@SkipForDialect(dialectClass = AltibaseDialect.class,
 			reason = "exceeds timestampadd limit in Altibase")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Overflow occurred on a datetime or interval")
 	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1910,6 +1912,8 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class,
 			matchSubTypes = true,
 			reason = "numeric overflow")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Overflow occurred on a datetime or interval operation")
 	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1926,8 +1930,11 @@ public class FunctionTests {
 		);
 	}
 
-	@Test @SkipForDialect(dialectClass = MySQLDialect.class,
+	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class,
 			reason = "MySQL has a really weird TIME type")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The result of a datetime computation is out of range")
 	public void testTimeDurationArithmeticWrapAroundWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1975,6 +1982,8 @@ public class FunctionTests {
 
 	@Test
 	@JiraKey("HHH-17074")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Bad use of aggregate in this context")
 	public void testDurationArithmeticWithParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2025,6 +2034,11 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (e.theTimestamp - (e.theTimestamp + (4 day + 2 hour))) by second from EntityOfBasics e", Long.class)
 							.list();
+
+					assertThat( session.createQuery("select (local datetime + 2 day) - local datetime").getSingleResult(),
+							is( Duration.ofDays( 2 ) ) );
+					assertThat( session.createQuery("select (local datetime - 12 hour) - local datetime").getSingleResult(),
+							is( Duration.ofHours( -12 ) ) );
 				}
 		);
 	}
@@ -2035,6 +2049,8 @@ public class FunctionTests {
 			reason = "result in numeric overflow")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
 			reason = "trivial rounding error")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Overflow occurred on a datetime or interval operation")
 	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

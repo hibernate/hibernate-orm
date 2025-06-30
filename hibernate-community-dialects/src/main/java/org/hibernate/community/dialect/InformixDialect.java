@@ -737,6 +737,9 @@ public class InformixDialect extends Dialect {
 					return "case ?1 when 't' then 1 when 'f' then 0 else null end";
 			}
 		}
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return buildStringToBooleanCast( "'t'", "'f'" );
+		}
 		return super.castPattern( from, to );
 	}
 

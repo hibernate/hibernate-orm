@@ -2122,6 +2122,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionDayOfWeekOf(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2140,6 +2141,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractEpoch.class)
 	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2151,6 +2153,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionWeek(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2204,7 +2207,8 @@ public class FunctionTests {
 	}
 
 	@Test
-	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
+	public void testExtractWeekWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					assertThat(
@@ -2250,6 +2254,14 @@ public class FunctionTests {
 							session.createQuery("select extract(day of year from date 2019-05-30) from EntityOfBasics", Integer.class).getResultList().get(0),
 							is(150)
 					);
+				}
+		);
+	}
+
+	@Test
+	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					assertThat(
 							session.createQuery("select extract(day of month from date 2019-05-27) from EntityOfBasics", Integer.class).getResultList().get(0),
 							is(27)
@@ -2680,6 +2692,7 @@ public class FunctionTests {
 
 	@Test
 	@JiraKey("HHH-18837")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractEpoch.class)
 	public void testEpochFunction(SessionFactoryScope scope) {
 
 		LocalDate someLocalDate = LocalDate.of( 2013, 7, 5 );

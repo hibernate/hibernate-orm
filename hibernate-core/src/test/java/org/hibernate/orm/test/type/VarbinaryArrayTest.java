@@ -11,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.SqlTypes;
@@ -218,7 +219,10 @@ public class VarbinaryArrayTest {
 
 	@ParameterizedTest
 	@MethodSource("perTypeArguments")
-	@SkipForDialect( dialectClass = HANADialect.class, matchSubTypes = true, reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect( dialectClass = HANADialect.class, matchSubTypes = true,
+			reason = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus queries")
 	<T> void queryByData(String propertyName, long id, T value, Function<EntityWithArrays, T> getter,
 			SessionFactoryScope scope) {
 		scope.inTransaction( session -> {

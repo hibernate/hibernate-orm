@@ -701,8 +701,7 @@ public class InformixDialect extends Dialect {
 	private static String intervalPattern(TemporalUnit unit, TemporalType temporalType) {
 		return switch (unit) {
 			case NANOSECOND -> "?2/1e9 * interval (1) second(9) to fraction";
-			case NATIVE -> "?2/1e3 * interval (1) second(9) to fraction"; // millis
-			case SECOND ->
+			case SECOND, NATIVE ->
 					temporalType == TemporalType.TIME
 							? "?2 * 1 units second" // times don't usually come equipped with fractional seconds
 							: "?2 * interval (1) second(9) to fraction"; // datetimes do have fractional seconds
@@ -714,9 +713,13 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public long getFractionalSecondPrecisionInNanos() {
-		// Informix actually supports up to 10 microseconds
-		// but defaults to milliseconds (so use that)
-		return 1_000_000;
+		// since we do computations with intervals,
+		// may as well just use seconds as the NATIVE
+		// precision, do minimize conversion factors
+		return 1_000_000_000;
+//		// Informix actually supports up to 10 microseconds
+//		// but defaults to milliseconds (so use that)
+//		return 1_000_000;
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -729,8 +732,8 @@ public class InformixDialect extends Dialect {
 				case NATIVE ->
 					fromTemporalType == TemporalType.TIME
 							// arguably, we don't really need to retain the milliseconds for a time, since times don't usually come with millis
-							? "((mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))*1e3)"
-							: "((to_number(cast(cast(sum(?3-?2) as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))*1e3)";
+							? "(mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))"
+							: "(to_number(cast(cast(sum(?3-?2) as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))";
 				case SECOND -> "to_number(cast(cast(sum(?3-?2) as interval second(9) to fraction) as varchar(15)))";
 				case NANOSECOND -> "(to_number(cast(cast(sum(?3-?2) as interval second(9) to fraction) as varchar(15)))*1e9)";
 				default -> "to_number(cast(cast(sum(?3-?2) as interval ?1(9) to ?1) as varchar(12)))";

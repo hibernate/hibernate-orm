@@ -44,6 +44,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -81,6 +82,7 @@ public abstract class JsonMappingTests {
 	private final Map<StringNode, StringNode> objectMap;
 	private final List<StringNode> list;
 	private final String json;
+	Map<String, Map<String, List<Set<Long>>>> complexMap;
 
 	protected JsonMappingTests(boolean supportsObjectMapKey) {
 		this.stringMap = Map.of( "name", "ABC" );
@@ -90,13 +92,14 @@ public abstract class JsonMappingTests {
 		) : null;
 		this.list = List.of( new StringNode( "ABC" ) );
 		this.json = "{\"name\":\"abc\"}";
+		this.complexMap = Map.of( "name", Map.of( "inner", List.of( Set.of( 10L ), Set.of( 20L ) ) ) );
 	}
 
 	@BeforeEach
 	public void setup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json ) );
+					session.persist( new EntityWithJson( 1, stringMap, objectMap, list, json, complexMap ) );
 				}
 		);
 	}
@@ -153,7 +156,7 @@ public abstract class JsonMappingTests {
 	public void verifyMergeWorks(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.merge( new EntityWithJson( 2, null, null, null, null ) );
+					session.merge( new EntityWithJson( 2, null, null, null, null, null) );
 				}
 		);
 
@@ -166,6 +169,7 @@ public abstract class JsonMappingTests {
 					assertThat( entityWithJson.jsonString, is( nullValue() ) );
 					assertThat( entityWithJson.jsonNode, is( nullValue() ) );
 					assertThat( entityWithJson.jsonValue, is( nullValue() ) );
+					assertThat( entityWithJson.complexMap, is( nullValue() ) );
 				}
 		);
 	}
@@ -270,6 +274,7 @@ public abstract class JsonMappingTests {
 			assertThat( entityWithJson.stringMap, is( newMap ) );
 			assertThat( entityWithJson.list, is( newList ) );
 			assertThat( entityWithJson.jsonString.replaceAll( "\\s", "" ), is( newJson ) );
+			assertThat( entityWithJson.complexMap, is( complexMap ) );
 		} );
 	}
 
@@ -299,6 +304,9 @@ public abstract class JsonMappingTests {
 		@JdbcTypeCode( SqlTypes.JSON )
 		private JsonValue jsonValue;
 
+		@JdbcTypeCode( SqlTypes.JSON )
+		private Map<String, Map<String, List<Set<Long>>>> complexMap;
+
 		public EntityWithJson() {
 		}
 
@@ -307,12 +315,14 @@ public abstract class JsonMappingTests {
 				Map<String, String> stringMap,
 				Map<StringNode, StringNode> objectMap,
 				List<StringNode> list,
-				String jsonString) {
+				String jsonString,
+				Map<String, Map<String, List<Set<Long>>>> complexMap) {
 			this.id = id;
 			this.stringMap = stringMap;
 			this.objectMap = objectMap;
 			this.list = list;
 			this.jsonString = jsonString;
+			this.complexMap = complexMap;
 		}
 	}
 

@@ -10,8 +10,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
@@ -64,6 +66,8 @@ public class UTCNormalizedInstantTest {
 		});
 	}
 
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix driver misbehaves")
 	@Test void testWithSystemTimeZone(SessionFactoryScope scope) {
 		final TimeZone timeZoneBefore = TimeZone.getDefault();
 		TimeZone.setDefault( TimeZone.getTimeZone( "CET" ) );

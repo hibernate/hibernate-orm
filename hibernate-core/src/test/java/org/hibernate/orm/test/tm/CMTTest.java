@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -279,7 +280,10 @@ public class CMTTest {
 			feature = DialectFeatureChecks.DoesReadCommittedCauseWritersToBlockReadersCheck.class, reverse = true,
 			comment = "write locks block readers"
 	)
-	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading a row that is exclusively locked by a different TX")
+	@SkipForDialect(dialectClass = CockroachDialect.class,
+			reason = "Cockroach uses SERIALIZABLE by default and seems to fail reading a row that is exclusively locked by a different TX")
+	@SkipForDialect(dialectClass = InformixDialect.class,
+			reason = "Informix simply fails to obtain the lock with 'Could not do a physical-order read to fetch next row'")
 	public void testConcurrentCachedDirtyQueries(SessionFactoryScope scope) throws Exception {
 		final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {

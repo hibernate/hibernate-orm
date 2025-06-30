@@ -106,7 +106,6 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
-import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
@@ -214,8 +213,8 @@ public class InformixDialect extends Dialect {
 		switch ( sqlTypeCode ) {
 			case TINYINT:
 				return "smallint";
-			case BIGINT:
-				return "int8";
+//			case BIGINT:
+//				return "int8";
 			case TIME:
 				return "datetime hour to second";
 			case TIMESTAMP:
@@ -982,14 +981,13 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		final DdlType descriptor = typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType );
-		if ( descriptor == null ) {
-			// just cast it to an arbitrary SQL type,
-			// which we expect to be ignored by higher layers
-			return "cast(null as int)";
-		}
-		else {
-			return "cast(null as " + castType( descriptor ) + ")";
-		}
+		final String castType =
+				descriptor != null
+						? castType( descriptor )
+						// just cast it to an arbitrary SQL type,
+						// which we expect to be ignored by higher layers
+						: "integer";
+		return "cast(null as " + castType + ")";
 	}
 
 	private static String castType(DdlType descriptor) {

@@ -135,8 +135,8 @@ public class DdlTypeRegistry implements Serializable {
 	}
 
 	/**
-	 * Get the SQL type name for the specified {@link java.sql.Types JDBC type code},
-	 * filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
+	 * Get the SQL type name for the specified {@linkplain java.sql.Types JDBC
+	 * type code}, filling in the placemarkers {@code $l}, {@code $p}, and {@code $s}
 	 * with the default length, precision, and scale for the given SQL dialect.
 	 *
 	 * @param typeCode the JDBC type code

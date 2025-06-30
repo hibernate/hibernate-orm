@@ -301,7 +301,8 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		);
 	}
 
-	@Test @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
+	@Test
+	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
 	public void testDateTimeOperations() {
@@ -372,6 +373,11 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					assertEquals( 150*60L, entityManager.createQuery(criteria).getSingleResult() );
 				}
 		);
+	}
+
+	@Test
+	void testDurationBetween() {
+		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(
 				this::entityManagerFactory,
 				entityManager -> {

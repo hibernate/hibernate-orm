@@ -445,8 +445,8 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsOrderByInCorrelatedSubquery implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsOrderByInSubquery()
-					// For some reason, HANA doesn't support order by in correlated subqueries...
-					&& !( dialect instanceof HANADialect );
+				// HANA doesn't support 'order by' in correlated subqueries
+				&& !( dialect instanceof HANADialect );
 		}
 	}
 
@@ -478,15 +478,15 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsStringAggregation implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof H2Dialect
-					|| dialect instanceof HSQLDialect
-					|| dialect instanceof MySQLDialect
-					|| dialect instanceof PostgreSQLDialect
-					|| dialect instanceof HANADialect
-					|| dialect instanceof CockroachDialect
-					|| dialect instanceof DB2Dialect
-					|| dialect instanceof OracleDialect
-					|| dialect instanceof SpannerDialect
-					|| dialect instanceof SQLServerDialect;
+				|| dialect instanceof HSQLDialect
+				|| dialect instanceof MySQLDialect
+				|| dialect instanceof PostgreSQLDialect
+				|| dialect instanceof HANADialect
+				|| dialect instanceof CockroachDialect
+				|| dialect instanceof DB2Dialect
+				|| dialect instanceof OracleDialect
+				|| dialect instanceof SpannerDialect
+				|| dialect instanceof SQLServerDialect;
 		}
 	}
 
@@ -496,7 +496,7 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof PostgreSQLDialect
 				|| dialect instanceof HANADialect
 				|| dialect instanceof CockroachDialect
-				|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isSameOrAfter( 11 )
+				|| dialect instanceof DB2Dialect db2 && db2.getDB2Version().isSameOrAfter( 11 )
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof SpannerDialect
 				|| dialect instanceof SQLServerDialect;
@@ -509,7 +509,7 @@ abstract public class DialectFeatureChecks {
 				|| dialect instanceof PostgreSQLDialect
 				|| dialect instanceof HANADialect
 				|| dialect instanceof CockroachDialect
-				|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isSameOrAfter( 11 )
+				|| dialect instanceof DB2Dialect db2 && db2.getDB2Version().isSameOrAfter( 11 )
 				|| dialect instanceof OracleDialect
 				|| dialect instanceof SpannerDialect
 				|| dialect instanceof SQLServerDialect;
@@ -519,13 +519,13 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsWindowFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			// Derby doesn't really support window functions, only row_number()
-			return dialect.supportsWindowFunctions() && !( dialect instanceof DerbyDialect );
+			return dialect.supportsWindowFunctions()
+				&& !( dialect instanceof DerbyDialect );
 		}
 	}
 
 	public static class SupportsFilterClause implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			// Derby doesn't really support window functions, only row_number()
 			return dialect instanceof PostgreSQLDialect;
 		}
 	}
@@ -539,7 +539,6 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsFullJoin implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			// TiDB db does not support subqueries for ON condition
 			return !( dialect instanceof H2Dialect
 					|| dialect instanceof MySQLDialect
 					|| dialect instanceof SybaseDialect
@@ -553,7 +552,21 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof SybaseDialect
 					|| dialect instanceof DerbyDialect
 					|| dialect instanceof FirebirdDialect
-					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isBefore( 11 ) );
+					|| dialect instanceof InformixDialect
+					|| dialect instanceof DB2Dialect db2 && db2.getDB2Version().isBefore( 11 ) );
+		}
+	}
+
+	public static class SupportsExtractEpoch implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			// I could not find any reasonable way to implement this on Informix
+			return !( dialect instanceof InformixDialect );
+		}
+	}
+
+	public static class SupportsExtractDayOfWeekYearMonth implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof InformixDialect );
 		}
 	}
 
@@ -697,9 +710,9 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonQueryNestedPath implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_query" )
-					&& !( dialect instanceof SQLServerDialect )
-					&& !( dialect instanceof H2Dialect )
-					&& !( dialect instanceof CockroachDialect );
+				&& !( dialect instanceof SQLServerDialect )
+				&& !( dialect instanceof H2Dialect )
+				&& !( dialect instanceof CockroachDialect );
 		}
 	}
 
@@ -724,14 +737,14 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonValueErrorBehavior implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_value" )
-					// H2 emulation doesn't support error behavior
-					&& !( dialect instanceof H2Dialect )
-					// MariaDB simply doesn't support the on error and on empty clauses
-					&& !( dialect instanceof MariaDBDialect )
-					// Cockroach doesn't have a native json_value function
-					&& !( dialect instanceof CockroachDialect )
-					// PostgreSQL added support for native json_value in version 17
-					&& ( !( dialect instanceof PostgreSQLDialect ) || dialect.getVersion().isSameOrAfter( 17 ) );
+				// H2 emulation doesn't support error behavior
+				&& !( dialect instanceof H2Dialect )
+				// MariaDB simply doesn't support the on error and on empty clauses
+				&& !( dialect instanceof MariaDBDialect )
+				// Cockroach doesn't have a native json_value function
+				&& !( dialect instanceof CockroachDialect )
+				// PostgreSQL added support for native json_value in version 17
+				&& !( dialect instanceof PostgreSQLDialect && dialect.getVersion().isBefore( 17 ) );
 		}
 	}
 
@@ -744,8 +757,8 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJsonObjectAgg implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_objectagg" )
-					// Bug in HSQL: https://sourceforge.net/p/hsqldb/bugs/1718/
-					&& !( dialect instanceof HSQLDialect );
+				// Bug in HSQL: https://sourceforge.net/p/hsqldb/bugs/1718/
+				&& !( dialect instanceof HSQLDialect );
 		}
 	}
 

@@ -17,6 +17,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -301,6 +302,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey( value = "HHH-15161")
+	@SkipForDialect(value = InformixDialect.class,
+			comment = "Informix does not allow 'union' in 'insert select'")
 	public void testInsertWithNullParamValueSetOperation() {
 		TestData data = new TestData();
 		data.prepare();

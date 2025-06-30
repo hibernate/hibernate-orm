@@ -247,6 +247,33 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
+	protected void visitArithmeticOperand(Expression expression) {
+		if ( expression instanceof SqmParameterInterpretation
+				&& expression.getExpressionType() != null
+				&& expression.getExpressionType().getJdbcTypeCount() == 1 ) {
+			final String castType =
+					switch ( expression.getExpressionType().getSingleJdbcMapping().getCastType() ) {
+						case FLOAT, DOUBLE ->  "float" ;
+						case INTEGER -> "integer" ;
+						case LONG -> "bigint";
+						default -> null;
+					};
+			if ( castType != null ) {
+				append( "cast(" );
+			}
+			super.visitArithmeticOperand( expression );
+			if ( castType != null ) {
+				append( " as " );
+				append( castType );
+				append( ")" );
+			}
+		}
+		else {
+			super.visitArithmeticOperand( expression );
+		}
+	}
+
+	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
 		final boolean isStringFunctionWithParameterArg =
 				expression instanceof FunctionExpression fn

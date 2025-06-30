@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -18,6 +19,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
@@ -241,6 +243,23 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 		else {
 			super.visitQuerySpec( querySpec );
+		}
+	}
+
+	@Override
+	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
+		final boolean isStringFunctionWithParameterArg =
+				expression instanceof FunctionExpression fn
+					&& expression.getExpressionType() != null
+					&& expression.getExpressionType().getJdbcTypeCount() == 1
+					&& expression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
+					&& fn.getArguments().stream().anyMatch( arg -> arg instanceof SqmParameterInterpretation );
+		if ( isStringFunctionWithParameterArg ) {
+			append( "cast(" );
+		}
+		super.visitSelfRenderingExpression( expression );
+		if ( isStringFunctionWithParameterArg ) {
+			append( " as lvarchar)" );
 		}
 	}
 

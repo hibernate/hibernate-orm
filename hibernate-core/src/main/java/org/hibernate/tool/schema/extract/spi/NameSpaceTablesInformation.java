@@ -26,7 +26,15 @@ public class NameSpaceTablesInformation {
 	}
 
 	public TableInformation getTableInformation(Table table) {
-		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
+		String tableName = identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() );
+		if ( tables.containsKey( tableName.toLowerCase() ))  {
+			return  tables.get( tableName.toLowerCase() );
+		}
+		else if ( tables.containsKey( tableName.toUpperCase() ) ) {
+			return  tables.get( tableName.toUpperCase() );
+		}
+
+		return null;
 	}
 
 	public TableInformation getTableInformation(String tableName) {

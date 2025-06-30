@@ -28,6 +28,14 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 		this.tupleElements = tupleElements;
 	}
 
+	public String[] getAliases() {
+		final String[] aliases = new String[this.tupleElements.size()];
+		for (int i = 0; i < aliases.length; i++) {
+			aliases[i] = ((TupleElement<?>) this.tupleElements.get(i)).getAlias();
+		}
+		return aliases;
+	}
+
 	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		final Object[] valueHandlerResult;

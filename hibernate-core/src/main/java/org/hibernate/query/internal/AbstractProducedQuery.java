@@ -69,6 +69,8 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.jpa.spi.AliasInjectingTransformer;
+import org.hibernate.jpa.spi.CriteriaQueryTupleTransformer;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -929,7 +931,21 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public QueryImplementor setResultTransformer(ResultTransformer transformer) {
-		this.resultTransformer = transformer;
+		if ( this.resultTransformer instanceof CriteriaQueryTupleTransformer ) {
+			this.resultTransformer = new AliasInjectingTransformer(
+					((CriteriaQueryTupleTransformer) this.resultTransformer).getAliases(),
+					transformer
+			);
+		}
+		else if ( this.resultTransformer instanceof AliasInjectingTransformer ) {
+			this.resultTransformer = new AliasInjectingTransformer(
+					((AliasInjectingTransformer) this.resultTransformer).getAliases(),
+					transformer
+			);
+		}
+		else {
+			this.resultTransformer = transformer;
+		}
 		return this;
 	}
 

@@ -132,7 +132,7 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					// supposed to be supported in JDBC 4.2
 					return javaType.wrap( rs.getObject( position, OffsetDateTime.class ), options );
 				}
-				catch (SQLException|AbstractMethodError e) {
+				catch (SQLException|AbstractMethodError|ClassCastException e) {
 					// fall back to treating it as a JDBC Timestamp
 					return options.getJdbcTimeZone() != null ?
 							javaType.wrap( rs.getTimestamp( position, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
@@ -146,7 +146,7 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					// supposed to be supported in JDBC 4.2
 					return javaType.wrap( statement.getObject( position, OffsetDateTime.class ), options );
 				}
-				catch (SQLException|AbstractMethodError e) {
+				catch (SQLException|AbstractMethodError|ClassCastException e) {
 					// fall back to treating it as a JDBC Timestamp
 					return options.getJdbcTimeZone() != null ?
 							javaType.wrap( statement.getTimestamp( position, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
@@ -160,7 +160,7 @@ public class TimestampWithTimeZoneJdbcType implements JdbcType {
 					// supposed to be supported in JDBC 4.2
 					return javaType.wrap( statement.getObject( name, OffsetDateTime.class ), options );
 				}
-				catch (SQLException|AbstractMethodError e) {
+				catch (SQLException|AbstractMethodError|ClassCastException e) {
 					// fall back to treating it as a JDBC Timestamp
 					return options.getJdbcTimeZone() != null ?
 							javaType.wrap( statement.getTimestamp( name, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :

@@ -1176,6 +1176,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncation")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No cast from varchar to byte")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1190,6 +1191,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting varchar to binary")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
 	public void testCastBinaryWithLengthForOracle(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1202,6 +1204,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
 	public void testCastBinaryWithLengthForDerby(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2119,6 +2122,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionDayOfWeekOf(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2137,6 +2141,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractEpoch.class)
 	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2148,6 +2153,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionWeek(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2201,7 +2207,8 @@ public class FunctionTests {
 	}
 
 	@Test
-	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
+	public void testExtractWeekWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					assertThat(
@@ -2247,6 +2254,14 @@ public class FunctionTests {
 							session.createQuery("select extract(day of year from date 2019-05-30) from EntityOfBasics", Integer.class).getResultList().get(0),
 							is(150)
 					);
+				}
+		);
+	}
+
+	@Test
+	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					assertThat(
 							session.createQuery("select extract(day of month from date 2019-05-27) from EntityOfBasics", Integer.class).getResultList().get(0),
 							is(27)
@@ -2587,6 +2602,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = DerbyDialect.class)
 	@SkipForDialect(dialectClass = HSQLDialect.class)
 	@SkipForDialect(dialectClass = DB2Dialect.class)
+	@SkipForDialect(dialectClass = InformixDialect.class)
 	public void testNullInCoalesce(SessionFactoryScope scope) {
 		scope.inTransaction(s -> {
 			assertEquals("hello",
@@ -2665,6 +2681,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class)
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
 	public void testHexFunction(SessionFactoryScope scope) {
 		scope.inTransaction(s -> {
 			assertEquals( "DEADBEEF",
@@ -2675,6 +2692,7 @@ public class FunctionTests {
 
 	@Test
 	@JiraKey("HHH-18837")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractEpoch.class)
 	public void testEpochFunction(SessionFactoryScope scope) {
 
 		LocalDate someLocalDate = LocalDate.of( 2013, 7, 5 );

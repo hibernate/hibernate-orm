@@ -12,9 +12,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PessimisticLockException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
@@ -23,9 +23,9 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.engine.spi.CollectionEntry;
 
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -120,7 +120,7 @@ public class MultipleSessionCollectionTest {
 									s2.getTransaction().commit();
 									fail( "should have thrown HibernateException" );
 								}
-								catch (OptimisticLockException | LockTimeoutException ex) {
+								catch (OptimisticLockException | PessimisticLockException | LockTimeoutException ex) {
 									// expected
 									s2.getTransaction().rollback();
 								}

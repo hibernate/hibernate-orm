@@ -252,7 +252,7 @@ public class InformixDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "varchar(255)",this )
+				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "lvarchar",this )
 						.withTypeCapacity( 255, "varchar($l)" )
 						.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
 						.build()
@@ -340,6 +340,7 @@ public class InformixDialect extends Dialect {
 		functionFactory.initcap();
 		functionFactory.yearMonthDay();
 		functionFactory.ceiling_ceil();
+		functionFactory.concat_pipeOperator();
 		functionFactory.ascii();
 		functionFactory.char_chr();
 		functionFactory.addMonths();
@@ -354,14 +355,6 @@ public class InformixDialect extends Dialect {
 		final BasicType<String> stringBasicType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
 		functionRegistry.registerAlternateKey( "var_samp", "variance" );
-
-		// the pipe operator or concat() function returns strings with trailing whitespace
-		functionRegistry.patternDescriptorBuilder( "concat", "cast(?1||?2... as varchar(255))" )
-				.setInvariantType( stringBasicType )
-				.setMinArgumentCount( 1 )
-				.setArgumentTypeResolver( impliedOrInvariant( typeConfiguration, STRING ) )
-				.setArgumentListSignature( "(STRING string0[, STRING string1[, ...]])" )
-				.register();
 
 		if ( getVersion().isSameOrAfter( 12 ) ) {
 			functionFactory.locate_charindex();
@@ -591,26 +584,35 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) ->
-				switch ( extractErrorCode( sqlException ) ) {
-					case -378, -233, -107, -113, -134, -143, -144, -154 ->
-						//TODO: which of these are these are really LockTimeoutExceptions
-						//      rather than the more generic LockAcquisitionException?
-							new LockAcquisitionException( message, sqlException, sql );
-					case -239, -268 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					case -691, -692 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					case -703, -391 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					case -530 ->
-							new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.CHECK,
-									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-					default -> null;
-				};
+		return (exception, message, sql) -> switch ( extractErrorCode( exception ) ) {
+			case -239, -268 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -691, -692 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -703, -391 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.NOT_NULL,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			case -530 ->
+					new ConstraintViolationException( message, exception, sql, ConstraintViolationException.ConstraintKind.CHECK,
+							getViolatedConstraintNameExtractor().extractConstraintName( exception ) );
+			default -> {
+				// unwrap the ISAM error, if any
+				if ( exception.getCause() instanceof SQLException cause && cause != exception ) {
+					yield switch ( extractErrorCode( cause ) ) {
+						case -107, -113, -134, -143, -144, -154 ->
+							//TODO: which of these are these are really LockTimeoutExceptions
+							//      rather than the more generic LockAcquisitionException?
+								new LockAcquisitionException( message, exception, sql );
+						default -> null;
+					};
+				}
+				else {
+					yield null;
+				}
+			}
+		};
 	}
 
 	@Override
@@ -734,6 +736,9 @@ public class InformixDialect extends Dialect {
 				case INTEGER_BOOLEAN:
 					return "case ?1 when 't' then 1 when 'f' then 0 else null end";
 			}
+		}
+		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
+			return buildStringToBooleanCast( "'t'", "'f'" );
 		}
 		return super.castPattern( from, to );
 	}
@@ -980,10 +985,10 @@ public class InformixDialect extends Dialect {
 		if ( descriptor == null ) {
 			// just cast it to an arbitrary SQL type,
 			// which we expect to be ignored by higher layers
-			return "null::int";
+			return "cast(null as int)";
 		}
 		else {
-			return "null::" + castType( descriptor );
+			return "cast(null as " + castType( descriptor ) + ")";
 		}
 	}
 

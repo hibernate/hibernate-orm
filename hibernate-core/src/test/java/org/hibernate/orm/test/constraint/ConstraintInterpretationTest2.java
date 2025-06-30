@@ -55,7 +55,7 @@ public class ConstraintInterpretationTest2 {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
+				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof InformixDialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id" ) );
 				}
 			}

@@ -304,11 +304,14 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		}
 	}
 
+	private boolean shouldEmulateFetch(QueryPart queryPart) {
+		return shouldEmulateFetchClause( queryPart )
+			|| getQueryPartForRowNumbering() != queryPart && !supportsOffsetClause() && hasOffset( queryPart );
+	}
+
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
-		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
-		if ( emulateFetchClause ||
-				getQueryPartForRowNumbering() != queryGroup && !supportsOffsetClause() && hasOffset( queryGroup ) ) {
+		if ( shouldEmulateFetch( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, true );
 		}
 		else {
@@ -318,9 +321,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
-		if ( emulateFetchClause ||
-				getQueryPartForRowNumbering() != querySpec && !supportsOffsetClause() && hasOffset( querySpec ) ) {
+		if ( shouldEmulateFetch( querySpec ) ) {
 			emulateFetchOffsetWithWindowFunctions( querySpec, true );
 		}
 		else {

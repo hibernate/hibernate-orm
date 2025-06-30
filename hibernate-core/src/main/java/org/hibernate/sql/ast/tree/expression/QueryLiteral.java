@@ -30,6 +30,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final T value;
 	private final SqlExpressible expressible;
+	private boolean inCast;
 
 	public QueryLiteral(T value, SqlExpressible expressible) {
 		assert value == null || expressible.getJdbcMapping().getJdbcJavaType().isInstance( value );
@@ -99,5 +100,13 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);
+	}
+
+	public void setInCast(boolean inCast) {
+		this.inCast = inCast;
+	}
+
+	public boolean isInCast() {
+		return inCast;
 	}
 }

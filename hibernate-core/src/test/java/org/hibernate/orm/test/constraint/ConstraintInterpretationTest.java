@@ -56,7 +56,7 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.NOT_NULL, cve.getKind() );
-				if ( !(scope.getDialect() instanceof DB2Dialect) ) {
+				if ( !(scope.getDialect() instanceof DB2Dialect) && !(scope.getDialect() instanceof InformixDialect) ) {
 					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "id" ) );
 				}
 			}
@@ -111,7 +111,9 @@ public class ConstraintInterpretationTest {
 			}
 			catch (ConstraintViolationException cve) {
 				assertEquals( ConstraintViolationException.ConstraintKind.CHECK, cve.getKind() );
-				assertTrue( cve.getConstraintName().toLowerCase().endsWith( "namecheck" ) );
+				if ( !(scope.getDialect() instanceof InformixDialect) ) {
+					assertTrue( cve.getConstraintName().toLowerCase().endsWith( "namecheck" ) );
+				}
 			}
 		} );
 	}

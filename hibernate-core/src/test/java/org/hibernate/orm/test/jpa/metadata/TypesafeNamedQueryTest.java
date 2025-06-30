@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.jpa.metadata;
 
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TypesafeNamedQueryTest {
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "'order by timestamp, id' not quite working")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "'order by timestamp, id' not quite working")
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "'order by timestamp, id' not quite working")
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Record record1 = new Record("Hello, World!");

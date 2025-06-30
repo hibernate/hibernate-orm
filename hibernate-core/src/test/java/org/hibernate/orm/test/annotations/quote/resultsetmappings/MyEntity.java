@@ -15,14 +15,12 @@ import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.Table;
 
 /**
- * TODO : javadoc
- *
  * @author Steve Ebersole
  */
 @SqlResultSetMappings({
 		@SqlResultSetMapping(
 				name="explicitScalarResultSetMapping",
-				columns={ @ColumnResult(name="QuotEd_nAMe") }
+				columns= @ColumnResult( name = "\"QuotEd_nAMe\"" )
 		)
 		,
 		@SqlResultSetMapping(

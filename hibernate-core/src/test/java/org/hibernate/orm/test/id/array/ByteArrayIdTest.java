@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JavaType;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
@@ -33,11 +34,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Piotr Krauzowicz
  * @author Gail Badner
  */
-@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, matchSubTypes = true, reason = "BLOB/TEXT column 'id' used in key specification without a key length")
-@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
-@DomainModel(
-		annotatedClasses = ByteArrayIdTest.DemoEntity.class
-)
+@SkipForDialect(dialectClass = MySQLDialect.class, majorVersion = 5, matchSubTypes = true,
+		reason = "BLOB/TEXT column 'id' used in key specification without a key length")
+@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true,
+		reason = "ORA-02329: column of datatype LOB cannot be unique or a primary key")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cannot add index")
+@DomainModel(annotatedClasses = ByteArrayIdTest.DemoEntity.class)
 @SessionFactory
 public class ByteArrayIdTest {
 

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.mapping.basic;
 
 import java.net.InetAddress;
 
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -35,7 +36,10 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel(annotatedClasses = InetAddressMappingTests.EntityWithInetAddress.class)
 @SessionFactory
-@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
+@SkipForDialect(dialectClass = SybaseASEDialect.class,
+		reason = "Driver or DB omit trailing zero bytes of a varbinary, making this test fail intermittently")
+@SkipForDialect( dialectClass = InformixDialect.class,
+		reason = "Blobs are not allowed in this expression (with a column of type BYTE)")
 public class InetAddressMappingTests {
 
 	@Test

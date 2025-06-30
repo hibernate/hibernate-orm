@@ -5,11 +5,14 @@
 package org.hibernate.type.format;
 
 
+import org.hibernate.Internal;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.io.IOException;
+import java.util.function.Consumer;
 
 /**
  * JSON document producer.
@@ -87,4 +90,28 @@ public interface JsonDocumentWriter {
 							JavaType<T> javaType,
 							JdbcType jdbcType,
 							WrapperOptions options);
+
+	/**
+	 * Returns {@code true} if this writer always expands properties to nested JSON objects,
+	 * which is useful for obtaining a verbose representation Hibernate data in JSON format.
+	 *
+	 * @return {@code true} if properties should be expanded, {@code false} otherwise
+	 */
+	@Internal
+	default boolean expandProperties() {
+		return false;
+	}
+
+	/**
+	 * Tracks the provided {@code entity} instance and invokes the {@code action} with either
+	 * {@code true} if the entity was not already encountered or {@code false} otherwise.
+	 *
+	 * @param entity the entity instance to track
+	 * @param entityType the type of the entity instance
+	 * @param action the action to invoke while tracking the entity
+	 */
+	@Internal
+	default void trackingEntity(Object entity, EntityMappingType entityType, Consumer<Boolean> action) throws IOException {
+		action.accept( true );
+	}
 }

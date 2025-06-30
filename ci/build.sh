@@ -1,7 +1,7 @@
 #! /bin/bash
 
 goal=
-if [ "$RDBMS" == "h2" ]; then
+if [ "$RDBMS" == "h2" ] || [ "$RDBMS" == "" ]; then
   # This is the default.
   goal="preVerifyRelease"
   # Settings needed for `preVerifyRelease` execution - for asciidoctor doc rendering
@@ -77,6 +77,9 @@ elif [ "$RDBMS" == "altibase" ]; then
   goal="-Pdb=altibase"
 elif [ "$RDBMS" == "informix" ]; then
   goal="-Pdb=informix"
+else
+  echo "Invalid value for RDBMS: $RDBMS"
+  exit 1
 fi
 
 function logAndExec() {

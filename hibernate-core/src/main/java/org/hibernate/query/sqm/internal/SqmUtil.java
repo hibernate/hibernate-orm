@@ -432,7 +432,7 @@ public class SqmUtil {
 						jdbcMapping = (JdbcMapping) domainParamBinding.getType();
 					}
 					else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping ) {
-						jdbcMapping = ( (BasicValuedMapping) domainParamBinding.getType() ).getJdbcMapping();
+						jdbcMapping = ( (BasicValuedMapping) domainParamBinding.getBindType() ).getJdbcMapping();
 					}
 					else {
 						jdbcMapping = null;

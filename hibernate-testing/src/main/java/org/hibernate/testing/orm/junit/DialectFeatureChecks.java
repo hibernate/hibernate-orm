@@ -557,13 +557,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsExtractEpoch implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			// I could not find any reasonable way to implement this on Informix
-			return !( dialect instanceof InformixDialect );
-		}
-	}
-
 	public static class SupportsExtractDayOfWeekYearMonth implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof InformixDialect );

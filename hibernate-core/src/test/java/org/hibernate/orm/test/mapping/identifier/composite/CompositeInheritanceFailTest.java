@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				CompositeInheritanceFailTest.TupAbstractEntity.class,
 				CompositeInheritanceFailTest.DummyEntity.class,
 				CompositeInheritanceFailTest.TestEntity.class, // Here the class is called TestEntity
+				CompositeInheritanceFailTest.Test2Entity.class,
 		}
 )
 @ServiceRegistry(
@@ -49,6 +51,18 @@ public class CompositeInheritanceFailTest {
 
 			CompositeIdClass key = e1.getCompositeId();
 			TestEntity e2 = em.find(TestEntity.class, key);
+			assertNotNull(e2);
+		} );
+	}
+
+	@Test
+	void hhh19076FailingTest2(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			Test2Entity e1 = new Test2Entity("foo", "xxxxxx");
+			em.persist(e1);
+
+			CompositeId2Class key = e1.getCompositeId();
+			Test2Entity e2 = em.find(Test2Entity.class, key);
 			assertNotNull(e2);
 		} );
 	}
@@ -103,6 +117,39 @@ public class CompositeInheritanceFailTest {
 
 	}
 
+	@Entity
+	@IdClass(CompositeId2Class.class)
+	public static class Test2Entity extends TupAbstractEntity {
+
+		@Id
+		private String otherId;
+
+		@Version
+		private long tanum = 0;
+
+		protected Test2Entity() {
+			// for JPA
+		}
+
+		public Test2Entity(String oid, String otherId) {
+			super(oid);
+			this.otherId = otherId;
+		}
+
+		public String myId() {
+			return otherId;
+		}
+
+		public long tanum() {
+			return tanum;
+		}
+
+		public CompositeId2Class getCompositeId() {
+			return new CompositeId2Class(getOid(), otherId);
+		}
+
+	}
+
 	public static class CompositeIdClass {
 
 		private String oid;
@@ -122,6 +169,29 @@ public class CompositeInheritanceFailTest {
 
 		public String myId() {
 			return myId;
+		}
+
+	}
+
+	public static class CompositeId2Class {
+
+		private String oid;
+		private String otherId;
+
+		public CompositeId2Class(String oid, String otherId) {
+			this.oid = oid;
+			this.otherId = otherId;
+		}
+
+		public CompositeId2Class() {
+		}
+
+		public String oid() {
+			return oid;
+		}
+
+		public String otherId() {
+			return otherId;
 		}
 
 	}

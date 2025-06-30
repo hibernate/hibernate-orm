@@ -1265,7 +1265,8 @@ abstract public class DialectFeatureChecks {
 				String name,
 				String subselect,
 				boolean isAbstract,
-				MetadataBuildingContext buildingContext) {
+				MetadataBuildingContext buildingContext,
+				boolean isExplicit) {
 			return null;
 		}
 

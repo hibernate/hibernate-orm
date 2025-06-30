@@ -113,7 +113,7 @@ public class QualifiedNameParser {
 			return new NameParts(
 					defaultCatalog,
 					defaultSchema,
-					Identifier.toIdentifier( unquote( text ), true )
+					Identifier.toIdentifier( unquote( text ), true, true, true )
 			);
 		}
 
@@ -173,7 +173,7 @@ public class QualifiedNameParser {
 		return new NameParts(
 				Identifier.toIdentifier( catalogName, wasQuotedInEntirety||catalogWasQuoted ),
 				Identifier.toIdentifier( schemaName, wasQuotedInEntirety||schemaWasQuoted ),
-				Identifier.toIdentifier( name, wasQuotedInEntirety||nameWasQuoted )
+				Identifier.toIdentifier( name, wasQuotedInEntirety || nameWasQuoted, true, true )
 		);
 	}
 

@@ -42,6 +42,22 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	}
 
 	@Override
+	protected void visitQueryClauses(QuerySpec querySpec) {
+		visitSelectClause( querySpec.getSelectClause() );
+		visitFromClause( querySpec.getFromClause() );
+		if ( !hasFrom( querySpec.getFromClause() )
+				&& hasWhere( querySpec.getWhereClauseRestrictions() ) ) {
+			append( " from " );
+			append( getDual() );
+		}
+		visitWhereClause( querySpec.getWhereClauseRestrictions() );
+		visitGroupByClause( querySpec, getDialect().getGroupBySelectItemReferenceStrategy() );
+		visitHavingClause( querySpec );
+		visitOrderBy( querySpec.getSortSpecifications() );
+		visitOffsetFetchClause( querySpec );
+	}
+
+	@Override
 	public void visitSelectClause(SelectClause selectClause) {
 		getClauseStack().push( Clause.SELECT );
 

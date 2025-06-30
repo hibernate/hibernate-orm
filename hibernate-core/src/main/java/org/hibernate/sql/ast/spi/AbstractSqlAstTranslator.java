@@ -3623,13 +3623,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( queryGroupAlias != null ) {
 				appendSql( OPEN_PARENTHESIS );
 			}
-			visitSelectClause( querySpec.getSelectClause() );
-			visitFromClause( querySpec.getFromClause() );
-			visitWhereClause( querySpec.getWhereClauseRestrictions() );
-			visitGroupByClause( querySpec, dialect.getGroupBySelectItemReferenceStrategy() );
-			visitHavingClause( querySpec );
-			visitOrderBy( querySpec.getSortSpecifications() );
-			visitOffsetFetchClause( querySpec );
+
+			visitQueryClauses( querySpec );
 			// We render the FOR UPDATE clause in the parent query
 			if ( queryPartForRowNumbering == null ) {
 				visitForUpdateClause( querySpec );
@@ -3652,6 +3647,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void visitQueryClauses(QuerySpec querySpec) {
+		visitSelectClause( querySpec.getSelectClause() );
+		visitFromClause( querySpec.getFromClause() );
+		visitWhereClause( querySpec.getWhereClauseRestrictions() );
+		visitGroupByClause( querySpec, dialect.getGroupBySelectItemReferenceStrategy() );
+		visitHavingClause( querySpec );
+		visitOrderBy( querySpec.getSortSpecifications() );
+		visitOffsetFetchClause( querySpec );
+	}
+
 	private boolean hasDuplicateSelectItems(QuerySpec querySpec) {
 		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
 		final Map<Expression, Boolean> map = new IdentityHashMap<>( sqlSelections.size() );
@@ -3664,9 +3669,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected final void visitWhereClause(Predicate whereClauseRestrictions) {
-		final Predicate additionalWherePredicate = this.additionalWherePredicate;
-		if ( whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty()
-				|| additionalWherePredicate != null ) {
+		if ( hasWhere( whereClauseRestrictions ) ) {
+			final Predicate additionalWherePredicate = this.additionalWherePredicate;
 			appendSql( " where " );
 
 			clauseStack.push( Clause.WHERE );
@@ -3688,6 +3692,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				clauseStack.pop();
 			}
 		}
+	}
+
+	protected boolean hasWhere(Predicate whereClauseRestrictions) {
+		return whereClauseRestrictions != null && !whereClauseRestrictions.isEmpty()
+			|| additionalWherePredicate != null;
 	}
 
 	protected Expression resolveAliasedExpression(Expression expression) {
@@ -5682,8 +5691,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// If we encounter a plain literal in the select clause which has no literal formatter, we must render it as parameter
 		if ( literalFormatter == null ) {
 			parameterBinders.add( literal );
-			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(), literal.getJdbcMapping().getJdbcType() );
-			final LiteralAsParameter<Object> jdbcParameter = new LiteralAsParameter<>( literal, marker );
+			final JdbcType jdbcType = literal.getJdbcMapping().getJdbcType();
+			final String marker = parameterMarkerStrategy.createMarker( parameterBinders.size(), jdbcType );
+			final LiteralAsParameter<?> jdbcParameter = new LiteralAsParameter<>( literal, marker );
 			if ( castParameter ) {
 				renderCasted( jdbcParameter );
 			}
@@ -5707,13 +5717,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitFromClause(FromClause fromClause) {
-		if ( fromClause == null || fromClause.getRoots().isEmpty() ) {
-			appendSql( getFromDualForSelectOnly() );
-		}
-		else {
+		if ( hasFrom( fromClause ) ) {
 			appendSql( " from " );
 			renderFromClauseSpaces( fromClause );
 		}
+		else {
+			appendSql( getFromDualForSelectOnly() );
+		}
+	}
+
+	protected boolean hasFrom(FromClause fromClause) {
+		return fromClause != null && !fromClause.getRoots().isEmpty();
 	}
 
 	protected void renderFromClauseSpaces(FromClause fromClause) {

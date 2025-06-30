@@ -25,7 +25,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -45,7 +46,7 @@ import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMA
 @SessionFactory
 public class StandardFunctionTests {
 
-	@BeforeAll
+	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				em -> {
@@ -58,6 +59,11 @@ public class StandardFunctionTests {
 					em.persist(entity);
 				}
 		);
+	}
+
+	@AfterEach
+	public void truncateDate(SessionFactoryScope scope) {
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

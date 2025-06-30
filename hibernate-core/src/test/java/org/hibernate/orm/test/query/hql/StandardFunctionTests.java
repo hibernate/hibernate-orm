@@ -582,6 +582,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -683,7 +684,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-//	@FailureExpected
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractDayOfWeekYearMonth.class)
 	public void testExtractFunctionWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

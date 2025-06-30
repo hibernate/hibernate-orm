@@ -72,8 +72,10 @@ import java.util.UUID;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.isOneOf;
 
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -2141,13 +2143,18 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractEpoch.class)
 	public void testExtractFunctionEpoch(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select extract(epoch from local datetime)", Long.class).getSingleResult();
+					long before = Instant.now().getEpochSecond()-1;
+					long epoch = session.createQuery( "select extract(epoch from local datetime)", Long.class ).getSingleResult();
+					long after = Instant.now().getEpochSecond()+1;
+					assertThat( epoch, allOf( greaterThanOrEqualTo( before ), lessThanOrEqualTo( after ) ) );
+
 					session.createQuery("select extract(epoch from offset datetime)", Long.class).getSingleResult();
-					assertThat( session.createQuery("select extract(epoch from datetime 1974-03-23 12:35)", Long.class).getSingleResult(), is(133274100L) );
+
+					assertThat( session.createQuery("select extract(epoch from datetime 1974-03-23 12:35)", Long.class).getSingleResult(),
+							is(133274100L) );
 				}
 		);
 	}
@@ -2692,7 +2699,6 @@ public class FunctionTests {
 
 	@Test
 	@JiraKey("HHH-18837")
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExtractEpoch.class)
 	public void testEpochFunction(SessionFactoryScope scope) {
 
 		LocalDate someLocalDate = LocalDate.of( 2013, 7, 5 );

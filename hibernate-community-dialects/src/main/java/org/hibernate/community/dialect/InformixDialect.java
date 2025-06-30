@@ -435,6 +435,7 @@ public class InformixDialect extends Dialect {
 			case HOUR -> "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";
 			case DAY_OF_MONTH -> "day(?2)";
+			case EPOCH -> "(to_number(cast(cast(sum(?2-datetime(1970-1-1) year to day) as interval day(9) to day) as varchar(12)))*86400+to_number(cast(cast(sum(cast(?2 as datetime hour to second)-datetime(00:00:00) hour to second) as interval second(6) to second) as varchar(9))))";
 			case NATIVE -> "((to_number(cast(cast(sum(?2) as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(sum(?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?2) as interval fraction to fraction) as varchar(6))))*1e3)";
 			default -> "?1(?2)";
 		};

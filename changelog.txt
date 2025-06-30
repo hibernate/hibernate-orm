@@ -3,6 +3,27 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.4.Final (June 30, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34000
+
+** Bug
+    * [HHH-19577] - BytecodeProviderImpl.SetPropertyValues wrongly emits duplicate stack map frames
+    * [HHH-19573] - Presence of wrapper byte array pollutes BasicTypeRegistry
+    * [HHH-19572] - NullPointerException when using where(List<Predicate> restrictions) method
+    * [HHH-19571] - CloningPropertyCall causes non-deterministic bytecode for AccessOptimizer
+    * [HHH-19570] - HQL with jpamodelgen fails compilation when querying by natural id named `id`
+    * [HHH-19560] - TupleTransformer and ResultListTransformer trash the query interpretation cache
+    * [HHH-19547] - Misleading exception message at DefaultFlushEntityEventListener - mangled ID - misplaced Entity and EntityEntry ID
+    * [HHH-19464] - Storing a binary data into BLOB on Oracle cutting off its content.
+    * [HHH-18898] - Specific mistake in HQL gives NullPointerException in AbstractSqlAstTranslator
+    * [HHH-18774] - two bad bugs in cascade refresh
+
+** Task
+    * [HHH-19519] - Document breaking changes in new Hibernate Maven Plugin
+
+
 Changes in 7.0.3.Final (June 22, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

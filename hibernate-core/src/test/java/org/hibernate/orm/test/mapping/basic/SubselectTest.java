@@ -15,6 +15,7 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support a CONCAT function")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support a CONCAT function")
 @SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support a CONCAT function")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix doesn't like CONCAT function in GROUP BY")
 public class SubselectTest {
 
 	@Test

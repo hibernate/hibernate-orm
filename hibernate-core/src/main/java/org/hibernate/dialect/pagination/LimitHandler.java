@@ -49,7 +49,7 @@ public interface LimitHandler {
 	}
 
 	// This is the one called directly by Hibernate ORM
-	default String processSql(String sql, int jdbcParameterBindingsCnt, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
+	default String processSql(String sql, int jdbcParameterBindingsCnt, ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
 		return processSql( sql, limit );
 	}
 

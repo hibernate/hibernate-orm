@@ -136,6 +136,25 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		if ( !queryPart.isRoot() && queryPart.getOffsetClauseExpression() != null ) {
 			throw new IllegalArgumentException( "Can't emulate offset clause in subquery" );
 		}
+		// We use 'select first n' on Informix, so nothing to do here
+	}
+
+	@Override
+	protected void beforeQueryGroup(QueryGroup queryGroup, QueryPart currentQueryPart) {
+		if ( queryGroup.isRoot() && queryGroup.hasOffsetOrFetchClause() ) {
+			append( "select ");
+			renderFirstSkipClause( queryGroup.getOffsetClauseExpression(),
+					queryGroup.getFetchClauseExpression() );
+			append(  "* from " );
+			append( OPEN_PARENTHESIS );
+		}
+	}
+
+	@Override
+	protected void afterQueryGroup(QueryGroup queryGroup, QueryPart currentQueryPart) {
+		if ( queryGroup.isRoot() && queryGroup.hasOffsetOrFetchClause() ) {
+			append( CLOSE_PARENTHESIS );
+		}
 	}
 
 	@Override

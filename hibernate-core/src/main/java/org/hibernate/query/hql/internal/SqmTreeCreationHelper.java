@@ -7,10 +7,9 @@ package org.hibernate.query.hql.internal;
 import java.util.Locale;
 import java.util.Set;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -136,8 +135,7 @@ public class SqmTreeCreationHelper {
 			HqlParser.EntityWithJoinsContext entityWithJoinsContext,
 			SqmRoot<E> sqmPrimaryRoot,
 			SemanticQueryBuilder<?> sqmBuilder) {
-		final HqlParser.RootEntityContext fromRootContext =
-				(HqlParser.RootEntityContext) entityWithJoinsContext.fromRoot();
+		final var fromRootContext = (HqlParser.RootEntityContext) entityWithJoinsContext.fromRoot();
 
 		//noinspection unchecked
 		final SqmRoot<E> sqmRoot = (SqmRoot<E>) fromRootContext.accept( sqmBuilder );
@@ -150,9 +148,8 @@ public class SqmTreeCreationHelper {
 		);
 		sqmPrimaryRoot.addSqmJoin( pseudoCrossJoin );
 
-		final SqmCreationProcessingState processingState = sqmBuilder.getProcessingStateStack().getCurrent();
-		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
-		pathRegistry.replace( pseudoCrossJoin, sqmRoot );
+		sqmBuilder.getProcessingStateStack().getCurrent().getPathRegistry()
+				.replace( pseudoCrossJoin, sqmRoot );
 
 		final int size = entityWithJoinsContext.getChildCount();
 		for ( int i = 1; i < size; i++ ) {
@@ -196,46 +193,39 @@ public class SqmTreeCreationHelper {
 		if ( ctx == null ) {
 			return null;
 		}
-
-		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-		if ( lastChild instanceof HqlParser.IdentifierContext identifierContext ) {
-			// in this branch, the alias could be a reserved word ("keyword as identifier")
-			// which JPA disallows...
-			if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {
-				final Token identificationVariableToken = identifierContext.getStart();
-				if ( RESERVED_WORDS.contains( identificationVariableToken.getText().toLowerCase( Locale.ENGLISH ) ) ) {
-					throw new StrictJpaComplianceViolation(
-							String.format(
-									Locale.ROOT,
-									"Strict JPQL compliance was violated : %s [%s]",
-									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
-									identificationVariableToken.getText()
-							),
-							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
-					);
-				}
-			}
-			return sqmBuilder.visitIdentifier( identifierContext );
-		}
 		else {
-			final HqlParser.NakedIdentifierContext identifierContext = (HqlParser.NakedIdentifierContext) lastChild;
-			// in this branch, the alias could be a reserved word ("keyword as identifier")
-			// which JPA disallows...
-			if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {
-				final Token identificationVariableToken = identifierContext.getStart();
-				if ( RESERVED_WORDS.contains( identificationVariableToken.getText().toLowerCase( Locale.ENGLISH ) ) ) {
-					throw new StrictJpaComplianceViolation(
-							String.format(
-									Locale.ROOT,
-									"Strict JPQL compliance was violated : %s [%s]",
-									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
-									identificationVariableToken.getText()
-							),
-							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
-					);
-				}
+			final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
+			if ( lastChild instanceof HqlParser.IdentifierContext identifierContext ) {
+				// in this branch, the alias could be a reserved word ("keyword as identifier")
+				// which JPA disallows...
+				checkJpaCompliance( sqmBuilder, identifierContext.getStart() );
+				return sqmBuilder.visitIdentifier( identifierContext );
 			}
-			return sqmBuilder.visitNakedIdentifier( identifierContext );
+			else if ( lastChild instanceof HqlParser.NakedIdentifierContext identifierContext ) {
+				// in this branch, the alias could be a reserved word ("keyword as identifier")
+				// which JPA disallows...
+				checkJpaCompliance( sqmBuilder, identifierContext.getStart() );
+				return sqmBuilder.visitNakedIdentifier( identifierContext );
+			}
+			else {
+				throw new AssertionFailure( "Unexpected type parse of tree" );
+			}
+		}
+	}
+
+	private static void checkJpaCompliance(SemanticQueryBuilder<?> sqmBuilder, Token identificationVariable) {
+		if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {
+			if ( RESERVED_WORDS.contains( identificationVariable.getText().toLowerCase( Locale.ENGLISH ) ) ) {
+				throw new StrictJpaComplianceViolation(
+						String.format(
+								Locale.ROOT,
+								"Strict JPQL compliance was violated : %s [%s]",
+								StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
+								identificationVariable.getText()
+						),
+						StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
+				);
+			}
 		}
 	}
 
@@ -243,14 +233,9 @@ public class SqmTreeCreationHelper {
 	 * Handle JPA requirement that variables (aliases) be case-insensitive
 	 */
 	public static String applyJpaCompliance(String text, SemanticQueryBuilder<?> sqmBuilder) {
-		if ( text == null ) {
-			return null;
-		}
-
-		if ( sqmBuilder.getCreationOptions().useStrictJpaCompliance() ) {
-			return text.toLowerCase( Locale.getDefault() );
-		}
-
-		return text;
+		return text != null
+			&& sqmBuilder.getCreationOptions().useStrictJpaCompliance()
+				? text.toLowerCase( Locale.getDefault() )
+				: text;
 	}
 }

@@ -6458,27 +6458,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		appendSql( WHITESPACE );
-		appendSql( tableGroupJoin.getJoinType().getText() );
+		final boolean isCrossJoin = tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS;
+		if ( !isCrossJoin || dialect.supportsCrossJoin() ) {
+			appendSql( tableGroupJoin.getJoinType().getText() );
+		}
 		appendSql( "join " );
 
+		final Predicate joinPredicate = tableGroupJoin.getPredicate();
 		final Predicate predicate;
-		if ( tableGroupJoin.getPredicate() == null ) {
-			if ( tableGroupJoin.getJoinType() == SqlAstJoinType.CROSS ) {
-				predicate = null;
-			}
-			else {
-				predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-			}
+		if ( joinPredicate == null ) {
+			predicate =
+					!isCrossJoin || !dialect.supportsCrossJoin()
+							? new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) )
+							: null;
 		}
 		else {
-			predicate = tableGroupJoin.getPredicate();
+			predicate = joinPredicate.isEmpty() ? null : joinPredicate;
 		}
-		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
-		}
-		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
-		}
+
+		renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
 	}
 
 	protected Predicate determineLateralEmulationPredicate(TableGroup tableGroup) {
@@ -6512,6 +6510,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 
+			final BasicType<Integer> intType = getIntegerType();
+			final BasicType<Boolean> booleanType = getBooleanType();
+
 			// Render with exists intersect sub-query if possible as that is shorter and more efficient
 			// ... x(c) on exists(select x.c intersect ...)
 			if ( shouldEmulateLateralWithIntersect( statement.getQueryPart() ) ) {
@@ -6529,7 +6530,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								emptyList()
 						),
 						false,
-						getBooleanType()
+						booleanType
 				);
 			}
 
@@ -6562,7 +6563,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				final QuerySpec existsQuery = new QuerySpec( false, 1 );
 				existsQuery.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
+						new SqlSelectionImpl( new QueryLiteral<>( 1, intType ) )
 				);
 				existsQuery.getFromClause().addRoot( subTableGroup );
 				existsQuery.applyPredicate(
@@ -6574,21 +6575,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 
 				return new ExistsPredicate(
-					new SelectStatement(
-							statement,
-							existsQuery,
-							emptyList()
-					),
+					new SelectStatement( statement, existsQuery, emptyList() ),
 					false,
-					getBooleanType()
+						booleanType
 				);
 			}
 			final QueryPart queryPart = statement.getQueryPart();
-			if ( queryPart instanceof QueryGroup ) {
+			if ( !( queryPart instanceof QuerySpec querySpec ) ) {
 				// We can't use double nesting, but we need to add filter conditions, so fail if this is a query group
 				throw new UnsupportedOperationException( "Can't emulate lateral query group with limit/offset" );
 			}
-			final QuerySpec querySpec = (QuerySpec) queryPart;
 
 			// The last possible way to emulate lateral subqueries is to check if the correlated subquery has a result for a row.
 			// Note though, that if the subquery has a limit/offset, an additional condition is needed as can be seen below
@@ -6611,7 +6607,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			existsQuery.setGroupByClauseExpressions( querySpec.getGroupByClauseExpressions() );
 			existsQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			existsQuery.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
+					new SqlSelectionImpl( new QueryLiteral<>( 1, intType ) )
 			);
 			existsQuery.applyPredicate(
 					new ComparisonPredicate(
@@ -6622,13 +6618,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 
 			final ExistsPredicate existsPredicate = new ExistsPredicate(
-					new SelectStatement(
-							statement,
-							existsQuery,
-							emptyList()
-					),
+					new SelectStatement( statement, existsQuery, emptyList() ),
 					false,
-					getBooleanType()
+					booleanType
 			);
 			if ( !queryPart.hasOffsetOrFetchClause() ) {
 				return existsPredicate;
@@ -6647,11 +6639,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					new SqlSelectionImpl(
 							new SelfRenderingAggregateFunctionSqlAstExpression<>(
 									"count",
-									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append( "count(*)" ),
+									(sqlAppender, sqlAstArguments, returnType, walker)
+											-> sqlAppender.append( "count(*)" ),
 									List.of( Star.INSTANCE ),
 									null,
-									getIntegerType(),
-									getIntegerType()
+									intType,
+									intType
 							)
 					)
 			);
@@ -6697,15 +6690,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 									new NullnessPredicate( sortExpression ),
 									new NullnessPredicate( currentRowColumnReference )
 							),
-							getBooleanType()
+							booleanType
 					);
-				}
-				final ComparisonOperator comparisonOperator;
-				if ( sortSpecification.getSortOrder() == SortDirection.DESCENDING ) {
-					comparisonOperator = ComparisonOperator.GREATER_THAN_OR_EQUAL;
-				}
-				else {
-					comparisonOperator = ComparisonOperator.LESS_THAN_OR_EQUAL;
 				}
 				countQuery.applyPredicate(
 						new Junction(
@@ -6714,11 +6700,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 										nullHandlingPredicate,
 										new ComparisonPredicate(
 												sortExpression,
-												comparisonOperator,
+												sortSpecification.getSortOrder() == SortDirection.DESCENDING
+														? ComparisonOperator.GREATER_THAN_OR_EQUAL
+														: ComparisonOperator.LESS_THAN_OR_EQUAL,
 												currentRowColumnReference
 										)
 								),
-								getBooleanType()
+								booleanType
 						)
 				);
 			}
@@ -6726,21 +6714,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Expression countLower;
 			final Expression countUpper;
 			if ( queryPart.getOffsetClauseExpression() == null ) {
-				countLower = new QueryLiteral<>( 1, getIntegerType() );
+				countLower = new QueryLiteral<>( 1, intType );
 				countUpper = queryPart.getFetchClauseExpression();
 			}
 			else {
 				countLower = new BinaryArithmeticExpression(
 						queryPart.getOffsetClauseExpression(),
 						BinaryArithmeticOperator.ADD,
-						new QueryLiteral<>( 1, getIntegerType() ),
-						getIntegerType()
+						new QueryLiteral<>( 1, intType ),
+						intType
 				);
 				countUpper = new BinaryArithmeticExpression(
 						queryPart.getOffsetClauseExpression(),
 						BinaryArithmeticOperator.ADD,
 						queryPart.getFetchClauseExpression(),
-						getIntegerType()
+						intType
 				);
 			}
 			return new Junction(
@@ -6748,18 +6736,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					List.of(
 							existsPredicate,
 							new BetweenPredicate(
-									new SelectStatement(
-											statement,
-											countQuery,
-											emptyList()
-									),
+									new SelectStatement( statement, countQuery, emptyList() ),
 									countLower,
 									countUpper,
 									false,
-									getBooleanType()
+									booleanType
 							)
 					),
-					getBooleanType()
+					booleanType
 			);
 		}
 		return null;
@@ -6836,22 +6820,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( QueryPart queryPart : queryGroup.getQueryParts() ) {
 			parts.add( stripToSelectClause( queryPart ) );
 		}
-
 		return new QueryGroup( queryGroup.isRoot(), queryGroup.getSetOperator(), parts );
 	}
 
 	private QuerySpec stripToSelectClause(QuerySpec querySpec) {
-		if ( querySpec.getGroupByClauseExpressions() != null && !querySpec.getGroupByClauseExpressions().isEmpty() ) {
+		final var groupByExpressions = querySpec.getGroupByClauseExpressions();
+		if ( groupByExpressions != null && !groupByExpressions.isEmpty() ) {
 			throw new UnsupportedOperationException( "Can't emulate lateral join for query spec with group by clause" );
 		}
-		if ( querySpec.getHavingClauseRestrictions() != null && !querySpec.getHavingClauseRestrictions().isEmpty() ) {
+		final Predicate havingRestrictions = querySpec.getHavingClauseRestrictions();
+		if ( havingRestrictions != null && !havingRestrictions.isEmpty() ) {
 			throw new UnsupportedOperationException( "Can't emulate lateral join for query spec with having clause" );
 		}
-		final QuerySpec newQuerySpec = new QuerySpec( querySpec.isRoot(), querySpec.getFromClause().getRoots().size() );
-		for ( TableGroup root : querySpec.getFromClause().getRoots() ) {
+		final var roots = querySpec.getFromClause().getRoots();
+		final QuerySpec newQuerySpec = new QuerySpec( querySpec.isRoot(), roots.size() );
+		for ( TableGroup root : roots ) {
 			newQuerySpec.getFromClause().addRoot( root );
 		}
-		for ( SqlSelection selection : querySpec.getSelectClause().getSqlSelections() ) {
+		final SelectClause selectClause = querySpec.getSelectClause();
+		for ( SqlSelection selection : selectClause.getSqlSelections() ) {
 			if ( AggregateFunctionChecker.hasAggregateFunctions( selection.getExpression() ) ) {
 				throw new UnsupportedOperationException( "Can't emulate lateral join for query spec with aggregate function" );
 			}
@@ -6862,12 +6849,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean needsLateralSortExpressionVirtualSelections(QuerySpec querySpec) {
 		return !( ( querySpec.getSelectClause().getSqlSelections().size() == 1
-				|| dialect.supportsRowValueConstructorSyntax() )
-				&& dialect.supportsDistinctFromPredicate()
-				&& isFetchFirstRowOnly( querySpec ) )
-				&& !shouldEmulateLateralWithIntersect( querySpec )
-				&& !dialect.supportsNestedSubqueryCorrelation()
-				&& querySpec.hasOffsetOrFetchClause();
+						|| dialect.supportsRowValueConstructorSyntax() )
+					&& dialect.supportsDistinctFromPredicate()
+					&& isFetchFirstRowOnly( querySpec ) )
+			&& !shouldEmulateLateralWithIntersect( querySpec )
+			&& !dialect.supportsNestedSubqueryCorrelation()
+			&& querySpec.hasOffsetOrFetchClause();
 	}
 
 	@Override
@@ -6902,13 +6889,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( columnReference.isColumnExpressionFormula() ) {
 			// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
 			// This is fine for now as this is only temporary anyway until we render aliases for table references
-			final String replacement;
-			if ( qualifier != null ) {
-				replacement = "$1" + qualifier + ".$3";
-			}
-			else {
-				replacement = "$1$3";
-			}
+			final String replacement = qualifier != null ? "$1" + qualifier + ".$3" : "$1$3";
 			appendSql(
 					columnReference.getColumnExpression()
 							.replaceAll( "(\\b)(" + columnReference.getQualifier() + "\\.)(\\b)", replacement )

@@ -15,7 +15,6 @@ import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -28,19 +27,15 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
-import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -233,30 +228,6 @@ public class SybaseASELegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 				appendSql( " holdlock" );
 				break;
 			}
-		}
-	}
-
-	@Override
-	protected void renderTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
-		appendSql( WHITESPACE );
-		if ( tableGroupJoin.getJoinType() != SqlAstJoinType.CROSS ) {
-			// No support for cross joins, so we emulate it with an inner join and always true on condition
-			appendSql( tableGroupJoin.getJoinType().getText() );
-		}
-		appendSql( "join " );
-
-		final Predicate predicate;
-		if ( tableGroupJoin.getPredicate() == null ) {
-			predicate = new BooleanExpressionPredicate( new QueryLiteral<>( true, getBooleanType() ) );
-		}
-		else {
-			predicate = tableGroupJoin.getPredicate();
-		}
-		if ( predicate != null && !predicate.isEmpty() ) {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), predicate, tableGroupJoinCollector );
-		}
-		else {
-			renderTableGroup( tableGroupJoin.getJoinedGroup(), null, tableGroupJoinCollector );
 		}
 	}
 

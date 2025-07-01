@@ -6135,6 +6135,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Is the {@code cross join} syntax supported?
+	 */
+	public boolean supportsCrossJoin() {
+		return true;
+	}
+
+	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax.
 	 * <p>

@@ -1051,6 +1051,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCrossJoin() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsRowValueConstructorSyntax() {
 		return false;
 	}

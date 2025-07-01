@@ -354,6 +354,11 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCrossJoin() {
+		return false;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {

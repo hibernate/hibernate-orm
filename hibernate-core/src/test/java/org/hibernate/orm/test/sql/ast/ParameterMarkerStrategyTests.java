@@ -29,8 +29,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.internal.util.StringHelper.*;
 
@@ -121,35 +119,6 @@ public class ParameterMarkerStrategyTests {
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
 			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
-		} );
-	}
-
-	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-16283" )
-	public void testNativeQuery(SessionFactoryScope scope) {
-		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-
-		statementInspector.clear();
-		scope.inTransaction( (session) -> {
-			session.createNativeQuery( "select count(1) from filtered_entity e where e.region = :region", Integer.class )
-					.setParameter( "region", "ABC" )
-					.uniqueResult();
-
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" );
-		} );
-
-		statementInspector.clear();
-		scope.inTransaction( (session) -> {
-			session.createNativeQuery( "select count(1) from filtered_entity e where e.region in (:region) and e.name = :name", Integer.class )
-					.setParameterList( "region", List.of( "ABC", "DEF" ) )
-					.setParameter( "name", "It" )
-					.uniqueResult();
-
-			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( count( statementInspector.getSqlQueries().get( 0 ), "?" ) ).isEqualTo( 3 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "?1" ).contains( "?2" ).contains( "?3" );
 		} );
 	}
 

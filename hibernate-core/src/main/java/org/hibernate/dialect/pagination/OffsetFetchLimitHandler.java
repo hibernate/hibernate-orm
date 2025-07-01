@@ -5,6 +5,10 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 
 /**
  * A {@link LimitHandler} for databases which support the
@@ -25,7 +29,12 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, Limit limit) {
+		return processSql( sql, 0, ParameterMarkerStrategyStandard.INSTANCE, limit, QueryOptions.NONE );
 
+	}
+
+	@Override
+	public String processSql(String sql, int jdbcParameterBindingsCnt, ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
 		boolean hasFirstRow = hasFirstRow(limit);
 		boolean hasMaxRows = hasMaxRows(limit);
 
@@ -40,7 +49,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 		if ( hasFirstRow ) {
 			offsetFetch.append( " offset " );
 			if ( supportsVariableLimit() ) {
-				offsetFetch.append( "?" );
+				offsetFetch.append( parameterMarkerStrategy.createMarker( ++jdbcParameterBindingsCnt, IntegerJdbcType.INSTANCE ) );
 			}
 			else {
 				offsetFetch.append( limit.getFirstRow() );
@@ -58,7 +67,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 				offsetFetch.append( " fetch first " );
 			}
 			if ( supportsVariableLimit() ) {
-				offsetFetch.append( "?" );
+				offsetFetch.append( parameterMarkerStrategy.createMarker( ++jdbcParameterBindingsCnt, IntegerJdbcType.INSTANCE ) );
 			}
 			else {
 				offsetFetch.append( getMaxOrLimit( limit ) );

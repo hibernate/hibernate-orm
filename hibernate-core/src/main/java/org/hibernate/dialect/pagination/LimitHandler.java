@@ -7,8 +7,10 @@ package org.hibernate.dialect.pagination;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * Contract defining dialect-specific limit and offset handling.
@@ -41,7 +43,13 @@ public interface LimitHandler {
 
 	String processSql(String sql, Limit limit);
 
+	@Deprecated // Never called directly by Hibernate ORM
 	default String processSql(String sql, Limit limit, QueryOptions queryOptions) {
+		return processSql( sql, limit );
+	}
+
+	// This is the one called directly by Hibernate ORM
+	default String processSql(String sql, int jdbcParameterBindingsCnt, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
 		return processSql( sql, limit );
 	}
 

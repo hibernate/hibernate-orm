@@ -28,6 +28,7 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -375,6 +376,9 @@ public class InformixDialect extends Dialect {
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
 		}
+
+		functionRegistry.register( "overlay",
+				new InsertSubstringOverlayEmulation( typeConfiguration, true ) );
 	}
 
 	@Override

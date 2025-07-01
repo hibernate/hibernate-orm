@@ -23,6 +23,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
@@ -30,6 +31,7 @@ import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
@@ -341,5 +343,23 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 			appendSql( "floor" );
 		}
 		super.visitBinaryArithmeticExpression( arithmeticExpression );
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateMerge( statement );
+		}
+		else {
+			super.visitUpdateStatementOnly( statement );
+		}
 	}
 }

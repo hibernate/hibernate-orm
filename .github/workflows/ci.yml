@@ -64,7 +64,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
         run: ci/database-start.sh
       - name: Set up Java 21
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -81,7 +81,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -98,7 +98,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -126,14 +126,14 @@ jobs:
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
           path: ~/.gradle/build-scan-data
 
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}
@@ -187,7 +187,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -204,7 +204,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -234,13 +234,13 @@ jobs:
       # We don't write to the remote cache as that would be unsafe.
       # That's even on push, because we do not trust Atlas runners to hold secrets: they are shared infrastructure.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: "${{ !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
           path: ~/.gradle/build-scan-data
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}
@@ -262,7 +262,7 @@ jobs:
       - name: Reclaim disk space and sanitize user home
         run: .github/ci-prerequisites-atlas.sh
       - name: Set up Java 21
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -279,7 +279,7 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
@@ -296,7 +296,7 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         # if it a pull request, we restore the cache but we don't save it
         if: github.event_name == 'pull_request'
         with:
@@ -322,14 +322,14 @@ jobs:
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: "${{ github.event_name == 'pull_request' && !cancelled() }}"
         with:
           name: build-scan-data-sca
           path: ~/.gradle/build-scan-data
 
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: failure()
         with:
           name: test-reports-java11-sca

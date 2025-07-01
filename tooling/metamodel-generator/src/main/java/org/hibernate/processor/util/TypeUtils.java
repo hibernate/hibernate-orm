@@ -27,6 +27,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.ElementFilter;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
 import java.util.HashMap;
@@ -240,6 +241,26 @@ public final class TypeUtils {
 		assert element != null;
 		assert qualifiedName != null;
 		for ( AnnotationMirror mirror : element.getAnnotationMirrors() ) {
+			if ( isAnnotationMirrorOfType( mirror, qualifiedName ) ) {
+				return mirror;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Checks whether the {@code Element} hosts the annotation (directly or inherited) with the given fully qualified class name.
+	 *
+	 * @param element the element to check for the hosted annotation
+	 * @param qualifiedName the fully qualified class name of the annotation to check for
+	 *
+	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
+	 *         the {@code TypeElement} does not host the specified annotation (directly or inherited).
+	 */
+	public static @Nullable AnnotationMirror getInheritedAnnotationMirror(Elements elements, Element element, String qualifiedName) {
+		assert element != null;
+		assert qualifiedName != null;
+		for ( AnnotationMirror mirror : elements.getAllAnnotationMirrors(element) ) {
 			if ( isAnnotationMirrorOfType( mirror, qualifiedName ) ) {
 				return mirror;
 			}

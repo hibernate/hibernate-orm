@@ -7,6 +7,7 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -27,6 +28,7 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
@@ -99,7 +101,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 			else {
 				final int jdbcBindingsCnt = jdbcParameterBindings.getBindings().size();
-				final ParameterMarkerStrategy parameterMarkerStrategy = dialect.getNativeParameterMarkerStrategy();
+				final ParameterMarkerStrategy parameterMarkerStrategy =
+						Objects.requireNonNullElse(dialect.getNativeParameterMarkerStrategy(), ParameterMarkerStrategyStandard.INSTANCE);
 				sqlWithLimit = limitHandler.processSql( sql, jdbcBindingsCnt, parameterMarkerStrategy, limit, queryOptions );
 			}
 

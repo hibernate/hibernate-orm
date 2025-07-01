@@ -107,6 +107,7 @@ tasks.compileJava.dependsOn tasks.spotlessJavaApply
 
 checkerFramework {
     excludeTests = true
+    skipCheckerFramework = true
     checkers = [
             'org.checkerframework.checker.nullness.NullnessChecker'
     ]

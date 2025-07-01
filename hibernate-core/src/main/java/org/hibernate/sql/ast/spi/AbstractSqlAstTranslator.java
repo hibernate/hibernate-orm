@@ -3473,7 +3473,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final int queryPartForRowNumberingClauseDepth = this.queryPartForRowNumberingClauseDepth;
 		final boolean needsSelectAliases = this.needsSelectAliases;
 		try {
-			String queryGroupAlias = null;
 			// See the field documentation of queryPartForRowNumbering etc. for an explanation about this
 			final QueryPart currentQueryPart = queryPartStack.getCurrent();
 			if ( currentQueryPart != null && queryPartForRowNumberingClauseDepth != clauseStack.depth() ) {
@@ -3482,88 +3481,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// If explicit column aliases were defined we should still use them when rendering the select clause
 				this.needsSelectAliases = columnAliases != null;
 			}
-			// If we are row numbering the current query group, this means that we can't render the
-			// order by and offset fetch clause, so we must do row counting on the query group level
-			final boolean needsRowNumberingWrapper = queryPartForRowNumbering == queryGroup
-					|| additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
-			final boolean needsQueryGroupWrapper =
-					currentQueryPart instanceof QueryGroup && !dialect.supportsSimpleQueryGrouping();
-			final boolean needsParenthesis;
-			if ( currentQueryPart instanceof QueryGroup ) {
-				// When this is query group within a query group, we can only do simple grouping if that is supported,
-				// and we don't already add a query group wrapper
-				needsParenthesis = !needsRowNumberingWrapper && !needsQueryGroupWrapper;
-			}
-			else {
-				needsParenthesis = queryGroup.hasOffsetOrFetchClause() && !queryGroup.isRoot();
-			}
-			if ( needsParenthesis ) {
-				appendSql( OPEN_PARENTHESIS );
-			}
-			if ( needsRowNumberingWrapper ) {
-				this.needsSelectAliases = true;
-				queryGroupAlias = "grp_" + queryGroupAliasCounter + '_';
-				queryGroupAliasCounter++;
-				appendSql( "select " );
-				appendSql( queryGroupAlias );
-				appendSql( ".* " );
-				final SelectClause firstSelectClause = queryGroup.getFirstQuerySpec().getSelectClause();
-				final List<SqlSelection> sqlSelections = firstSelectClause.getSqlSelections();
-				final int sqlSelectionsSize = sqlSelections.size();
-				// We need this synthetic select clause to properly render the ORDER BY within the OVER clause
-				// of the row numbering functions
-				final SelectClause syntheticSelectClause = new SelectClause( sqlSelectionsSize );
-				for ( int i = 0; i < sqlSelectionsSize; i++ ) {
-					syntheticSelectClause.addSqlSelection(
-							new SqlSelectionImpl(
-									i,
-									new ColumnReference(
-											queryGroupAlias,
-											"c" + i,
-											false,
-											null,
-											getIntegerType()
-									)
-							)
-					);
-				}
-				renderRowNumberingSelectItems( syntheticSelectClause, queryPartForRowNumbering );
-				appendSql( " from (" );
-			}
-			else if ( needsQueryGroupWrapper ) {
-				// Query group nested inside a query group
-				this.needsSelectAliases = true;
-				queryGroupAlias = "grp_" + queryGroupAliasCounter + '_';
-				queryGroupAliasCounter++;
-				appendSql( "select " );
-				appendSql( queryGroupAlias );
-				appendSql( ".* " );
-				appendSql( " from (" );
-			}
-			queryPartStack.push( queryGroup );
-			final List<QueryPart> queryParts = queryGroup.getQueryParts();
-			final String setOperatorString = ' ' + queryGroup.getSetOperator().sqlString() + ' ';
-			String separator = "";
-			for ( int i = 0; i < queryParts.size(); i++ ) {
-				appendSql( separator );
-				queryParts.get( i ).accept( this );
-				separator = setOperatorString;
-			}
-
-			if ( renderOrderByAndOffsetFetchClause ) {
-				visitOrderBy( queryGroup.getSortSpecifications() );
-				visitOffsetFetchClause( queryGroup );
-			}
-			if ( queryGroupAlias != null ) {
-				appendSql( ") " );
-				appendSql( queryGroupAlias );
-				if ( additionalWherePredicate != null && !additionalWherePredicate.isEmpty() ) {
-					visitWhereClause( additionalWherePredicate );
-				}
-			}
-			if ( needsParenthesis ) {
-				appendSql( CLOSE_PARENTHESIS );
-			}
+			renderQueryGroup(
+					queryGroup,
+					queryPartForRowNumbering,
+					currentQueryPart,
+					renderOrderByAndOffsetFetchClause
+			);
 		}
 		finally {
 			queryPartStack.pop();
@@ -3571,6 +3494,146 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.queryPartForRowNumberingClauseDepth = queryPartForRowNumberingClauseDepth;
 			this.needsSelectAliases = needsSelectAliases;
 		}
+	}
+
+	private void renderQueryGroup(
+			QueryGroup queryGroup,
+			QueryPart queryPartForRowNumbering,
+			QueryPart currentQueryPart,
+			boolean renderOrderByAndOffsetFetchClause) {
+		final boolean needsRowNumberingWrapper =
+				needsRowNumbering( queryGroup, queryPartForRowNumbering );
+		final boolean needsQueryGroupWrapper =
+				nonsimpleQueryGrouping( currentQueryPart );
+		final boolean needsParenthesis =
+				needsParenthesesAroundQueryGroup(
+						queryGroup,
+						currentQueryPart,
+						needsRowNumberingWrapper,
+						needsQueryGroupWrapper
+				);
+		if ( needsParenthesis ) {
+			appendSql( OPEN_PARENTHESIS );
+		}
+		beforeQueryGroup( queryGroup, currentQueryPart );
+		final String queryGroupAlias =
+				wrapQueryPartsIfNecessary(
+						queryGroup,
+						queryPartForRowNumbering,
+						needsRowNumberingWrapper,
+						needsQueryGroupWrapper
+				);
+		queryPartStack.push( queryGroup );
+		renderQueryParts( queryGroup );
+		afterQueryGroup( queryGroup, currentQueryPart );
+
+		if ( renderOrderByAndOffsetFetchClause ) {
+			visitOrderBy( queryGroup.getSortSpecifications() );
+			visitOffsetFetchClause( queryGroup );
+		}
+		if ( queryGroupAlias != null ) {
+			appendSql( CLOSE_PARENTHESIS );
+			appendSql( WHITESPACE );
+			appendSql( queryGroupAlias );
+			if ( additionalWherePredicate != null && !additionalWherePredicate.isEmpty() ) {
+				visitWhereClause( additionalWherePredicate );
+			}
+		}
+		if ( needsParenthesis ) {
+			appendSql( CLOSE_PARENTHESIS );
+		}
+	}
+
+	private boolean nonsimpleQueryGrouping(QueryPart currentQueryPart) {
+		return currentQueryPart instanceof QueryGroup
+			&& !dialect.supportsSimpleQueryGrouping();
+	}
+
+	private boolean needsRowNumbering(QueryGroup queryGroup, QueryPart queryPartForRowNumbering) {
+		// If we are row numbering the current query group, this means that we can't render the
+		// order by and offset fetch clause, so we must do row counting on the query group level
+		return queryPartForRowNumbering == queryGroup
+			|| additionalWherePredicate != null && !additionalWherePredicate.isEmpty();
+	}
+
+	private String wrapQueryPartsIfNecessary(
+			QueryGroup queryGroup,
+			QueryPart queryPartForRowNumbering,
+			boolean needsRowNumberingWrapper,
+			boolean needsQueryGroupWrapper) {
+		if ( needsRowNumberingWrapper ) {
+			this.needsSelectAliases = true;
+			final String queryGroupAlias = "grp_" + queryGroupAliasCounter + '_';
+			queryGroupAliasCounter++;
+			appendSql( "select " );
+			appendSql( queryGroupAlias );
+			appendSql( ".* " );
+			final SelectClause firstSelectClause = queryGroup.getFirstQuerySpec().getSelectClause();
+			final int sqlSelectionsSize = firstSelectClause.getSqlSelections().size();
+			// We need this synthetic select clause to properly render the ORDER BY within the OVER clause
+			// of the row numbering functions
+			final SelectClause syntheticSelectClause = new SelectClause( sqlSelectionsSize );
+			for ( int i = 0; i < sqlSelectionsSize; i++ ) {
+				syntheticSelectClause.addSqlSelection(
+						new SqlSelectionImpl(
+								i,
+								new ColumnReference(
+										queryGroupAlias,
+										"c" + i,
+										false,
+										null,
+										getIntegerType()
+								)
+						)
+				);
+			}
+			renderRowNumberingSelectItems( syntheticSelectClause, queryPartForRowNumbering );
+			appendSql( " from " );
+			appendSql( OPEN_PARENTHESIS );
+			return queryGroupAlias;
+		}
+		else if ( needsQueryGroupWrapper ) {
+			// Query group nested inside a query group
+			this.needsSelectAliases = true;
+			final String queryGroupAlias = "grp_" + queryGroupAliasCounter + '_';
+			queryGroupAliasCounter++;
+			appendSql( "select " );
+			appendSql( queryGroupAlias );
+			appendSql( ".* " );
+			appendSql( " from " );
+			appendSql( OPEN_PARENTHESIS );
+			return queryGroupAlias;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private void renderQueryParts(QueryGroup queryGroup) {
+		final var queryParts = queryGroup.getQueryParts();
+		final String setOperatorString = ' ' + queryGroup.getSetOperator().sqlString() + ' ';
+		String separator = "";
+		for ( int i = 0; i < queryParts.size(); i++ ) {
+			appendSql( separator );
+			queryParts.get( i ).accept( this );
+			separator = setOperatorString;
+		}
+	}
+
+	protected void afterQueryGroup(QueryGroup queryGroup, QueryPart currentQueryPart) {
+	}
+
+	protected void beforeQueryGroup(QueryGroup queryGroup, QueryPart currentQueryPart) {
+	}
+
+	protected boolean needsParenthesesAroundQueryGroup(
+			QueryGroup queryGroup, QueryPart currentQueryPart,
+			boolean needsRowNumberingWrapper, boolean needsQueryGroupWrapper) {
+		return currentQueryPart instanceof QueryGroup
+				// When this is query group within a query group, we can only do simple grouping
+				// if that is supported, and we don't already add a query group wrapper
+				? !needsRowNumberingWrapper && !needsQueryGroupWrapper
+				: queryGroup.hasOffsetOrFetchClause() && !queryGroup.isRoot();
 	}
 
 	@Override

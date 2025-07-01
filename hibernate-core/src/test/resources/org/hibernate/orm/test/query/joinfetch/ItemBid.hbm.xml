@@ -34,13 +34,13 @@
 		</set>
 
 		<sql-query name="all">
-			<return alias="item" class="Item"/>
-			<return-join alias="bid" property="item.bids"/>
-			<return-join alias="commnt" property="item.comments"/>
-			select {item.*}, {bid.*}, {commnt.*} 
-			from AuctionItems item
-				left outer join AuctionBids bid on bid.item = item.id
-				left outer join AuctionComments commnt on commnt.item = item.id
+			<return alias="it" class="Item"/>
+			<return-join alias="bid" property="it.bids"/>
+			<return-join alias="commnt" property="it.comments"/>
+			select {it.*}, {bid.*}, {commnt.*}
+			from AuctionItems it
+				left outer join AuctionBids bid on bid.item = it.id
+				left outer join AuctionComments commnt on commnt.item = it.id
 		</sql-query>
 
 	</class>

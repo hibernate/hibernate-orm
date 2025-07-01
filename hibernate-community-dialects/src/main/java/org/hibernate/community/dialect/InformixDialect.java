@@ -24,6 +24,7 @@ import org.hibernate.community.dialect.sequence.SequenceInformationExtractorInfo
 import org.hibernate.community.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
@@ -1082,5 +1083,10 @@ public class InformixDialect extends Dialect {
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
 		}
 		return super.buildIdentifierHelper( builder, metadata );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

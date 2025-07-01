@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -78,9 +77,6 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
 			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
-		}
-		else if (DialectContext.getDialect() instanceof InformixDialect ) {
-			baseQuery = "update AnEntity set name=?";
 		}
 		else {
 			baseQuery = "update AnEntity ae1_0 set name=?";

@@ -3221,9 +3221,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmPathSource<?> pathSource = sqmJoin.getReferencedPathSource();
 		final SqmJoinType sqmJoinType = sqmJoin.getSqmJoinType();
 
-		final TableGroupJoin joinedTableGroupJoin;
-		final TableGroup joinedTableGroup;
-
 		final NavigablePath sqmJoinNavigablePath = sqmJoin.getNavigablePath();
 
 		final ModelPart modelPart =
@@ -3231,43 +3228,27 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.findSubPart( pathSource.getPathName(),
 								resolveExplicitTreatTarget( sqmJoin, this ) );
 
+		final TableGroupJoin joinedTableGroupJoin =
+				((TableGroupJoinProducer) modelPart)
+						.createTableGroupJoin(
+								sqmJoinNavigablePath,
+								ownerTableGroup,
+								sqmJoin.getExplicitAlias(),
+								null,
+								sqmJoinType.getCorrespondingSqlJoinType(),
+								sqmJoin.isFetched(),
+								sqmJoin.getJoinPredicate() != null,
+								this
+						);
+		final TableGroup joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
+
 		if ( pathSource instanceof PluralPersistentAttribute ) {
 			assert modelPart instanceof PluralAttributeMapping;
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
-
 			if ( sqmJoin.isFetched() ) {
 				containsCollectionFetches = true;
 			}
-
-			joinedTableGroupJoin = pluralAttributeMapping.createTableGroupJoin(
-					sqmJoinNavigablePath,
-					ownerTableGroup,
-					sqmJoin.getExplicitAlias(),
-					null,
-					sqmJoinType.getCorrespondingSqlJoinType(),
-					sqmJoin.isFetched(),
-					sqmJoin.getJoinPredicate() != null,
-					this
-			);
-
-			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
 		}
 		else {
-			assert modelPart instanceof TableGroupJoinProducer;
-
-			joinedTableGroupJoin = ( (TableGroupJoinProducer) modelPart ).createTableGroupJoin(
-					sqmJoinNavigablePath,
-					ownerTableGroup,
-					sqmJoin.getExplicitAlias(),
-					null,
-					sqmJoinType.getCorrespondingSqlJoinType(),
-					sqmJoin.isFetched(),
-					sqmJoin.getJoinPredicate() != null,
-					this
-			);
-
-			joinedTableGroup = joinedTableGroupJoin.getJoinedGroup();
-
 			// Since this is an explicit join, we force the initialization of a possible lazy table group
 			// to retain the cardinality, but only if this is a non-trivial attribute join.
 			// Left or inner singular attribute joins without a predicate can be safely optimized away
@@ -3381,7 +3362,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
-				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS,
+				correspondingSqlJoinType == SqlAstJoinType.INNER
+					|| correspondingSqlJoinType == SqlAstJoinType.CROSS,
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				null,
@@ -3504,7 +3486,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				sqmJoin.isLateral(),
-				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS,
+				correspondingSqlJoinType == SqlAstJoinType.INNER
+					|| correspondingSqlJoinType == SqlAstJoinType.CROSS,
 				sqmJoin.getReusablePath( CollectionPart.Nature.INDEX.getName() ) != null
 		);
 		getFromClauseIndex().register( sqmJoin, tableGroup );
@@ -3537,7 +3520,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				getCteName( sqmJoin.getCte().getCteTable() ),
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS
+				correspondingSqlJoinType == SqlAstJoinType.INNER
+					|| correspondingSqlJoinType == SqlAstJoinType.CROSS
 		);
 		getFromClauseIndex().register( sqmJoin, tableGroup );
 
@@ -3613,10 +3597,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmPath instanceof SqmEntityValuedSimplePath<?>
 				|| sqmPath instanceof SqmEmbeddedValuedSimplePath<?>
 				|| sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
-			final TableGroup existingTableGroup = fromClauseIndex.findTableGroupForGetOrCreate(
-					sqmPath.getNavigablePath(),
-					allowLeftJoins
-			);
+			final TableGroup existingTableGroup =
+					fromClauseIndex.findTableGroupForGetOrCreate( sqmPath.getNavigablePath(), allowLeftJoins );
 			if ( existingTableGroup == null ) {
 				final TableGroup createdTableGroup = createTableGroup(
 						getActualTableGroup(
@@ -3626,10 +3608,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						sqmPath,
 						allowLeftJoins
 				);
-				if ( createdTableGroup != null ) {
-					if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
-						fromClauseIndex.register( sqmPath, createdTableGroup );
-					}
+				if ( createdTableGroup != null && sqmPath instanceof SqmTreatedPath<?, ?> ) {
+					fromClauseIndex.register( sqmPath, createdTableGroup );
 				}
 			}
 		}
@@ -3643,8 +3623,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmPath<?> sqmPath = (SqmPath<?>) path;
 		final SqmPath<?> parentPath;
 		final boolean treated;
-		if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
-			parentPath = ( (SqmTreatedPath<?, ?>) sqmPath ).getWrappedPath();
+		if ( sqmPath instanceof SqmTreatedPath<?, ?> treatedPath ) {
+			parentPath = treatedPath.getWrappedPath();
 			treated = true;
 		}
 		else {
@@ -3652,23 +3632,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			treated = false;
 		}
 		if ( parentPath == null ) {
-			if ( sqmPath instanceof SqmFunctionPath<?> functionPath ) {
-				if ( functionPath.getReferencedPathSource() instanceof CompositeSqmPathSource<?> ) {
-					return (TableGroup) visitFunctionPath( functionPath );
-				}
-			}
-			return null;
+			return sqmPath instanceof SqmFunctionPath<?> functionPath
+				&& functionPath.getReferencedPathSource() instanceof CompositeSqmPathSource<?>
+					? (TableGroup) visitFunctionPath( functionPath )
+					: null;
 		}
 		final TableGroup parentTableGroup = getActualTableGroup(
 				fromClauseIndex.findTableGroupForGetOrCreate( parentPath.getNavigablePath() ),
 				sqmPath
 		);
 		if ( parentTableGroup == null ) {
-			final TableGroup createdParentTableGroup = prepareReusablePath(
-					fromClauseIndex,
-					parentPath,
-					implicitJoinChecker
-			);
+			final TableGroup createdParentTableGroup =
+					prepareReusablePath( fromClauseIndex, parentPath, implicitJoinChecker );
 			if ( createdParentTableGroup == null ) {
 				throw new SqlTreeCreationException( "Could not locate TableGroup - " + parentPath.getNavigablePath() );
 			}
@@ -3677,12 +3652,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				fromClauseIndex.register( parentPath, createdParentTableGroup );
 				newTableGroup = createdParentTableGroup;
 			}
-			else if ( createdParentTableGroup instanceof PluralTableGroup ) {
-				final CollectionPart.Nature nature = CollectionPart.Nature.fromName(
-						parentPath.getNavigablePath().getLocalName()
-				);
+			else if ( createdParentTableGroup instanceof PluralTableGroup pluralTableGroup ) {
+				final var nature = CollectionPart.Nature.fromName( parentPath.getNavigablePath().getLocalName() );
 				assert nature != null;
-				newTableGroup = ( (PluralTableGroup) createdParentTableGroup ).getTableGroup( nature );
+				newTableGroup = pluralTableGroup.getTableGroup( nature );
 			}
 			else {
 				newTableGroup = getActualTableGroup(
@@ -3726,10 +3699,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// fetched - the fetch would use a left-join.  however, since the path is
 			// used outside the select-clause also, we need to force the join to be inner
 			final String partName = sqmPath.getResolvedModel().getPathName();
-			final ModelPart pathPart;
 			if ( !toOneAttributeMapping.isFkOptimizationAllowed()
-					|| !( ( pathPart = toOneAttributeMapping.findSubPart( partName ) ) instanceof ValuedModelPart )
-					|| !toOneAttributeMapping.getForeignKeyDescriptor().isKeyPart( (ValuedModelPart) pathPart ) ) {
+					|| !( toOneAttributeMapping.findSubPart( partName ) instanceof ValuedModelPart pathPart )
+					|| !toOneAttributeMapping.getForeignKeyDescriptor().isKeyPart( pathPart ) ) {
 				final NavigablePath parentParentPath = parentPath.getParentPath().getNavigablePath();
 				final TableGroup parentParentTableGroup = fromClauseIndex.findTableGroup( parentParentPath );
 				final TableGroupJoin tableGroupJoin = parentParentTableGroup.findTableGroupJoin( parentTableGroup );
@@ -3743,20 +3715,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void prepareForSelection(SqmPath<?> selectionPath) {
-		final SqmPath<?> path;
 		// Don't create joins for plural part paths as that will be handled
 		// through a cardinality preserving mechanism in visitIndexAggregateFunction/visitElementAggregateFunction
-		if ( selectionPath instanceof AbstractSqmSpecificPluralPartPath<?> ) {
-			path = selectionPath.getLhs().getLhs();
-		}
-		else {
-			path = selectionPath;
-		}
+		final SqmPath<?> path =
+				selectionPath instanceof AbstractSqmSpecificPluralPartPath<?>
+						? selectionPath.getLhs().getLhs()
+						: selectionPath;
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 		final TableGroup tableGroup = fromClauseIndex.findTableGroupForGetOrCreate( path.getNavigablePath() );
 		if ( tableGroup == null ) {
 			prepareReusablePath( path, () -> null );
-
 			if ( path.getLhs() != null && !( path instanceof SqmEntityValuedSimplePath<?>
 					|| path instanceof SqmEmbeddedValuedSimplePath<?>
 					|| path instanceof SqmAnyValuedSimplePath<?>
@@ -3792,8 +3760,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 		final ModelPart subPart = parentTableGroup.getModelPart().findSubPart(
 				joinedPath.getReferencedPathSource().getPathName(),
-				lhsPath instanceof SqmTreatedPath<?, ?> && ( (SqmTreatedPath<?, ?>) lhsPath ).getTreatTarget().getPersistenceType() == ENTITY
-						? resolveEntityPersister( (EntityDomainType<?>) ( (SqmTreatedPath<?, ?>) lhsPath ).getTreatTarget() )
+				lhsPath instanceof SqmTreatedPath<?, ?> treatedPath && treatedPath.getTreatTarget().getPersistenceType() == ENTITY
+						? resolveEntityPersister( (EntityDomainType<?>) treatedPath.getTreatTarget() )
 						: null
 		);
 
@@ -3816,23 +3784,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				queryNodeProcessingState.getFromClause().addRoot( tableGroup );
 			}
 			else {
-				final TableGroupJoin compatibleLeftJoin;
-				final SqlAstJoinType sqlAstJoinType;
-				if ( isMappedByOrNotFoundToOne( joinProducer ) ) {
-					compatibleLeftJoin = parentTableGroup.findCompatibleJoin(
-							joinProducer,
-							SqlAstJoinType.LEFT
-					);
-					sqlAstJoinType = SqlAstJoinType.LEFT;
-				}
-				else {
-					compatibleLeftJoin = null;
-					sqlAstJoinType = null;
-				}
-
-				final TableGroup compatibleTableGroup = compatibleLeftJoin != null ?
-						compatibleLeftJoin.getJoinedGroup() :
-						parentTableGroup.findCompatibleJoinedGroup( joinProducer, SqlAstJoinType.INNER );
+				final boolean mappedByOrNotFoundToOne = isMappedByOrNotFoundToOne( joinProducer );
+				final TableGroupJoin compatibleLeftJoin =
+						mappedByOrNotFoundToOne
+								? parentTableGroup.findCompatibleJoin( joinProducer, SqlAstJoinType.LEFT )
+								: null;
+				final SqlAstJoinType sqlAstJoinType = mappedByOrNotFoundToOne ? SqlAstJoinType.LEFT : null;
+				final TableGroup compatibleTableGroup =
+						compatibleLeftJoin != null
+								? compatibleLeftJoin.getJoinedGroup()
+								: parentTableGroup.findCompatibleJoinedGroup( joinProducer, SqlAstJoinType.INNER );
 				if ( compatibleTableGroup == null ) {
 					final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 							joinedPath.getNavigablePath(),
@@ -3877,18 +3838,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private boolean isMappedByOrNotFoundToOne(TableGroupJoinProducer joinProducer) {
 		if ( joinProducer instanceof ToOneAttributeMapping toOne ) {
-			return toOne.hasNotFoundAction() ||
-					// ToOne( mappedBy = "..." ) always has a referenced property name and is the target side
-					( toOne.getReferencedPropertyName() != null && toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET );
+			return toOne.hasNotFoundAction()
+				// ToOne( mappedBy = "..." ) always has a referenced property name and is the target side
+				|| toOne.getReferencedPropertyName() != null && toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET;
 		}
 		return false;
 	}
 
 	private boolean isRecursiveCte(TableGroup tableGroup) {
-		if ( tableGroup instanceof CteTableGroup cteTableGroup ) {
-			return cteContainer.getCteStatement( cteTableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
-		}
-		return false;
+		return tableGroup instanceof CteTableGroup cteTableGroup
+			&& cteContainer.getCteStatement( cteTableGroup.getPrimaryTableReference().getTableId() ).isRecursive();
 	}
 
 	private void registerPluralTableGroupParts(TableGroup tableGroup) {
@@ -4244,18 +4203,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						mapping.getContainingTableExpression()
 				);
 
-				final Expression expression = getSqlExpressionResolver().resolveSqlExpression(
-						tableReference,
-						mapping
-				);
+				final Expression expression =
+						getSqlExpressionResolver()
+								.resolveSqlExpression( tableReference, mapping );
 				final ColumnReference columnReference;
-				if ( expression instanceof ColumnReference ) {
-					columnReference = (ColumnReference) expression;
+				if ( expression instanceof ColumnReference columnRef ) {
+					columnReference = columnRef;
 				}
-				else if ( expression instanceof SqlSelectionExpression ) {
-					final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getSelection().getExpression();
-					assert selectedExpression instanceof ColumnReference;
-					columnReference = (ColumnReference) selectedExpression;
+				else if ( expression instanceof SqlSelectionExpression sqlSelectionExpression ) {
+					columnReference = (ColumnReference) sqlSelectionExpression.getSelection().getExpression();
 				}
 				else {
 					throw new UnsupportedOperationException( "Unsupported basic-valued path expression : " + expression );
@@ -4352,25 +4308,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// producing a literal scalar value, so
 				// we must convert this duration from
 				// nanoseconds to the given unit
-
-				JdbcMappingContainer durationType = scaledExpression.getExpressionType();
-				Duration duration;
-				if ( durationType.getSingleJdbcMapping().getJdbcType().isInterval() ) {
-					// For interval types, we need to extract the epoch for integer arithmetic for the 'by unit' operator
-					duration = new Duration(
-							extractEpoch( scaledExpression ),
-							SECOND,
-							(BasicValuedMapping) durationType
-					);
-				}
-				else {
-					// Durations are stored as nanoseconds (see DurationJavaType)
-					duration = new Duration( scaledExpression, NANOSECOND, (BasicValuedMapping) durationType );
-				}
-
-				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();
-				BasicValuedMapping scalarType = (BasicValuedMapping) appliedByUnit.getNodeType();
-				result = new Conversion( duration, appliedUnit, scalarType );
+				result = unitConversion( scaledExpression );
 			}
 			else {
 				// a "bare" Duration value in nanoseconds
@@ -4381,11 +4319,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return withTreatRestriction( result, sqmPath );
 	}
 
+	private Expression unitConversion(Expression scaledExpression) {
+		final var durationType = (BasicValuedMapping) scaledExpression.getExpressionType();
+		final var scalarType = (BasicValuedMapping) appliedByUnit.getNodeType();
+		final var duration =
+				durationType.getSingleJdbcMapping().getJdbcType().isInterval()
+						// For interval types, we need to extract the epoch for integer arithmetic for the 'by unit' operator
+						? new Duration( extractEpoch( scaledExpression ), SECOND, durationType )
+						// Durations are stored as nanoseconds (see DurationJavaType)
+						: new Duration( scaledExpression, NANOSECOND, durationType );
+		return new Conversion( duration, appliedByUnit.getUnit().getUnit(), scalarType );
+	}
+
 	private Expression extractEpoch(Expression intervalExpression) {
-		final BasicType<Integer> intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
-		final PatternRenderer patternRenderer = new PatternRenderer(
-				creationContext.getDialect().extractPattern( EPOCH )
-		);
+		final var intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		final var patternRenderer = new PatternRenderer( creationContext.getDialect().extractPattern( EPOCH ) );
 		return new SelfRenderingFunctionSqlAstExpression<>(
 				"extract",
 				(sqlAppender, sqlAstArguments, returnType, walker) ->

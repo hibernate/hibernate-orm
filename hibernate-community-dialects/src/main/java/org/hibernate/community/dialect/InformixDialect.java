@@ -105,6 +105,7 @@ import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
+import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers.impliedOrInvariant;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -437,7 +438,7 @@ public class InformixDialect extends Dialect {
 			case HOUR -> "to_number(to_char(?2,'%H'))";
 			case DAY_OF_WEEK -> "(weekday(?2)+1)";
 			case DAY_OF_MONTH -> "day(?2)";
-			case EPOCH -> "(to_number(cast(cast(sum(?2-datetime(1970-1-1) year to day) as interval day(9) to day) as varchar(12)))*86400+to_number(cast(cast(sum(cast(?2 as datetime hour to second)-datetime(00:00:00) hour to second) as interval second(6) to second) as varchar(9))))";
+			case EPOCH -> "(to_number(cast(cast((?2-datetime(1970-1-1) year to day) as interval day(9) to day) as varchar(12)))*86400+to_number(cast(cast((cast(?2 as datetime hour to second)-datetime(00:00:00) hour to second) as interval second(6) to second) as varchar(9))))";
 			default -> "?1(?2)";
 		};
 	}
@@ -730,15 +731,25 @@ public class InformixDialect extends Dialect {
 			return "(?3-?2)";
 		}
 		else {
+			if ( fromTemporalType == TemporalType.DATE && toTemporalType == TemporalType.DATE ) {
+				// special case: subtraction of two dates results in an integer number of days
+				return switch ( unit ) {
+					case NATIVE -> "to_number(cast(?3-?2 as lvarchar))*86400";
+					case YEAR, MONTH -> "to_number(cast(cast(extend(?3,year to month)-extend(?2,year to month) as interval ?1(9) to ?1) as varchar(12)))";
+					case DAY -> "to_number(cast(?3-?2 as lvarchar))";
+					case WEEK -> "floor(to_number(cast(?3-?2 as lvarchar))/7)";
+					default -> "to_number(cast(?3-?2 as lvarchar))" + DAY.conversionFactor( unit, this );
+				};
+			}
 			return switch ( unit ) {
 				case NATIVE ->
 					fromTemporalType == TemporalType.TIME
 							// arguably, we don't really need to retain the milliseconds for a time, since times don't usually come with millis
-							? "(mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))"
-							: "(to_number(cast(cast(sum(?3-?2) as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(sum(?3-?2) as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(sum(?3-?2) as interval fraction to fraction) as varchar(6))))";
-				case SECOND -> "to_number(cast(cast(sum(?3-?2) as interval second(9) to fraction) as varchar(15)))";
-				case NANOSECOND -> "(to_number(cast(cast(sum(?3-?2) as interval second(9) to fraction) as varchar(15)))*1e9)";
-				default -> "to_number(cast(cast(sum(?3-?2) as interval ?1(9) to ?1) as varchar(12)))";
+							? "(mod(to_number(cast(cast(?3-?2 as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(?3-?2 as interval fraction to fraction) as varchar(6))))"
+							: "(to_number(cast(cast(?3-?2 as interval day(9) to day) as varchar(12)))*86400+mod(to_number(cast(cast(?3-?2 as interval second(6) to second) as varchar(9))),86400)+to_number(cast(cast(?3-?2 as interval fraction to fraction) as varchar(6))))";
+				case SECOND -> "to_number(cast(cast(?3-?2 as interval second(9) to fraction) as varchar(15)))";
+				case NANOSECOND -> "(to_number(cast(cast(?3-?2 as interval second(9) to fraction) as varchar(15)))*1e9)";
+				default -> "to_number(cast(cast(?3-?2 as interval ?1(9) to ?1) as varchar(12)))";
 			};
 		}
 	}

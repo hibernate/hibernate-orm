@@ -349,6 +349,7 @@ public class InformixDialect extends Dialect {
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 		functionFactory.varPop_sumCount();
+		functionFactory.hypotheticalOrderedSetAggregates();
 
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();

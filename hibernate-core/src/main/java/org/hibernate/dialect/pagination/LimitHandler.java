@@ -47,6 +47,11 @@ public interface LimitHandler {
 		return processSql( sql, limit );
 	}
 
+	/**
+	* Currently all Dialects with non-standard native parameter renderers invariably rely on {@link OffsetFetchLimitHandler},
+	* so the method below is currently only overridden in it. However, if other {@link LimitHandler}s are involved in the future
+	* (e.g. {@link Limit} related parameters need to be inserted after select), code refactoring is required (HHH-18624).
+	*/
 	// This is the one called directly by Hibernate ORM
 	default String processSql(String sql, int jdbcParameterBindingsCnt, ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
 		return processSql( sql, limit );

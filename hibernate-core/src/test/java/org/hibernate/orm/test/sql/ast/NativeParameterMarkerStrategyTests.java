@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 ) )
 @DomainModel( annotatedClasses = NativeParameterMarkerStrategyTests.Book.class )
 @SessionFactory( useCollectingStatementInspector = true )
-@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNativeParameterMarker.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNonStandardNativeParameterRendering.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16283" )
 class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 
@@ -52,6 +52,9 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 	}
 
 	public static class DialectParameterMarkerStrategy implements ParameterMarkerStrategy {
+
+		public static final DialectParameterMarkerStrategy INSTANCE = new DialectParameterMarkerStrategy();
+
 		@Override
 		public String createMarker(int position, JdbcType jdbcType) {
 			return DialectContext.getDialect().getNativeParameterMarkerStrategy().createMarker( position, jdbcType );
@@ -76,17 +79,17 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 	@EnumSource(ParameterStyle.class)
 	void testHappyPath(ParameterStyle style) {
 		scope.inTransaction( (session) -> {
-			final NativeQueryImplementor<Integer> nativeQuery;
+			final NativeQueryImplementor<Book> nativeQuery;
 			final var parameterValue = "War and Peace";
 			if ( style == ParameterStyle.NAMED ) {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.title = :title", Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.title = :title", Book.class )
 						.setParameter( "title",  parameterValue );
 			} else {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.title = " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.title = " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Book.class )
 						.setParameter( 1, parameterValue );
 			};
-			nativeQuery.uniqueResult();
-			assertNativeQueryContainsMarkers( statementInspector, 1 );
+			nativeQuery.list();
+			assertNativeQueryContainsMarkers( 1 );
 		} );
 	}
 
@@ -96,16 +99,16 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 		final var parameterValue = List.of( "Moby-Dick", "Don Quixote", "In Search of Lost Time" );
 
 		scope.inTransaction( (session) -> {
-			final NativeQuery<Integer> nativeQuery;
+			final NativeQuery<Book> nativeQuery;
 			if ( style == ParameterStyle.NAMED ) {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.title in :titles", Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.title in :titles", Book.class )
 						.setParameterList( "titles", parameterValue );
 			} else {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.title in " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.title in " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Book.class )
 						.setParameterList( 1, parameterValue );
 			};
 			nativeQuery.list();
-			assertNativeQueryContainsMarkers( statementInspector, parameterValue.size() );
+			assertNativeQueryContainsMarkers( parameterValue.size() );
 		} );
 	}
 
@@ -113,18 +116,18 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 	@EnumSource(ParameterStyle.class)
 	void testLimitHandler(ParameterStyle style) {
 		scope.inTransaction( (session) -> {
-			final NativeQueryImplementor<Integer> nativeQuery;
+			final NativeQueryImplementor<Book> nativeQuery;
 			final var parameterValue = "Herman Melville";
 			if ( style == ParameterStyle.NAMED ) {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.author = :author", Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.author = :author", Book.class )
 						.setParameter( "author", parameterValue );
 			} else {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.author = " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.author = " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Book.class )
 						.setParameter( 1, parameterValue );
 			};
 			nativeQuery.setFirstResult( 2 ).setMaxResults( 1 ).list();
 
-			assertNativeQueryContainsMarkers( statementInspector, 3 );
+			assertNativeQueryContainsMarkers( 3 );
 		} );
 	}
 
@@ -134,26 +137,26 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 		final var parameterValue = List.of( "Moby-Dick", "Don Quixote", "In Search of Lost Time" );
 
 		scope.inTransaction( (session) -> {
-			final NativeQueryImplementor<Integer> nativeQuery;
+			final NativeQueryImplementor<Book> nativeQuery;
 			if ( style == ParameterStyle.NAMED ) {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.title in :titles", Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.title in :titles", Book.class )
 						.setParameterList( "titles", parameterValue );
 			} else {
-				nativeQuery = session.createNativeQuery( "select * from books b where b.title in " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Integer.class )
+				nativeQuery = session.createNativeQuery( "select * from books b where b.title in " + ( style == ParameterStyle.ORDINAL ? "?1" : "?" ), Book.class )
 						.setParameterList( 1, parameterValue );
 			};
 			nativeQuery.setFirstResult( 1 ).setMaxResults( 3 ).list();
 
-			assertNativeQueryContainsMarkers( statementInspector, parameterValue.size() + 2 );
+			assertNativeQueryContainsMarkers( parameterValue.size() + 2 );
 		} );
 	}
 
-	private void assertNativeQueryContainsMarkers(SQLStatementInspector statementInspector, int expectedMarkerNum) {
+	private void assertNativeQueryContainsMarkers(int expectedMarkerNum) {
 
-		final var strategy = new DialectParameterMarkerStrategy();
+		final var strategy = DialectParameterMarkerStrategy.INSTANCE;
 
 		final var expectedMarkers = new String[expectedMarkerNum];
-		for (int i = 1; i <= expectedMarkerNum; i++) {
+		for ( int i = 1; i <= expectedMarkerNum; i++ ) {
 			expectedMarkers[i - 1] = strategy.createMarker( i, IntegerJdbcType.INSTANCE );
 		}
 
@@ -168,9 +171,8 @@ class NativeParameterMarkerStrategyTests implements SessionFactoryScopeAware {
 	@Table(name = "books")
 	static class Book {
 		@Id
-		String isbn;
+		int id;
 		String title;
 		String author;
 	}
-
 }

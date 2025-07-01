@@ -81,6 +81,7 @@ import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.type.SqlTypes;
@@ -1035,10 +1036,10 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsNativeParameterMarker implements DialectFeatureCheck {
+	public static class SupportsNonStandardNativeParameterRendering implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return dialect.getNativeParameterMarkerStrategy() != null;
+			return !ParameterMarkerStrategyStandard.isStandardRenderer( dialect.getNativeParameterMarkerStrategy() );
 		}
 	}
 

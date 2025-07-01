@@ -21,7 +21,7 @@ dependencies {
 
 	implementation "jakarta.inject:jakarta.inject-api:2.0.0"
 
-	implementation 'io.smallrye:jandex:3.1.2'
+	implementation 'io.smallrye:jandex:3.3.1'
 	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 	implementation 'jakarta.json.bind:jakarta.json.bind-api:2.0.0'
 	implementation 'jakarta.json:jakarta.json-api:2.0.1'

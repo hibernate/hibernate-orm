@@ -685,9 +685,8 @@ public class SqmUtil {
 		if ( domainParamBinding.getType() instanceof JdbcMapping mapping ) {
 			return mapping;
 		}
-		// TODO: why do the test and the cast disagree here? getBindType() vs getType()
 		else if ( domainParamBinding.getBindType() instanceof BasicValuedMapping ) {
-			return ( (BasicValuedMapping) domainParamBinding.getType() ).getJdbcMapping();
+			return ( (BasicValuedMapping) domainParamBinding.getBindType() ).getJdbcMapping();
 		}
 		else {
 			return null;

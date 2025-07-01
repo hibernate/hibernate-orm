@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -68,6 +70,10 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
+		if ( getDialect() instanceof InformixDialect ) {
+			options.put( AvailableSettings.ISOLATION,
+					Connection.TRANSACTION_REPEATABLE_READ );
+		}
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 //		options.remove( AvailableSettings.CONNECTION_PROVIDER );
 	}

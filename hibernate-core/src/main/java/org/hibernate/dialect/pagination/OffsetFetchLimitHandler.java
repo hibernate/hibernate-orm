@@ -4,6 +4,7 @@
  */
 package org.hibernate.dialect.pagination;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
@@ -34,7 +35,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String processSql(String sql, int jdbcParameterBindingsCnt, ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
+	public String processSql(String sql, int jdbcParameterBindingsCnt, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, Limit limit, QueryOptions queryOptions) {
 		boolean hasFirstRow = hasFirstRow(limit);
 		boolean hasMaxRows = hasMaxRows(limit);
 
@@ -46,6 +47,9 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 
 		begin(sql, offsetFetch, hasFirstRow, hasMaxRows);
 
+		if (parameterMarkerStrategy == null) {
+			parameterMarkerStrategy = ParameterMarkerStrategyStandard.INSTANCE;
+		}
 		if ( hasFirstRow ) {
 			offsetFetch.append( " offset " );
 			if ( supportsVariableLimit() ) {

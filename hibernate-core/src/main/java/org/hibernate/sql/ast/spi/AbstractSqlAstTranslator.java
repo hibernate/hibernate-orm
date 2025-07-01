@@ -3657,31 +3657,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				this.queryPartForRowNumbering = null;
 				this.queryPartForRowNumberingClauseDepth = -1;
 			}
-			String queryGroupAlias = null;
-			if ( currentQueryPart instanceof QueryGroup ) {
-				// We always need query wrapping if we are in a query group and this query spec has a fetch or order by
-				// clause, because of order by precedence in SQL
-				if ( querySpec.hasOffsetOrFetchClause() || querySpec.hasSortSpecifications() ) {
-					queryGroupAlias = "";
-					// If the parent is a query group with a fetch clause we must use a select wrapper,
-					// or if the database does not support simple query grouping, we must use a select wrapper
-					if ( ( !dialect.supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
-							// We can skip it though if this query spec is being row numbered,
-							// because then we already have a wrapper
-							&& queryPartForRowNumbering != querySpec ) {
-						queryGroupAlias = " grp_" + queryGroupAliasCounter + '_';
-						queryGroupAliasCounter++;
-						appendSql( "select" );
-						appendSql( queryGroupAlias );
-						appendSql( ".* from " );
-						// We need to assign aliases when we render a query spec as subquery to avoid clashing aliases
-						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
-					}
-					else if ( !dialect.supportsDuplicateSelectItemsInQueryGroup() ) {
-						this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
-					}
-				}
-			}
+			final String queryGroupAlias =
+					wrapQueryPartsIfNecessary(
+							querySpec,
+							currentQueryPart,
+							queryPartForRowNumbering
+					);
 			queryPartStack.push( querySpec );
 			if ( queryGroupAlias != null ) {
 				appendSql( OPEN_PARENTHESIS );
@@ -3707,6 +3688,40 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( queryPartForRowNumbering == null ) {
 				this.forUpdate = forUpdate;
 			}
+		}
+	}
+
+	private String wrapQueryPartsIfNecessary(
+			QuerySpec querySpec, QueryPart currentQueryPart, QueryPart queryPartForRowNumbering) {
+		// We always need query wrapping if we are in a query group and if this query
+		// spec has a fetch or order by clause, because of order by precedence in SQL
+		if ( currentQueryPart instanceof QueryGroup
+				&& ( querySpec.hasOffsetOrFetchClause() || querySpec.hasSortSpecifications() ) ) {
+			// If the parent is a query group with a fetch clause, we must use a select wrapper
+			// Or, if the database does not support simple query grouping, we must use a select wrapper
+			if ( ( !dialect.supportsSimpleQueryGrouping() || currentQueryPart.hasOffsetOrFetchClause() )
+					// We can skip it though if this query spec is being row numbered,
+					// because then we already have a wrapper
+					&& queryPartForRowNumbering != querySpec ) {
+				final String queryGroupAlias = " grp_" + queryGroupAliasCounter + '_';
+				queryGroupAliasCounter++;
+				appendSql( "select" );
+				appendSql( queryGroupAlias );
+				appendSql( ".* from " );
+				// We need to assign aliases when we render a query spec as subquery to avoid clashing aliases
+				this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
+				return queryGroupAlias;
+			}
+			else if ( !dialect.supportsDuplicateSelectItemsInQueryGroup() ) {
+				this.needsSelectAliases = this.needsSelectAliases || hasDuplicateSelectItems( querySpec );
+				return "";
+			}
+			else {
+				return "";
+			}
+		}
+		else {
+			return null;
 		}
 	}
 

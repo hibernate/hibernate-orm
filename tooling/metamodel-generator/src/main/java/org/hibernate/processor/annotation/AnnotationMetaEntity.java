@@ -95,6 +95,7 @@ import static org.hibernate.processor.util.TypeUtils.findMappedSuperElement;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
+import static org.hibernate.processor.util.TypeUtils.getInheritedAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
@@ -703,9 +704,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable TypeMirror findIdType() {
-		Element idMember = findIdMember();
 		TypeElement primaryEntityForTest = primaryEntity;
-		if ( idMember != null && primaryEntityForTest != null ) {
+		if ( primaryEntityForTest == null ) {
+			return null;
+		}
+		AnnotationMirror idClass = getInheritedAnnotationMirror( this.context.getElementUtils(), primaryEntityForTest, ID_CLASS );
+		if ( idClass != null ) {
+			AnnotationValue value = getAnnotationValue(idClass, "value" );
+			// I don't think this can have a null value
+			if ( value != null ) {
+				return (TypeMirror) value.getValue();
+			}
+		}
+		Element idMember = findIdMember();
+		if ( idMember != null ) {
 			TypeMirror typedIdMember = this.context.getTypeUtils().asMemberOf((DeclaredType) primaryEntityForTest.asType(), idMember);
 			return switch(typedIdMember.getKind()) {
 				case ARRAY, DECLARED, BOOLEAN, BYTE, CHAR, SHORT, INT, LONG, FLOAT, DOUBLE -> typedIdMember;

@@ -4,13 +4,16 @@
  */
 package org.hibernate.orm.test.jpa.lock;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.LockModeType;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
@@ -48,6 +51,10 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 			org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
 			CONNECTION_PROVIDER
 		);
+		if ( getDialect() instanceof InformixDialect ) {
+			config.put( AvailableSettings.ISOLATION,
+					Connection.TRANSACTION_REPEATABLE_READ );
+		}
 		return config;
 	}
 

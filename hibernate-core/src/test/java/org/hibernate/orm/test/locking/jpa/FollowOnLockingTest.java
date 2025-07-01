@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -39,6 +40,8 @@ import static org.assertj.core.api.Assertions.fail;
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach allows the concurrent access but cancels one or both transactions at the end")
 @SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Timeouts don't work on Oracle 11 when using a driver other than ojdbc6, but we can't test with that driver")
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support timeout in statement level")
+@SkipForDialect(dialectClass = InformixDialect.class, reason = "Test requires REPEATABLE_READ (and then it passes)")
+//@ServiceRegistry(settings = @Setting(name = AvailableSettings.ISOLATION, value = "REPEATABLE_READ"))
 public class FollowOnLockingTest {
 
 	@Test

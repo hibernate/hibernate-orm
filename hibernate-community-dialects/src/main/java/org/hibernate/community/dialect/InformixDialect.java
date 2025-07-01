@@ -314,6 +314,11 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean doesReadCommittedCauseWritersToBlockReaders() {
+		return true;
+	}
+
+	@Override
 	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
 		return SelectItemReferenceStrategy.POSITION;
 	}

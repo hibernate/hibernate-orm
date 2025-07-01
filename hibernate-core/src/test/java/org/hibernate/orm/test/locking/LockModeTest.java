@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.locking;
 
+import java.sql.Connection;
 import java.util.Collections;
 
 import jakarta.persistence.LockModeType;
@@ -14,7 +15,9 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -62,6 +65,10 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 		super.applySettings( ssrBuilder );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
 //		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
+		if ( getDialect() instanceof InformixDialect ) {
+			ssrBuilder.applySetting( AvailableSettings.ISOLATION,
+					Connection.TRANSACTION_REPEATABLE_READ );
+		}
 	}
 
 	@BeforeEach

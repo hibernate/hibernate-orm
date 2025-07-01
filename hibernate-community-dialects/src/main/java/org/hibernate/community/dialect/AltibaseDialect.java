@@ -591,6 +591,11 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCrossJoin() {
+		return false;
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return AltibaseSequenceSupport.INSTANCE;
 	}

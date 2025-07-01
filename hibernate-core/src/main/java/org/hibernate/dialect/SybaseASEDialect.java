@@ -764,4 +764,8 @@ public class SybaseASEDialect extends SybaseDialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsCrossJoin() {
+		return false;
+	}
 }

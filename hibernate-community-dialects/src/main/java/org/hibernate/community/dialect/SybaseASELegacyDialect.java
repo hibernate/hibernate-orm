@@ -739,4 +739,8 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 		return true;
 	}
 
+	@Override
+	public boolean supportsCrossJoin() {
+		return false;
+	}
 }

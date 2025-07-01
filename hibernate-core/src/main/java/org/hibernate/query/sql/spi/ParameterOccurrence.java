@@ -10,4 +10,8 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  * @author Christian Beikov
  */
 public record ParameterOccurrence(QueryParameterImplementor<?> parameter, int sourcePosition, int length) {
+    @Deprecated(forRemoval = true)
+    public ParameterOccurrence(QueryParameterImplementor<?> parameter, int sourcePosition) {
+        this( parameter, sourcePosition, 1 );
+    }
 }

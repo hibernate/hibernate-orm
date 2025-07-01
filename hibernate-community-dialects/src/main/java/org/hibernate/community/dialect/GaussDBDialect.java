@@ -17,6 +17,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.GaussDBIdentityColumnSupport;
 import org.hibernate.community.dialect.sequence.GaussDBSequenceSupport;
+import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -445,9 +446,28 @@ public class GaussDBDialect extends Dialect {
 		if ( from == CastType.STRING && to == CastType.BOOLEAN ) {
 			return "cast(?1 as ?2)";
 		}
-		else {
-			return super.castPattern( from, to );
+
+		if ( to == CastType.STRING ) {
+			switch ( from ) {
+				case BOOLEAN:
+				case INTEGER_BOOLEAN:
+				case TF_BOOLEAN:
+				case YN_BOOLEAN:
+					return BooleanDecoder.toString( from );
+				case DATE:
+					return "to_char(?1,'YYYY-MM-DD')";
+				case TIME:
+					return "cast(?1 as ?2)";
+				case TIMESTAMP:
+					return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9')";
+				case OFFSET_TIMESTAMP:
+					return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9TZH:TZM')";
+				case ZONE_TIMESTAMP:
+					return "to_char(?1,'YYYY-MM-DD HH24:MI:SS.FF9 TZR')";
+			}
 		}
+
+		return super.castPattern( from, to );
 	}
 
 	/**

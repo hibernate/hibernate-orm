@@ -25,14 +25,13 @@ import jakarta.persistence.ParameterMode;
  *
  * @author liubao
  *
- * Notes: Original code of this class is based on PostgreSQLTruncFunction.
+ * Notes: Original code of this class is based on PostgreSQLCallableStatementSupport.
  */
 public class GaussDBCallableStatementSupport extends AbstractStandardCallableStatementSupport {
 	/**
 	 * Singleton access
 	 */
 	public static final GaussDBCallableStatementSupport INSTANCE = new GaussDBCallableStatementSupport( true );
-	public static final GaussDBCallableStatementSupport V10_INSTANCE = new GaussDBCallableStatementSupport( false );
 
 	private final boolean supportsProcedures;
 
@@ -79,11 +78,6 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 					callMode = CallMode.TABLE_FUNCTION;
 					startIndex = 0;
 					jdbcParameterOffset = 1;
-					// Old style
-//					callMode = CallMode.CALL_RETURN;
-//					startIndex = 0;
-//					jdbcParameterOffset = 2;
-//					builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( procedureCall.getSession() ) );
 				}
 			}
 			else {
@@ -178,7 +172,5 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 			this.start = start;
 			this.end = end;
 		}
-
 	}
-
 }

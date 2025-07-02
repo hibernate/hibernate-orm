@@ -18,7 +18,6 @@ import org.hibernate.testing.logger.LogListener;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Jpa(annotatedClasses = DataSourceTest.TestEntity.class,
 		integrationSettings = @Setting(name = JdbcSettings.CONNECTION_PROVIDER,
 				value = "org.hibernate.orm.test.datasource.TestDataSourceConnectionProvider"))
-@SkipForDialect(dialectClass = DB2Dialect.class)
 public class DataSourceTest {
 	@Test
 	void test(EntityManagerFactoryScope scope) {
@@ -39,6 +37,7 @@ public class DataSourceTest {
 		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.INSTANCE );
 		Dialect dialect = scope.getDialect();
 		assertTrue( dialect instanceof OracleDialect od && od.isAutonomous()
+					|| dialect instanceof DB2Dialect
 					|| dialect instanceof InformixDialect // Informix metadata does not include the URL
 					|| listener.seen );
 	}

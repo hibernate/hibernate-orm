@@ -146,14 +146,14 @@ public class InformixDialect extends Dialect {
 				ForeignKey foreignKey,
 				Metadata metadata,
 				SqlStringGenerationContext context) {
-			String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
+			final String[] results = super.getSqlCreateStrings( foreignKey, metadata, context );
 			for ( int i = 0; i < results.length; i++ ) {
-				String result = results[i];
+				final String result = results[i];
 				if ( result.contains( " on delete " ) ) {
-					String constraintName = "constraint " + foreignKey.getName();
-					result = result.replace( constraintName + " ", "" );
-					result = result + " " + constraintName;
-					results[i] = result;
+					final String constraintName = "constraint " + foreignKey.getName();
+					results[i] =
+							result.replace( constraintName + " ", "" )
+									+ " " + constraintName;
 				}
 			}
 			return results;
@@ -174,11 +174,12 @@ public class InformixDialect extends Dialect {
 				}
 				constraint.append( column.getQuotedName( dialect ) );
 			}
-			constraint.append(')');
+			constraint.append( ')' );
 			final UniqueKey orderingUniqueKey = key.getOrderingUniqueKey();
 			if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
 				constraint.append( " constraint " )
-						.append( orderingUniqueKey.getName() ).append( ' ' );
+						.append( orderingUniqueKey.getName() )
+						.append( ' ' );
 			}
 			return constraint.toString();
 		}
@@ -356,11 +357,11 @@ public class InformixDialect extends Dialect {
 		functionFactory.variance();
 		functionFactory.bitLength_pattern( "length(?1)*8" );
 		functionFactory.varPop_sumCount();
-		functionFactory.hypotheticalOrderedSetAggregates();
 
 		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
-		final BasicType<String> stringBasicType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
+		final BasicType<String> stringBasicType =
+				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING );
 
 		functionRegistry.registerAlternateKey( "var_samp", "variance" );
 
@@ -378,8 +379,10 @@ public class InformixDialect extends Dialect {
 				.setArgumentTypeResolver( impliedOrInvariant( typeConfiguration, STRING ) )
 				.setArgumentListSignature( "(STRING string, STRING pattern)" )
 				.register();
+
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
+			functionFactory.hypotheticalOrderedSetAggregates();
 		}
 
 		functionRegistry.register( "overlay",

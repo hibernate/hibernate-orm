@@ -915,6 +915,9 @@ public class FunctionTests {
 							is(".....hello"));
 					assertThat(session.createQuery("select pad('hello' with 10 trailing '.')", String.class).getSingleResult(),
 							is("hello....."));
+
+					assertThat(session.createQuery("select pad(:hello with 10 leading)", String.class).setParameter( "hello", "hello" ).getSingleResult(),
+							is("     hello"));
 				}
 		);
 
@@ -2019,6 +2022,10 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select (e.theDate - e.theDate) by day from EntityOfBasics e", Long.class)
 							.list();
+
+					//TODO
+//					session.createQuery("select (e.theDate - e.theDate) by week from EntityOfBasics e", Long.class)
+//							.list();
 
 					session.createQuery("select (e.theTimestamp - e.theTimestamp) by hour from EntityOfBasics e", Long.class)
 							.list();

@@ -50,12 +50,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private final JdbcEventHandler jdbcEventHandler;
 
 	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
-	private HashMap<ResultSet,Object> unassociatedResultSets;
 
-	private ArrayList<Blob> blobs;
-	private ArrayList<Clob> clobs;
-	private ArrayList<NClob> nclobs;
-
+	private ExtendedState ext;
 	private Statement lastQuery;
 
 	public ResourceRegistryStandardImpl() {
@@ -69,10 +65,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public boolean hasRegisteredResources() {
 		return hasRegistered( xref )
-			|| hasRegistered( unassociatedResultSets )
-			|| hasRegistered( blobs )
-			|| hasRegistered( clobs )
-			|| hasRegistered( nclobs );
+			|| ext != null && ext.hasRegisteredResources();
 	}
 
 	@Override
@@ -142,9 +135,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		else {
-			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.remove( resultSet );
-			if ( removed == null ) {
-				log.unregisteredResultSetWithoutStatement();
+			if ( ext != null ) {
+				ext.releaseUnassociatedResult( resultSet );
 			}
 		}
 		close( resultSet );
@@ -241,11 +233,15 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			resultSets.put( resultSet, PRESENT );
 		}
 		else {
-			if ( unassociatedResultSets == null ) {
-				this.unassociatedResultSets = new HashMap<>();
-			}
-			unassociatedResultSets.put( resultSet, PRESENT );
+			getExtendedStateForWrite().storeUnassociatedResultset( resultSet );
 		}
+	}
+
+	private ExtendedState getExtendedStateForWrite() {
+		if ( this.ext == null ) {
+			this.ext = new ExtendedState();
+		}
+		return this.ext;
 	}
 
 	private JDBCException convert(SQLException e, String s) {
@@ -254,56 +250,46 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void register(Blob blob) {
-		if ( blobs == null ) {
-			blobs = new ArrayList<>();
-		}
-
-		blobs.add( blob );
+		getExtendedStateForWrite().registerBlob( blob );
 	}
 
 	@Override
-	public void release(Blob blob) {
-		if ( blobs == null ) {
+	public void release(final Blob blob) {
+		if ( ext == null || ext.blobs == null ) {
 			log.debug( "Request to release Blob, but appears no Blobs have ever been registered" );
 			return;
 		}
-		blobs.remove( blob );
+		ext.blobs.remove( blob );
 	}
 
 	@Override
-	public void register(Clob clob) {
-		if ( clobs == null ) {
-			clobs = new ArrayList<>();
-		}
-		clobs.add( clob );
+	public void register(final Clob clob) {
+		getExtendedStateForWrite().registerClob( clob );
 	}
 
 	@Override
-	public void release(Clob clob) {
-		if ( clobs == null ) {
+	public void release(final Clob clob) {
+		if ( ext == null || ext.clobs == null ) {
 			log.debug( "Request to release Clob, but appears no Clobs have ever been registered" );
 			return;
 		}
-		clobs.remove( clob );
+		ext.clobs.remove( clob );
 	}
 
 	@Override
-	public void register(NClob nclob) {
+	public void register(final NClob nclob) {
 		// todo : just store them in clobs?
-		if ( nclobs == null ) {
-			nclobs = new ArrayList<>();
-		}
-		nclobs.add( nclob );
+		getExtendedStateForWrite().registerNClob( nclob );
 	}
 
 	@Override
 	public void release(NClob nclob) {
 		// todo : just store them in clobs?
-		if ( nclobs == null ) {
+		if ( ext == null || ext.nclobs == null ) {
 			log.debug( "Request to release NClob, but appears no NClobs have ever been registered" );
 			return;
 		}
-		nclobs.remove( nclob );
+		ext.nclobs.remove( nclob );
 	}
 
 	@Override
@@ -332,43 +318,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		xref.forEach( ResourceRegistryStandardImpl::releaseXref );
 		xref.clear();
 
-		closeAll( unassociatedResultSets );
-
-		if ( blobs != null ) {
-			blobs.forEach( blob -> {
-				try {
-					blob.free();
-				}
-				catch (SQLException e) {
-					log.debugf( "Unable to free JDBC Blob reference [%s]", e.getMessage() );
-				}
-			} );
-			//for these, it seems better to null the map rather than clear it:
-			blobs = null;
-		}
-
-		if ( clobs != null ) {
-			clobs.forEach( clob -> {
-				try {
-					clob.free();
-				}
-				catch (SQLException e) {
-					log.debugf( "Unable to free JDBC Clob reference [%s]", e.getMessage() );
-				}
-			} );
-			clobs = null;
-		}
-
-		if ( nclobs != null ) {
-			nclobs.forEach( nclob -> {
-				try {
-					nclob.free();
-				}
-				catch (SQLException e) {
-					log.debugf( "Unable to free JDBC NClob reference [%s]", e.getMessage() );
-				}
-			} );
-			nclobs = null;
+		if ( ext != null ) {
+			ext.releaseResources();
 		}
 
 		if ( jdbcEventHandler != null ) {
@@ -376,11 +327,109 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	private boolean hasRegistered(final HashMap resource) {
+	private static boolean hasRegistered(final HashMap resource) {
 		return resource != null && !resource.isEmpty();
 	}
 
-	private boolean hasRegistered(final ArrayList resource) {
+	private static boolean hasRegistered(final ArrayList resource) {
 		return resource != null && !resource.isEmpty();
+	}
+
+	/**
+	 * Keeping this state separate from the main instance state as these are less-so commonly
+	 * used: this keeps memory pressure low and the code a bit more organized.
+	 * This implies that instances of ExtendedState should be lazily initialized, and access
+	 * carefully guarded against null.
+	 */
+	private static class ExtendedState {
+		//All fields lazily initialized as well:
+		private HashMap<ResultSet,Object> unassociatedResultSets;
+		private ArrayList<Blob> blobs;
+		private ArrayList<Clob> clobs;
+		private ArrayList<NClob> nclobs;
+
+		public boolean hasRegisteredResources() {
+			return hasRegistered( unassociatedResultSets )
+				|| hasRegistered( blobs )
+				|| hasRegistered( clobs )
+				|| hasRegistered( nclobs );
+		}
+
+		public void releaseUnassociatedResult(final ResultSet resultSet) {
+			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.remove( resultSet );
+			if ( removed == null ) {
+				log.unregisteredResultSetWithoutStatement();
+			}
+		}
+
+		public void storeUnassociatedResultset(ResultSet resultSet) {
+			if ( unassociatedResultSets == null ) {
+				this.unassociatedResultSets = new HashMap<>();
+			}
+			unassociatedResultSets.put( resultSet, PRESENT );
+		}
+
+		public void registerBlob(final Blob blob) {
+			if ( blobs == null ) {
+				blobs = new ArrayList<>();
+			}
+
+			blobs.add( blob );
+		}
+
+		public void registerClob(final Clob clob) {
+			if ( clobs == null ) {
+				clobs = new ArrayList<>();
+			}
+			clobs.add( clob );
+		}
+
+		public void registerNClob(final NClob nclob) {
+			if ( nclobs == null ) {
+				nclobs = new ArrayList<>();
+			}
+			nclobs.add( nclob );
+		}
+
+		public void releaseResources() {
+			closeAll( unassociatedResultSets );
+
+			if ( blobs != null ) {
+				blobs.forEach( blob -> {
+					try {
+						blob.free();
+					}
+					catch (SQLException e) {
+						log.debugf( "Unable to free JDBC Blob reference [%s]", e.getMessage() );
+					}
+				} );
+				//for these, it seems better to null the map rather than clear it:
+				blobs = null;
+			}
+
+			if ( clobs != null ) {
+				clobs.forEach( clob -> {
+					try {
+						clob.free();
+					}
+					catch (SQLException e) {
+						log.debugf( "Unable to free JDBC Clob reference [%s]", e.getMessage() );
+					}
+				} );
+				clobs = null;
+			}
+
+			if ( nclobs != null ) {
+				nclobs.forEach( nclob -> {
+					try {
+						nclob.free();
+					}
+					catch (SQLException e) {
+						log.debugf( "Unable to free JDBC NClob reference [%s]", e.getMessage() );
+					}
+				} );
+				nclobs = null;
+			}
+		}
 	}
 }

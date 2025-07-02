@@ -38,6 +38,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -391,6 +392,12 @@ public class InformixDialect extends Dialect {
 
 		functionRegistry.register( "overlay",
 				new InsertSubstringOverlayEmulation( typeConfiguration, true ) );
+
+		functionRegistry.namedDescriptorBuilder( "coalesce" )
+				.setMinArgumentCount( 1 )
+				.setArgumentRenderingMode( SqlAstNodeRenderingMode.INLINE_PARAMETERS )
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
+				.register();
 	}
 
 	@Override

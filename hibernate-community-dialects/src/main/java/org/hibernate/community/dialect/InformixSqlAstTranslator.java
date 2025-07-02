@@ -20,7 +20,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -191,18 +190,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 	}
 
-//	@Override
-//	protected void renderNull(Literal literal) {
-//		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.NO_UNTYPED ) {
-//			renderCasted( literal );
-//		}
-//		else {
-//			int sqlType = literal.getExpressionType().getSingleJdbcMapping().getJdbcType().getJdbcTypeCode();
-//			String nullString = getDialect().getSelectClauseNullString( sqlType, getSessionFactory().getTypeConfiguration() );
-//			appendSql( nullString );
-//		}
-//	}
-
 	@Override
 	protected void renderInsertIntoNoColumns(TableInsertStandard tableInsert) {
 		renderIntoIntoAndTable( tableInsert );
@@ -245,7 +232,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-			   && getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+			&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -292,26 +279,6 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 		else {
 			super.visitArithmeticOperand( expression );
-		}
-	}
-
-	private static boolean isStringFunctionWithParameterArg(SelfRenderingExpression expression) {
-		return expression instanceof FunctionExpression fn
-			&& expression.getExpressionType() != null
-			&& expression.getExpressionType().getJdbcTypeCount() == 1
-			&& expression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-			&& fn.getArguments().stream().anyMatch( arg -> arg instanceof SqmParameterInterpretation );
-	}
-
-	@Override
-	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		if ( isStringFunctionWithParameterArg( expression ) ) {
-			append( "cast(" );
-			super.visitSelfRenderingExpression( expression );
-			append( " as lvarchar)" );
-		}
-		else {
-			super.visitSelfRenderingExpression( expression );
 		}
 	}
 

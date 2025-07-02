@@ -29,6 +29,7 @@ import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -393,11 +394,17 @@ public class InformixDialect extends Dialect {
 		functionRegistry.register( "overlay",
 				new InsertSubstringOverlayEmulation( typeConfiguration, true ) );
 
+		// coalesce() has a bug where it does not accept parameters
+		// as arguments, even with a cast (on Informix 14)
 		functionRegistry.namedDescriptorBuilder( "coalesce" )
 				.setMinArgumentCount( 1 )
 				.setArgumentRenderingMode( SqlAstNodeRenderingMode.INLINE_PARAMETERS )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
+
+		// parameter arguments to trim() require a cast
+		functionContributions.getFunctionRegistry().register( "trim",
+				new TrimFunction( this, typeConfiguration, SqlAstNodeRenderingMode.NO_UNTYPED ) );
 	}
 
 	@Override

@@ -295,35 +295,41 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 	}
 
+	private static boolean isStringFunctionWithParameterArg(SelfRenderingExpression expression) {
+		return expression instanceof FunctionExpression fn
+			&& expression.getExpressionType() != null
+			&& expression.getExpressionType().getJdbcTypeCount() == 1
+			&& expression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
+			&& fn.getArguments().stream().anyMatch( arg -> arg instanceof SqmParameterInterpretation );
+	}
+
 	@Override
 	public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-		final boolean isStringFunctionWithParameterArg =
-				expression instanceof FunctionExpression fn
-					&& expression.getExpressionType() != null
-					&& expression.getExpressionType().getJdbcTypeCount() == 1
-					&& expression.getExpressionType().getSingleJdbcMapping().getJdbcType().isString()
-					&& fn.getArguments().stream().anyMatch( arg -> arg instanceof SqmParameterInterpretation );
-		if ( isStringFunctionWithParameterArg ) {
+		if ( isStringFunctionWithParameterArg( expression ) ) {
 			append( "cast(" );
-		}
-		super.visitSelfRenderingExpression( expression );
-		if ( isStringFunctionWithParameterArg ) {
+			super.visitSelfRenderingExpression( expression );
 			append( " as lvarchar)" );
+		}
+		else {
+			super.visitSelfRenderingExpression( expression );
 		}
 	}
 
+	private static boolean isConcatFunction(Expression expression) {
+		return expression instanceof FunctionExpression fn
+			&& fn.getFunctionName().equals( "concat" );
+	}
+
 	private void caseArgument(Expression expression) {
-		// concatenation inside a case must be cast to varchar(255)
-		// or we get a bunch of trailing whitespace
-		final boolean concat =
-				expression instanceof FunctionExpression fn
-						&& fn.getFunctionName().equals( "concat" );
-		if ( concat ) {
+		if ( isConcatFunction( expression ) ) {
+			// concatenation inside a case must be cast to varchar(255)
+			// or we get a bunch of trailing whitespace
 			append( "cast(" );
-		}
-		expression.accept( this );
-		if ( concat ) {
+			expression.accept( this );
 			append( " as varchar(255))");
+		}
+		else {
+			expression.accept( this );
 		}
 	}
 

@@ -11,9 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -40,17 +38,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
 	private static final boolean IS_TRACE_ENABLED = log.isTraceEnabled();
 
-	// Dummy value to associate with an Object in the backing Map when we use it as a set:
-	private static final Object PRESENT = new Object();
-
-	//Used instead of Collections.EMPTY_SET to avoid polymorphic calls on xref;
-	//Also, uses an HashMap as it were an HashSet, as technically we just need the Set semantics
-	//but in this case the overhead of HashSet is not negligible.
-	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<>( 1, 0.2f );
-
 	private final JdbcEventHandler jdbcEventHandler;
 
-	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
+	private final ResultsetsTrackingContainer xref = new ResultsetsTrackingContainer();
 
 	private ExtendedState ext;
 	private Statement lastQuery;
@@ -65,7 +55,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public boolean hasRegisteredResources() {
-		return hasRegistered( xref )
+		return xref.hasRegisteredResources()
 			|| ext != null && ext.hasRegisteredResources();
 	}
 
@@ -73,10 +63,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(Statement statement, boolean cancelable) {
 		if ( IS_TRACE_ENABLED ) log.tracef( "Registering statement [%s]", statement );
 
-		HashMap<ResultSet,Object> previousValue = xref.putIfAbsent( statement, EMPTY );
-		if ( previousValue != null ) {
-			throw new HibernateException( "JDBC Statement already registered" );
-		}
+		xref.registerExpectingNew( statement );
 
 		if ( cancelable ) {
 			lastQuery = statement;
@@ -87,7 +74,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void release(Statement statement) {
 		if ( IS_TRACE_ENABLED ) log.tracev( "Releasing statement [{0}]", statement );
 
-		final HashMap<ResultSet,Object> resultSets = xref.remove( statement );
+		final ResultSetsSet resultSets = xref.remove( statement );
 		if ( resultSets != null ) {
 			closeAll( resultSets );
 		}
@@ -117,12 +104,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			final HashMap<ResultSet,Object> resultSets = xref.get( statement );
+			final ResultSetsSet resultSets = xref.getForResultSetRemoval( statement );
 			if ( resultSets == null ) {
 				log.unregisteredStatement();
 			}
 			else {
-				resultSets.remove( resultSet );
+				resultSets.removeResultSet( resultSet );
 				if ( resultSets.isEmpty() ) {
 					try {
 						if ( statement.isClosed() ) {
@@ -143,15 +130,14 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( resultSet );
 	}
 
-	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
+	private static void closeAll(final ResultSetsSet resultSets) {
 		if ( resultSets == null ) {
 			return;
 		}
-		resultSets.forEach( (resultSet, o) -> close( resultSet ) );
-		resultSets.clear();
+		resultSets.forEachResultSet( ResourceRegistryStandardImpl::close );
 	}
 
-	private static void releaseXref(final Statement s, final HashMap<ResultSet, Object> r) {
+	private static void releaseXref(final Statement s, final ResultSetsSet r) {
 		closeAll( r );
 		close( s );
 	}
@@ -219,19 +205,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			HashMap<ResultSet,Object> resultSets = xref.get( statement );
-
-			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			if ( resultSets == null ) {
-				log.debug( "ResultSet statement was not registered (on register)" );
-			}
-
-			if ( resultSets == null || resultSets == EMPTY ) {
-				resultSets = new HashMap<>();
-				xref.put( statement, resultSets );
-			}
-			resultSets.put( resultSet, PRESENT );
+			xref.storeAssociatedResultset( statement, resultSet );
 		}
 		else {
 			getExtendedStateForWrite().storeUnassociatedResultset( resultSet );
@@ -328,7 +302,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 	}
 
-	private static boolean hasRegistered(final HashMap resource) {
+	private static boolean hasRegistered(final ResultSetsSet resource) {
 		return resource != null && !resource.isEmpty();
 	}
 
@@ -344,7 +318,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	 */
 	private static class ExtendedState {
 		//All fields lazily initialized as well:
-		private HashMap<ResultSet,Object> unassociatedResultSets;
+		private ResultSetsSet unassociatedResultSets;
 		private ArrayList<Blob> blobs;
 		private ArrayList<Clob> clobs;
 		private ArrayList<NClob> nclobs;
@@ -357,7 +331,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 
 		public void releaseUnassociatedResult(final ResultSet resultSet) {
-			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.remove( resultSet );
+			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.removeResultSet( resultSet );
 			if ( removed == null ) {
 				log.unregisteredResultSetWithoutStatement();
 			}
@@ -365,9 +339,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 		public void storeUnassociatedResultset(ResultSet resultSet) {
 			if ( unassociatedResultSets == null ) {
-				this.unassociatedResultSets = new HashMap<>();
+				this.unassociatedResultSets = new ResultSetsSet();
 			}
-			unassociatedResultSets.put( resultSet, PRESENT );
+			unassociatedResultSets.storeResultSet( resultSet );
 		}
 
 		public void registerBlob(final Blob blob) {
@@ -394,6 +368,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 		public void releaseResources() {
 			closeAll( unassociatedResultSets );
+			unassociatedResultSets.clear();
 
 			if ( blobs != null ) {
 				blobs.forEach( blob -> {

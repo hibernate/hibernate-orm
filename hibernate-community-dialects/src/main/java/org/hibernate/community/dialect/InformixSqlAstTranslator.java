@@ -245,7 +245,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-			&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+			   && getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override

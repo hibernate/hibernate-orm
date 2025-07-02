@@ -18,6 +18,7 @@ import static org.hibernate.generator.EventType.UPDATE;
 public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	private org.hibernate.generator.EventType[] event;
 	private org.hibernate.annotations.SourceType source;
+	private boolean allowMutation;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -25,6 +26,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	public CurrentTimestampAnnotation(ModelsContext modelContext) {
 		this.event = new org.hibernate.generator.EventType[] {INSERT, UPDATE};
 		this.source = org.hibernate.annotations.SourceType.DB;
+		this.allowMutation = false;
 	}
 
 	/**
@@ -33,6 +35,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	public CurrentTimestampAnnotation(CurrentTimestamp annotation, ModelsContext modelContext) {
 		this.event = annotation.event();
 		this.source = annotation.source();
+		this.allowMutation = annotation.allowMutation();
 	}
 
 	/**
@@ -41,6 +44,7 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 	public CurrentTimestampAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.event = (org.hibernate.generator.EventType[]) attributeValues.get( "event" );
 		this.source = (org.hibernate.annotations.SourceType) attributeValues.get( "source" );
+		this.allowMutation = (Boolean) attributeValues.get( "allowMutation" );
 	}
 
 	@Override
@@ -66,5 +70,12 @@ public class CurrentTimestampAnnotation implements CurrentTimestamp {
 		this.source = value;
 	}
 
+	@Override
+	public boolean allowMutation() {
+		return allowMutation;
+	}
 
+	public void allowMutation(boolean value) {
+		this.allowMutation = value;
+	}
 }

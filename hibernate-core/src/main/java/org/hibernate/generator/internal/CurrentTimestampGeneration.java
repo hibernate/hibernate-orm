@@ -79,6 +79,7 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public static final String CLOCK_SETTING_NAME = "hibernate.testing.clock";
 
 	private final EnumSet<EventType> eventTypes;
+	private final boolean allowMutation;
 
 	private final CurrentTimestampGeneratorDelegate delegate;
 	private static final Map<Class<?>, BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate>> GENERATOR_PRODUCERS = new HashMap<>();
@@ -185,16 +186,19 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = fromArray( annotation.event() );
+		allowMutation = annotation.allowMutation();
 	}
 
 	public CurrentTimestampGeneration(CreationTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = INSERT_ONLY;
+		allowMutation = false;
 	}
 
 	public CurrentTimestampGeneration(UpdateTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = INSERT_AND_UPDATE;
+		allowMutation = false;
 	}
 
 	private static CurrentTimestampGeneratorDelegate getGeneratorDelegate(
@@ -216,24 +220,27 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 						context.getDatabase().getDialect(),
 						basicValue.getMetadata()
 				);
-				final Clock baseClock = context.getServiceRegistry()
-						.requireService( ConfigurationService.class )
-						.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
-				final Key key = new Key( propertyType, baseClock, size.getPrecision() == null ? 0 : size.getPrecision() );
-				final CurrentTimestampGeneratorDelegate delegate = GENERATOR_DELEGATES.get( key );
+				final Clock baseClock =
+						context.getServiceRegistry().requireService( ConfigurationService.class )
+								.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
+				final Key key =
+						new Key( propertyType, baseClock,
+								size.getPrecision() == null ? 0 : size.getPrecision() );
+				final var delegate = GENERATOR_DELEGATES.get( key );
 				if ( delegate != null ) {
 					return delegate;
 				}
-				final BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate> producer = GENERATOR_PRODUCERS.get( key.clazz );
-				if ( producer == null ) {
-					return null;
+				else {
+					final var producer = GENERATOR_PRODUCERS.get( key.clazz );
+					if ( producer == null ) {
+						return null;
+					}
+					else {
+						final var generatorDelegate = producer.apply( key.clock, key.precision );
+						final var old = GENERATOR_DELEGATES.putIfAbsent( key, generatorDelegate );
+						return old != null ? old : generatorDelegate;
+					}
 				}
-				final CurrentTimestampGeneratorDelegate generatorDelegate = producer.apply( key.clock, key.precision );
-				final CurrentTimestampGeneratorDelegate old = GENERATOR_DELEGATES.putIfAbsent(
-						key,
-						generatorDelegate
-				);
-				return old != null ? old : generatorDelegate;
 			case DB:
 				return null;
 			default:
@@ -253,6 +260,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	@Override
 	public EnumSet<EventType> getEventTypes() {
 		return eventTypes;
+	}
+
+	@Override
+	public boolean allowMutation() {
+		return allowMutation;
 	}
 
 	@Override
@@ -276,7 +288,8 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	}
 
 	interface CurrentTimestampGeneratorDelegate {
-		// Left out the Generator params, they're not used anyway. Since this is purely internal, this can be changed if needed
+		// Left out the Generator params, they're not used anyway.
+		// Since this is purely internal, this can be changed if needed
 		Object generate();
 	}
 

@@ -19,22 +19,14 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
@@ -92,21 +84,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
 	@MethodSource("transactionKind")
-	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "Cockroach silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts a boolean to string types")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to string")
-	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
-	@SkipForDialect(dialectClass = InformixDialect.class)
+	// most dialects silently convert boolean to string types
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(value = PostgreSQLDialect.class, matchSubTypes = false)
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );
@@ -147,20 +127,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 	@ParameterizedTest
 	@MethodSource("transactionKind")
-	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = HANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
-	@SkipForDialect(dialectClass = InformixDialect.class)
+	// most dialects silently convert boolean to integral types
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(CockroachDialect.class)
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			session.disableFilter( "subDepartmentFilter" );

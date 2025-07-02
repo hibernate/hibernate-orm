@@ -21,10 +21,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.PropertyValueException;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.action.internal.BulkOperationCleanupAction.BulkOperationCleanUpAfterTransactionCompletionProcess;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
@@ -548,6 +550,16 @@ public class ActionQueue {
 		}
 	}
 
+	@Internal
+	public void executePendingBulkOperationCleanUpActions() {
+		if ( !isTransactionCoordinatorShared ) {
+			// Execute completion actions only in transaction owner (aka parent session).
+			if ( afterTransactionProcesses != null ) {
+				afterTransactionProcesses.executePendingBulkOperationCleanUpActions();
+			}
+		}
+	}
+
 	/**
 	 * Execute any registered {@link BeforeTransactionCompletionProcess}
 	 */
@@ -1063,6 +1075,39 @@ public class ActionQueue {
 						.invalidate( querySpacesToInvalidate.toArray(new String[0]), session );
 			}
 			querySpacesToInvalidate.clear();
+		}
+
+		public void executePendingBulkOperationCleanUpActions() {
+			AfterTransactionCompletionProcess process;
+			boolean hasPendingBulkOperationCleanUpActions = false;
+			while ( ( process = processes.poll() ) != null ) {
+				if ( process instanceof BulkOperationCleanUpAfterTransactionCompletionProcess ) {
+					try {
+						hasPendingBulkOperationCleanUpActions = true;
+						process.doAfterTransactionCompletion( true, session );
+					}
+					catch (CacheException ce) {
+						LOG.unableToReleaseCacheLock( ce );
+						// continue loop
+					}
+					catch (Exception e) {
+						throw new HibernateException(
+								"Unable to perform afterTransactionCompletion callback: " + e.getMessage(),
+								e
+						);
+					}
+				}
+			}
+
+			if ( hasPendingBulkOperationCleanUpActions ) {
+				if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
+					session.getFactory().getCache().getTimestampsCache().invalidate(
+							querySpacesToInvalidate.toArray( new String[0] ),
+							session
+					);
+				}
+				querySpacesToInvalidate.clear();
+			}
 		}
 	}
 

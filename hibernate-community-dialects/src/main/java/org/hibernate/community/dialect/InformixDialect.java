@@ -371,8 +371,12 @@ public class InformixDialect extends Dialect {
 
 		//coalesce() and nullif() both supported since Informix 12
 
-		functionRegistry.register( "least", new CaseLeastGreatestEmulation( true ) );
-		functionRegistry.register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		// least() and greatest() supported since 12.10
+		if ( getVersion().isBefore( 12, 10 ) ) {
+			functionRegistry.register( "least", new CaseLeastGreatestEmulation( true ) );
+			functionRegistry.register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		}
+
 		functionRegistry.namedDescriptorBuilder( "matches" )
 				.setInvariantType( stringBasicType )
 				.setExactArgumentCount( 2 )

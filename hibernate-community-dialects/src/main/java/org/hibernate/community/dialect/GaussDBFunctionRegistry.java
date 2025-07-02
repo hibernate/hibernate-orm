@@ -5,7 +5,6 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.community.dialect.function.GaussDBFormatFunction;
 import org.hibernate.community.dialect.function.GaussDBMinMaxFunction;
 import org.hibernate.community.dialect.function.GaussDBTruncFunction;
 import org.hibernate.community.dialect.function.GaussDBTruncRoundFunction;
@@ -96,6 +95,7 @@ public class GaussDBFunctionRegistry {
 		functionFactory.hex( "encode(?1, 'hex')" );
 		functionFactory.sha( "sha256(?1)" );
 		functionFactory.md5( "decode(md5(?1), 'hex')" );
+		functionFactory.format_toChar();
 
 		functionContributions.getFunctionRegistry().register( "min", new GaussDBMinMaxFunction( "min" ) );
 		functionContributions.getFunctionRegistry().register( "max", new GaussDBMinMaxFunction( "max" ) );
@@ -115,7 +115,6 @@ public class GaussDBFunctionRegistry {
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 
-		format_toChar_gaussdb();
 		array_gaussdb();
 		arrayRemoveIndex_gaussdb();
 		arrayConcat_gaussdb();
@@ -128,10 +127,6 @@ public class GaussDBFunctionRegistry {
 		arraySet_gaussdb();
 		arrayFill_gaussdb();
 		jsonObject_gaussdb();
-	}
-
-	public void format_toChar_gaussdb() {
-		functionRegistry.register( "format", new GaussDBFormatFunction( "to_char", typeConfiguration ) );
 	}
 
 	public void array_gaussdb() {

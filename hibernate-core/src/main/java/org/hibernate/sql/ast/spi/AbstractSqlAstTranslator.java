@@ -7503,12 +7503,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
-		if ( queryLiteral.getLiteralValue() == null && queryLiteral.isInCast() ) {
-			appendSql( SqlAppender.NULL_KEYWORD );
-		}
-		else {
-			visitLiteral( queryLiteral );
-		}
+		visitLiteral( queryLiteral );
 	}
 
 	@Override

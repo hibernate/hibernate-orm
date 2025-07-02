@@ -38,6 +38,7 @@ import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
 public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
+	private static final boolean IS_TRACE_ENABLED = log.isTraceEnabled();
 
 	// Dummy value to associate with an Object in the backing Map when we use it as a set:
 	private static final Object PRESENT = new Object();
@@ -70,7 +71,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void register(Statement statement, boolean cancelable) {
-		log.tracef( "Registering statement [%s]", statement );
+		if ( IS_TRACE_ENABLED ) log.tracef( "Registering statement [%s]", statement );
 
 		HashMap<ResultSet,Object> previousValue = xref.putIfAbsent( statement, EMPTY );
 		if ( previousValue != null ) {
@@ -84,7 +85,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void release(Statement statement) {
-		log.tracev( "Releasing statement [{0}]", statement );
+		if ( IS_TRACE_ENABLED ) log.tracev( "Releasing statement [{0}]", statement );
 
 		final HashMap<ResultSet,Object> resultSets = xref.remove( statement );
 		if ( resultSets != null ) {
@@ -105,7 +106,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void release(ResultSet resultSet, Statement statement) {
-		log.tracef( "Releasing result set [%s]", resultSet );
+		if ( IS_TRACE_ENABLED ) log.tracef( "Releasing result set [%s]", resultSet );
 
 		if ( statement == null ) {
 			try {
@@ -156,7 +157,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private static void close(final ResultSet resultSet) {
-		log.tracef( "Closing result set [%s]", resultSet );
+		if ( IS_TRACE_ENABLED ) log.tracef( "Closing result set [%s]", resultSet );
 
 		try {
 			if ( resultSet != null ) {
@@ -173,7 +174,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private static void close(Statement statement) {
-		log.tracef( "Closing prepared statement [%s]", statement );
+		if ( IS_TRACE_ENABLED ) log.tracef( "Closing prepared statement [%s]", statement );
 
 		try {
 			// if we are unable to "clean" the prepared statement,
@@ -207,7 +208,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void register(ResultSet resultSet, Statement statement) {
-		log.tracef( "Registering result set [%s]", resultSet );
+		if ( IS_TRACE_ENABLED ) log.tracef( "Registering result set [%s]", resultSet );
 
 		if ( statement == null ) {
 			try {
@@ -309,7 +310,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void releaseResources() {
-		log.trace( "Releasing JDBC resources" );
+		if ( IS_TRACE_ENABLED ) log.trace( "Releasing JDBC resources" );
 
 		if ( jdbcEventHandler != null ) {
 			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();

@@ -580,6 +580,21 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public boolean canDisableConstraints() {
+		return true;
+	}
+
+	@Override
+	public String getDisableConstraintStatement(String tableName, String name) {
+		return "set constraints " + name + " disabled";
+	}
+
+	@Override
+	public String getEnableConstraintStatement(String tableName, String name) {
+		return "set constraints " + name + " enabled";
+	}
+
+	@Override
 	public boolean supportsOrderByInSubquery() {
 		// This is just a guess
 		return false;

@@ -511,6 +511,12 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getTruncateTableStatement(String tableName) {
+		return super.getTruncateTableStatement( tableName )
+			+ " reuse storage keep statistics";
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return sequenceSupport;
 	}

@@ -7057,23 +7057,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitParameter(JdbcParameter jdbcParameter) {
 		switch ( getParameterRenderingMode() ) {
 			case NO_UNTYPED:
-			case NO_PLAIN_PARAMETER: {
+			case NO_PLAIN_PARAMETER:
 				renderCasted( jdbcParameter );
 				break;
-			}
 			case INLINE_PARAMETERS:
-			case INLINE_ALL_PARAMETERS: {
+			case INLINE_ALL_PARAMETERS:
 				renderExpressionAsLiteral( jdbcParameter, jdbcParameterBindings );
 				break;
-			}
 			case WRAP_ALL_PARAMETERS:
 				renderWrappedParameter( jdbcParameter );
 				break;
 			case DEFAULT:
-			default: {
+			default:
 				visitParameterAsParameter( jdbcParameter );
 				break;
-			}
 		}
 	}
 
@@ -7115,8 +7112,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode) {
-		SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
+				&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 			this.parameterRenderingMode = renderingMode;
 		}
 		try {
@@ -7128,8 +7126,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void withParameterRenderingMode(SqlAstNodeRenderingMode renderingMode, Runnable runnable) {
-		SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS && original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
+		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
+		if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
+				&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 			this.parameterRenderingMode = renderingMode;
 		}
 		try {
@@ -7351,7 +7350,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Consumer<Expression> resultRenderer) {
 		appendSql( "case" );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		for ( CaseSearchedExpression.WhenFragment whenFragment : caseSearchedExpression.getWhenFragments() ) {
+		for ( var whenFragment : caseSearchedExpression.getWhenFragments() ) {
 			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
 					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
@@ -7375,12 +7374,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitDecodeCaseSearchedExpression(CaseSearchedExpression caseSearchedExpression) {
 		appendSql( "decode( " );
 		final SqlAstNodeRenderingMode original = this.parameterRenderingMode;
-		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+		final var whenFragments = caseSearchedExpression.getWhenFragments();
 		final int caseNumber = whenFragments.size();
 		CaseSearchedExpression.WhenFragment firstWhenFragment = null;
 		for ( int i = 0; i < caseNumber; i++ ) {
-			final CaseSearchedExpression.WhenFragment whenFragment = whenFragments.get( i );
-			Predicate predicate = whenFragment.getPredicate();
+			final var whenFragment = whenFragments.get( i );
+			final Predicate predicate = whenFragment.getPredicate();
 			if ( original != SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS
 					&& original != SqlAstNodeRenderingMode.WRAP_ALL_PARAMETERS ) {
 				this.parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;

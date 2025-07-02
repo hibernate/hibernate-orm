@@ -10,6 +10,7 @@ import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -25,7 +26,7 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
  *
  * Notes: Original code of this class is based on PostgreSQLStructCastingJdbcType.
  */
-public class GaussDBStructuredJdbcType extends GaussDBAbstractStructuredJdbcType {
+public class GaussDBStructuredJdbcType extends AbstractPostgreSQLStructJdbcType {
 
 	public static final GaussDBStructuredJdbcType INSTANCE = new GaussDBStructuredJdbcType();
 	public GaussDBStructuredJdbcType() {
@@ -75,6 +76,7 @@ public class GaussDBStructuredJdbcType extends GaussDBAbstractStructuredJdbcType
 					throws SQLException {
 				final String stringValue = ( (GaussDBStructuredJdbcType) getJdbcType() ).toString(
 						value,
+						getJavaType(),
 						options
 				);
 				st.setString( index, stringValue );
@@ -85,6 +87,7 @@ public class GaussDBStructuredJdbcType extends GaussDBAbstractStructuredJdbcType
 					throws SQLException {
 				final String stringValue = ( (GaussDBStructuredJdbcType) getJdbcType() ).toString(
 						value,
+						getJavaType(),
 						options
 				);
 				st.setString( name, stringValue );

@@ -24,6 +24,8 @@ import java.util.List;
  * @author chenzhida
  *
  * Notes: Original code of this class is based on ArrayContainsOperatorFunction.
+ *  ArrayContainsOperatorFunction is only used by PostgreSQL and has some different with GaussDB, Maybe
+ *  it's better to have a name with PostgreSQLArrayContainsOperatorFunction
  */
 public class GaussDBArrayContainsOperatorFunction extends ArrayContainsUnnestFunction {
 

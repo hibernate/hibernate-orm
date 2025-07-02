@@ -7,6 +7,7 @@ package org.hibernate.community.dialect;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.dialect.type.AbstractPostgreSQLStructJdbcType;
 import org.hibernate.procedure.internal.AbstractStandardCallableStatementSupport;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
@@ -132,9 +133,9 @@ public class GaussDBCallableStatementSupport extends AbstractStandardCallableSta
 				if ( parameter.getName() != null ) {
 					buffer.append( parameter.getName() ).append( " => " );
 				}
-				if ( type != null && type.getJdbcType() instanceof GaussDBAbstractStructuredJdbcType ) {
+				if ( type != null && type.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
 					// We have to cast struct type parameters so that GaussDB understands nulls
-					castType = ( (GaussDBAbstractStructuredJdbcType) type.getJdbcType() ).getStructTypeName();
+					castType = ( (AbstractPostgreSQLStructJdbcType) type.getJdbcType() ).getStructTypeName();
 					buffer.append( "cast(" );
 				}
 				else {

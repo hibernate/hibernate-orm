@@ -228,6 +228,21 @@ public enum CommunityDatabase {
 					? "org.apache.derby.jdbc.ClientDriver"
 					: "org.apache.derby.jdbc.EmbeddedDriver";
 		}
+	},
+
+	GAUSSDB {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new GaussDBDialect(info);
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return "GaussDB".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.huawei.gaussdb.jdbc.Driver";
+		}
 	};
 
 	/**

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.net.InetAddress;
 import java.sql.CallableStatement;
@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;

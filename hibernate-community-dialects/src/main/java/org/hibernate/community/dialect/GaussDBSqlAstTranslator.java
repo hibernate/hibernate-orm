@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -289,7 +289,8 @@ public class GaussDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		if ( likePredicate.getEscapeCharacter() != null ) {
 			appendSql( " escape " );
 			likePredicate.getEscapeCharacter().accept( this );
-		} else {
+		}
+		else {
 			appendSql( " escape ''''" );
 		}
 	}

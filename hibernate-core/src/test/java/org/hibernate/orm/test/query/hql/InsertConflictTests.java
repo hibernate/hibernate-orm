@@ -7,7 +7,7 @@ package org.hibernate.orm.test.query.hql;
 import java.time.LocalDate;
 
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;

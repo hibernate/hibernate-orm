@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;

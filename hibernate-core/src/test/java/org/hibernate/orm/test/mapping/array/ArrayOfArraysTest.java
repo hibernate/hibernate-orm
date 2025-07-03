@@ -9,7 +9,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.SqlTypes;
 

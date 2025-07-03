@@ -2,17 +2,23 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.function;
+package org.hibernate.community.dialect.function;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL;
+import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEMPORAL_UNIT;
 
 /**
  * Custom {@link TruncFunction} for GaussDB which uses the dialect-specific function for numeric truncation
@@ -55,7 +61,11 @@ public class GaussDBTruncFunction extends TruncFunction {
 				datetimeRenderingSupport,
 				args,
 				impliedResultType,
-				TruncArgumentsValidator.DATETIME_VALIDATOR,
+				new ArgumentTypesValidator(
+						StandardArgumentsValidators.exactly( 2 ),
+						TEMPORAL,
+						TEMPORAL_UNIT
+				),
 				getReturnTypeResolver(),
 				queryEngine.getCriteriaBuilder(),
 				getName()

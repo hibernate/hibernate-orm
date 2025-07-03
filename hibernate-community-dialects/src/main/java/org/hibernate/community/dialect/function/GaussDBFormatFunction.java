@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.function;
+package org.hibernate.community.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;

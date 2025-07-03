@@ -2,12 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.aggregate;
+package org.hibernate.community.dialect.aggregate;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.aggregate.AggregateSupport;
+import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;

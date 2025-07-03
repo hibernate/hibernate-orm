@@ -2,8 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.function.array;
+package org.hibernate.community.dialect.function.array;
 
+import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;

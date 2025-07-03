@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.function.array;
+package org.hibernate.community.dialect.function.array;
 
+import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -19,10 +20,11 @@ import java.util.List;
  */
 public class GaussDBArrayRemoveIndexFunction extends ArrayRemoveIndexUnnestFunction {
 
-
+	private final boolean castEmptyArrayLiteral;
 
 	public GaussDBArrayRemoveIndexFunction(boolean castEmptyArrayLiteral) {
 		super( castEmptyArrayLiteral );
+		this.castEmptyArrayLiteral = castEmptyArrayLiteral;
 	}
 
 	@Override

@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JavaType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;

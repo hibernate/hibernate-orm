@@ -2,10 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.function.array;
+package org.hibernate.community.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.dialect.function.array.ArrayConcatElementFunction;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;

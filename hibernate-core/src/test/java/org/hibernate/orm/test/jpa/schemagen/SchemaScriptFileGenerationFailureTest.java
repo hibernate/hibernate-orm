@@ -17,7 +17,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;

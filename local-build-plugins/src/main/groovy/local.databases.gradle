@@ -76,7 +76,7 @@ ext {
                     'connection.init_sql' : ''
             ],
             gaussdb: [
-                    'db.dialect'         : 'org.hibernate.dialect.GaussDBDialect',
+                    'db.dialect'         : 'org.hibernate.community.dialect.GaussDBDialect',
                     'jdbc.driver'        : 'com.huawei.gaussdb.jdbc.Driver',
                     'jdbc.user'          : 'hibernate_orm_test',
                     'jdbc.pass'          : 'Hibernate_orm_test@1234',

@@ -15,6 +15,7 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -1183,6 +1184,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No cast from varchar to byte")
+	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB bytea doesn't have a length")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1824,6 +1826,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "GaussDB driver does not support implicit type casting to Long or Duration.")
 	public void testDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1928,6 +1932,8 @@ public class FunctionTests {
 			reason = "numeric overflow")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Overflow occurred on a datetime or interval operation")
+	@SkipForDialect(dialectClass = GaussDBDialect.class,
+			reason = "numeric overflow")
 	public void testDurationSubtractionWithDatetimeLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2013,6 +2019,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = GaussDBDialect.class,
+			reason = "GaussDB driver does not support implicit type casting to Long or Duration.")
 	public void testIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

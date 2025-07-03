@@ -22,6 +22,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -1189,6 +1190,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = GaussDBDialect.class, comment = "The USTORE storage engine does not support For Key Share and For No Key Update")
 	public void testLockInsertFkTarget() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1228,6 +1230,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AltibaseDialect.class, comment = "FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = GaussDBDialect.class, comment = "The USTORE storage engine does not support For Key Share and For No Key Update")
 	public void testLockUpdateFkTarget() {
 		Lock lock1 = new Lock();
 		lock1.setName( "l1" );

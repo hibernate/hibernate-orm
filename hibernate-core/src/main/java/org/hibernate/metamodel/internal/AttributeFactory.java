@@ -58,6 +58,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.query.sqm.tree.domain.SqmDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmMappedSuperclassDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
@@ -740,56 +741,70 @@ public class AttributeFactory {
 			Property property,
 			MappedSuperclassDomainType<?> ownerType,
 			MetadataContext context) {
-		final EntityPersister declaringEntity =
-				getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, context );
-		if ( declaringEntity != null ) {
-			return resolveEntityMember( property, declaringEntity );
-		}
-		else {
-			final ManagedDomainType<?> subType = ownerType.getSubTypes().iterator().next();
-			final Type.PersistenceType persistenceType = subType.getPersistenceType();
-			return switch ( persistenceType ) {
-				case ENTITY ->
-						resolveEntityMember( property,
-								getDeclaringEntity( (AbstractIdentifiableType<?>) subType, context ) );
-				case MAPPED_SUPERCLASS ->
-						resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) subType, context );
-				case EMBEDDABLE ->
-						resolveEmbeddedMember( property, (EmbeddableDomainType<?>) subType, context );
-				default -> throw new IllegalArgumentException( "Unexpected PersistenceType: " + persistenceType );
-			};
-		}
+		return property.getGetter( ownerType.getJavaType() ).getMember();
+//		final EntityPersister declaringEntity =
+//				getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, context );
+//		if ( declaringEntity != null ) {
+//			return resolveEntityMember( property, declaringEntity );
+//		}
+//		else {
+//			final ManagedDomainType<?> subType = ownerType.getSubTypes().iterator().next();
+//			final Type.PersistenceType persistenceType = subType.getPersistenceType();
+//			return switch ( persistenceType ) {
+//				case ENTITY ->
+//						resolveEntityMember( property,
+//								getDeclaringEntity( (AbstractIdentifiableType<?>) subType, context ) );
+//				case MAPPED_SUPERCLASS ->
+//						resolveMappedSuperclassMember( property, (MappedSuperclassDomainType<?>) subType, context );
+//				case EMBEDDABLE ->
+//						resolveEmbeddedMember( property, (EmbeddableDomainType<?>) subType, context );
+//				default -> throw new IllegalArgumentException( "Unexpected PersistenceType: " + persistenceType );
+//			};
+//		}
 	}
 
 	private final MemberResolver identifierMemberResolver = (attributeContext, metadataContext) -> {
 		final AbstractIdentifiableType<?> identifiableType =
 				(AbstractIdentifiableType<?>) attributeContext.getOwnerType();
-		final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
-		final EntityIdentifierMapping identifierMapping = declaringEntityMapping.getIdentifierMapping();
-		final Property propertyMapping = attributeContext.getPropertyMapping();
-		return !propertyMapping.getName().equals( identifierMapping.getAttributeName() )
-				// this *should* indicate processing part of an IdClass...
-				? virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext )
-				: getter( declaringEntityMapping, propertyMapping,
-						identifierMapping.getAttributeName(), identifierMapping.getJavaType().getJavaTypeClass() );
-
+		if ( identifiableType instanceof SqmMappedSuperclassDomainType<?> ) {
+			return attributeContext.getPropertyMapping()
+					.getGetter( identifiableType.getJavaType() )
+					.getMember();
+		}
+		else {
+			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
+			final EntityIdentifierMapping identifierMapping = declaringEntityMapping.getIdentifierMapping();
+			final Property propertyMapping = attributeContext.getPropertyMapping();
+			return !propertyMapping.getName().equals( identifierMapping.getAttributeName() )
+					// this *should* indicate processing part of an IdClass...
+					? virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext )
+					: getter( declaringEntityMapping, propertyMapping,
+							identifierMapping.getAttributeName(), identifierMapping.getJavaType().getJavaTypeClass() );
+		}
 	};
 
 	private final MemberResolver versionMemberResolver = (attributeContext, metadataContext) -> {
 		final AbstractIdentifiableType<?> identifiableType =
 				(AbstractIdentifiableType<?>) attributeContext.getOwnerType();
-		final EntityPersister entityPersister = getDeclaringEntity( identifiableType, metadataContext );
-		final EntityVersionMapping versionMapping = entityPersister.getVersionMapping();
-		assert entityPersister.isVersioned();
-		assert versionMapping != null;
-
-		final String versionPropertyName = attributeContext.getPropertyMapping().getName();
-		if ( !versionPropertyName.equals( versionMapping.getVersionAttribute().getAttributeName() ) ) {
-			// this should never happen, but to be safe...
-			throw new IllegalArgumentException( "Given property did not match declared version property" );
+		if ( identifiableType instanceof SqmMappedSuperclassDomainType<?> ) {
+			return attributeContext.getPropertyMapping()
+					.getGetter( identifiableType.getJavaType() )
+					.getMember();
 		}
-		return getter( entityPersister, attributeContext.getPropertyMapping(),
-				versionPropertyName, versionMapping.getJavaType().getJavaTypeClass() );
+		else {
+			final EntityPersister entityPersister = getDeclaringEntity( identifiableType, metadataContext );
+			final EntityVersionMapping versionMapping = entityPersister.getVersionMapping();
+			assert entityPersister.isVersioned();
+			assert versionMapping != null;
+
+			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
+			if ( !versionPropertyName.equals( versionMapping.getVersionAttribute().getAttributeName() ) ) {
+				// this should never happen, but to be safe...
+				throw new IllegalArgumentException( "Given property did not match declared version property" );
+			}
+			return getter( entityPersister, attributeContext.getPropertyMapping(),
+					versionPropertyName, versionMapping.getJavaType().getJavaTypeClass() );
+		}
 	};
 
 	private static Member getter(EntityPersister persister, Property property, String name, Class<?> type) {

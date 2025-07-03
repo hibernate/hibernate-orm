@@ -2,7 +2,9 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.identity;
+package org.hibernate.community.dialect.identity;
+
+import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 
 import static org.hibernate.internal.util.StringHelper.unquote;
 

@@ -2042,6 +2042,43 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		clauseStack.pop();
 	}
 
+	protected void visitOnDuplicateKeyConflictClauseWithDoNothing(ConflictClause conflictClause) {
+		if ( conflictClause == null ) {
+			return;
+		}
+		// The duplicate key clause does not support specifying the constraint name or constraint column names,
+		// but to allow compatibility, we have to require the user to specify either one in the SQM conflict clause.
+		// To allow meaningful usage, we simply ignore the constraint column names in this emulation.
+		// A possible problem with this is when the constraint column names contain the primary key columns,
+		// but the insert fails due to a unique constraint violation. This emulation will not cause a failure to be
+		// propagated, but instead will run the respective conflict action.
+		final String constraintName = conflictClause.getConstraintName();
+		if ( constraintName != null ) {
+			if ( conflictClause.isDoUpdate() ) {
+				throw new IllegalQueryOperationException( "Insert conflict 'do update' clause with constraint name is not supported" );
+			}
+			else {
+				return;
+			}
+		}
+		clauseStack.push( Clause.CONFLICT );
+		appendSql( " on duplicate key update" );
+		final List<Assignment> assignments = conflictClause.getAssignments();
+		if ( assignments.isEmpty() ) {
+			try {
+				clauseStack.push( Clause.SET );
+				appendSql( " nothing " );
+			}
+			finally {
+				clauseStack.pop();
+			}
+		}
+		else {
+			renderPredicatedSetAssignments( assignments, conflictClause.getPredicate() );
+		}
+		clauseStack.pop();
+	}
+
 	private void renderPredicatedSetAssignments(List<Assignment> assignments, Predicate predicate) {
 		char separator = ' ';
 		try {

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
@@ -14,16 +14,21 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.identity.GaussDBIdentityColumnSupport;
+import org.hibernate.community.dialect.sequence.GaussDBSequenceSupport;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
+import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.GaussDBMinMaxFunction;
-import org.hibernate.dialect.function.GaussDBTruncFunction;
-import org.hibernate.dialect.function.GaussDBTruncRoundFunction;
-import org.hibernate.dialect.identity.GaussDBIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.sequence.GaussDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -43,7 +48,6 @@ import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.procedure.internal.GaussDBCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.FetchClauseType;
@@ -55,7 +59,6 @@ import org.hibernate.query.sqm.mutation.internal.cte.CteInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.cte.CteMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -100,7 +103,6 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
-import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -503,149 +505,13 @@ public class GaussDBDialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
-
-		functionFactory.cot();
-		functionFactory.radians();
-		functionFactory.degrees();
-		functionFactory.log();
-		functionFactory.mod_operator();
-		functionFactory.moreHyperbolic();
-		functionFactory.cbrt();
-		functionFactory.pi();
-		functionFactory.log10_log();
-		functionFactory.trim2();
-		functionFactory.repeat();
-		functionFactory.initcap();
-		functionFactory.substr();
-		functionFactory.substring_substr();
-		//also natively supports ANSI-style substring()
-		functionFactory.translate();
-		functionFactory.toCharNumberDateTimestamp();
-		functionFactory.localtimeLocaltimestamp();
-		functionFactory.bitLength_pattern( "bit_length(?1)", "length(?1)*8" );
-		functionFactory.octetLength_pattern( "octet_length(?1)", "length(?1)" );
-		functionFactory.ascii();
-		functionFactory.char_chr();
-		functionFactory.position();
-		functionFactory.bitandorxornot_operator();
-		functionFactory.bitAndOr();
-		functionFactory.everyAny_boolAndOr();
-		functionFactory.median_percentileCont( false );
-		functionFactory.stddev();
-		functionFactory.stddevPopSamp();
-		functionFactory.variance();
-		functionFactory.varPopSamp();
-		functionFactory.covarPopSamp();
-		functionFactory.corr();
-		functionFactory.regrLinearRegressionAggregates();
-		functionFactory.insert_overlay();
-		functionFactory.overlay();
-		functionFactory.soundex(); //was introduced apparently
-		functionFactory.format_toChar_gaussdb();
-
-		functionFactory.locate_positionSubstring();
-		functionFactory.windowFunctions();
-		functionFactory.listagg_stringAgg( "varchar" );
-		functionFactory.array_gaussdb();
-		functionFactory.arrayAggregate();
-		functionFactory.arrayRemoveIndex_gaussdb();
-		functionFactory.arrayConcat_gaussdb();
-		functionFactory.arrayPrepend_gaussdb();
-		functionFactory.arrayAppend_gaussdb();
-		functionFactory.arrayContains_gaussdb();
-		functionFactory.arrayIntersects_gaussdb();
-		functionFactory.arrayRemove_gaussdb();
-		functionFactory.arraySlice_operator();
-		functionFactory.arrayReplace_gaussdb();
-		functionFactory.arraySet_gaussdb();
-		functionFactory.arrayFill_gaussdb();
-
-		functionFactory.jsonObject_gaussdb();
-
-		functionFactory.makeDateTimeTimestamp();
-		// Note that GaussDB doesn't support the OVER clause for ordered set-aggregate functions
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
-
-		if ( !supportsMinMaxOnUuid() ) {
-			functionContributions.getFunctionRegistry().register( "min", new GaussDBMinMaxFunction( "min" ) );
-			functionContributions.getFunctionRegistry().register( "max", new GaussDBMinMaxFunction( "max" ) );
-		}
-
-		// uses # instead of ^ for XOR
-		functionContributions.getFunctionRegistry().patternDescriptorBuilder( "bitxor", "(?1 # ?2)" )
-				.setExactArgumentCount( 2 )
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
-				.register();
-
-		functionContributions.getFunctionRegistry().register(
-				"round", new GaussDBTruncRoundFunction( "round", true )
-		);
-		functionContributions.getFunctionRegistry().register(
-				"trunc",
-				new GaussDBTruncFunction( true, functionContributions.getTypeConfiguration() )
-		);
-		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
-		functionFactory.dateTrunc();
-
-		functionFactory.hex( "encode(?1, 'hex')" );
-		functionFactory.sha( "sha256(?1)" );
-		functionFactory.md5( "decode(md5(?1), 'hex')" );
+		GaussDBFunctionRegistry functionRegistry = new GaussDBFunctionRegistry( functionContributions );
+		functionRegistry.register();
 	}
 
 	@Override
 	public @Nullable String getDefaultOrdinalityColumnName() {
 		return "ordinality";
-	}
-
-	/**
-	 * Whether GaussDB supports {@code min(uuid)}/{@code max(uuid)},
-	 * which it doesn't by default. Since the emulation does not perform well,
-	 * this method may be overridden by any user who ensures that aggregate
-	 * functions for handling uuids exist in the database.
-	 * <p>
-	 * The following definitions can be used for this purpose:
-	 * <code><pre>
-	 * create or replace function min(uuid, uuid)
-	 *     returns uuid
-	 *     immutable parallel safe
-	 *     language plpgsql as
-	 * $$
-	 * begin
-	 *     return least($1, $2);
-	 * end
-	 * $$;
-	 *
-	 * create aggregate min(uuid) (
-	 *     sfunc = min,
-	 *     stype = uuid,
-	 *     combinefunc = min,
-	 *     parallel = safe,
-	 *     sortop = operator (&lt;)
-	 *     );
-	 *
-	 * create or replace function max(uuid, uuid)
-	 *     returns uuid
-	 *     immutable parallel safe
-	 *     language plpgsql as
-	 * $$
-	 * begin
-	 *     return greatest($1, $2);
-	 * end
-	 * $$;
-	 *
-	 * create aggregate max(uuid) (
-	 *     sfunc = max,
-	 *     stype = uuid,
-	 *     combinefunc = max,
-	 *     parallel = safe,
-	 *     sortop = operator (&gt;)
-	 *     );
-	 * </pre></code>
-	 */
-	protected boolean supportsMinMaxOnUuid() {
-		return false;
 	}
 
 	@Override
@@ -1325,7 +1191,7 @@ public class GaussDBDialect extends Dialect {
 
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingInetJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingIntervalSecondJdbcType.INSTANCE );
-		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBStructCastingJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBStructuredJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( GaussDBCastingJsonJdbcType.JSONB_INSTANCE );
 		jdbcTypeRegistry.addTypeConstructorIfAbsent( GaussDBCastingJsonArrayJdbcTypeConstructor.JSONB_INSTANCE );
 

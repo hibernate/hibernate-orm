@@ -2,8 +2,11 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect.function.array;
+package org.hibernate.community.dialect.function.array;
 
+import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
+import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
+import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;

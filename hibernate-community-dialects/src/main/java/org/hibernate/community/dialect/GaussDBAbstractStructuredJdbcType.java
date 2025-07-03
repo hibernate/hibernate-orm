@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -59,7 +59,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  *
  * Notes: Original code of this class is based on AbstractPostgreSQLStructJdbcType.
  */
-public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcType {
+public abstract class GaussDBAbstractStructuredJdbcType implements StructuredJdbcType {
 
 	private static final DateTimeFormatter LOCAL_DATE_TIME;
 	static {
@@ -91,7 +91,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 	private final int[] inverseOrderMapping;
 	private final EmbeddableMappingType embeddableMappingType;
 
-	protected AbstractGaussDBStructJdbcType(
+	protected GaussDBAbstractStructuredJdbcType(
 			EmbeddableMappingType embeddableMappingType,
 			String typeName,
 			int[] orderMapping) {
@@ -162,7 +162,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 				if ( object == null ) {
 					return null;
 				}
-				return ( (AbstractGaussDBStructJdbcType) getJdbcType() ).fromString(
+				return ( (GaussDBAbstractStructuredJdbcType) getJdbcType() ).fromString(
 						object.toString(),
 						getJavaType(),
 						options
@@ -452,7 +452,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
 							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
-							if ( jdbcMapping.getJdbcType() instanceof AbstractGaussDBStructJdbcType structJdbcType ) {
+							if ( jdbcMapping.getJdbcType() instanceof GaussDBAbstractStructuredJdbcType structJdbcType ) {
 								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
 								final int subEnd = structJdbcType.deserializeStruct(
 										string,
@@ -848,7 +848,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 						i += expectedQuotes - 1;
 						if ( string.charAt( i + 1 ) == '(' ) {
 							// This could be a nested struct
-							if ( elementType.getJdbcType() instanceof AbstractGaussDBStructJdbcType structJdbcType ) {
+							if ( elementType.getJdbcType() instanceof GaussDBAbstractStructuredJdbcType structJdbcType ) {
 								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
 								final int subEnd = structJdbcType.deserializeStruct(
 										string,
@@ -1211,7 +1211,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 					embeddableMappingType.getJdbcValueSelectable( i ) :
 					embeddableMappingType.getJdbcValueSelectable( orderMapping[i] );
 			final JdbcMapping jdbcMapping = selectableMapping.getJdbcMapping();
-			if ( jdbcMapping.getJdbcType() instanceof AbstractGaussDBStructJdbcType structJdbcType ) {
+			if ( jdbcMapping.getJdbcType() instanceof GaussDBAbstractStructuredJdbcType structJdbcType ) {
 				appender.quoteStart();
 				structJdbcType.serializeJdbcValuesTo(
 						appender,
@@ -1344,7 +1344,7 @@ public abstract class AbstractGaussDBStructJdbcType implements StructuredJdbcTyp
 				break;
 			case SqlTypes.STRUCT:
 				if ( subValue != null ) {
-					final AbstractGaussDBStructJdbcType structJdbcType = (AbstractGaussDBStructJdbcType) jdbcMapping.getJdbcType();
+					final GaussDBAbstractStructuredJdbcType structJdbcType = (GaussDBAbstractStructuredJdbcType) jdbcMapping.getJdbcType();
 					appender.quoteStart();
 					structJdbcType.serializeJdbcValuesTo( appender, options, (Object[]) subValue, '(' );
 					appender.append( ')' );

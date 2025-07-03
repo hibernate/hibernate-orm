@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.dialect.GaussDBDialect;
+import org.hibernate.community.dialect.GaussDBDialect;
 import static org.junit.Assert.assertArrayEquals;
 
 /**

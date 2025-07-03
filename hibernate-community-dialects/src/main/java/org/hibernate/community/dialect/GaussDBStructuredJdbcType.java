@@ -2,13 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.dialect;
+package org.hibernate.community.dialect;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -24,14 +25,14 @@ import org.hibernate.type.descriptor.jdbc.BasicBinder;
  *
  * Notes: Original code of this class is based on PostgreSQLStructCastingJdbcType.
  */
-public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType {
+public class GaussDBStructuredJdbcType extends GaussDBAbstractStructuredJdbcType {
 
-	public static final GaussDBStructCastingJdbcType INSTANCE = new GaussDBStructCastingJdbcType();
-	public GaussDBStructCastingJdbcType() {
+	public static final GaussDBStructuredJdbcType INSTANCE = new GaussDBStructuredJdbcType();
+	public GaussDBStructuredJdbcType() {
 		this( null, null, null );
 	}
 
-	private GaussDBStructCastingJdbcType(
+	private GaussDBStructuredJdbcType(
 			EmbeddableMappingType embeddableMappingType,
 			String typeName,
 			int[] orderMapping) {
@@ -43,7 +44,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 			EmbeddableMappingType mappingType,
 			String sqlType,
 			RuntimeModelCreationContext creationContext) {
-		return new GaussDBStructCastingJdbcType(
+		return new GaussDBStructuredJdbcType(
 				mappingType,
 				sqlType,
 				creationContext.getBootModel()
@@ -72,7 +73,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ( (GaussDBStructCastingJdbcType) getJdbcType() ).toString(
+				final String stringValue = ( (GaussDBStructuredJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -83,7 +84,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final String stringValue = ( (GaussDBStructCastingJdbcType) getJdbcType() ).toString(
+				final String stringValue = ( (GaussDBStructuredJdbcType) getJdbcType() ).toString(
 						value,
 						getJavaType(),
 						options
@@ -93,7 +94,7 @@ public class GaussDBStructCastingJdbcType extends AbstractGaussDBStructJdbcType 
 
 			@Override
 			public Object getBindValue(X value, WrapperOptions options) throws SQLException {
-				return ( (GaussDBStructCastingJdbcType) getJdbcType() ).getBindValue( value, options );
+				return ( (GaussDBStructuredJdbcType) getJdbcType() ).getBindValue( value, options );
 			}
 		};
 	}

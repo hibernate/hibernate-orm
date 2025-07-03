@@ -216,7 +216,7 @@ gaussdb() {
 
     # config param
     CONTAINER_NAME=opengauss
-    IMAGE=opengauss/opengauss:7.0.0-RC1
+    IMAGE=opengauss/opengauss:7.0.0-RC1.B023
     PORT=8000
     DB_USER=hibernate_orm_test
     DB_PASSWORD=Hibernate_orm_test@1234
@@ -225,24 +225,22 @@ gaussdb() {
 
     echo "start OpenGauss container..."
     $CONTAINER_CLI run --name ${CONTAINER_NAME} \
-    --privileged \
+    --privileged=true \
+    -e GS_USERNAME=${DB_USER} \
     -e GS_PASSWORD=${DB_PASSWORD} \
-    -e GS_NODENAME=opengauss \
     -e GS_PORT=${PORT} \
-    -e GS_CGROUP_DISABLE=YES \
     -p ${PORT}:8000 \
     -d ${IMAGE}
 
     echo "wait OpenGauss starting..."
-    sleep 20
+    sleep 30
 
     echo " Initialize the database using the PostgreSQL client container..."
 
     $CONTAINER_CLI run --rm --network=host ${PSQL_IMAGE} \
       bash -c "
-        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';\" &&
-        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d postgres -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\" &&
-        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U gaussdb -d ${DB_NAME} -c \"CREATE SCHEMA test AUTHORIZATION ${DB_USER};\"
+        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U ${DB_USER} -d postgres -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\" &&
+        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U ${DB_USER} -d ${DB_NAME} -c \"CREATE SCHEMA test AUTHORIZATION ${DB_USER};\"
       "
 
     echo "Initialization completed"

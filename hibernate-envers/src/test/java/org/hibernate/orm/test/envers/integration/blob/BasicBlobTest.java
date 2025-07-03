@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import org.hamcrest.Matchers;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.proxy.BlobProxy;
@@ -82,6 +83,7 @@ public class BasicBlobTest extends BaseEnversJPAFunctionalTestCase {
 			comment = "The driver closes the stream, so it cannot be reused by envers")
 	@SkipForDialect(value = SQLServerDialect.class,
 			comment = "The driver closes the stream, so it cannot be reused by envers")
+	@SkipForDialect(value = InformixDialect.class)
 	public void testGenerateProxyStream() throws URISyntaxException {
 		final Path path = Path.of( Thread.currentThread().getContextClassLoader()
 				.getResource( "org/hibernate/orm/test/envers/integration/blob/blob.txt" ).toURI() );

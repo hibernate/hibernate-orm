@@ -41,12 +41,6 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.service.spi.EventListenerGroups;
-import org.hibernate.event.spi.PostCollectionRecreateEvent;
-import org.hibernate.event.spi.PostCollectionRecreateEventListener;
-import org.hibernate.event.spi.PostCollectionRemoveEvent;
-import org.hibernate.event.spi.PostCollectionRemoveEventListener;
-import org.hibernate.event.spi.PostCollectionUpdateEvent;
-import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
@@ -55,12 +49,6 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PostUpsertEvent;
 import org.hibernate.event.spi.PostUpsertEventListener;
-import org.hibernate.event.spi.PreCollectionRecreateEvent;
-import org.hibernate.event.spi.PreCollectionRecreateEventListener;
-import org.hibernate.event.spi.PreCollectionRemoveEvent;
-import org.hibernate.event.spi.PreCollectionRemoveEventListener;
-import org.hibernate.event.spi.PreCollectionUpdateEvent;
-import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.event.spi.PreDeleteEvent;
 import org.hibernate.event.spi.PreDeleteEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
@@ -634,46 +622,49 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				PostDeleteEventListener::onPostDelete );
 	}
 
+	// Note: the pre/post collection events have been disabled for stateless sessions
+	// as they were not actually useful (see https://hibernate.atlassian.net/browse/HHH-19523)
+
 	// Hibernate Reactive may need to call this
 	protected void firePreRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
-		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
-				() -> new PreCollectionRecreateEvent(  persister, collection, null ),
-				PreCollectionRecreateEventListener::onPreRecreateCollection );
+//		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_RECREATE.fireLazyEventOnEachListener(
+//				() -> new PreCollectionRecreateEvent(  persister, collection, null ),
+//				PreCollectionRecreateEventListener::onPreRecreateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePreUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
-		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
-				() -> new PreCollectionUpdateEvent(  persister, collection, null ),
-				PreCollectionUpdateEventListener::onPreUpdateCollection );
+//		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_UPDATE.fireLazyEventOnEachListener(
+//				() -> new PreCollectionUpdateEvent(  persister, collection, null ),
+//				PreCollectionUpdateEventListener::onPreUpdateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePreRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
-		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
-				() -> new PreCollectionRemoveEvent(  persister, collection, null, owner ),
-				PreCollectionRemoveEventListener::onPreRemoveCollection );
+//		eventListenerGroups.eventListenerGroup_PRE_COLLECTION_REMOVE.fireLazyEventOnEachListener(
+//				() -> new PreCollectionRemoveEvent(  persister, collection, null, owner ),
+//				PreCollectionRemoveEventListener::onPreRemoveCollection );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostRecreate(PersistentCollection<?> collection, CollectionPersister persister) {
-		eventListenerGroups.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
-				() -> new PostCollectionRecreateEvent(  persister, collection, null ),
-				PostCollectionRecreateEventListener::onPostRecreateCollection );
+//		eventListenerGroups.eventListenerGroup_POST_COLLECTION_RECREATE.fireLazyEventOnEachListener(
+//				() -> new PostCollectionRecreateEvent(  persister, collection, null ),
+//				PostCollectionRecreateEventListener::onPostRecreateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostUpdate(PersistentCollection<?> collection, CollectionPersister persister) {
-		eventListenerGroups.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
-				() -> new PostCollectionUpdateEvent(  persister, collection, null ),
-				PostCollectionUpdateEventListener::onPostUpdateCollection );
+//		eventListenerGroups.eventListenerGroup_POST_COLLECTION_UPDATE.fireLazyEventOnEachListener(
+//				() -> new PostCollectionUpdateEvent(  persister, collection, null ),
+//				PostCollectionUpdateEventListener::onPostUpdateCollection );
 	}
 
 	// Hibernate Reactive may need to call this
 	protected void firePostRemove(PersistentCollection<?> collection, Object owner, CollectionPersister persister) {
-		eventListenerGroups.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
-				() -> new PostCollectionRemoveEvent(  persister, collection, null, owner ),
-				PostCollectionRemoveEventListener::onPostRemoveCollection );
+//		eventListenerGroups.eventListenerGroup_POST_COLLECTION_REMOVE.fireLazyEventOnEachListener(
+//				() -> new PostCollectionRemoveEvent(  persister, collection, null, owner ),
+//				PostCollectionRemoveEventListener::onPostRemoveCollection );
 	}
 
 	// collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

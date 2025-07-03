@@ -8,6 +8,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.dialect.GaussDBDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -23,6 +24,7 @@ import org.junit.Before;
 @SkipForDialect(value = TiDBDialect.class, comment = "Doesn't support SERIALIZABLE isolation")
 @SkipForDialect(value = AltibaseDialect.class, comment = "Altibase cannot change isolation level in autocommit mode")
 @SkipForDialect(value = SybaseASEDialect.class, comment = "JtdsConnection.isValid not implemented")
+@SkipForDialect(value = GaussDBDialect.class, comment = "GaussDB query serialization level of SERIALIZABLE has some problem")
 public class C3p0TransactionIsolationConfigTest extends BaseTransactionIsolationConfigTest {
 	private StandardServiceRegistry ssr;
 

@@ -776,72 +776,63 @@ public class AttributeFactory {
 			Property property,
 			MappedSuperclassDomainType<?> ownerType,
 			MetadataContext metadataContext) {
-		final EntityPersister declaringEntity = getDeclaringEntity( (AbstractIdentifiableType<?>) ownerType, metadataContext );
-		if ( declaringEntity != null ) {
-			return resolveEntityMember( property, declaringEntity );
-		}
-		else {
-			final ManagedDomainType<?> subType = ownerType.getSubTypes().iterator().next();
-			final Type.PersistenceType persistenceType = subType.getPersistenceType();
-			if ( persistenceType == Type.PersistenceType.ENTITY ) {
-				return resolveEntityMember( property, getDeclaringEntity( (AbstractIdentifiableType<?>) subType, metadataContext ) );
-			}
-			else if ( persistenceType == Type.PersistenceType.EMBEDDABLE ) {
-				return resolveEmbeddedMember( property, (EmbeddableDomainType<?>) subType, metadataContext );
-			}
-			else if ( persistenceType == Type.PersistenceType.MAPPED_SUPERCLASS ) {
-				return resolveMappedSuperclassMember(
-						property,
-						(MappedSuperclassDomainType<?>) subType,
-						metadataContext
-				);
-			}
-			else {
-				throw new IllegalArgumentException( "Unexpected sub-type: " + persistenceType );
-			}
-		}
+		return property.getGetter( ownerType.getJavaType() ).getMember();
 	}
 
 	private final MemberResolver identifierMemberResolver = (attributeContext, metadataContext) -> {
 		final AbstractIdentifiableType<?> identifiableType =
 				(AbstractIdentifiableType<?>) attributeContext.getOwnerType();
-		final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
-		final EntityIdentifierMapping identifierMapping = declaringEntityMapping.getIdentifierMapping();
-		final Property propertyMapping = attributeContext.getPropertyMapping();
-		if ( !propertyMapping.getName().equals( identifierMapping.getAttributeName() ) ) {
-			// this *should* indicate processing part of an IdClass...
-			return virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext );
-		}
-
-		final Getter getter = getter( declaringEntityMapping, propertyMapping );
-		if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
-			return new MapMember( identifierMapping.getAttributeName(), identifierMapping.getJavaType().getJavaTypeClass() );
+		if ( identifiableType instanceof MappedSuperclassDomainType<?> ) {
+			return attributeContext.getPropertyMapping()
+					.getGetter( identifiableType.getJavaType() )
+					.getMember();
 		}
 		else {
-			return getter.getMember();
+			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
+			final EntityIdentifierMapping identifierMapping = declaringEntityMapping.getIdentifierMapping();
+			final Property propertyMapping = attributeContext.getPropertyMapping();
+			if ( !propertyMapping.getName().equals( identifierMapping.getAttributeName() ) ) {
+				// this *should* indicate processing part of an IdClass...
+				return virtualIdentifierMemberResolver.resolveMember( attributeContext, metadataContext );
+			}
+
+			final Getter getter = getter( declaringEntityMapping, propertyMapping );
+			if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
+				return new MapMember( identifierMapping.getAttributeName(), identifierMapping.getJavaType().getJavaTypeClass() );
+			}
+			else {
+				return getter.getMember();
+			}
 		}
 	};
 
 	private final MemberResolver versionMemberResolver = (attributeContext, metadataContext) -> {
 		final AbstractIdentifiableType<?> identifiableType =
 				(AbstractIdentifiableType<?>) attributeContext.getOwnerType();
-		final EntityPersister entityPersister = getDeclaringEntity( identifiableType, metadataContext );
-		final EntityVersionMapping versionMapping = entityPersister.getVersionMapping();
-		assert entityPersister.isVersioned();
-		assert versionMapping != null;
-
-		final String versionPropertyName = attributeContext.getPropertyMapping().getName();
-		if ( !versionPropertyName.equals( versionMapping.getVersionAttribute().getAttributeName() ) ) {
-			// this should never happen, but to be safe...
-			throw new IllegalArgumentException( "Given property did not match declared version property" );
-		}
-
-		final Getter getter = getter( entityPersister, attributeContext.getPropertyMapping() );
-		if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
-			return new MapMember( versionPropertyName, versionMapping.getJavaType().getJavaTypeClass() );
+		if ( identifiableType instanceof MappedSuperclassDomainType<?> ) {
+			return attributeContext.getPropertyMapping()
+					.getGetter( identifiableType.getJavaType() )
+					.getMember();
 		}
 		else {
-			return getter.getMember();
+			final EntityPersister entityPersister = getDeclaringEntity( identifiableType, metadataContext );
+			final EntityVersionMapping versionMapping = entityPersister.getVersionMapping();
+			assert entityPersister.isVersioned();
+			assert versionMapping != null;
+
+			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
+			if ( !versionPropertyName.equals( versionMapping.getVersionAttribute().getAttributeName() ) ) {
+				// this should never happen, but to be safe...
+				throw new IllegalArgumentException( "Given property did not match declared version property" );
+			}
+
+			final Getter getter = getter( entityPersister, attributeContext.getPropertyMapping() );
+			if ( getter instanceof PropertyAccessMapImpl.GetterImpl ) {
+				return new MapMember( versionPropertyName, versionMapping.getJavaType().getJavaTypeClass() );
+			}
+			else {
+				return getter.getMember();
+			}
 		}
 	};
 

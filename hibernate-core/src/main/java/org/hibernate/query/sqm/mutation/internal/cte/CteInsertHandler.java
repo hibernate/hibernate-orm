@@ -1141,7 +1141,7 @@ public class CteInsertHandler implements InsertHandler {
 					final List<ColumnReference> assignmentColumns = new ArrayList<>( assignments.size() );
 					final QuerySpec updateSubquery = new QuerySpec( false, 1 );
 					for ( Assignment assignment : assignments ) {
-						assignmentColumns.add( (ColumnReference) assignment.getAssignable() );
+						assignmentColumns.addAll( assignment.getAssignable().getColumnReferences() );
 						updateSubquery.getSelectClause().addSqlSelection(
 								new SqlSelectionImpl( assignment.getAssignedValue() )
 						);

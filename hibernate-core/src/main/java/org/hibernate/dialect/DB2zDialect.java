@@ -5,8 +5,6 @@
 package org.hibernate.dialect;
 
 
-import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -66,27 +64,12 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry( functionContributions );
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			final var functionFactory = new CommonFunctionFactory( functionContributions );
-			functionFactory.listagg( null );
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		}
-	}
-
-	@Override
 	protected String columnType(int sqlTypeCode) {
-		if ( getVersion().isAfter( 10 ) ) {
-			switch ( sqlTypeCode ) {
-				case TIME_WITH_TIMEZONE:
-				case TIMESTAMP_WITH_TIMEZONE:
-					// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
-					return "timestamp with time zone";
-			}
-		}
-		return super.columnType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			// See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/wnew/src/tpc/db2z_10_timestamptimezone.html
+			case TIME_WITH_TIMEZONE, TIMESTAMP_WITH_TIMEZONE -> "timestamp with time zone";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -113,7 +96,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
-		return getVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override

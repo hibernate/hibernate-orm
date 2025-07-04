@@ -6,8 +6,6 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
-import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -32,14 +30,14 @@ import java.util.List;
 import static org.hibernate.type.SqlTypes.ROWID;
 
 /**
- * A SQL dialect for DB2 for IBM i version 7.1 and above, previously known as "DB2/400".
+ * A SQL dialect for DB2 for IBM i version 7.2 and above, previously known as "DB2/400".
  *
  * @author Peter DeGregorio (pdegregorio)
  * @author Christian Beikov
  */
 public class DB2iDialect extends DB2Dialect {
 
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 1 );
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 7, 2 );
 	public final static DatabaseVersion DB2_LUW_VERSION = DB2Dialect.MINIMUM_VERSION;
 
 	private static final String FOR_UPDATE_SQL = " for update with rs";
@@ -61,17 +59,6 @@ public class DB2iDialect extends DB2Dialect {
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;
-	}
-
-	@Override
-	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry( functionContributions );
-		if ( getVersion().isSameOrAfter( 7, 2 ) ) {
-			final var functionFactory = new CommonFunctionFactory( functionContributions );
-			functionFactory.listagg( null );
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		}
 	}
 
 	@Override
@@ -98,8 +85,8 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsUpdateReturning() {
-		// Only supported for insert statements on DB2 for i: https://www.ibm.com/docs/en/i/7.1?topic=clause-table-reference
-		return false;
+		// Only supported as of version 7.6: https://www.ibm.com/docs/en/i/7.6.0?topic=clause-table-reference
+		return getVersion().isSameOrAfter( 7, 6 );
 	}
 
 	/**

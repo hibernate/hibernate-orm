@@ -37,11 +37,6 @@ public class DB2zSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 	}
 
 	@Override
-	protected boolean supportsOffsetClause() {
-		return version.isSameOrAfter(12);
-	}
-
-	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// Supported at least since DB2 z/OS 9.0
 		renderComparisonStandard( lhs, operator, rhs );

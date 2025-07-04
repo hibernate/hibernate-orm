@@ -343,7 +343,7 @@ public class EmbeddableBinder {
 
 		final String subpath = getPath( propertyHolder, inferredData );
 		LOG.tracev( "Binding component with path: {0}", subpath );
-		final ComponentPropertyHolder subholder = buildPropertyHolder(
+		final PropertyHolder subholder = buildPropertyHolder(
 				component,
 				subpath,
 				inferredData,
@@ -469,8 +469,6 @@ public class EmbeddableBinder {
 								+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
 			}
 		}
-
-		subholder.checkPropertyConsistency();
 
 		if ( compositeUserType != null ) {
 			processCompositeUserType( component, compositeUserType );

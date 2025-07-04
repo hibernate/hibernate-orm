@@ -10,7 +10,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2GetObjectExtractor;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -484,6 +483,12 @@ public class DB2LegacyDialect extends Dialect {
 		if ( supportsRecursiveCTE() ) {
 			functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 		}
+
+		functionFactory.hex( "hex(?1)" );
+		if ( getDB2Version().isSameOrAfter( 11 ) ) {
+			functionFactory.sha( "hash(?1, 2)" );
+			functionFactory.md5( "hash(?1, 0)" );
+		}
 	}
 
 	/**
@@ -522,7 +527,7 @@ public class DB2LegacyDialect extends Dialect {
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( getDB2Version().isBefore( 11 ) ) {
-			return DB2Dialect.timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
+			return timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
 		}
 		final StringBuilder pattern = new StringBuilder();
 		final String fromExpression;
@@ -558,7 +563,11 @@ public class DB2LegacyDialect extends Dialect {
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
-				pattern.append( "(seconds_between(" );
+				pattern.append( "(seconds_between(date_trunc('second'," );
+				pattern.append( toExpression );
+				pattern.append( "),date_trunc('second'," );
+				pattern.append( fromExpression );
+				pattern.append( "))" );
 				break;
 			//note: DB2 does have weeks_between()
 			case MONTH:
@@ -566,14 +575,18 @@ public class DB2LegacyDialect extends Dialect {
 				// the months_between() function results
 				// in a non-integral value, so trunc() it
 				pattern.append( "trunc(months_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 				break;
 			default:
 				pattern.append( "?1s_between(" );
+				pattern.append( toExpression );
+				pattern.append( ',' );
+				pattern.append( fromExpression );
+				pattern.append( ')' );
 		}
-		pattern.append( toExpression );
-		pattern.append( ',' );
-		pattern.append( fromExpression );
-		pattern.append( ')' );
 		switch ( unit ) {
 			case NATIVE:
 				pattern.append( "+(microsecond(");
@@ -597,6 +610,97 @@ public class DB2LegacyDialect extends Dialect {
 				break;
 		}
 		return pattern.toString();
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String timestampdiffPatternV10(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		final boolean isTime = fromTemporalType == TemporalType.TIME || toTemporalType == TemporalType.TIME;
+		final String fromExpression;
+		final String toExpression;
+		if ( unit.isDateUnit() ) {
+			if ( fromTemporalType == TemporalType.TIME ) {
+				fromExpression = "timestamp('1970-01-01',?2)";
+			}
+			else {
+				fromExpression = "?2";
+			}
+			if ( toTemporalType == TemporalType.TIME ) {
+				toExpression = "timestamp('1970-01-01',?3)";
+			}
+			else {
+				toExpression = "?3";
+			}
+		}
+		else {
+			if ( fromTemporalType == TemporalType.DATE ) {
+				fromExpression = "cast(?2 as timestamp)";
+			}
+			else {
+				fromExpression = "?2";
+			}
+			if ( toTemporalType == TemporalType.DATE ) {
+				toExpression = "cast(?3 as timestamp)";
+			}
+			else {
+				toExpression = "?3";
+			}
+		}
+		switch ( unit ) {
+			case NATIVE:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))+(microsecond(t2)-microsecond(t1))/1e6 " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case NANOSECOND:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))*1e9";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))*1e9+(microsecond(t2)-microsecond(t1))*1e3 " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case SECOND:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1)) " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case MINUTE:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/60";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*1440+(midnight_seconds(t2)-midnight_seconds(t1))/60 from " +
+						"lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case HOUR:
+				if ( isTime ) {
+					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/3600";
+				}
+				else {
+					return "(select (days(t2)-days(t1))*24+(midnight_seconds(t2)-midnight_seconds(t1))/3600 " +
+						"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
+				}
+			case YEAR:
+				return "(year(" + toExpression + ")-year(" + fromExpression + "))";
+			// the months_between() function results
+			// in a non-integral value, so trunc() it
+			case MONTH:
+				return "trunc(months_between(" + toExpression + ',' + fromExpression + "))";
+			case QUARTER:
+				return "trunc(months_between(" + toExpression + ',' + fromExpression + ")/3)";
+			case WEEK:
+				return "int((days" + toExpression + ")-days(" + fromExpression + "))/7)";
+			case DAY:
+				return "(days(" + toExpression + ")-days(" + fromExpression + "))";
+			default:
+				throw new UnsupportedOperationException( "Unsupported unit: " + unit );
+		}
 	}
 
 	@Override
@@ -903,10 +1007,31 @@ public class DB2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		// would need multiple statements to 'set not null'/'drop not null', 'set default'/'drop default', 'set generated', etc
+		return "alter column " + columnName + " set data type " + columnType;
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return getVersion().isSameOrAfter( 10, 5 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 11, 5 );
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new CteMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 
 	@Override
@@ -947,6 +1072,11 @@ public class DB2LegacyDialect extends Dialect {
 
 	@Override
 	public boolean supportsLobValueChangePropagation() {
+		return false;
+	}
+
+	@Override
+	public boolean useInputStreamToInsertBlob() {
 		return false;
 	}
 

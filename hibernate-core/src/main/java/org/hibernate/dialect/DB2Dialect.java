@@ -15,13 +15,11 @@ import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DB2FormatEmulation;
-import org.hibernate.dialect.function.DB2PositionFunction;
 import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
-import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -86,8 +84,6 @@ import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -118,7 +114,6 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
-import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.NUMERIC;
@@ -135,7 +130,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Db2 for LUW (Linux, Unix, and Windows) version 10.5 and above.
+ * A {@linkplain Dialect SQL dialect} for Db2 for LUW (Linux, Unix, and Windows) version 11.1 and above.
  * <p>
  * Please refer to the
  * <a href="https://www.ibm.com/docs/en/db2/12.1">Db2 documentation</a>.
@@ -147,7 +142,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  */
 public class DB2Dialect extends Dialect {
 
-	final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 5 );
+	final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 1 );
 	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
 
 	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
@@ -157,10 +152,7 @@ public class DB2Dialect extends Dialect {
 	private static final String FOR_SHARE_SKIP_LOCKED_SQL = FOR_SHARE_SQL + SKIP_LOCKED_SQL;
 	private static final String FOR_UPDATE_SKIP_LOCKED_SQL = FOR_UPDATE_SQL + SKIP_LOCKED_SQL;
 
-	private final LimitHandler limitHandler =
-			getDB2Version().isBefore( 11, 1 )
-					? LegacyDB2LimitHandler.INSTANCE
-					: DB2LimitHandler.INSTANCE;
+	private final LimitHandler limitHandler = DB2LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = createUniqueDelegate();
 	private final StandardTableExporter db2TableExporter = new StandardTableExporter( this ) {
 		@Override
@@ -210,13 +202,6 @@ public class DB2Dialect extends Dialect {
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		return switch (sqlTypeCode) {
-			case BOOLEAN ->
-				// prior to DB2 11, the 'boolean' type existed,
-				// but was not allowed as a column type
-					getDB2Version().isBefore( 11 )
-							? "smallint"
-							: super.columnType( sqlTypeCode );
-
 			case TINYINT -> "smallint"; // no tinyint
 
 			// HHH-12827: map them both to the same type to avoid problems with schema update
@@ -228,17 +213,6 @@ public class DB2Dialect extends Dialect {
 
 			case TIMESTAMP_WITH_TIMEZONE -> "timestamp($p)";
 			case TIME, TIME_WITH_TIMEZONE -> "time";
-
-			case BINARY ->
-				// should use 'binary' since version 11
-					getDB2Version().isBefore( 11 )
-							? "char($l) for bit data"
-							: super.columnType( sqlTypeCode );
-			case VARBINARY ->
-				// should use 'varbinary' since version 11
-					getDB2Version().isBefore( 11 )
-							? "varchar($l) for bit data"
-							: super.columnType( sqlTypeCode );
 
 			default -> super.columnType( sqlTypeCode );
 		};
@@ -286,13 +260,8 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	protected boolean supportsPredicateAsExpression() {
-		return getDB2Version().isSameOrAfter( 11 );
-	}
-
-	@Override
 	public boolean supportsDistinctFromPredicate() {
-		return getDB2Version().isSameOrAfter( 11, 1 );
+		return true;
 	}
 
 	@Override
@@ -351,33 +320,15 @@ public class DB2Dialect extends Dialect {
 		functionFactory.regrLinearRegressionAggregates();
 		functionFactory.variance();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.position();
-			functionFactory.overlayLength_overlay( false );
-			functionFactory.median();
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.stddevPopSamp();
-			functionFactory.varPopSamp();
-			functionFactory.varianceSamp();
-			functionFactory.dateTrunc();
-			functionFactory.trunc_dateTrunc();
-		}
-		else {
-			// Before version 11, the position function required the use of the code units
-			functionContributions.getFunctionRegistry().register(
-					"position",
-					new DB2PositionFunction( functionContributions.getTypeConfiguration() )
-			);
-			// Before version 11, the overlay function required the use of the code units
-			functionFactory.overlayLength_overlay( true );
-			// ordered set aggregate functions are only available as of version 11, and we can't reasonably emulate them
-			// so no percent_rank, cume_dist, median, mode, percentile_cont or percentile_disc
-			functionContributions.getFunctionRegistry().registerAlternateKey( "stddev_pop", "stddev" );
-			functionFactory.stddevSamp_sumCount();
-			functionContributions.getFunctionRegistry().registerAlternateKey( "var_pop", "variance" );
-			functionFactory.varSamp_sumCount();
-			functionFactory.trunc_dateTrunc_trunc();
-		}
+		functionFactory.position();
+		functionFactory.overlayLength_overlay( false );
+		functionFactory.median();
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.stddevPopSamp();
+		functionFactory.varPopSamp();
+		functionFactory.varianceSamp();
+		functionFactory.dateTrunc();
+		functionFactory.trunc_dateTrunc();
 
 		functionFactory.addYearsMonthsDaysHoursMinutesSeconds();
 		functionFactory.yearsMonthsDaysHoursMinutesSecondsBetween();
@@ -446,30 +397,22 @@ public class DB2Dialect extends Dialect {
 		functionFactory.windowFunctions();
 		functionFactory.listagg( null );
 
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.jsonValue_db2();
-			functionFactory.jsonQuery_no_passing();
-			functionFactory.jsonExists_no_passing();
-			functionFactory.jsonObject_db2();
-			functionFactory.jsonArray_db2();
-			functionFactory.jsonArrayAgg_db2();
-			functionFactory.jsonObjectAgg_db2();
-			functionFactory.jsonTable_db2( getMaximumSeriesSize() );
-		}
+		functionFactory.jsonValue_db2();
+		functionFactory.jsonQuery_no_passing();
+		functionFactory.jsonExists_no_passing();
+		functionFactory.jsonObject_db2();
+		functionFactory.jsonArray_db2();
+		functionFactory.jsonArrayAgg_db2();
+		functionFactory.jsonObjectAgg_db2();
+		functionFactory.jsonTable_db2( getMaximumSeriesSize() );
 
 		functionFactory.xmlelement();
 		functionFactory.xmlcomment();
 		functionFactory.xmlforest();
 		functionFactory.xmlconcat();
 		functionFactory.xmlpi();
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.xmlquery_db2();
-			functionFactory.xmlexists();
-		}
-		else {
-			functionFactory.xmlquery_db2_legacy();
-			functionFactory.xmlexists_db2_legacy();
-		}
+		functionFactory.xmlquery_db2();
+		functionFactory.xmlexists();
 		functionFactory.xmlagg();
 		functionFactory.xmltable_db2();
 
@@ -477,10 +420,8 @@ public class DB2Dialect extends Dialect {
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), false, true );
 
 		functionFactory.hex( "hex(?1)" );
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			functionFactory.sha( "hash(?1, 2)" );
-			functionFactory.md5( "hash(?1, 0)" );
-		}
+		functionFactory.sha( "hash(?1, 2)" );
+		functionFactory.md5( "hash(?1, 0)" );
 	}
 
 	/**
@@ -518,9 +459,6 @@ public class DB2Dialect extends Dialect {
 
 	@Override @SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( getDB2Version().isBefore( 11 ) ) {
-			return timestampdiffPatternV10( unit, fromTemporalType, toTemporalType );
-		}
 		final StringBuilder pattern = new StringBuilder();
 		final String fromExpression;
 		final String toExpression;
@@ -590,97 +528,6 @@ public class DB2Dialect extends Dialect {
 				break;
 		}
 		return pattern.toString();
-	}
-
-	@SuppressWarnings("deprecation")
-	public static String timestampdiffPatternV10(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		final boolean isTime = fromTemporalType == TemporalType.TIME || toTemporalType == TemporalType.TIME;
-		final String fromExpression;
-		final String toExpression;
-		if ( unit.isDateUnit() ) {
-			if ( fromTemporalType == TemporalType.TIME ) {
-				fromExpression = "timestamp('1970-01-01',?2)";
-			}
-			else {
-				fromExpression = "?2";
-			}
-			if ( toTemporalType == TemporalType.TIME ) {
-				toExpression = "timestamp('1970-01-01',?3)";
-			}
-			else {
-				toExpression = "?3";
-			}
-		}
-		else {
-			if ( fromTemporalType == TemporalType.DATE ) {
-				fromExpression = "cast(?2 as timestamp)";
-			}
-			else {
-				fromExpression = "?2";
-			}
-			if ( toTemporalType == TemporalType.DATE ) {
-				toExpression = "cast(?3 as timestamp)";
-			}
-			else {
-				toExpression = "?3";
-			}
-		}
-		switch ( unit ) {
-			case NATIVE:
-				if ( isTime ) {
-					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
-				}
-				else {
-					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))+(microsecond(t2)-microsecond(t1))/1e6 " +
-							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
-				}
-			case NANOSECOND:
-				if ( isTime ) {
-					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))*1e9";
-				}
-				else {
-					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1))*1e9+(microsecond(t2)-microsecond(t1))*1e3 " +
-							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
-				}
-			case SECOND:
-				if ( isTime ) {
-					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))";
-				}
-				else {
-					return "(select (days(t2)-days(t1))*86400+(midnight_seconds(t2)-midnight_seconds(t1)) " +
-							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
-				}
-			case MINUTE:
-				if ( isTime ) {
-					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/60";
-				}
-				else {
-					return "(select (days(t2)-days(t1))*1440+(midnight_seconds(t2)-midnight_seconds(t1))/60 from " +
-							"lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
-				}
-			case HOUR:
-				if ( isTime ) {
-					return "(midnight_seconds(" + toExpression + ")-midnight_seconds(" + fromExpression + "))/3600";
-				}
-				else {
-					return "(select (days(t2)-days(t1))*24+(midnight_seconds(t2)-midnight_seconds(t1))/3600 " +
-							"from lateral(values(" + fromExpression + ',' + toExpression + ")) as temp(t1,t2))";
-				}
-			case YEAR:
-				return "(year(" + toExpression + ")-year(" + fromExpression + "))";
-			// the months_between() function results
-			// in a non-integral value, so trunc() it
-			case MONTH:
-				return "trunc(months_between(" + toExpression + ',' + fromExpression + "))";
-			case QUARTER:
-				return "trunc(months_between(" + toExpression + ',' + fromExpression + ")/3)";
-			case WEEK:
-				return "int((days" + toExpression + ")-days(" + fromExpression + "))/7)";
-			case DAY:
-				return "(days(" + toExpression + ")-days(" + fromExpression + "))";
-			default:
-				throw new UnsupportedOperationException( "Unsupported unit: " + unit );
-		}
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -847,7 +694,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
+		// Introduced in 11.5.4: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
 		return getDB2Version().isSameOrAfter( 11, 5 );
 	}
 
@@ -1004,7 +851,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsIsTrue() {
-		return getDB2Version().isSameOrAfter( 11 );
+		return true;
 	}
 
 	@Override
@@ -1061,12 +908,6 @@ public class DB2Dialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-
-		if ( getDB2Version().isBefore( 11 ) ) {
-			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
-			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
-			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
-		}
 
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( DB2StructJdbcType.INSTANCE );
@@ -1130,9 +971,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public AggregateSupport getAggregateSupport() {
-		return getDB2Version().isSameOrAfter( 11 )
-				? DB2AggregateSupport.JSON_INSTANCE
-				: DB2AggregateSupport.INSTANCE;
+		return DB2AggregateSupport.JSON_INSTANCE;
 	}
 
 	@Override
@@ -1142,13 +981,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			appender.appendSql( "BX'" );
-		}
-		else {
-			// This should be fine on DB2 prior to 10
-			appender.appendSql( "X'" );
-		}
+		appender.appendSql( "BX'" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
@@ -1297,12 +1130,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
-		if ( getDB2Version().isBefore( 11 ) ) {
-			appender.appendSql( bool ? '1' : '0' );
-		}
-		else {
-			appender.appendSql( bool );
-		}
+		appender.appendSql( bool );
 	}
 
 	@Override
@@ -1318,12 +1146,6 @@ public class DB2Dialect extends Dialect {
 				return "dayofweek(?2)";
 			case QUARTER:
 				return "quarter(?2)";
-			case EPOCH:
-				if ( getDB2Version().isBefore( 11 ) ) {
-					return timestampdiffPattern( TemporalUnit.SECOND, TemporalType.TIMESTAMP, TemporalType.TIMESTAMP )
-							.replace( "?2", "'1970-01-01 00:00:00'" )
-							.replace( "?3", "?2" );
-				}
 		}
 		return super.extractPattern( unit );
 	}
@@ -1403,7 +1225,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsFromClauseInUpdate() {
-		return getDB2Version().isSameOrAfter( 11 );
+		return true;
 	}
 
 	@Override

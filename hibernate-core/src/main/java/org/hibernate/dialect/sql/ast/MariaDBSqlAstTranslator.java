@@ -281,7 +281,8 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
-				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson() ) {
+				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().isJson()
+				&& getDialect().getVersion().isSameOrAfter( 10, 7 ) ) {
 			switch ( operator ) {
 				case DISTINCT_FROM:
 					appendSql( "case when json_equals(" );

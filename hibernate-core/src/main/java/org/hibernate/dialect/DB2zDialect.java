@@ -112,12 +112,6 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		// Supported at least since DB2 z/OS 9.0
-		return true;
-	}
-
-	@Override
 	public TimeZoneSupport getTimeZoneSupport() {
 		return getVersion().isAfter(10) ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}

@@ -42,7 +42,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, dialect );
 		assertEquals(
 				"The default column length is 255, but char length on DB2 is limited to 254",
-				"varchar($l) for bit data",
+				"varbinary($l)",
 				actual
 		);
 	}
@@ -54,7 +54,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		String actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 1) );
 		assertEquals(
 				"Wrong binary type",
-				"char(1) for bit data",
+				"binary(1)",
 				actual
 		);
 
@@ -62,7 +62,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 254) );
 		assertEquals(
 				"Wrong binary type. 254 is the max length in DB2",
-				"char(254) for bit data",
+				"binary(254)",
 				actual
 		);
 
@@ -70,7 +70,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		actual = typeConfiguration.getDdlTypeRegistry().getTypeName( Types.BINARY, Size.length( 255) );
 		assertEquals(
 				"Wrong binary type. Should be varchar for length > 254",
-				"varchar(255) for bit data",
+				"varbinary(255)",
 				actual
 		);
 	}
@@ -84,7 +84,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", rowSelection );
 		assertTrue(
 				"Integer overflow for max rows in: " + sql,
-				sql.contains("fetch first 2147483647 rows only")
+				sql.contains("fetch next ? rows only")
 		);
 	}
 }

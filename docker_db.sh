@@ -290,7 +290,7 @@ edb_17() {
 }
 
 db2() {
-  db2_11_5
+  db2_12_1
 }
 
 db2_11_5() {
@@ -306,26 +306,17 @@ db2_11_5() {
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 }
 
-db2_10_5() {
+db2_12_1() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2 || true
-    # The sha represents the tag 10.5.0.5-3.10.0
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INST1_PASSWORD=db2inst1-pwd -e LICENSE=accept -p 50000:50000 -d ${DB_IMAGE_DB2_10_5:-quay.io/hibernate/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b} db2start
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d ${DB_IMAGE_DB2_11_5:-icr.io/db2_community/db2:12.1.2.0}
     # Give the container some time to start
     OUTPUT=
-    while [[ $OUTPUT != *"DB2START"* ]]; do
+    while [[ $OUTPUT != *"INSTANCE"* ]]; do
         echo "Waiting for DB2 to start..."
         sleep 10
         OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2 2>&1)
     done
-    $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - db2inst1 bash -c "/home/db2inst1/sqllib/bin/db2 create database orm_test &&
-    /home/db2inst1/sqllib/bin/db2 'connect to orm_test' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE BUFFERPOOL BP8K pagesize 8K' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE SYSTEM TEMPORARY TABLESPACE STB_8 PAGESIZE 8K BUFFERPOOL BP8K' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE BUFFERPOOL BP16K pagesize 16K' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE SYSTEM TEMPORARY TABLESPACE STB_16 PAGESIZE 16K BUFFERPOOL BP16K' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE BUFFERPOOL BP32K pagesize 32K' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE SYSTEM TEMPORARY TABLESPACE STB_32 PAGESIZE 32K BUFFERPOOL BP32K' &&
-    /home/db2inst1/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
 }
 
 db2_spatial() {

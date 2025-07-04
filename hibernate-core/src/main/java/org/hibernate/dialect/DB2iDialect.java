@@ -97,11 +97,6 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsDistinctFromPredicate() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsUpdateReturning() {
 		// Only supported for insert statements on DB2 for i: https://www.ibm.com/docs/en/i/7.1?topic=clause-table-reference
 		return false;

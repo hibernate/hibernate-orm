@@ -58,10 +58,8 @@ elif [ "$RDBMS" == "oracle_db23c" ]; then
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_cloud_db23c -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
-elif [ "$RDBMS" == "db2" ]; then
+elif [ "$RDBMS" == "db2" ] || [ "$RDBMS" == "db2_11_5" ]; then
   goal="-Pdb=db2_ci"
-elif [ "$RDBMS" == "db2_10_5" ]; then
-  goal="-Pdb=db2"
 elif [ "$RDBMS" == "mssql" ] || [ "$RDBMS" == "mssql_2017" ]; then
   goal="-Pdb=mssql_ci"
 # Exclude some Sybase tests on CI because they use `xmltable` function which has a memory leak on the DB version in CI

@@ -29,7 +29,6 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
@@ -41,7 +40,6 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -130,12 +128,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	@Override
 	protected void renderExpressionAsClauseItem(Expression expression) {
-		if ( expression instanceof Predicate && getDB2Version().isBefore( 11 ) ) {
-			super.renderExpressionAsClauseItem( expression );
-		}
-		else {
-			expression.accept( this );
-		}
+		expression.accept( this );
 	}
 
 	@Override
@@ -145,18 +138,13 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 
 	@Override
 	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
-		if ( getDB2Version().isSameOrAfter( 11 ) ) {
-			final boolean isNegated = booleanExpressionPredicate.isNegated();
-			if ( isNegated ) {
-				appendSql( "not(" );
-			}
-			booleanExpressionPredicate.getExpression().accept( this );
-			if ( isNegated ) {
-				appendSql( CLOSE_PARENTHESIS );
-			}
+		final boolean isNegated = booleanExpressionPredicate.isNegated();
+		if ( isNegated ) {
+			appendSql( "not(" );
 		}
-		else {
-			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+		booleanExpressionPredicate.getExpression().accept( this );
+		if ( isNegated ) {
+			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
 
@@ -233,17 +221,11 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			return false;
 		}
 		// Percent fetches or ties fetches aren't supported in DB2
-		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
-			return true;
-		}
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
-		return getDB2Version().isBefore( 11, 1 )
-				&& queryPart.getFetchClauseExpression() != null
-				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
+		return useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	protected boolean supportsOffsetClause() {
-		return getDB2Version().isSameOrAfter( 11, 1 );
+		return true;
 	}
 
 	@Override
@@ -518,7 +500,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 			final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 			if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
 					&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-				// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+				// In DB2, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 				switch ( operator ) {
 					case DISTINCT_FROM:
 						appendSql( "decode(" );
@@ -566,7 +548,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslat
 		final JdbcMappingContainer lhsExpressionType = lhs.getExpressionType();
 		if ( lhsExpressionType != null && lhsExpressionType.getJdbcTypeCount() == 1
 				&& lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() == SqlTypes.SQLXML ) {
-			// In SQL Server, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
+			// In DB2, XMLTYPE is not "comparable", so we have to cast the two parts to varchar for this purpose
 			switch ( operator ) {
 				case EQUAL:
 				case NOT_DISTINCT_FROM:

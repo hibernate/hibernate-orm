@@ -192,8 +192,11 @@ public class MySQLAggregateSupport extends AggregateSupportImpl {
 					if ( uuidFunctions ) {
 						return "bin_to_uuid(" + customWriteExpression + ")";
 					}
+					else if ( jsonType ) {
+						return "insert(insert(insert(insert(lower(hex(" + customWriteExpression + ")),21,0,'-'),17,0,'-'),13,0,'-'),9,0,'-')";
+					}
 					else {
-						return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','$1-$2-$3-$4-$5')";
+						return "regexp_replace(lower(hex(" + customWriteExpression + ")),'^(.{8})(.{4})(.{4})(.{4})(.{12})$','\\\\1-\\\\2-\\\\3-\\\\4-\\\\5')";
 					}
 				}
 				// Fall-through intended

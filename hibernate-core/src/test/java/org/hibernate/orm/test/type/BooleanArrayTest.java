@@ -9,6 +9,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -116,6 +117,8 @@ public class BooleanArrayTest {
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "The statement failed because binary large objects are not allowed in the Union, Intersect, or Minus ")
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
+			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
 	public void testQuery(SessionFactoryScope scope) {
 	scope.inSession( em -> {
 			TypedQuery<TableWithBooleanArrays> tq = em.createNamedQuery( "TableWithBooleanArrays.JPQL.getByData", TableWithBooleanArrays.class );
@@ -174,6 +177,8 @@ public class BooleanArrayTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
+	@SkipForDialect(dialectClass = MariaDBDialect.class, majorVersion = 10, minorVersion = 6,
+			reason = "Bug in MariaDB https://jira.mariadb.org/browse/MDEV-21530")
 	public void testLiteral(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			final HibernateCriteriaBuilder cb = em.getCriteriaBuilder();

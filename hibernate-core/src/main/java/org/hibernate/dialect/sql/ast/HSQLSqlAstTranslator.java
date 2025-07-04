@@ -13,7 +13,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
  *
  * @author Christian Beikov
  */
-public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class HSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslatorWithMerge<T> {
 
 	public HSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );

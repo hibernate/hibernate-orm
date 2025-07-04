@@ -4,16 +4,13 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -72,7 +69,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 	private final String embeddedAttributeName;
 	private final Map<String,AttributeConversionInfo> attributeConversionInfoMap;
-	private final List<AnnotatedColumn> annotatedColumns;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -98,12 +94,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		else {
 			this.embeddedAttributeName = "";
 			this.attributeConversionInfoMap = processAttributeConversions( inferredData.getClassOrElementType() );
-		}
-
-		if ( parent instanceof ComponentPropertyHolder parentHolder ) {
-			this.annotatedColumns = parentHolder.annotatedColumns;
-		} else {
-			this.annotatedColumns = new ArrayList<>();
 		}
 	}
 
@@ -231,12 +221,17 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
+	public void addProperty(Property property, MemberDetails attributeMemberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass) {
 		//AnnotatedColumns.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
-		final Table table = property.getValue().getTable();
+		assert columns == null || property.getValue().getTable() == columns.getTable();
+		setTable( property.getValue().getTable() );
+		addProperty( property, attributeMemberDetails, declaringClass );
+	}
+
+	private void setTable(Table table) {
 		if ( !table.equals( getTable() ) ) {
 			if ( component.getPropertySpan() == 0 ) {
 				component.setTable( table );
@@ -248,27 +243,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 						+ " (all properties of the embeddable class must map to the same table)"
 				);
 			}
-		}
-		if ( columns != null ) {
-			annotatedColumns.addAll( columns.getColumns() );
-		}
-		addProperty( property, attributeMemberDetails, declaringClass );
-	}
-
-	public void checkPropertyConsistency() {
-		if ( annotatedColumns.size() > 1 ) {
-			for ( int currentIndex = 1; currentIndex < annotatedColumns.size(); currentIndex++ ) {
-				final AnnotatedColumn current = annotatedColumns.get( currentIndex );
-				final AnnotatedColumn previous = annotatedColumns.get( currentIndex - 1 );
-				if ( !Objects.equals(
-						StringHelper.nullIfEmpty( current.getExplicitTableName() ),
-						StringHelper.nullIfEmpty( previous.getExplicitTableName() ) ) ) {
-					throw new AnnotationException(
-							"Embeddable class '" + component.getComponentClassName()
-							+ "' has properties mapped to two different tables"
-							+ " (all properties of the embeddable class must map to the same table)"
-					);
-				}
+			if ( parent instanceof ComponentPropertyHolder parentComponentHolder ) {
+				parentComponentHolder.setTable( table );
 			}
 		}
 	}

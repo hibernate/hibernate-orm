@@ -255,7 +255,7 @@ public class CriteriaWindowFunctionTest {
 	}
 
 	@Test
-//	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions")
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for percent_rank and cume_dist functions before DB2 11")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for percent_rank and cume_dist functions with over clause")
 	public void testReusableWindow(SessionFactoryScope scope) {
 		scope.inTransaction(

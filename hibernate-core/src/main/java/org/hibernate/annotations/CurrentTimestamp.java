@@ -85,4 +85,17 @@ public @interface CurrentTimestamp {
 	 * this additional {@code select} never occurs.
 	 */
 	SourceType source() default SourceType.DB;
+
+	/**
+	 * Specifies whether the value may be mutated by the application program
+	 * during {@linkplain #event events} which do <em>not</em> trigger value
+	 * generation.
+	 * <p>
+	 * For example, a field annotated
+	 * {@code CurrentTimestamp(event=INSERT, allowMutation=true)}
+	 * is generated when a record is inserted and may be manually mutated later.
+	 *
+	 * @since 7.1
+	 */
+	boolean allowMutation() default false;
 }

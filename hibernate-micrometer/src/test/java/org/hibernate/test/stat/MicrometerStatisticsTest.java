@@ -19,6 +19,9 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.search.MeterNotFoundException;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  *  @author Erin Schnabel
@@ -136,10 +139,11 @@ public class MicrometerStatisticsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	void verifyMeterNotFoundException(String name) {
-		try {
-			registry.get(name).meter();
-			Assert.fail(name + " should not have been found");
-		} catch(MeterNotFoundException mnfe) {
-		}
+		MeterNotFoundException ex = assertThrows(
+				MeterNotFoundException.class,
+				() -> registry.get( name ).meter(), name + " should not have been found"
+		);
+		assertTrue( ex.getMessage().contains( name ) );
+
 	}
 }

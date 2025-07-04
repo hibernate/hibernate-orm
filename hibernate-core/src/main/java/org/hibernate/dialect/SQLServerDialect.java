@@ -132,7 +132,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A dialect for Microsoft SQL Server 2016 and above.
+ * A dialect for Microsoft SQL Server 2014 and above.
  * <p>
  * Please refer to the
  * <a href="https://learn.microsoft.com/en-us/sql/t-sql/language-reference">SQL Server documentation</a>.
@@ -140,7 +140,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13, 0 );
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12, 0 );
 
 	/**
 	 * NOTE : 2100 is the documented limit supposedly - but in my testing, sending
@@ -440,18 +440,20 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
-		functionFactory.jsonValue_sqlserver();
-		functionFactory.jsonQuery_sqlserver();
-		functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
-		functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
-		functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
-		functionFactory.jsonSet_sqlserver();
-		functionFactory.jsonRemove_sqlserver();
-		functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
-		functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
-		functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
-		functionFactory.jsonArrayInsert_sqlserver();
-		functionFactory.jsonTable_sqlserver();
+		if ( getVersion().isSameOrAfter( 13 ) ) {
+			functionFactory.jsonValue_sqlserver();
+			functionFactory.jsonQuery_sqlserver();
+			functionFactory.jsonExists_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonObject_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArray_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonSet_sqlserver();
+			functionFactory.jsonRemove_sqlserver();
+			functionFactory.jsonReplace_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonInsert_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayAppend_sqlserver( getVersion().isSameOrAfter( 16 ) );
+			functionFactory.jsonArrayInsert_sqlserver();
+			functionFactory.jsonTable_sqlserver();
+		}
 
 		functionFactory.xmlelement_sqlserver();
 		functionFactory.xmlcomment_sqlserver();

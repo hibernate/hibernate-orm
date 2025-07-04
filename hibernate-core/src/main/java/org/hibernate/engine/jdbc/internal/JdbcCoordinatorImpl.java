@@ -49,6 +49,7 @@ import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcCoordinatorImpl.class );
+	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
 
 	private transient final LogicalConnectionImplementor logicalConnection;
 	private transient final JdbcSessionOwner owner;
@@ -141,7 +142,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public Connection close() {
-		LOG.tracev( "Closing JDBC container [{0}]", this );
+		if ( TRACE_ENABLED ) LOG.tracev( "Closing JDBC container [{0}]", this );
 		Connection connection;
 		try {
 			if ( currentBatch != null ) {
@@ -264,7 +265,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterStatementExecution() {
 		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
-		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
+		if ( TRACE_ENABLED ) LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );
@@ -320,7 +321,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void registerLastQuery(Statement statement) {
-		LOG.tracev( "Registering last query statement [{0}]", statement );
+		if ( TRACE_ENABLED ) LOG.tracev( "Registering last query statement [{0}]", statement );
 		if ( statement instanceof JdbcWrapper ) {
 			final JdbcWrapper<Statement> wrapper = (JdbcWrapper<Statement>) statement;
 			registerLastQuery( wrapper.getWrappedObject() );

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.ManyToAny;
@@ -301,7 +302,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
+	public void addProperty(Property prop, MemberDetails memberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass) {
 		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
 		throw new AssertionFailure( "addProperty to a join table of a collection: does it make sense?" );
 	}

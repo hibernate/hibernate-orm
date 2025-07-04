@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -220,27 +221,32 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property property, MemberDetails attributeMemberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
-		//Ejb3Column.checkPropertyConsistency( ); //already called earlier
+	public void addProperty(Property property, MemberDetails attributeMemberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass) {
+		//AnnotatedColumns.checkPropertyConsistency( ); //already called earlier
 		// Check table matches between the component and the columns
 		// if not, change the component table if no properties are set
 		// if a property is set already the core cannot support that
-		if ( columns != null ) {
-			final Table table = columns.getTable();
-			if ( !table.equals( getTable() ) ) {
-				if ( component.getPropertySpan() == 0 ) {
-					component.setTable( table );
-				}
-				else {
-					throw new AnnotationException(
-							"Embeddable class '" + component.getComponentClassName()
-									+ "' has properties mapped to two different tables"
-									+ " (all properties of the embeddable class must map to the same table)"
-					);
-				}
+		assert columns == null || property.getValue().getTable() == columns.getTable();
+		setTable( property.getValue().getTable() );
+		addProperty( property, attributeMemberDetails, declaringClass );
+	}
+
+	void setTable(Table table) {
+		if ( !table.equals( getTable() ) ) {
+			if ( component.getPropertySpan() == 0 ) {
+				component.setTable( table );
+			}
+			else {
+				throw new AnnotationException(
+						"Embeddable class '" + component.getComponentClassName()
+						+ "' has properties mapped to two different tables"
+						+ " (all properties of the embeddable class must map to the same table)"
+				);
+			}
+			if ( parent instanceof ComponentPropertyHolder parentComponentHolder ) {
+				parentComponentHolder.setTable( table );
 			}
 		}
-		addProperty( property, attributeMemberDetails, declaringClass );
 	}
 
 	@Override

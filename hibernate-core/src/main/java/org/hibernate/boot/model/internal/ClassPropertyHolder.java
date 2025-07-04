@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
@@ -150,7 +151,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	}
 
 	@Override
-	public void addProperty(Property prop, MemberDetails memberDetails, AnnotatedColumns columns, ClassDetails declaringClass) {
+	public void addProperty(Property prop, MemberDetails memberDetails, @Nullable AnnotatedColumns columns, ClassDetails declaringClass) {
 		//AnnotatedColumn.checkPropertyConsistency( ); //already called earlier
 		if ( columns != null ) {
 			if ( columns.isSecondary() ) {

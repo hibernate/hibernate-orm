@@ -40,15 +40,15 @@ public class DB2iLegacySqlAstTranslator<T extends JdbcOperation> extends DB2Lega
 		if ( useOffsetFetchClause( queryPart ) && !isRowsOnlyFetchClauseType( queryPart ) ) {
 			return true;
 		}
-		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 7.10
-		return  version.isBefore(7, 10)
+		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 7.1
+		return version.isBefore(7, 1)
 				&& queryPart.getFetchClauseExpression() != null
 				&& !( queryPart.getFetchClauseExpression() instanceof Literal );
 	}
 
 	@Override
 	protected boolean supportsOffsetClause() {
-		return version.isSameOrAfter(7, 10);
+		return version.isSameOrAfter(7, 1);
 	}
 
 	@Override

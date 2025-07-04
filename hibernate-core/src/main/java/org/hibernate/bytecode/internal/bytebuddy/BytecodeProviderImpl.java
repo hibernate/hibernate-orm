@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerClassLocator;
@@ -184,7 +183,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				.method( setPropertyValuesMethodName )
 				.intercept( new Implementation.Simple( new SetPropertyValues( clazz, getterNames, setters ) ) )
 				.method( getPropertyNamesMethodName )
-				.intercept( MethodCall.call( new CloningPropertyCall( getterNames ) ) )
+				.intercept( new Implementation.Simple( new GetPropertyNames( getterNames ) ) )
 		);
 
 		try {
@@ -253,7 +252,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					.method( setPropertyValuesMethodName )
 					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
 					.method( getPropertyNamesMethodName )
-					.intercept( MethodCall.call( new CloningPropertyCall( propertyNames ) ) )
+					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames ) ) )
 			);
 		}
 		else {
@@ -266,7 +265,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 					.method( setPropertyValuesMethodName )
 					.intercept( new Implementation.Simple( new SetPropertyValues( clazz, propertyNames, setters ) ) )
 					.method( getPropertyNamesMethodName )
-					.intercept( MethodCall.call( new CloningPropertyCall( propertyNames ) ) )
+					.intercept( new Implementation.Simple( new GetPropertyNames( propertyNames ) ) )
 			);
 		}
 
@@ -887,16 +886,16 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 			Label nextLabel = new Label();
 			for ( int index = 0; index < setters.length; index++ ) {
 				final Member setterMember = setters[index];
-				if ( enhanced && currentLabel != null ) {
+				if ( setterMember == EMBEDDED_MEMBER ) {
+					// The embedded property access does a no-op
+					continue;
+				}
+				if ( currentLabel != null ) {
 					methodVisitor.visitLabel( currentLabel );
 					implementationContext.getFrameGeneration().same(
 							methodVisitor,
 							instrumentedMethod.getParameters().asTypeList()
 					);
-				}
-				if ( setterMember == EMBEDDED_MEMBER ) {
-					// The embedded property access does a no-op
-					continue;
 				}
 				// Push entity on stack
 				methodVisitor.visitVarInsn( Opcodes.ALOAD, 1 );
@@ -1029,6 +1028,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				}
 				if ( enhanced ) {
 					final boolean compositeTracker = CompositeTracker.class.isAssignableFrom( type );
+					boolean alreadyHasFrame = false;
 					// The composite owner check and setting only makes sense if
 					//  * the value type is a composite tracker
 					//  * a value subtype can be a composite tracker
@@ -1110,6 +1110,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Clean stack after the if block
 						methodVisitor.visitLabel( compositeTrackerEndLabel );
 						implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
+						alreadyHasFrame = true;
 					}
 					if ( persistentAttributeInterceptable ) {
 						// Load the owner
@@ -1174,9 +1175,20 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 						// Clean stack after the if block
 						methodVisitor.visitLabel( instanceofEndLabel );
 						implementationContext.getFrameGeneration().same(methodVisitor, instrumentedMethod.getParameters().asTypeList());
+						alreadyHasFrame = true;
 					}
 
-					currentLabel = nextLabel;
+					if ( alreadyHasFrame ) {
+						// Usually, the currentLabel is visited as well generating a frame,
+						// but if a frame was already generated, only visit the label here,
+						// otherwise two frames for the same bytecode index are generated,
+						// which is wrong and will produce an error when the JDK ClassFile API is used
+						methodVisitor.visitLabel( nextLabel );
+						currentLabel = null;
+					}
+					else {
+						currentLabel = nextLabel;
+					}
 					nextLabel = new Label();
 				}
 			}
@@ -1346,17 +1358,29 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		}
 	}
 
-	public static class CloningPropertyCall implements Callable<String[]> {
+	public static class GetPropertyNames implements ByteCodeAppender {
 
 		private final String[] propertyNames;
 
-		private CloningPropertyCall(String[] propertyNames) {
+		private GetPropertyNames(String[] propertyNames) {
 			this.propertyNames = propertyNames;
 		}
 
 		@Override
-		public String[] call() {
-			return propertyNames.clone();
+		public Size apply(
+				MethodVisitor methodVisitor,
+				Implementation.Context implementationContext,
+				MethodDescription instrumentedMethod) {
+			methodVisitor.visitLdcInsn( propertyNames.length );
+			methodVisitor.visitTypeInsn( Opcodes.ANEWARRAY, Type.getInternalName( String.class ) );
+			for ( int i = 0; i < propertyNames.length; i++ ) {
+				methodVisitor.visitInsn( Opcodes.DUP );
+				methodVisitor.visitLdcInsn( i );
+				methodVisitor.visitLdcInsn( propertyNames[i] );
+				methodVisitor.visitInsn( Opcodes.AASTORE );
+			}
+			methodVisitor.visitInsn( Opcodes.ARETURN );
+			return new Size( 4, instrumentedMethod.getStackSize() + 1 );
 		}
 	}
 

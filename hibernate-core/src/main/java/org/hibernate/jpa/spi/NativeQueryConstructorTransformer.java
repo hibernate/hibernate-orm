@@ -20,7 +20,7 @@ import java.util.List;
 public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T> {
 
 	private final Class<T> resultClass;
-	private Constructor<T> constructor;
+	private transient Constructor<T> constructor;
 
 	private Constructor<T> constructor(Object[] elements) {
 		if ( constructor == null ) {
@@ -70,5 +70,22 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 		catch (Exception e) {
 			throw new InstantiationException( "Cannot instantiate query result type", resultClass, e );
 		}
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) {
+			return true;
+		}
+		if ( obj == null || getClass() != obj.getClass() ) {
+			return false;
+		}
+		final NativeQueryConstructorTransformer<?> that = (NativeQueryConstructorTransformer<?>) obj;
+		return resultClass.equals( that.resultClass );
+	}
+
+	@Override
+	public int hashCode() {
+		return resultClass.hashCode();
 	}
 }

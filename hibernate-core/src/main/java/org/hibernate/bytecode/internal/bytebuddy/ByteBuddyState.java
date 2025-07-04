@@ -229,7 +229,10 @@ public final class ByteBuddyState {
 	 */
 	public Class<?> load(Class<?> referenceClass, String className, BiFunction<ByteBuddy, NamingStrategy, DynamicType.Builder<?>> makeClassFunction) {
 		try {
-			return referenceClass.getClassLoader().loadClass( className );
+			Class<?> result = referenceClass.getClassLoader().loadClass(className);
+			if ( result.getClassLoader() == referenceClass.getClassLoader() ) {
+				return result;
+			}
 		}
 		catch (ClassNotFoundException e) {
 			// Ignore

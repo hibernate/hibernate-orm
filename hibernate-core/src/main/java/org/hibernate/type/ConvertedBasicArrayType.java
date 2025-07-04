@@ -16,6 +16,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
+import static org.hibernate.type.BasicArrayType.determineArrayTypeName;
+
 /**
  * Given a {@link BasicValueConverter} for an array type,
  *
@@ -50,7 +52,7 @@ public class ConvertedBasicArrayType<T,S,E>
 		this.jdbcValueExtractor = (ValueExtractor<T>) arrayJdbcType.getExtractor( converter.getRelationalJavaType() );
 		this.jdbcLiteralFormatter = (JdbcLiteralFormatter<T>) arrayJdbcType.getJdbcLiteralFormatter( converter.getRelationalJavaType() );
 		this.baseDescriptor = baseDescriptor;
-		this.name = baseDescriptor.getName() + "[]";
+		this.name = determineArrayTypeName( baseDescriptor );
 	}
 
 	@Override

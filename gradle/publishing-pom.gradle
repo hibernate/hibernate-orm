@@ -66,7 +66,7 @@ publishing {
 		}
 		maven {
 			name = 'snapshots'
-			url = "https://oss.sonatype.org/content/repositories/snapshots/"
+			url = "https://central.sonatype.com/repository/maven-snapshots/"
 			// So that Gradle uses the `ORG_GRADLE_PROJECT_snapshotsPassword` / `ORG_GRADLE_PROJECT_snapshotsUsername`
 			//  env variables to read the username/password for the `snapshots` repository publishing:
 			credentials(PasswordCredentials)

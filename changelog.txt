@@ -3,6 +3,27 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.5.Final (July 06, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34132
+
+** Bug
+    * [HHH-19583] - JsonJavaType is missing parameterized info on the type arguments
+    * [HHH-19523] - NPE when using stateless session and having a PreCollectionRecreateEventListener registered
+    * [HHH-19396] - Cannot select the same column twice (with different aliases) while using CTE
+    * [HHH-19076] - expecting IdClass mapping sessionfactory error with specific @IdClass setup with inheritence
+    * [HHH-18837] - Oracle epoch extraction doesn't work with dates
+    * [HHH-18774] - two bad bugs in cascade refresh
+
+** Improvement
+    * [HHH-19558] - allow JDBC escapes in native SQL queries
+    * [HHH-19498] - upserts on MySQL and Maria
+
+** Task
+    * [HHH-19519] - Document breaking changes in new Hibernate Maven Plugin
+
+
 Changes in 7.0.4.Final (June 30, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

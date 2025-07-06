@@ -3,6 +3,23 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.20.Final (July 06, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34165
+
+** Bug
+    * [HHH-19464] - Storing a binary data into BLOB on Oracle cutting off its content.
+    * [HHH-19396] - Cannot select the same column twice (with different aliases) while using CTE
+    * [HHH-19076] - expecting IdClass mapping sessionfactory error with specific @IdClass setup with inheritence
+    * [HHH-18898] - Specific mistake in HQL gives NullPointerException in AbstractSqlAstTranslator
+    * [HHH-18837] - Oracle epoch extraction doesn't work with dates
+    * [HHH-18581] - Performance degradation from Hibernate 5 to 6 on NativeQuery
+
+** Improvement
+    * [HHH-19558] - allow JDBC escapes in native SQL queries
+
+
 Changes in 6.6.19.Final (June 29, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

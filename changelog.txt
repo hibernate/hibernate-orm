@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.40.Final (July 06, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34099
+
+** Bug
+    * [HHH-19464] - Storing a binary data into BLOB on Oracle cutting off its content.
+    * [HHH-18898] - Specific mistake in HQL gives NullPointerException in AbstractSqlAstTranslator
+
+
 Changes in 6.2.39.Final (June 29, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -57,6 +57,9 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author chen zhida
+ *
+ * Notes: Original code of this class is based on OracleStoredProcedureTest.
+ *
  */
 @Jpa(
 		annotatedClasses = {

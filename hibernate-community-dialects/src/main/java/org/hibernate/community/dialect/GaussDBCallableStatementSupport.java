@@ -13,7 +13,7 @@ import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
  *
  * @author liubao
  *
- * Notes: Original code of this class is based on PostgreSQLCallableStatementSupport.
+ * Notes: Original code of this class is based on OracleCallableStatementSupport.
  */
 public class GaussDBCallableStatementSupport extends StandardCallableStatementSupport {
 

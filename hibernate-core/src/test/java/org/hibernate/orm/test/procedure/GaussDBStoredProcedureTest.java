@@ -56,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 
 /**
- * @author Vlad Mihalcea
+ * @author chen zhida
  */
 @Jpa(
 		annotatedClasses = {

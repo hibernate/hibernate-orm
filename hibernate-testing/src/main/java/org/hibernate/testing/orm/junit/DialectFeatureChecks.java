@@ -695,6 +695,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsTypedArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+		}
+	}
+
 	public static class SupportsUpsertOrMerge implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof DerbyDialect );

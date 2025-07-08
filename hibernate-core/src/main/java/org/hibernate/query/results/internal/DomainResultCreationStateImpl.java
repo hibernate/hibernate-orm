@@ -82,6 +82,7 @@ public class DomainResultCreationStateImpl
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
+	private boolean isProcedureOrNativeQuery;
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
@@ -89,6 +90,7 @@ public class DomainResultCreationStateImpl
 			Map<String, Map<Fetchable, LegacyFetchBuilder>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
 			LoadQueryInfluencers loadQueryInfluencers,
+			boolean isProcedureOrNativeQuery,
 			SessionFactoryImplementor sessionFactory) {
 		this.stateIdentifier = stateIdentifier;
 		this.jdbcResultsMetadata = jdbcResultsMetadata;
@@ -100,6 +102,8 @@ public class DomainResultCreationStateImpl
 		this.legacyFetchResolver = new LegacyFetchResolver( legacyFetchBuilders );
 
 		this.sessionFactory = sessionFactory;
+
+		this.isProcedureOrNativeQuery = isProcedureOrNativeQuery;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -350,11 +354,8 @@ public class DomainResultCreationStateImpl
 		final EntityIdentifierMapping identifierMapping = parentModelPart.getEntityMappingType().getIdentifierMapping();
 		final String identifierAttributeName = attributeName( identifierMapping );
 
-		//noinspection unchecked
-		final FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
-				.getCurrent()
-				.apply( identifierMapping );
-		LegacyFetchBuilder fetchBuilderLegacy;
+		final FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack.getCurrent().apply( identifierMapping );
+		final LegacyFetchBuilder fetchBuilderLegacy;
 		if ( explicitFetchBuilder == null ) {
 			fetchBuilderLegacy = legacyFetchResolver.resolve(
 					fromClauseAccess.findTableGroup( fetchParent.getNavigablePath() )
@@ -414,9 +415,7 @@ public class DomainResultCreationStateImpl
 			if ( !fetchable.isSelectable() ) {
 				return;
 			}
-			FetchBuilder explicitFetchBuilder = (FetchBuilder) fetchBuilderResolverStack
-					.getCurrent()
-					.apply( fetchable );
+			FetchBuilder explicitFetchBuilder = fetchBuilderResolverStack.getCurrent().apply( fetchable );
 			LegacyFetchBuilder fetchBuilderLegacy;
 			if ( explicitFetchBuilder == null ) {
 				fetchBuilderLegacy = legacyFetchResolver.resolve(
@@ -490,4 +489,8 @@ public class DomainResultCreationStateImpl
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 
+	@Override
+	public boolean isProcedureOrNativeQuery() {
+		return isProcedureOrNativeQuery;
+	}
 }

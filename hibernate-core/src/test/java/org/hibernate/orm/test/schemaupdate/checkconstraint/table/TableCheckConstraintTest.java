@@ -14,6 +14,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
@@ -175,9 +176,10 @@ public class TableCheckConstraintTest {
 			String[] fileContent,
 			String tableName,
 			String secondaryTableConstraints) {
+		final String createTableString = DialectContext.getDialect().getCreateTableString().toUpperCase( Locale.ROOT );
 		for ( String string : fileContent ) {
 			String statement = string.toUpperCase( Locale.ROOT );
-			if ( statement.contains( "CREATE TABLE " + tableName.toUpperCase( Locale.ROOT ) ) ) {
+			if ( statement.contains( createTableString + " " + tableName.toUpperCase( Locale.ROOT ) ) ) {
 				if ( statement.contains( secondaryTableConstraints.toUpperCase( Locale.ROOT ) ) ) {
 					return true;
 				}

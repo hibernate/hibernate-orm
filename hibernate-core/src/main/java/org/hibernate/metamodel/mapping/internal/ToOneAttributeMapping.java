@@ -1572,8 +1572,8 @@ public class ToOneAttributeMapping
 		else {
 			side = this.sideNature;
 		}
-
-		if ( ( fetchTiming == FetchTiming.IMMEDIATE && selected ) || needsJoinFetch( side ) ) {
+		if ( fetchTiming == FetchTiming.IMMEDIATE && selected
+			|| !creationState.getSqlAstCreationState().isProcedureOrNativeQuery() && needsJoinFetch( side ) ) {
 			final TableGroup tableGroup = determineTableGroupForFetch(
 					fetchablePath,
 					fetchParent,
@@ -1704,9 +1704,12 @@ public class ToOneAttributeMapping
 
 	private boolean needsJoinFetch(ForeignKeyDescriptor.Nature side) {
 		if ( side == ForeignKeyDescriptor.Nature.TARGET ) {
-			// The target model part doesn't correspond to the identifier of the target entity mapping
-			// so we must eagerly fetch with a join (subselect would still cause problems).
+			// With composite identifier if the target model part doesn't correspond to the identifier of the target entity mapping
+			// we must eagerly fetch with a join (subselect would still cause problems).
 			final EntityIdentifierMapping identifier = entityMappingType.getIdentifierMapping();
+			if ( identifier instanceof BasicEntityIdentifierMappingImpl ) {
+				return false;
+			}
 			final ValuedModelPart targetPart = foreignKeyDescriptor.getTargetPart();
 			if ( identifier != targetPart ) {
 				// If the identifier and the target part of the same class, we can preserve laziness as deferred loading will still work

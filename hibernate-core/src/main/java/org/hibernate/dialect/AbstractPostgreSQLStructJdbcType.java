@@ -1156,6 +1156,9 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 	@Override
 	public Object createJdbcValue(Object domainValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
+		if (domainValue == null) {
+			return null;
+		}
 		final StringBuilder sb = new StringBuilder();
 		serializeStructTo( new PostgreSQLAppender( sb ), domainValue, options );
 		return sb.toString();

@@ -105,6 +105,9 @@ public class StructHelper {
 			WrapperOptions options) throws SQLException {
 		final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 		final int valueCount = jdbcValueCount + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
+		if (domainValue == null) {
+			return null;
+		}
 		final Object[] values = embeddableMappingType.getValues( domainValue );
 		final Object[] jdbcValues;
 		if ( valueCount != values.length || orderMapping != null ) {

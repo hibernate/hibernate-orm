@@ -141,11 +141,13 @@ public class StructJdbcType implements org.hibernate.type.descriptor.jdbc.Struct
 				domainValue,
 				options
 		);
-		return options.getSession()
+		return jdbcValues == null
+				? null
+				: options.getSession()
 				.getJdbcCoordinator()
 				.getLogicalConnection()
 				.getPhysicalConnection()
-				.createStruct( typeName, jdbcValues );
+				.createStruct(typeName, jdbcValues);
 	}
 
 	@Override

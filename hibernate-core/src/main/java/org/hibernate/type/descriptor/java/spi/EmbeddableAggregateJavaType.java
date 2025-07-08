@@ -85,6 +85,9 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 
 	@Override
 	public <X> T wrap(X value, WrapperOptions options) {
+		if ( value == null ) {
+			return null;
+		}
 		if ( getJavaTypeClass().isInstance( value ) ) {
 			//noinspection unchecked
 			return (T) value;

@@ -10,7 +10,7 @@ elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_8_0" ]; then
   goal="-Pdb=mysql_ci"
-elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_4" ]; then
+elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_5" ]; then
   goal="-Pdb=mariadb_ci"
 elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_13" ]; then
   goal="-Pdb=pgsql_ci"

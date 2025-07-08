@@ -2,38 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.procedure;
-
-import java.math.BigDecimal;
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-
-import org.hibernate.Session;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.GaussDBDialect;
-import org.hibernate.jpa.HibernateHints;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureParameter;
-import org.hibernate.result.Output;
-import org.hibernate.result.ResultSetOutput;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.type.NumericBooleanConverter;
-import org.hibernate.type.YesNoConverter;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+package org.hibernate.community.dialect.procedure;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,6 +14,38 @@ import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.Table;
 import org.assertj.core.api.Assertions;
+import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.GaussDBDialect;
+import org.hibernate.jpa.HibernateHints;
+import org.hibernate.orm.test.procedure.Person;
+import org.hibernate.orm.test.procedure.Phone;
+import org.hibernate.orm.test.procedure.Vote;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureParameter;
+import org.hibernate.result.Output;
+import org.hibernate.result.ResultSetOutput;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;

@@ -1156,7 +1156,11 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructuredJdbc
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
 		final Object[] array = new Object[embeddableMappingType.getJdbcValueCount()];
-		deserializeStruct( getRawStructFromJdbcValue( rawJdbcValue ), 0, 0, array, true, options );
+		final String struct = getRawStructFromJdbcValue( rawJdbcValue );
+		if ( struct == null ) {
+			return null;
+		}
+		deserializeStruct( struct, 0, 0, array, true, options );
 		if ( inverseOrderMapping != null ) {
 			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
 		}

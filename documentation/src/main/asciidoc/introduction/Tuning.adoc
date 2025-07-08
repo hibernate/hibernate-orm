@@ -141,6 +141,8 @@ All we need to do is set a single property:
 | link:{doc-javadoc-url}/org/hibernate/cfg/BatchSettings.html#STATEMENT_BATCH_SIZE[`hibernate.jdbc.batch_size`] | Maximum batch size for SQL statement batching | `setJdbcBatchSize()`
 |===
 
+To confirm that statement batching is working, enable ``TRACE``-level logging for the category `org.hibernate.orm.jdbc.batch`.
+
 That said, batching is rarely the most convenient or most efficient way to update or delete many rows at once.
 
 [TIP]

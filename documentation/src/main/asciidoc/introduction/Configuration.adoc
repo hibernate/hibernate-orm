@@ -490,7 +490,7 @@ These settings really help when troubleshooting the generated SQL statements.
 | `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
 |===
 
-Alternatively, you can enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
+Alternatively, you can enable ``DEBUG``-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
 
 For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
 
@@ -507,6 +507,9 @@ logger.jdbc-bind.level=trace
 logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
 logger.jdbc-extract.level=trace
 
+# JDBC batching
+logger.jdbc-batch.name=org.hibernate.orm.jdbc.batch
+logger.jdbc-batch.level=trace
 ----
 
 SQL logging respects the settings `hibernate.format_sql` and `hibernate.highlight_sql`, so we don't miss out on the pretty formatting and highlighting.

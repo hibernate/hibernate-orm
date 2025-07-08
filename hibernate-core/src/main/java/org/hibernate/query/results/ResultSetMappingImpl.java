@@ -209,6 +209,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 				legacyFetchBuilders,
 				sqlSelections::add,
 				loadQueryInfluencers,
+				true,
 				sessionFactory
 		);
 

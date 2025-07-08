@@ -146,15 +146,6 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		return false;
 	}
 
-	/*
-	 * Copyright (c) 2025, Oracle and/or its affiliates.
-	 * Licensed under the Universal Permissive License v 1.0 as shown
-	 * at http://oss.oracle.com/licenses/upl
-	 *
-	 * - Added a custom definition for 'renderRowsToClause()'.
-	 *
-	 * @Author: Carlos Blanco
-	*/
 	@Override
 	protected void renderRowsToClause(Expression offsetClauseExpression, Expression fetchClauseExpression) {
 		// offsetClauseExpression -> firstRow

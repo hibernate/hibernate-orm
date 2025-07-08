@@ -91,18 +91,6 @@ public class TimesTenDialect extends Dialect {
 		super( info );
 	}
 
-	/*
-	 * Copyright (c) 2025, Oracle and/or its affiliates.
-	 * Licensed under the Universal Permissive License v 1.0 as shown
-	 * at http://oss.oracle.com/licenses/upl
-	 *
-	 * - Added more datatypes into columnType():
-	 *     BIT, CHAR, VARCHAR, LONGVARCHAR, BINARY, VARBINARY
-	 *     LONGVARBINARY, BINARY_FLOAT, BINARY_DOUBLE, TIMESTAMP,
-	 *     BLOB, CLOB, NCLOB
-	 * 
-	 * @Author: Carlos Blanco
-	*/
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
@@ -200,22 +188,6 @@ public class TimesTenDialect extends Dialect {
 		return 40;
 	}
 
-	/*
-	 * Copyright (c) 2025, Oracle and/or its affiliates.
-	 * Licensed under the Universal Permissive License v 1.0 as shown
-	 * at http://oss.oracle.com/licenses/upl
-	 *
-	 * - Added more SQL functions support into initializeFunctionRegistry():
-	 *     lower, upper, rtrim, ltrim, length, to_char, chr, instr, instrb,
-	 *     lpad, rpad, substr, substrb, substring, str, soundex, replace,
-	 *     to_date, sysdate, getdate, current_date, current_time, current_timestamp,
-	 *     to_timestamp, add_months, months_between, abs, acos, asin, atan, atan2,
-	 *     ceil, cos, cosh, exp, ln, sin, sign, sinh, mod, round, trunc, tan, tanh,
-	 *     floor, power, bitnot, bitor, bitxor, nvl, user, rowid, uid, rownum, 
-	 *     vsize, SESSION_USER, SYSTEM_USER, CURRENT_USER
-	 *
-	 * @Author: Carlos Blanco
-	*/
 	@Override
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
@@ -232,16 +204,10 @@ public class TimesTenDialect extends Dialect {
 
 		// String Functions
 		functionContributions.getFunctionRegistry().register( 
-				"lower", new StandardSQLFunction("lower") 
+				"rtrim", new StandardSQLFunction("rtrim", StandardBasicTypes.STRING) 
 		);
 		functionContributions.getFunctionRegistry().register( 
-				"upper", new StandardSQLFunction("upper") 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"rtrim", new StandardSQLFunction("rtrim") 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"ltrim", new StandardSQLFunction("ltrim") 
+				"ltrim", new StandardSQLFunction("ltrim", StandardBasicTypes.STRING) 
 		);
 		functionContributions.getFunctionRegistry().register( 
 				"length", new StandardSQLFunction("length", StandardBasicTypes.LONG)
@@ -250,40 +216,16 @@ public class TimesTenDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register( 
 				"to_char", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
 		);
-		functionContributions.getFunctionRegistry().register( 
-				"chr", new StandardSQLFunction("chr", StandardBasicTypes.CHARACTER)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"instr", new StandardSQLFunction("instr", StandardBasicTypes.INTEGER) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"instrb", new StandardSQLFunction("instrb", StandardBasicTypes.INTEGER)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"lpad", new StandardSQLFunction("lpad", StandardBasicTypes.STRING)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"rpad", new StandardSQLFunction("rpad", StandardBasicTypes.STRING)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"substrb", new StandardSQLFunction("substrb", StandardBasicTypes.STRING) 
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING )
-		);
-		functionFactory.locate();
+		functionFactory.char_chr();
+		functionFactory.instr();
+		functionFactory.substr();
 		functionContributions.getFunctionRegistry().register( 
 				"str", new StandardSQLFunction("to_char", StandardBasicTypes.STRING)
 		);
 		functionContributions.getFunctionRegistry().register( 
-				"soundex", new StandardSQLFunction("soundex") 
+				"substring", new StandardSQLFunction( "substr", StandardBasicTypes.STRING )
 		);
-		functionContributions.getFunctionRegistry().register( 
-				"replace", new StandardSQLFunction("replace", StandardBasicTypes.STRING)
-		);
+		functionFactory.soundex();
 
 		// Date/Time Functions
 		functionContributions.getFunctionRegistry().register( 
@@ -318,72 +260,21 @@ public class TimesTenDialect extends Dialect {
 		);
 
 		// Math functions
-		functionContributions.getFunctionRegistry().register( 
-				"abs", new StandardSQLFunction("abs")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"acos", new StandardSQLFunction("acos")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"asin", new StandardSQLFunction("asin")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"atan", new StandardSQLFunction("atan")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"atan2", new StandardSQLFunction("atan2")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"ceil", new StandardSQLFunction("ceil")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"cos", new StandardSQLFunction("cos")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"cosh", new StandardSQLFunction("cosh")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"exp", new StandardSQLFunction("exp")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"ln", new StandardSQLFunction("ln")
-		);
-		functionFactory.log();
-		functionContributions.getFunctionRegistry().register( 
-				"sin", new StandardSQLFunction("sin")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"sign", new StandardSQLFunction("sign", StandardBasicTypes.INTEGER)
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"sinh", new StandardSQLFunction("sinh")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"mod", new StandardSQLFunction("mod")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"round", new StandardSQLFunction("round")
-		);
+		functionFactory.ceiling_ceil();
+		functionFactory.radians_acos();
+		functionFactory.degrees_acos();
+		functionFactory.sinh();
+		functionFactory.tanh();
 		functionContributions.getFunctionRegistry().register( 
 				"trunc", new StandardSQLFunction("trunc")
 		);
 		functionContributions.getFunctionRegistry().register( 
-				"tan", new StandardSQLFunction("tan")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"tanh", new StandardSQLFunction("tanh")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"floor", new StandardSQLFunction("floor")
-		);
-		functionContributions.getFunctionRegistry().register( 
-				"power", new StandardSQLFunction("power", StandardBasicTypes.FLOAT)
+				"round", new StandardSQLFunction("round")
 		);
 
 		// Bitwise functions
-		functionFactory.bitand();
 		functionContributions.getFunctionRegistry().register( 
-				"bitnot", new StandardSQLFunction("bitnot")
+				"bitnot", new StandardSQLFunction("bitnot", StandardBasicTypes.INTEGER)
 		);
 
 		functionContributions.getFunctionRegistry()
@@ -404,7 +295,6 @@ public class TimesTenDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register( 
 				"nvl", new StandardSQLFunction("nvl")
 		);
-		functionFactory.coalesce();
 		functionContributions.getFunctionRegistry().register( 
 				"user",  new CurrentFunction("user", "user", stringType)
 		);
@@ -418,7 +308,7 @@ public class TimesTenDialect extends Dialect {
 				"rownum", new CurrentFunction("rownum", "rownum", longType)
 		);
 		functionContributions.getFunctionRegistry().register( 
-				"vsize", new StandardSQLFunction("vsize")
+				"vsize", new StandardSQLFunction("vsize", StandardBasicTypes.DOUBLE)
 		);
 		functionContributions.getFunctionRegistry().register( 
 				"SESSION_USER", new CurrentFunction("SESSION_USER","SESSION_USER", stringType)
@@ -509,15 +399,6 @@ public class TimesTenDialect extends Dialect {
 	}
 
   
-	/*
-	* Copyright (c) 2025, Oracle and/or its affiliates.
-	* Licensed under the Universal Permissive License v 1.0 as shown
-	* at http://oss.oracle.com/licenses/upl
-	*
-	* - Updated the custom definition for 'getForUpdateString()'
-	*
-	* @Author: Carlos Blanco
-	*/
 	@Override
 	public String getForUpdateString() {
 		return " for update";
@@ -693,24 +574,6 @@ public class TimesTenDialect extends Dialect {
 		}
 	}
 
-	/*
-	 * Copyright (c) 2025, Oracle and/or its affiliates.
-	 * Licensed under the Universal Permissive License v 1.0 as shown
-	 * at http://oss.oracle.com/licenses/upl
-	 *
-	 *  - Added a custom definition for 'getNativeIdentifierGeneratorStrategy()'
-	 *  - Added a custom definition for 'currentDate()'
-	 *  - Added a custom definition for 'currentTime()'
-	 *  - Added a custom definition for 'getMaxVarcharLength()'
-	 *  - Added a custom definition for 'getMaxVarbinaryLength()'
-	 *  - Added a custom definition for 'isEmptyStringTreatedAsNull()'
-	 *  - Added a custom definition for 'supportsTupleDistinctCounts()'
-	 *  - Added a custom definition for 'getDual()'
-	 *  - Added a custom definition for 'getFromDualForSelectOnly()'
-	 *
-	 * @Author: Carlos Blanco
-	*/
-
 	@Override 
 	public String getNativeIdentifierGeneratorStrategy() {
 		return "sequence";
@@ -748,10 +611,12 @@ public class TimesTenDialect extends Dialect {
 		return false;
 	}
 
+	@Override
 	public String getDual() {
 		return "dual"; 
 	}
 
+	@Override
 	public String getFromDualForSelectOnly() {
 		return " from dual";
 	}

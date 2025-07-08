@@ -191,13 +191,19 @@ public class ArrayJdbcType implements JdbcType {
 			final Object rawArray = array.getArray();
 			final Object[] domainObjects = new Object[Array.getLength( rawArray )];
 			for ( int i = 0; i < domainObjects.length; i++ ) {
-				final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues( Array.get( rawArray, i ), options );
-				final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
-						embeddableMappingType,
-						aggregateRawValues,
-						options
-				);
-				domainObjects[i] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+				final Object rawJdbcValue = Array.get(rawArray, i);
+				if (rawJdbcValue == null) {
+					domainObjects[i] = null;
+				}
+				else {
+					final Object[] aggregateRawValues = aggregateJdbcType.extractJdbcValues(rawJdbcValue, options);
+					final StructAttributeValues attributeValues = StructHelper.getAttributeValues(
+							embeddableMappingType,
+							aggregateRawValues,
+							options
+					);
+					domainObjects[i] = instantiate( embeddableMappingType, attributeValues, options.getSessionFactory() );
+				}
 			}
 			return extractor.getJavaType().wrap( domainObjects, options );
 		}

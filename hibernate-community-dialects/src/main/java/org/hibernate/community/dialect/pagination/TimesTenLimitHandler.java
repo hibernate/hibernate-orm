@@ -14,25 +14,6 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
  * A {@link LimitHandler} for TimesTen, which uses {@code ROWS n},
  * but at the start of the query instead of at the end.
  */
-
-/*
- * Copyright (c) 2025, Oracle and/or its affiliates.
- * Licensed under the Universal Permissive License v 1.0 as shown
- * at http://oss.oracle.com/licenses/upl
- *
- *   - The class now extends 'AbstractLimitHandler'
- *   - Removed a custom definition for 'insert()'
- *   - Added a custom definition for 'supportsLimit()'
- *   - Added a custom definition for 'supportsOffset()'
- *   - Added a custom definition for 'supportsLimitOffset()'
- *   - Added a custom definition for 'supportsVariableLimit()'
- *   - Added a custom definition for 'convertToFirstRowValue(int zeroBasedFirstResult)'
- *   - Added a custom definition for 'useMaxForLimit()'
- *   - Added a custom definition for 'limitClause(boolean hasFirstRow)'
- * 
- * @Author: Carlos Blanco
- *
-*/
 public class TimesTenLimitHandler extends AbstractLimitHandler {
 
 	public static final TimesTenLimitHandler INSTANCE = new TimesTenLimitHandler();

@@ -13,23 +13,6 @@ import org.hibernate.dialect.sequence.SequenceSupport;
  *
  * @author Gavin King
  */
-
-/*
- * Copyright (c) 2025, Oracle and/or its affiliates.
- * Licensed under the Universal Permissive License v 1.0 as shown
- * at http://oss.oracle.com/licenses/upl
- *
- *  - The Class now implements 'SequenceSupport'
- *  - Added a custom definition for 'supportsSequences()'
- *  - Added a custom definition for 'supportsPooledSequences()'
- *  - Added a custom definition for 'getSelectSequenceNextValString(String sequenceName)'
- *  - Added a custom definition for 'getSequenceNextValString(String sequenceName)'
- *  - Added a custom definition for 'getCreateSequenceString(String sequenceName)'
- *  - Added a custom definition for 'getDropSequenceString(String sequenceName)'
- *
- *  @Author: Carlos Blanco
- *
-*/
 public final class TimesTenSequenceSupport implements SequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new TimesTenSequenceSupport();

@@ -169,6 +169,7 @@ dependencies {
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
 	javadocClasspath jdbcLibs.oracle
+	javadocClasspath jdbcLibs.oracleJdbcJacksonOsonExtension
 }
 
 

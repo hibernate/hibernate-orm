@@ -26,11 +26,14 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
- * Class responsible for extracting SQL statements from import script. Supports instructions/comments and quoted
- * strings spread over multiple lines. Each statement must end with semicolon.
+ * Class responsible for extracting SQL statements from an import script.
+ * Supports instructions/comments and quoted strings spread over multiple lines.
+ * Each statement must end with a semicolon.
  *
  * @author Lukasz Antoniak
  * @author Steve Ebersole
+ *
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR
  */
 public class MultiLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public static final String SHORT_NAME = "multi-line";

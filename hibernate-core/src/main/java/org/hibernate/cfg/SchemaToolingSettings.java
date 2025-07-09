@@ -216,14 +216,15 @@ public interface SchemaToolingSettings {
 	 * <p>
 	 * The correct extractor to use depends on the format of the SQL script:
 	 * <ul>
-	 * <li>if the script has one complete SQL statement per line, use
+	 * <li>if the script has one complete SQL statement per line, use {@code single-line} or
 	 *     {@link org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}, or
-	 * <li>if a script contains statements spread over multiple lines, use
+	 * <li>if a script contains statements spread over multiple lines, use {@code multi-line} or
 	 *     {@link org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor}.
 	 * </ul>
 	 *
 	 * @settingDefault {@code org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor}.
 	 *
+	 * @see org.hibernate.tool.schema.spi.SqlScriptCommandExtractor
 	 * @see org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor
 	 * @see org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor
 	 */

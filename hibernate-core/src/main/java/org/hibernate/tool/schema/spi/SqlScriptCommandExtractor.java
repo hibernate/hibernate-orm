@@ -12,13 +12,20 @@ import org.hibernate.service.Service;
 
 /**
  * Contract for extracting statements from source/import/init scripts.
+ * <p>
+ * A concrete implementation may be selected via
+ * {@value org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR}.
  *
  * @author Lukasz Antoniak
  *
- * @see org.hibernate.cfg.AvailableSettings#HBM2DDL_IMPORT_FILES
- * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
- * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
- * @see org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR
+ * @see org.hibernate.tool.schema.internal.script.SingleLineSqlScriptExtractor
+ * @see org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor
+ *
+ * @see org.hibernate.cfg.SchemaToolingSettings#HBM2DDL_IMPORT_FILES
+ * @see org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE
+ * @see org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE
+ * @see org.hibernate.cfg.SchemaToolingSettings#JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE
  */
 public interface SqlScriptCommandExtractor extends Service {
 	/**

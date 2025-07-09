@@ -1409,8 +1409,4 @@ Starting with Hibernate 5.2, the Hibernate `Session` extends the Jakarta Persist
 the `HibernateException` or `SQLException` can be wrapped in a Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] when thrown
 by `Session` methods that implement `EntityManager` methods (e.g., https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
-
-If your `SessionFactory` is built via Hibernate's native bootstrapping, and you don't want the Hibernate exceptions to be wrapped in the Jakarta Persistence `PersistenceException`, you need to set the
-`hibernate.native_exception_handling_51_compliance` configuration property to `true`. See the
-<<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.native_exception_handling_51_compliance`>> configuration property for more details.
 ====

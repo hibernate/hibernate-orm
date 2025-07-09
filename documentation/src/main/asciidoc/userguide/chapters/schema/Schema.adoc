@@ -15,7 +15,7 @@ it's much more flexible to manage the schema using incremental migration scripts
 ====
 
 Traditionally, the process of generating  schema from entity mapping has been called `HBM2DDL`.
-To get a list of Hibernate-native and Jakarta Persistence-specific configuration properties consider reading the <<appendices/Configurations.adoc#configurations-hbmddl,Configurations>> section.
+To get a list of Hibernate-native and Jakarta Persistence-specific configuration properties consider reading the <<appendices/SettingsReference.adoc#settings-schema,Configurations>> section.
 
 Considering the following Domain Model:
 

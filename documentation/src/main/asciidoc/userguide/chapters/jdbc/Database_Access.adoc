@@ -42,7 +42,7 @@ Otherwise, the no-arg form is used.
 === Driver Configuration
 `hibernate.connection.driver_class`:: The name of the JDBC Driver class to use
 `hibernate.connection.url`:: The JDBC connection url
-`hibernate.connection.*`:: All such setting names (except the <<appendices/Configurations.adoc#configurations-database-connection,predefined ones>>) will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
+`hibernate.connection.*`:: All such setting names (except the <<appendices/SettingsReference.adoc#settings-hibernate.connection,predefined ones>>) will have the `hibernate.connection.` prefix stripped. The remaining name and the original value will be passed to the driver as a JDBC connection property
 
 NOTE: Not all properties apply to all situations. For example, if you are providing a data source, `hibernate.connection.driver_class` setting will not be used.
 
@@ -155,7 +155,7 @@ The `Connection` will be acquired as soon as it is needed and will be released a
 The `Connection` will be acquired as soon as it is needed and will be released after each transaction is completed.
 
 If you don't want to use the default connection handling mode, you can specify a connection handling mode via the `hibernate.connection.handling_mode` configuration property. For more details, check out the
-<<appendices/Configurations.adoc#configurations-database-connection,Database connection properties>> section.
+<<appendices/SettingsReference.adoc#settings-jdbc,Database connection properties>> section.
 
 ==== Transaction type and connection handling
 

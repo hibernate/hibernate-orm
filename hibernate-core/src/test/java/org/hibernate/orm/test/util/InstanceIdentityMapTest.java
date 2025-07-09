@@ -6,6 +6,7 @@ package org.hibernate.orm.test.util;
 
 import org.hibernate.engine.spi.InstanceIdentity;
 import org.hibernate.internal.util.collections.InstanceIdentityMap;
+import org.hibernate.testing.orm.junit.Jira;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -99,4 +100,15 @@ public class InstanceIdentityMapTest {
 		assertThat( testMap.values() ).hasSize( 100 ).containsAll( map.values() );
 		assertThat( testMap.entrySet() ).hasSize( 100 ).containsAll( map.entrySet() );
 	}
+
+	@Test
+	@Jira(value = "https://hibernate.atlassian.net/browse/HHH-19582")
+	public void testNullPage() {
+		final TestInstance i1 = new TestInstance( 9999 );
+		testMap.put( i1, "instance_X" );
+
+		testMap.clear();
+		assertThat( testMap ).isEmpty();
+	}
+
 }

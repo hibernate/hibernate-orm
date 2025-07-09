@@ -176,7 +176,9 @@ public class AbstractPagedArray<E> {
 
 	public void clear() {
 		for ( Page<E> entryPage : elementPages ) {
-			entryPage.clear();
+			if ( entryPage != null ) {
+				entryPage.clear();
+			}
 		}
 		elementPages.clear();
 		elementPages.trimToSize();

@@ -447,6 +447,9 @@ additionally, drop the schema on `SessionFactory` shutdown
 
 | `jakarta.persistence.sql-load-script-source`
 | (Optional) The name of a SQL DML script to be executed
+
+| `hibernate.hbm2ddl.import_files_sql_extractor`
+| (Optional) If `multi-line`, SQL statements may be split across multiple lines in scripts, and must be ``;``-terminated.
 |===
 
 This feature is extremely useful for testing.

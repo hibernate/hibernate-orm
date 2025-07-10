@@ -142,16 +142,12 @@ stage('Build') {
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "sybase_jconn":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('nguoianphu/docker-sybase').pull()
-									}
+									docker.image('nguoianphu/docker-sybase').pull()
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "cockroachdb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.12').pull()
-									}
+									docker.image('cockroachdb/cockroach:v23.1.12').pull()
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;

@@ -32,6 +32,7 @@ import org.hibernate.orm.test.legacy.Simple;
 import org.hibernate.orm.test.legacy.Single;
 import org.junit.Test;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -470,8 +471,8 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		Blobber b = new Blobber();
-		b.setBlob( s.getLobHelper().createBlob( "foo/bar/baz".getBytes() ) );
-		b.setClob( s.getLobHelper().createClob("foo/bar/baz") );
+		b.setBlob( getLobHelper().createBlob( "foo/bar/baz".getBytes() ) );
+		b.setClob( getLobHelper().createClob("foo/bar/baz") );
 		s.persist(b);
 		//s.refresh(b);
 		//assertTrue( b.getClob() instanceof ClobImpl );
@@ -502,7 +503,7 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		b = s.getReference( Blobber.class, b.getId() );
-		b.setClob( s.getLobHelper().createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
+		b.setClob( getLobHelper().createClob("xcvfxvc xcvbx cvbx cvbx cvbxcvbxcvbxcvb") );
 		s.flush();
 		s.getTransaction().commit();
 		s.close();

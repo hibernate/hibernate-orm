@@ -31,6 +31,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -65,9 +66,9 @@ public class PostgreSqlLobStringTest {
 											"        (?, ?, ?, -1)"
 							)) {
 								int index = 1;
-								statement.setClob( index++, session.getLobHelper().createClob( value1 ) );
-								statement.setClob( index++, session.getLobHelper().createClob( value2 ) );
-								statement.setClob( index++, session.getLobHelper().createClob( value3 ) );
+								statement.setClob( index++, getLobHelper().createClob( value1 ) );
+								statement.setClob( index++, getLobHelper().createClob( value2 ) );
+								statement.setClob( index++, getLobHelper().createClob( value3 ) );
 
 								assertEquals( 1, statement.executeUpdate() );
 							}

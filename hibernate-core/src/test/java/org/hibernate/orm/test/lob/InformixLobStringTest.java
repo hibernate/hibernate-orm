@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -46,7 +47,7 @@ public class InformixLobStringTest extends BaseCoreFunctionalTestCase {
 		doInHibernate( this::sessionFactory, session -> {
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
-			entity.setClobField( session.getLobHelper().createClob( value2 ) );
+			entity.setClobField( getLobHelper().createClob( value2 ) );
 			session.persist( entity );
 		} );
 

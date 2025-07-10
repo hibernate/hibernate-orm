@@ -1321,11 +1321,15 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void disableFetchProfile(String name) throws UnknownProfileException;
 
 	/**
-	 * Obtain a {@linkplain LobHelper factory} for instances of {@link java.sql.Blob}
+	 * Obtain a {@linkplain LobHelper} for instances of {@link java.sql.Blob}
 	 * and {@link java.sql.Clob}.
 	 *
 	 * @return an instance of {@link LobHelper}
+	 *
+	 * @deprecated 	This method will be removed.
+	 * 				use {@link Hibernate#getLobHelper()} instead
 	 */
+	@Deprecated(since="7.0", forRemoval = true)
 	LobHelper getLobHelper();
 
 	/**

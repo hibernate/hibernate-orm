@@ -26,8 +26,6 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.PersistenceContexts;
-import org.hibernate.engine.jdbc.LobCreator;
-import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.ActionQueue.TransactionCompletionProcesses;
@@ -86,16 +84,11 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Reader;
 import java.io.Serial;
 import java.io.Serializable;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -2026,13 +2019,8 @@ public class SessionImpl
 
 	@Override
 	public LobHelper getLobHelper() {
-		if ( lobHelper == null ) {
-			lobHelper = new LobHelperImpl();
-		}
-		return lobHelper;
+		return Hibernate.getLobHelper();
 	}
-
-	private transient LobHelperImpl lobHelper;
 
 	@Override
 	public void beforeTransactionCompletion() {
@@ -2065,45 +2053,6 @@ public class SessionImpl
 		}
 
 		super.afterTransactionCompletion( successful, delayed );
-	}
-
-	private static class LobHelperImpl implements LobHelper {
-
-		@Override
-		public Blob createBlob(byte[] bytes) {
-			return lobCreator().createBlob( bytes );
-		}
-
-		private LobCreator lobCreator() {
-			// Always use NonContextualLobCreator.  If ContextualLobCreator is
-			// used both here and in WrapperOptions,
-			return NonContextualLobCreator.INSTANCE;
-		}
-
-		@Override
-		public Blob createBlob(InputStream stream, long length) {
-			return lobCreator().createBlob( stream, length );
-		}
-
-		@Override
-		public Clob createClob(String string) {
-			return lobCreator().createClob( string );
-		}
-
-		@Override
-		public Clob createClob(Reader reader, long length) {
-			return lobCreator().createClob( reader, length );
-		}
-
-		@Override
-		public NClob createNClob(String string) {
-			return lobCreator().createNClob( string );
-		}
-
-		@Override
-		public NClob createNClob(Reader reader, long length) {
-			return lobCreator().createNClob( reader, length );
-		}
 	}
 
 	private static class SharedSessionBuilderImpl

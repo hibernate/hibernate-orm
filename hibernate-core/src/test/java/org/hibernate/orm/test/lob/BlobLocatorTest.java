@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.sql.Blob;
 import java.util.Arrays;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -52,7 +53,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		LobHolder entity = new LobHolder();
-		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
+		entity.setBlobLocator( getLobHelper().createBlob( original ) );
 		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();
@@ -94,7 +95,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( entity.getBlobLocator() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( original, extractData( entity.getBlobLocator() ) );
-		entity.setBlobLocator( s.getLobHelper().createBlob( changed ) );
+		entity.setBlobLocator( getLobHelper().createBlob( changed ) );
 		s.getTransaction().commit();
 		s.close();
 
@@ -104,7 +105,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		entity = s.find( LobHolder.class, entity.getId() );
 		Assert.assertEquals( BLOB_SIZE, entity.getBlobLocator().length() );
 		assertEquals( changed, extractData( entity.getBlobLocator() ) );
-		entity.setBlobLocator( s.getLobHelper().createBlob( empty ) );
+		entity.setBlobLocator( getLobHelper().createBlob( empty ) );
 		s.getTransaction().commit();
 		s.close();
 
@@ -137,7 +138,7 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		s.beginTransaction();
 		LobHolder entity = new LobHolder();
-		entity.setBlobLocator( s.getLobHelper().createBlob( original ) );
+		entity.setBlobLocator( getLobHelper().createBlob( original ) );
 		s.persist( entity );
 		s.getTransaction().commit();
 		s.close();

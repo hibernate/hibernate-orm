@@ -11,8 +11,6 @@ import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.Session;
-
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -20,6 +18,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -41,9 +40,7 @@ public class BlobTest {
 						image.put( "data", "imagedata" );
 						ImageReader reader = new ImageReader();
 						oos.writeObject( image );
-						reader.setImage( entityManager.unwrap( Session.class )
-												.getLobHelper()
-												.createBlob( baos.toByteArray() ) );
+						reader.setImage( getLobHelper().createBlob( baos.toByteArray() ) );
 						entityManager.persist( reader );
 						return reader.getId();
 					}

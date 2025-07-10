@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.util.Random;
 
-import org.hibernate.LobHelper;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -19,6 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,12 +42,11 @@ public class JpaLargeBlobTest {
 		LobEntity o = new LobEntity();
 		LobInputStream inputStream = scope.fromSession(
 				session -> {
-					LobHelper lh = session.getLobHelper();
 					LobInputStream lis = new LobInputStream();
 
 					session.getTransaction().begin();
 					try {
-						Blob blob = lh.createBlob( lis, LobEntity.BLOB_LENGTH );
+						Blob blob = getLobHelper().createBlob( lis, LobEntity.BLOB_LENGTH );
 						o.setBlob( blob );
 
 						// Regardless if NON_CONTEXTUAL_LOB_CREATION is set to true,

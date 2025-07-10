@@ -30,6 +30,7 @@ import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -56,7 +57,7 @@ public class LobStringTest {
 
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
-			entity.setClobField( session.getLobHelper().createClob( value2 ) );
+			entity.setClobField( getLobHelper().createClob( value2 ) );
 			session.persist( entity );
 		} );
 

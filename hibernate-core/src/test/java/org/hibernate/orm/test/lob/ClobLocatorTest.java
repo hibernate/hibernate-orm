@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Clob;
 
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -56,7 +57,7 @@ public class ClobLocatorTest {
 		Long id = scope.fromTransaction(
 				session -> {
 					LobHolder entity = new LobHolder();
-					entity.setClobLocator( session.getLobHelper().createClob( original ) );
+					entity.setClobLocator( getLobHelper().createClob( original ) );
 					session.persist( entity );
 					return entity.getId();
 				}
@@ -121,7 +122,7 @@ public class ClobLocatorTest {
 						assertNotNull( entity.getClobLocator() );
 						assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
 						assertEquals( original, extractData( entity.getClobLocator() ) );
-						entity.setClobLocator( session.getLobHelper().createClob( changed ) );
+						entity.setClobLocator( getLobHelper().createClob( changed ) );
 					}
 					catch (Exception e) {
 						fail( e );
@@ -139,7 +140,7 @@ public class ClobLocatorTest {
 							LobHolder entity = session.get( LobHolder.class, id );
 							assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
 							assertEquals( changed, extractData( entity.getClobLocator() ) );
-							entity.setClobLocator( session.getLobHelper().createClob( empty ) );
+							entity.setClobLocator( getLobHelper().createClob( empty ) );
 						}
 						catch (Exception e) {
 							fail( e );
@@ -177,7 +178,7 @@ public class ClobLocatorTest {
 		Long id = scope.fromTransaction(
 				session -> {
 					LobHolder entity = new LobHolder();
-					entity.setClobLocator( session.getLobHelper().createClob( original ) );
+					entity.setClobLocator( getLobHelper().createClob( original ) );
 					session.persist( entity );
 					return entity.getId();
 				}

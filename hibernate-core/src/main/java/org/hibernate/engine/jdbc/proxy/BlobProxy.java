@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.DataHelper;
  * Manages aspects of representing {@link Blob} objects.
  *
  * @apiNote This class is not intended to be called directly by the application program.
- *          Instead, use {@link org.hibernate.Session#getLobHelper()}.
+ *          Instead, use {@link org.hibernate.Hibernate#getLobHelper()}.
  *
  * @see ClobProxy
  * @see LobCreator

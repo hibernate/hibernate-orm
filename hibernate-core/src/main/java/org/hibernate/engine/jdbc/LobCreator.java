@@ -14,7 +14,7 @@ import java.sql.NClob;
  * Contract for creating various LOB references.
  *
  * @apiNote This class is not intended to be called directly by the application program.
- *          Instead, use {@link org.hibernate.Session#getLobHelper()}.
+ *          Instead, use {@link org.hibernate.Hibernate#getLobHelper()}.
  *
  * @author Steve Ebersole
  * @author Gail Badner

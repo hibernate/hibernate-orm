@@ -4,6 +4,11 @@
  */
 package org.hibernate;
 
+import java.io.InputStream;
+import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,6 +32,8 @@ import org.hibernate.collection.spi.PersistentSet;
 import org.hibernate.collection.spi.PersistentSortedMap;
 import org.hibernate.collection.spi.PersistentSortedSet;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.env.internal.NonContextualLobCreator;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -110,6 +117,8 @@ public final class Hibernate {
 	private Hibernate() {
 		throw new UnsupportedOperationException();
 	}
+
+	private static final LobHelperImpl lobHelper = new LobHelperImpl();
 
 	/**
 	 * Force initialization of a proxy or persistent collection. In the case of a
@@ -587,7 +596,56 @@ public final class Hibernate {
 		}
 	}
 
+	/**
+	 * Obtain a {@linkplain LobHelper} for instances of {@link java.sql.Blob}
+	 * and {@link java.sql.Clob}.
+	 *
+	 * @return an instance of {@link LobHelper}
+	 */
+	public static LobHelper getLobHelper() {
+		return lobHelper;
+	}
+
 	private static PersistentAttributeInterceptor getAttributeInterceptor(Object entity) {
 		return asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor();
 	}
+
+	private static class LobHelperImpl implements LobHelper {
+		@Override
+		public Blob createBlob(byte[] bytes) {
+			return lobCreator().createBlob( bytes );
+		}
+
+		private LobCreator lobCreator() {
+			// Always use NonContextualLobCreator.  If ContextualLobCreator is
+			// used both here and in WrapperOptions,
+			return NonContextualLobCreator.INSTANCE;
+		}
+
+		@Override
+		public Blob createBlob(InputStream stream, long length) {
+			return lobCreator().createBlob( stream, length );
+		}
+
+		@Override
+		public Clob createClob(String string) {
+			return lobCreator().createClob( string );
+		}
+
+		@Override
+		public Clob createClob(Reader reader, long length) {
+			return lobCreator().createClob( reader, length );
+		}
+
+		@Override
+		public NClob createNClob(String string) {
+			return lobCreator().createNClob( string );
+		}
+
+		@Override
+		public NClob createNClob(Reader reader, long length) {
+			return lobCreator().createNClob( reader, length );
+		}
+	}
+
 }

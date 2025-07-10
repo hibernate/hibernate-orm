@@ -11,3 +11,18 @@
 
 This guide discusses migration to Hibernate ORM version {version}. For migration from
 earlier versions, see any other pertinent migration guides as well.
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// API changes
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[api-changes]]
+== Changes to API
+
+This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
+
+[[session-getLobHelper]]
+==== Session#getLobHelper
+
+The `Session#getLobHelper` method has been marked as deprecated in favor of the static `Hibernate#getLobHelper` and will be removed in a future *major* version.
+

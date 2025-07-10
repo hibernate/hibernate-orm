@@ -75,6 +75,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hibernate.Hibernate.getLobHelper;
 
 /**
  * Test how the type of results are detected from the JDBC type in native queries,
@@ -289,12 +290,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		doTest(
 				ClobEntity.class,
 				Clob.class,
-				session -> session.getLobHelper().createClob( "some text" )
+				session -> getLobHelper().createClob( "some text" )
 		);
 		doTest(
 				BlobEntity.class,
 				Blob.class,
-				session -> session.getLobHelper().createBlob( "some text".getBytes() )
+				session -> getLobHelper().createBlob( "some text".getBytes() )
 		);
 	}
 

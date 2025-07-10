@@ -21,6 +21,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.Hibernate.getLobHelper;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @DomainModel(annotatedClasses = Person.class)
@@ -49,8 +50,8 @@ public class AltibaseFunctionsTest {
 					{
 						arry[i] = (byte)i;
 					}
-					person.setBinaryData( session.getLobHelper().createBlob(arry) );
-					person.setComments( session.getLobHelper().createClob("blahblah") );
+					person.setBinaryData( getLobHelper().createBlob(arry) );
+					person.setComments( getLobHelper().createClob("blahblah") );
 					session.persist( person );
 				}
 		);

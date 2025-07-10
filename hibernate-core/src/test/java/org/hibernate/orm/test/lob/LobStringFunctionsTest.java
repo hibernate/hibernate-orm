@@ -30,6 +30,7 @@ import jakarta.persistence.Tuple;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.core.Is.is;
+import static org.hibernate.Hibernate.getLobHelper;
 
 @JiraKey(value = "HHH-15162")
 @DomainModel(
@@ -51,7 +52,7 @@ public class LobStringFunctionsTest {
 
 			entity.setFirstLobField( value1 );
 			entity.setSecondLobField( value2 );
-			entity.setClobField( session.getLobHelper().createClob( value2 ) );
+			entity.setClobField( getLobHelper().createClob( value2 ) );
 			session.persist( entity );
 		} );
 

@@ -6,17 +6,11 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	currentBuild.result = 'NOT_BUILT'
   	return
 }
-def throttleCount
-// Don't build the TCK on PRs, unless they use the tck label
-if ( env.CHANGE_ID != null ) {
-	if ( !pullRequest.labels.contains( 'tck' ) ) {
-		print "INFO: Build skipped because pull request doesn't have 'tck' label"
-		return
-	}
-	throttleCount = 20
-}
-else {
-	throttleCount = 1
+// This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
+if ( !env.CHANGE_ID ) {
+    print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
+    currentBuild.result = 'NOT_BUILT'
+    return
 }
 
 pipeline {
@@ -25,7 +19,6 @@ pipeline {
         jdk 'OpenJDK 17 Latest'
     }
     options {
-  		rateLimitBuilds(throttle: [count: throttleCount, durationName: 'day', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
     }

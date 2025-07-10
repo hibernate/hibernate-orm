@@ -87,12 +87,12 @@ public class InsertOrderingWithJoinedTableInheritance extends BaseInsertOrdering
 
 		sessionFactoryScope().inTransaction( (session) -> {
 			final Long specialPersonCount = session
-					.createSelectionQuery( "select count(1) from SpecialPerson", Long.class )
+					.createSelectionQuery( "select count(*) from SpecialPerson", Long.class )
 					.getSingleResult();
 			assertThat( specialPersonCount ).isEqualTo( 12L );
 
 			final Long addressCount = session
-					.createSelectionQuery( "select count(1) from Address", Long.class )
+					.createSelectionQuery( "select count(*) from Address", Long.class )
 					.getSingleResult();
 			assertThat( addressCount ).isEqualTo( 24L );
 		} );

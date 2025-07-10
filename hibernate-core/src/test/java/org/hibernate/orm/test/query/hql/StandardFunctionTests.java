@@ -893,6 +893,15 @@ public class StandardFunctionTests {
 				session -> {
 					session.createQuery("select count(*) from EntityOfBasics e")
 							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect( dialectClass = InformixDialect.class, majorVersion = 11, minorVersion = 50, reason = "Informix does not support count(1) function")
+	public void testSimpleCount1Functions(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select count(1) from EntityOfBasics e")
 							.list();
 				}

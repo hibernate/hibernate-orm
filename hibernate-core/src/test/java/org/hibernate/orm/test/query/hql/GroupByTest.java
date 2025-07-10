@@ -48,7 +48,7 @@ public class GroupByTest {
 		sqlStatementInspector.clear();
 
 		scope.inSession( (session) -> {
-			final String qryString = "select c.id as id_alias, count(1) as occurrences"
+			final String qryString = "select c.id as id_alias, count(*) as occurrences"
 					+ " from Contact c"
 					+ " group by id_alias"
 					+ " order by id_alias";
@@ -69,7 +69,7 @@ public class GroupByTest {
 		sqlStatementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final String qryString = "select c.name as name_alias, count(1) as occurrences"
+			final String qryString = "select c.name as name_alias, count(*) as occurrences"
 					+ " from Contact c"
 					+ " group by name_alias"
 					+ " order by name_alias";
@@ -94,7 +94,7 @@ public class GroupByTest {
 		sqlStatementInspector.clear();
 
 		scope.inTransaction( (session) -> {
-			final String qryString = "select c.id as id_alias, c.gender as gender_alias, count(1) as occurrences"
+			final String qryString = "select c.id as id_alias, c.gender as gender_alias, count(*) as occurrences"
 					+ " from Contact c"
 					+ " group by id_alias, gender_alias"
 					+ " order by id_alias, gender_alias";

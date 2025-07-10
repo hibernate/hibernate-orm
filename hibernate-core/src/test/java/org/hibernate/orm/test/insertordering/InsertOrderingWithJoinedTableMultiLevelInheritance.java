@@ -91,22 +91,22 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInse
 			// 1 AnotherPerson per loop (2)
 			// 1 President per loop (2)
 			final Long addressCount = session
-					.createSelectionQuery( "select count(1) from Address", Long.class )
+					.createSelectionQuery( "select count(*) from Address", Long.class )
 					.getSingleResult();
 			assertThat( addressCount ).isEqualTo( 4L );
 
 			final Long officeCount = session
-					.createSelectionQuery( "select count(1) from Office", Long.class )
+					.createSelectionQuery( "select count(*) from Office", Long.class )
 					.getSingleResult();
 			assertThat( officeCount ).isEqualTo( 2L );
 
 			final Long presidentCount = session
-					.createSelectionQuery( "select count(1) from President", Long.class )
+					.createSelectionQuery( "select count(*) from President", Long.class )
 					.getSingleResult();
 			assertThat( presidentCount ).isEqualTo( 2L );
 
 			final Long anotherPersonCount = session
-					.createSelectionQuery( "select count(1) from AnotherPerson", Long.class )
+					.createSelectionQuery( "select count(*) from AnotherPerson", Long.class )
 					.getSingleResult();
 			assertThat( presidentCount ).isEqualTo( 2L );
 

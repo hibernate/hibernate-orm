@@ -52,7 +52,7 @@ public class ImplicitSoftDeleteTests {
 			// make sure all 3 are still physically there
 			session.doWork( (connection) -> {
 				final Statement statement = connection.createStatement();
-				final ResultSet resultSet = statement.executeQuery( "select count(1) from implicit_entities" );
+				final ResultSet resultSet = statement.executeQuery( "select count(*) from implicit_entities" );
 				resultSet.next();
 				final int count = resultSet.getInt( 1 );
 				assertThat( count ).isEqualTo( 3 );

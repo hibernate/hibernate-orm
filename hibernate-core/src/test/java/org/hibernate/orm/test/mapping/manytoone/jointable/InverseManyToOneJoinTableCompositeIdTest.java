@@ -132,7 +132,7 @@ public class InverseManyToOneJoinTableCompositeIdTest {
 			session.createQuery( "from Author", Author.class ).list().forEach( session::remove );
 		} );
 		scope.inTransaction( (session) -> {
-			final Long bookCount = session.createSelectionQuery( "select count(1) from Book", Long.class ).uniqueResult();
+			final Long bookCount = session.createSelectionQuery( "select count(*) from Book", Long.class ).uniqueResult();
 			assertThat( bookCount ).isEqualTo( 0L );
 		} );
 	}

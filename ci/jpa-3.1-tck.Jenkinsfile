@@ -43,9 +43,7 @@ pipeline {
                 stage('Build') {
                     steps {
                         script {
-                            docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-                                docker.image('openjdk:11-jdk').pull()
-                            }
+                            docker.image('openjdk:11-jdk').pull()
                         }
                         dir('hibernate') {
                             checkout scm

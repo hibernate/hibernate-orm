@@ -86,11 +86,13 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 			declaration
 					.append("_spec.createQuery(")
 					.append(localSessionName())
+					.append(getObjectCall())
 					.append(")\n");
 		}
 		else {
 			declaration
 					.append(localSessionName())
+					.append(getObjectCall())
 					.append(".")
 					.append(createQueryMethod())
 					.append('(');
@@ -138,6 +140,7 @@ public abstract class AbstractCriteriaMethod extends AbstractFinderMethod {
 		declaration
 				.append("\tvar _builder = ")
 				.append(localSessionName())
+				.append(getObjectCall())
 				.append(".getCriteriaBuilder();\n");
 	}
 

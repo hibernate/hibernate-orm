@@ -124,6 +124,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final boolean managed;
 	private boolean jakartaDataRepository;
 	private final boolean quarkusInjection;
+	private final boolean springInjection;
 	private String qualifiedName;
 	private final boolean jakartaDataStaticModel;
 
@@ -180,6 +181,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		this.managed = managed;
 		this.members = new LinkedHashMap<>();
 		this.quarkusInjection = context.isQuarkusInjection();
+		this.springInjection = context.isSpringInjection();
 		this.importContext = parent != null ? parent : new ImportContextImpl( getPackageName( context, element ) );
 		jakartaDataStaticModel = jakartaDataStaticMetamodel;
 		importContext.importType(
@@ -769,20 +771,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					sessionType = addDaoConstructor( getter );
 				}
 				else {
-					// For Panache subtypes, we look at the session type, but no DAO, we want static methods
+					// For Panache subtypes, we look at the session type, but no DAO,
+					// we want static methods
 					sessionType = fullReturnType(getter);
 				}
 			}
 			else if ( element.getKind() == ElementKind.INTERFACE
 					&& !jakartaDataRepository
 					&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
-				// if we don't have a getter, and not a JD repository, but we're in Quarkus, we know how to find the default sessions
+				// if we don't have a getter, and not a JD repository, but we're in Quarkus,
+				// we know how to find the default sessions
 				repository = true;
 				sessionType = setupQuarkusDaoConstructor();
 			}
 			if ( !repository && jakartaDataRepository ) {
 				repository = true;
-				sessionType = HIB_STATELESS_SESSION;
+				sessionType = springInjection
+						? SPRING_STATELESS_SESSION_PROVIDER
+						: HIB_STATELESS_SESSION;
 				addDaoConstructor( null );
 			}
 			if ( needsDefaultConstructor() ) {
@@ -819,6 +825,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	boolean needsDefaultConstructor() {
 		return jakartaDataRepository
 			&& !quarkusInjection
+			&& !springInjection
 			&& context.addDependentAnnotation();
 	}
 
@@ -861,6 +868,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	public boolean isReactiveSessionAccess() {
 		return usingReactiveSessionAccess(sessionType);
+	}
+
+	public boolean isProvidedSessionAccess() {
+		return sessionType.startsWith(SPRING_OBJECT_PROVIDER);
 	}
 
 	private boolean isPanacheType(TypeElement type) {
@@ -940,7 +951,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			importType( Constants.QUARKUS_SESSION_OPERATIONS );
 			// use this getter to get the method, do not generate an injection point for its type
 			sessionGetter = "SessionOperations.getSession()";
-			return Constants.UNI_MUTINY_SESSION;
+			return UNI_MUTINY_SESSION;
 		}
 	}
 
@@ -950,14 +961,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * needed return types.
 	 */
 	private static boolean isSessionGetter(ExecutableElement method) {
-		if ( method.getParameters().isEmpty() ) {
-			final TypeMirror returnType = method.getReturnType();
-			if ( returnType.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = (DeclaredType) ununi(returnType);
-				final Element element = declaredType.asElement();
-				if ( element.getKind() == ElementKind.INTERFACE ) {
-					final TypeElement typeElement = (TypeElement) element;
-					final Name name = typeElement.getQualifiedName();
+		return method.getParameters().isEmpty()
+			&& isSessionGetterType( method.getReturnType() );
+	}
+
+	private static boolean isSessionGetterType(TypeMirror returnType) {
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) ununi( returnType );
+			final Element element = declaredType.asElement();
+			if ( element.getKind() == ElementKind.INTERFACE ) {
+				final TypeElement typeElement = (TypeElement) element;
+				final Name name = typeElement.getQualifiedName();
+				if ( name.contentEquals(UNI) || name.contentEquals(SPRING_OBJECT_PROVIDER) ) {
+					final var typeArguments = declaredType.getTypeArguments();
+					return typeArguments.size() == 1
+						&& isSessionGetterType( typeArguments.get( 0 ) );
+				}
+				else {
 					return name.contentEquals(HIB_SESSION)
 						|| name.contentEquals(HIB_STATELESS_SESSION)
 						|| name.contentEquals(MUTINY_SESSION)
@@ -965,8 +985,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						|| name.contentEquals(ENTITY_MANAGER);
 				}
 			}
+			else {
+				return false;
+			}
 		}
-		return false;
+		else {
+			return false;
+		}
 	}
 
 	/**
@@ -2054,7 +2079,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private String getSessionVariableName(String sessionType) {
 		return switch (sessionType) {
-			case HIB_SESSION, HIB_STATELESS_SESSION, MUTINY_SESSION, MUTINY_STATELESS_SESSION -> "session";
+			case HIB_SESSION, HIB_STATELESS_SESSION,
+				MUTINY_SESSION, MUTINY_STATELESS_SESSION,
+				SPRING_STATELESS_SESSION_PROVIDER -> "session";
 //			case UNI_MUTINY_SESSION, UNI_MUTINY_STATELESS_SESSION -> "session";
 			default -> sessionGetter;
 		};
@@ -3388,7 +3415,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean usingStatelessSession(String sessionType) {
 		return HIB_STATELESS_SESSION.equals(sessionType)
 			|| MUTINY_STATELESS_SESSION.equals(sessionType)
-			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType);
+			|| UNI_MUTINY_STATELESS_SESSION.equals(sessionType)
+			|| SPRING_STATELESS_SESSION_PROVIDER.equals(sessionType);
 	}
 
 	private static boolean usingReactiveSessionAccess(String sessionType) {

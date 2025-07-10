@@ -63,6 +63,10 @@ public abstract class AbstractAnnotatedMethod implements MetaAttribute {
 		return isReactiveSessionAccess() ? "_session" : sessionName;
 	}
 
+	String getObjectCall() {
+		return annotationMetaEntity.isProvidedSessionAccess() ? ".getObject()" : "";
+	}
+
 	@Override
 	public List<AnnotationMirror> inheritedAnnotations() {
 		if ( annotationMetaEntity.isJakartaDataRepository() ) {

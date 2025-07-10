@@ -170,7 +170,8 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		}
 		declaration
 				.append("\treturn ")
-				.append(sessionName);
+				.append(sessionName)
+				.append(getObjectCall());
 	}
 
 	void modifiers(StringBuilder declaration) {

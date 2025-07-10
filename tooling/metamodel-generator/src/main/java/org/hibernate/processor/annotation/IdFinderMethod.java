@@ -179,7 +179,8 @@ public class IdFinderMethod extends AbstractFinderMethod {
 					.append("\treturn ");
 		}
 		declaration
-				.append(sessionName);
+				.append(sessionName)
+				.append(getObjectCall());
 	}
 
 	private void findWithFetchProfiles(StringBuilder declaration) {

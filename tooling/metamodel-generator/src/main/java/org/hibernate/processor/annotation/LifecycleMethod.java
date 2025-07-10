@@ -216,11 +216,13 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 			declaration
 					.append("\t\tif (")
 					.append(sessionName)
+					.append(getObjectCall())
 					.append(".getIdentifier(")
 					.append(parameterName)
 					.append(") == null)\n")
 					.append("\t\t\t")
 					.append(sessionName)
+					.append(getObjectCall())
 					.append('.')
 					.append("insert");
 			argument( declaration );
@@ -231,6 +233,7 @@ public class LifecycleMethod extends AbstractAnnotatedMethod {
 		declaration
 				.append("\t\t")
 				.append(sessionName)
+				.append(getObjectCall())
 				.append('.')
 				.append(operationName);
 		argument( declaration );

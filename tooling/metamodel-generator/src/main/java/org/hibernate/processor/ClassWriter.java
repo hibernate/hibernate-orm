@@ -29,6 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
+import static org.hibernate.processor.util.Constants.SPRING_COMPONENT;
 import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQualifiedName;
 import static org.hibernate.processor.util.TypeUtils.isMemberType;
 
@@ -94,6 +95,9 @@ public final class ClassWriter {
 
 			pw.println( entity.javadoc() );
 
+			if ( context.addComponentAnnotation() && entity.isInjectable() ) {
+				pw.println( writeComponentAnnotation( entity ) );
+			}
 			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
 				pw.println( writeScopeAnnotation( entity ) );
 			}
@@ -312,6 +316,10 @@ public final class ClassWriter {
 
 	private static String writeScopeAnnotation(Metamodel entity) {
 		return "@" + entity.importType( entity.scope() );
+	}
+
+	private static String writeComponentAnnotation(Metamodel entity) {
+		return "@" + entity.importType( SPRING_COMPONENT );
 	}
 
 	private static String writeStaticMetaModelAnnotation(Metamodel entity) {

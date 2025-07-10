@@ -115,6 +115,7 @@ public class RepositoryConstructor implements MetaAttribute {
 		}
 		declaration
 				.append("}");
+		// resource accessor method a.k.a. session getter
 		if ( annotationMetaEntity.getSuperTypeElement() == null ) {
 			declaration
 					.append("\n\n");

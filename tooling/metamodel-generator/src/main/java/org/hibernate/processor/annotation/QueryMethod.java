@@ -129,12 +129,14 @@ public class QueryMethod extends AbstractQueryMethod {
 				declaration
 						.append("_spec.createQuery(")
 						.append(localSessionName())
+						.append(getObjectCall())
 						.append(")\n");
 			}
 		}
 		else {
 			declaration
 					.append(localSessionName())
+					.append(getObjectCall())
 					.append('.')
 					.append(createQueryMethod())
 					.append("(")

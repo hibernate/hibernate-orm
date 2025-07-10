@@ -84,6 +84,7 @@ public final class Context {
 	private Boolean fullyXmlConfigured;
 	private boolean addInjectAnnotation = false;
 	private boolean addDependentAnnotation = false;
+	private boolean addComponentAnnotation = false;
 	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
@@ -92,6 +93,7 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 	private boolean generateJakartaDataStaticMetamodel;
 	private boolean quarkusInjection;
+	private boolean springInjection;
 	private boolean dataEventPackageAvailable;
 
 	// keep track of all classes for which model have been generated
@@ -173,6 +175,14 @@ public final class Context {
 		this.addDependentAnnotation = addDependentAnnotation;
 	}
 
+	public boolean addComponentAnnotation() {
+		return addComponentAnnotation;
+	}
+
+	public void setAddComponentAnnotation(boolean addComponentAnnotation) {
+		this.addComponentAnnotation = addComponentAnnotation;
+	}
+
 	public boolean addNonnullAnnotation() {
 		return addNonnullAnnotation;
 	}
@@ -223,6 +233,14 @@ public final class Context {
 
 	public void setQuarkusInjection(boolean quarkusInjection) {
 		this.quarkusInjection = quarkusInjection;
+	}
+
+	public boolean isSpringInjection() {
+		return springInjection;
+	}
+
+	public void setSpringInjection(boolean springInjection) {
+		this.springInjection = springInjection;
 	}
 
 	public boolean isDataEventPackageAvailable() {

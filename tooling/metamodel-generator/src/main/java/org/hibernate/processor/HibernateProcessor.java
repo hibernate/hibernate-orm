@@ -266,6 +266,13 @@ public class HibernateProcessor extends AbstractProcessor {
 			quarkusOrmPanachePackage = quarkusReactivePanachePackage = null;
 		}
 
+		final PackageElement springBeansPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "org.springframework.beans.factory" );
+		final PackageElement springStereotypePackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "org.springframework.stereotype" );
+
 		context.setAddInjectAnnotation( packagePresent(jakartaInjectPackage) );
 		context.setAddNonnullAnnotation( packagePresent(jakartaAnnotationPackage) );
 		context.setAddGeneratedAnnotation( packagePresent(jakartaAnnotationPackage) );
@@ -275,6 +282,8 @@ public class HibernateProcessor extends AbstractProcessor {
 		context.setQuarkusInjection( packagePresent(quarkusOrmPackage) || packagePresent(quarkusReactivePackage) );
 		context.setUsesQuarkusOrm( packagePresent(quarkusOrmPanachePackage) );
 		context.setUsesQuarkusReactive( packagePresent(quarkusReactivePanachePackage) );
+		context.setSpringInjection( packagePresent(springBeansPackage) );
+		context.setAddComponentAnnotation( packagePresent(springStereotypePackage) );
 
 		final Map<String, String> options = environment.getOptions();
 

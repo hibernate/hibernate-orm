@@ -158,23 +158,30 @@ public final class Constants {
 	public static final String PANACHE_REACTIVE_REPOSITORY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheRepositoryBase";
 	public static final String PANACHE_REACTIVE_ENTITY_BASE = "io.quarkus.hibernate.reactive.panache.PanacheEntityBase";
 
+	public static final String SPRING_OBJECT_PROVIDER = "org.springframework.beans.factory.ObjectProvider";
+	public static final String SPRING_STATELESS_SESSION_PROVIDER = SPRING_OBJECT_PROVIDER + "<" + HIB_STATELESS_SESSION + ">";
+	public static final String SPRING_COMPONENT = "org.springframework.stereotype.Component";
+
 	public static final Map<String, String> COLLECTIONS = Map.of(
-			COLLECTION, Constants.COLLECTION_ATTRIBUTE,
-			SET, Constants.SET_ATTRIBUTE,
-			LIST, Constants.LIST_ATTRIBUTE,
-			MAP, Constants.MAP_ATTRIBUTE,
+			COLLECTION, COLLECTION_ATTRIBUTE,
+			SET, SET_ATTRIBUTE,
+			LIST, LIST_ATTRIBUTE,
+			MAP, MAP_ATTRIBUTE,
 			// Hibernate also supports the SortedSet and SortedMap interfaces
-			java.util.SortedSet.class.getName(), Constants.SET_ATTRIBUTE,
-			java.util.SortedMap.class.getName(), Constants.MAP_ATTRIBUTE
+			java.util.SortedSet.class.getName(), SET_ATTRIBUTE,
+			java.util.SortedMap.class.getName(), MAP_ATTRIBUTE
 	);
 
 	public static final Set<String> SESSION_TYPES =
 			Set.of(
-					Constants.ENTITY_MANAGER,
-					Constants.HIB_SESSION,
-					Constants.HIB_STATELESS_SESSION,
-					Constants.MUTINY_SESSION,
-					Constants.UNI_MUTINY_SESSION
+					ENTITY_MANAGER,
+					HIB_SESSION,
+					HIB_STATELESS_SESSION,
+					MUTINY_SESSION,
+					MUTINY_STATELESS_SESSION,
+					UNI_MUTINY_SESSION,
+					UNI_MUTINY_STATELESS_SESSION,
+					SPRING_STATELESS_SESSION_PROVIDER
 			);
 
 	//TODO: this is not even an exhaustive list of built-in basic types

@@ -4,6 +4,7 @@
  */
 package org.hibernate.event.internal;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.EntityEntry;
@@ -42,11 +43,7 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		final var holdersByKey = persistenceContext.getEntityHoldersByKey();
 		if ( holdersByKey != null ) {
 			for ( var entry : holdersByKey.entrySet() ) {
-				final EntityHolder holder = entry.getValue();
-				final EntityEntry entityEntry = holder.getEntityEntry();
-				final Status status = entityEntry.getStatus();
-				if ( status != Status.MANAGED && status != Status.GONE
-					|| isEntityDirty( holder.getManagedObject(), holder.getDescriptor(), entityEntry, session ) ) {
+				if ( isEntityDirty( entry.getValue(), session ) ) {
 					event.setDirty( true );
 					return;
 				}
@@ -63,7 +60,18 @@ public class DefaultDirtyCheckEventListener implements DirtyCheckEventListener {
 		}
 	}
 
-	private static boolean isEntityDirty(
+	private static boolean isEntityDirty(EntityHolder holder, EventSource session) {
+		final EntityEntry entityEntry = holder.getEntityEntry();
+		final Status status = entityEntry.getStatus();
+		return switch ( status ) {
+			case GONE, READ_ONLY -> false;
+			case DELETED -> true;
+			case MANAGED -> isManagedEntityDirty( holder.getManagedObject(), holder.getDescriptor(), entityEntry, session );
+			case SAVING, LOADING -> throw new AssertionFailure( "Unexpected status: " + status );
+		};
+	}
+
+	private static boolean isManagedEntityDirty(
 			Object entity, EntityPersister descriptor, EntityEntry entityEntry, EventSource session) {
 		if ( entityEntry.requiresDirtyCheck( entity ) ) { // takes into account CustomEntityDirtinessStrategy
 			final Object[] propertyValues =

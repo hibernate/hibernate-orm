@@ -11,8 +11,10 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.query.MutationQuery;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -47,6 +49,7 @@ import static java.util.Arrays.stream;
 		MutationQueriesFilterTest.RoleEntity.class
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16392" )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDmlTargetColumnQualifier.class )
 public class MutationQueriesFilterTest {
 	@Test
 	public void testDelete(SessionFactoryScope scope) {

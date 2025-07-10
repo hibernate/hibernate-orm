@@ -683,6 +683,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsDmlTargetColumnQualifier.class)
 	public void testFiltersOnSimpleHqlDelete() {
 		Salesperson sp = new Salesperson();
 		Salesperson sp2 = new Salesperson();
@@ -708,6 +709,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@RequiresDialectFeature(DialectChecks.SupportsDmlTargetColumnQualifier.class)
 	public void testFiltersOnMultiTableHqlDelete() {
 		Salesperson sp = new Salesperson();
 		Salesperson sp2 = new Salesperson();

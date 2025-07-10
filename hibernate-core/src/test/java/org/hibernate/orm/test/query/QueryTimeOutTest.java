@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -77,6 +78,9 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
 			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
+		}
+		else if ( DialectContext.getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.NONE ) {
+			baseQuery = "update AnEntity set name=?";
 		}
 		else {
 			baseQuery = "update AnEntity ae1_0 set name=?";

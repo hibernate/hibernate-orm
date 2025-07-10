@@ -34,7 +34,6 @@ pipeline {
                 label 'LongDuration'
             }
         	steps {
-                requireApprovalForPullRequest 'hibernate'
 				script {
 					dir('hibernate') {
 						checkout scm

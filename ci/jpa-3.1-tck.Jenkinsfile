@@ -42,7 +42,6 @@ pipeline {
             stages {
                 stage('Build') {
                     steps {
-                        requireApprovalForPullRequest 'hibernate'
                         script {
                             docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
                                 docker.image('openjdk:11-jdk').pull()

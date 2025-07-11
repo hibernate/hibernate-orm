@@ -4,11 +4,9 @@
  */
 package org.hibernate.community.dialect;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
-import org.hibernate.dialect.sql.ast.MySQLSqlAstTranslator;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -42,6 +40,10 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 /**
  * A SQL AST translator for SingleStore.
  *
@@ -49,6 +51,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private static final int MAX_CHAR_SIZE = 8192;
 	private final SingleStoreDialect dialect;
 
 	public SingleStoreSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement, SingleStoreDialect dialect) {
@@ -403,9 +406,60 @@ public class SingleStoreSqlAstTranslator<T extends JdbcOperation> extends Abstra
 		return true;
 	}
 
+	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
+		final String sqlType = getCastTypeName( castTarget, factory.getTypeConfiguration() );
+		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
+	}
+
+	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
+		if ( sqlType != null ) {
+			int parenthesesIndex = sqlType.indexOf( '(' );
+			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex ).trim();
+			switch ( baseName.toLowerCase( Locale.ROOT ) ) {
+				case "bit":
+					return "unsigned";
+				case "tinyint":
+				case "smallint":
+				case "integer":
+				case "bigint":
+					return "signed";
+				case "float":
+				case "real":
+				case "double precision":
+					final int precision = castTarget.getPrecision() == null ?
+							dialect.getDefaultDecimalPrecision() :
+							castTarget.getPrecision();
+					final int scale = castTarget.getScale() == null ? Size.DEFAULT_SCALE : castTarget.getScale();
+					return "decimal(" + precision + "," + scale + ")";
+				case "char":
+				case "varchar":
+				case "text":
+				case "mediumtext":
+				case "longtext":
+				case "set":
+				case "enum":
+					if ( castTarget.getLength() == null ) {
+						if ( castTarget.getJdbcMapping().getJdbcJavaType().getJavaType() == Character.class ) {
+							return "char(1)";
+						}
+						else {
+							return "char";
+						}
+					}
+					return castTarget.getLength() > MAX_CHAR_SIZE ? "char" : "char(" + castTarget.getLength() + ")";
+				case "binary":
+				case "varbinary":
+				case "mediumblob":
+				case "longblob":
+					return castTarget.getLength() == null ? "binary" : "binary(" + castTarget.getLength() + ")";
+			}
+		}
+		return sqlType;
+	}
+
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
+		String sqlType = getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}

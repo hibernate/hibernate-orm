@@ -27,6 +27,7 @@ import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -91,7 +92,17 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			limit = queryOptions.getLimit();
 			final boolean hasLimit = hasLimit( jdbcSelect );
 			limitHandler = hasLimit ? NoopLimitHandler.NO_LIMIT : dialect.getLimitHandler();
-			final String sqlWithLimit = hasLimit ? sql : limitHandler.processSql( sql, limit, queryOptions );
+
+			final String sqlWithLimit;
+			if ( hasLimit ) {
+				sqlWithLimit = sql;
+			}
+			else {
+				final int jdbcBindingsCnt = jdbcParameterBindings.getBindings().size();
+				final ParameterMarkerStrategy parameterMarkerStrategy =
+						executionContext.getSession().getFactory().getServiceRegistry().requireService( ParameterMarkerStrategy.class );
+				sqlWithLimit = limitHandler.processSql( sql, jdbcBindingsCnt, parameterMarkerStrategy, limit, queryOptions );
+			}
 
 			final LockOptions lockOptions = queryOptions.getLockOptions();
 			final JdbcLockStrategy jdbcLockStrategy = jdbcSelect.getLockStrategy();

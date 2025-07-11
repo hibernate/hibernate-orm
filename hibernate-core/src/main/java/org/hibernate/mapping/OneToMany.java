@@ -234,4 +234,9 @@ public class OneToMany implements Value {
 	public String toString() {
 		return getClass().getSimpleName();
 	}
+
+	@Override
+	public boolean isPartitionKey() {
+		return false;
+	}
 }

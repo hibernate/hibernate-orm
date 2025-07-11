@@ -427,8 +427,20 @@ public abstract sealed class PersistentClass
 		final PrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
 		pk.addColumns( getKey() );
-
+		if ( addPartitionKeyToPrimaryKey() ) {
+			for ( Property property : getProperties() ) {
+				if ( property.getValue().isPartitionKey() ) {
+					pk.addColumns( property.getValue() );
+				}
+			}
+		}
 		table.setPrimaryKey( pk );
+	}
+
+	private boolean addPartitionKeyToPrimaryKey() {
+		return metadataBuildingContext.getMetadataCollector()
+				.getDatabase().getDialect()
+				.addPartitionKeyToPrimaryKey();
 	}
 
 	public abstract String getWhere();

@@ -481,7 +481,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		if ( parent != null && embedded instanceof VirtualModelPart && !isPartOfKey && data.getState() != State.MISSING ) {
 			final InitializerData subData = parent.getData( data.getRowProcessingState() );
 			parent.resolveInstance( subData );
-			data.setInstance( parent.getResolvedInstance( subData ) );
+			data.setInstance( parent.getResolvedInstanceNoProxy( subData ) );
 			if ( data.getState() == State.INITIALIZED ) {
 				return;
 			}

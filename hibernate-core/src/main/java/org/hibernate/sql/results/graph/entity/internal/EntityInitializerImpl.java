@@ -1794,6 +1794,11 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		return "EntityJoinedFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
+	@Override
+	public Object getResolvedInstanceNoProxy(EntityInitializerData data) {
+		return data.entityInstanceForNotify;
+	}
+
 	//#########################
 	// For Hibernate Reactive
 	//#########################

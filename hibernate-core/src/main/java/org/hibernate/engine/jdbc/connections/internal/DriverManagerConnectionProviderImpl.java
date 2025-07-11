@@ -9,7 +9,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -477,7 +476,7 @@ public class DriverManagerConnectionProviderImpl
 
 		public void close() throws SQLException {
 			try {
-				int allocationCount = allConnections.size() - availableConnections.size();
+				final int allocationCount = allConnections.size() - availableConnections.size();
 				if (allocationCount > 0) {
 					ConnectionInfoLogger.INSTANCE.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
 				}
@@ -653,8 +652,7 @@ public class DriverManagerConnectionProviderImpl
 			statelock.writeLock().lock();
 			try {
 				RuntimeException ex = null;
-				for ( Iterator<Connection> iterator = pool.allConnections.iterator(); iterator.hasNext(); ) {
-					final Connection connection = iterator.next();
+				for ( Connection connection : pool.allConnections ) {
 					SQLException e = null;
 					boolean isValid = false;
 					try {

@@ -13,7 +13,6 @@ import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -74,12 +73,11 @@ public abstract class AbstractDeleteCoordinator
 			SharedSessionContractImplementor session) {
 		boolean isImpliedOptimisticLocking = entityPersister().optimisticLockStyle().isAllOrDirty();
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		final EntityEntry entry = persistenceContext.getEntry( entity );
+		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entity );
 		final Object[] loadedState = entry != null && isImpliedOptimisticLocking ? entry.getLoadedState() : null;
 		final Object rowId = entry != null ? entry.getRowId() : null;
 
-		if ( ( isImpliedOptimisticLocking && loadedState != null ) || ( rowId == null && entityPersister().hasRowId() ) ) {
+		if ( isImpliedOptimisticLocking && loadedState != null || rowId == null && entityPersister().hasRowId() ) {
 			doDynamicDelete( entity, id, rowId, loadedState, session );
 		}
 		else {

@@ -46,7 +46,7 @@ pipeline {
                         }
                     }
                     dir('quarkus') {
-                        def latestQuarkusVersion = sh (script: "git ls-remote --heads https://github.com/quarkusio/quarkus.git | grep -oP 'refs/heads/\\K[0-9]+\\.[0-9]+?\$' | sort -V -r | head -n 1").trim()
+                        def latestQuarkusVersion = sh (script: "git ls-remote --heads https://github.com/quarkusio/quarkus.git | grep -oP 'refs/heads/\\K[0-9]+\\.[0-9]+?\$' | sort -V -r | head -n 1",  returnStdout: true).trim()
                         sh "git clone -b ${latestQuarkusVersion} --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
                         script {
                             def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)

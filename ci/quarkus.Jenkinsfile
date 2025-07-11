@@ -17,6 +17,7 @@ pipeline {
     agent none
     tools {
         jdk 'OpenJDK 17 Latest'
+        maven 'Apache Maven 3.9'
     }
     options {
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
@@ -46,7 +47,7 @@ pipeline {
                         }
                     }
                     dir('quarkus') {
-                        def latestQuarkusVersion = sh (script: "git ls-remote --heads https://github.com/quarkusio/quarkus.git | grep -oP 'refs/heads/\\K[0-9]+\\.[0-9]+?\$' | sort -V -r | head -n 1").trim()
+                        def latestQuarkusVersion = sh (script: "git ls-remote --heads https://github.com/quarkusio/quarkus.git | grep -oP 'refs/heads/\\K[0-9]+\\.[0-9]+?\$' | sort -V -r | head -n 1",  returnStdout: true).trim()
                         sh "git clone -b ${latestQuarkusVersion} --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
                         script {
                             def sedStatus = sh (script: "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' pom.xml", returnStatus: true)
@@ -57,15 +58,18 @@ pipeline {
                         // Need to override the default maven configuration this way, because there is no other way to do it
                         sh "sed -i 's/-Xmx5g/-Xmx2048m/' ./.mvn/jvm.config"
                         sh "echo -e '\\n-XX:MaxMetaspaceSize=1024m'>>./.mvn/jvm.config"
-                        withMaven(mavenLocalRepo: env.WORKSPACE + '/.m2repository', publisherStrategy:'EXPLICIT') {
-                            sh "./mvnw -pl !docs -Dquickly install"
-                            // Need to kill the gradle daemons started during the Maven install run
-                            sh "sudo pkill -f '.*GradleDaemon.*' || true"
-                            // Need to override the default maven configuration this way, because there is no other way to do it
-                            sh "sed -i 's/-Xmx2048m/-Xmx1340m/' ./.mvn/jvm.config"
-                            sh "sed -i 's/MaxMetaspaceSize=1024m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"
-                            def excludes = "'!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!extensions/oidc-db-token-state-manager/deployment,!docs'"
-                            sh "TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=true ./mvnw -Dinsecure.repositories=WARN -pl :quarkus-hibernate-orm -amd -pl ${excludes} verify -Dstart-containers -Dtest-containers -Dskip.gradle.build"
+                        withMaven(mavenLocalRepo: env.WORKSPACE + '/.m2repository', publisherStrategy: 'EXPLICIT') {
+                            // to account for script-only maven wrapper use in Quarkus:
+                            withEnv(["MAVEN_ARGS=${env.MAVEN_ARGS?:""} ${env.MAVEN_CONFIG}"]) {
+                                sh "./mvnw -pl !docs -Dquickly install"
+                                // Need to kill the gradle daemons started during the Maven install run
+                                sh "sudo pkill -f '.*GradleDaemon.*' || true"
+                                // Need to override the default maven configuration this way, because there is no other way to do it
+                                sh "sed -i 's/-Xmx2048m/-Xmx1340m/' ./.mvn/jvm.config"
+                                sh "sed -i 's/MaxMetaspaceSize=1024m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"
+                                def excludes = "'!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/maven,!integration-tests/quartz,!integration-tests/reactive-messaging-kafka,!integration-tests/resteasy-reactive-kotlin/standard,!integration-tests/opentelemetry-reactive-messaging,!integration-tests/virtual-threads/kafka-virtual-threads,!integration-tests/smallrye-jwt-oidc-webapp,!extensions/oidc-db-token-state-manager/deployment,!docs'"
+                                sh "TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=true ./mvnw -Dinsecure.repositories=WARN -pl :quarkus-hibernate-orm -amd -pl ${excludes} verify -Dstart-containers -Dtest-containers -Dskip.gradle.build"
+                            }
                         }
                     }
                 }

@@ -355,9 +355,7 @@ public class ComponentType extends AbstractType
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int begin, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-
-		Object[] subvalues = nullSafeGetValues( value );
-
+		final Object[] subvalues = nullSafeGetValues( value );
 		for ( int i = 0; i < propertySpan; i++ ) {
 			propertyTypes[i].nullSafeSet( st, subvalues[i], begin, session );
 			begin += propertyTypes[i].getColumnSpan( session.getFactory().getRuntimeMetamodels() );
@@ -372,7 +370,6 @@ public class ComponentType extends AbstractType
 			boolean[] settable,
 			SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-
 		final Object[] subvalues = nullSafeGetValues( value );
 		int loc = 0;
 		for ( int i = 0; i < propertySpan; i++ ) {
@@ -481,18 +478,19 @@ public class ComponentType extends AbstractType
 		if ( value == null ) {
 			return "null";
 		}
-
-		final Map<String, String> result = new HashMap<>();
-		final Object[] values = getPropertyValues( value );
-		for ( int i = 0; i < propertyTypes.length; i++ ) {
-			if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-				result.put( propertyNames[i], "<uninitialized>" );
+		else {
+			final Map<String, String> result = new HashMap<>();
+			final Object[] values = getPropertyValues( value );
+			for ( int i = 0; i < propertyTypes.length; i++ ) {
+				if ( values[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+					result.put( propertyNames[i], "<uninitialized>" );
+				}
+				else {
+					result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
+				}
 			}
-			else {
-				result.put( propertyNames[i], propertyTypes[i].toLoggableString( values[i], factory ) );
-			}
+			return unqualify( getName() ) + result;
 		}
-		return unqualify( getName() ) + result;
 	}
 
 	@Override
@@ -505,22 +503,23 @@ public class ComponentType extends AbstractType
 		if ( component == null ) {
 			return null;
 		}
+		else {
+			final Object[] values = getPropertyValues( component );
+			for ( int i = 0; i < propertySpan; i++ ) {
+				values[i] = propertyTypes[i].deepCopy( values[i], factory );
+			}
 
-		final Object[] values = getPropertyValues( component );
-		for ( int i = 0; i < propertySpan; i++ ) {
-			values[i] = propertyTypes[i].deepCopy( values[i], factory );
+			final Object result = instantiator( component ).instantiate( () -> values );
+
+			//not absolutely necessary, but helps for some
+			//equals()/hashCode() implementations
+			final PropertyAccess parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
+			if ( parentAccess != null ) {
+				parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ) );
+			}
+
+			return result;
 		}
-
-		final Object result = instantiator( component ).instantiate( () -> values );
-
-		//not absolutely necessary, but helps for some
-		//equals()/hashCode() implementations
-		final PropertyAccess parentAccess = mappingModelPart().getParentInjectionAttributePropertyAccess();
-		if ( parentAccess != null ) {
-			parentAccess.getSetter().set( result, parentAccess.getGetter().get( component ) );
-		}
-
-		return result;
 	}
 
 	@Override
@@ -530,28 +529,28 @@ public class ComponentType extends AbstractType
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) {
-
 		if ( original == null ) {
 			return null;
 		}
-
-		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues = getPropertyValues( target );
-		final Object[] replacedValues = TypeHelper.replace(
-				originalValues,
-				resultValues,
-				propertyTypes,
-				session,
-				owner,
-				copyCache
-		);
-
-		if ( target == null || !isMutable() ) {
-			return instantiator( original ).instantiate( () -> replacedValues );
-		}
 		else {
-			setPropertyValues( target, replacedValues );
-			return target;
+			final Object[] originalValues = getPropertyValues( original );
+			final Object[] resultValues = getPropertyValues( target );
+			final Object[] replacedValues = TypeHelper.replace(
+					originalValues,
+					resultValues,
+					propertyTypes,
+					session,
+					owner,
+					copyCache
+			);
+
+			if ( target == null || !isMutable() ) {
+				return instantiator( original ).instantiate( () -> replacedValues );
+			}
+			else {
+				setPropertyValues( target, replacedValues );
+				return target;
+			}
 		}
 	}
 
@@ -563,28 +562,29 @@ public class ComponentType extends AbstractType
 			Object owner,
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
-
 		if ( original == null ) {
 			return null;
 		}
-		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues = getPropertyValues( target );
-		final Object[] replacedValues = TypeHelper.replace(
-				originalValues,
-				resultValues,
-				propertyTypes,
-				session,
-				owner,
-				copyCache,
-				foreignKeyDirection
-		);
-
-		if ( target == null || !isMutable() ) {
-			return instantiator( original ).instantiate( () -> replacedValues );
-		}
 		else {
-			setPropertyValues( target, replacedValues );
-			return target;
+			final Object[] originalValues = getPropertyValues( original );
+			final Object[] resultValues = getPropertyValues( target );
+			final Object[] replacedValues = TypeHelper.replace(
+					originalValues,
+					resultValues,
+					propertyTypes,
+					session,
+					owner,
+					copyCache,
+					foreignKeyDirection
+			);
+
+			if ( target == null || !isMutable() ) {
+				return instantiator( original ).instantiate( () -> replacedValues );
+			}
+			else {
+				setPropertyValues( target, replacedValues );
+				return target;
+			}
 		}
 	}
 

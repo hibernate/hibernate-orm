@@ -108,11 +108,12 @@ public class TypeHelper {
 		final Type[] types = persister.getPropertyTypes();
 		for ( int i = 0; i < types.length; i++ ) {
 			final Object oldValue = values[i];
-			final Object newValue;
 			if ( oldValue != LazyPropertyInitializer.UNFETCHED_PROPERTY
-					&& oldValue != PropertyAccessStrategyBackRefImpl.UNKNOWN
-					&& ( newValue = types[i].replace( values[i], values[i], session, owner, copyCache ) ) != oldValue ) {
-				persister.setValue( entity, i, newValue );
+					&& oldValue != PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+				final Object newValue = types[i].replace( values[i], values[i], session, owner, copyCache );
+				if ( newValue != oldValue ) {
+					persister.setValue( entity, i, newValue );
+				}
 			}
 		}
 	}

@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.results.graph;
 
+
+import org.hibernate.Hibernate;
+
 /**
  * Provides access to information about the owner/parent of a fetch
  * in relation to the current "row" being processed.
@@ -13,5 +16,7 @@ package org.hibernate.sql.results.graph;
  * @author Steve Ebersole
  */
 public interface InitializerParent<Data extends InitializerData> extends Initializer<Data> {
-
+	default Object getResolvedInstanceNoProxy(Data data){
+		return Hibernate.unproxy( getResolvedInstance( data ) );
+	}
 }

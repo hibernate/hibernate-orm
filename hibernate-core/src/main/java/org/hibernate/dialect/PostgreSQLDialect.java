@@ -822,6 +822,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean addPartitionKeyToPrimaryKey() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsNonQueryWithCTE() {
 		return true;
 	}

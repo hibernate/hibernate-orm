@@ -143,6 +143,11 @@ class ExportableColumnHelper {
 			public boolean isColumnUpdateable(int index) {
 				return true;
 			}
+
+			@Override
+			public boolean isPartitionKey() {
+				return false;
+			}
 		} );
 		return column;
 	}

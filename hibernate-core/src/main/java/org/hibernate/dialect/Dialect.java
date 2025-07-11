@@ -4623,6 +4623,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect require that the columns listed in
+	 * {@code partition by} also occur in the primary key?
+	 *
+	 * @since 7.1
+	 */
+	public boolean addPartitionKeyToPrimaryKey() {
+		return false;
+	}
+
+	/**
 	 * Override {@link DatabaseMetaData#supportsNamedParameters()}.
 	 *
 	 * @throws SQLException Accessing the {@link DatabaseMetaData} cause

@@ -1100,6 +1100,16 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
+	public boolean addPartitionKeyToPrimaryKey() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}

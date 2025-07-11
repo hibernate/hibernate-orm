@@ -123,6 +123,8 @@ public interface Value extends Serializable {
 
 	boolean isAlternateUniqueKey();
 
+	boolean isPartitionKey();
+
 	boolean isNullable();
 
 	void createForeignKey();

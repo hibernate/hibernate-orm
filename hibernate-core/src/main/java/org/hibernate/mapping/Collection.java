@@ -897,4 +897,9 @@ public abstract sealed class Collection
 	public void setDeleteAllExpectation(Supplier<? extends Expectation> deleteAllExpectation) {
 		this.deleteAllExpectation = deleteAllExpectation;
 	}
+
+	@Override
+	public boolean isPartitionKey() {
+		return false;
+	}
 }

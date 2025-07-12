@@ -58,7 +58,9 @@ public class DDLFormatterImpl implements Formatter {
 
 	private String formatCommentOn(String sql) {
 		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
-		final StringTokenizer tokens = new StringTokenizer( sql, " '[]\"", true );
+		final StringTokenizer tokens =
+				new StringTokenizer( sql.replace('\n',' '),
+						" '[]\"", true );
 
 		boolean quoted = false;
 		while ( tokens.hasMoreTokens() ) {
@@ -79,7 +81,9 @@ public class DDLFormatterImpl implements Formatter {
 
 	private String formatAlterTable(String sql) {
 		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
-		final StringTokenizer tokens = new StringTokenizer( sql, " (,)'[]\"", true );
+		final StringTokenizer tokens =
+				new StringTokenizer( sql.replace('\n',' '),
+						" (,)'[]\"", true );
 
 		boolean first = true;
 		boolean quoted = false;
@@ -102,7 +106,9 @@ public class DDLFormatterImpl implements Formatter {
 
 	private String formatCreateTable(String sql) {
 		final StringBuilder result = new StringBuilder( 60 ).append( INITIAL_LINE );
-		final StringTokenizer tokens = new StringTokenizer( sql, "(,)'[]\"", true );
+		final StringTokenizer tokens =
+				new StringTokenizer( sql.replace('\n',' '),
+						"(,)'[]\"", true );
 
 		int depth = 0;
 		boolean quoted = false;

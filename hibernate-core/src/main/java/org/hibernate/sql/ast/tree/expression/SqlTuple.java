@@ -12,7 +12,6 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.update.Assignable;
@@ -30,16 +29,6 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	public SqlTuple(List<? extends Expression> expressions, MappingModelExpressible<?> valueMapping) {
 		this.expressions = expressions;
 		this.valueMapping = valueMapping;
-
-		if ( SqlTreeCreationLogger.LOGGER.isDebugEnabled() ) {
-			final int size = expressions.size();
-			if ( size < 2 ) {
-				SqlTreeCreationLogger.LOGGER.debugf(
-						"SqlTuple created with `%s` expression(s)",
-						size
-				);
-			}
-		}
 	}
 
 	@Override

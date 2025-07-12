@@ -182,8 +182,8 @@ public class ModelBinder {
 		);
 
 		rootEntityDescriptor.setTable( primaryTable );
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "Mapping class: %s -> %s", rootEntityDescriptor.getEntityName(), primaryTable.getName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Mapping class: %s -> %s", rootEntityDescriptor.getEntityName(), primaryTable.getName() );
 		}
 
 		rootEntityDescriptor.setOptimisticLockStyle( hierarchySource.getOptimisticLockStyle() );
@@ -502,8 +502,8 @@ public class ModelBinder {
 		);
 
 		entityDescriptor.setTable( primaryTable );
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "Mapping joined-subclass: %s -> %s", entityDescriptor.getEntityName(), primaryTable.getName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Mapping joined-subclass: %s -> %s", entityDescriptor.getEntityName(), primaryTable.getName() );
 		}
 
 		// KEY
@@ -579,8 +579,8 @@ public class ModelBinder {
 		);
 		entityDescriptor.setTable( primaryTable );
 
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "Mapping union-subclass: %s -> %s", entityDescriptor.getEntityName(), primaryTable.getName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracef( "Mapping union-subclass: %s -> %s", entityDescriptor.getEntityName(), primaryTable.getName() );
 		}
 
 		// todo : tooling hints
@@ -1557,8 +1557,8 @@ public class ModelBinder {
 		secondaryTableJoin.setInverse( secondaryTableSource.isInverse() );
 		secondaryTableJoin.setOptional( secondaryTableSource.isOptional() );
 
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
 					"Mapping entity secondary-table: %s -> %s",
 					persistentClass.getEntityName(),
 					secondaryTable.getName()
@@ -2335,8 +2335,8 @@ public class ModelBinder {
 
 		property.setMetaAttributes( propertySource.getToolingHintContext().getMetaAttributeMap() );
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Mapped property: " + propertySource.getName() + " -> [" + columns( property.getValue() ) + "]" );
 		}
 	}
 
@@ -2379,8 +2379,8 @@ public class ModelBinder {
 
 				// generated properties can *never* be insertable...
 				if ( property.isInsertable() && timing.includesInsert() ) {
-					log.debugf(
-							"Property [%s] specified %s generation, setting insertable to false : %s",
+					log.tracef(
+							"Property [%s] specified %s generation, setting insertable to false: %s",
 							propertySource.getName(),
 							timing.name(),
 							mappingDocument.getOrigin()
@@ -2390,8 +2390,8 @@ public class ModelBinder {
 
 				// properties generated on update can never be updatable...
 				if ( property.isUpdateable() && timing.includesUpdate() ) {
-					log.debugf(
-							"Property [%s] specified ALWAYS generation, setting updateable to false : %s",
+					log.tracef(
+							"Property [%s] specified ALWAYS generation, setting updateable to false: %s",
 							propertySource.getName(),
 							mappingDocument.getOrigin()
 					);
@@ -2454,23 +2454,23 @@ public class ModelBinder {
 		// todo : better define the conditions in this if/else
 		if ( isDynamic ) {
 			// dynamic is represented as a Map
-			log.debugf( "Binding dynamic-component [%s]", role );
+			log.tracef( "Binding dynamic-component [%s]", role );
 			componentBinding.setDynamic( true );
 		}
 		else if ( isVirtual ) {
 			// virtual (what used to be called embedded) is just a conceptual composition...
 			// <properties/> for example
 			if ( componentBinding.getOwner().hasPojoRepresentation() ) {
-				log.debugf( "Binding virtual component [%s] to owner class [%s]", role, componentBinding.getOwner().getClassName() );
+				log.tracef( "Binding virtual component [%s] to owner class [%s]", role, componentBinding.getOwner().getClassName() );
 				componentBinding.setComponentClassName( componentBinding.getOwner().getClassName() );
 			}
 			else {
-				log.debugf( "Binding virtual component [%s] as dynamic", role );
+				log.tracef( "Binding virtual component [%s] as dynamic", role );
 				componentBinding.setDynamic( true );
 			}
 		}
 		else {
-			log.debugf( "Binding component [%s]", role );
+			log.tracef( "Binding component [%s]", role );
 			if ( isNotEmpty( explicitComponentClassName ) ) {
 				try {
 					final Class<Object> componentClass = sourceDocument.getBootstrapContext()
@@ -2494,7 +2494,7 @@ public class ModelBinder {
 				catch (ClassLoadingException ex) {
 					log.debugf( ex, "Could load component class [%s]", explicitComponentClassName );
 				}
-				log.debugf( "Binding component [%s] to explicitly specified class", role, explicitComponentClassName );
+				log.tracef( "Binding component [%s] to explicitly specified class", role, explicitComponentClassName );
 				componentBinding.setComponentClassName( explicitComponentClassName );
 			}
 			else if ( componentBinding.getOwner().hasPojoRepresentation() ) {
@@ -2982,18 +2982,18 @@ public class ModelBinder {
 
 			collectionBinding.createAllKeys();
 
-			if ( log.isDebugEnabled() ) {
-				log.debugf( "Mapped collection : %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
-				log.debugf( "   + table -> %s", getCollectionBinding().getTable().getName() );
-				log.debugf( "   + key -> %s", columns( getCollectionBinding().getKey() ) );
+			if ( log.isTraceEnabled() ) {
+				log.tracef( "Mapped collection : %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
+				log.tracef( "   + table -> %s", getCollectionBinding().getTable().getName() );
+				log.tracef( "   + key -> %s", columns( getCollectionBinding().getKey() ) );
 				if ( getCollectionBinding().isIndexed() ) {
-					log.debugf( "   + index -> %s", columns( ( (IndexedCollection) getCollectionBinding() ).getIndex() ) );
+					log.tracef( "   + index -> %s", columns( ( (IndexedCollection) getCollectionBinding() ).getIndex() ) );
 				}
 				if ( getCollectionBinding().isOneToMany() ) {
-					log.debugf( "   + one-to-many -> %s", ( (OneToMany) getCollectionBinding().getElement() ).getReferencedEntityName() );
+					log.tracef( "   + one-to-many -> %s", ( (OneToMany) getCollectionBinding().getElement() ).getReferencedEntityName() );
 				}
 				else {
-					log.debugf( "   + element -> %s", columns( getCollectionBinding().getElement() ) );
+					log.tracef( "   + element -> %s", columns( getCollectionBinding().getElement() ) );
 				}
 			}
 		}
@@ -3088,8 +3088,10 @@ public class ModelBinder {
 			}
 
 
-			if ( log.isDebugEnabled() ) {
-				log.debugf( "Mapping collection: %s -> %s", collectionBinding.getRole(), collectionBinding.getCollectionTable().getName() );
+			if ( log.isTraceEnabled() ) {
+				log.tracef( "Mapping collection: %s -> %s",
+						collectionBinding.getRole(),
+						collectionBinding.getCollectionTable().getName() );
 			}
 
 			if ( pluralAttributeSource.getCollectionTableComment() != null ) {
@@ -3117,8 +3119,8 @@ public class ModelBinder {
 				backref.setValue( collectionBinding.getKey() );
 				referenced.addProperty( backref );
 
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
+				if ( log.isTraceEnabled() ) {
+					log.tracef(
 							"Added virtual backref property [%s] : %s",
 							backref.getName(),
 							pluralAttributeSource.getAttributeRole().getFullPath()
@@ -3208,8 +3210,8 @@ public class ModelBinder {
 
 		protected void bindCollectionElement() {
 			final PluralAttributeElementSource pluralElementSource = getPluralAttributeSource().getElementSource();
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
+			if ( log.isTraceEnabled() ) {
+				log.tracef(
 						"Binding [%s] element type for a [%s]",
 						pluralElementSource.getNature(),
 						getPluralAttributeSource().getNature()
@@ -3356,8 +3358,8 @@ public class ModelBinder {
 
 				for ( FilterSource filterSource : elementSource.getFilterSources() ) {
 					if ( filterSource.getName() == null ) {
-						if ( log.isDebugEnabled() ) {
-							log.debugf(
+						if ( log.isTraceEnabled() ) {
+							log.tracef(
 									"Encountered filter with no name associated with many-to-many [%s]; skipping",
 									getPluralAttributeSource().getAttributeRole().getFullPath()
 							);
@@ -3377,8 +3379,8 @@ public class ModelBinder {
 						);
 					}
 
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
+					if ( log.isTraceEnabled() ) {
+						log.tracef(
 								"Applying many-to-many filter [%s] as [%s] to collection [%s]",
 								filterSource.getName(),
 								filterSource.getCondition(),
@@ -3984,7 +3986,7 @@ public class ModelBinder {
 
 		@Override
 		public void process() {
-			log.debugf( "Binding natural-id UniqueKey for entity : %s", entityBinding.getEntityName() );
+			log.tracef( "Binding natural-id UniqueKey for entity: %s", entityBinding.getEntityName() );
 
 			final List<Identifier> columnNames = new ArrayList<>();
 

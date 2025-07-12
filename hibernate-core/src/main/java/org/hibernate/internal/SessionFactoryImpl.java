@@ -227,7 +227,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
 			final BootstrapContext bootstrapContext) {
-		LOG.debug( "Building session factory" );
+		LOG.trace( "Building session factory" );
 		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
@@ -361,7 +361,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			throw e;
 		}
 
-		LOG.debug( "Instantiated factory" );
+		LOG.trace( "Instantiated factory" );
 	}
 
 	private EventMonitor loadEventMonitor() {
@@ -773,7 +773,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public Reference getReference() {
 		// from javax.naming.Referenceable
-		LOG.debug( "Returning a Reference to the factory" );
+		LOG.trace( "Returning a Reference to the factory" );
 		return new Reference(
 				SessionFactoryImpl.class.getName(),
 				new StringRefAddr( "uuid", getUuid() ),
@@ -1580,7 +1580,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			LOG.debug( "Resolved factory by UUID: " + uuid );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Resolved factory by UUID: " + uuid );
+			}
 			return uuidResult;
 		}
 
@@ -1589,7 +1591,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				LOG.debug( "Resolved factory by name: " + name );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Resolved factory by name: " + name );
+				}
 				return namedResult;
 			}
 		}

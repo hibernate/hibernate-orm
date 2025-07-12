@@ -249,9 +249,9 @@ public class PluralAttributeMappingImpl
 			final TranslationContext context = collectionDescriptor::getFactory;
 
 			if ( hasOrder ) {
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"Translating order-by fragment [%s] for collection role : %s",
+				if ( log.isTraceEnabled() ) {
+					log.tracef(
+							"Translating order-by fragment [%s] for collection role: %s",
 							bootDescriptor.getOrderBy(),
 							collectionDescriptor.getRole()
 					);
@@ -264,9 +264,9 @@ public class PluralAttributeMappingImpl
 			}
 
 			if ( hasManyToManyOrder ) {
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"Translating many-to-many order-by fragment [%s] for collection role : %s",
+				if ( log.isTraceEnabled() ) {
+					log.tracef(
+							"Translating many-to-many order-by fragment [%s] for collection role: %s",
 							bootDescriptor.getOrderBy(),
 							collectionDescriptor.getRole()
 					);

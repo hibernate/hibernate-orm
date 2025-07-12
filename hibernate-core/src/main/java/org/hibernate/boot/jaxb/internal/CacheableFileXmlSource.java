@@ -118,8 +118,8 @@ public class CacheableFileXmlSource extends XmlSource {
 			binding = (Serializable) bindingWrapper.getRoot();
 		}
 		try ( FileOutputStream fos = new FileOutputStream( serFile ) ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
+			if ( log.isTraceEnabled() ) {
+				log.tracef( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );
 			}
 			SerializationHelper.serialize( binding, fos );
 			boolean success = serFile.setLastModified( System.currentTimeMillis() );

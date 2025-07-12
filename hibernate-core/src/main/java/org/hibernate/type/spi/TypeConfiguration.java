@@ -194,7 +194,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * @param metadataBuildingContext a {@link MetadataBuildingContext}
 	 */
 	public void scope(MetadataBuildingContext metadataBuildingContext) {
-		log.debugf( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
+		log.tracef( "Scoping TypeConfiguration [%s] to MetadataBuildingContext [%s]", this, metadataBuildingContext );
 		scope.setMetadataBuildingContext( metadataBuildingContext );
 	}
 
@@ -206,7 +206,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	 * @param sessionFactory a {@link SessionFactory} that is in a very fragile state
 	 */
 	public void scope(SessionFactoryImplementor sessionFactory) {
-		log.debugf( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
+		log.tracef( "Scoping TypeConfiguration [%s] to SessionFactoryImplementor [%s]", this, sessionFactory );
 
 		if ( scope.getMetadataBuildingContext() == null ) {
 			throw new IllegalStateException( "MetadataBuildingContext not known" );
@@ -605,7 +605,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		private void unsetSessionFactory(SessionFactory factory) {
-			log.debugf( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
+			log.tracef( "Un-scoping TypeConfiguration [%s] from SessionFactory [%s]", this, factory );
 			sessionFactory = null;
 		}
 

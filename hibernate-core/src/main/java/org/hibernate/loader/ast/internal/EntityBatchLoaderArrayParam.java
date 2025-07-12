@@ -67,8 +67,8 @@ public class EntityBatchLoaderArrayParam<T>
 		super( entityDescriptor, loadQueryInfluencers );
 		this.domainBatchSize = domainBatchSize;
 
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Batch fetching enabled for `%s` (entity) using ARRAY strategy : %s",
 					entityDescriptor.getEntityName(),
 					domainBatchSize
@@ -126,8 +126,8 @@ public class EntityBatchLoaderArrayParam<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s",
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Ids to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getEntityName(), id, Arrays.toString(idsToInitialize) );
 		}
 

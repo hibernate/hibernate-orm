@@ -127,7 +127,7 @@ import jakarta.persistence.criteria.Predicate;
 /**
  * Printer for an SQM tree - for debugging purpose
  *
- * @implNote At the top-level (statement) we check against {@link #DEBUG_ENABLED}
+ * @implNote At the top-level (statement) we check against {@link #TRACE_ENABLED}
  * and decide whether to continue or not.  That's to avoid unnecessary, continued
  * checking of that boolean.  The assumption being that we only ever enter from
  * these statement rules
@@ -138,10 +138,10 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	private static final Logger log = Logger.getLogger( SqmTreePrinter.class );
 
 	private static final Logger LOGGER = QueryLogging.subLogger( "sqm.ast" );
-	private static final boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+	private static final boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 
 	public static void logTree(SqmQuerySpec<?> sqmQuerySpec, String header) {
-		if ( ! DEBUG_ENABLED ) {
+		if ( !TRACE_ENABLED ) {
 			return;
 		}
 
@@ -151,11 +151,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 		final String title = header != null ? header : "SqmQuerySpec Tree";
 
-		LOGGER.debugf( "%s :%n%s", title, treePrinter.buffer.toString() );
+		LOGGER.tracef( "%s :%n%s", title, treePrinter.buffer.toString() );
 	}
 
 	public static void logTree(SqmStatement<?> sqmStatement) {
-		if ( ! DEBUG_ENABLED ) {
+		if ( !TRACE_ENABLED ) {
 			return;
 		}
 
@@ -174,7 +174,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			printer.visitInsertSelectStatement( statement );
 		}
 
-		LOGGER.debugf( "SqmStatement Tree :%n%s", printer.buffer.toString() );
+		LOGGER.tracef( "SqmStatement Tree :%n%s", printer.buffer.toString() );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -294,7 +294,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitDeleteStatement(SqmDeleteStatement<?> statement) {
-		if ( DEBUG_ENABLED ) {
+		if ( TRACE_ENABLED ) {
 			processStanza(
 					"delete",
 					() -> {
@@ -309,7 +309,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitInsertSelectStatement(SqmInsertSelectStatement<?> statement) {
-		if ( DEBUG_ENABLED ) {
+		if ( TRACE_ENABLED ) {
 			processStanza(
 					"insert",
 					() -> {
@@ -328,7 +328,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitInsertValuesStatement(SqmInsertValuesStatement<?> statement) {
-		if ( DEBUG_ENABLED ) {
+		if ( TRACE_ENABLED ) {
 			processStanza(
 					"insert",
 					() -> {
@@ -375,7 +375,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
-		if ( DEBUG_ENABLED ) {
+		if ( TRACE_ENABLED ) {
 			processStanza(
 					"select",
 					() -> statement.getQueryPart().accept( this )
@@ -387,7 +387,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitCteStatement(SqmCteStatement<?> sqmCteStatement) {
-		if ( DEBUG_ENABLED ) {
+		if ( TRACE_ENABLED ) {
 			logIndented( "cte" );
 		}
 
@@ -401,7 +401,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitUpdateStatement(SqmUpdateStatement<?> statement) {
-		if ( DEBUG_ENABLED ) {
+		if ( TRACE_ENABLED ) {
 			processStanza(
 					statement.isVersioned() ? "update versioned" : "update",
 					() -> {

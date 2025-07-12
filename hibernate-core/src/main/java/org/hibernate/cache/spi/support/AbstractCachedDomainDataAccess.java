@@ -39,7 +39,7 @@ public abstract class AbstractCachedDomainDataAccess implements CachedDomainData
 	}
 
 	protected void clearCache() {
-		log.debugf( "Clearing cache data map [region=`%s`]", region.getName() );
+		log.tracef( "Clearing cache data map [region=`%s`]", region.getName() );
 		getStorageAccess().evictData();
 	}
 

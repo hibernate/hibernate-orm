@@ -271,7 +271,7 @@ public class BasicTypeRegistry implements Serializable {
 		final JdbcType jdbcType = type.getJdbcType();
 		final BasicType<?> existing = registryForJdbcType( jdbcType ).put( type.getMappedJavaType(), type );
 		if ( existing != null ) {
-			LOG.debugf(
+			LOG.tracef(
 					"BasicTypeRegistry registration overwritten (%s + %s); previous =`%s`",
 					jdbcType.getFriendlyName(),
 					type.getJavaTypeDescriptor(),
@@ -367,7 +367,7 @@ public class BasicTypeRegistry implements Serializable {
 		final JdbcType jdbcType = type.getJdbcType();
 		final BasicType<?> existing = registryForJdbcType( jdbcType ).get( type.getMappedJavaType() );
 		if ( existing != null ) {
-			LOG.debugf(
+			LOG.tracef(
 					"Skipping registration of BasicType (%s + %s); still priming.  existing = %s",
 					jdbcType.getFriendlyName(),
 					type.getJavaTypeDescriptor(),
@@ -395,11 +395,11 @@ public class BasicTypeRegistry implements Serializable {
 			//Incidentally this might help with map lookup efficiency too.
 			key = key.intern();
 
-			LOG.debugf( "Adding type registration %s -> %s", key, type );
+			LOG.tracef( "Adding type registration %s -> %s", key, type );
 
 			final Type old = typesByName.put( key, type );
 			if ( old != null && old != type ) {
-				LOG.debugf(
+				LOG.tracef(
 						"Type registration key [%s] overrode previous entry : `%s`",
 						key,
 						old
@@ -420,11 +420,11 @@ public class BasicTypeRegistry implements Serializable {
 			//Incidentally this might help with map lookup efficiency too.
 			key = key.intern();
 
-			LOG.debugf( "Adding type registration %s -> %s", key, type );
+			LOG.tracef( "Adding type registration %s -> %s", key, type );
 
 			final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
 			if ( old != null && old != type ) {
-				LOG.debugf(
+				LOG.tracef(
 						"Type registration key [%s] overrode previous entry : `%s`",
 						key,
 						old

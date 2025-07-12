@@ -292,17 +292,11 @@ public class BootstrapServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				LOG.debug(
-						"Implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				LOG.trace( "Implicitly destroying Bootstrap registry on deregistration of all child ServiceRegistries" );
 				destroy();
 			}
 			else {
-				LOG.debug(
-						"Skipping implicitly destroying Boot-strap registry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				LOG.trace( "Skipping implicitly destroying Bootstrap registry on deregistration of all child ServiceRegistries" );
 			}
 		}
 	}

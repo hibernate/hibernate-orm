@@ -101,7 +101,8 @@ public class LocalXsdResolver {
 					schemaStream.close();
 				}
 				catch ( IOException e ) {
-					Logger.getLogger( LocalXsdResolver.class ).debugf( "Problem closing schema stream [%s]", e.toString() );
+					Logger.getLogger( LocalXsdResolver.class )
+							.debugf( "Problem closing schema stream [%s]", e.toString() );
 				}
 			}
 		}

@@ -51,7 +51,7 @@ public class CollectionBatchLoaderInPredicate
 				.getBatchLoadSizingStrategy()
 				.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
 		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
+			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Using IN-predicate batch fetching strategy for collection `%s` : %s (%s)",
 					attributeMapping.getNavigableRole().getFullPath(),
 					sqlBatchSize,
@@ -90,7 +90,7 @@ public class CollectionBatchLoaderInPredicate
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
 		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
 		if ( loggerDebugEnabled ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
+			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getNavigableRole().getFullPath(),
 					key,
@@ -126,7 +126,7 @@ public class CollectionBatchLoaderInPredicate
 				},
 				(startIndex) -> {
 					if ( loggerDebugEnabled ) {
-						MULTI_KEY_LOAD_LOGGER.debugf(
+						MULTI_KEY_LOAD_LOGGER.tracef(
 								"Processing collection batch-fetch chunk (`%s#%s`) %s - %s",
 								getLoadable().getNavigableRole().getFullPath(),
 								key,
@@ -137,7 +137,7 @@ public class CollectionBatchLoaderInPredicate
 				},
 				(startIndex, nonNullElementCount) -> {
 					if ( loggerDebugEnabled ) {
-						MULTI_KEY_LOAD_LOGGER.debugf(
+						MULTI_KEY_LOAD_LOGGER.tracef(
 								"Finishing collection batch-fetch chunk (`%s#%s`) %s - %s (%s)",
 								getLoadable().getNavigableRole().getFullPath(),
 								key,

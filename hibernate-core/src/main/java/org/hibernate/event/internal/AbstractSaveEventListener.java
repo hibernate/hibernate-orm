@@ -160,7 +160,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		else {
 			if  ( LOG.isDebugEnabled() ) {
 				// TODO: define toString()s for generators
-				LOG.debugf(
+				LOG.tracef(
 						"Generated identifier [%s] using generator '%s'",
 						persister.getIdentifierType().toLoggableString( id, source.getFactory() ),
 						generator.getClass().getName()

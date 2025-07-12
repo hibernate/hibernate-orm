@@ -18,7 +18,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -50,6 +49,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
+import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
@@ -273,13 +273,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final QueryKey queryResultsCacheKey;
 		final List<?> cachedResults;
 		if ( cacheable && cacheMode.isGetEnabled() ) {
-			SqlExecLogger.SQL_EXEC_LOGGER.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
+			SQL_EXEC_LOGGER.tracef( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
 			if ( querySpaces == null || querySpaces.isEmpty() ) {
-				SqlExecLogger.SQL_EXEC_LOGGER.tracef( "Unexpected querySpaces is empty" );
+				SQL_EXEC_LOGGER.tracef( "Unexpected querySpaces is empty" );
 			}
 			else {
-				SqlExecLogger.SQL_EXEC_LOGGER.tracef( "querySpaces is `%s`", querySpaces );
+				SQL_EXEC_LOGGER.tracef( "querySpaces is `%s`", querySpaces );
 			}
 
 			final QueryResultsCache queryCache = factory.getCache()
@@ -319,7 +319,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 		else {
-			SqlExecLogger.SQL_EXEC_LOGGER.debugf( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
+			SQL_EXEC_LOGGER.tracef( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
 					queryCacheEnabled,
 					cacheMode.name()
 			);

@@ -52,8 +52,6 @@ public class SqmFunctionRegistry {
 
 	/**
 	 * Useful for diagnostics - not efficient: do not use in production code.
-	 *
-	 * @return
 	 */
 	public Stream<Map.Entry<String, SqmFunctionDescriptor>> getFunctionsByName() {
 		final Map<String, SqmFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
@@ -68,8 +66,6 @@ public class SqmFunctionRegistry {
 
 	/**
 	 * Useful for diagnostics - not efficient: do not use in production code.
-	 *
-	 * @return
 	 */
 	public Stream<Map.Entry<String, SqmSetReturningFunctionDescriptor>> getSetReturningFunctionsByName() {
 		final Map<String, SqmSetReturningFunctionDescriptor> sortedFunctionMap = new TreeMap<>( CASE_INSENSITIVE_ORDER );
@@ -125,7 +121,7 @@ public class SqmFunctionRegistry {
 	 */
 	public SqmFunctionDescriptor register(String registrationKey, SqmFunctionDescriptor function) {
 		final SqmFunctionDescriptor priorRegistration = functionMap.put( registrationKey, function );
-		log.debugf(
+		log.tracef(
 				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
 				function,
 				registrationKey,
@@ -136,11 +132,11 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
-	 * Register a set returning function descriptor by name
+	 * Register a set-returning function descriptor by name
 	 */
 	public SqmSetReturningFunctionDescriptor register(String registrationKey, SqmSetReturningFunctionDescriptor function) {
 		final SqmSetReturningFunctionDescriptor priorRegistration = setReturningFunctionMap.put( registrationKey, function );
-		log.debugf(
+		log.tracef(
 				"Registered SqmSetReturningFunctionTemplate [%s] under %s; prior registration was %s",
 				function,
 				registrationKey,
@@ -389,7 +385,7 @@ public class SqmFunctionRegistry {
 
 	public void registerAlternateKey(String alternateKey, String mappedKey) {
 		assert functionMap.containsKey( mappedKey );
-		log.debugf( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
+		log.tracef( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
 		alternateKeyMap.put( alternateKey, mappedKey );
 	}
 
@@ -575,8 +571,8 @@ public class SqmFunctionRegistry {
 	 * incoming registry, potentially overriding its registrations
 	 */
 	public void overlay(SqmFunctionRegistry registryToOverly) {
-		// NOTE : done in this "direction" as it is easier to access the
-		//		functionMap directly in performing this operation
+		// NOTE: done in this "direction" as it is easier to access the
+		//		 functionMap directly in performing this operation
 		functionMap.forEach( registryToOverly::register );
 		alternateKeyMap.forEach( registryToOverly::registerAlternateKey );
 	}

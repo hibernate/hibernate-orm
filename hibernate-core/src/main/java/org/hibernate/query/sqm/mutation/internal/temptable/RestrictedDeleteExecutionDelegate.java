@@ -389,7 +389,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 				jdbcParameterBindings,
 				executionContext
 		);
-		MUTATION_QUERY_LOGGER.debugf( "deleteFromNonRootTable - `%s` : %s rows", targetTableReference, rows );
+		MUTATION_QUERY_LOGGER.tracef( "deleteFromNonRootTable - `%s` : %s rows", targetTableReference, rows );
 		return rows;
 	}
 

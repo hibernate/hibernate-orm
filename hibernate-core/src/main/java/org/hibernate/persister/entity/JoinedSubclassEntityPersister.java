@@ -171,7 +171,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			forceDiscriminator = persistentClass.isForceDiscriminator();
 			final Value discriminatorMapping = persistentClass.getDiscriminator();
 			if ( discriminatorMapping != null ) {
-				log.debug( "Encountered explicit discriminator mapping for joined inheritance" );
+				log.tracef( "Encountered explicit discriminator mapping for joined inheritance" );
 				final Selectable selectable = discriminatorMapping.getSelectables().get(0);
 				if ( selectable instanceof Column column ) {
 					explicitDiscriminatorColumnName = column.getQuotedName( dialect );

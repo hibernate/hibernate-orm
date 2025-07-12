@@ -37,7 +37,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		log.tracef( "In resolveEntity(%s, %s, %s, %s)", publicID, systemID, baseURI, namespace );
 
 		if ( namespace != null ) {
-			log.debugf( "Interpreting namespace : %s", namespace );
+			log.tracef( "Interpreting namespace: %s", namespace );
 			if ( MappingXsdSupport.latestDescriptor().getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( MappingXsdSupport.latestDescriptor() );
 			}
@@ -84,7 +84,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		}
 
 		if ( publicID != null || systemID != null ) {
-			log.debugf( "Checking public/system identifiers `%s`/`%s` as DTD references", publicID, systemID );
+			log.tracef( "Checking public/system identifiers `%s`/`%s` as DTD references", publicID, systemID );
 
 			if ( MAPPING_DTD.matches( publicID, systemID ) ) {
 				return openUrlStream( MAPPING_DTD.localSchemaUrl );
@@ -116,15 +116,15 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		if ( systemID != null ) {
 			// technically, "classpath://..." identifiers should only be declared as SYSTEM identifiers
 			if ( systemID.startsWith( CLASSPATH_EXTENSION_URL_BASE ) ) {
-				log.debugf( "Recognized `classpath:` identifier; attempting to resolve on classpath [%s]", systemID );
+				log.tracef( "Recognized `classpath:` identifier; attempting to resolve on classpath [%s]", systemID );
 				final String path = systemID.substring( CLASSPATH_EXTENSION_URL_BASE.length() );
 				// todo : for this to truly work consistently, we need access to ClassLoaderService
 				final InputStream stream = resolveInLocalNamespace( path );
 				if ( stream == null ) {
-					log.debugf( "Unable to resolve [%s] on classpath", systemID );
+					log.tracef( "Unable to resolve [%s] on classpath", systemID );
 				}
 				else {
-					log.debugf( "Resolved [%s] on classpath", systemID );
+					log.tracef( "Resolved [%s] on classpath", systemID );
 				}
 				return stream;
 			}

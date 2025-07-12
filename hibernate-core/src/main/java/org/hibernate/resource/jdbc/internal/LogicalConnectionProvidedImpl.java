@@ -110,15 +110,15 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 		}
 		else if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
-			log.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
+			log.trace( "Reconnecting the same connection that is already connected; should this connection have been disconnected?" );
 		}
 		else if ( providedConnection != null ) {
 			throw new IllegalArgumentException(
-					"cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
+					"Cannot reconnect to a new user-supplied connection because currently connected; must disconnect before reconnecting."
 			);
 		}
 		providedConnection = connection;
-		log.debug( "Manually reconnected logical connection" );
+		log.trace( "Manually reconnected logical connection" );
 	}
 
 	@Override

@@ -3030,7 +3030,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	private static SessionFactory locateSessionFactoryOnDeserialization(String uuid, String name) throws InvalidObjectException{
 		final SessionFactory uuidResult = SessionFactoryRegistry.INSTANCE.getSessionFactory( uuid );
 		if ( uuidResult != null ) {
-			LOG.debugf( "Resolved SessionFactory by UUID [%s]", uuid );
+			LOG.tracef( "Resolved SessionFactory by UUID [%s]", uuid );
 			return uuidResult;
 		}
 
@@ -3039,7 +3039,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		if ( name != null ) {
 			final SessionFactory namedResult = SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( name );
 			if ( namedResult != null ) {
-				LOG.debugf( "Resolved SessionFactory by name [%s]", name );
+				LOG.tracef( "Resolved SessionFactory by name [%s]", name );
 				return namedResult;
 			}
 		}

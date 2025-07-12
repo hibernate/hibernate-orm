@@ -44,8 +44,8 @@ public abstract class AbstractEntityBatchLoader<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
@@ -58,8 +58,8 @@ public abstract class AbstractEntityBatchLoader<T>
 			Object entityInstance,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );

@@ -287,7 +287,7 @@ public class ActionQueue {
 		if ( insert.isEarlyInsert() ) {
 			LOG.trace( "Executing insertions before resolved early-insert" );
 			executeInserts();
-			LOG.debug( "Executing identity-insert immediately" );
+			LOG.trace( "Executing identity-insert immediately" );
 			execute( insert );
 		}
 		else {
@@ -605,7 +605,7 @@ public class ActionQueue {
 
 		for ( Serializable actionSpace : actions.getQuerySpaces() ) {
 			if ( tableSpaces.contains( actionSpace ) ) {
-				LOG.debugf( "Changes must be flushed to space: %s", actionSpace );
+				LOG.tracef( "Changes must be flushed to space: %s", actionSpace );
 				return true;
 			}
 		}
@@ -618,7 +618,7 @@ public class ActionQueue {
 			final Serializable[] spaces = action.getPropertySpaces();
 			for ( Serializable space : spaces ) {
 				if ( tableSpaces.contains( space ) ) {
-					LOG.debugf( "Changes must be flushed to space: %s", space );
+					LOG.tracef( "Changes must be flushed to space: %s", space );
 					return true;
 				}
 			}

@@ -31,7 +31,6 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -49,6 +48,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
+import static org.hibernate.sql.results.ResultsLogger.RESULTS_LOGGER;
 
 /**
  * Central implementation of {@linkplain DomainResultCreationState},
@@ -115,7 +115,7 @@ public class DomainResultCreationStateImpl
 	}
 
 	public void disallowPositionalSelections() {
-		ResultsLogger.RESULTS_LOGGER.debugf( "Disallowing positional selections : %s", stateIdentifier );
+		RESULTS_LOGGER.debugf( "Disallowing positional selections: %s", stateIdentifier );
 		this.allowPositionalSelections = false;
 	}
 

@@ -115,9 +115,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			}
 		}
 		catch ( Exception e ) {
-			log.debug(
-					"Could not re-enable auto-commit on JDBC Connection after completion of JDBC-based transaction : " + e
-			);
+			log.debug( "Could not re-enable auto-commit on JDBC Connection after completion of JDBC-based transaction", e );
 		}
 	}
 

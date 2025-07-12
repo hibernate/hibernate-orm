@@ -677,6 +677,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
+	public boolean addPartitionKeyToPrimaryKey() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}

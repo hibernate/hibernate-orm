@@ -111,7 +111,7 @@ public class XmlMappingBinderAccess {
 	 */
 	public Binding<JaxbBindableMappingDescriptor> bind(URL url) {
 		final String urlExternalForm = url.toExternalForm();
-		LOG.debugf( "Reading mapping document from URL : %s", urlExternalForm );
+		LOG.tracef( "Reading mapping document from URL: %s", urlExternalForm );
 		final Origin origin = new Origin( SourceType.URL, urlExternalForm );
 		return new UrlXmlSource( origin, url ).doBind( getMappingBinder() );
 	}

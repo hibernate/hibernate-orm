@@ -36,8 +36,8 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		hasSimpleNaturalId = entityDescriptor.getNaturalIdMapping() instanceof SimpleNaturalIdMapping;
 
 		if ( !hasSimpleNaturalId ) {
-			// just log it - we allow this for composite natural-ids with the assumption
-			// that a singular representation of the natural-id (Map or array) will be passed
+			// Just log it - we allow this for composite natural ids with the assumption
+			// that a singular representation of the natural id (Map or array) will be passed
 			LoaderLogging.LOADER_LOGGER.debugf(
 					"Entity [%s] did not define a simple natural id",
 					entityDescriptor.getEntityName()

@@ -313,7 +313,9 @@ public class ManagedTypeProcessor {
 		final RenderingTargetCollectingImpl collectingTarget = new RenderingTargetCollectingImpl();
 		final SimpleRenderer renderer = new SimpleRenderer( collectingTarget );
 		renderer.renderClass( classDetails, xmlDocumentContext.getModelBuildingContext() );
-		XML_PROCESS_LOGGER.debugf( "Class annotations from XML for %s:\n%s", classDetails.getName(), collectingTarget.toString() );
+		XML_PROCESS_LOGGER.tracef( "Class annotations from XML for %s:\n%s",
+				classDetails.getName(),
+				collectingTarget.toString() );
 	}
 
 	private static void applyAccessAnnotation(

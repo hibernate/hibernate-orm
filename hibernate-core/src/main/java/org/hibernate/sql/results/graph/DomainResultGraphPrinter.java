@@ -38,12 +38,9 @@ public class DomainResultGraphPrinter {
 	}
 
 	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
-		if ( !AST_LOGGER.isDebugEnabled() ) {
-			return;
+		if ( AST_LOGGER.isTraceEnabled() ) {
+			new DomainResultGraphPrinter( header ).visitDomainResults( domainResults );
 		}
-
-		final DomainResultGraphPrinter graphPrinter = new DomainResultGraphPrinter( header );
-		graphPrinter.visitDomainResults( domainResults );
 	}
 
 	private final StringBuilder buffer;

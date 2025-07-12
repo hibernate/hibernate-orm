@@ -407,17 +407,11 @@ public abstract class AbstractServiceRegistryImpl
 		childRegistries.remove( child );
 		if ( childRegistries.isEmpty() ) {
 			if ( autoCloseRegistry ) {
-				log.debug(
-						"Implicitly destroying ServiceRegistry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				log.trace( "Implicitly destroying ServiceRegistry on deregistration of all child ServiceRegistries" );
 				destroy();
 			}
 			else {
-				log.debug(
-						"Skipping implicitly destroying ServiceRegistry on de-registration " +
-								"of all child ServiceRegistries"
-				);
+				log.trace( "Skipping implicitly destroying ServiceRegistry on deregistration of all child ServiceRegistries" );
 			}
 		}
 	}

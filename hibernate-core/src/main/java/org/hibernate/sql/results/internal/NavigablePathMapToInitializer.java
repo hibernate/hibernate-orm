@@ -5,7 +5,6 @@
 package org.hibernate.sql.results.internal;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import org.hibernate.spi.NavigablePath;
@@ -48,32 +47,31 @@ public final class NavigablePathMapToInitializer {
 	}
 
 	public void logInitializers() {
-		ResultsLogger logger = ResultsLogger.RESULTS_MESSAGE_LOGGER;
-		if ( !logger.isDebugEnabled() ) {
-			return;
-		}
-		if ( map == null ) {
-			logger.debug( "Initializer list is empty" );
-		}
-		else {
-			//Apparently we want to log this on multiple lines (existing code did this - not sure if that was by design):
-			//using a StringBuilder to avoid potentially interleaving the logs from different operations.
-			final StringBuilder sb = new StringBuilder( "Initializer list:\n" );
-			for ( Map.Entry<NavigablePath, InitializerHolder> holderEntry : map.entrySet() ) {
-				final NavigablePath navigablePath = holderEntry.getKey();
-				final Initializer<?> initializer = holderEntry.getValue().initializer;
-				String formatted = String.format(
-						"  %s -> %s@%s (%s)",
-						navigablePath,
-						initializer,
-						initializer.hashCode(),
-						initializer.getInitializedPart()
-				);
-				sb.append( '\t' );
-				sb.append( formatted );
-				sb.append( '\n' );
+		final ResultsLogger logger = ResultsLogger.RESULTS_MESSAGE_LOGGER;
+		if ( logger.isTraceEnabled() ) {
+			if ( map == null ) {
+				logger.trace( "Initializer list is empty" );
 			}
-			logger.debug( sb.toString() );
+			else {
+				//Apparently we want to log this on multiple lines (existing code did this - not sure if that was by design):
+				//using a StringBuilder to avoid potentially interleaving the logs from different operations.
+				final StringBuilder sb = new StringBuilder( "Initializer list:\n" );
+				for ( var holderEntry : map.entrySet() ) {
+					final NavigablePath navigablePath = holderEntry.getKey();
+					final Initializer<?> initializer = holderEntry.getValue().initializer;
+					final String formatted = String.format(
+							"  %s -> %s@%s (%s)",
+							navigablePath,
+							initializer,
+							initializer.hashCode(),
+							initializer.getInitializedPart()
+					);
+					sb.append( '\t' );
+					sb.append( formatted );
+					sb.append( '\n' );
+				}
+				logger.trace( sb.toString() );
+			}
 		}
 	}
 

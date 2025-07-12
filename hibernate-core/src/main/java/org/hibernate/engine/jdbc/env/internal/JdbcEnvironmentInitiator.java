@@ -432,10 +432,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
 					"Database ->\n"
-							+ "	   name : %s\n"
-							+ "	version : %s\n"
-							+ "	  major : %s\n"
-							+ "	  minor : %s",
+							+ "	   name: %s\n"
+							+ "	version: %s\n"
+							+ "	  major: %s\n"
+							+ "	  minor: %s",
 					dbmd.getDatabaseProductName(),
 					dbmd.getDatabaseProductVersion(),
 					dbmd.getDatabaseMajorVersion(),
@@ -443,16 +443,16 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			);
 			log.debugf(
 					"Driver ->\n"
-							+ "	   name : %s\n"
-							+ "	version : %s\n"
-							+ "	  major : %s\n"
-							+ "	  minor : %s",
+							+ "	   name: %s\n"
+							+ "	version: %s\n"
+							+ "	  major: %s\n"
+							+ "	  minor: %s",
 					dbmd.getDriverName(),
 					dbmd.getDriverVersion(),
 					dbmd.getDriverMajorVersion(),
 					dbmd.getDriverMinorVersion()
 			);
-			log.debugf( "JDBC version : %s.%s", dbmd.getJDBCMajorVersion(), dbmd.getJDBCMinorVersion() );
+			log.debugf( "JDBC version: %s.%s", dbmd.getJDBCMajorVersion(), dbmd.getJDBCMinorVersion() );
 		}
 	}
 

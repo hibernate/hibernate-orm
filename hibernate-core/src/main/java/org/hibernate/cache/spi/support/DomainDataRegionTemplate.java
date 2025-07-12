@@ -67,7 +67,7 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		final NavigableRole namedEntityRole = entityAccessConfig.getNavigableRole();
 		final AccessType accessType = entityAccessConfig.getAccessType();
 
-		log.debugf( "Generating entity cache access [%s] : %s", accessType.getExternalName(), namedEntityRole );
+		log.tracef( "Generating entity cache access [%s] : %s", accessType.getExternalName(), namedEntityRole );
 
 		switch ( accessType ) {
 			case READ_ONLY: {
@@ -128,25 +128,14 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		final NavigableRole namedEntityRole = accessConfig.getNavigableRole();
 		final AccessType accessType = accessConfig.getAccessType();
 
-		log.debugf( "Generating entity natural-id access [%s] : %s", accessType.getExternalName(), namedEntityRole );
+		log.tracef( "Generating entity natural-id access [%s] : %s", accessType.getExternalName(), namedEntityRole );
 
-		switch ( accessType ) {
-			case READ_ONLY: {
-				return generateReadOnlyNaturalIdAccess( accessConfig );
-			}
-			case READ_WRITE: {
-				return generateReadWriteNaturalIdAccess( accessConfig );
-			}
-			case NONSTRICT_READ_WRITE: {
-				return generateNonStrictReadWriteNaturalIdAccess( accessConfig );
-			}
-			case TRANSACTIONAL: {
-				return generateTransactionalNaturalIdDataAccess( accessConfig );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessType );
-			}
-		}
+		return switch ( accessType ) {
+			case READ_ONLY -> generateReadOnlyNaturalIdAccess( accessConfig );
+			case READ_WRITE -> generateReadWriteNaturalIdAccess( accessConfig );
+			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteNaturalIdAccess( accessConfig );
+			case TRANSACTIONAL -> generateTransactionalNaturalIdDataAccess( accessConfig );
+		};
 	}
 
 	protected NaturalIdDataAccess generateReadOnlyNaturalIdAccess(NaturalIdDataCachingConfig accessConfig) {
@@ -184,25 +173,14 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	public CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig accessConfig) {
 		final NavigableRole namedCollectionRole = accessConfig.getNavigableRole();
 
-		log.debugf( "Generating collection cache access : %s", namedCollectionRole );
+		log.tracef( "Generating collection cache access: %s", namedCollectionRole );
 
-		switch ( accessConfig.getAccessType() ) {
-			case READ_ONLY: {
-				return generateReadOnlyCollectionAccess( accessConfig );
-			}
-			case READ_WRITE: {
-				return generateReadWriteCollectionAccess( accessConfig );
-			}
-			case NONSTRICT_READ_WRITE: {
-				return generateNonStrictReadWriteCollectionAccess( accessConfig );
-			}
-			case TRANSACTIONAL: {
-				return generateTransactionalCollectionDataAccess( accessConfig );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessConfig.getAccessType() );
-			}
-		}
+		return switch ( accessConfig.getAccessType() ) {
+			case READ_ONLY -> generateReadOnlyCollectionAccess( accessConfig );
+			case READ_WRITE -> generateReadWriteCollectionAccess( accessConfig );
+			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteCollectionAccess( accessConfig );
+			case TRANSACTIONAL -> generateTransactionalCollectionDataAccess( accessConfig );
+		};
 	}
 
 	private CollectionDataAccess generateReadOnlyCollectionAccess(CollectionDataCachingConfig accessConfig) {

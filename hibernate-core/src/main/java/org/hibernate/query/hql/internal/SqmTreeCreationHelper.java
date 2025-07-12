@@ -139,7 +139,7 @@ public class SqmTreeCreationHelper {
 
 		//noinspection unchecked
 		final SqmRoot<E> sqmRoot = (SqmRoot<E>) fromRootContext.accept( sqmBuilder );
-		SqmTreeCreationLogger.LOGGER.debugf( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
+		SqmTreeCreationLogger.LOGGER.tracef( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
 		final SqmEntityJoin<E,E> pseudoCrossJoin = new SqmEntityJoin<>(
 				sqmRoot.getManagedType(),
 				extractAlias( fromRootContext.variable(), sqmBuilder ),

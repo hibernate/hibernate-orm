@@ -180,7 +180,7 @@ final class ResultsetsTrackingContainer {
 		// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 		// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
 		if ( existingEntry == null ) {
-			log.debug( "ResultSet statement was not registered (on register)" );
+			log.trace( "ResultSet statement was not registered (on register)" );
 		}
 		return true;
 	}

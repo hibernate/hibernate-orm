@@ -85,7 +85,7 @@ public final class ProviderChecker {
 			return persistenceUnitRequestedProvider;
 		}
 
-		// NOTE : if no provider requested we assume we are the provider (the calls got to us somehow...)
+		// NOTE: if no provider requested, we assume we are the provider (the calls got to us somehow...)
 		log.debug( "No PersistenceProvider explicitly requested, assuming Hibernate" );
 		return HibernatePersistenceProvider.class.getName();
 	}

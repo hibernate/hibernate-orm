@@ -259,8 +259,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final EntityPersister persister = getEntityDescriptor( entityName );
 		final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting entity second-level cache: "
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Evicting entity second-level cache: "
 							+ infoString( persister, identifier, sessionFactory ) );
 			}
 
@@ -305,8 +305,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictEntityData(NavigableRole navigableRole, EntityDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting entity second-level cache: " + navigableRole.getFullPath() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Evicting entity second-level cache: " + navigableRole.getFullPath() );
 			}
 			cacheAccess.evictAll();
 		}
@@ -344,8 +344,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictNaturalIdData(NavigableRole rootEntityRole, NaturalIdDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting natural-id cache: " + rootEntityRole.getFullPath() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Evicting natural-id cache: " + rootEntityRole.getFullPath() );
 			}
 			cacheAccess.evictAll();
 		}
@@ -375,8 +375,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final CollectionPersister persister = getCollectionDescriptor( role );
 		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting collection second-level cache: "
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Evicting collection second-level cache: "
 							+ collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
 			}
 
@@ -398,8 +398,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictCollectionData(NavigableRole navigableRole, CollectionDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting collection second-level cache: " + navigableRole.getFullPath() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Evicting collection second-level cache: " + navigableRole.getFullPath() );
 			}
 			cacheAccess.evictAll();
 		}
@@ -435,8 +435,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictQueryResultRegion(QueryResultsCache cache) {
 		if ( cache != null ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Evicting query cache region: " + cache.getRegion().getName() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Evicting query cache region: " + cache.getRegion().getName() );
 			}
 			cache.clear();
 		}
@@ -444,8 +444,8 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	@Override
 	public void evictQueryRegions() {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Evicting cache of all query regions" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Evicting cache of all query regions" );
 		}
 
 		evictQueryResultRegion( defaultQueryResultsCache );

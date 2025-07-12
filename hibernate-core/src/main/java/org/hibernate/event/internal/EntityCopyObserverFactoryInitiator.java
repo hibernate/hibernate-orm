@@ -37,17 +37,20 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 		}
 		else if ( value.equals( EntityCopyNotAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyNotAllowedObserver.class.getName() ) ) {
-			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyNotAllowedObserver.SHORT_NAME );
+			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
+					EntityCopyNotAllowedObserver.SHORT_NAME );
 			return EntityCopyNotAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyAllowedObserver.class.getName() ) ) {
-			LOG.debugf( "Configured EntityCopyObserver strategy: %s", EntityCopyAllowedObserver.SHORT_NAME );
+			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
+					EntityCopyAllowedObserver.SHORT_NAME );
 			return EntityCopyAllowedObserver.FACTORY_OF_SELF;
 		}
 		else if ( value.equals( EntityCopyAllowedLoggedObserver.SHORT_NAME )
 				|| value.equals( EntityCopyAllowedLoggedObserver.class.getName() ) ) {
-			LOG.debugf( "Configured EntityCopyObserver strategy: %s",  EntityCopyAllowedLoggedObserver.SHORT_NAME );
+			LOG.tracef( "Configured EntityCopyObserver strategy: %s",
+					EntityCopyAllowedLoggedObserver.SHORT_NAME );
 			return EntityCopyAllowedLoggedObserver.FACTORY_OF_SELF;
 		}
 		else {
@@ -59,7 +62,8 @@ public class EntityCopyObserverFactoryInitiator implements StandardServiceInitia
 					registry.requireService( StrategySelector.class )
 							.resolveStrategy( EntityCopyObserver.class, value );
 			final Class<? extends EntityCopyObserver> observerType = exampleInstance.getClass();
-			LOG.debugf( "Configured EntityCopyObserver is a custom implementation of type '%s'", observerType.getName() );
+			LOG.tracef( "Configured EntityCopyObserver is a custom implementation of type '%s'",
+					observerType.getName() );
 			return new EntityCopyObserverFactoryFromClass( observerType );
 		}
 	}

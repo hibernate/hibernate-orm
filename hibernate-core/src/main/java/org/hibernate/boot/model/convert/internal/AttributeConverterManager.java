@@ -112,8 +112,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		// see if we have a matching entry in `attributeConverterDescriptorsByClass`.
 		// if so, remove it.  The conversion being registered will always take precedence
 		if ( attributeConverterDescriptorsByClass != null ) {
-			final ConverterDescriptor<?,?> removed =
-					attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
+			final var removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
 			if ( removed != null && log.isDebugEnabled() ) {
 				log.debugf( "Removed potentially auto-applicable converter `%s` due to @ConverterRegistration",
 						removed.getAttributeConverterClass().getName() );
@@ -228,8 +227,8 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			ConverterDescriptor<?,?>> matcher) {
 		final List<ConverterDescriptor<?,?>> matches = new ArrayList<>();
 		for ( ConverterDescriptor<?,?> descriptor : converterDescriptors() ) {
-			if ( log.isDebugEnabled() ) {
-				log.debugf(
+			if ( log.isTraceEnabled() ) {
+				log.tracef(
 						"Checking auto-apply AttributeConverter [%s] (domain-type=%s) for match against %s : %s.%s (type=%s)",
 						descriptor.getAttributeConverterClass().getName(),
 						descriptor.getDomainValueResolvedType().getSignature(),

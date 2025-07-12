@@ -58,7 +58,6 @@ import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BindableType;
-import org.hibernate.query.QueryLogging;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.common.FetchClauseType;
@@ -329,6 +328,7 @@ import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.common.TemporalUnit.NATIVE;
@@ -3290,7 +3290,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
-				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
+				QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
 			}
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
@@ -5807,7 +5807,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( sqmExpression instanceof SqmPath ) {
-			log.debugf( "Determining mapping-model type for SqmPath : %s ", sqmExpression );
+			log.tracef( "Determining mapping-model type for SqmPath: %s ", sqmExpression );
 			final MappingModelExpressible<?> mappingModelExpressible =
 					resolveMappingModelExpressible( sqmExpression, domainModel, fromClauseIndex::findTableGroup );
 			if ( mappingModelExpressible != null ) {
@@ -5880,7 +5880,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );
+		log.tracef( "Determining mapping-model type for generalized SqmExpression: %s", sqmExpression );
 		final SqmExpressible<?> nodeType = sqmExpression.getNodeType();
 		if ( nodeType == null ) {
 			// We can't determine the type of the expression
@@ -5935,7 +5935,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected MappingModelExpressible<?> determineValueMapping(SqmParameter<?> sqmParameter) {
-		log.debugf( "Determining mapping-model type for SqmParameter : %s", sqmParameter );
+		log.tracef( "Determining mapping-model type for SqmParameter: %s", sqmParameter );
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
 		final boolean bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;

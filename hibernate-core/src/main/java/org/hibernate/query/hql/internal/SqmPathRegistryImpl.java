@@ -14,7 +14,6 @@ import java.util.function.Function;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.AliasCollisionException;
@@ -32,6 +31,8 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
+
+import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
 
 /**
  * Container for indexing needed while building an SQM tree.
@@ -261,7 +262,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		//  	(configurable?) option would be to simply pick the first one as a perf optimization
 
 		SqmFrom<?, ?> found = null;
-		for ( Map.Entry<NavigablePath, SqmFrom<?, ?>> entry : sqmFromByPath.entrySet() ) {
+		for ( var entry : sqmFromByPath.entrySet() ) {
 			final SqmFrom<?, ?> fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
@@ -274,7 +275,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 
 		if ( found == null ) {
 			if ( associatedProcessingState.getParentProcessingState() != null ) {
-				HqlLogging.QUERY_LOGGER.debugf(
+				QUERY_LOGGER.tracef(
 						"Unable to resolve unqualified attribute [%s] in local from-clause; checking parent ",
 						navigableName
 				);
@@ -282,7 +283,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			}
 		}
 
-		HqlLogging.QUERY_LOGGER.debugf(
+		QUERY_LOGGER.tracef(
 				"Unable to resolve unqualified attribute [%s] in local from-clause",
 				navigableName
 		);

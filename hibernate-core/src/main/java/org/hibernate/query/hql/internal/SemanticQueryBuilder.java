@@ -1719,7 +1719,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					query );
 		}
 		if ( sortExpression instanceof SqmLiteral || sortExpression instanceof SqmParameter ) {
-			HqlLogging.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
+			HqlLogging.QUERY_LOGGER.debugf( "Questionable sorting by constant value: %s", sortExpression );
 		}
 		return new SqmSortSpecification( sortExpression, sortOrder( ctx ), nullPrecedence( ctx ) );
 	}
@@ -2145,7 +2145,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	protected <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
 		final String name = getEntityName( parserJoin.entityName() );
 
-		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
+		SqmTreeCreationLogger.LOGGER.tracef( "Handling root path - %s", name );
 
 		final EntityDomainType<T> entityDescriptor = getJpaMetamodel().resolveHqlEntityReference( name );
 

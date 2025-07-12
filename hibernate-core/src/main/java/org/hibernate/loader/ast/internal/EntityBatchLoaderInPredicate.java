@@ -61,9 +61,9 @@ public class EntityBatchLoaderInPredicate<T>
 				sessionFactory.getJdbcServices().getDialect().getBatchLoadSizingStrategy()
 						.determineOptimalBatchLoadSize( idColumnCount, domainBatchSize, false );
 
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
-					"Batch fetching `%s` entity using padded IN-list : %s (%s)",
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef(
+					"Batch fetching `%s` entity using padded IN-list: %s (%s)",
 					entityDescriptor.getEntityName(),
 					domainBatchSize,
 					sqlBatchSize
@@ -121,8 +121,8 @@ public class EntityBatchLoaderInPredicate<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s",
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Ids to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
 		}
 
@@ -156,8 +156,8 @@ public class EntityBatchLoaderInPredicate<T>
 							}
 						},
 						(startIndex) -> {
-							if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-								MULTI_KEY_LOAD_LOGGER.debugf(
+							if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+								MULTI_KEY_LOAD_LOGGER.tracef(
 										"Processing entity batch-fetch chunk (`%s#%s`) %s - %s",
 										getLoadable().getEntityName(),
 										pkValue,

@@ -114,7 +114,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 	public void topLevelMergeComplete(EventSource session) {
 		// Log the summary.
 		if ( countsByEntityName != null ) {
-			for ( Map.Entry<String, Integer> entry : countsByEntityName.entrySet() ) {
+			for ( var entry : countsByEntityName.entrySet() ) {
 				LOG.debug(
 						String.format(
 								"Summary: number of %s entities with multiple representations merged: %d",
@@ -129,10 +129,10 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 		}
 
 		if ( managedToMergeEntitiesXref != null ) {
-			for ( Map.Entry<Object,Set<Object>> entry : managedToMergeEntitiesXref.entrySet() ) {
-				Object managedEntity = entry.getKey();
-				Set<Object> mergeEntities = entry.getValue();
-				StringBuilder sb = new StringBuilder( "Details: merged ")
+			for ( var entry : managedToMergeEntitiesXref.entrySet() ) {
+				final Object managedEntity = entry.getKey();
+				final Set<Object> mergeEntities = entry.getValue();
+				final StringBuilder sb = new StringBuilder( "Details: merged ")
 						.append( mergeEntities.size() )
 						.append( " representations of the same entity " )
 						.append(

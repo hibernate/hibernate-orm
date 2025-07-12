@@ -90,7 +90,7 @@ public final class LogHelper {
 		sb.append( "Properties [" );
 		Properties properties = descriptor.getProperties();
 		if (properties != null) {
-			Enumeration names = properties.propertyNames();
+			Enumeration<?> names = properties.propertyNames();
 			while ( names.hasMoreElements() ) {
 				String name = (String) names.nextElement();
 				sb.append( "\n\t\t" ).append( name ).append( ": " ).append( properties.getProperty( name ) );

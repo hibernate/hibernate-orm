@@ -47,7 +47,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	private StatisticsImplementor statistics;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
-		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
+		log.tracef( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
 		final InternalCacheFactory cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
 		this.queryPlanCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.hqlInterpretationCache = cacheFactory.createInternalCache( maxQueryPlanCount );
@@ -189,7 +189,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 				queryString,
 				s -> {
 					final ParameterInterpretation interpretation = creator.apply( queryString );
-					log.debugf( "Creating and caching NativeQuery ParameterInterpretation - %s", interpretation );
+					log.tracef( "Creating and caching NativeQuery ParameterInterpretation - %s", interpretation );
 					return interpretation;
 				}
 		);
@@ -202,7 +202,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	@Override
 	public void close() {
-		log.debug( "Closing QueryInterpretationCache" );
+		log.trace( "Closing QueryInterpretationCache" );
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();

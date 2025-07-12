@@ -199,7 +199,7 @@ final class JndiServiceImpl implements JndiService {
 					LOG.tracev( "Found intermediate context: {0}", intermediateContextName );
 				}
 				else {
-					LOG.tracev( "Creating sub-context: {0}", intermediateContextName );
+					LOG.tracev( "Creating subcontext: {0}", intermediateContextName );
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -210,7 +210,7 @@ final class JndiServiceImpl implements JndiService {
 				intermediateContextBase = intermediateContext;
 				name = name.getSuffix( 1 );
 			}
-			LOG.tracev( "Binding : {0}", name );
+			LOG.tracev( "Binding: {0}", name );
 			try {
 				intermediateContextBase.rebind( name, value );
 			}
@@ -218,7 +218,7 @@ final class JndiServiceImpl implements JndiService {
 				throw new JndiException( "Error performing intermediate bind [" + name + "]", e );
 			}
 		}
-		LOG.debugf( "Bound name: %s", name );
+		LOG.tracef( "Bound name: %s", name );
 	}
 
 	@Override

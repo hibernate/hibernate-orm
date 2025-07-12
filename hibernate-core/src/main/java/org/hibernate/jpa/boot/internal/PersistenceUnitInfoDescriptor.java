@@ -132,8 +132,9 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 		// During testing, we will return a null temp class loader
 		// in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
-			if ( LOGGER.isDebugEnabled() ) {
-				LOGGER.debug( "Pushing class transformers for PU named '" + getName() + "' on loading classloader " + enhancementContext.getLoadingClassLoader() );
+			if ( LOGGER.isTraceEnabled() ) {
+				LOGGER.trace( "Pushing class transformers for PU named '" + getName()
+								+ "' on loading classloader " + enhancementContext.getLoadingClassLoader() );
 			}
 			final EnhancingClassTransformerImpl classTransformer =
 					new EnhancingClassTransformerImpl( enhancementContext );

@@ -1850,9 +1850,9 @@ public class MappingModelCreationHelper {
 					|| value instanceof ManyToOne manyToOne && value.isNullable() && manyToOne.isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 				if ( lazy ) {
-					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isDebugEnabled() ) {
-						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
-								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
+						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
+								"Forcing FetchTiming.IMMEDIATE for to-one association: %s.%s",
 								declaringType.getNavigableRole(),
 								bootProperty.getName()
 						);

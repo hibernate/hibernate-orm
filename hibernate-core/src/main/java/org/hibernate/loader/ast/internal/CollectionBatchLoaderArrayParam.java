@@ -58,8 +58,8 @@ public class CollectionBatchLoaderArrayParam
 			SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, loadQueryInfluencers, attributeMapping, sessionFactory );
 
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Using ARRAY batch fetching strategy for collection `%s` : %s",
 					attributeMapping.getNavigableRole().getFullPath(),
 					domainBatchSize
@@ -115,8 +115,8 @@ public class CollectionBatchLoaderArrayParam
 			Object keyBeingLoaded,
 			SharedSessionContractImplementor session,
 			ForeignKeyDescriptor keyDescriptor) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Batch fetching collection: %s.%s",
 					getLoadable().getNavigableRole().getFullPath(), keyBeingLoaded
 			);
@@ -167,8 +167,8 @@ public class CollectionBatchLoaderArrayParam
 
 	@Override
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf(
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getNavigableRole().getFullPath(),
 					key,

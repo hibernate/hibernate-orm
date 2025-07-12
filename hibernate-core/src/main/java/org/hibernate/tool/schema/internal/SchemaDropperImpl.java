@@ -160,7 +160,7 @@ public class SchemaDropperImpl implements SchemaDropper {
 					target.release();
 				}
 				catch (Exception e) {
-					log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+					log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 				}
 			}
 		}

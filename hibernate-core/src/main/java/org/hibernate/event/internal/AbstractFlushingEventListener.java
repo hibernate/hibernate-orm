@@ -191,7 +191,7 @@ public abstract class AbstractFlushingEventListener {
 	private void prepareCollectionFlushes(PersistenceContext persistenceContext) throws HibernateException {
 		// Initialize dirty flags for arrays + collections with composite elements
 		// and reset reached, doupdate, etc.
-		LOG.debug( "Dirty checking collections" );
+		LOG.trace( "Dirty checking collections" );
 		final var collectionEntries = persistenceContext.getCollectionEntries();
 		if ( collectionEntries != null ) {
 			final var identityMap = (InstanceIdentityMap<PersistentCollection<?>, CollectionEntry>) collectionEntries;

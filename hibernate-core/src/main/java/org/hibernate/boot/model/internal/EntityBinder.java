@@ -179,8 +179,8 @@ public class EntityBinder {
 			ClassDetails clazzToProcess,
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Binding entity from annotated class: " + clazzToProcess.getName() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding entity from annotated class: " + clazzToProcess.getName() );
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
@@ -1011,8 +1011,8 @@ public class EntityBinder {
 		if ( discriminatorColumn != null ) {
 			final boolean ignore = buildingOptions.ignoreExplicitDiscriminatorsForJoinedInheritance();
 			if ( ignore ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debug( "Ignoring explicit @DiscriminatorColumn annotation on: "
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Ignoring explicit @DiscriminatorColumn annotation on: "
 								+ annotatedClass.getName() );
 				}
 			}
@@ -1021,8 +1021,8 @@ public class EntityBinder {
 		else {
 			final boolean createImplicit = buildingOptions.createImplicitDiscriminatorsForJoinedInheritance();
 			if ( createImplicit ) {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debug( "Inferring implicit @DiscriminatorColumn using defaults for: "
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Inferring implicit @DiscriminatorColumn using defaults for: "
 								+ annotatedClass.getName() );
 				}
 			}

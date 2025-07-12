@@ -637,7 +637,7 @@ public class BasicValue extends SimpleValue
 			final MetadataBuildingContext context = getBuildingContext();
 			final TypeDefinition autoAppliedTypeDef = context.getTypeDefinitionRegistry().resolveAutoApplied( castType );
 			if ( autoAppliedTypeDef != null ) {
-				log.debug("BasicValue resolution matched auto-applied type-definition");
+				log.trace( "BasicValue resolution matched auto-applied type definition" );
 				return autoAppliedTypeDef.resolve( getTypeParameters(), null, context, this );
 			}
 		}

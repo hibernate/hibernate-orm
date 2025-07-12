@@ -98,8 +98,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void clearSynchronizations() {
-		log.debug( "Clearing local Synchronizations" );
-
+		log.trace( "Clearing local Synchronizations" );
 		if ( synchronizations != null ) {
 			synchronizations.clear();
 		}

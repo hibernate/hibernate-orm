@@ -4634,6 +4634,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 7.1
 	 */
+	@Incubating
 	public boolean addPartitionKeyToPrimaryKey() {
 		return false;
 	}

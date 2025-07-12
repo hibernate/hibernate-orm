@@ -4614,7 +4614,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does is dialect support {@code partition by}?
+	 * Does is dialect support {@code partition by} in window
+	 * functions?
+	 *
+	 * @apiNote This has nothing to do with table partitioning.
 	 *
 	 * @since 5.2
 	 */
@@ -4624,7 +4627,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 
 	/**
 	 * Does this dialect require that the columns listed in
-	 * {@code partition by} also occur in the primary key?
+	 * {@code partition by} also occur in the primary key,
+	 * when defining table partitioning?
+	 *
+	 * @apiNote This has nothing to do with window functions.
 	 *
 	 * @since 7.1
 	 */

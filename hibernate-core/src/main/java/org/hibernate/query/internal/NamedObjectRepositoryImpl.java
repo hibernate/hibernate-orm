@@ -321,12 +321,12 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 
 		// Check named HQL queries
-		log.debugf( "Checking %s named HQL queries", sqmMementoMap.size() );
+		log.tracef( "Checking %s named HQL queries", sqmMementoMap.size() );
 		for ( NamedSqmQueryMemento<?> hqlMemento : sqmMementoMap.values() ) {
 			final String queryString = hqlMemento.getHqlString();
 			final String registrationName = hqlMemento.getRegistrationName();
 			try {
-				log.debugf( "Checking named HQL query: %s", registrationName );
+				log.tracef( "Checking named HQL query: %s", registrationName );
 				interpretationCache.resolveHqlInterpretation(
 						queryString,
 						null,
@@ -345,12 +345,12 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		}
 
 		// Check native-sql queries
-		log.debugf( "Checking %s named SQL queries", sqlMementoMap.size() );
-		for ( NamedNativeQueryMemento<?> memento : sqlMementoMap.values() ) {
+		log.tracef( "Checking %s named SQL queries", sqlMementoMap.size() );
+		for ( var memento : sqlMementoMap.values() ) {
 			memento.validate( queryEngine );
 //			// this will throw an error if there's something wrong.
 //			try {
-//				log.debugf( "Checking named SQL query: %s", memento.getRegistrationName() );
+//				log.tracef( "Checking named SQL query: %s", memento.getRegistrationName() );
 //				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
 //				// currently not doable though because of the resultset-ref stuff...
 //				NativeSQLQuerySpecification spec;

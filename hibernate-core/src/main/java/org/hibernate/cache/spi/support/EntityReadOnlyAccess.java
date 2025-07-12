@@ -11,7 +11,6 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import org.jboss.logging.Logger;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -22,7 +21,6 @@ import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
  * @author Steve Ebersole
  */
 public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
-	private static final Logger log = Logger.getLogger( EntityReadOnlyAccess.class );
 
 	public EntityReadOnlyAccess(
 			DomainDataRegion region,
@@ -64,7 +62,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			Object value,
 			Object currentVersion,
 			Object previousVersion) {
-		log.debugf( "Illegal attempt to update item cached as read-only [%s]", key );
+//		log.debugf( "Illegal attempt to update item cached as read-only [%s]", key );
 		throw new UnsupportedOperationException( "Can't update readonly object" );
 	}
 
@@ -76,7 +74,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			Object currentVersion,
 			Object previousVersion,
 			SoftLock lock) {
-		log.debugf( "Illegal attempt to update item cached as read-only [%s]", key );
+//		log.debugf( "Illegal attempt to update item cached as read-only [%s]", key );
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 }

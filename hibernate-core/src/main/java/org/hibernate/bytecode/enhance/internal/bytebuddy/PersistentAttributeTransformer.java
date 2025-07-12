@@ -127,8 +127,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		}
 
 		AnnotatedFieldDescription[] orderedFields = enhancementContext.order( persistentFieldList.toArray( new AnnotatedFieldDescription[0] ) );
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
 					"Persistent fields for entity %s: %s",
 					managedCtClass.getName(),
 					Arrays.toString( orderedFields )
@@ -155,7 +155,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			return collectInheritPersistentFields( managedCtSuperclass, enhancementContext );
 		}
 
-		log.debugf( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
+		log.tracef( "Found @MappedSuperclass %s to collectPersistenceFields", managedCtSuperclass );
 
 		List<AnnotatedFieldDescription> persistentFieldList = new ArrayList<>();
 

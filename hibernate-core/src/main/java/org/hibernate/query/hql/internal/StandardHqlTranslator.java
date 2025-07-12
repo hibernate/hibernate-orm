@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.SyntaxException;
 import org.hibernate.query.sqm.TerminalPathException;
-import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
 import org.hibernate.query.sqm.InterpretationException;
@@ -35,6 +34,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
 
 /**
  * Standard implementation of {@link HqlTranslator}.
@@ -55,7 +55,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public <R> SqmStatement<R> translate(String query, Class<R> expectedResultType) {
-		HqlLogging.QUERY_LOGGER.debugf( "HQL : %s", query );
+		QUERY_LOGGER.tracef( "HQL: %s", query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 

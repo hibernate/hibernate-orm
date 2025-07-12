@@ -388,7 +388,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public void addNamedEntityGraph(String graphName, RootGraphImplementor<?> rootGraph) {
 		final EntityGraph<?> old = entityGraphMap.put( graphName, rootGraph.makeImmutableCopy( graphName ) );
 		if ( old != null ) {
-			log.debugf( "EntityGraph named '%s' was replaced", graphName );
+			log.tracef( "EntityGraph named '%s' was replaced", graphName );
 		}
 	}
 
@@ -485,11 +485,8 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
-			log.debugf(
-					"Applying named entity graph [name=%s, source=%s]",
-					definition.name(),
-					definition.source()
-			);
+			log.tracef( "Applying named entity graph [name=%s, source=%s]",
+					definition.name(), definition.source() );
 
 			final RootGraphImplementor<?> graph = definition.graphCreator().createEntityGraph(
 					(entityClass) -> {

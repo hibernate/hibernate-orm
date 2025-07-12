@@ -260,9 +260,9 @@ public class BasicValuedCollectionPart
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		if ( ResultsLogger.RESULTS_LOGGER.isDebugEnabled() ) {
-			ResultsLogger.RESULTS_LOGGER.debugf(
-					"Generating Fetch for collection-part : `%s` -> `%s`",
+		if ( ResultsLogger.RESULTS_LOGGER.isTraceEnabled() ) {
+			ResultsLogger.RESULTS_LOGGER.tracef(
+					"Generating Fetch for collection-part: `%s` -> `%s`",
 					collectionDescriptor.getRole(),
 					nature.getName()
 			);

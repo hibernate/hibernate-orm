@@ -59,7 +59,7 @@ public class JdbcConnectionAccessConnectionProviderImpl implements JdbcConnectio
 			wasInitiallyAutoCommit = false;
 		}
 
-		log.debugf( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
+		log.tracef( "wasInitiallyAutoCommit=%s", wasInitiallyAutoCommit );
 		this.wasInitiallyAutoCommit = wasInitiallyAutoCommit;
 	}
 

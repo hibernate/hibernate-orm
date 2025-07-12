@@ -157,7 +157,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 					new RegisteredSynchronization( getSynchronizationCallbackCoordinator() ) );
 			getSynchronizationCallbackCoordinator().synchronizationRegistered();
 			synchronizationRegistered = true;
-			log.debug( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
+			log.trace( "Hibernate RegisteredSynchronization successfully registered with JTA platform" );
 			// report entering into a "transactional context"
 			getTransactionCoordinatorOwner().startTransactionBoundary();
 		}
@@ -166,7 +166,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 	@Override
 	public void explicitJoin() {
 		if ( synchronizationRegistered ) {
-			log.debug( "JTA transaction was already joined (RegisteredSynchronization already registered)" );
+			log.trace( "JTA transaction was already joined (RegisteredSynchronization already registered)" );
 		}
 		else {
 			if ( getTransactionDriverControl().getStatus() != ACTIVE ) {

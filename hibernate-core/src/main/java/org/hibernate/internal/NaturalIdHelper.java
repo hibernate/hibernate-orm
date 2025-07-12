@@ -76,7 +76,7 @@ public class NaturalIdHelper {
 			if ( entry == null ) {
 				if ( loggerDebugEnabled ) {
 					LoaderLogging.LOADER_LOGGER.debugf(
-							"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : %s#%s",
+							"Cached natural-id/pk resolution linked to null EntityEntry in persistence context: %s#%s",
 							entityMappingType.getEntityName(),
 							pk
 					);

@@ -92,7 +92,7 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 		}
 		catch (Exception throwable) {
 			//If the driver is not compatible with the Java 8 contract, the method might not exit.
-			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support : " + throwable.getMessage() );
+			log.debug( "Unexpected error trying to gauge level of JDBC REF_CURSOR support: " + throwable.getMessage() );
 			return false;
 		}
 	}

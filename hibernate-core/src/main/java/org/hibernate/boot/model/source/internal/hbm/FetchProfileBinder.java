@@ -50,7 +50,7 @@ public class FetchProfileBinder {
 			String containingEntityName) {
 		FetchProfile profile = context.getMetadataCollector().getFetchProfile( fetchProfileBinding.getName() );
 		if ( profile == null ) {
-			log.debugf( "Creating FetchProfile : %s", fetchProfileBinding.getName() );
+			log.tracef( "Creating FetchProfile: %s", fetchProfileBinding.getName() );
 			profile = new FetchProfile( fetchProfileBinding.getName(), MetadataSource.HBM );
 			context.getMetadataCollector().addFetchProfile( profile );
 		}

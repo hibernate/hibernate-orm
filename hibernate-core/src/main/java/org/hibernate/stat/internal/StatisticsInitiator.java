@@ -44,7 +44,7 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		final StatisticsImplementor statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
 		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
 		statistics.setStatisticsEnabled( enabled );
-		LOG.debugf( "Statistics initialized [enabled=%s]", enabled );
+		LOG.tracef( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;
 	}
 

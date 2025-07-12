@@ -33,8 +33,8 @@ public class TypeDefinitionBinder {
 				ConfigParameterHelper.extractConfigParameters( typeDefinitionBinding )
 		);
 
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
+		if ( log.isTraceEnabled() ) {
+			log.tracef(
 					"Processed type-definition : %s -> %s",
 					definition.getName(),
 					definition.getTypeImplementorClass().getName()

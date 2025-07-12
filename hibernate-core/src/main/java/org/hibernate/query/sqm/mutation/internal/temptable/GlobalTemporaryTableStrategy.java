@@ -65,7 +65,7 @@ public class GlobalTemporaryTableStrategy {
 						.requireService( ConfigurationService.class );
 
 		if ( configService.getSetting( CREATE_ID_TABLES, StandardConverters.BOOLEAN, true ) ) {
-			log.debugf( "Creating global-temp ID table: %s", getTemporaryTable().getTableExpression() );
+			log.tracef( "Creating global-temp ID table: %s", getTemporaryTable().getTableExpression() );
 
 			final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork =
 					new TemporaryTableHelper.TemporaryTableCreationWork( getTemporaryTable(), sessionFactory );
@@ -104,7 +104,7 @@ public class GlobalTemporaryTableStrategy {
 
 		dropIdTables = false;
 
-		log.debugf( "Dropping global-temp ID table : %s", getTemporaryTable().getTableExpression() );
+		log.tracef( "Dropping global-temp ID table: %s", getTemporaryTable().getTableExpression() );
 
 		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
 				new TemporaryTableHelper.TemporaryTableDropWork( getTemporaryTable(), sessionFactory );

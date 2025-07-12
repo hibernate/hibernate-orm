@@ -148,8 +148,8 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					}
 
 					if ( !wasUpdated ) {
-						MODEL_MUTATION_LOGGER.debugf(
-								"Upsert update altered no rows - inserting : %s",
+						MODEL_MUTATION_LOGGER.tracef(
+								"Upsert update altered no rows - inserting: %s",
 								tableMapping.getTableName()
 						);
 						try {

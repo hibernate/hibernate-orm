@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
 public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	private static final Logger log = Logger.getLogger( TimestampsCacheEnabledImpl.class );
 
-	public static final boolean DEBUG_ENABLED = log.isDebugEnabled();
+	public static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
 	private final TimestampsRegion timestampsRegion;
 
@@ -52,11 +52,11 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final Long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final boolean debugEnabled = log.isDebugEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 
 		for ( String space : spaces ) {
-			if ( debugEnabled ) {
-				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, timestamp );
+			if ( traceEnabled ) {
+				log.tracef( "Pre-invalidating space [%s], timestamp: %s", space, timestamp );
 			}
 			final EventMonitor eventMonitor = session.getEventMonitor();
 			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
@@ -92,11 +92,11 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
-		final boolean debugEnabled = log.isDebugEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 
 		for ( String space : spaces ) {
-			if ( debugEnabled ) {
-				log.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
+			if ( traceEnabled ) {
+				log.tracef( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
@@ -152,8 +152,8 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			return false;
 		}
 		else {
-			if ( DEBUG_ENABLED ) {
-				log.debugf(
+			if ( TRACE_ENABLED ) {
+				log.tracef(
 						"[%s] last update timestamp: %s",
 						space,
 						lastUpdate + ", result set timestamp: " + timestamp

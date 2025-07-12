@@ -53,13 +53,13 @@ public class PathConsumer {
 		}
 		pathSoFar.append( unquotedIdentifier );
 
-		log.tracef(
-				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
-				unquotedIdentifier,
-				isBase,
-				isTerminal,
-				pathSoFar
-		);
+//		log.tracef(
+//				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
+//				unquotedIdentifier,
+//				isBase,
+//				isTerminal,
+//				pathSoFar
+//		);
 
 		currentPart = currentPart.resolvePathPart( unquotedIdentifier, identifier, isTerminal, translationContext );
 	}

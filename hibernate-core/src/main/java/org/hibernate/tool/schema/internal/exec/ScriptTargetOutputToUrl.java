@@ -80,7 +80,7 @@ public class ScriptTargetOutputToUrl extends AbstractScriptTargetOutput implemen
 
 
 	private static Writer toWriter( URL url, String charsetName, boolean append ) {
-		log.debug( "Attempting to resolve writer for URL : " + url );
+		log.debug( "Attempting to resolve writer for URL: " + url );
 		// technically only "strings corresponding to file URLs" are supported, which I take to mean URLs whose
 		// protocol is "file"
 		try {

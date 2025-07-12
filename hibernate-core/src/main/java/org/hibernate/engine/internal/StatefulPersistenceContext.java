@@ -733,7 +733,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public void reassociateProxy(Object value, Object id) throws MappingException {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( value );
 		if ( lazyInitializer != null ) {
-			LOG.debugf( "Setting proxy identifier: %s", id );
+			LOG.tracef( "Setting proxy identifier: %s", id );
 			lazyInitializer.setIdentifier( id );
 			reassociateProxy( lazyInitializer, asHibernateProxy( value ) );
 		}
@@ -1524,7 +1524,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 								collectionPersister,
 								unmergedInstance
 						);
-						LOG.debugf(
+						LOG.tracef(
 								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child.",
 								( found ? "contains" : "does not contain" )
 						);

@@ -8,8 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.PartitionKey;
-import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -17,10 +16,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@RequiresDialect(MySQLDialect.class)
-@RequiresDialect(MariaDBDialect.class)
-@Jpa(annotatedClasses = MySQLPartitionedTableTest.Partitioned.class)
-class MySQLPartitionedTableTest {
+@RequiresDialect(InformixDialect.class)
+@Jpa(annotatedClasses = InformixPartitionedTableTest.Partitioned.class)
+class InformixPartitionedTableTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( session -> {
 			Partitioned partitioned = new Partitioned();
@@ -35,13 +33,13 @@ class MySQLPartitionedTableTest {
 		} );
 	}
 	@Entity
-	@Table(name = "myparts",
+	@Table(name = "infoparts",
 		options =
 			"""
-			PARTITION BY RANGE (pid) (
-				PARTITION p1 VALUES LESS THAN (1000),
-				PARTITION p2 VALUES LESS THAN (2000)
-			)
+			FRAGMENT BY RANGE (pid)
+			INTERVAL (1000) STORE IN (rootdbs)
+				PARTITION p1 VALUES < 1000 IN rootdbs,
+				PARTITION p2 VALUES < 2000 IN rootdbs
 			""")
 	static class Partitioned {
 		@Id Long id;

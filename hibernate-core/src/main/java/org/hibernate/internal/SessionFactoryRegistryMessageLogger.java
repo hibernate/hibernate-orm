@@ -21,6 +21,7 @@ import java.lang.invoke.MethodHandles;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 import static org.jboss.logging.Logger.getMessageLogger;
 
@@ -89,7 +90,7 @@ public interface SessionFactoryRegistryMessageLogger extends BasicLogger  {
 	@Message(value = "A SessionFactory was successfully bound to name: %s", id = 20282)
 	void factoryBoundToJndi(String name);
 
-	@LogMessage(level = DEBUG)
+	@LogMessage(level = TRACE)
 	@Message(value = "Not binding SessionFactory to JNDI, no JNDI name configured", id = 20385)
 	void notBindingSessionFactory();
 }

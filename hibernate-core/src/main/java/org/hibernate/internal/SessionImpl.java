@@ -473,7 +473,7 @@ public class SessionImpl
 
 	protected void checkSessionFactoryOpen() {
 		if ( !getFactory().isOpen() ) {
-			log.debug( "Forcing-closing session since factory is already closed" );
+			log.trace( "Forcing-closing session since factory is already closed" );
 			setClosed();
 		}
 	}
@@ -1015,7 +1015,7 @@ public class SessionImpl
 	public Object immediateLoad(String entityName, Object id) {
 		if ( log.isDebugEnabled() ) {
 			final EntityPersister persister = requireEntityPersister( entityName );
-			log.debugf( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
+			log.tracef( "Initializing proxy: %s", infoString( persister, id, getFactory() ) );
 		}
 		final LoadEvent event = makeLoadEvent( entityName, id, getReadOnlyFromLoadQueryInfluencers(), true );
 		fireLoadNoChecks( event, IMMEDIATE_LOAD );
@@ -1037,7 +1037,7 @@ public class SessionImpl
 			clearedEffectiveGraph = false;
 		}
 		else {
-			log.debug("Clearing effective entity graph for subsequent select");
+			log.trace( "Clearing effective entity graph for subsequent select" );
 			clearedEffectiveGraph = true;
 			effectiveEntityGraph.clear();
 		}
@@ -1476,8 +1476,8 @@ public class SessionImpl
 
 	@Override
 	public void forceFlush(EntityKey key) {
-		if ( log.isDebugEnabled() ) {
-			log.debugf("Flushing to force deletion of re-saved object: "
+		if ( log.isTraceEnabled() ) {
+			log.tracef("Flushing to force deletion of re-saved object: "
 					+ infoString( key.getPersister(), key.getIdentifier(), getFactory() ) );
 		}
 

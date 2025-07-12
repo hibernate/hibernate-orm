@@ -70,7 +70,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public void addDescriptor(JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 		if ( previous != null && previous != jdbcType ) {
-			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
+			log.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
 		}
 	}
 
@@ -78,7 +78,7 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
 		if ( previous != null && previous != jdbcType ) {
-			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
+			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
 		}
 	}
 

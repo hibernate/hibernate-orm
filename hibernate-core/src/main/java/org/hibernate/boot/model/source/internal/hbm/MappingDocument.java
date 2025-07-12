@@ -186,7 +186,7 @@ public class MappingDocument implements HbmLocalMetadataBuildingContext, Metadat
 					? StringHelper.unqualify( name )
 					: renameBinding.getRename();
 			getMetadataCollector().addImport( rename, name );
-			log.debugf( "Import (query rename): %s -> %s", rename, name );
+			log.tracef( "Import (query rename): %s -> %s", rename, name );
 		}
 	}
 

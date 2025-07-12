@@ -122,7 +122,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 								target.release();
 							}
 							catch (Exception e) {
-								log.debugf( "Problem releasing GenerationTarget [%s] : %s", target, e.getMessage() );
+								log.debugf( "Problem releasing GenerationTarget [%s]: %s", target, e.getMessage() );
 							}
 						}
 					}
@@ -132,7 +132,7 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 						databaseInformation.cleanup();
 					}
 					catch (Exception e) {
-						log.debug( "Problem releasing DatabaseInformation : " + e.getMessage() );
+						log.debug( "Problem releasing DatabaseInformation: " + e.getMessage() );
 					}
 				}
 			}

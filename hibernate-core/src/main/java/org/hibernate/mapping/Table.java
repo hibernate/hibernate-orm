@@ -279,8 +279,8 @@ public class Table implements Serializable, ContributableDatabaseObject {
 				for ( Column pkColumn : primaryKey.getColumns() ) {
 					if ( pkColumn.getCanonicalName().equals( column.getCanonicalName() ) ) {
 						column.setNullable( false );
-						if ( log.isDebugEnabled() ) {
-							log.debugf(
+						if ( log.isTraceEnabled() ) {
+							log.tracef(
 									"Forcing column [%s] to be non-null as it is part of the primary key for table [%s]",
 									column.getCanonicalName(),
 									getNameIdentifier().getCanonicalName()

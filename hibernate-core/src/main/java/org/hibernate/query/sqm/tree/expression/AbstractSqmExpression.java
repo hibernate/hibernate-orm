@@ -41,8 +41,8 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
-		SqmTreeCreationLogger.LOGGER.debugf(
-				"Applying inferable type to SqmExpression [%s] : %s -> %s",
+		SqmTreeCreationLogger.LOGGER.tracef(
+				"Applying inferable type to SqmExpression [%s]: %s -> %s",
 				this,
 				getExpressible(),
 				newType

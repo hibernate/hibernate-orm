@@ -355,7 +355,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				assert ! ( joinedEntityType instanceof SqmPolymorphicRootDescriptor );
 
 				if ( fetch ) {
-					log.debugf( "Ignoring fetch on entity join : %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
+					log.debugf( "Ignoring fetch on entity join: %s(%s)", joinedEntityType.getHibernateEntityName(), alias );
 				}
 
 				join = new SqmEntityJoin<>( joinedEntityType, alias, joinType, sqmRoot );

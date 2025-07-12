@@ -127,8 +127,8 @@ public class CollectionCacheInvalidator
 				handleInverseOneToMany( entity, persister, oldState, collectionPersister, session );
 			}
 			else {
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() );
+				if ( LOG.isTraceEnabled() ) {
+					LOG.trace( "Evict CollectionRegion " + collectionPersister.getRole() );
 				}
 				final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
 				final SoftLock softLock = cacheAccessStrategy.lockRegion();
@@ -184,8 +184,8 @@ public class CollectionCacheInvalidator
 	}
 
 	private void evict(Object id, CollectionPersister collectionPersister, EventSource session) {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
 		}
 		final CollectionEvictCacheAction evictCacheAction =
 				new CollectionEvictCacheAction( collectionPersister, null, id, session );

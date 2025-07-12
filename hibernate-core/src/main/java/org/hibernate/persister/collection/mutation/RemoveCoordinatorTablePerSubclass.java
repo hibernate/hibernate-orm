@@ -63,8 +63,8 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 
 	@Override
 	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
-		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-			MODEL_MUTATION_LOGGER.debugf(
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.tracef(
 					"Deleting collection - %s : %s",
 					mutationTarget.getRolePath(),
 					key
@@ -127,7 +127,8 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
 		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s", mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s",
+					mutationTarget.getRolePath() );
 		}
 
 		final CollectionTableMapping collectionTableMapping = mutationTarget.getCollectionTableMapping();

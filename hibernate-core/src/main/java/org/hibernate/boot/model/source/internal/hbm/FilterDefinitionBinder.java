@@ -87,6 +87,6 @@ class FilterDefinitionBinder {
 				)
 		);
 
-		log.debugf( "Processed filter definition : %s", jaxbFilterDefinitionMapping.getName() );
+		log.tracef( "Processed filter definition: %s", jaxbFilterDefinitionMapping.getName() );
 	}
 }

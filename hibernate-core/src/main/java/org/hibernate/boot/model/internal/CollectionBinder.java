@@ -1079,8 +1079,8 @@ public abstract class CollectionBinder {
 	private void bind() {
 		collection = createCollection( propertyHolder.getPersistentClass() );
 		final String role = qualify( propertyHolder.getPath(), propertyName );
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Binding collection role: " + role );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding collection role: " + role );
 		}
 		collection.setRole( role );
 		collection.setMappedByProperty( mappedBy );
@@ -2803,8 +2803,8 @@ public abstract class CollectionBinder {
 	}
 
 	private void logOneToManySecondPass() {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Binding @OneToMany through foreign key: " + safeCollectionRole() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Binding @OneToMany through foreign key: " + safeCollectionRole() );
 		}
 	}
 
@@ -2812,18 +2812,18 @@ public abstract class CollectionBinder {
 			boolean isOneToMany,
 			boolean isCollectionOfEntities,
 			boolean isManyToAny) {
-		if ( LOG.isDebugEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			if ( isCollectionOfEntities && isOneToMany ) {
-				LOG.debug( "Binding @OneToMany through association table: " + safeCollectionRole() );
+				LOG.trace( "Binding @OneToMany through association table: " + safeCollectionRole() );
 			}
 			else if ( isCollectionOfEntities ) {
-				LOG.debug( "Binding @ManyToMany through association table: " + safeCollectionRole() );
+				LOG.trace( "Binding @ManyToMany through association table: " + safeCollectionRole() );
 			}
 			else if ( isManyToAny ) {
-				LOG.debug( "Binding @ManyToAny: " + safeCollectionRole() );
+				LOG.trace( "Binding @ManyToAny: " + safeCollectionRole() );
 			}
 			else {
-				LOG.debug( "Binding @ElementCollection to collection table: " + safeCollectionRole() );
+				LOG.trace( "Binding @ElementCollection to collection table: " + safeCollectionRole() );
 			}
 		}
 	}

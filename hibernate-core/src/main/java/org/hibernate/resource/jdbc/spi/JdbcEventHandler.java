@@ -124,7 +124,7 @@ public class JdbcEventHandler {
 		if ( jdbcCoordinatorSupplier != null ) {
 			final JdbcCoordinator jdbcCoordinator = jdbcCoordinatorSupplier.get();
 			if ( jdbcCoordinator != null ) {
-				log.debug( "Aborting batches as part of ResourceRegistryStandardImpl#releaseResources" );
+				log.trace( "Aborting batches as part of ResourceRegistryStandardImpl#releaseResources" );
 				jdbcCoordinator.abortBatch();
 			}
 		}

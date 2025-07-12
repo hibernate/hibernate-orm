@@ -99,7 +99,7 @@ public class MappingModelCreationProcess {
 	}
 
 	private void executePostInitCallbacks() {
-		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf( "Starting post-init callbacks" );
+		MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( "Starting post-init callbacks" );
 
 		Map<PostInitCallbackEntry, Exception> exceptions = new HashMap<>();
 		while ( postInitCallbacks != null && !postInitCallbacks.isEmpty() ) {
@@ -249,10 +249,10 @@ public class MappingModelCreationProcess {
 		}
 
 		private boolean process() {
-			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
-					"Starting PostInitCallbackEntry : %s",
-					description
-			);
+//			MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef(
+//					"Starting PostInitCallbackEntry : %s",
+//					description
+//			);
 			return callback.process();
 		}
 

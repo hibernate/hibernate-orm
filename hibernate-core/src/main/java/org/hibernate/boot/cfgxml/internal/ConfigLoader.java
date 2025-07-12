@@ -130,10 +130,7 @@ public class ConfigLoader {
 				stream.close();
 			}
 			catch (IOException e) {
-				log.debug(
-						String.format( "Unable to close properties file [%s] stream", resourceName ),
-						e
-				);
+				log.debug( "Unable to close properties file stream [" + resourceName + "]", e );
 			}
 		}
 	}
@@ -157,10 +154,7 @@ public class ConfigLoader {
 					stream.close();
 				}
 				catch (IOException e) {
-					log.debug(
-							String.format( "Unable to close properties file [%s] stream", file.getAbsolutePath() ),
-							e
-					);
+					log.debug( "Unable to close properties file stream [" + file.getAbsolutePath() + "]", e );
 				}
 			}
 		}

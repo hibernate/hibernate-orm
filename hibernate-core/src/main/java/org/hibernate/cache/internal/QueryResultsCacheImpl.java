@@ -50,8 +50,8 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		if ( L2CACHE_LOGGER.isDebugEnabled() ) {
-			L2CACHE_LOGGER.debugf( "Caching query results in region: %s; timestamp=%s",
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.tracef( "Caching query results in region: %s; timestamp=%s",
 					cacheRegion.getName(),
 					session.getCacheTransactionSynchronization().getCachingTimestamp() );
 		}
@@ -90,28 +90,28 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final Set<String> spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		final boolean loggerDebugEnabled = L2CACHE_LOGGER.isDebugEnabled();
-		if ( loggerDebugEnabled ) {
-			L2CACHE_LOGGER.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		if ( loggerTraceEnabled ) {
+			L2CACHE_LOGGER.tracef( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( loggerDebugEnabled ) {
-				L2CACHE_LOGGER.debug( "Query results were not found in cache" );
+			if ( loggerTraceEnabled ) {
+				L2CACHE_LOGGER.trace( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( loggerDebugEnabled ) {
-				L2CACHE_LOGGER.debug( "Cached query results were not up-to-date" );
+			if ( loggerTraceEnabled ) {
+				L2CACHE_LOGGER.trace( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( loggerDebugEnabled ) {
-			L2CACHE_LOGGER.debug( "Returning cached query results" );
+		if ( loggerTraceEnabled ) {
+			L2CACHE_LOGGER.trace( "Returning cached query results" );
 		}
 
 		// No need to copy results, since consumers will never mutate
@@ -123,28 +123,28 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final QueryKey key,
 			final String[] spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		final boolean loggerDebugEnabled = L2CACHE_LOGGER.isDebugEnabled();
-		if ( loggerDebugEnabled ) {
-			L2CACHE_LOGGER.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+		if ( loggerTraceEnabled ) {
+			L2CACHE_LOGGER.tracef( "Checking cached query results in region: %s", cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
-			if ( loggerDebugEnabled ) {
-				L2CACHE_LOGGER.debug( "Query results were not found in cache" );
+			if ( loggerTraceEnabled ) {
+				L2CACHE_LOGGER.trace( "Query results were not found in cache" );
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
-			if ( loggerDebugEnabled ) {
-				L2CACHE_LOGGER.debug( "Cached query results were not up-to-date" );
+			if ( loggerTraceEnabled ) {
+				L2CACHE_LOGGER.trace( "Cached query results were not up-to-date" );
 			}
 			return null;
 		}
 
-		if ( loggerDebugEnabled ) {
-			L2CACHE_LOGGER.debug( "Returning cached query results" );
+		if ( loggerTraceEnabled ) {
+			L2CACHE_LOGGER.trace( "Returning cached query results" );
 		}
 
 		return deepCopy( cacheItem.results );

@@ -469,7 +469,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 			data.setInstance( createCompositeInstance( data ) );
 		}
 
-		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s]", navigablePath );
+		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]", navigablePath );
 	}
 
 	private void extractRowState(EmbeddableInitializerData data) {
@@ -519,7 +519,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 				: data.concreteEmbeddableType.getInstantiator();
 		final Object instance = instantiator.instantiate( data );
 		data.setState( State.RESOLVED );
-		EMBEDDED_LOAD_LOGGER.debugf( "Created composite instance [%s] : %s", navigablePath, instance );
+		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]: %s", navigablePath, instance );
 		return instance;
 	}
 

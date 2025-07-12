@@ -81,7 +81,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 
 		verifyWriteability();
 
-		log.debugf( "Setting effective graph state [%s] : %s", semantic.name(), graph );
+		log.tracef( "Setting effective graph state [%s] : %s", semantic.name(), graph );
 
 		this.semantic = semantic;
 		this.graph = graph;
@@ -111,8 +111,8 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			return;
 		}
 
-		RootGraphImplementor<?> fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
-		RootGraphImplementor<?> loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
+		var fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJpaHintName() );
+		var loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJpaHintName() );
 		if ( fetchHint == null ) {
 			fetchHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.FETCH.getJakartaHintName() );
 		}
@@ -120,25 +120,20 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 		}
 
-		if ( fetchHint == null && loadHint == null ) {
-			log.debugf( "Neither LOAD nor FETCH graph were found in properties" );
-			return;
-		}
-
-		if ( fetchHint != null ) {
-			if ( loadHint != null ) {
-				// can't have both
-				throw new IllegalArgumentException(
-						"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
-								"only one should be passed"
-				);
+		if ( fetchHint != null || loadHint != null ) {
+			if ( fetchHint != null ) {
+				if ( loadHint != null ) {
+					// can't have both
+					throw new IllegalArgumentException(
+							"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
+							"only one should be passed"
+					);
+				}
+				applyGraph( fetchHint, GraphSemantic.FETCH );
 			}
-
-			applyGraph( fetchHint, GraphSemantic.FETCH );
-		}
-		else {
-			assert loadHint != null : "@AssumeAssertion(nullness)";
-			applyGraph( loadHint, GraphSemantic.LOAD );
+			else {
+				applyGraph( loadHint, GraphSemantic.LOAD );
+			}
 		}
 	}
 

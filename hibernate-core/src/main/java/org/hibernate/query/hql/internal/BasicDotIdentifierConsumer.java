@@ -80,13 +80,13 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 		}
 		pathSoFar.append( identifier );
 
-		QUERY_LOGGER.tracef(
-				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
-				identifier,
-				isBase,
-				isTerminal,
-				pathSoFar
-		);
+//		QUERY_LOGGER.tracef(
+//				"BasicDotIdentifierHandler#consumeIdentifier( %s, %s, %s ) - %s",
+//				identifier,
+//				isBase,
+//				isTerminal,
+//				pathSoFar
+//		);
 
 		currentPart = currentPart.resolvePathPart( identifier, isTerminal, creationState );
 	}
@@ -121,13 +121,13 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 				String identifier,
 				boolean isTerminal,
 				SqmCreationState creationState) {
-			QUERY_LOGGER.tracef(
-					"BaseLocalSequencePart#consumeIdentifier( %s, %s, %s ) - %s",
-					identifier,
-					isBase,
-					isTerminal,
-					pathSoFar
-			);
+//			QUERY_LOGGER.tracef(
+//					"BaseLocalSequencePart#consumeIdentifier( %s, %s, %s ) - %s",
+//					identifier,
+//					isBase,
+//					isTerminal,
+//					pathSoFar
+//			);
 
 			if ( isBase ) {
 				isBase = false;

@@ -71,7 +71,7 @@ public class TemporaryTableHelper {
 				}
 				catch (SQLException e) {
 					log.debugf(
-							"unable to create temporary table [%s]; `%s` failed : %s",
+							"Unable to create temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							creationCommand,
 							e.getMessage()
@@ -126,7 +126,7 @@ public class TemporaryTableHelper {
 				}
 				catch (SQLException e) {
 					log.debugf(
-							"unable to drop temporary table [%s]; `%s` failed : %s",
+							"Unable to drop temporary table [%s]; `%s` failed : %s",
 							temporaryTable.getQualifiedTableName(),
 							dropCommand,
 							e.getMessage()

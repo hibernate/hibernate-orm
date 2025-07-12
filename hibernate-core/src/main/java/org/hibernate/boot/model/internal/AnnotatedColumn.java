@@ -240,8 +240,8 @@ public class AnnotatedColumn {
 
 	public void bind() {
 		if ( isNotEmpty( formulaString ) ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Binding formula: " + formulaString );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Binding formula: " + formulaString );
 			}
 			formula = new Formula();
 			formula.setFormula( formulaString );
@@ -275,7 +275,7 @@ public class AnnotatedColumn {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Binding column: " + logicalColumnName );
+				LOG.trace( "Binding column: " + logicalColumnName );
 			}
 		}
 	}
@@ -773,8 +773,8 @@ public class AnnotatedColumn {
 						+ " '@AttributeOverride's but the overridden property has " + overriddenCols.length
 						+ " columns (every column must have exactly one '@AttributeOverride')" );
 			}
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Column mapping overridden for property: " + inferredData.getPropertyName() );
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Column mapping overridden for property: " + inferredData.getPropertyName() );
 			}
 			return isEmpty( overriddenCols ) ? null : overriddenCols;
 		}

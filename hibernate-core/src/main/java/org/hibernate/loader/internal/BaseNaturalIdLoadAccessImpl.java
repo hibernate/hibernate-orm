@@ -163,7 +163,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 				return (T) getIdentifierLoadAccess().getReference( cachedResolution );
 			}
 			else {
-				LoaderLogging.LOADER_LOGGER.debugf(
+				LoaderLogging.LOADER_LOGGER.tracef(
 						"Selecting entity identifier by natural-id for `#getReference` handling - %s : %s",
 						entityPersister().getEntityName(),
 						normalizedNaturalIdValue
@@ -176,7 +176,6 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	protected final T doLoad(Object normalizedNaturalIdValue) {
 		performAnyNeededCrossReferenceSynchronizations( synchronizationEnabled, entityDescriptor, context.getSession() );
 
@@ -199,6 +198,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 			final EffectiveEntityGraph effectiveEntityGraph =
 					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
 			try {
+				@SuppressWarnings("unchecked")
 				final T loaded = cachedResolution != null
 						? (T) getIdentifierLoadAccess().load(cachedResolution)
 						: (T) entityPersister().getNaturalIdLoader().load( normalizedNaturalIdValue, this, session );

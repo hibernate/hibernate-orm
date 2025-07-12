@@ -903,9 +903,9 @@ public class InFlightMetadataCollectorImpl
 			throw new IllegalArgumentException( "Import name or entity name is null" );
 		}
 		log.tracev( "Import: {0} -> {1}", importName, className);
-		String old = imports.put( importName, className);
+		final String old = imports.put( importName, className);
 		if ( old != null ) {
-			log.debugf( "import name [%s] overrode previous [{%s}]", importName, old );
+			log.debugf( "Import name [%s] overrode previous [{%s}]", importName, old );
 		}
 	}
 
@@ -1953,7 +1953,7 @@ public class InFlightMetadataCollectorImpl
 
 	private void processPropertyReferences() {
 		if ( delayedPropertyReferenceHandlers != null ) {
-			log.debug( "Processing association property references" );
+			log.trace( "Processing association property references" );
 
 			for ( DelayedPropertyReferenceHandler delayedPropertyReferenceHandler : delayedPropertyReferenceHandlers ) {
 				delayedPropertyReferenceHandler.process( this );
@@ -2107,7 +2107,7 @@ public class InFlightMetadataCollectorImpl
 			// by tools. We want to hold off requiring classes being present until we
 			// try to build the SF. Here, just building the Metadata, it is "ok" for an
 			// exception to occur, the same exception will happen later as we build the SF.
-			log.debugf( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
+			log.debug( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
 		}
 	}
 

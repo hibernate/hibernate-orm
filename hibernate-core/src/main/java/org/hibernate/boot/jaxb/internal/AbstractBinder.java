@@ -99,7 +99,6 @@ public abstract class AbstractBinder<T> implements Binder<T> {
 			}
 			catch (Exception e) {
 				log.debug( "Unable to close StAX reader", e );
-
 			}
 		}
 	}

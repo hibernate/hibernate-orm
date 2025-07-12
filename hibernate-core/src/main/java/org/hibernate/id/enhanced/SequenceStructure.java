@@ -123,8 +123,8 @@ public class SequenceStructure implements DatabaseStructure {
 							rs.next();
 							final IntegralDataTypeHolder value = getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
-							if ( LOG.isDebugEnabled() ) {
-								LOG.debugf( "Sequence value obtained: %s", value.makeValue() );
+							if ( LOG.isTraceEnabled() ) {
+								LOG.tracef( "Sequence value obtained: %s", value.makeValue() );
 							}
 							return value;
 						}

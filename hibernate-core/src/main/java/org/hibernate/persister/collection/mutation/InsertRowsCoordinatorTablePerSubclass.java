@@ -41,10 +41,11 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister()
-				.getRootEntityDescriptor()
-				.getSubclassEntityNames()
-				.size()];
+		this.subclassEntries =
+				new SubclassEntry[mutationTarget.getElementPersister()
+						.getRootEntityDescriptor()
+						.getSubclassEntityNames()
+						.size()];
 		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
@@ -64,9 +65,9 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 			Object id,
 			EntryFilter entryChecker,
 			SharedSessionContractImplementor session) {
-		final boolean loggerDebugEnabled = MODEL_MUTATION_LOGGER.isDebugEnabled();
-		if ( loggerDebugEnabled ) {
-			MODEL_MUTATION_LOGGER.debugf(
+		final boolean loggerTraceEnabled = MODEL_MUTATION_LOGGER.isTraceEnabled();
+		if ( loggerTraceEnabled ) {
+			MODEL_MUTATION_LOGGER.tracef(
 					"Inserting collection rows - %s : %s",
 					mutationTarget.getRolePath(),
 					id
@@ -79,8 +80,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
 		if ( !entries.hasNext() ) {
-			if ( loggerDebugEnabled ) {
-				MODEL_MUTATION_LOGGER.debugf(
+			if ( loggerTraceEnabled ) {
+				MODEL_MUTATION_LOGGER.tracef(
 						"No collection rows to insert - %s : %s",
 						mutationTarget.getRolePath(),
 						id
@@ -124,9 +125,9 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 				entryCount++;
 			}
 
-			if ( loggerDebugEnabled ) {
-				MODEL_MUTATION_LOGGER.debugf(
-						"Done inserting `%s` collection rows : %s",
+			if ( loggerTraceEnabled ) {
+				MODEL_MUTATION_LOGGER.tracef(
+						"Done inserting `%s` collection rows: %s",
 						entryCount,
 						mutationTarget.getRolePath()
 				);
@@ -148,7 +149,8 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		if ( subclassEntry != null ) {
 			return subclassEntry;
 		}
-		final BasicBatchKey basicBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + subclassId );
+		final BasicBatchKey basicBatchKey =
+				new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT#" + subclassId );
 		return subclassEntries[subclassId] = new SubclassEntry(
 				() -> basicBatchKey,
 				createOperationGroup( elementPersister )

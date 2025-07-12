@@ -175,19 +175,19 @@ public class EnhancerImpl implements Enhancer {
 		// I'm currently inclined to keep both checks, as one is safer and the other has better backwards compatibility.
 		if ( managedCtClass.getDeclaredAnnotations().isAnnotationPresent( EnhancementInfo.class ) ) {
 			verifyVersions( managedCtClass, enhancementContext );
-			log.debugf( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
+			log.tracef( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
 			return null;
 		}
 
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
+			log.tracef( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
 			return null;
 		}
 
 		// can't effectively enhance records
 		if ( managedCtClass.isRecord() ) {
-			log.debugf( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
+			log.tracef( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
 			return null;
 		}
 
@@ -195,7 +195,7 @@ public class EnhancerImpl implements Enhancer {
 		if ( alreadyEnhanced( managedCtClass ) ) {
 			verifyVersions( managedCtClass, enhancementContext );
 
-			log.debugf( "Skipping enhancement of [%s]: it's already implementing 'Managed'", managedCtClass.getName() );
+			log.tracef( "Skipping enhancement of [%s]: it's already implementing 'Managed'", managedCtClass.getName() );
 			return null;
 		}
 
@@ -205,7 +205,7 @@ public class EnhancerImpl implements Enhancer {
 				return null;
 			}
 
-			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
+			log.tracef( "Enhancing [%s] as Entity", managedCtClass.getName() );
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedEntity.class )
 					.defineMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME, constants.TypeObject, constants.methodModifierPUBLIC )
@@ -384,7 +384,7 @@ public class EnhancerImpl implements Enhancer {
 				return null;
 			}
 
-			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
+			log.tracef( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedComposite.class );
@@ -422,18 +422,18 @@ public class EnhancerImpl implements Enhancer {
 				return null;
 			}
 
-			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
+			log.tracef( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
 			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedMappedSuperclass.class );
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
-			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );
+			log.tracef( "Extended enhancement of [%s]", managedCtClass.getName() );
 			return createTransformer( managedCtClass ).applyExtended( builderSupplier.get() );
 		}
 		else {
-			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
+			log.tracef( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 			return null;
 		}
 	}
@@ -671,7 +671,7 @@ public class EnhancerImpl implements Enhancer {
 	private DynamicType.Builder<?> addInterceptorHandling(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
 		// interceptor handling is only needed if class has lazy-loadable attributes
 		if ( enhancementContext.hasLazyLoadableAttributes( managedCtClass ) ) {
-			log.debugf( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );
+			log.tracef( "Weaving in PersistentAttributeInterceptable implementation on [%s]", managedCtClass.getName() );
 
 			builder = builder.implement( PersistentAttributeInterceptable.class );
 

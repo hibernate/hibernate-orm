@@ -105,7 +105,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.model.ModelMutationLogging;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.TableMapping.MutationDetails;
@@ -712,30 +711,30 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void logStaticSQL() {
-		if ( ModelMutationLogging.MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-			MODEL_MUTATION_LOGGER.debugf( "Static SQL for collection: %s", getRole() );
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.tracef( "Static SQL for collection: %s", getRole() );
 
 			final JdbcMutationOperation insertRowOperation = getRowMutationOperations().getInsertRowOperation();
 			final String insertRowSql = insertRowOperation != null ? insertRowOperation.getSqlString() : null;
 			if ( insertRowSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " Row insert: %s", insertRowSql );
+				MODEL_MUTATION_LOGGER.tracef( " Row insert: %s", insertRowSql );
 			}
 
 			final JdbcMutationOperation updateRowOperation = getRowMutationOperations().getUpdateRowOperation();
 			final String updateRowSql = updateRowOperation != null ? updateRowOperation.getSqlString() : null;
 			if ( updateRowSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " Row update: %s", updateRowSql );
+				MODEL_MUTATION_LOGGER.tracef( " Row update: %s", updateRowSql );
 			}
 
 			final JdbcMutationOperation deleteRowOperation = getRowMutationOperations().getDeleteRowOperation();
 			final String deleteRowSql = deleteRowOperation != null ? deleteRowOperation.getSqlString() : null;
 			if ( deleteRowSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " Row delete: %s", deleteRowSql );
+				MODEL_MUTATION_LOGGER.tracef( " Row delete: %s", deleteRowSql );
 			}
 
 			final String deleteAllSql = getRemoveCoordinator().getSqlString();
 			if ( deleteAllSql != null ) {
-				MODEL_MUTATION_LOGGER.debugf( " One-shot delete: %s", deleteAllSql );
+				MODEL_MUTATION_LOGGER.tracef( " One-shot delete: %s", deleteAllSql );
 			}
 		}
 	}

@@ -50,8 +50,8 @@ public final class Collections {
 		final CollectionEntry entry = persistenceContext.getCollectionEntry( coll );
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
-		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
-			LOG.debug("Collection dereferenced: "
+		if ( loadedPersister != null && LOG.isTraceEnabled() ) {
+			LOG.trace("Collection dereferenced: "
 					+ collectionInfoString( loadedPersister, coll, entry.getLoadedKey(), session ) );
 		}
 
@@ -115,8 +115,8 @@ public final class Collections {
 				session.getPersistenceContextInternal()
 						.getCollectionEntry( coll );
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Found collection with unloaded owner: " +
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Found collection with unloaded owner: " +
 					collectionInfoString( entry.getLoadedPersister(), coll, entry.getLoadedKey(), session ) );
 		}
 
@@ -166,8 +166,8 @@ public final class Collections {
 		if ( isBytecodeEnhanced && !collection.wasInitialized() ) {
 			// the class of the collection owner is enhanced for lazy loading and we found an un-initialized PersistentCollection
 			// 		- skip it
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Skipping uninitialized bytecode-lazy collection: "
+			if ( LOG.isTraceEnabled() ) {
+				LOG.trace( "Skipping uninitialized bytecode-lazy collection: "
 						+ collectionInfoString( persister, collection, ce.getCurrentKey(), session ) );
 			}
 			ce.setReached( true );
@@ -184,9 +184,9 @@ public final class Collections {
 
 		ce.setReached( true );
 
-		if ( LOG.isDebugEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			if ( collection.wasInitialized() ) {
-				LOG.debugf(
+				LOG.tracef(
 						"Collection found: %s, was: %s (initialized)",
 						collectionInfoString(
 								persister,
@@ -203,7 +203,7 @@ public final class Collections {
 				);
 			}
 			else {
-				LOG.debugf(
+				LOG.tracef(
 						"Collection found: %s, was: %s (uninitialized)",
 						collectionInfoString(
 								persister,

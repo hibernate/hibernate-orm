@@ -36,14 +36,14 @@ public abstract class CollectionSecondPass implements SecondPass {
 	@Override
 	public void doSecondPass(Map<String, PersistentClass> persistentClasses)
 			throws MappingException {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debug( "Second pass for collection: " + collection.getRole() );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Second pass for collection: " + collection.getRole() );
 		}
 
 		secondPass( persistentClasses );
 		collection.createAllKeys();
 
-		if ( LOG.isDebugEnabled() ) {
+		if ( LOG.isTraceEnabled() ) {
 			String msg = "Mapped collection key: " + columns( collection.getKey() );
 			if ( collection.isIndexed() ) {
 				msg += ", index: " + columns( ( (IndexedCollection) collection ).getIndex() );
@@ -55,7 +55,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 			else {
 				msg += ", element: " + columns( collection.getElement() );
 			}
-			LOG.debug( msg );
+			LOG.trace( msg );
 		}
 	}
 

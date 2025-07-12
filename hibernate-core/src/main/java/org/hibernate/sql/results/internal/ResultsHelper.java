@@ -23,7 +23,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingResolution;
@@ -31,6 +30,8 @@ import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.EntityType;
+
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * @author Steve Ebersole
@@ -107,10 +108,10 @@ public class ResultsHelper {
 			addCollectionToCache( persistenceContext, collectionDescriptor, collectionInstance, key );
 		}
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
+		if ( LOG.isTraceEnabled() ) {
+			LOG.tracef(
 					"Collection fully initialized: %s",
-					MessageHelper.collectionInfoString(
+					collectionInfoString(
 							collectionDescriptor,
 							collectionInstance,
 							key,
@@ -139,8 +140,9 @@ public class ResultsHelper {
 		final SharedSessionContractImplementor session = persistenceContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Caching collection: %s", MessageHelper.collectionInfoString( collectionDescriptor, collectionInstance, key, session ) );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Caching collection: "
+					+ collectionInfoString( collectionDescriptor, collectionInstance, key, session ) );
 		}
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && collectionDescriptor.isAffectedByEnabledFilters( session ) ) {

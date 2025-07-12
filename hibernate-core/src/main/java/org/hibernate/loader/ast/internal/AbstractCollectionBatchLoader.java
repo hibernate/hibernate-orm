@@ -79,8 +79,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching collection: %s.%s",
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Batch fetching collection: %s.%s",
 					getLoadable().getNavigableRole().getFullPath(), key );
 		}
 
@@ -105,8 +105,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 			return;
 		}
 
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Finishing initializing batch-fetched collection: %s.%s",
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
+			MULTI_KEY_LOAD_LOGGER.tracef( "Finishing initializing batch-fetched collection: %s.%s",
 					attributeMapping.getNavigableRole().getFullPath(), key );
 		}
 

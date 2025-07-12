@@ -53,7 +53,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 			final TableGroup previousAliasReg = tableGroupByAliasXref.put( sqmPath.getExplicitAlias(), tableGroup );
 			if ( previousAliasReg != null && log.isDebugEnabled() ) {
 				log.debugf(
-						"Encountered previous TableGroup registration [%s] for alias : %s",
+						"Encountered previous TableGroup registration [%s] for alias: %s",
 						previousAliasReg,
 						sqmPath.getExplicitAlias()
 				);

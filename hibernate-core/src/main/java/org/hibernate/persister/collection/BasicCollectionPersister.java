@@ -144,8 +144,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				&& !isInverse();
 
 		if ( !performUpdates ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping collection row updates - %s",
 						getRolePath()
 				);
@@ -158,8 +158,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertRowCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping collection inserts - %s",
 						getRolePath()
 				);
@@ -172,8 +172,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping collection row deletions - %s",
 						getRolePath()
 				);
@@ -186,8 +186,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
-				MODEL_MUTATION_LOGGER.debugf(
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping collection removals - %s",
 						getRolePath()
 				);

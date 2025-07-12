@@ -131,12 +131,10 @@ public abstract class PersistentTableStrategy {
 		dropIdTables = false;
 
 		final TemporaryTable temporaryTable = getTemporaryTable();
-		log.debugf( "Dropping persistent ID table : %s", temporaryTable.getTableExpression() );
+		log.tracef( "Dropping persistent ID table: %s", temporaryTable.getTableExpression() );
 
-		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork = new TemporaryTableHelper.TemporaryTableDropWork(
-				temporaryTable,
-				sessionFactory
-		);
+		final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork =
+				new TemporaryTableHelper.TemporaryTableDropWork( temporaryTable, sessionFactory );
 		Connection connection;
 		try {
 			connection = connectionAccess.obtainConnection();

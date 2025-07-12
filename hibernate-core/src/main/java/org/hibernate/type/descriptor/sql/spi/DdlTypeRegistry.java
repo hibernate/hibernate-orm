@@ -59,7 +59,7 @@ public class DdlTypeRegistry implements Serializable {
 			for ( String rawTypeName : previous.getRawTypeNames() ) {
 				sqlTypes.remove( rawTypeName );
 			}
-			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
+			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", sqlTypeCode, ddlType, previous );
 		}
 		addSqlType( ddlType, sqlTypeCode );
 	}

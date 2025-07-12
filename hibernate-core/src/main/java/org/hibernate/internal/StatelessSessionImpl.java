@@ -1034,9 +1034,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					final Object proxy = holder == null ? null : holder.getProxy();
 
 					if ( proxy != null ) {
-						if ( LOG.isTraceEnabled() ) {
-							LOG.trace( "Entity proxy found in session cache" );
-						}
+						LOG.trace( "Entity proxy found in session cache" );
 						if ( LOG.isDebugEnabled() && extractLazyInitializer( proxy ).isUnwrap() ) {
 							LOG.debug( "Ignoring NO_PROXY to honor laziness" );
 						}
@@ -1046,9 +1044,8 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 					// specialized handling for entities with subclasses with a HibernateProxy factory
 					if ( entityMetamodel.hasSubclasses() ) {
-						// entities with subclasses that define a ProxyFactory can create
-						// a HibernateProxy.
-						LOG.debug( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
+						// entities with subclasses that define a ProxyFactory can create a HibernateProxy.
+						LOG.trace( "Creating a HibernateProxy for to-one association with subclasses to honor laziness" );
 						return createProxy( entityKey );
 					}
 					return enhancementMetadata.createEnhancedProxy( entityKey, false, this );

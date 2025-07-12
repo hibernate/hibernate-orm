@@ -215,7 +215,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	}
 
 	private void insertMappedSuperclasses(LinkedHashSet<ClassDetails> original, LinkedHashSet<ClassDetails> copy) {
-		final boolean debug = log.isDebugEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 
 		for ( ClassDetails clazz : original ) {
 			if ( clazz.isInterface() ) {
@@ -225,8 +225,8 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			}
 
 			if ( clazz.hasDirectAnnotationUsage( MappedSuperclass.class ) ) {
-				if ( debug ) {
-					log.debugf(
+				if ( traceEnabled ) {
+					log.tracef(
 							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
 							clazz
 					);

@@ -80,12 +80,12 @@ public class IdentifierHelperBuilder {
 		);
 
 		if ( unquotedAffirmatives == 0 ) {
-			log.debug( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
+			log.trace( "JDBC driver metadata reported database stores unquoted identifiers in neither upper, lower nor mixed case" );
 		}
 		else {
 			// NOTE : still "dodgy" if more than one is true
 			if ( unquotedAffirmatives > 1 ) {
-				log.debug( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
+				log.trace( "JDBC driver metadata reported database stores unquoted identifiers in more than one case" );
 			}
 
 			if ( metaData.storesUpperCaseIdentifiers() ) {
@@ -107,12 +107,12 @@ public class IdentifierHelperBuilder {
 		);
 
 		if ( quotedAffirmatives == 0 ) {
-			log.debug( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
+			log.trace( "JDBC driver metadata reported database stores quoted identifiers in neither upper, lower nor mixed case" );
 		}
 		else {
 			// NOTE : still "dodgy" if more than one is true
 			if ( quotedAffirmatives > 1 ) {
-				log.debug( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
+				log.trace( "JDBC driver metadata reported database stores quoted identifiers in more than one case" );
 			}
 
 			if ( metaData.storesMixedCaseQuotedIdentifiers() ) {

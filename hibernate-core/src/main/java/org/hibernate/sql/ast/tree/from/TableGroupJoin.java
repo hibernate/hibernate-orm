@@ -54,7 +54,7 @@ public class TableGroupJoin implements TableJoin, PredicateContainer, DomainResu
 	}
 
 	public void setJoinType(SqlAstJoinType joinType) {
-		SqlTreeCreationLogger.LOGGER.debugf(
+		SqlTreeCreationLogger.LOGGER.tracef(
 				"Adjusting join-type for TableGroupJoin(%s) : %s -> %s",
 				navigablePath,
 				this.joinType,

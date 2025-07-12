@@ -45,6 +45,7 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.SqlResultSetMapping;
 
+import static org.hibernate.boot.query.BootQueryLogging.BOOT_QUERY_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
@@ -139,7 +140,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
+			BOOT_QUERY_LOGGER.tracef(
 					"Generating ScalarResultMappingMemento for JPA ColumnResult(%s) for ResultSet mapping `%s`",
 					columnResult.name(),
 					mappingName
@@ -200,7 +201,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 		@Override
 		public ResultMemento resolve(ResultSetMappingResolutionContext resolutionContext) {
-			BootQueryLogging.BOOT_QUERY_LOGGER.debugf(
+			BOOT_QUERY_LOGGER.tracef(
 					"Generating InstantiationResultMappingMemento for JPA ConstructorResult(%s) for ResultSet mapping `%s`",
 					targetJavaType.getName(),
 					mappingName

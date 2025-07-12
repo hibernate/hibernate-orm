@@ -47,7 +47,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	private StatisticsImplementor statistics;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, ServiceRegistry serviceRegistry) {
-		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
+		log.tracef( "Starting QueryInterpretationCache (size %s)", maxQueryPlanCount );
 		final InternalCacheFactory cacheFactory = serviceRegistry.requireService( InternalCacheFactory.class );
 		this.queryPlanCache = cacheFactory.createInternalCache( maxQueryPlanCount );
 		this.hqlInterpretationCache = cacheFactory.createInternalCache( maxQueryPlanCount );
@@ -76,7 +76,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(
 			Key key,
 			Supplier<SelectQueryPlan<R>> creator) {
-		log.tracef( "QueryPlan#getSelectQueryPlan(%s)", key );
+		log.tracef( "Resolving cached QueryPlan for [%s]", key );
 		final StatisticsImplementor statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
@@ -99,13 +99,11 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	@Override
 	public NonSelectQueryPlan getNonSelectQueryPlan(Key key) {
-		log.tracef( "QueryPlan#getNonSelectQueryPlan(%s)", key );
 		return null;
 	}
 
 	@Override
 	public void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan) {
-		log.tracef( "QueryPlan#cacheNonSelectQueryPlan(%s)", key );
 	}
 
 	@Override
@@ -113,7 +111,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			String queryString,
 			Class<R> expectedResultType,
 			HqlTranslator translator) {
-		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
+		log.tracef( "Resolving HQL interpretation for '%s'", queryString );
 		final StatisticsImplementor statistics = getStatistics();
 
 		final Object cacheKey = expectedResultType != null
@@ -184,15 +182,8 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	public ParameterInterpretation resolveNativeQueryParameters(
 			String queryString,
 			Function<String, ParameterInterpretation> creator) {
-		log.tracef( "QueryPlan#resolveNativeQueryParameters(%s)", queryString );
-		return nativeQueryParamCache.computeIfAbsent(
-				queryString,
-				s -> {
-					final ParameterInterpretation interpretation = creator.apply( queryString );
-					log.debugf( "Creating and caching NativeQuery ParameterInterpretation - %s", interpretation );
-					return interpretation;
-				}
-		);
+		log.tracef( "Resolving native query parameters for '%s'", queryString );
+		return nativeQueryParamCache.computeIfAbsent( queryString, creator );
 	}
 
 	@Override
@@ -202,7 +193,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 
 	@Override
 	public void close() {
-		log.debug( "Closing QueryInterpretationCache" );
+		log.trace( "Closing QueryInterpretationCache" );
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();

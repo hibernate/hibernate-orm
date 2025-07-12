@@ -10,6 +10,13 @@ import java.lang.annotation.RetentionPolicy;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 
+/**
+ * Using this extension requires enabling the {@link org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedTestEngine bytecode enhancement test engine}.
+ * To enable it either reference it as an additional engine in your JUnit request or add the {@code org.junit.platform.engine.TestEngine} file
+ * with the {@link org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedTestEngine} to your
+ * {@code test/resources/META-INF/services}.
+ *
+ */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(BytecodeEnhancementExtension.class)

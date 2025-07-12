@@ -579,6 +579,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		return false;
 	}
 
+	@Override
+	public boolean addPartitionKeyToPrimaryKey() {
+		return true;
+	}
+
 	private static class JTDSSchemaNameResolver implements SchemaNameResolver {
 		@Override
 		public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {

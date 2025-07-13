@@ -24,7 +24,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 @ValidIdRange( min = 10001501, max = 10002000 )
 @SubSystemLogging(
 		name = ConnectionAccessLogger.LOGGER_NAME,
-		description = "Used to log details around use of `JdbcConnectionAccess`"
+		description = "Logging related to use of JdbcConnectionAccess"
 )
 @Internal
 public interface ConnectionAccessLogger extends BasicLogger {

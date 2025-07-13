@@ -13,10 +13,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 
 import org.hibernate.JDBCException;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
+
+import static org.hibernate.resource.jdbc.internal.ResourceRegistryLogger.RESOURCE_REGISTRY_LOGGER;
 
 /**
  * Helps to track {@link Statement}s and {@link ResultSet}s which need to be closed.
@@ -35,8 +35,7 @@ import org.hibernate.resource.jdbc.spi.JdbcEventHandler;
  */
 public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( ResourceRegistryStandardImpl.class );
-	private static final boolean IS_TRACE_ENABLED = log.isTraceEnabled();
+	private static final boolean IS_TRACE_ENABLED = RESOURCE_REGISTRY_LOGGER.isTraceEnabled();
 
 	private final JdbcEventHandler jdbcEventHandler;
 
@@ -62,7 +61,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void register(Statement statement, boolean cancelable) {
 		if ( IS_TRACE_ENABLED ) {
-			log.tracef( "Registering statement [%s]", statement );
+			RESOURCE_REGISTRY_LOGGER.registeringStatement(statement);
 		}
 
 		xref.registerExpectingNew( statement );
@@ -75,7 +74,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void release(Statement statement) {
 		if ( IS_TRACE_ENABLED ) {
-			log.tracef( "Releasing statement [%s]", statement );
+			RESOURCE_REGISTRY_LOGGER.releasingStatement( statement );
 		}
 
 		final ResultSetsSet resultSets = xref.remove( statement );
@@ -83,9 +82,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			closeAll( resultSets );
 		}
 		else {
-			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-			log.unregisteredStatement();
+			RESOURCE_REGISTRY_LOGGER.unregisteredStatement();
 		}
 
 		close( statement );
@@ -98,7 +95,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void release(ResultSet resultSet, Statement statement) {
 		if ( IS_TRACE_ENABLED ) {
-			log.tracef( "Releasing result set [%s]", resultSet );
+			RESOURCE_REGISTRY_LOGGER.releasingResultSet(resultSet);
 		}
 
 		if ( statement == null ) {
@@ -106,13 +103,13 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 				statement = resultSet.getStatement();
 			}
 			catch (SQLException e) {
-				throw convert( e, "unable to access Statement from ResultSet" );
+				throw convert( e, "Unable to access Statement from ResultSet" );
 			}
 		}
 		if ( statement != null ) {
 			final ResultSetsSet resultSets = xref.getForResultSetRemoval( statement );
 			if ( resultSets == null ) {
-				log.unregisteredStatement();
+				RESOURCE_REGISTRY_LOGGER.unregisteredStatement();
 			}
 			else {
 				resultSets.removeResultSet( resultSet );
@@ -123,7 +120,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 						}
 					}
 					catch (SQLException e) {
-						log.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+						RESOURCE_REGISTRY_LOGGER.unableToReleaseStatement( e.getMessage() );
 					}
 				}
 			}
@@ -149,7 +146,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	private static void close(ResultSet resultSet) {
 		if ( IS_TRACE_ENABLED ) {
-			log.tracef( "Closing result set [%s]", resultSet );
+			RESOURCE_REGISTRY_LOGGER.closingResultSet(resultSet);
 		}
 
 		try {
@@ -158,17 +155,17 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		catch (SQLException e) {
-			log.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
+			RESOURCE_REGISTRY_LOGGER.unableToReleaseResultSet( e.getMessage() );
 		}
 		catch (Exception e) {
 			// try to handle general errors more elegantly
-			log.debugf( "Unable to release JDBC result set [%s]", e.getMessage() );
+			RESOURCE_REGISTRY_LOGGER.unableToReleaseResultSet( e.getMessage() );
 		}
 	}
 
 	private static void close(Statement statement) {
 		if ( IS_TRACE_ENABLED ) {
-			log.tracef( "Closing prepared statement [%s]", statement );
+			RESOURCE_REGISTRY_LOGGER.closingPreparedStatement(statement);
 		}
 
 		try {
@@ -184,8 +181,8 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 			catch (SQLException sqle) {
 				// there was a problem "cleaning" the prepared statement
-				if ( log.isDebugEnabled() ) {
-					log.debugf( "Exception clearing maxRows/queryTimeout [%s]", sqle.getMessage() );
+				if ( RESOURCE_REGISTRY_LOGGER.isDebugEnabled() ) {
+					RESOURCE_REGISTRY_LOGGER.exceptionClearingMaxRowsOrQueryTimeout( sqle.getMessage() );
 				}
 				// EARLY EXIT!!!
 				return;
@@ -193,18 +190,18 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			statement.close();
 		}
 		catch (SQLException e) {
-			log.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+			RESOURCE_REGISTRY_LOGGER.unableToReleaseStatement( e.getMessage() );
 		}
 		catch (Exception e) {
 			// try to handle general errors more elegantly
-			log.debugf( "Unable to release JDBC statement [%s]", e.getMessage() );
+			RESOURCE_REGISTRY_LOGGER.unableToReleaseStatement( e.getMessage() );
 		}
 	}
 
 	@Override
 	public void register(ResultSet resultSet, Statement statement) {
 		if ( IS_TRACE_ENABLED ) {
-			log.tracef( "Registering result set [%s]", resultSet );
+			RESOURCE_REGISTRY_LOGGER.registeringResultSet(resultSet);
 		}
 
 		if ( statement == null ) {
@@ -212,7 +209,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 				statement = resultSet.getStatement();
 			}
 			catch (SQLException e) {
-				throw convert( e, "unable to access Statement from ResultSet" );
+				throw convert( e, "Unable to access Statement from ResultSet" );
 			}
 		}
 		if ( statement != null ) {
@@ -245,7 +242,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			ext.blobs.remove( blob );
 		}
 		else {
-			log.debug( "Request to release Blob, but appears no Blobs have ever been registered" );
+			RESOURCE_REGISTRY_LOGGER.noRegisteredLobs( Blob.class.getSimpleName() );
 		}
 	}
 
@@ -260,7 +257,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			ext.clobs.remove( clob );
 		}
 		else {
-			log.debug( "Request to release Clob, but appears no Clobs have ever been registered" );
+			RESOURCE_REGISTRY_LOGGER.noRegisteredLobs( Clob.class.getSimpleName() );
 		}
 	}
 
@@ -277,7 +274,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			ext.nclobs.remove( nclob );
 		}
 		else {
-			log.debug( "Request to release NClob, but appears no NClobs have ever been registered" );
+			RESOURCE_REGISTRY_LOGGER.noRegisteredLobs( NClob.class.getSimpleName() );
 		}
 	}
 
@@ -289,7 +286,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		catch (SQLException e) {
-			throw convert( e, "Cannot cancel query" );
+			throw convert( e, "Could not cancel query" );
 		}
 		finally {
 			lastQuery = null;
@@ -298,7 +295,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void releaseResources() {
-		log.trace( "Releasing JDBC resources" );
+		RESOURCE_REGISTRY_LOGGER.releasingResources();
 
 		if ( jdbcEventHandler != null ) {
 			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();
@@ -345,9 +342,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		}
 
 		public void releaseUnassociatedResult(final ResultSet resultSet) {
-			final Object removed = unassociatedResultSets == null ? null : unassociatedResultSets.removeResultSet( resultSet );
+			final Object removed =
+					unassociatedResultSets == null
+							? null
+							: unassociatedResultSets.removeResultSet( resultSet );
 			if ( removed == null ) {
-				log.unregisteredResultSetWithoutStatement();
+				RESOURCE_REGISTRY_LOGGER.unregisteredResultSetWithoutStatement();
 			}
 		}
 
@@ -390,7 +390,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 						blob.free();
 					}
 					catch (SQLException e) {
-						log.debugf( "Unable to free JDBC Blob reference [%s]", e.getMessage() );
+						RESOURCE_REGISTRY_LOGGER.unableToFreeLob( Blob.class.getSimpleName(), e.getMessage() );
 					}
 				} );
 				//for these, it seems better to null the map rather than clear it:
@@ -403,7 +403,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 						clob.free();
 					}
 					catch (SQLException e) {
-						log.debugf( "Unable to free JDBC Clob reference [%s]", e.getMessage() );
+						RESOURCE_REGISTRY_LOGGER.unableToFreeLob( Clob.class.getSimpleName(), e.getMessage() );
 					}
 				} );
 				clobs = null;
@@ -415,7 +415,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 						nclob.free();
 					}
 					catch (SQLException e) {
-						log.debugf( "Unable to free JDBC NClob reference [%s]", e.getMessage() );
+						RESOURCE_REGISTRY_LOGGER.unableToFreeLob( NClob.class.getSimpleName(), e.getMessage() );
 					}
 				} );
 				nclobs = null;

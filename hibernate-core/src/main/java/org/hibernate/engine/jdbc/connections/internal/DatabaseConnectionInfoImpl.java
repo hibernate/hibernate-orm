@@ -112,17 +112,27 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
 	@Override
 	public String toInfoString() {
-		return "\tDatabase JDBC URL [" + handleEmpty( jdbcUrl ) + ']' +
-				"\n\tDatabase driver: " + handleEmpty( jdbcDriver ) +
-				"\n\tDatabase version: " + handleEmpty( dialectVersion ) +
-				"\n\tAutocommit mode: " + handleEmpty( autoCommitMode ) +
-				"\n\tIsolation level: " + handleEmpty( isolationLevel ) +
-				"\n\tPool: " + handleEmpty( connectionProviderClass ) +
-				"\n\tMinimum pool size: " + handleEmpty( poolMinSize ) +
-				"\n\tMaximum pool size: " + handleEmpty( poolMaxSize );
+		return """
+				\tDatabase JDBC URL [%s]
+				\tDatabase driver: %s
+				\tDialect version: %s
+				\tAutocommit mode: %s
+				\tIsolation level: %s
+				\tPool: %s
+				\t\tMinimum size: %s
+				\t\tMaximum size: %s"""
+				.formatted(
+						handleEmpty( jdbcUrl ),
+						handleEmpty( jdbcDriver ),
+						handleEmpty( dialectVersion ),
+						handleEmpty( autoCommitMode ),
+						handleEmpty( isolationLevel ),
+						handleEmpty( connectionProviderClass ),
+						handleEmpty( poolMinSize ),
+						handleEmpty( poolMaxSize ) );
 	}
 
-	private static String handleEmpty(String value) {
+	static String handleEmpty(String value) {
 		return isNotEmpty( value ) ? value : DEFAULT;
 	}
 

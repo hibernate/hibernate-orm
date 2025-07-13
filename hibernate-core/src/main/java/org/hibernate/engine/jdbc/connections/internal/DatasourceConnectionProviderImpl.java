@@ -157,36 +157,42 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 
 	@Override
 	public DatabaseConnectionInfo getDatabaseConnectionInfo(Dialect dialect, ExtractedDatabaseMetaData metaData) {
-		final String url;
-		final String driver;
-		final String isolationLevel;
-		if ( metaData != null ) {
-			url = metaData.getUrl();
-			driver = metaData.getDriver();
-			isolationLevel = toIsolationNiceName( metaData.getTransactionIsolation() )
-							+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
-		}
-		else {
-			url = null;
-			driver = null;
-			isolationLevel = null;
-		}
-
 		return new DatabaseConnectionInfoImpl(
 				DatasourceConnectionProviderImpl.class,
-				url,
-				driver,
+				metaData == null ? null : metaData.getUrl(),
+				metaData == null ? null : metaData.getDriver(),
 				dialect.getVersion(),
 				null,
-				isolationLevel,
+				metaData == null
+						? null
+						: toIsolationNiceName( metaData.getTransactionIsolation() )
+								+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]",
 				null,
 				null
 		) {
 			@Override
 			public String toInfoString() {
-				return dataSourceJndiName != null
-						? "\tDataSource JNDI name [" + dataSourceJndiName + "]\n" + super.toInfoString()
-						: super.toInfoString();
+				var infoString = new StringBuilder();
+				if ( dataSourceJndiName != null ) {
+					infoString
+							.append( "\tDataSource JNDI name [" )
+							.append( dataSourceJndiName )
+							.append( "]\n" );
+				}
+				if ( metaData != null ) {
+					infoString
+							.append( "\tDatabase: ")
+							.append( handleEmpty( metaData.getDatabaseProductName() ) )
+							.append( " " )
+							.append( handleEmpty( metaData.getDatabaseProductVersion() ) )
+							.append( "\n\t\tCatalog: ")
+							.append( handleEmpty( metaData.getConnectionCatalogName() ) )
+							.append( "\n\t\tSchema: ")
+							.append( handleEmpty( metaData.getConnectionSchemaName() ) )
+							.append( "\n" );
+				}
+				infoString.append( super.toInfoString() );
+				return infoString.toString();
 			}
 		};
 	}

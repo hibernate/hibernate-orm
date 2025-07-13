@@ -72,11 +72,8 @@ public class EvictVisitor extends AbstractVisitor {
 		final CollectionPersister persister = ce.getLoadedPersister();
 		final Object loadedKey = ce.getLoadedKey();
 
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf(
-					"Evicting collection: %s",
-					collectionInfoString( persister, collection, loadedKey, session )
-			);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Evicting collection: " + collectionInfoString( persister, collection, loadedKey, session ) );
 		}
 
 		if ( persister != null ) {

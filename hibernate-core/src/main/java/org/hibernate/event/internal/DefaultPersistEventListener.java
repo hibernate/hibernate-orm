@@ -19,15 +19,15 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import static org.hibernate.event.internal.EntityState.getEntityState;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
- * Defines the default create event listener used by hibernate for creating
- * transient entities in response to generated create events.
+ * Defines the default event listener used by Hibernate for persisting
+ * transient entities in response to generated persist events.
  *
  * @author Gavin King
  */
@@ -53,9 +53,9 @@ public class DefaultPersistEventListener
 	}
 
 	/**
-	 * Handle the given create event.
+	 * Handle the given persist event.
 	 *
-	 * @param event The create event to be handled.
+	 * @param event The persist event to be handled
 	 *
 	 */
 	@Override
@@ -83,7 +83,7 @@ public class DefaultPersistEventListener
 		final String entityName = entityName( event, entity, entityEntry );
 		switch ( getEntityState( entity, entityName, entityEntry, source, true ) ) {
 			case DETACHED:
-				throw new PersistentObjectException( "detached entity passed to persist: "
+				throw new PersistentObjectException( "Detached entity passed to persist: "
 						+ EventUtil.getLoggableName( event.getEntityName(), entity) );
 			case PERSISTENT:
 				entityIsPersistent( event, createCache );
@@ -99,7 +99,7 @@ public class DefaultPersistEventListener
 				break;
 			default:
 				throw new ObjectDeletedException(
-						"deleted entity passed to persist",
+						"Deleted entity passed to persist",
 						null,
 						EventUtil.getLoggableName( event.getEntityName(), entity )
 				);
@@ -135,13 +135,13 @@ public class DefaultPersistEventListener
 	}
 
 	/**
-	 * Handle the given create event.
+	 * Handle the given persist event.
 	 *
-	 * @param event The save event to be handled.
-	 * @param createCache The copy cache of entity instance to merge/copy instance.
+	 * @param event The persist event to be handled
+	 * @param createCache The copy cache of entity instance to merge/copy instance
 	 */
 	protected void entityIsTransient(PersistEvent event, PersistContext createCache) {
-		LOG.trace( "Saving transient instance" );
+		LOG.trace( "Persisting transient instance" );
 		final EventSource source = event.getSession();
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		if ( createCache.add( entity ) ) {
@@ -154,10 +154,8 @@ public class DefaultPersistEventListener
 		final Object entity = source.getPersistenceContextInternal().unproxy( event.getObject() );
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-				"un-scheduling entity deletion [%s]",
-				MessageHelper.infoString( persister, persister.getIdentifier( entity, source ), event.getFactory() )
-			);
+			final Object id = persister.getIdentifier( entity, source );
+			LOG.trace( "Unscheduling entity deletion: " + infoString( persister, id, source.getFactory() ) );
 		}
 		if ( createCache.add( entity ) ) {
 			justCascade( createCache, source, entity, persister );

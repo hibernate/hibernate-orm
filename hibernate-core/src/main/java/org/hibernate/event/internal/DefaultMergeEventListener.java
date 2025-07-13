@@ -121,7 +121,7 @@ public class DefaultMergeEventListener
 				final PersistentAttributeInterceptor interceptor =
 						asPersistentAttributeInterceptable( original ).$$_hibernate_getInterceptor();
 				if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor proxyInterceptor ) {
-					LOG.trace( "Ignoring uninitialized enhanced-proxy" );
+					LOG.trace( "Ignoring uninitialized enhanced proxy" );
 					event.setResult( source.byId( proxyInterceptor.getEntityName() )
 							.getReference( proxyInterceptor.getIdentifier() ) );
 				}
@@ -314,7 +314,7 @@ public class DefaultMergeEventListener
 		// copy created before we actually copy
 		super.cascadeAfterSave( session, persister, entity, copyCache );
 
-		// this is the second pass through on a merge op, so here we limit the
+		// this is the second pass of a merge operation, so here we limit the
 		// replacement to association types (value types were already replaced
 		// during the first pass)
 //		final Object[] newSourceValues = persister.getValues( entity );

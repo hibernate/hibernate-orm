@@ -97,7 +97,7 @@ public class DefaultReplicateEventListener
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
 			}
 			else if ( LOG.isTraceEnabled() ) {
-				// do nothing (don't even re-associate object!)
+				// do nothing (don't even reassociate entity!)
 				LOG.trace( "No need to replicate" );
 			}
 

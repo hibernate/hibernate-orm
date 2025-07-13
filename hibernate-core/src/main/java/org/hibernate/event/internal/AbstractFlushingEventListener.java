@@ -121,13 +121,13 @@ public abstract class AbstractFlushingEventListener {
 	}
 
 	/**
-	 * process cascade save/update at the start of a flush to discover
+	 * Process cascade save/update at the start of a flush to discover
 	 * any newly referenced entity that must be passed to saveOrUpdate(),
 	 * and also apply orphan delete
 	 */
 	private void prepareEntityFlushes(EventSource session, PersistenceContext persistenceContext)
 			throws HibernateException {
-		LOG.debug( "Processing flush-time cascades" );
+		LOG.trace( "Processing flush-time cascades" );
 		final PersistContext context = PersistContext.create();
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( var me : persistenceContext.reentrantSafeEntityEntries() ) {

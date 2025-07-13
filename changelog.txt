@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.21.Final (July 13, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34199
+
+** Bug
+    * [HHH-19596] - NPE when array/collection of Struct contains null value
+    * [HHH-19542] - Embeddable in secondary table fails to recognize a nested embeddable is in the same table
+
+
 Changes in 6.6.20.Final (July 06, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

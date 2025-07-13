@@ -43,8 +43,8 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 		final StatisticsFactory statisticsFactory = statisticsFactory( configValue, context.getServiceRegistry() );
 		final StatisticsImplementor statistics = statisticsFactory.buildStatistics( context.getSessionFactory() );
 		final boolean enabled = context.getSessionFactoryOptions().isStatisticsEnabled();
+		LOG.statisticsInitialized();
 		statistics.setStatisticsEnabled( enabled );
-		LOG.tracef( "Statistics initialized [enabled=%s]", enabled );
 		return statistics;
 	}
 

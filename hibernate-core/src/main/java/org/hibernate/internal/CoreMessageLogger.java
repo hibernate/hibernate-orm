@@ -20,7 +20,6 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.service.Service;
 import org.hibernate.type.SerializationException;
 
 import org.jboss.logging.BasicLogger;
@@ -33,7 +32,6 @@ import org.jboss.logging.annotations.ValidIdRange;
 import jakarta.transaction.Synchronization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
 import static org.hibernate.cfg.ValidationSettings.JAKARTA_VALIDATION_MODE;
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -118,7 +116,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void duplicateGeneratorName(String name);
 
 	@LogMessage(level = INFO)
-	@Message(value = "entity-listener duplication, first event definition will be used: %s", id = 73)
+	@Message(value = "entity listener duplication, first event definition will be used: %s", id = 73)
 	void duplicateListener(String className);
 
 	@LogMessage(level = WARN)
@@ -462,10 +460,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Error running schema update", id = 366)
 	void unableToRunSchemaUpdate(@Cause Exception e);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Error stopping service [%s]", id = 369)
-	void unableToStopService(Class<? extends Service> class1, @Cause Exception e);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Could not updateQuery hi value in: %s", id = 376)
 	void unableToUpdateQueryHiValue(String tableName, @Cause SQLException e);
@@ -562,13 +556,6 @@ public interface CoreMessageLogger extends BasicLogger {
 					"using 'key'/'value' as required by spec; attempting to DoTheRightThing"
 	)
 	void nonCompliantMapConversion(String collectionRole);
-
-	@LogMessage(level = WARN)
-	@Message(
-			id = 450,
-			value = "Encountered request for Service by non-primary service role [%s -> %s]; please update usage"
-	)
-	void alternateServiceRole(String requestedRole, String targetRole);
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -672,10 +659,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void multipleSchemaCreationSettingsDefined();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Ignoring ServiceConfigurationError caught while trying to instantiate service '%s'.", id = 505)
-	void ignoringServiceConfigurationError(Class<?> serviceContract, @Cause ServiceConfigurationError error);
-
-	@LogMessage(level = WARN)
 	@Message(value = "Detaching an uninitialized collection with enabled filters from a session: %s", id = 506)
 	void enabledFiltersWhenDetachFromSession(String collectionInfoString);
 
@@ -752,19 +735,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void invalidJSONColumnType(String actual, String expected);
 
-	@LogMessage(level = DEBUG)
-	@Message(
-			id = 455,
-			value =
-					"'" + CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT + "' " +
-					"""
-					was enabled. This setting should only be enabled when JDBC Connections obtained by Hibernate \
-					from the ConnectionProvider have auto-commit disabled. Enabling this setting when connections \
-					have auto-commit enabled leads to execution of SQL operations outside of any JDBC transaction.\
-					"""
-	)
-	void connectionProviderDisablesAutoCommitEnabled();
-
 	@LogMessage(level = TRACE)
 	@Message(value = "Closing logical connection", id = 456)
 	void closingLogicalConnection();
@@ -772,6 +742,38 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message(value = "Logical connection closed", id = 457)
 	void logicalConnectionClosed();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Statistics initialized", id = 460)
+	void statisticsInitialized();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Statistics collection enabled", id = 461)
+	void statisticsEnabled();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Statistics collection disabled", id = 462)
+	void statisticsDisabled();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Statistics reset", id = 463)
+	void statisticsReset();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Initializing service: %s", id = 500)
+	void initializingService(String serviceRole);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Error stopping service: %s", id = 369)
+	void unableToStopService(String serviceRole, @Cause Exception e);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Ignoring ServiceConfigurationError caught while instantiating service: %s", id = 505)
+	void ignoringServiceConfigurationError(String serviceContract, @Cause ServiceConfigurationError error);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Encountered request for service by non-primary service role [%s -> %s]", id = 450)
+	void alternateServiceRole(String requestedRole, String targetRole);
 
 	@LogMessage(level = DEBUG)
 	@Message(

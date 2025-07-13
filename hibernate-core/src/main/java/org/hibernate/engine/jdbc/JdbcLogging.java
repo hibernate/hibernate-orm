@@ -117,4 +117,25 @@ public interface JdbcLogging extends BasicLogger {
 					"""
 	)
 	void connectionProviderDisablesAutoCommitEnabled();
+
+	@LogMessage(level = DEBUG)
+	@Message(value = """
+			Database:
+				name: %s
+				version: %s
+				major: %s
+				minor: %s""",
+			id = 100017)
+	void logDatabaseInfo(String name, String version, int major, int minor);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = """
+			Driver:
+				name: %s
+				version: %s
+				major: %s
+				minor: %s
+				JDBC version: %s.%s""",
+			id = 100018)
+	void logDriverInfo(String name, String version, int major, int minor, int jdbcMajor, int jdbcMinor);
 }

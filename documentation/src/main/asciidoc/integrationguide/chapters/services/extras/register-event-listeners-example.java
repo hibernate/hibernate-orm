@@ -6,7 +6,7 @@ public class MyIntegrator implements org.hibernate.integrator.spi.Integrator {
             SessionFactoryServiceRegistry serviceRegistry) {
         // As you might expect, an EventListenerRegistry is the thing with which event listeners are registered  It is a
         // service so we look it up using the service registry
-        final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+        final EventListenerRegistry eventListenerRegistry = sessionFactory.getEventListenerRegistry();
 
         // If you wish to have custom determination and handling of "duplicate" listeners, you would have to add an
         // implementation of the org.hibernate.event.service.spi.DuplicationStrategy contract like this

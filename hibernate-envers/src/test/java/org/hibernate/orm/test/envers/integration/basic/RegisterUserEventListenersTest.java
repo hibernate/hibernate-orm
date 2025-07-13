@@ -33,8 +33,7 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 	@Test
 	@JiraKey(value = "HHH-7478")
 	public void testTransactionProcessSynchronization() {
-		final EventListenerRegistry registry = sessionFactory().getServiceRegistry()
-				.getService( EventListenerRegistry.class );
+		final EventListenerRegistry registry = sessionFactory().getEventListenerRegistry();
 		final CountingPostInsertTransactionBoundaryListener listener = new CountingPostInsertTransactionBoundaryListener();
 
 		registry.getEventListenerGroup( EventType.POST_INSERT ).appendListener( listener );

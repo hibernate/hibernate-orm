@@ -18,8 +18,6 @@ import org.hibernate.query.sqm.produce.function.SetReturningFunctionTypeResolver
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.String.CASE_INSENSITIVE_ORDER;
@@ -36,14 +34,14 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
  * @author Steve Ebersole
  */
 public class SqmFunctionRegistry {
-	private static final Logger log = Logger.getLogger( SqmFunctionRegistry.class );
+//	private static final Logger log = Logger.getLogger( SqmFunctionRegistry.class );
 
 	private final CaseInsensitiveDictionary<SqmFunctionDescriptor> functionMap = new CaseInsensitiveDictionary<>();
 	private final CaseInsensitiveDictionary<SqmSetReturningFunctionDescriptor> setReturningFunctionMap = new CaseInsensitiveDictionary<>();
 	private final CaseInsensitiveDictionary<String> alternateKeyMap = new CaseInsensitiveDictionary<>();
 
 	public SqmFunctionRegistry() {
-		log.trace( "SqmFunctionRegistry created" );
+//		log.trace( "SqmFunctionRegistry created" );
 	}
 
 	public Set<String> getValidFunctionKeys() {
@@ -121,12 +119,13 @@ public class SqmFunctionRegistry {
 	 */
 	public SqmFunctionDescriptor register(String registrationKey, SqmFunctionDescriptor function) {
 		final SqmFunctionDescriptor priorRegistration = functionMap.put( registrationKey, function );
-		log.tracef(
-				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
-				function,
-				registrationKey,
-				priorRegistration
-		);
+		// Incredibly verbose logging disabled
+//		log.tracef(
+//				"Registered SqmFunctionTemplate [%s] under %s; prior registration was %s",
+//				function,
+//				registrationKey,
+//				priorRegistration
+//		);
 		alternateKeyMap.remove( registrationKey );
 		return function;
 	}
@@ -136,12 +135,12 @@ public class SqmFunctionRegistry {
 	 */
 	public SqmSetReturningFunctionDescriptor register(String registrationKey, SqmSetReturningFunctionDescriptor function) {
 		final SqmSetReturningFunctionDescriptor priorRegistration = setReturningFunctionMap.put( registrationKey, function );
-		log.tracef(
-				"Registered SqmSetReturningFunctionTemplate [%s] under %s; prior registration was %s",
-				function,
-				registrationKey,
-				priorRegistration
-		);
+//		log.tracef(
+//				"Registered SqmSetReturningFunctionTemplate [%s] under %s; prior registration was %s",
+//				function,
+//				registrationKey,
+//				priorRegistration
+//		);
 		alternateKeyMap.remove( registrationKey );
 		return function;
 	}
@@ -385,7 +384,8 @@ public class SqmFunctionRegistry {
 
 	public void registerAlternateKey(String alternateKey, String mappedKey) {
 		assert functionMap.containsKey( mappedKey );
-		log.tracef( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
+		// Incredibly verbose logging disabled
+//		log.tracef( "Registering alternate key : %s -> %s", alternateKey, mappedKey );
 		alternateKeyMap.put( alternateKey, mappedKey );
 	}
 

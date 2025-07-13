@@ -240,22 +240,22 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> R initiateService(ServiceInitiator<R> serviceInitiator) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void injectDependencies(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
 	public <R extends Service> void startService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		throw new ServiceException( "Bootstrap registry should only contain provided services" );
 	}
 
 	@Override
@@ -266,7 +266,7 @@ public class BootstrapServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e );
+				LOG.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}

@@ -183,9 +183,9 @@ public abstract class AbstractServiceRegistryImpl
 
 	@Override
 	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
-		//Fast-path for ClassLoaderService as it's extremely hot during bootstrap
-		//(and after bootstrap service loading performance is less interesting as it's
-		//ideally being cached by long term consumers)
+		// Fast-path for ClassLoaderService as it's extremely hot during bootstrap
+		// (and after bootstrap service loading performance is less interesting as it's
+		// ideally being cached by long-term consumers)
 		if ( ClassLoaderService.class == serviceRole ) {
 			if ( parent != null ) {
 				return parent.getService( serviceRole );
@@ -230,22 +230,22 @@ public abstract class AbstractServiceRegistryImpl
 
 	private <R extends Service> @Nullable R initializeService(ServiceBinding<R> serviceBinding) {
 		if ( log.isTraceEnabled() ) {
-			log.tracev( "Initializing service [role={0}]", serviceBinding.getServiceRole().getName() );
+			log.initializingService( serviceBinding.getServiceRole().getName() );
 		}
 
-		// PHASE 1 : create service
+		// PHASE 1: create service
 		R service = createService( serviceBinding );
 		if ( service == null ) {
 			return null;
 		}
 
-		// PHASE 2 : inject service (***potentially recursive***)
+		// PHASE 2: inject service (***potentially recursive***)
 		serviceBinding.getLifecycleOwner().injectDependencies( serviceBinding );
 
-		// PHASE 3 : configure service
+		// PHASE 3: configure service
 		serviceBinding.getLifecycleOwner().configureService( serviceBinding );
 
-		// PHASE 4 : Start service
+		// PHASE 4: Start service
 		serviceBinding.getLifecycleOwner().startService( serviceBinding );
 
 		return service;
@@ -260,8 +260,8 @@ public abstract class AbstractServiceRegistryImpl
 
 		try {
 			R service = serviceBinding.getLifecycleOwner().initiateService( serviceInitiator );
-			// IMPL NOTE : the register call here is important to avoid potential stack overflow issues
-			//		from recursive calls through #configureService
+			// IMPL NOTE: the register call here is important to avoid potential stack overflow issues
+			//		      from recursive calls through #configureService
 			if ( service != null ) {
 				registerService( serviceBinding, service );
 			}
@@ -297,7 +297,7 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 		catch (NullPointerException e) {
-			log.error( "NPE injecting service deps : " + service.getClass().getName() );
+			log.error( "NPE injecting service dependencies: " + service.getClass().getName() );
 		}
 	}
 
@@ -381,7 +381,7 @@ public abstract class AbstractServiceRegistryImpl
 				stoppable.stop();
 			}
 			catch ( Exception e ) {
-				log.unableToStopService( service.getClass(), e );
+				log.unableToStopService( binding.getServiceRole().getName(), e );
 			}
 		}
 	}
@@ -393,7 +393,7 @@ public abstract class AbstractServiceRegistryImpl
 		}
 		if ( !childRegistries.add( child ) ) {
 			log.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
+					"Child ServiceRegistry [%s] was already registered; this will end badly later",
 					child
 			);
 		}
@@ -411,7 +411,7 @@ public abstract class AbstractServiceRegistryImpl
 				destroy();
 			}
 			else {
-				log.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistru" );
+				log.trace( "Skipping destroying ServiceRegistry after deregistration of every child ServiceRegistry" );
 			}
 		}
 	}

@@ -211,6 +211,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		queryPlanCacheMissCount.reset();
 
 		resetStart();
+
+		log.statisticsReset();
 	}
 
 	private void resetStart(@UnknownInitialization StatisticsImpl this) {
@@ -235,6 +237,12 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	@Override
 	public void setStatisticsEnabled(boolean enabled) {
 		isStatisticsEnabled = enabled;
+		if ( enabled ) {
+			log.statisticsEnabled();
+		}
+		else {
+			log.statisticsDisabled();
+		}
 	}
 
 

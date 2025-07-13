@@ -148,8 +148,12 @@ public class QueryEngineImpl implements QueryEngine {
 		dialect.initializeFunctionRegistry( functionContributions );
 
 		if ( LOG_HQL_FUNCTIONS.isDebugEnabled() ) {
+			var list = new StringBuilder("Available HQL Functions:\n");
 			sqmFunctionRegistry.getFunctionsByName()
-					.forEach( entry -> LOG_HQL_FUNCTIONS.debug( entry.getValue().getSignature( entry.getKey() ) ) );
+					.forEach( entry -> list.append('\t')
+											.append( entry.getValue().getSignature( entry.getKey() ) )
+											.append('\n') );
+			LOG_HQL_FUNCTIONS.debug( list.toString() );
 		}
 
 		return sqmFunctionRegistry;

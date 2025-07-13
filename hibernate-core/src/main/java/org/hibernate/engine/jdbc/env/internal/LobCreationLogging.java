@@ -25,7 +25,7 @@ import static org.jboss.logging.Logger.Level.DEBUG;
  */
 @SubSystemLogging(
 		name = BootLogging.NAME,
-		description = "Logging related to "
+		description = "Logging related to contextual LOB creation"
 )
 @MessageLogger( projectCode = "HHH" )
 @ValidIdRange( min = 10010001, max = 10010050 )

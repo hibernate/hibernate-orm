@@ -475,16 +475,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToWriteCachedFile(String path, String message);
 
 	@LogMessage(level = WARN)
-	@Message(value = "ResultSet had no statement associated with it, but was not yet registered", id = 386)
-	void unregisteredResultSetWithoutStatement();
-
-	// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
-	// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
-	@LogMessage(level = DEBUG)
-	@Message(value = "ResultSet's statement was not registered", id = 387)
-	void unregisteredStatement();
-
-	@LogMessage(level = WARN)
 	@Message(value = "The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk HQL/JPQL will not work properly",
 			id = 393)
 	void unsupportedMultiTableBulkHqlJpaql(int majorVersion, int minorVersion, int buildId);

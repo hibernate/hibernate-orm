@@ -134,4 +134,9 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 	public int hashCode() {
 		return hashCode;
 	}
+
+	@Override
+	public String toString() {
+		return query.toString() + " : " + resultType.getSimpleName();
+	}
 }

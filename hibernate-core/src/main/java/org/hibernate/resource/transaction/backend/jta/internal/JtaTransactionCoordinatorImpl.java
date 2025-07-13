@@ -325,6 +325,7 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void beforeCompletion() {
+		log.trace( "Notifying JTA transaction observers before completion" );
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 		}
@@ -342,22 +343,22 @@ public class JtaTransactionCoordinatorImpl implements TransactionCoordinator, Sy
 
 	@Override
 	public void afterCompletion(boolean successful, boolean delayed) {
-		if ( !transactionCoordinatorOwner.isActive() ) {
-			return;
+		if ( transactionCoordinatorOwner.isActive() ) {
+			log.trace( "Notifying JTA transaction observers after completion" );
+
+			final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
+			synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
+
+//			afterCompletionAction.doAction( this, statusToSend );
+
+			transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
+
+			for ( TransactionObserver observer : observers() ) {
+				observer.afterCompletion( successful, delayed );
+			}
+
+			synchronizationRegistered = false;
 		}
-
-		final int statusToSend =  successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
-		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
-
-//		afterCompletionAction.doAction( this, statusToSend );
-
-		transactionCoordinatorOwner.afterTransactionCompletion( successful, delayed );
-
-		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, delayed );
-		}
-
-		synchronizationRegistered = false;
 	}
 
 	public void addObserver(TransactionObserver observer) {

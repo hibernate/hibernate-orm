@@ -1149,7 +1149,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void initializeNonLazyCollections(Consumer<PersistentCollection<?>> initializeAction ) {
 		if ( loadCounter == 0 ) {
-			LOG.trace( "Initializing non-lazy collections" );
+//			LOG.trace( "Initializing non-lazy collections" );
 			// do this work only at the very highest level of the load
 			// don't let this method be called recursively
 			loadCounter++;
@@ -1525,7 +1525,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 								unmergedInstance
 						);
 						LOG.tracef(
-								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child.",
+								"Detached object being merged (corresponding with a managed entity) has a collection that [%s] the detached child",
 								( found ? "contains" : "does not contain" )
 						);
 					}
@@ -1556,7 +1556,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 								mergeMap.get( proxy )
 						);
 						LOG.debugf(
-								"Detached proxy being merged has a collection that [%s] the managed child.",
+								"Detached proxy being merged has a collection that [%s] the managed child",
 								(found ? "contains" : "does not contain")
 						);
 						if ( !found ) {
@@ -1568,7 +1568,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 									mergeMap.get( proxy )
 							);
 							LOG.debugf(
-									"Detached proxy being merged has a collection that [%s] the detached child being merged..",
+									"Detached proxy being merged has a collection that [%s] the detached child being merged",
 									(found ? "contains" : "does not contain")
 							);
 						}
@@ -1820,7 +1820,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 * @throws IOException serialization errors.
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		LOG.trace( "Serializing persistence-context" );
+		LOG.trace( "Serializing persistence context" );
 
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
@@ -1925,7 +1925,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	public static StatefulPersistenceContext deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		LOG.trace( "Deserializing persistence-context" );
+		LOG.trace( "Deserializing persistence context" );
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
 		SessionFactoryImplementor sfi = session.getFactory();
 

@@ -48,7 +48,7 @@ public class SessionFactoryRegistry {
 	private final ConcurrentHashMap<String, String> nameUuidXref = new ConcurrentHashMap<>();
 
 	private SessionFactoryRegistry() {
-		LOG.tracef( "Initializing SessionFactoryRegistry: %s", this );
+		LOG.tracef( "Initializing SessionFactoryRegistry @%s", hashCode() );
 	}
 
 	/**

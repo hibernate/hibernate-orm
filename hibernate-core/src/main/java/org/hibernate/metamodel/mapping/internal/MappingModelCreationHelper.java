@@ -235,7 +235,7 @@ public class MappingModelCreationHelper {
 		if ( declaringType instanceof EmbeddableMappingType embeddableMappingType ) {
 			if ( bootProperty.isLazy() ) {
 				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
-						"Attribute was declared lazy, but is part of an embeddable - `%s#%s` - LAZY will be ignored",
+						"Attribute was declared LAZY, but is part of embeddable '%s#%s', LAZY ignored",
 						declaringType.getNavigableRole().getFullPath(),
 						bootProperty.getName()
 				);

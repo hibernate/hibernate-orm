@@ -127,7 +127,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 			return PathQualifierType.VALUE;
 		}
 
-		throw new InvalidGraphException( "Invalid path qualifier [" + qualifier + "] - expecting `key` or `value`" );
+		throw new InvalidGraphException( "Invalid path qualifier [" + qualifier + "] - expecting 'key' or 'value'" );
 	}
 
 	@Override
@@ -136,7 +136,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor<GraphNode<?>> {
 
 		if ( PARSING_LOGGER.isTraceEnabled() ) {
 			PARSING_LOGGER.tracef(
-					"%s Starting graph : %s",
+					"%s Starting graph: %s",
 					StringHelper.repeat( ">>", attributeNodeStack.depth() + 2 ),
 					subTypeName
 			);

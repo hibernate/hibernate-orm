@@ -72,7 +72,7 @@ public class TransactionImpl implements TransactionImplementor {
 			}
 		}
 		else {
-			LOG.debug( "begin transaction" );
+			LOG.debug( "Beginning transaction" );
 			transactionDriverControl.begin();
 		}
 	}
@@ -85,7 +85,7 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new IllegalStateException( "Transaction not successfully started" );
 		}
 		else {
-			LOG.debug( "committing transaction" );
+			LOG.debug( "Committing transaction" );
 			try {
 				internalGetTransactionDriverControl().commit();
 			}
@@ -120,7 +120,7 @@ public class TransactionImpl implements TransactionImplementor {
 			throw new TransactionException( "Cannot roll back transaction in current status [" + status.name() + "]" );
 		}
 		else if ( status != TransactionStatus.FAILED_COMMIT || allowFailedCommitToPhysicallyRollback() ) {
-			LOG.debug( "rolling back transaction" );
+			LOG.debug( "Rolling back transaction" );
 			internalGetTransactionDriverControl().rollback();
 		}
 	}

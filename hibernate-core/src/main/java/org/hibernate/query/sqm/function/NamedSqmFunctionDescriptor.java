@@ -106,7 +106,9 @@ public class NamedSqmFunctionDescriptor
 
 	@Override
 	public String getArgumentListSignature() {
-		return argumentListSignature == null ? super.getArgumentListSignature() : argumentListSignature;
+		return argumentListSignature == null
+				? super.getArgumentListSignature()
+				: argumentListSignature;
 	}
 
 	@Override
@@ -246,7 +248,7 @@ public class NamedSqmFunctionDescriptor
 	public String toString() {
 		return String.format(
 				Locale.ROOT,
-				"NamedSqmFunctionTemplate(%s)",
+				"NamedSqmFunctionDescriptor(%s)",
 				functionName
 		);
 	}

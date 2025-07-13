@@ -61,7 +61,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void register(Statement statement, boolean cancelable) {
-		if ( IS_TRACE_ENABLED ) log.tracef( "Registering statement [%s]", statement );
+		if ( IS_TRACE_ENABLED ) {
+			log.tracef( "Registering statement [%s]", statement );
+		}
 
 		xref.registerExpectingNew( statement );
 
@@ -72,7 +74,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void release(Statement statement) {
-		if ( IS_TRACE_ENABLED ) log.tracev( "Releasing statement [{0}]", statement );
+		if ( IS_TRACE_ENABLED ) {
+			log.tracef( "Releasing statement [%s]", statement );
+		}
 
 		final ResultSetsSet resultSets = xref.remove( statement );
 		if ( resultSets != null ) {
@@ -93,7 +97,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void release(ResultSet resultSet, Statement statement) {
-		if ( IS_TRACE_ENABLED ) log.tracef( "Releasing result set [%s]", resultSet );
+		if ( IS_TRACE_ENABLED ) {
+			log.tracef( "Releasing result set [%s]", resultSet );
+		}
 
 		if ( statement == null ) {
 			try {
@@ -143,7 +149,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private static void close(final ResultSet resultSet) {
-		if ( IS_TRACE_ENABLED ) log.tracef( "Closing result set [%s]", resultSet );
+		if ( IS_TRACE_ENABLED ) {
+			log.tracef( "Closing result set [%s]", resultSet );
+		}
 
 		try {
 			if ( resultSet != null ) {
@@ -160,7 +168,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private static void close(Statement statement) {
-		if ( IS_TRACE_ENABLED ) log.tracef( "Closing prepared statement [%s]", statement );
+		if ( IS_TRACE_ENABLED ) {
+			log.tracef( "Closing prepared statement [%s]", statement );
+		}
 
 		try {
 			// if we are unable to "clean" the prepared statement,
@@ -194,7 +204,9 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void register(ResultSet resultSet, Statement statement) {
-		if ( IS_TRACE_ENABLED ) log.tracef( "Registering result set [%s]", resultSet );
+		if ( IS_TRACE_ENABLED ) {
+			log.tracef( "Registering result set [%s]", resultSet );
+		}
 
 		if ( statement == null ) {
 			try {
@@ -284,7 +296,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void releaseResources() {
-		if ( IS_TRACE_ENABLED ) log.trace( "Releasing JDBC resources" );
+		log.trace( "Releasing JDBC resources" );
 
 		if ( jdbcEventHandler != null ) {
 			jdbcEventHandler.jdbcReleaseRegistryResourcesStart();

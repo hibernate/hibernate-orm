@@ -274,7 +274,7 @@ public class AnnotatedColumn {
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
 			}
-			if ( LOG.isDebugEnabled() ) {
+			if ( LOG.isDebugEnabled() && logicalColumnName != null ) {
 				LOG.trace( "Binding column: " + logicalColumnName );
 			}
 		}

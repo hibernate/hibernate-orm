@@ -149,7 +149,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 
 					if ( !wasUpdated ) {
 						MODEL_MUTATION_LOGGER.tracef(
-								"Upsert update altered no rows - inserting: %s",
+								"Upsert update altered no rows; performing insert (%s)",
 								tableMapping.getTableName()
 						);
 						try {
@@ -300,7 +300,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private boolean performUpdate(
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
-		MODEL_MUTATION_LOGGER.tracef( "#performUpdate(%s)", tableMapping.getTableName() );
+		MODEL_MUTATION_LOGGER.tracef( "Performing update (%s)", tableMapping.getTableName() );
 
 		final JdbcServices jdbcServices = session.getJdbcServices();
 		final var statementGroup = new PreparedStatementGroupSingleTable( createJdbcUpdate( session ), session );

@@ -32,6 +32,6 @@ public class CustomTrueFalseConverter implements AttributeConverter<Boolean,Char
 		if ( dbData.equals( 'F' ) ) {
 			return false;
 		}
-		throw new IllegalArgumentException( "Unexpected database value - `" + dbData + "`, expected 'T' or 'F'" );
+		throw new IllegalArgumentException( "Unexpected database value - '" + dbData + "', expected 'T' or 'F'" );
 	}
 }

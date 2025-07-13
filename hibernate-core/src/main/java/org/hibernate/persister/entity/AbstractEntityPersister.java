@@ -305,6 +305,7 @@ import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRI
 import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
+import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * Basic functionality for persisting an entity via JDBC, using either generated or custom SQL.
@@ -496,14 +497,19 @@ public abstract class AbstractEntityPersister
 				: ImmutableEntityEntryFactory.INSTANCE;
 
 		// Handle any filters applied to the class level
-		filterHelper = isNotEmpty( persistentClass.getFilters() ) ? new FilterHelper(
-				persistentClass.getFilters(),
-				getEntityNameByTableNameMap(
-						persistentClass,
-						factory.getSqlStringGenerationContext()
-				),
-				factory
-		) : null;
+		if ( isNotEmpty( persistentClass.getFilters() ) ) {
+			filterHelper = new FilterHelper(
+					persistentClass.getFilters(),
+					getEntityNameByTableNameMap(
+							persistentClass,
+							factory.getSqlStringGenerationContext()
+					),
+					factory
+			);
+		}
+		else {
+			filterHelper = null;
+		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2670,13 +2676,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected void logStaticSQL() {
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Static SQL for entity: %s", getEntityName() );
-			for ( Map.Entry<String, SingleIdArrayLoadPlan> entry : lazyLoadPlanByFetchGroup.entrySet() ) {
-				LOG.debugf( " Lazy select (%s) : %s", entry.getKey(), entry.getValue().getJdbcSelect().getSqlString() );
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+			MODEL_MUTATION_LOGGER.tracef( "Static SQL for entity: %s", getEntityName() );
+			for ( var entry : lazyLoadPlanByFetchGroup.entrySet() ) {
+				MODEL_MUTATION_LOGGER.tracef( " Lazy select (%s) : %s", entry.getKey(), entry.getValue().getJdbcSelect().getSqlString() );
 			}
 			if ( sqlVersionSelectString != null ) {
-				LOG.debugf( " Version select: %s", sqlVersionSelectString );
+				MODEL_MUTATION_LOGGER.tracef( " Version select: %s", sqlVersionSelectString );
 			}
 
 			{
@@ -2685,7 +2691,7 @@ public abstract class AbstractEntityPersister
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticInsertGroup.getOperation( i );
 						if ( mutation instanceof JdbcOperation jdbcOperation ) {
-							LOG.debugf( " Insert (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.tracef( " Insert (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2697,7 +2703,7 @@ public abstract class AbstractEntityPersister
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
 						if ( mutation instanceof JdbcOperation jdbcOperation ) {
-							LOG.debugf( " Update (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.tracef( " Update (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -2709,7 +2715,7 @@ public abstract class AbstractEntityPersister
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
 						if ( mutation instanceof JdbcOperation jdbcOperation ) {
-							LOG.debugf( " Delete (%s): %s", i, jdbcOperation.getSqlString() );
+							MODEL_MUTATION_LOGGER.tracef( " Delete (%s): %s", i, jdbcOperation.getSqlString() );
 						}
 					}
 				}
@@ -4386,7 +4392,7 @@ public abstract class AbstractEntityPersister
 			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( insertGeneratedValuesProcessor == null ) {
-			throw new UnsupportedOperationException( "Entity has no insert-generated properties - `" + getEntityName() + "`" );
+			throw new UnsupportedOperationException( "Entity has no insert-generated properties - '" + getEntityName() + "'" );
 		}
 		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
 	}
@@ -4424,7 +4430,7 @@ public abstract class AbstractEntityPersister
 			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( updateGeneratedValuesProcessor == null ) {
-			throw new AssertionFailure( "Entity has no update-generated properties - `" + getEntityName() + "`" );
+			throw new AssertionFailure( "Entity has no update-generated properties - '" + getEntityName() + "'" );
 		}
 		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
 	}
@@ -5672,7 +5678,6 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
-		LOG.tracef( "#findSubPart(`%s`)", name );
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
 			return discriminatorMapping;

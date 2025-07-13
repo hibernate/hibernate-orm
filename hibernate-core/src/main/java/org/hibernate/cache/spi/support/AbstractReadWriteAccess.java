@@ -106,7 +106,7 @@ public abstract class AbstractReadWriteAccess extends AbstractCachedDomainDataAc
 		try {
 			final boolean traceEnabled = log.isTraceEnabled();
 			if ( traceEnabled ) {
-				log.tracef( "Caching data from load [region=`%s` (%s)] : key[%s] -> value[%s]", getRegion().getName(), getAccessType(), key, value );
+				log.tracef( "Caching data from load [region='%s' (%s)] : key[%s] -> value[%s]", getRegion().getName(), getAccessType(), key, value );
 			}
 			writeLock.lock();
 			Lockable item = (Lockable) getStorageAccess().getFromCache( key, session );

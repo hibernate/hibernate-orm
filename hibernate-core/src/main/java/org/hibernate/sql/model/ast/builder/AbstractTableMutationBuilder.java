@@ -135,6 +135,6 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 
 	@Override
 	public String toString() {
-		return "TableMutationBuilder( " + mutationType + " - `" + mutatingTable.getTableName() + "`)";
+		return "TableMutationBuilder( " + mutationType + " - '" + mutatingTable.getTableName() + "')";
 	}
 }

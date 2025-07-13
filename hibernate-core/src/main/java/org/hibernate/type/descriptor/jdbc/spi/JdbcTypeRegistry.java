@@ -24,8 +24,6 @@ import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import org.jboss.logging.Logger;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCode;
@@ -40,7 +38,7 @@ import static org.hibernate.type.descriptor.JdbcTypeNameMapper.isStandardTypeCod
  * @since 5.3
  */
 public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serializable {
-	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
+//	private static final Logger log = Logger.getLogger( JdbcTypeRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
@@ -69,17 +67,17 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	@Override
 	public void addDescriptor(JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
-		if ( previous != null && previous != jdbcType ) {
-			log.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
-		}
+//		if ( previous != null && previous != jdbcType ) {
+//			log.tracef( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
+//		}
 	}
 
 	@Override
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
-		if ( previous != null && previous != jdbcType ) {
-			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
-		}
+//		if ( previous != null && previous != jdbcType ) {
+//			log.tracef( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
+//		}
 	}
 
 	public void addDescriptorIfAbsent(JdbcType jdbcType) {
@@ -100,10 +98,10 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 			return descriptor;
 		}
 		else {
-			if ( isStandardTypeCode( jdbcTypeCode ) ) {
-				log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
-						jdbcTypeCode );
-			}
+//			if ( isStandardTypeCode( jdbcTypeCode ) ) {
+//				log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//						jdbcTypeCode );
+//			}
 
 			// see if the typecode is part of a known type family...
 			final JdbcType potentialAlternateDescriptor = getFamilyDescriptor( jdbcTypeCode );
@@ -130,10 +128,10 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 						// todo (6.0) : add a SqlTypeDescriptor#canBeAssignedFrom method ?
 						return potentialAlternateDescriptor;
 					}
-					if ( isStandardTypeCode( potentialAlternateTypeCode ) ) {
-						log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
-								potentialAlternateTypeCode );
-					}
+//					if ( isStandardTypeCode( potentialAlternateTypeCode ) ) {
+//						log.debugf( "A standard JDBC type code [%s] was not defined in SqlTypeDescriptorRegistry",
+//								potentialAlternateTypeCode );
+//					}
 				}
 			}
 		}

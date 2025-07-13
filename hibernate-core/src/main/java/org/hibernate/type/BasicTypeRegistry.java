@@ -385,51 +385,49 @@ public class BasicTypeRegistry implements Serializable {
 
 	private void applyRegistrationKeys(BasicType<?> type, String[] keys) {
 		for ( String key : keys ) {
-			// be safe...
-			if ( key == null ) {
-				continue;
+			if ( key != null ) {
+				// Use String.intern here as there's a high probability of duplicates combined with long-term usage:
+				// just running our testsuite would generate 210,000 instances for the String "java.lang.Class" alone.
+				// Incidentally, this might also help with map lookup efficiency.
+				key = key.intern();
+
+				// Incredibly verbose logging disabled
+//				LOG.tracef( "Adding type registration %s -> %s", key, type );
+
+				final Type old = typesByName.put( key, type );
+//				if ( old != null && old != type ) {
+//					LOG.tracef(
+//							"Type registration key [%s] overrode previous entry : `%s`",
+//							key,
+//							old
+//					);
+//				}
 			}
 
-			//Use String#intern here as there's high chances of duplicates combined with long term usage:
-			//just running our testsuite would generate 210,000 instances for the String "java.lang.Class" alone.
-			//Incidentally this might help with map lookup efficiency too.
-			key = key.intern();
-
-			LOG.tracef( "Adding type registration %s -> %s", key, type );
-
-			final Type old = typesByName.put( key, type );
-			if ( old != null && old != type ) {
-				LOG.tracef(
-						"Type registration key [%s] overrode previous entry : `%s`",
-						key,
-						old
-				);
-			}
 		}
 	}
 
 	private void applyRegistrationKeys(BasicTypeReference<?> type, String[] keys) {
 		for ( String key : keys ) {
-			// be safe...
-			if ( key == null ) {
-				continue;
+			if ( key != null ) {
+				// Use String.intern here as there's a high probability of duplicates combined with long-term usage:
+				// just running our testsuite would generate 210,000 instances for the String "java.lang.Class" alone.
+				// Incidentally, this might also help with map lookup efficiency.
+				key = key.intern();
+
+				// Incredibly verbose logging disabled
+//				LOG.tracef( "Adding type registration %s -> %s", key, type );
+
+				final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
+//				if ( old != null && old != type ) {
+//					LOG.tracef(
+//							"Type registration key [%s] overrode previous entry : `%s`",
+//							key,
+//							old
+//					);
+//				}
 			}
 
-			//Use String#intern here as there's high chances of duplicates combined with long term usage:
-			//just running our testsuite would generate 210,000 instances for the String "java.lang.Class" alone.
-			//Incidentally this might help with map lookup efficiency too.
-			key = key.intern();
-
-			LOG.tracef( "Adding type registration %s -> %s", key, type );
-
-			final BasicTypeReference<?> old = typeReferencesByName.put( key, type );
-			if ( old != null && old != type ) {
-				LOG.tracef(
-						"Type registration key [%s] overrode previous entry : `%s`",
-						key,
-						old
-				);
-			}
 		}
 	}
 }

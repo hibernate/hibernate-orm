@@ -20,6 +20,7 @@ import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.bytecode.enhance.spi.interceptor.SessionAssociationMarkers;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
@@ -584,4 +585,13 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating
 	SessionAssociationMarkers getSessionAssociationMarkers();
+
+	@Override
+	<T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType);
+
+	@Override
+	RootGraphImplementor<?> createEntityGraph(String graphName);
+
+	@Override
+	RootGraphImplementor<?> getEntityGraph(String graphName);
 }

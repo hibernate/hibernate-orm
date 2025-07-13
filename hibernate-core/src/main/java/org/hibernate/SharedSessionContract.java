@@ -375,23 +375,26 @@ public interface SharedSessionContract extends QueryProducer, AutoCloseable, Ser
 	 * @throws IllegalArgumentException if the graph with the given
 	 *         name does not have the given entity type as its root
 	 *
+	 * @see jakarta.persistence.EntityManager#createEntityGraph(String)
+	 *
 	 * @since 6.3
 	 */
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/**
 	 * Obtain an immutable reference to a predefined
-	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}
-	 * or return {@code null} if there is no predefined graph with the given
-	 * name.
+	 * {@linkplain jakarta.persistence.NamedEntityGraph named entity graph}.
 	 *
 	 * @param graphName the name of the predefined named entity graph
+	 * @throws IllegalArgumentException if there is no predefined graph
+	 *         with the given name
 	 *
 	 * @apiNote This method returns {@code RootGraph<?>}, requiring an
 	 * unchecked typecast before use. It's cleaner to obtain a graph using
 	 * the static metamodel for the class which defines the graph, or by
 	 * calling {@link SessionFactory#getNamedEntityGraphs(Class)} instead.
 	 *
+	 * @see jakarta.persistence.EntityManager#getEntityGraph(String)
 	 * @see SessionFactory#getNamedEntityGraphs(Class)
 	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
 	 *

@@ -673,8 +673,8 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	protected void applyEntityGraphHint(String hintName, Object value) {
-		super.applyEntityGraphHint( hintName, value );
+	protected void applyEntityGraphHint(GraphSemantic graphSemantic, Object value, String hintName) {
+		super.applyEntityGraphHint( graphSemantic, value, hintName );
 	}
 
 	@Override

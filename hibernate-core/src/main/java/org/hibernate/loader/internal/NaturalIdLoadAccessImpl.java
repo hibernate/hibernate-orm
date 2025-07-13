@@ -19,9 +19,14 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
+ * Implementation of {@link NaturalIdLoadAccess}.
+ *
  * @author Steve Ebersole
  */
-public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadAccess<T> {
+public class NaturalIdLoadAccessImpl<T>
+		extends BaseNaturalIdLoadAccessImpl<T>
+		implements NaturalIdLoadAccess<T> {
+
 	private final Map<String, Object> naturalIdParameters = new LinkedHashMap<>();
 
 	public NaturalIdLoadAccessImpl(LoadAccessContext context, EntityMappingType entityDescriptor) {

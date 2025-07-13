@@ -4,7 +4,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
 import java.util.List;
 
 import org.hibernate.Hibernate;
@@ -23,12 +22,10 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.internal.OptimisticLockHelper;
 import org.hibernate.internal.build.AllowReflection;
-import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
@@ -39,6 +36,10 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import static java.lang.reflect.Array.newInstance;
+import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * @author Steve Ebersole
@@ -70,9 +71,9 @@ public class LoaderHelper {
 				);
 			}
 
-			if ( LoaderLogging.LOADER_LOGGER.isTraceEnabled() ) {
-				LoaderLogging.LOADER_LOGGER.tracef(
-						"Locking `%s( %s )` in `%s` lock-mode",
+			if ( LOADER_LOGGER.isTraceEnabled() ) {
+				LOADER_LOGGER.tracef(
+						"Locking %s with id '%s' in mode %s",
 						persister.getEntityName(),
 						entry.getId(),
 						requestedLockMode
@@ -99,7 +100,7 @@ public class LoaderHelper {
 					else {
 						throw new IllegalStateException( String.format(
 								"Trying to lock versioned entity %s but found null version",
-								MessageHelper.infoString( persister.getEntityName(), entry.getId() )
+								infoString( persister.getEntityName(), entry.getId() )
 						) );
 					}
 				}
@@ -204,7 +205,7 @@ public class LoaderHelper {
 	@AllowReflection
 	public static <X> X[] createTypedArray(Class<X> elementClass, @SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
-		return (X[]) Array.newInstance( elementClass, length );
+		return (X[]) newInstance( elementClass, length );
 	}
 
 	/**

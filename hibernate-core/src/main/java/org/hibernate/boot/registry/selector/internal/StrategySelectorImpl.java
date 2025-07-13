@@ -201,28 +201,22 @@ public class StrategySelectorImpl implements StrategySelector {
 
 		for ( String name : names ) {
 			final Class<?> old = namedStrategyImplementorMap.put( name, implementation );
-			if ( old == null ) {
-				if ( log.isTraceEnabled() ) {
-					log.trace(
-							String.format(
-									"Registering named strategy selector [%s] : [%s] -> [%s]",
-									strategy.getName(),
-									name,
-									implementation.getName()
-							)
+			if ( log.isTraceEnabled() ) {
+				if ( old == null ) {
+					log.tracef(
+							"Strategy selector for %s: '%s' -> %s",
+							strategy.getSimpleName(),
+							name,
+							implementation.getName()
 					);
 				}
-			}
-			else {
-				if ( log.isTraceEnabled() ) {
-					log.trace(
-							String.format(
-									"Registering named strategy selector [%s] : [%s] -> [%s] (replacing [%s])",
-									strategy.getName(),
-									name,
-									implementation.getName(),
-									old.getName()
-							)
+				else {
+					log.tracef(
+							"Strategy selector for %s: '%s' -> %s (replacing %s)",
+							strategy.getSimpleName(),
+							name,
+							implementation.getName(),
+							old.getName()
 					);
 				}
 			}

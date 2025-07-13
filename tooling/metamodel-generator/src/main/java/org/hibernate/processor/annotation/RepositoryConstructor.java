@@ -9,6 +9,7 @@ import org.hibernate.processor.model.MetaAttribute;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.Constants;
 
+import static org.hibernate.processor.util.Constants.HIB_STATELESS_SESSION;
 import static org.hibernate.processor.util.Constants.INJECT;
 import static org.hibernate.processor.util.Constants.NONNULL;
 
@@ -126,15 +127,27 @@ public class RepositoryConstructor implements MetaAttribute {
 					.append("public ");
 			notNull( declaration );
 			declaration
-					.append(annotationMetaEntity.importType(sessionTypeName))
+					.append(annotationMetaEntity.importType(providedSessionType()))
 					.append(" ")
 					.append(methodName)
 					.append("() {")
 					.append("\n\treturn ")
-					.append(sessionVariableName)
+					.append(sessionVariableName);
+			if ( annotationMetaEntity.isProvidedSessionAccess() ) {
+				declaration
+						.append( ".getObject()" );
+			}
+			declaration
 					.append(";\n}");
 		}
 		return declaration.toString();
+	}
+
+	private String providedSessionType() {
+		return annotationMetaEntity.isProvidedSessionAccess()
+				//TODO: assuming provided sessions are always StatelessSessions for now
+				? HIB_STATELESS_SESSION
+				: sessionTypeName;
 	}
 
 	/**

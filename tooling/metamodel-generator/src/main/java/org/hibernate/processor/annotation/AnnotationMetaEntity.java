@@ -786,10 +786,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			if ( !repository && jakartaDataRepository ) {
 				repository = true;
-				sessionType = springInjection
-						? SPRING_STATELESS_SESSION_PROVIDER
-						: HIB_STATELESS_SESSION;
-				addDaoConstructor( null );
+				// Jakarta Data defaults to StatelessSession, not EntityManager
+				sessionType = HIB_STATELESS_SESSION;
+				// If it's Spring, we wrap the StatelessSession in ObjectProvider
+				sessionType = addDaoConstructor( null );
 			}
 			if ( needsDefaultConstructor() ) {
 				addDefaultConstructor();
@@ -895,7 +895,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * it.
 	 */
 	private String addDaoConstructor(@Nullable ExecutableElement method) {
-		final String sessionType = method == null ? this.sessionType : fullReturnType(method);
+		final String returnType = method == null ? this.sessionType : fullReturnType( method );
+		final String sessionType =
+				jakartaDataRepository && springInjection
+						? SPRING_OBJECT_PROVIDER + '<' + returnType + '>'
+						: returnType;
 		final String sessionVariableName = getSessionVariableName( sessionType );
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 

@@ -167,7 +167,7 @@ final class JndiServiceImpl implements JndiService {
 
 	private void bind(Name name, Object value, Context context) {
 		try {
-			LOG.tracef( "Binding : %s", name );
+			LOG.tracef( "Binding: %s", name );
 			context.rebind( name, value );
 		}
 		catch ( Exception initialException ) {
@@ -185,7 +185,7 @@ final class JndiServiceImpl implements JndiService {
 
 				Context intermediateContext = null;
 				try {
-					LOG.tracev( "Intermediate lookup: {0}", intermediateContextName );
+					LOG.tracef( "Intermediate lookup: %s", intermediateContextName );
 					intermediateContext = (Context) intermediateContextBase.lookup( intermediateContextName );
 				}
 				catch ( NameNotFoundException handledBelow ) {
@@ -196,10 +196,10 @@ final class JndiServiceImpl implements JndiService {
 				}
 
 				if ( intermediateContext != null ) {
-					LOG.tracev( "Found intermediate context: {0}", intermediateContextName );
+					LOG.tracef( "Found intermediate context: %s", intermediateContextName );
 				}
 				else {
-					LOG.tracev( "Creating subcontext: {0}", intermediateContextName );
+					LOG.tracef( "Creating subcontext: %s", intermediateContextName );
 					try {
 						intermediateContext = intermediateContextBase.createSubcontext( intermediateContextName );
 					}
@@ -210,7 +210,7 @@ final class JndiServiceImpl implements JndiService {
 				intermediateContextBase = intermediateContext;
 				name = name.getSuffix( 1 );
 			}
-			LOG.tracev( "Binding: {0}", name );
+			LOG.tracef( "Binding: %s", name );
 			try {
 				intermediateContextBase.rebind( name, value );
 			}

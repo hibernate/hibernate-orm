@@ -54,20 +54,19 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 			return classLoaderService.classForName( name );
 		}
 		else {
-			log.tracef( "Not known whether passed class name [%s] is safe", name );
+			// Could not determine that the given class is safe to load with live ClassLoader
 			if ( jpaTempClassLoader == null ) {
 				log.tracef(
-						"No temp ClassLoader provided; using live ClassLoader " +
-								"for loading potentially unsafe class: %s",
+						"No temp ClassLoader provided; using live ClassLoader to load potentially unsafe class: %s",
 						name
 				);
 				return classLoaderService.classForName( name );
 			}
 			else {
-				log.tracef(
-						"Temp ClassLoader was provided, so we will use that: %s",
-						name
-				);
+//				log.tracef(
+//						"Temp ClassLoader was provided, so we will use that: %s",
+//						name
+//				);
 				try {
 					return jpaTempClassLoader.loadClass( name );
 				}

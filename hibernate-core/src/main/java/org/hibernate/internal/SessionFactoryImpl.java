@@ -246,7 +246,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
 		deprecationCheck( settings );
-		LOG.instantiatingFactory( settings );
+		LOG.instantiatingFactory( uuid, settings );
 
 		sqlStringGenerationContext = createSqlStringGenerationContext( bootMetamodel, options, jdbcServices );
 
@@ -814,7 +814,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		try {
-			LOG.closingFactory();
+			LOG.closingFactory( getUuid() );
 			observer.sessionFactoryClosing( this );
 
 		// NOTE : the null checks below handle cases where close is called from

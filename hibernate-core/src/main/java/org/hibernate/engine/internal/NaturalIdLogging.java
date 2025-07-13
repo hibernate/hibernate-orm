@@ -52,10 +52,14 @@ public interface NaturalIdLogging extends BasicLogger {
 	void removingLocallyCachedNaturalIdResolution(String entityName, Object naturalId, Object id);
 
 	@LogMessage(level = TRACE)
-	@Message(value = "Resolved natural key [%s] -> primary key [%s] resolution in session cache for [%s]:", id = 90004)
+	@Message(value = "Resolved natural key [%s] -> primary key [%s] resolution in session cache for [%s]", id = 90004)
 	void resolvedNaturalIdInSessionCache(Object naturalId, Object pk, String entityName);
 
 	@LogMessage(level = TRACE)
 	@Message(value = "Found natural key [%s] -> primary key [%s] xref in second-level cache for [%s]", id = 90005)
 	void foundNaturalIdInSecondLevelCache(Object naturalId, Object pk, String entityName);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Retrieving primary key of %s from database for natural id: %s", id = 90006)
+	void retrievingIdForNaturalId(String entityName, Object naturalId);
 }

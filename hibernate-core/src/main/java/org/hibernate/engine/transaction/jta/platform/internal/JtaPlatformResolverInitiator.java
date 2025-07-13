@@ -29,7 +29,7 @@ public class JtaPlatformResolverInitiator implements StandardServiceInitiator<Jt
 				registry.requireService( StrategySelector.class )
 						.resolveStrategy( JtaPlatformResolver.class, setting );
 		if ( resolver == null ) {
-			log.debugf( "No JtaPlatformResolver was specified, using default [%s]", StandardJtaPlatformResolver.class.getName() );
+			log.tracef( "No JtaPlatformResolver was specified, using default [%s]", StandardJtaPlatformResolver.class.getName() );
 			return StandardJtaPlatformResolver.INSTANCE;
 		}
 		return resolver;

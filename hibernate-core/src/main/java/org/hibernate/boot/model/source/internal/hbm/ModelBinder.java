@@ -2454,7 +2454,7 @@ public class ModelBinder {
 		// todo : better define the conditions in this if/else
 		if ( isDynamic ) {
 			// dynamic is represented as a Map
-			log.tracef( "Binding dynamic-component [%s]", role );
+			log.tracef( "Binding dynamic component [%s]", role );
 			componentBinding.setDynamic( true );
 		}
 		else if ( isVirtual ) {
@@ -2983,7 +2983,7 @@ public class ModelBinder {
 			collectionBinding.createAllKeys();
 
 			if ( log.isTraceEnabled() ) {
-				log.tracef( "Mapped collection : %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
+				log.tracef( "Mapped collection: %s", getPluralAttributeSource().getAttributeRole().getFullPath() );
 				log.tracef( "   + table -> %s", getCollectionBinding().getTable().getName() );
 				log.tracef( "   + key -> %s", columns( getCollectionBinding().getKey() ) );
 				if ( getCollectionBinding().isIndexed() ) {

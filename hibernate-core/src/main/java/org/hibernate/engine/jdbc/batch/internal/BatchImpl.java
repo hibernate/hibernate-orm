@@ -123,7 +123,7 @@ public class BatchImpl implements Batch {
 						&& !inclusionChecker.include( statementDetails.getMutatingTableDetails() ) ) {
 					if ( loggerTraceEnabled ) {
 						MODEL_MUTATION_LOGGER.tracef(
-								"Skipping addBatch for table : %s (batch-position=%s)",
+								"Skipping addBatch for table: %s (batch position %s)",
 								statementDetails.getMutatingTableDetails().getTableName(),
 								batchPosition+1
 						);

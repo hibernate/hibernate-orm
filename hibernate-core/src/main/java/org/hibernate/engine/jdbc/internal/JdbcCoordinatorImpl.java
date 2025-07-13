@@ -7,7 +7,6 @@ package org.hibernate.engine.jdbc.internal;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.engine.jdbc.batch.JdbcBatchLogging;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
@@ -39,6 +38,7 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
+import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
  * Standard implementation of {@link JdbcCoordinator}.
@@ -81,6 +81,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.jdbcServices = jdbcServices;
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Created JdbcCoordinator @%s", hashCode() );
+		}
 	}
 
 	private static LogicalConnectionImplementor createLogicalConnection(
@@ -101,6 +104,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.isUserSuppliedConnection = isUserSuppliedConnection;
 		this.owner = owner;
 		this.jdbcServices = owner.getJdbcSessionContext().getJdbcServices();
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Created JdbcCoordinator @%s", hashCode() );
+		}
 	}
 
 	@Override
@@ -142,7 +148,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public Connection close() {
-		if ( TRACE_ENABLED ) LOG.tracev( "Closing JDBC container [{0}]", this );
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Closing JdbcCoordinator @%s", hashCode() );
+		}
 		Connection connection;
 		try {
 			if ( currentBatch != null ) {
@@ -193,7 +201,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void conditionallyExecuteBatch(BatchKey key) {
 		if ( currentBatch != null && !currentBatch.getKey().equals( key ) ) {
-			JdbcBatchLogging.BATCH_LOGGER.debugf( "Conditionally executing batch - %s", currentBatch.getKey() );
+			BATCH_MESSAGE_LOGGER.conditionallyExecuteBatch( currentBatch.getKey().toLoggableString() );
 			try {
 				currentBatch.execute();
 			}
@@ -206,6 +214,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void abortBatch() {
 		if ( currentBatch != null ) {
+			BATCH_MESSAGE_LOGGER.abortBatch( currentBatch.getKey() .toLoggableString());
 			currentBatch.release();
 		}
 	}
@@ -257,7 +266,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		final long millisecondsRemaining = transactionTimeOutInstant - System.currentTimeMillis();
 		if ( millisecondsRemaining <= 0L ) {
-			throw new TransactionException( "transaction timeout expired" );
+			throw new TransactionException( "Transaction timeout expired" );
 		}
 		return Math.max( (int) (millisecondsRemaining / 1000), 1 );
 	}
@@ -266,7 +275,8 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void afterStatementExecution() {
 		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
 		if ( TRACE_ENABLED ) {
-			LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
+			LOG.tracef( "Statement execution complete (connection release mode %s) in JdbcCoordinator @%s",
+					connectionReleaseMode, hashCode() );
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
@@ -309,7 +319,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			return result;
 		}
 		catch ( SQLException e ) {
-			throw sqlExceptionHelper().convert( e, "error executing work" );
+			throw sqlExceptionHelper().convert( e, "Error executing work" );
 		}
 	}
 
@@ -323,7 +333,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void registerLastQuery(Statement statement) {
-		if ( TRACE_ENABLED ) LOG.tracev( "Registering last query statement [{0}]", statement );
+//		if ( TRACE_ENABLED ) {
+//			LOG.tracef( "Registering last query statement [%s] @%s", statement, hashCode() );
+//		}
 		if ( statement instanceof JdbcWrapper ) {
 			final JdbcWrapper<Statement> wrapper = (JdbcWrapper<Statement>) statement;
 			registerLastQuery( wrapper.getWrappedObject() );
@@ -371,17 +383,28 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterTransactionBegin() {
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Transaction after begin in JdbcCoordinator @%s", hashCode() );
+		}
 		owner.afterTransactionBegin();
 	}
 
 	@Override
 	public void beforeTransactionCompletion() {
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Transaction before completion in JdbcCoordinator @%s", hashCode() );
+		}
 		owner.beforeTransactionCompletion();
 		logicalConnection.beforeTransactionCompletion();
 	}
 
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+		if ( TRACE_ENABLED ) {
+			LOG.tracef( "Transaction after %s completion in JdbcCoordinator @%s",
+					successful ? "successful" : "unsuccessful",
+					hashCode() );
+		}
 		afterTransaction();
 		owner.afterTransactionCompletion( successful, delayed );
 	}

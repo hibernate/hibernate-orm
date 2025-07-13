@@ -27,7 +27,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
 
 /**
  * A {@link DotIdentifierConsumer} used to interpret paths outside any

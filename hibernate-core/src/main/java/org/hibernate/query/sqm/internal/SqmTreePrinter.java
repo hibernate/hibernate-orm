@@ -151,7 +151,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 		final String title = header != null ? header : "SqmQuerySpec Tree";
 
-		LOGGER.tracef( "%s :%n%s", title, treePrinter.buffer.toString() );
+		LOGGER.tracef( "%s:%n%s", title, treePrinter.buffer.toString() );
 	}
 
 	public static void logTree(SqmStatement<?> sqmStatement) {
@@ -174,7 +174,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 			printer.visitInsertSelectStatement( statement );
 		}
 
-		LOGGER.tracef( "SqmStatement Tree :%n%s", printer.buffer.toString() );
+		LOGGER.tracef( "SqmStatement Tree:%n%s", printer.buffer.toString() );
 	}
 
 	private final StringBuffer buffer = new StringBuffer();
@@ -539,7 +539,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitRootPath(SqmRoot<?> sqmRoot) {
 		processStanza(
 				"root",
-				"`" + sqmRoot.getNavigablePath() + "`",
+				"'" + sqmRoot.getNavigablePath() + "'",
 				() -> processJoins( sqmRoot )
 		);
 
@@ -550,7 +550,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
 		processStanza(
 				"derived",
-				"`" + sqmRoot.getNavigablePath() + "`",
+				"'" + sqmRoot.getNavigablePath() + "'",
 				() -> processJoins( sqmRoot )
 		);
 		return null;
@@ -560,7 +560,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitRootFunction(SqmFunctionRoot<?> sqmRoot) {
 		processStanza(
 				"derived",
-				"`" + sqmRoot.getNavigablePath() + "`",
+				"'" + sqmRoot.getNavigablePath() + "'",
 				() -> processJoins( sqmRoot )
 		);
 		return null;
@@ -570,7 +570,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
 		processStanza(
 				"cte",
-				"`" + sqmRoot.getNavigablePath() + "`",
+				"'" + sqmRoot.getNavigablePath() + "'",
 				() -> processJoins( sqmRoot )
 		);
 		return null;
@@ -591,7 +591,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
 		processStanza(
 				"cross",
-				"`" + joinedFromElement.getNavigablePath() + "`",
+				"'" + joinedFromElement.getNavigablePath() + "'",
 				() -> processJoins( joinedFromElement )
 		);
 
@@ -602,7 +602,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement) {
 		processStanza(
 				"plural-part",
-				"`" + joinedFromElement.getNavigablePath() + "`",
+				"'" + joinedFromElement.getNavigablePath() + "'",
 				() -> processJoins( joinedFromElement )
 		);
 
@@ -626,12 +626,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitQualifiedEntityJoin(SqmEntityJoin<?,?> joinedFromElement) {
 		if ( inJoinPredicate ) {
-			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+			logWithIndentation( "-> [joined-path] - '%s'", joinedFromElement.getNavigablePath() );
 		}
 		else {
 			processStanza(
 					"entity",
-					"`" + joinedFromElement.getNavigablePath() + "`",
+					"'" + joinedFromElement.getNavigablePath() + "'",
 					() -> {
 						processJoinPredicate( joinedFromElement );
 						processJoins( joinedFromElement );
@@ -644,12 +644,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitQualifiedAttributeJoin(SqmAttributeJoin<?,?> joinedFromElement) {
 		if ( inJoinPredicate ) {
-			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+			logWithIndentation( "-> [joined-path] - '%s'", joinedFromElement.getNavigablePath() );
 		}
 		else {
 			processStanza(
 					"attribute",
-					"`" + joinedFromElement.getNavigablePath() + "`",
+					"'" + joinedFromElement.getNavigablePath() + "'",
 					() -> {
 						logIndented( "[fetched = " + joinedFromElement.isFetched() + ']' );
 
@@ -664,12 +664,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement) {
 		if ( inJoinPredicate ) {
-			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+			logWithIndentation( "-> [joined-path] - '%s'", joinedFromElement.getNavigablePath() );
 		}
 		else {
 			processStanza(
 					"derived",
-					"`" + joinedFromElement.getNavigablePath() + "`",
+					"'" + joinedFromElement.getNavigablePath() + "'",
 					() -> {
 						processJoinPredicate( joinedFromElement );
 						processJoins( joinedFromElement );
@@ -682,12 +682,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitQualifiedFunctionJoin(SqmFunctionJoin<?> joinedFromElement) {
 		if ( inJoinPredicate ) {
-			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+			logWithIndentation( "-> [joined-path] - '%s'", joinedFromElement.getNavigablePath() );
 		}
 		else {
 			processStanza(
 					"derived",
-					"`" + joinedFromElement.getNavigablePath() + "`",
+					"'" + joinedFromElement.getNavigablePath() + "'",
 					() -> {
 						processJoinPredicate( joinedFromElement );
 						processJoins( joinedFromElement );
@@ -700,12 +700,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitQualifiedCteJoin(SqmCteJoin<?> joinedFromElement) {
 		if ( inJoinPredicate ) {
-			logWithIndentation( "-> [joined-path] - `%s`", joinedFromElement.getNavigablePath() );
+			logWithIndentation( "-> [joined-path] - '%s'", joinedFromElement.getNavigablePath() );
 		}
 		else {
 			processStanza(
 					"cte",
-					"`" + joinedFromElement.getNavigablePath() + "`",
+					"'" + joinedFromElement.getNavigablePath() + "'",
 					() -> {
 						processJoinPredicate( joinedFromElement );
 						processJoins( joinedFromElement );
@@ -717,56 +717,56 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitBasicValuedPath(SqmBasicValuedSimplePath<?> path) {
-		logWithIndentation( "-> [basic-path] - `%s`", path.getNavigablePath() );
+		logWithIndentation( "-> [basic-path] - '%s'", path.getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> path) {
-		logWithIndentation( "-> [embedded-path] - `%s`", path.getNavigablePath() );
+		logWithIndentation( "-> [embedded-path] - '%s'", path.getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitAnyValuedValuedPath(SqmAnyValuedSimplePath<?> path) {
-		logWithIndentation( "-> [any-path] - `%s`", path.getNavigablePath() );
+		logWithIndentation( "-> [any-path] - '%s'", path.getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath<?> path) {
-		logWithIndentation( "-> [non-aggregated-composite-path] - `%s`", path.getNavigablePath() );
+		logWithIndentation( "-> [non-aggregated-composite-path] - '%s'", path.getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitFkExpression(SqmFkExpression<?> fkExpression) {
-		logWithIndentation( "-> [fk-ref] - `%s`", fkExpression.getLhs().getNavigablePath() );
+		logWithIndentation( "-> [fk-ref] - '%s'", fkExpression.getLhs().getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitDiscriminatorPath(DiscriminatorSqmPath<?> sqmPath) {
-		logWithIndentation( "-> [discriminator-path] - `%s`", sqmPath.getNavigablePath() );
+		logWithIndentation( "-> [discriminator-path] - '%s'", sqmPath.getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitEntityValuedPath(SqmEntityValuedSimplePath<?> path) {
-		logWithIndentation( "-> [entity-path] - `%s`", path.getNavigablePath() );
+		logWithIndentation( "-> [entity-path] - '%s'", path.getNavigablePath() );
 
 		return null;
 	}
 
 	@Override
 	public Object visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
-		logWithIndentation( "-> [plural-path] - `%s`", path.getNavigablePath() );
+		logWithIndentation( "-> [plural-path] - '%s'", path.getNavigablePath() );
 
 		return null;
 	}

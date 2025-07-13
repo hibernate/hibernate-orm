@@ -39,7 +39,7 @@ public class TransactionUtil2 {
 	}
 
 	public static <R> R fromSession(SessionFactoryImplementor sfi, Function<SessionImplementor,R> action) {
-		log.trace( "#inSession(SF,action)" );
+		log.trace( "#fromSession(SF,action)" );
 
 		try (SessionImplementor session = sfi.openSession()) {
 			log.trace( "Session opened, calling action" );
@@ -75,7 +75,7 @@ public class TransactionUtil2 {
 		);
 	}
 	public static <R> R fromTransaction(SessionFactoryImplementor factory, Function<SessionImplementor,R> action) {
-		log.trace( "#inTransaction(factory, action)");
+		log.trace( "#fromTransaction(factory, action)");
 
 		return fromSession(
 				factory,
@@ -133,7 +133,7 @@ public class TransactionUtil2 {
 	}
 
 	public static <R> R fromTransaction(SessionImplementor session, Function<SessionImplementor,R> action) {
-		log.trace( "inTransaction(session,action)" );
+		log.trace( "fromTransaction(session,action)" );
 
 		final Transaction txn = session.beginTransaction();
 		log.trace( "Started transaction" );

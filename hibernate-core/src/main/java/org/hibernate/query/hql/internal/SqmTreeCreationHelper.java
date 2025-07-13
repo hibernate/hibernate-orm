@@ -10,7 +10,6 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.jpa.spi.JpaCompliance;
-import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -139,7 +138,9 @@ public class SqmTreeCreationHelper {
 
 		//noinspection unchecked
 		final SqmRoot<E> sqmRoot = (SqmRoot<E>) fromRootContext.accept( sqmBuilder );
-		SqmTreeCreationLogger.LOGGER.tracef( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
+
+//		SqmTreeCreationLogger.LOGGER.tracef( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
+
 		final SqmEntityJoin<E,E> pseudoCrossJoin = new SqmEntityJoin<>(
 				sqmRoot.getManagedType(),
 				extractAlias( fromRootContext.variable(), sqmBuilder ),

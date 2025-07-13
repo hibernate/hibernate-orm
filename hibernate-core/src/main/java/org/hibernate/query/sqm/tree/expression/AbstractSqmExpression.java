@@ -10,7 +10,6 @@ import java.util.Collection;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
-import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -41,12 +40,12 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	protected void internalApplyInferableType(@Nullable SqmBindableType<?> newType) {
-		SqmTreeCreationLogger.LOGGER.tracef(
-				"Applying inferable type to SqmExpression [%s]: %s -> %s",
-				this,
-				getExpressible(),
-				newType
-		);
+//		SqmTreeCreationLogger.LOGGER.tracef(
+//				"Applying inferable type to SqmExpression [%s]: %s -> %s",
+//				this,
+//				getExpressible(),
+//				newType
+//		);
 
 		setExpressibleType( highestPrecedenceType2( newType, getExpressible() ) );
 	}

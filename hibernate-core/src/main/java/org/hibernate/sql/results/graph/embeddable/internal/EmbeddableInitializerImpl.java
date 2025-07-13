@@ -41,7 +41,6 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import static org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger.EMBEDDED_LOAD_LOGGER;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -469,7 +468,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 			data.setInstance( createCompositeInstance( data ) );
 		}
 
-		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]", navigablePath );
+//		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]", navigablePath );
 	}
 
 	private void extractRowState(EmbeddableInitializerData data) {
@@ -519,7 +518,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 				: data.concreteEmbeddableType.getInstantiator();
 		final Object instance = instantiator.instantiate( data );
 		data.setState( State.RESOLVED );
-		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]: %s", navigablePath, instance );
+//		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]: %s", navigablePath, instance );
 		return instance;
 	}
 
@@ -576,6 +575,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(" + navigablePath + ") : `" + getInitializedPart().getJavaType().getJavaTypeClass() + "`";
+		return getClass().getSimpleName() + "(" + navigablePath + ") : "
+			+ getInitializedPart().getJavaType().getJavaTypeClass().getSimpleName();
 	}
 }

@@ -120,10 +120,10 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s",
-					mutationTarget.getRolePath() );
-		}
+//		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s",
+//					mutationTarget.getRolePath() );
+//		}
 
 		final CollectionTableMapping tableMapping = mutationTarget.getCollectionTableMapping();
 		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );

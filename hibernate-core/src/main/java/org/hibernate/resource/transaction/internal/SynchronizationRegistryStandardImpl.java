@@ -50,8 +50,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void notifySynchronizationsBeforeTransactionCompletion() {
-		log.trace( "SynchronizationRegistryStandardImpl.notifySynchronizationsBeforeTransactionCompletion" );
-
+		log.trace( "Notifying Synchronizations (before completion)" );
 		if ( synchronizations != null ) {
 			for ( Synchronization synchronization : synchronizations ) {
 				try {
@@ -70,11 +69,7 @@ public class SynchronizationRegistryStandardImpl implements SynchronizationRegis
 
 	@Override
 	public void notifySynchronizationsAfterTransactionCompletion(int status) {
-		log.tracef(
-				"SynchronizationRegistryStandardImpl.notifySynchronizationsAfterTransactionCompletion(%s)",
-				status
-		);
-
+		log.tracef( "Notifying Synchronizations (after completion with status %s)", status );
 		if ( synchronizations != null ) {
 			try {
 				for ( Synchronization synchronization : synchronizations ) {

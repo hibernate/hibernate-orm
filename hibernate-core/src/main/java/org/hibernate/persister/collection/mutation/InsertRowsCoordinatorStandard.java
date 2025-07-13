@@ -118,7 +118,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.tracef( "Done inserting `%s` collection rows : %s",
+			MODEL_MUTATION_LOGGER.tracef( "Done inserting %s collection rows : %s",
 					entryCount, mutationTarget.getRolePath() );
 
 		}

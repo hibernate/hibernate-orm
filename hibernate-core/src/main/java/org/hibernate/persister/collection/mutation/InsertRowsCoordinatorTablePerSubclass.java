@@ -127,7 +127,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 			if ( loggerTraceEnabled ) {
 				MODEL_MUTATION_LOGGER.tracef(
-						"Done inserting `%s` collection rows: %s",
+						"Done inserting %s collection rows: %s",
 						entryCount,
 						mutationTarget.getRolePath()
 				);

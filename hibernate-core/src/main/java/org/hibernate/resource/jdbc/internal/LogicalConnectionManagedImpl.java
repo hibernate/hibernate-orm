@@ -133,10 +133,10 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		super.afterStatement();
 		if ( connectionHandlingMode.getReleaseMode() == AFTER_STATEMENT ) {
 			if ( getResourceRegistry().hasRegisteredResources() ) {
-				log.trace( "Skipping aggressive release of JDBC Connection after-statement due to held resources" );
+				log.trace( "Skipping aggressive JDBC connection release from 'afterStatement' due to held resources" );
 			}
 			else {
-				log.trace( "Initiating JDBC connection release from afterStatement" );
+				log.trace( "Initiating JDBC connection release from 'afterStatement'" );
 				releaseConnectionIfNeeded();
 			}
 		}
@@ -146,7 +146,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 	public void beforeTransactionCompletion() {
 		super.beforeTransactionCompletion();
 		if ( connectionHandlingMode.getReleaseMode() == BEFORE_TRANSACTION_COMPLETION ) {
-			log.trace( "Initiating JDBC connection release from beforeTransactionCompletion" );
+			log.trace( "Initiating JDBC connection release from 'beforeTransactionCompletion'" );
 			releaseConnectionIfNeeded();
 		}
 	}
@@ -159,7 +159,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 			// - AFTER_STATEMENT cases that were circumvented due to held resources
 			// - BEFORE_TRANSACTION_COMPLETION cases that were circumvented because a rollback occurred
 			//   (we don't get a beforeTransactionCompletion event on rollback).
-			log.trace( "Initiating JDBC connection release from afterTransaction" );
+			log.trace( "Initiating JDBC connection release from 'afterTransaction'" );
 			releaseConnectionIfNeeded();
 		}
 	}

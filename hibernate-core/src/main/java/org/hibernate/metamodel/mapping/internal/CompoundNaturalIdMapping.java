@@ -143,7 +143,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 			return values;
 		}
 		else {
-			throw new UnsupportedMappingException( "Could not normalize compound natural-id value: " + incoming );
+			throw new UnsupportedMappingException( "Could not normalize compound natural id value: " + incoming );
 		}
 	}
 

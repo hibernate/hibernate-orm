@@ -4523,13 +4523,6 @@ public abstract class AbstractEntityPersister
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
 		verifyHasNaturalId();
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Resolving natural-id [%s] to id : %s ",
-					Arrays.asList( naturalIdValues ),
-					infoString( this )
-			);
-		}
 		return getNaturalIdLoader().resolveNaturalIdToId( naturalIdValues, session );
 	}
 

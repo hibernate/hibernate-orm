@@ -81,7 +81,7 @@ public class EnversIntegrator implements Integrator {
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Do the registrations
-		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final EventListenerRegistry listenerRegistry = sessionFactory.getEventListenerRegistry();
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
 		if ( enversService.getEntitiesConfigurations().hasAuditedEntities() ) {

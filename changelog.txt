@@ -3,6 +3,23 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.6.Final (July 13, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34200
+
+** Bug
+    * [HHH-19604] - Session.isDirty always return true when @Immutable entity is loaded
+    * [HHH-19596] - NPE when array/collection of Struct contains null value
+    * [HHH-19582] - NullPointerException on EntityManager#clear in org.hibernate.internal.util.collections.AbstractPagedArray#clear
+    * [HHH-19542] - Embeddable in secondary table fails to recognize a nested embeddable is in the same table
+    * [HHH-19497] - Fallback implementation of IN LIST is incorrect with dangerous consequences
+    * [HHH-18774] - two bad bugs in cascade refresh
+
+** Task
+    * [HHH-19519] - Document breaking changes in new Hibernate Maven Plugin
+
+
 Changes in 7.0.5.Final (July 06, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

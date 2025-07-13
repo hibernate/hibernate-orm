@@ -18,8 +18,7 @@ import org.jboss.logging.Logger;
  */
 @SubSystemLogging(
 		name = LoaderLogging.LOGGER_NAME,
-		description = "Logging related to loaders of domain model references (`org.hibernate.loader.ast.spi.Loader`); " +
-				"see also `" + SubSystemLogging.BASE + ".results`"
+		description = "Logging related to loaders of domain model references"
 )
 @Internal
 public interface LoaderLogging {

@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
  */
 @SubSystemLogging(
 		name = ModelMutationLogging.NAME,
-		description = "Logging related to entity and collection mutations stemming from persistence-context events"
+		description = "Logging related to entity and collection mutations stemming from persistence context events"
 )
 @Internal
 public final class ModelMutationLogging {

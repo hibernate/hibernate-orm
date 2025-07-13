@@ -2804,7 +2804,7 @@ public abstract class CollectionBinder {
 
 	private void logOneToManySecondPass() {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding @OneToMany through foreign key: " + safeCollectionRole() );
+			LOG.trace( "Binding one-to-many association through foreign key: " + safeCollectionRole() );
 		}
 	}
 
@@ -2814,16 +2814,16 @@ public abstract class CollectionBinder {
 			boolean isManyToAny) {
 		if ( LOG.isTraceEnabled() ) {
 			if ( isCollectionOfEntities && isOneToMany ) {
-				LOG.trace( "Binding @OneToMany through association table: " + safeCollectionRole() );
+				LOG.trace( "Binding one-to-many association through association table: " + safeCollectionRole() );
 			}
 			else if ( isCollectionOfEntities ) {
-				LOG.trace( "Binding @ManyToMany through association table: " + safeCollectionRole() );
+				LOG.trace( "Binding many-to-many association through association table: " + safeCollectionRole() );
 			}
 			else if ( isManyToAny ) {
-				LOG.trace( "Binding @ManyToAny: " + safeCollectionRole() );
+				LOG.trace( "Binding many-to-any: " + safeCollectionRole() );
 			}
 			else {
-				LOG.trace( "Binding @ElementCollection to collection table: " + safeCollectionRole() );
+				LOG.trace( "Binding element collection to collection table: " + safeCollectionRole() );
 			}
 		}
 	}

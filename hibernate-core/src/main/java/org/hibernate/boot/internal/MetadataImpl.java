@@ -493,12 +493,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		// must not use BootstrapContext services here
 		final ServiceRegistryImplementor registry = sessionFactory.getServiceRegistry();
 		assert registry != null;
-		final ConfigurationService configurationService =
-				registry.requireService( ConfigurationService.class );
-		final ClassLoaderService classLoaderService =
-				registry.requireService( ClassLoaderService.class );
-		final EventListenerRegistry eventListenerRegistry =
-				registry.requireService( EventListenerRegistry.class );
+		final ConfigurationService configurationService = registry.requireService( ConfigurationService.class );
+		final ClassLoaderService classLoaderService = registry.requireService( ClassLoaderService.class );
+		final EventListenerRegistry eventListenerRegistry = sessionFactory.getEventListenerRegistry();
 		configurationService.getSettings().forEach( (propertyName, value) -> {
 			if ( propertyName.startsWith( EVENT_LISTENER_PREFIX ) ) {
 				final String eventTypeName = propertyName.substring( EVENT_LISTENER_PREFIX.length() + 1 );

@@ -4,8 +4,6 @@
  */
 package org.hibernate.orm.test.stateless.events;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
@@ -28,9 +26,7 @@ class CollectionListenerInStatelessSessionTest {
 
 	@Test
 	void statelessInsert(SessionFactoryScope scope) {
-		EventListenerRegistry registry =
-				scope.getSessionFactory().unwrap(SessionFactoryImplementor.class)
-						.getServiceRegistry().getService(EventListenerRegistry.class);
+		var registry = scope.getSessionFactory().getEventListenerRegistry();
 		var preRecreate = new MyPreCollectionRecreateEventListener();
 		var preRemove = new MyPreCollectionRemoveEventListener();
 		var postRecreate = new MyPostCollectionRecreateEventListener();

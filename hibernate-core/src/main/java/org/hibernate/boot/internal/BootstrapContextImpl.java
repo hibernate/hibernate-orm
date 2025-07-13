@@ -307,28 +307,43 @@ public class BootstrapContextImpl implements BootstrapContext {
 		}
 	}
 
-	void injectJpaTempClassLoader(ClassLoader jpaTempClassLoader) {
-		log.tracef( "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]", jpaTempClassLoader, this.getJpaTempClassLoader() );
-		this.classLoaderAccess.injectTempClassLoader( jpaTempClassLoader );
+	void injectJpaTempClassLoader(ClassLoader classLoader) {
+		if ( log.isTraceEnabled() && classLoader != getJpaTempClassLoader() ) {
+			log.tracef( "Injecting JPA temp ClassLoader [%s] into BootstrapContext; was [%s]",
+					classLoader, getJpaTempClassLoader() );
+		}
+		this.classLoaderAccess.injectTempClassLoader( classLoader );
 	}
 
 	void injectScanOptions(ScanOptions scanOptions) {
-		log.tracef( "Injecting ScanOptions [%s] into BootstrapContext; was [%s]", scanOptions, this.scanOptions );
+		if ( log.isTraceEnabled() && scanOptions != this.scanOptions ) {
+			log.tracef( "Injecting ScanOptions [%s] into BootstrapContext; was [%s]",
+					scanOptions, this.scanOptions );
+		}
 		this.scanOptions = scanOptions;
 	}
 
 	void injectScanEnvironment(ScanEnvironment scanEnvironment) {
-		log.tracef( "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]", scanEnvironment, this.scanEnvironment );
+		if ( log.isTraceEnabled() && scanEnvironment != this.scanEnvironment ) {
+			log.tracef( "Injecting ScanEnvironment [%s] into BootstrapContext; was [%s]",
+					scanEnvironment, this.scanEnvironment );
+		}
 		this.scanEnvironment = scanEnvironment;
 	}
 
 	void injectScanner(Scanner scanner) {
-		log.tracef( "Injecting Scanner [%s] into BootstrapContext; was [%s]", scanner, this.scannerSetting );
+		if ( log.isTraceEnabled() && scanner != this.scannerSetting ) {
+			log.tracef( "Injecting Scanner [%s] into BootstrapContext; was [%s]",
+					scanner, scannerSetting );
+		}
 		this.scannerSetting = scanner;
 	}
 
 	void injectArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {
-		log.tracef( "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]", factory, this.archiveDescriptorFactory );
+		if ( log.isTraceEnabled() && factory != archiveDescriptorFactory ) {
+			log.tracef( "Injecting ArchiveDescriptorFactory [%s] into BootstrapContext; was [%s]",
+					factory, archiveDescriptorFactory );
+		}
 		this.archiveDescriptorFactory = factory;
 	}
 

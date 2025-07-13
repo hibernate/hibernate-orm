@@ -29,6 +29,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
@@ -632,12 +633,12 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public <T> RootGraph<T> createEntityGraph(Class<T> rootType) {
+	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		return delegate.createEntityGraph( rootType );
 	}
 
 	@Override
-	public RootGraph<?> createEntityGraph(String graphName) {
+	public RootGraphImplementor<?> createEntityGraph(String graphName) {
 		return delegate.createEntityGraph( graphName );
 	}
 
@@ -647,7 +648,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public RootGraph<?> getEntityGraph(String graphName) {
+	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
 	}
 

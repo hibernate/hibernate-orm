@@ -10,7 +10,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -65,15 +64,6 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	@Override
 	SessionFactoryImplementor getSessionFactory();
-
-	@Override
-	<T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType);
-
-	@Override
-	RootGraphImplementor<?> createEntityGraph(String graphName);
-
-	@Override
-	RootGraphImplementor<?> getEntityGraph(String graphName);
 
 	@Override
 	<T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery);

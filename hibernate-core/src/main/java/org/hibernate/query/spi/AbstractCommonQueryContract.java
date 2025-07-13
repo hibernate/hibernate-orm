@@ -354,13 +354,13 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
 					//fall through to:
 				case HINT_SPEC_FETCH_GRAPH:
-					applyEntityGraphHint( hintName, value );
+					applyEntityGraphHint( GraphSemantic.FETCH, value, hintName );
 					return true;
 				case HINT_JAVAEE_LOAD_GRAPH:
 					DEPRECATION_LOGGER.deprecatedSetting( HINT_JAVAEE_LOAD_GRAPH, HINT_SPEC_LOAD_GRAPH );
 					//fall through to:
 				case HINT_SPEC_LOAD_GRAPH:
-					applyEntityGraphHint( hintName, value );
+					applyEntityGraphHint( GraphSemantic.LOAD, value, hintName );
 					return true;
 				case HINT_FETCH_PROFILE:
 					queryOptions.enableFetchProfile( (String) value );
@@ -371,17 +371,39 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		}
 	}
 
-	protected void applyEntityGraphHint(String hintName, Object value) {
-		final GraphSemantic graphSemantic = GraphSemantic.fromHintName( hintName );
+	protected void applyEntityGraphHint(GraphSemantic graphSemantic, Object value, String hintName) {
 		if ( value instanceof RootGraphImplementor<?> rootGraphImplementor ) {
 			applyGraph( rootGraphImplementor, graphSemantic );
 		}
 		else if ( value instanceof String string ) {
-			applyGraph( string, graphSemantic );
+			// try and interpret it as the name of a @NamedEntityGraph
+			final var entityGraph = getEntityGraph( string );
+			if ( entityGraph == null ) {
+				try {
+					// try and parse it in the entity graph language
+					applyGraph( string, graphSemantic );
+				}
+				catch ( IllegalArgumentException e ) {
+					throw new IllegalArgumentException( "The string value of the hint '" + hintName
+							+ "' must be the name of a named EntityGraph, or a representation understood by GraphParser" );
+				}
+			}
+			else {
+				applyGraph( entityGraph, graphSemantic );
+			}
 		}
 		else {
 			throw new IllegalArgumentException( "The value of the hint '" + hintName
-					+ "' must be an instance of EntityGraph or the string name of a named EntityGraph" );
+					+ "' must be an instance of EntityGraph, the string name of a named EntityGraph, or a string representation understood by GraphParser" );
+		}
+	}
+
+	private RootGraphImplementor<?> getEntityGraph(String string) {
+		try {
+			return getSession().getEntityGraph( string );
+		}
+		catch ( IllegalArgumentException e ) {
+			return null;
 		}
 	}
 
@@ -392,7 +414,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 			throw new IllegalArgumentException(
 					String.format(
 							ROOT,
-							"Invalid entity-graph definition `%s`; expected form `${EntityName}( ${property1} ... )",
+							"Invalid entity-graph definition '%s'; expected form '${EntityName}( ${property1} ... )'",
 							graphString
 					)
 			);

@@ -136,19 +136,18 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( resultSet );
 	}
 
-	private static void closeAll(final ResultSetsSet resultSets) {
-		if ( resultSets == null ) {
-			return;
+	private static void closeAll(ResultSetsSet resultSets) {
+		if ( resultSets != null ) {
+			resultSets.forEachResultSet( ResourceRegistryStandardImpl::close );
 		}
-		resultSets.forEachResultSet( ResourceRegistryStandardImpl::close );
 	}
 
-	private static void releaseXref(final Statement s, final ResultSetsSet r) {
-		closeAll( r );
-		close( s );
+	private static void releaseXref(Statement statement, ResultSetsSet resultSetsSet) {
+		closeAll( resultSetsSet );
+		close( statement );
 	}
 
-	private static void close(final ResultSet resultSet) {
+	private static void close(ResultSet resultSet) {
 		if ( IS_TRACE_ENABLED ) {
 			log.tracef( "Closing result set [%s]", resultSet );
 		}
@@ -225,10 +224,10 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	}
 
 	private ExtendedState getExtendedStateForWrite() {
-		if ( this.ext == null ) {
-			this.ext = new ExtendedState();
+		if ( ext == null ) {
+			ext = new ExtendedState();
 		}
-		return this.ext;
+		return ext;
 	}
 
 	private JDBCException convert(SQLException e, String s) {
@@ -242,11 +241,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void release(final Blob blob) {
-		if ( ext == null || ext.blobs == null ) {
-			log.debug( "Request to release Blob, but appears no Blobs have ever been registered" );
-			return;
+		if ( ext != null && ext.blobs != null ) {
+			ext.blobs.remove( blob );
 		}
-		ext.blobs.remove( blob );
+		else {
+			log.debug( "Request to release Blob, but appears no Blobs have ever been registered" );
+		}
 	}
 
 	@Override
@@ -256,11 +256,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 
 	@Override
 	public void release(final Clob clob) {
-		if ( ext == null || ext.clobs == null ) {
-			log.debug( "Request to release Clob, but appears no Clobs have ever been registered" );
-			return;
+		if ( ext != null && ext.clobs != null ) {
+			ext.clobs.remove( clob );
 		}
-		ext.clobs.remove( clob );
+		else {
+			log.debug( "Request to release Clob, but appears no Clobs have ever been registered" );
+		}
 	}
 
 	@Override
@@ -272,11 +273,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	@Override
 	public void release(NClob nclob) {
 		// todo : just store them in clobs?
-		if ( ext == null || ext.nclobs == null ) {
-			log.debug( "Request to release NClob, but appears no NClobs have ever been registered" );
-			return;
+		if ( ext != null && ext.nclobs != null ) {
+			ext.nclobs.remove( nclob );
 		}
-		ext.nclobs.remove( nclob );
+		else {
+			log.debug( "Request to release NClob, but appears no NClobs have ever been registered" );
+		}
 	}
 
 	@Override
@@ -318,7 +320,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		return resource != null && !resource.isEmpty();
 	}
 
-	private static boolean hasRegistered(final ArrayList resource) {
+	private static boolean hasRegistered(final ArrayList<?> resource) {
 		return resource != null && !resource.isEmpty();
 	}
 

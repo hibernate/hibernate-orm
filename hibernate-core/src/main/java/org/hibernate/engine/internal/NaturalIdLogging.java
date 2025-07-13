@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.metamodel.mapping;
+package org.hibernate.engine.internal;
 
 import org.hibernate.Internal;
 import org.hibernate.internal.log.SubSystemLogging;
@@ -25,7 +25,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
  */
 @SubSystemLogging(
 		name = NaturalIdLogging.LOGGER_NAME,
-		description = "Logging related to handling of natural-id mappings"
+		description = "Logging related to handling of natural id mappings"
 )
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 90001, max = 90100)

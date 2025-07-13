@@ -35,7 +35,7 @@ import org.jboss.logging.Logger;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
-import static org.hibernate.metamodel.mapping.NaturalIdLogging.NATURAL_ID_MESSAGE_LOGGER;
+import static org.hibernate.engine.internal.NaturalIdLogging.NATURAL_ID_MESSAGE_LOGGER;
 
 public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializable {
 	private static final Logger LOG = Logger.getLogger( NaturalIdResolutionsImpl.class );

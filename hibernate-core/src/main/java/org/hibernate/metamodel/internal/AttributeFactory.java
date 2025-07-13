@@ -443,11 +443,11 @@ public class AttributeFactory {
 		log.tracef( "Starting attribute metadata determination [%s]", propertyName );
 
 		final Member member = memberResolver.resolveMember( attributeContext, context );
-		log.tracef( "    Determined member [%s]", member );
+		log.tracef( "\tMember: %s", member );
 
 		final Value value = propertyMapping.getValue();
 		final org.hibernate.type.Type type = value.getType();
-		log.tracef( "    Determined type [name=%s, class=%s]", type.getName(), type.getClass().getName() );
+		log.tracef( "\tType: %s [%s]", type.getName(), type.getClass().getSimpleName() );
 
 		if ( type instanceof AnyType ) {
 			return new SingularAttributeMetadataImpl<>(

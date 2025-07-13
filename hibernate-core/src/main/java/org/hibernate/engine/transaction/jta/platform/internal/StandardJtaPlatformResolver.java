@@ -97,7 +97,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 		}
 
 		// Finally, return the default...
-		log.debugf( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
+		log.tracef( "Could not resolve JtaPlatform, using default [%s]", NoJtaPlatform.class.getName() );
 		return NoJtaPlatform.INSTANCE;
 	}
 }

@@ -68,7 +68,7 @@ public class SchemaManagementToolCoordinator {
 
 		if ( groupings.isEmpty() ) {
 			// no actions specified
-			log.debug( "No actions found; doing nothing" );
+			log.debug( "No schema management actions found" );
 			return;
 		}
 
@@ -751,7 +751,7 @@ public class SchemaManagementToolCoordinator {
 				}
 
 				if ( databaseActionToUse == Action.NONE &&  scriptActionToUse == Action.NONE ) {
-					log.debugf( "No schema actions specified for contributor `%s`; doing nothing", contributor );
+					log.debugf( "No schema actions specified for contributor '%s'", contributor );
 					continue;
 				}
 

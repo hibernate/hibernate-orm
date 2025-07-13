@@ -108,7 +108,7 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 				deletionCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.tracef( "Done deleting `%s` collection rows : %s",
+			MODEL_MUTATION_LOGGER.tracef( "Done deleting %s collection rows : %s",
 					deletionCount, mutationTarget.getRolePath() );
 		}
 		finally {

@@ -45,7 +45,7 @@ public abstract class AbstractPreparedStatementGroup implements PreparedStatemen
 		if ( statementDetails.toRelease() ) {
 			if ( statementDetails.getStatement() == null ) {
 				BATCH_LOGGER.debugf(
-						"PreparedStatementDetails did not contain PreparedStatement on #releaseStatements : %s",
+						"PreparedStatementDetails did not contain PreparedStatement on releaseStatements: %s",
 						statementDetails.getSqlString()
 				);
 			}

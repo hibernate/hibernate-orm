@@ -95,14 +95,15 @@ class EntityPropertyMapping {
 	}
 
 	private void logDuplicateRegistration(String path, Type existingType, Type type) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]",
-					path,
-					existingType,
-					type
-			);
-		}
+		// Disabled because this resulted in many useless messages
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracev(
+//					"Skipping duplicate registration of path [{0}], existing type = [{1}], incoming type = [{2}]",
+//					path,
+//					existingType,
+//					type
+//			);
+//		}
 	}
 
 	private void logIncompatibleRegistration(String path, Type existingType, Type type) {

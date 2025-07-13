@@ -361,7 +361,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			throw e;
 		}
 
-		LOG.trace( "Instantiated factory" );
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "Instantiated factory: " + uuid );
+		}
 	}
 
 	private EventMonitor loadEventMonitor() {

@@ -50,7 +50,7 @@ public class TransactionTimeoutTests {
 			}
 			catch (PersistenceException e) {
 				assertThat( e ).isInstanceOf( TransactionException.class );
-				assertThat( e ).hasMessageContaining( "transaction timeout expired" );
+				assertThat( e ).hasMessageContaining( "Transaction timeout expired" );
 			}
 		} );
 	}

@@ -19,7 +19,6 @@ import org.hibernate.Internal;
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.service.Service;
 import org.hibernate.type.SerializationException;
@@ -285,11 +284,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Running schema validator", id = 229)
 	void runningSchemaValidator();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Scoping types to session factory %s after already scoped %s", id = 233)
-	void scopingTypesToSessionFactoryAfterAlreadyScoped(
-			SessionFactoryImplementor factory,
-			SessionFactoryImplementor factory2);
+//	@LogMessage(level = WARN)
+//	@Message(value = "Scoping types to session factory %s after already scoped %s", id = 233)
+//	void scopingTypesToSessionFactoryAfterAlreadyScoped(
+//			SessionFactoryImplementor factory,
+//			SessionFactoryImplementor factory2);
 
 //	@LogMessage(level = WARN)
 //	@Message(value = "SQL Error: %s, SQLState: %s", id = 247)

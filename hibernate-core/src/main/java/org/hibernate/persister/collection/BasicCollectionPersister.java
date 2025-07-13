@@ -58,7 +58,6 @@ import org.hibernate.type.EntityType;
 import java.util.List;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
@@ -144,12 +143,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				&& !isInverse();
 
 		if ( !performUpdates ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"Skipping collection row updates - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection row updates - %s",
+//						getRolePath()
+//				);
+//			}
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 
@@ -158,12 +157,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertRowCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"Skipping collection inserts - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection inserts - %s",
+//						getRolePath()
+//				);
+//			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 
@@ -172,12 +171,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"Skipping collection row deletions - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection row deletions - %s",
+//						getRolePath()
+//				);
+//			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 
@@ -186,12 +185,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef(
-						"Skipping collection removals - %s",
-						getRolePath()
-				);
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef(
+//						"Skipping collection removals - %s",
+//						getRolePath()
+//				);
+//			}
 			return new RemoveCoordinatorNoOp( this );
 		}
 

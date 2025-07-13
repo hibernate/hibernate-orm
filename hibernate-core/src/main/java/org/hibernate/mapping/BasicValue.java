@@ -287,10 +287,10 @@ public class BasicValue extends SimpleValue
 			throw new IllegalArgumentException( "Incoming column was null" );
 		}
 
-		final Selectable column = getColumn();
-		if ( column == incomingColumn || column.getText().equals( incomingColumn.getText() ) ) {
-			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
-		}
+//		final Selectable column = getColumn();
+//		if ( column == incomingColumn || column.getText().equals( incomingColumn.getText() ) ) {
+//			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
+//		}
 //		else {
 //			throw new IllegalStateException(
 //					"BasicValue [" + ownerName + "." + propertyName +

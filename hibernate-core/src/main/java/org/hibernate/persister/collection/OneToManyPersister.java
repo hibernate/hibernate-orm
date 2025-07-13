@@ -76,7 +76,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import static org.hibernate.internal.util.NullnessHelper.areAllNonNull;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 
 /**
@@ -407,9 +406,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef( "Skipping collection (re)creation - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection (re)creation - %s", getRolePath() );
+//			}
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -424,9 +423,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private UpdateRowsCoordinator buildUpdateCoordinator() {
 		if ( !isRowDeleteEnabled() && !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row updates - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row updates - %s", getRolePath() );
+//			}
 			return new UpdateRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -440,9 +439,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteCoordinator() {
 		if ( !needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row deletions - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection row deletions - %s", getRolePath() );
+//			}
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 		else {
@@ -458,9 +457,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
-				MODEL_MUTATION_LOGGER.tracef( "Skipping collection removals - %s", getRolePath() );
-			}
+//			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
+//				MODEL_MUTATION_LOGGER.tracef( "Skipping collection removals - %s", getRolePath() );
+//			}
 			return new RemoveCoordinatorNoOp( this );
 		}
 		else {

@@ -47,7 +47,7 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 			String tableExpression) {
 		throw new UnknownTableReferenceException(
 				tableExpression,
-				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath
+				"TableReferences cannot be resolved relative to DerivedTableReferences - '" + tableExpression + "' : " + navigablePath
 		);
 	}
 
@@ -58,7 +58,7 @@ public abstract class DerivedTableReference extends AbstractTableReference {
 			String tableExpression) {
 		throw new UnknownTableReferenceException(
 				tableExpression,
-				"TableReferences cannot be resolved relative to DerivedTableReferences - `" + tableExpression + "` : " + navigablePath
+				"TableReferences cannot be resolved relative to DerivedTableReferences - '" + tableExpression + "' : " + navigablePath
 		);
 	}
 

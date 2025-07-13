@@ -151,6 +151,8 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		// report entering into a "transactional context"
 		transactionCoordinatorOwner.startTransactionBoundary();
 
+		log.trace( "Notifying resource-local transaction observers after begin" );
+
 		// trigger the Transaction-API-only after-begin callback
 		transactionCoordinatorOwner.afterTransactionBegin();
 
@@ -158,11 +160,10 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		for ( TransactionObserver observer : observers() ) {
 			observer.afterBegin();
 		}
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#afterBeginCallback" );
 	}
 
 	private void beforeCompletionCallback() {
-		log.trace( "ResourceLocalTransactionCoordinatorImpl#beforeCompletionCallback" );
+		log.trace( "Notifying resource-local transaction observers before completion" );
 		try {
 			transactionCoordinatorOwner.beforeTransactionCompletion();
 			synchronizationRegistry.notifySynchronizationsBeforeTransactionCompletion();
@@ -180,7 +181,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 	}
 
 	private void afterCompletionCallback(boolean successful) {
-		log.tracef( "ResourceLocalTransactionCoordinatorImpl#afterCompletionCallback(%s)", successful );
+		log.trace( "Notifying resource-local transaction observers after completion" );
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_ROLLEDBACK;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );

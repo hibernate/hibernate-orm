@@ -127,7 +127,7 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	 */
 	@Override
 	public @Nullable Boolean isUnsaved(@Nullable Object id) {
-		LOG.tracev( "ID unsaved-value: {0}", value );
+		LOG.tracef( "ID unsaved-value: %s", value );
 		return id == null || id.equals( value );
 	}
 

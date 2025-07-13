@@ -319,8 +319,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		}
 		else {
-			SQL_EXEC_LOGGER.tracef( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
-					queryCacheEnabled,
+			SQL_EXEC_LOGGER.tracef( "Skipping reading query result cache data (query cache %s, cache mode %s)",
+					queryCacheEnabled ? "enabled" : "disabled",
 					cacheMode.name()
 			);
 			cachedResults = null;

@@ -61,4 +61,12 @@ public interface JdbcBatchLogging extends BasicLogger {
 	@LogMessage(level = TRACE)
 	@Message("Executing JDBC batch (%s / %s) - [%s]")
 	void executeBatch(int batchPosition, int batchSize, String string);
+
+	@LogMessage(level = TRACE)
+	@Message("Conditionally executing JDBC batch - [%s]")
+	void conditionallyExecuteBatch(String string);
+
+	@LogMessage(level = TRACE)
+	@Message("Aborting JDBC batch - [%s]")
+	void abortBatch(String string);
 }

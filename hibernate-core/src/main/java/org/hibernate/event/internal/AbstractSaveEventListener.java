@@ -43,7 +43,9 @@ import static org.hibernate.id.IdentifierGeneratorHelper.SHORT_CIRCUIT_INDICATOR
 import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
- * A convenience base class for listeners responding to save events.
+ * A convenience base class for listeners responding to persist or merge events.
+ * <p>
+ * This class contains common functionality for persisting new transient instances.
  *
  * @author Steve Ebersole.
  */
@@ -58,13 +60,13 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Prepares the save call using the given requested id.
+	 * Prepares the persist call using the given requested id.
 	 *
-	 * @param entity The entity to be saved.
-	 * @param requestedId The id to which to associate the entity.
-	 * @param entityName The name of the entity being saved.
-	 * @param context Generally cascade-specific information.
-	 * @param source The session which is the source of this save event.
+	 * @param entity The entity to be persisted
+	 * @param requestedId The id with which to associate the entity
+	 * @param entityName The name of the entity being persisted
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of this event
 	 *
 	 * @return The id used to save the entity.
 	 */
@@ -79,18 +81,18 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Prepares the save call using a newly generated id.
+	 * Prepares the persist call using a newly generated id.
 	 *
-	 * @param entity The entity to be saved
-	 * @param entityName The entity-name for the entity to be saved
-	 * @param context Generally cascade-specific information.
-	 * @param source The session which is the source of this save event.
+	 * @param entity The entity to be persisted
+	 * @param entityName The entity-name for the entity to be persisted
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of this persist event
 	 * @param requiresImmediateIdAccess does the event context require
 	 * access to the identifier immediately after execution of this method
 	 * (if not, post-insert style id generators may be postponed if we are
 	 * outside a transaction).
 	 *
-	 * @return The id used to save the entity; may be null depending on the
+	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
 	protected Object saveWithGeneratedId(
@@ -140,10 +142,10 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	 * Generate an id before execution of the insert statements,
 	 * using the given {@link BeforeExecutionGenerator}.
 	 *
-	 * @param entity The entity instance to be saved
-	 * @param source The session which is the source of this save event.
-	 * @param generator The entity's generator
-	 * @param persister The entity's persister instance.
+	 * @param entity The entity instance to be persisted
+	 * @param source The session which is the source of this persist event
+	 * @param generator The generator for the entity id
+	 * @param persister The persister for the entity
 	 *
 	 * @return The generated id
 	 */
@@ -158,7 +160,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 			throw new IdentifierGenerationException( "Null id generated for entity '" + persister.getEntityName() + "'" );
 		}
 		else {
-			if  ( LOG.isDebugEnabled() ) {
+			if ( LOG.isTraceEnabled() ) {
 				// TODO: define toString()s for generators
 				LOG.tracef(
 						"Generated identifier [%s] using generator '%s'",
@@ -171,18 +173,18 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Prepares the save call by checking the session caches for a pre-existing
+	 * Prepares the persist call by checking the session caches for a pre-existing
 	 * entity and performing any lifecycle callbacks.
 	 *
-	 * @param entity The entity to be saved.
-	 * @param id The id by which to save the entity.
-	 * @param persister The entity's persister instance.
+	 * @param entity The entity to be persisted
+	 * @param id The id by which to persist the entity
+	 * @param persister The entity's persister instance
 	 * @param useIdentityColumn Is an identity column being used?
-	 * @param context Generally cascade-specific information.
-	 * @param source The session from which the event originated.
+	 * @param context Generally cascade-specific information
+	 * @param source The session from which the event originated
 	 * @param delayIdentityInserts Should the identity insert be delayed?
 	 *
-	 * @return The id used to save the entity; may be null depending on the
+	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and on delayIdentityInserts
 	 */
 	protected Object performSave(
@@ -211,7 +213,7 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 		}
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Saving " + infoString( persister, id, source.getFactory() ) );
+			LOG.trace( "Persisting " + infoString( persister, id, source.getFactory() ) );
 		}
 
 		final EntityKey key = useIdentityColumn ? null : entityKey( id, persister, source );
@@ -237,18 +239,18 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Performs all the actual work needed to save an entity (well to get the save moved to
-	 * the execution queue).
+	 * Performs all the actual work needed to persist an entity
+	 * (well to get the persist action moved to the execution queue).
 	 *
-	 * @param entity The entity to be saved
+	 * @param entity The entity to be persisted
 	 * @param key The id to be used for saving the entity (or null, in the case of identity columns)
-	 * @param persister The entity's persister instance.
+	 * @param persister The persister for the entity
 	 * @param useIdentityColumn Should an identity column be used for id generation?
-	 * @param context Generally cascade-specific information.
-	 * @param source The session which is the source of the current event.
+	 * @param context Generally cascade-specific information
+	 * @param source The session which is the source of the current event
 	 * @param delayIdentityInserts Should the identity insert be delayed?
 	 *
-	 * @return The id used to save the entity; may be null depending on the
+	 * @return The id used to persist the entity; may be null depending on the
 	 *         type of id generator used and the requiresImmediateIdAccess value
 	 */
 	protected Object performSaveOrReplicate(
@@ -394,10 +396,10 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * After the save, will the version number be incremented
+	 * After the persist, will the version number be incremented
 	 * if the instance is modified?
 	 *
-	 * @return True if the version will be incremented on an entity change after save;
+	 * @return True if the version will be incremented on an entity change after persist;
 	 *         false otherwise.
 	 */
 	protected boolean isVersionIncrementDisabled() {
@@ -451,11 +453,11 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Handles the calls needed to perform pre-save cascades for the given entity.
+	 * Handles the calls needed to perform pre-persist cascades for the given entity.
 	 *
-	 * @param source The session from which the save event originated.
-	 * @param persister The entity's persister instance.
-	 * @param entity The entity to be saved.
+	 * @param source The session from which the persist event originated
+	 * @param persister The persister for the entity
+	 * @param entity The entity to be persisted
 	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeBeforeSave(
@@ -482,11 +484,11 @@ public abstract class AbstractSaveEventListener<C> implements CallbackRegistryCo
 	}
 
 	/**
-	 * Handles calls needed to perform post-save cascades.
+	 * Handles calls needed to perform post-persist cascades.
 	 *
-	 * @param source The session from which the event originated.
-	 * @param persister The entity's persister instance.
-	 * @param entity The entity being saved.
+	 * @param source The session from which the event originated
+	 * @param persister The persister for the entity
+	 * @param entity The entity being persisted
 	 * @param context Generally cascade-specific data
 	 */
 	protected void cascadeAfterSave(

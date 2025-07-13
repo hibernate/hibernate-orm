@@ -15,7 +15,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
-import org.hibernate.pretty.MessageHelper;
+
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * An {@link EntityCopyObserver} implementation that allows multiple representations of
@@ -53,15 +54,10 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			Object mergeEntity2,
 			EventSource session) {
 		final String entityName = session.getEntityName( managedEntity );
-		LOG.trace(
-				String.format(
-						"More than one representation of the same persistent entity being merged for: %s",
-						MessageHelper.infoString(
-								entityName,
-								session.getIdentifier( managedEntity )
-						)
-				)
-		);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace( "More than one representation of the same persistent entity being merged for: "
+						+ infoString( entityName, session.getIdentifier( managedEntity ) ) );
+		}
 		Set<Object> detachedEntitiesForManaged = null;
 		if ( managedToMergeEntitiesXref == null ) {
 			// This is the first time multiple representations have been found;
@@ -125,7 +121,7 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 			}
 		}
 		else {
-			LOG.debug( "No entity copies merged." );
+			LOG.debug( "No entity copies merged" );
 		}
 
 		if ( managedToMergeEntitiesXref != null ) {
@@ -135,12 +131,8 @@ public final class EntityCopyAllowedLoggedObserver implements EntityCopyObserver
 				final StringBuilder sb = new StringBuilder( "Details: merged ")
 						.append( mergeEntities.size() )
 						.append( " representations of the same entity " )
-						.append(
-								MessageHelper.infoString(
-										session.getEntityName( managedEntity ),
-										session.getIdentifier( managedEntity )
-								)
-						)
+						.append( infoString( session.getEntityName( managedEntity ),
+										session.getIdentifier( managedEntity ) ) )
 						.append( " being merged: " );
 				boolean first = true;
 				for ( Object mergeEntity : mergeEntities ) {

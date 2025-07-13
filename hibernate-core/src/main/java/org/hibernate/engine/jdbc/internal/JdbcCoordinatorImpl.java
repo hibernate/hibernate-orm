@@ -17,8 +17,6 @@ import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.ResourceRegistry;
@@ -38,6 +36,7 @@ import java.sql.Statement;
 import java.util.function.Supplier;
 
 import static org.hibernate.ConnectionReleaseMode.AFTER_STATEMENT;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOGGER;
 
 /**
@@ -48,8 +47,7 @@ import static org.hibernate.engine.jdbc.batch.JdbcBatchLogging.BATCH_MESSAGE_LOG
  * @author Sanne Grinovero
  */
 public class JdbcCoordinatorImpl implements JdbcCoordinator {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcCoordinatorImpl.class );
-	private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
+	private static final boolean TRACE_ENABLED = JDBC_MESSAGE_LOGGER.isTraceEnabled();
 
 	private transient final LogicalConnectionImplementor logicalConnection;
 	private transient final JdbcSessionOwner owner;
@@ -82,7 +80,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 		this.logicalConnection = createLogicalConnection( userSuppliedConnection, owner );
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Created JdbcCoordinator @%s", hashCode() );
+			JDBC_MESSAGE_LOGGER.createdJdbcCoordinator( hashCode() );
 		}
 	}
 
@@ -105,7 +103,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		this.owner = owner;
 		this.jdbcServices = owner.getJdbcSessionContext().getJdbcServices();
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Created JdbcCoordinator @%s", hashCode() );
+			JDBC_MESSAGE_LOGGER.createdJdbcCoordinator( hashCode() );
 		}
 	}
 
@@ -149,12 +147,12 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public Connection close() {
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Closing JdbcCoordinator @%s", hashCode() );
+			JDBC_MESSAGE_LOGGER.closingJdbcCoordinator( hashCode() );
 		}
 		Connection connection;
 		try {
 			if ( currentBatch != null ) {
-				LOG.closingUnreleasedBatch();
+				JDBC_MESSAGE_LOGGER.closingUnreleasedBatch( hashCode() );
 				currentBatch.release();
 			}
 		}
@@ -275,15 +273,14 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	public void afterStatementExecution() {
 		final ConnectionReleaseMode connectionReleaseMode = connectionReleaseMode();
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Statement execution complete (connection release mode %s) in JdbcCoordinator @%s",
-					connectionReleaseMode, hashCode() );
+			JDBC_MESSAGE_LOGGER.statementExecutionComplete( connectionReleaseMode, hashCode() );
 		}
 		if ( connectionReleaseMode == AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
-				LOG.debug( "Skipping aggressive release due to manual disabling" );
+				JDBC_MESSAGE_LOGGER.trace( "Skipping aggressive release due to manual disabling" );
 			}
 			else if ( hasRegisteredResources() ) {
-				LOG.debug( "Skipping aggressive release due to registered resources" );
+				JDBC_MESSAGE_LOGGER.trace( "Skipping aggressive release due to registered resources" );
 			}
 			else {
 				getLogicalConnection().afterStatement();
@@ -384,7 +381,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransactionBegin() {
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Transaction after begin in JdbcCoordinator @%s", hashCode() );
+			JDBC_MESSAGE_LOGGER.transactionAfterBegin( hashCode() );
 		}
 		owner.afterTransactionBegin();
 	}
@@ -392,7 +389,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void beforeTransactionCompletion() {
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Transaction before completion in JdbcCoordinator @%s", hashCode() );
+			JDBC_MESSAGE_LOGGER.transactionBeforeCompletion( hashCode() );
 		}
 		owner.beforeTransactionCompletion();
 		logicalConnection.beforeTransactionCompletion();
@@ -401,7 +398,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public void afterTransactionCompletion(boolean successful, boolean delayed) {
 		if ( TRACE_ENABLED ) {
-			LOG.tracef( "Transaction after %s completion in JdbcCoordinator @%s",
+			JDBC_MESSAGE_LOGGER.transactionAfterCompletion(
 					successful ? "successful" : "unsuccessful",
 					hashCode() );
 		}

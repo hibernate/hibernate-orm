@@ -78,27 +78,27 @@ public interface CoreMessageLogger extends BasicLogger {
 	void callingJoinTransactionOnNonJtaEntityManager();
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Instantiating factory with settings: %s", id = 30)
-	void instantiatingFactory(Map<String, Object> settings);
+	@Message(value = "Instantiating factory [%s] with settings: %s", id = 30)
+	void instantiatingFactory(String uuid, Map<String, Object> settings);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Closing factory", id = 31)
-	void closingFactory();
+	@Message(value = "Closing factory [%s]", id = 31)
+	void closingFactory(String uuid);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Serializing factory: %s", id = 32)
+	@Message(value = "Serializing factory [%s]", id = 32)
 	void serializingFactory(String uuid);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Deserialized factory: %s", id = 33)
+	@Message(value = "Deserialized factory [%s]", id = 33)
 	void deserializedFactory(String uuid);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Composite-id class does not override equals(): %s", id = 38)
+	@Message(value = "Composite id class does not override equals(): %s", id = 38)
 	void compositeIdClassDoesNotOverrideEquals(String name);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Composite-id class does not override hashCode(): %s", id = 39)
+	@Message(value = "Composite id class does not override hashCode(): %s", id = 39)
 	void compositeIdClassDoesNotOverrideHashCode(String name);
 
 	@LogMessage(level = WARN)
@@ -503,10 +503,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Write locks via update not supported for non-versioned entities [%s]", id = 416)
 	void writeLocksNotSupported(String entityName);
-
-	@LogMessage(level = DEBUG)
-	@Message(value = "Closing unreleased batch", id = 420)
-	void closingUnreleasedBatch();
 
 	@LogMessage(level = WARN)
 	@Message(

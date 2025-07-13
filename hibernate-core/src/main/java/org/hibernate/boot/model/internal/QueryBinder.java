@@ -81,7 +81,8 @@ public abstract class QueryBinder {
 			}
 
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracef( "Binding named query: %s => %s", queryName, queryString );
+				LOG.tracef( "Binding named query '%s' to [%s]", queryName,
+						queryString.replace( '\n', ' ' ) );
 			}
 
 			final QueryHintDefinition hints = new QueryHintDefinition( queryName, namedQuery.hints() );
@@ -141,9 +142,9 @@ public abstract class QueryBinder {
 				createNamedQueryDefinition( registrationName, queryString, resultClass, resultSetMappingName, hints, location );
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Binding named native query: %s => %s",
+			LOG.tracef( "Binding named native query '%s' to [%s]",
 					queryDefinition.getRegistrationName(),
-					queryDefinition.getSqlQueryString() );
+					queryDefinition.getSqlQueryString().replace( '\n', ' ' ) );
 		}
 
 		if ( isDefault ) {
@@ -234,9 +235,9 @@ public abstract class QueryBinder {
 		final NamedNativeQueryDefinition<?> queryDefinition = builder.build();
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(
-					"Binding named native query: %s => %s",
+					"Binding named native query '%' to [%s]",
 					queryDefinition.getRegistrationName(),
-					queryDefinition.getSqlQueryString()
+					queryDefinition.getSqlQueryString().replace( '\n', ' ' )
 			);
 		}
 		context.getMetadataCollector().addNamedNativeQuery( queryDefinition );
@@ -390,9 +391,9 @@ public abstract class QueryBinder {
 		final NamedHqlQueryDefinitionImpl<?> hqlQueryDefinition = builder.build();
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef( "Binding named query: %s => %s",
+			LOG.tracef( "Binding named query '%s' to [%s]",
 					hqlQueryDefinition.getRegistrationName(),
-					hqlQueryDefinition.getHqlString() );
+					hqlQueryDefinition.getHqlString().replace( '\n', ' ' ) );
 		}
 
 		context.getMetadataCollector().addNamedQuery( hqlQueryDefinition );

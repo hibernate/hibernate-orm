@@ -180,7 +180,7 @@ public class EntityBinder {
 			Map<ClassDetails, InheritanceState> inheritanceStates,
 			MetadataBuildingContext context) {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Binding entity from annotated class: " + clazzToProcess.getName() );
+			LOG.trace( "Binding entity with annotated class: " + clazzToProcess.getName() );
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();

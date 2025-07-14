@@ -116,7 +116,7 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		if ( systemID != null ) {
 			// technically, "classpath://..." identifiers should only be declared as SYSTEM identifiers
 			if ( systemID.startsWith( CLASSPATH_EXTENSION_URL_BASE ) ) {
-				log.tracef( "Recognized `classpath:` identifier; attempting to resolve on classpath [%s]", systemID );
+				log.tracef( "Recognized 'classpath:' identifier; attempting to resolve on classpath [%s]", systemID );
 				final String path = systemID.substring( CLASSPATH_EXTENSION_URL_BASE.length() );
 				// todo : for this to truly work consistently, we need access to ClassLoaderService
 				final InputStream stream = resolveInLocalNamespace( path );

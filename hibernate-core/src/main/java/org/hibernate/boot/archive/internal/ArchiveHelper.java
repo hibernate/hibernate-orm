@@ -26,8 +26,8 @@ public class ArchiveHelper {
 	private static final Logger log = Logger.getLogger( ArchiveHelper.class );
 
 	/**
-	 * Get the JAR URL of the JAR containing the given entry
-	 * Method used in a non managed environment
+	 * Get the JAR URL of the JAR containing the given entry.
+	 * Method used in a non-managed environment.
 	 *
 	 * @param url URL pointing to the known file in the JAR
 	 * @param entry file known to be in the JAR

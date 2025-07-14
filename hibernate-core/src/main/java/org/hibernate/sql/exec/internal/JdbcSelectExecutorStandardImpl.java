@@ -273,13 +273,13 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final QueryKey queryResultsCacheKey;
 		final List<?> cachedResults;
 		if ( cacheable && cacheMode.isGetEnabled() ) {
-			SQL_EXEC_LOGGER.tracef( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
+			SQL_EXEC_LOGGER.tracef( "Reading query result cache data [%s]", cacheMode.name() );
 			final Set<String> querySpaces = jdbcSelect.getAffectedTableNames();
 			if ( querySpaces == null || querySpaces.isEmpty() ) {
-				SQL_EXEC_LOGGER.tracef( "Unexpected querySpaces is empty" );
+				SQL_EXEC_LOGGER.tracef( "Affected query spaces unexpectedly empty" );
 			}
 			else {
-				SQL_EXEC_LOGGER.tracef( "querySpaces is `%s`", querySpaces );
+				SQL_EXEC_LOGGER.tracef( "Affected query spaces %s", querySpaces );
 			}
 
 			final QueryResultsCache queryCache = factory.getCache()

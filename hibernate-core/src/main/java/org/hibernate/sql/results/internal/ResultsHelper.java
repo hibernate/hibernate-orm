@@ -109,15 +109,8 @@ public class ResultsHelper {
 		}
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracef(
-					"Collection fully initialized: %s",
-					collectionInfoString(
-							collectionDescriptor,
-							collectionInstance,
-							key,
-							session
-					)
-			);
+			LOG.trace( "Collection fully initialized: "
+					+ collectionInfoString( collectionDescriptor, collectionInstance, key, session ) );
 		}
 
 		final StatisticsImplementor statistics = session.getFactory().getStatistics();

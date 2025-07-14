@@ -36,6 +36,7 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * {@link CollectionBatchLoader} using a SQL {@code ARRAY} parameter to pass the key values.
@@ -60,7 +61,7 @@ public class CollectionBatchLoaderArrayParam
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Using ARRAY batch fetching strategy for collection `%s` : %s",
+					"Batch fetching enabled for collection '%s' using ARRAY strategy with batch size %s",
 					attributeMapping.getNavigableRole().getFullPath(),
 					domainBatchSize
 			);
@@ -116,10 +117,8 @@ public class CollectionBatchLoaderArrayParam
 			SharedSessionContractImplementor session,
 			ForeignKeyDescriptor keyDescriptor) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Batch fetching collection: %s.%s",
-					getLoadable().getNavigableRole().getFullPath(), keyBeingLoaded
-			);
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching collection: "
+					+ collectionInfoString( getLoadable().getNavigableRole().getFullPath(), keyBeingLoaded ) );
 		}
 
 		final int length = getDomainBatchSize();
@@ -168,12 +167,9 @@ public class CollectionBatchLoaderArrayParam
 	@Override
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
-					getLoadable().getNavigableRole().getFullPath(),
-					key,
-					keysToInitialize
-			);
+			MULTI_KEY_LOAD_LOGGER.tracef( "Collection keys to initialize via batch fetching (%s) %s",
+					collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
+					keysToInitialize );
 		}
 
 		assert jdbcSelectOperation != null;

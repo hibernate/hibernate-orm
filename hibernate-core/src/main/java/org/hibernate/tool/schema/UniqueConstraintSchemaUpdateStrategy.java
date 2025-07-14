@@ -45,7 +45,7 @@ public enum UniqueConstraintSchemaUpdateStrategy {
 	}
 
 	public static UniqueConstraintSchemaUpdateStrategy interpret(Object setting) {
-		log.tracef( "Interpreting UniqueConstraintSchemaUpdateStrategy from setting : %s", setting );
+		log.tracef( "Interpreting UniqueConstraintSchemaUpdateStrategy from setting: %s", setting );
 
 		if ( setting == null ) {
 			// default

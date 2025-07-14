@@ -1160,7 +1160,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final List<ColumnReference> columnReferences = assignable.getColumnReferences();
 		final Expression assignedValue = assignment.getAssignedValue();
 		if ( columnReferences.size() == 1 ) {
-			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendColumn( columnReferences.get( 0 ) );
 			appendSql( '=' );
 			final SqlTuple sqlTuple = getSqlTuple( assignedValue );
 			if ( sqlTuple != null ) {
@@ -1175,7 +1175,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			char separator = OPEN_PARENTHESIS;
 			for ( ColumnReference columnReference : columnReferences ) {
 				appendSql( separator );
-				columnReference.appendColumnForWrite( this, null );
+				appendColumn( columnReference );
 				separator = COMMA_SEPARATOR_CHAR;
 			}
 			appendSql( ")=" );
@@ -1184,7 +1184,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			assert assignedValue instanceof SqlTupleContainer;
 			final List<? extends Expression> expressions = ( (SqlTupleContainer) assignedValue ).getSqlTuple().getExpressions();
-			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendColumn( columnReferences.get( 0 ) );
 			appendSql( '=' );
 			expressions.get( 0 ).accept( this );
 			for ( int i = 1; i < columnReferences.size(); i++ ) {
@@ -1194,6 +1194,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				expressions.get( i ).accept( this );
 			}
 		}
+	}
+
+	protected void appendColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				affectedTableNames.size() > 1 ? determineColumnReferenceQualifier( column ) : null
+		);
 	}
 
 	protected void visitSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {

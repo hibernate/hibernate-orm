@@ -63,7 +63,7 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			Object currentVersion,
 			Object previousVersion) {
 //		log.debugf( "Illegal attempt to update item cached as read-only [%s]", key );
-		throw new UnsupportedOperationException( "Can't update readonly object" );
+		throw new UnsupportedOperationException( "Can't update read-only object" );
 	}
 
 	@Override
@@ -75,6 +75,6 @@ public class EntityReadOnlyAccess extends AbstractEntityDataAccess {
 			Object previousVersion,
 			SoftLock lock) {
 //		log.debugf( "Illegal attempt to update item cached as read-only [%s]", key );
-		throw new UnsupportedOperationException( "Can't write to a readonly object" );
+		throw new UnsupportedOperationException( "Can't write to a read-only object" );
 	}
 }

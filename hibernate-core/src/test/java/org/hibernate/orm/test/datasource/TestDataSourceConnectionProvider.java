@@ -17,6 +17,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Map;
 import java.util.logging.Logger;
 
+@SuppressWarnings( "unused" ) // used by DatasourceTest in this package
 public class TestDataSourceConnectionProvider
 		extends DatasourceConnectionProviderImpl
 		implements ServiceRegistryAwareService {

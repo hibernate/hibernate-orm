@@ -422,4 +422,12 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTran
 		appendSql( ")" );
 	}
 
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
+	}
 }

@@ -459,4 +459,12 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransl
 		appendSql( "tr" );
 	}
 
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
+	}
 }

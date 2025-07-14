@@ -21,8 +21,8 @@ import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
- * The standard implementation of the Hibernate QueryCache interface.  Works
- * hind-in-hand with {@link TimestampsCache} to help in recognizing
+ * The standard implementation of the {@link QueryResultsCache} interface.
+ * Works in conjunction with {@link TimestampsCache} to help in recognizing
  * stale query results.
  *
  * @author Gavin King

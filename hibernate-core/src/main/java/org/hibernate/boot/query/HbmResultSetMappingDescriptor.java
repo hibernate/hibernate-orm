@@ -105,7 +105,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			if ( hbmValueMapping == null ) {
 				throw new IllegalStateException(
-						"ValueMappingSources contained null reference(s)"
+						"ValueMappingSources contained null reference"
 				);
 			}
 
@@ -138,7 +138,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 			else {
 				throw new IllegalArgumentException(
-						"Unknown NativeQueryReturn type : " + hbmValueMapping.getClass().getName()
+						"Unknown NativeQueryReturn type: " + hbmValueMapping.getClass().getName()
 				);
 			}
 		}
@@ -158,13 +158,13 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			Map<String, HbmFetchParent> fetchParentByAlias,
 			String registrationName,
 			MetadataBuildingContext context) {
-		// property path is in the form `{ownerAlias}.{joinedPath}`.  Split it into the 2 parts
+		// property path is in the form {ownerAlias}.{joinedPath}. Split it into the 2 parts.
 		final String fullPropertyPath = jaxbHbmJoin.getProperty();
 		final int firstDot = fullPropertyPath.indexOf( '.' );
 		if ( firstDot < 1 ) {
 			throw new MappingException(
-					"Illegal <return-join/> property attribute: `" + fullPropertyPath + "`.  Should"
-					+ "be in the form `{ownerAlias.joinedPropertyPath}` (" + registrationName + ")"
+					"Illegal <return-join/> property attribute: '" + fullPropertyPath + "' - "
+					+ " - should be in the form '{ownerAlias.joinedPropertyPath}' (" + registrationName + ")"
 			);
 		}
 
@@ -182,8 +182,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		final JoinDescriptor existing = joinDescriptorsForAlias.get( propertyPath );
 		if ( existing != null ) {
 			throw new MappingException(
-					"Property join specified twice for join-return `" + ownerTableAlias + "." + propertyPath
-							+ "` (" + registrationName + ")"
+					"Property join specified twice for join-return '" + ownerTableAlias + "." + propertyPath
+							+ "' (" + registrationName + ")"
 			);
 		}
 
@@ -200,8 +200,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 
 	/**
-	 * Constructor for an implicit resultset mapping defined inline as part of a `&lt;sql-query/&gt;`
-	 * stanza
+	 * Constructor for an implicit resultset mapping defined inline
+	 * as part of a '&lt;sql-query/&gt;' stanza.
 	 */
 	public HbmResultSetMappingDescriptor(
 			String registrationName,
@@ -269,7 +269,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// `hbm.xml` returns
+	// hbm.xml returns
 
 	public interface HbmFetchDescriptor extends FetchDescriptor {
 		String getFetchablePath();
@@ -722,8 +722,8 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final int firstDot = fullPropertyPath.indexOf( '.' );
 			if ( firstDot < 1 ) {
 				throw new MappingException(
-						"Illegal <return-join/> property attribute: `" + fullPropertyPath + "`.  Should"
-						+ "be in the form `{ownerAlias.joinedPropertyPath}`"
+						"Illegal <return-join/> property attribute: '" + fullPropertyPath + "'"
+						+ " - should be in the form '{ownerAlias.joinedPropertyPath}'"
 				);
 			}
 

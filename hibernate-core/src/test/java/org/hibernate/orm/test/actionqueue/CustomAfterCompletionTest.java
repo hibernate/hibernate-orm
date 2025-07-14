@@ -36,6 +36,7 @@ public class CustomAfterCompletionTest extends BaseCoreFunctionalTestCase {
 					called.set( true );
 				}
 			} );
+
 			Assert.assertFalse( called.get() );
 			inTransaction( session, theSession -> {
 				theSession.persist( new SimpleEntity( "jack" ) );

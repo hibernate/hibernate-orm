@@ -16,13 +16,14 @@ import javax.xml.transform.dom.DOMSource;
 
 import org.hibernate.boot.MappingNotFoundException;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
-import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 import org.w3c.dom.Document;
+
+import static org.hibernate.boot.jaxb.JaxbLogger.JAXB_LOGGER;
 
 /**
  * Helper for building and handling {@link XmlSource} references.
@@ -38,7 +39,7 @@ public class XmlSources {
 	 * Create an {@link XmlSource} from a named resource
 	 */
 	public static XmlSource fromResource(String resourceName, ClassLoaderService classLoaderService) {
-		JaxbLogger.JAXB_LOGGER.tracef( "reading mappings from resource : %s", resourceName );
+		JAXB_LOGGER.tracef( "Reading mappings from resource: %s", resourceName );
 
 		final Origin origin = new Origin( SourceType.RESOURCE, resourceName );
 		final URL url = classLoaderService.locateResource( resourceName );
@@ -54,7 +55,7 @@ public class XmlSources {
 	 */
 	public static XmlSource fromUrl(URL url) {
 		final String urlExternalForm = url.toExternalForm();
-		JaxbLogger.JAXB_LOGGER.tracef( "Reading mapping document from URL : %s", urlExternalForm );
+		JAXB_LOGGER.tracef( "Reading mapping document from URL: %s", urlExternalForm );
 
 		final Origin origin = new Origin( SourceType.URL, urlExternalForm );
 		return new UrlXmlSource( origin, url );
@@ -62,7 +63,7 @@ public class XmlSources {
 
 	public static XmlSource fromFile(File file) {
 		final String filePath = file.getPath();
-		JaxbLogger.JAXB_LOGGER.tracef( "reading mappings from file : %s", filePath );
+		JAXB_LOGGER.tracef( "Reading mappings from file: %s", filePath );
 
 		final Origin origin = new Origin( SourceType.FILE, filePath );
 
@@ -87,7 +88,7 @@ public class XmlSources {
 
 	public static XmlSource fromCacheableFile(File file, File cacheableDir, boolean strict) {
 		final String filePath = file.getPath();
-		JaxbLogger.JAXB_LOGGER.tracef( "reading mappings from cacheable-file : %s", filePath );
+		JAXB_LOGGER.tracef( "Reading mappings from cacheable file: %s", filePath );
 
 		final Origin origin = new Origin( SourceType.FILE, filePath );
 		return new CacheableFileXmlSource( origin, file, cacheableDir, strict );
@@ -95,21 +96,21 @@ public class XmlSources {
 
 	public static XmlSource fromStream(InputStreamAccess inputStreamAccess) {
 		final String streamName = inputStreamAccess.getStreamName();
-		JaxbLogger.JAXB_LOGGER.tracef( "reading mappings from InputStreamAccess : %s", streamName );
+		JAXB_LOGGER.tracef( "Reading mappings from InputStreamAccess: %s", streamName );
 
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, streamName );
 		return new InputStreamAccessXmlSource( origin, inputStreamAccess );
 	}
 
 	public static XmlSource fromStream(InputStream inputStream) {
-		JaxbLogger.JAXB_LOGGER.trace( "reading mappings from InputStream" );
+		JAXB_LOGGER.trace( "reading mappings from InputStream" );
 
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		return new InputStreamXmlSource( origin, inputStream, false );
 	}
 
 	public static XmlSource fromDocument(Document document) {
-		JaxbLogger.JAXB_LOGGER.trace( "reading mappings from DOM" );
+		JAXB_LOGGER.trace( "reading mappings from DOM" );
 		final Origin origin = new Origin( SourceType.DOM, Origin.UNKNOWN_FILE_PATH );
 		return new JaxpSourceXmlSource( origin, new DOMSource( document ) );
 	}
@@ -125,7 +126,7 @@ public class XmlSources {
 	 * @param consumer a consumer of the resulting {@linkplain XmlSource XML sources}
 	 */
 	public static void fromJar(File jar, Consumer<XmlSource> consumer) {
-		JaxbLogger.JAXB_LOGGER.tracef( "Seeking mapping documents in jar file : %s", jar.getName() );
+		JAXB_LOGGER.tracef( "Seeking mapping documents in jar file: %s", jar.getName() );
 
 		final Origin origin = new Origin( SourceType.JAR, jar.getAbsolutePath() );
 
@@ -134,7 +135,7 @@ public class XmlSources {
 			while ( entries.hasMoreElements() ) {
 				final JarEntry jarEntry = entries.nextElement();
 				if ( jarEntry.getName().endsWith(".hbm.xml") ) {
-					JaxbLogger.JAXB_LOGGER.tracef( "Found hbm.xml mapping in jar : %s", jarEntry.getName() );
+					JAXB_LOGGER.tracef( "Found 'hbm.xml' mapping in jar: %s", jarEntry.getName() );
 					consumer.accept( new JarFileEntryXmlSource( origin, jarFile, jarEntry ) );
 				}
 			}

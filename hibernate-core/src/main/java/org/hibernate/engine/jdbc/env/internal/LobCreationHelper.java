@@ -86,7 +86,7 @@ public class LobCreationHelper {
 				clob.free();
 			}
 			catch (Throwable e) {
-				LOB_LOGGER.tracef( "Unable to free CLOB created to test createClob() implementation : %s", e );
+				LOB_LOGGER.tracef( "Unable to free CLOB created to test createClob() implementation: %s", e );
 			}
 			return true;
 		}
@@ -104,7 +104,7 @@ public class LobCreationHelper {
 				clob.free();
 			}
 			catch (Throwable e) {
-				LOB_LOGGER.tracef( "Unable to free NCLOB created to test createNClob() implementation : %s", e );
+				LOB_LOGGER.tracef( "Unable to free NCLOB created to test createNClob() implementation: %s", e );
 			}
 			return true;
 		}

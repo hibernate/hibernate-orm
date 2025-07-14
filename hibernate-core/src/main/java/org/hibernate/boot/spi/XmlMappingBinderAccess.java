@@ -56,7 +56,7 @@ public class XmlMappingBinderAccess {
 	 * Create a {@linkplain Binding binding} from a named URL resource
 	 */
 	public Binding<JaxbBindableMappingDescriptor> bind(String resource) {
-		LOG.tracef( "reading mappings from resource : %s", resource );
+		LOG.tracef( "Reading mappings from resource: %s", resource );
 		final Origin origin = new Origin( SourceType.RESOURCE, resource );
 		final URL url = classLoaderService.locateResource( resource );
 		if ( url == null ) {
@@ -70,7 +70,7 @@ public class XmlMappingBinderAccess {
 	 */
 	public Binding<JaxbBindableMappingDescriptor> bind(File file) {
 		final Origin origin = new Origin( SourceType.FILE, file.getPath() );
-		LOG.tracef( "reading mappings from file : %s", origin.getName() );
+		LOG.tracef( "Reading mappings from file: %s", origin.getName() );
 		if ( !file.exists() ) {
 			throw new MappingNotFoundException( origin );
 		}
@@ -81,7 +81,7 @@ public class XmlMappingBinderAccess {
 	 * Create a {@linkplain Binding binding} from an input stream
 	 */
 	public Binding<JaxbBindableMappingDescriptor> bind(InputStreamAccess xmlInputStreamAccess) {
-		LOG.tracef( "reading mappings from InputStreamAccess : %s", xmlInputStreamAccess.getStreamName() );
+		LOG.tracef( "Reading mappings from InputStreamAccess: %s", xmlInputStreamAccess.getStreamName() );
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, xmlInputStreamAccess.getStreamName() );
 		final InputStream xmlInputStream = xmlInputStreamAccess.accessInputStream();
 		try {
@@ -101,7 +101,7 @@ public class XmlMappingBinderAccess {
 	 * Create a {@linkplain Binding binding} from an input stream
 	 */
 	public Binding<JaxbBindableMappingDescriptor> bind(InputStream xmlInputStream) {
-		LOG.trace( "reading mappings from InputStream" );
+		LOG.trace( "Reading mappings from InputStream" );
 		final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
 		return new InputStreamXmlSource( origin, xmlInputStream, false ).doBind( getMappingBinder() );
 	}

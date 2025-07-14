@@ -100,7 +100,7 @@ public class LoaderHelper {
 					else {
 						throw new IllegalStateException( String.format(
 								"Trying to lock versioned entity %s but found null version",
-								infoString( persister.getEntityName(), entry.getId() )
+								infoString( persister, entry.getId() )
 						) );
 					}
 				}

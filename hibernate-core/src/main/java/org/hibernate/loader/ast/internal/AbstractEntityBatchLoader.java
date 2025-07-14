@@ -47,7 +47,7 @@ public abstract class AbstractEntityBatchLoader<T>
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching entity: "
-					+ infoString( getLoadable().getEntityName(), id ) );
+					+ infoString( getLoadable(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
@@ -62,7 +62,7 @@ public abstract class AbstractEntityBatchLoader<T>
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching entity: "
-					+ infoString( getLoadable().getEntityName(), id ) );
+					+ infoString( getLoadable(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );

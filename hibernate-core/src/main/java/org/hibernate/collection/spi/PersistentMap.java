@@ -528,6 +528,11 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		protected final K getIndex() {
 			return index;
 		}
+		
+		@Override
+		public Object getAddedEntry() {
+			return Map.entry( getIndex(), getAddedInstance() );
+		}
 	}
 
 	final class Put extends AbstractMapValueDelayedOperation {

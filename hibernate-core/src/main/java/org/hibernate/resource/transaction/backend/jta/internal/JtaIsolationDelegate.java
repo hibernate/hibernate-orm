@@ -21,12 +21,12 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
  * An isolation delegate for JTA environments.
@@ -34,7 +34,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
  * @author Andrea Boriero
  */
 public class JtaIsolationDelegate implements IsolationDelegate {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JtaIsolationDelegate.class );
 
 	private final JdbcConnectionAccess connectionAccess;
 	private final BiFunction<SQLException, String, JDBCException> sqlExceptionConverter;
@@ -115,7 +114,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 			// First we suspend any current JTA transaction
 			final Transaction surroundingTransaction = transactionManager.suspend();
 			if ( surroundingTransaction != null ) {
-				LOG.tracef( "Surrounding JTA transaction suspended [%s]", surroundingTransaction );
+				JTA_LOGGER.transactionSuspended( surroundingTransaction );
 			}
 
 			try {
@@ -128,7 +127,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 				try {
 					if ( surroundingTransaction != null ) {
 						transactionManager.resume( surroundingTransaction );
-						LOG.tracef( "Surrounding JTA transaction resumed [%s]", surroundingTransaction );
+						JTA_LOGGER.transactionResumed( surroundingTransaction );
 					}
 				}
 				catch ( Throwable t2 ) {
@@ -165,7 +164,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 					transactionManager.rollback();
 				}
 				catch ( Exception exception ) {
-					LOG.unableToRollbackIsolatedTransaction( e, exception );
+					JTA_LOGGER.unableToRollbackIsolatedTransaction( e, exception );
 				}
 				throw new HibernateException( "Could not apply work", e );
 			}
@@ -195,7 +194,7 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 					jdbcConnectionAccess().releaseConnection( connection );
 				}
 				catch ( Throwable throwable ) {
-					LOG.unableToReleaseIsolatedConnection( throwable );
+					JTA_LOGGER.unableToReleaseIsolatedConnection( throwable );
 				}
 			}
 		}

@@ -7,10 +7,10 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 import jakarta.transaction.SystemException;
 import jakarta.transaction.TransactionManager;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.TransactionException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
  * JtaTransactionAdapter for coordinating with the JTA TransactionManager
@@ -18,7 +18,6 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * @author Steve Ebersole
  */
 public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransactionAdapter {
-	private static final Logger log = Logger.getLogger( JtaTransactionAdapterTransactionManagerImpl.class );
 
 	private final TransactionManager transactionManager;
 
@@ -32,17 +31,17 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 	public void begin() {
 		try {
 			if ( getStatus() == TransactionStatus.NOT_ACTIVE ) {
-				log.trace( "Calling TransactionManager#begin" );
+				JTA_LOGGER.callingTransactionManagerBegin();
 				transactionManager.begin();
 				initiator = true;
-				log.trace( "Called TransactionManager#begin" );
+				JTA_LOGGER.calledTransactionManagerBegin();
 			}
 			else {
-				log.trace( "Skipping TransactionManager#begin due to already active transaction" );
+				JTA_LOGGER.skippingTransactionManagerBegin();
 			}
 		}
 		catch (Exception e) {
-			throw new TransactionException( "JTA TransactionManager#begin failed", e );
+			throw new TransactionException( "JTA TransactionManager.begin() failed", e );
 		}
 	}
 
@@ -51,16 +50,16 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling TransactionManager#commit" );
+				JTA_LOGGER.callingTransactionManagerCommit();
 				transactionManager.commit();
-				log.trace( "Called TransactionManager#commit" );
+				JTA_LOGGER.calledTransactionManagerCommit();
 			}
 			else {
-				log.trace( "Skipping TransactionManager#commit due to not being initiator" );
+				JTA_LOGGER.skippingTransactionManagerCommit();
 			}
 		}
 		catch (Exception e) {
-			throw new TransactionException( "JTA TransactionManager#commit failed", e );
+			throw new TransactionException( "JTA TransactionManager.commit() failed", e );
 		}
 	}
 
@@ -69,16 +68,16 @@ public class JtaTransactionAdapterTransactionManagerImpl implements JtaTransacti
 		try {
 			if ( initiator ) {
 				initiator = false;
-				log.trace( "Calling TransactionManager#rollback" );
+				JTA_LOGGER.callingTransactionManagerRollback();
 				transactionManager.rollback();
-				log.trace( "Called TransactionManager#rollback" );
+				JTA_LOGGER.calledTransactionManagerRollback();
 			}
 			else {
 				markRollbackOnly();
 			}
 		}
 		catch (Exception e) {
-			throw new TransactionException( "JTA TransactionManager#rollback failed", e );
+			throw new TransactionException( "JTA TransactionManager.rollback() failed", e );
 		}
 	}
 

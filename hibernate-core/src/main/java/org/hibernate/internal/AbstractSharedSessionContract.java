@@ -644,19 +644,15 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public void joinTransaction() {
 		checkOpen();
-		if ( !transactionCoordinator.getTransactionCoordinatorBuilder().isJta() ) {
-			log.callingJoinTransactionOnNonJtaEntityManager();
+		try {
+			// For a non-JTA TransactionCoordinator, this just logs a WARNing
+			transactionCoordinator.explicitJoin();
 		}
-		else {
-			try {
-				transactionCoordinator.explicitJoin();
-			}
-			catch ( TransactionRequiredForJoinException e ) {
-				throw new TransactionRequiredException( e.getMessage() );
-			}
-			catch ( HibernateException he ) {
-				throw getExceptionConverter().convert( he );
-			}
+		catch ( TransactionRequiredForJoinException e ) {
+			throw new TransactionRequiredException( e.getMessage() );
+		}
+		catch ( HibernateException he ) {
+			throw getExceptionConverter().convert( he );
 		}
 	}
 

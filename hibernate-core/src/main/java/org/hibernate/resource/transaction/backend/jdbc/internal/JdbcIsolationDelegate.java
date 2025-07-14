@@ -23,7 +23,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
  * @author Andrea Boriero
  */
 public class JdbcIsolationDelegate implements IsolationDelegate {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcIsolationDelegate.class );
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( JdbcIsolationDelegate.class );
 
 	private final JdbcConnectionAccess connectionAccess;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -33,10 +33,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 	}
 
 	public JdbcIsolationDelegate(JdbcSessionOwner jdbcSessionOwner) {
-		this(
-				jdbcSessionOwner.getJdbcConnectionAccess(),
-				jdbcSessionOwner.getSqlExceptionHelper()
-		);
+		this( jdbcSessionOwner.getJdbcConnectionAccess(), jdbcSessionOwner.getSqlExceptionHelper() );
 	}
 
 	public JdbcIsolationDelegate(JdbcConnectionAccess connectionAccess, SqlExceptionHelper sqlExceptionHelper) {
@@ -80,7 +77,7 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 				catch ( Exception exception ) {
-					LOG.unableToRollbackConnection( exception );
+					log.unableToRollbackConnection( exception );
 				}
 
 				if ( e instanceof HibernateException ) {
@@ -99,14 +96,14 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 						connection.setAutoCommit( true );
 					}
 					catch ( Exception ignore ) {
-						LOG.trace( "was unable to reset connection back to auto-commit" );
+						log.trace( "Unable to reset connection back to auto-commit" );
 					}
 				}
 				try {
 					jdbcConnectionAccess().releaseConnection( connection );
 				}
 				catch ( Exception ignore ) {
-					LOG.unableToReleaseIsolatedConnection( ignore );
+					log.unableToReleaseIsolatedConnection( ignore );
 				}
 			}
 		}

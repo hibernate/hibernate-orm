@@ -34,12 +34,11 @@ import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.cache.spi.SecondLevelCacheLogger;
 
 import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
@@ -53,7 +52,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Gail Badner
  */
 public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildingContext {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EnabledCaching.class );
+	private static final SecondLevelCacheLogger LOG = SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final RegionFactory regionFactory;
@@ -259,10 +258,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final EntityPersister persister = getEntityDescriptor( entityName );
 		final EntityDataAccess cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Evicting entity second-level cache: "
-							+ infoString( persister, identifier, sessionFactory ) );
-			}
+			LOG.evictingEntityCache( infoString( persister, identifier, sessionFactory ) );
 
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( identifier, persister, sessionFactory, null );
@@ -305,9 +301,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictEntityData(NavigableRole navigableRole, EntityDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Evicting entity second-level cache: " + navigableRole.getFullPath() );
-			}
+			LOG.evictingEntityCacheByRole( navigableRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -344,9 +338,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictNaturalIdData(NavigableRole rootEntityRole, NaturalIdDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Evicting natural-id cache: " + rootEntityRole.getFullPath() );
-			}
+			LOG.evictingNaturalIdCache( rootEntityRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -375,10 +367,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 		final CollectionPersister persister = getCollectionDescriptor( role );
 		final CollectionDataAccess cacheAccess = persister.getCacheAccessStrategy();
 		if ( cacheAccess != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Evicting collection second-level cache: "
-							+ collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
-			}
+			LOG.evictingCollectionCache( collectionInfoString( persister, ownerIdentifier, sessionFactory ) );
 
 			final Object cacheKey =
 					cacheAccess.generateCacheKey( ownerIdentifier, persister, sessionFactory, null );
@@ -398,9 +387,7 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictCollectionData(NavigableRole navigableRole, CollectionDataAccess cacheAccess) {
 		if ( cacheAccess != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Evicting collection second-level cache: " + navigableRole.getFullPath() );
-			}
+			LOG.evictingCollectionCacheByRole( navigableRole.getFullPath() );
 			cacheAccess.evictAll();
 		}
 	}
@@ -435,18 +422,14 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 
 	private void evictQueryResultRegion(QueryResultsCache cache) {
 		if ( cache != null ) {
-			if ( LOG.isTraceEnabled() ) {
-				LOG.trace( "Evicting query cache region: " + cache.getRegion().getName() );
-			}
+			LOG.evictingQueryCacheRegion( cache.getRegion().getName() );
 			cache.clear();
 		}
 	}
 
 	@Override
 	public void evictQueryRegions() {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Evicting cache of all query regions" );
-		}
+		LOG.evictingAllQueryRegions();
 
 		evictQueryResultRegion( defaultQueryResultsCache );
 		for ( QueryResultsCache cache : namedQueryResultsCacheMap.values() ) {

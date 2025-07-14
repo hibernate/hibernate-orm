@@ -131,8 +131,94 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(
-			value = "Returning cached query results",
-			id = NAMESPACE + 14
+		value = "Returning cached query results",
+		id = NAMESPACE + 14
 	)
 	void returningCachedQueryResults();
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting entity second-level cache: %s",
+		id = NAMESPACE + 15
+	)
+	void evictingEntityCache(String entityInfo);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting entity second-level cache: %s",
+		id = NAMESPACE + 16
+	)
+	void evictingEntityCacheByRole(String role);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting natural id cache: %s",
+		id = NAMESPACE + 17
+	)
+	void evictingNaturalIdCache(String role);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting collection second-level cache: %s",
+		id = NAMESPACE + 18
+	)
+	void evictingCollectionCache(String collectionInfo);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting collection second-level cache: %s",
+		id = NAMESPACE + 19
+	)
+	void evictingCollectionCacheByRole(String role);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Auto-evicting collection from second-level cache: %s"
+					+ " (since 'hibernate.cache.auto_evict_collection_cache' is enabled)",
+			id = NAMESPACE + 25
+	)
+	void autoEvictingCollectionCache(String collectionInfo);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Auto-evicting collection from second-level cache: %s"
+					+ " (since 'hibernate.cache.auto_evict_collection_cache' is enabled)",
+			id = NAMESPACE + 26
+	)
+	void autoEvictingCollectionCacheByRole(String collectionRole);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting query cache region: %s",
+		id = NAMESPACE + 20
+	)
+	void evictingQueryCacheRegion(String regionName);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Evicting cache of all query regions",
+		id = NAMESPACE + 21
+	)
+	void evictingAllQueryRegions();
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Pre-invalidating space [%s], timestamp: %s",
+		id = NAMESPACE + 22
+	)
+	void preInvalidatingSpace(String space, Long timestamp);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "Invalidating space [%s], timestamp: %s",
+		id = NAMESPACE + 23
+	)
+	void invalidatingSpace(String space, Long timestamp);
+
+	@LogMessage(level = TRACE)
+	@Message(
+		value = "[%s] last update timestamp: %s, result set timestamp: %s",
+		id = NAMESPACE + 24
+	)
+	void lastUpdateTimestampForSpace(String space, Long lastUpdate, Long timestamp);
 }

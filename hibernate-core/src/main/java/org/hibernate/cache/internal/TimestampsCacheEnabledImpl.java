@@ -16,7 +16,9 @@ import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
+import static org.hibernate.event.monitor.spi.EventMonitor.CacheActionDescription.TIMESTAMP_INVALIDATE;
+import static org.hibernate.event.monitor.spi.EventMonitor.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE;
 
 /**
  * Standard implementation of TimestampsCache
@@ -24,9 +26,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class TimestampsCacheEnabledImpl implements TimestampsCache {
-	private static final Logger log = Logger.getLogger( TimestampsCacheEnabledImpl.class );
-
-	public static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
 	private final TimestampsRegion timestampsRegion;
 
@@ -45,20 +44,18 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor factory = session.getFactory();
 		final RegionFactory regionFactory = factory.getCache().getRegionFactory();
-
 		final StatisticsImplementor statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
 		final Long timestamp = regionFactory.nextTimestamp() + regionFactory.getTimeout();
 
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-		final boolean traceEnabled = log.isTraceEnabled();
-
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		for ( String space : spaces ) {
 			if ( traceEnabled ) {
-				log.tracef( "Pre-invalidating space [%s], timestamp: %s", space, timestamp );
+				L2CACHE_LOGGER.preInvalidatingSpace( space, timestamp );
 			}
-			final EventMonitor eventMonitor = session.getEventMonitor();
 			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
@@ -73,7 +70,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 						session,
 						timestampsRegion,
 						true,
-						EventMonitor.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
+						TIMESTAMP_PRE_INVALIDATE
 				);
 				eventListenerManager.cachePutEnd();
 			}
@@ -88,23 +85,24 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	public void invalidate(
 			String[] spaces,
 			SharedSessionContractImplementor session) {
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final SessionFactoryImplementor factory = session.getFactory();
+		final StatisticsImplementor statistics = factory.getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
 
-		final Long ts = session.getFactory().getCache().getRegionFactory().nextTimestamp();
-		final boolean traceEnabled = log.isTraceEnabled();
+		final Long timestamp = factory.getCache().getRegionFactory().nextTimestamp();
 
+		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final EventMonitor eventMonitor = session.getEventMonitor();
+		final boolean traceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		for ( String space : spaces ) {
 			if ( traceEnabled ) {
-				log.tracef( "Invalidating space [%s], timestamp: %s", space, ts );
+				L2CACHE_LOGGER.invalidatingSpace( space, timestamp );
 			}
 
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
-			final EventMonitor eventMonitor = session.getEventMonitor();
 			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
-				timestampsRegion.putIntoCache( space, ts, session );
+				timestampsRegion.putIntoCache( space, timestamp, session );
 			}
 			finally {
 				eventMonitor.completeCachePutEvent(
@@ -112,7 +110,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 						session,
 						timestampsRegion,
 						true,
-						EventMonitor.CacheActionDescription.TIMESTAMP_INVALIDATE
+						TIMESTAMP_INVALIDATE
 				);
 				eventListenerManager.cachePutEnd();
 
@@ -152,13 +150,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			return false;
 		}
 		else {
-			if ( TRACE_ENABLED ) {
-				log.tracef(
-						"[%s] last update timestamp: %s",
-						space,
-						lastUpdate + ", result set timestamp: " + timestamp
-				);
-			}
+			L2CACHE_LOGGER.lastUpdateTimestampForSpace( space, lastUpdate, timestamp );
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.updateTimestampsCacheHit();
 			}

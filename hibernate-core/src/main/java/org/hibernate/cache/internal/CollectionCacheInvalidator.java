@@ -32,8 +32,10 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
@@ -127,8 +129,8 @@ public class CollectionCacheInvalidator
 				handleInverseOneToMany( entity, persister, oldState, collectionPersister, session );
 			}
 			else {
-				if ( LOG.isTraceEnabled() ) {
-					LOG.trace( "Evict CollectionRegion " + collectionPersister.getRole() );
+				if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+					L2CACHE_LOGGER.autoEvictingCollectionCacheByRole( collectionPersister.getRole() );
 				}
 				final CollectionDataAccess cacheAccessStrategy = collectionPersister.getCacheAccessStrategy();
 				final SoftLock softLock = cacheAccessStrategy.lockRegion();
@@ -184,8 +186,9 @@ public class CollectionCacheInvalidator
 	}
 
 	private void evict(Object id, CollectionPersister collectionPersister, EventSource session) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace( "Evict CollectionRegion " + collectionPersister.getRole() + " for id " + id );
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.autoEvictingCollectionCache(
+					collectionInfoString( collectionPersister, id, collectionPersister.getFactory() ) );
 		}
 		final CollectionEvictCacheAction evictCacheAction =
 				new CollectionEvictCacheAction( collectionPersister, null, id, session );

@@ -52,7 +52,7 @@ public abstract class AbstractMultiNaturalIdLoader<E> implements MultiNaturalIdL
 			MultiNaturalIdLoadOptions loadOptions,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Unordered MultiLoad starting: "
+			MULTI_KEY_LOAD_LOGGER.tracef( "Unordered batch load starting: "
 					+ getEntityDescriptor().getEntityName() );
 		}
 		return unorderedMultiLoad( naturalIds, loadOptions, session );

@@ -92,7 +92,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		assert !loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Unordered MultiLoad starting: "
+			MULTI_KEY_LOAD_LOGGER.tracef( "Unordered batch load starting: "
 					+ getLoadable().getEntityName() );
 		}
 		return unorderedMultiLoad( ids, loadOptions, session );
@@ -105,7 +105,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 		assert loadOptions.isOrderReturnEnabled();
 		assert ids != null;
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Ordered MultiLoad starting: "
+			MULTI_KEY_LOAD_LOGGER.tracef( "Ordered batch load starting: "
 					+ getLoadable().getEntityName() );
 		}
 		return orderedMultiLoad( ids, loadOptions, session );

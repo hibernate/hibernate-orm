@@ -93,7 +93,7 @@ public class CollectionBatchLoaderInPredicate
 		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.tracef(
 					"Collection keys to initialize via batch fetching (%s) %s",
-					collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
+					collectionInfoString( getLoadable(), key ),
 					keysToInitialize
 			);
 		}
@@ -128,7 +128,7 @@ public class CollectionBatchLoaderInPredicate
 					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.tracef(
 								"Processing collection batch-fetch chunk (%s) %s - %s",
-								collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
+								collectionInfoString( getLoadable(), key ),
 								startIndex,
 								startIndex + (sqlBatchSize-1)
 						);
@@ -138,7 +138,7 @@ public class CollectionBatchLoaderInPredicate
 					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.tracef(
 								"Finishing collection batch-fetch chunk (%s) %s - %s (%s)",
-								collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
+								collectionInfoString( getLoadable(), key ),
 								startIndex,
 								startIndex + (sqlBatchSize-1),
 								nonNullElementCount

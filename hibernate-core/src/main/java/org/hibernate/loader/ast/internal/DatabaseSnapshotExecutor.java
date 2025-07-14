@@ -43,13 +43,13 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.jboss.logging.Logger;
+import static org.hibernate.loader.LoaderLogging.LOADER_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * @author Steve Ebersole
  */
 class DatabaseSnapshotExecutor {
-	private static final Logger log = Logger.getLogger( DatabaseSnapshotExecutor.class );
 
 	private final EntityMappingType entityDescriptor;
 
@@ -154,8 +154,9 @@ class DatabaseSnapshotExecutor {
 	}
 
 	Object[] loadDatabaseSnapshot(Object id, SharedSessionContractImplementor session) {
-		if ( log.isTraceEnabled() ) {
-			log.tracef( "Getting current persistent state for `%s#%s`", entityDescriptor.getEntityName(), id );
+		if ( LOADER_LOGGER.isTraceEnabled() ) {
+			LOADER_LOGGER.trace( "Retrieving snapshot of current persistent state for "
+					+ infoString( entityDescriptor, id ) );
 		}
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl(

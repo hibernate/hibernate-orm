@@ -82,7 +82,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching collection: "
-					+ collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ) );
+					+ collectionInfoString( getLoadable(), key ) );
 		}
 
 		final Object[] keys = resolveKeysToInitialize( key, session );
@@ -108,7 +108,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.trace( "Finishing initializing batch-fetched collection: "
-					+ collectionInfoString( attributeMapping.getNavigableRole().getFullPath(), key ) );
+					+ collectionInfoString( attributeMapping, key ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();

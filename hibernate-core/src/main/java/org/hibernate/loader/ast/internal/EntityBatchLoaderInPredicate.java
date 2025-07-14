@@ -124,7 +124,7 @@ public class EntityBatchLoaderInPredicate<T>
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.tracef( "Entity ids to initialize via batch fetching (%s) %s",
-					infoString( getLoadable().getEntityName(), pkValue ),
+					infoString( getLoadable(), pkValue ),
 					Arrays.toString(idsToInitialize) );
 		}
 
@@ -161,7 +161,7 @@ public class EntityBatchLoaderInPredicate<T>
 							if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 								MULTI_KEY_LOAD_LOGGER.tracef(
 										"Processing entity batch-fetch chunk (%s) %s - %s",
-										infoString( getLoadable().getEntityName(), pkValue ),
+										infoString( getLoadable(), pkValue ),
 										startIndex,
 										startIndex + ( sqlBatchSize - 1 )
 								);

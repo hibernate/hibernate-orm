@@ -129,7 +129,7 @@ public class EntityBatchLoaderArrayParam<T>
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.tracef( "Entity ids to initialize via batch fetching (%s) %s",
-					infoString( getLoadable().getEntityName(), id),
+					infoString( getLoadable(), id),
 					Arrays.toString( idsToInitialize ) );
 		}
 

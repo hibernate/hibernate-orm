@@ -16,6 +16,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -117,7 +118,11 @@ public sealed class Column
 	}
 
 	public JdbcMapping getType() {
-		return getValue().getSelectableType( getValue().getBuildingContext().getMetadataCollector(), getTypeIndex() );
+		return getValue().getSelectableType( getMetadataCollector(), getTypeIndex() );
+	}
+
+	private InFlightMetadataCollector getMetadataCollector() {
+		return getValue().getBuildingContext().getMetadataCollector();
 	}
 
 	public String getName() {
@@ -176,22 +181,16 @@ public sealed class Column
 	 * @return the quoted name as it would occur in the mapping file
 	 */
 	public String getQuotedName() {
-		return safeInterning(
-				quoted ?
-				"`" + name + "`" :
-				name
-		);
+		return safeInterning( quoted ? "`" + name + "`" : name );
 	}
 
 	/**
 	 * @return the quoted name using the quoting syntax of the given dialect
 	 */
 	public String getQuotedName(Dialect dialect) {
-		return safeInterning(
-				quoted ?
-				dialect.openQuote() + name + dialect.closeQuote() :
-				name
-		);
+		return safeInterning( quoted
+				? dialect.openQuote() + name + dialect.closeQuote()
+				: name );
 	}
 
 	@Override

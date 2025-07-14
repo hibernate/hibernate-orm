@@ -557,14 +557,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void nonCompliantMapConversion(String collectionRole);
 
-	@LogMessage(level = WARN)
-	@Message(
-			id = 451,
-			value = "Transaction afterCompletion called by a background thread; " +
-					"delaying afterCompletion processing until the original thread can handle it. [status=%s]"
-	)
-	void rollbackFromBackgroundThread(int status);
-
 	// 458-466 reserved for use by main branch (ORM 5.0.0)
 
 	@LogMessage(level = DEBUG)

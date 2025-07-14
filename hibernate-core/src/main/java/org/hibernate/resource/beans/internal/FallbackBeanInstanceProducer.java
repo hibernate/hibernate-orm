@@ -34,7 +34,7 @@ public class FallbackBeanInstanceProducer implements BeanInstanceProducer {
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		log.tracef( "Creating ManagedBean(%s) using direct instantiation", beanType.getName() );
+		log.tracef( "Creating ManagedBean [%s] using direct instantiation", beanType.getName() );
 		try {
 			final Constructor<B> constructor = beanType.getDeclaredConstructor();
 			constructor.setAccessible( true );

@@ -5,8 +5,8 @@
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
+
+import static org.hibernate.resource.transaction.backend.jta.internal.JtaLogging.JTA_LOGGER;
 
 /**
  * Manages callbacks from the {@link jakarta.transaction.Synchronization} registered by Hibernate.
@@ -14,9 +14,6 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class SynchronizationCallbackCoordinatorNonTrackingImpl implements SynchronizationCallbackCoordinator {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger(
-			SynchronizationCallbackCoordinatorNonTrackingImpl.class
-	);
 
 	private final SynchronizationCallbackTarget target;
 
@@ -37,23 +34,21 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 
 	@Override
 	public void beforeCompletion() {
-		log.trace( "Synchronization coordinator: beforeCompletion()" );
-
-		if ( !target.isActive() ) {
-			return;
+		JTA_LOGGER.trace( "Synchronization coordinator: beforeCompletion()" );
+		if ( target.isActive() ) {
+			target.beforeCompletion();
 		}
-		target.beforeCompletion();
 	}
 
 	@Override
 	public void afterCompletion(int status) {
-		log.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
+		JTA_LOGGER.tracef( "Synchronization coordinator: afterCompletion(status=%s)", status );
 		doAfterCompletion( JtaStatusHelper.isCommitted( status ), false );
 	}
 
 	protected void doAfterCompletion(boolean successful, boolean delayed) {
-		log.tracef( "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)", successful, delayed );
-
+		JTA_LOGGER.tracef( "Synchronization coordinator: doAfterCompletion(successful=%s, delayed=%s)",
+				successful, delayed );
 		try {
 			target.afterCompletion( successful, delayed );
 		}

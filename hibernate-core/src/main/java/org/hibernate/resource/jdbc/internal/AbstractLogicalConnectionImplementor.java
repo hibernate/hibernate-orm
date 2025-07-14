@@ -108,7 +108,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	protected void resetConnection(boolean initiallyAutoCommit) {
 		try {
 			if ( initiallyAutoCommit ) {
-				log.trace( "re-enabling auto-commit on JDBC Connection after completion of JDBC-based transaction" );
+				log.trace( "Re-enabling auto-commit on JDBC Connection after completion of JDBC-based transaction" );
 				getConnectionForTransactionManagement().setAutoCommit( true );
 				status = TransactionStatus.NOT_ACTIVE;
 			}
@@ -121,7 +121,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	@Override
 	public void rollback() {
 		try {
-			log.trace( "Preparing to rollback transaction via JDBC Connection.rollback()" );
+			log.trace( "Preparing to roll back transaction via JDBC Connection.rollback()" );
 			status = TransactionStatus.ROLLING_BACK;
 			if ( isPhysicallyConnected() ) {
 				getConnectionForTransactionManagement().rollback();
@@ -130,7 +130,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 				errorIfClosed();
 			}
 			status = TransactionStatus.ROLLED_BACK;
-			log.trace( "Transaction rolled-back via JDBC Connection.rollback()" );
+			log.trace( "Transaction rolled back via JDBC Connection.rollback()" );
 		}
 		catch( SQLException e ) {
 			status = TransactionStatus.FAILED_ROLLBACK;

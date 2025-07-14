@@ -51,7 +51,7 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final List<?> results,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
-			L2CACHE_LOGGER.tracef( "Caching query results in region: %s; timestamp=%s",
+			L2CACHE_LOGGER.cachingQueryResults(
 					cacheRegion.getName(),
 					session.getCacheTransactionSynchronization().getCachingTimestamp() );
 		}
@@ -92,26 +92,26 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final SharedSessionContractImplementor session) throws HibernateException {
 		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
 		if ( loggerTraceEnabled ) {
-			L2CACHE_LOGGER.tracef( "Checking cached query results in region: %s", cacheRegion.getName() );
+			L2CACHE_LOGGER.checkingCachedQueryResults( cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
 			if ( loggerTraceEnabled ) {
-				L2CACHE_LOGGER.trace( "Query results were not found in cache" );
+				L2CACHE_LOGGER.queryResultsNotFound();
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
 			if ( loggerTraceEnabled ) {
-				L2CACHE_LOGGER.trace( "Cached query results were not up-to-date" );
+				L2CACHE_LOGGER.cachedQueryResultsStale();
 			}
 			return null;
 		}
 
 		if ( loggerTraceEnabled ) {
-			L2CACHE_LOGGER.trace( "Returning cached query results" );
+			L2CACHE_LOGGER.returningCachedQueryResults();
 		}
 
 		// No need to copy results, since consumers will never mutate
@@ -124,27 +124,28 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 			final String[] spaces,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		final boolean loggerTraceEnabled = L2CACHE_LOGGER.isTraceEnabled();
+
 		if ( loggerTraceEnabled ) {
-			L2CACHE_LOGGER.tracef( "Checking cached query results in region: %s", cacheRegion.getName() );
+			L2CACHE_LOGGER.checkingCachedQueryResults( cacheRegion.getName() );
 		}
 
 		final CacheItem cacheItem = getCachedData( key, session );
 		if ( cacheItem == null ) {
 			if ( loggerTraceEnabled ) {
-				L2CACHE_LOGGER.trace( "Query results were not found in cache" );
+				L2CACHE_LOGGER.queryResultsNotFound();
 			}
 			return null;
 		}
 
 		if ( !timestampsCache.isUpToDate( spaces, cacheItem.timestamp, session ) ) {
 			if ( loggerTraceEnabled ) {
-				L2CACHE_LOGGER.trace( "Cached query results were not up-to-date" );
+				L2CACHE_LOGGER.cachedQueryResultsStale();
 			}
 			return null;
 		}
 
 		if ( loggerTraceEnabled ) {
-			L2CACHE_LOGGER.trace( "Returning cached query results" );
+			L2CACHE_LOGGER.returningCachedQueryResults();
 		}
 
 		return deepCopy( cacheItem.results );

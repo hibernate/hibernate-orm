@@ -17,6 +17,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
@@ -26,7 +27,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @ValidIdRange( min = 90001001, max = 90002000 )
 @SubSystemLogging(
 		name = SecondLevelCacheLogger.LOGGER_NAME,
-		description = "Logging related to Hibernate second-level caching"
+		description = "Logging related to the second-level cache"
 )
 @Internal
 public interface SecondLevelCacheLogger extends BasicLogger {
@@ -60,7 +61,7 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 
 	@LogMessage( level = WARN )
 	@Message(
-			value = "Read-only caching was requested for mutable natural-id for entity [%s]",
+			value = "Read-only caching was requested for entity [%s] with mutable natural id",
 			id = NAMESPACE + 4
 	)
 	void readOnlyCachingMutableNaturalId(String entity);
@@ -100,4 +101,38 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 	@SuppressWarnings( "unused" ) // used by hibernate-jcache
 	void nonStandardSupportForAccessType(String regionName, String accessType, String regionFactoryClass);
 
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Caching query results in region '%s' with timestamp %s",
+			id = NAMESPACE + 9
+	)
+	void cachingQueryResults(String regionName, long timestamp);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Checking cached query results in region '%s'",
+			id = NAMESPACE + 10
+	)
+	void checkingCachedQueryResults(String regionName);
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Query results were not found in cache",
+			id = NAMESPACE + 11
+	)
+	void queryResultsNotFound();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Cached query results were stale",
+			id = NAMESPACE + 12
+	)
+	void cachedQueryResultsStale();
+
+	@LogMessage(level = TRACE)
+	@Message(
+			value = "Returning cached query results",
+			id = NAMESPACE + 14
+	)
+	void returningCachedQueryResults();
 }

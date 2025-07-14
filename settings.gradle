@@ -281,7 +281,7 @@ buildCache {
     remote(HttpBuildCache) {
         enabled = settings.ext.useRemoteCache
         push = settings.ext.populateRemoteBuildCache
-        url = 'https://ge.hibernate.org/cache/'
+        url = 'https://develocity.commonhaus.dev/cache/'
     }
 }
 

@@ -17,7 +17,8 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
-import org.jboss.logging.Logger;
+
+import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
 /**
  * Abstract implementation of {@link  org.hibernate.cache.spi.DomainDataRegion} based
@@ -37,7 +38,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
-	private static final Logger log = Logger.getLogger( DomainDataRegionTemplate.class );
 
 	private final DomainDataStorageAccess storageAccess;
 
@@ -67,25 +67,15 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		final NavigableRole namedEntityRole = entityAccessConfig.getNavigableRole();
 		final AccessType accessType = entityAccessConfig.getAccessType();
 
-		log.tracef( "Generating entity cache access [%s] : %s", accessType.getExternalName(), namedEntityRole );
+		L2CACHE_LOGGER.tracef( "Generating entity cache access [%s] : %s",
+				accessType.getExternalName(), namedEntityRole );
 
-		switch ( accessType ) {
-			case READ_ONLY: {
-				return generateReadOnlyEntityAccess( entityAccessConfig );
-			}
-			case READ_WRITE: {
-				return generateReadWriteEntityAccess( entityAccessConfig );
-			}
-			case NONSTRICT_READ_WRITE: {
-				return generateNonStrictReadWriteEntityAccess( entityAccessConfig );
-			}
-			case TRANSACTIONAL: {
-				return generateTransactionalEntityDataAccess( entityAccessConfig );
-			}
-			default: {
-				throw new IllegalArgumentException( "Unrecognized cache AccessType - " + accessType );
-			}
-		}
+		return switch ( accessType ) {
+			case READ_ONLY -> generateReadOnlyEntityAccess( entityAccessConfig );
+			case READ_WRITE -> generateReadWriteEntityAccess( entityAccessConfig );
+			case NONSTRICT_READ_WRITE -> generateNonStrictReadWriteEntityAccess( entityAccessConfig );
+			case TRANSACTIONAL -> generateTransactionalEntityDataAccess( entityAccessConfig );
+		};
 	}
 
 	protected EntityDataAccess generateReadOnlyEntityAccess(EntityDataCachingConfig accessConfig) {
@@ -128,7 +118,8 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 		final NavigableRole namedEntityRole = accessConfig.getNavigableRole();
 		final AccessType accessType = accessConfig.getAccessType();
 
-		log.tracef( "Generating entity natural-id access [%s] : %s", accessType.getExternalName(), namedEntityRole );
+		L2CACHE_LOGGER.tracef( "Generating entity natural-id access [%s] : %s",
+				accessType.getExternalName(), namedEntityRole );
 
 		return switch ( accessType ) {
 			case READ_ONLY -> generateReadOnlyNaturalIdAccess( accessConfig );
@@ -173,7 +164,9 @@ public class DomainDataRegionTemplate extends AbstractDomainDataRegion {
 	public CollectionDataAccess generateCollectionAccess(CollectionDataCachingConfig accessConfig) {
 		final NavigableRole namedCollectionRole = accessConfig.getNavigableRole();
 
-		log.tracef( "Generating collection cache access: %s", namedCollectionRole );
+		if ( L2CACHE_LOGGER.isTraceEnabled() ) {
+			L2CACHE_LOGGER.trace( "Generating collection cache access: " + namedCollectionRole );
+		}
 
 		return switch ( accessConfig.getAccessType() ) {
 			case READ_ONLY -> generateReadOnlyCollectionAccess( accessConfig );

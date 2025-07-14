@@ -219,6 +219,9 @@ public class EntityBinder {
 			assert superEntity != null;
 			superEntity.addSubclass( subclass );
 		}
+
+		persistentClass.createConstraints( context );
+
 		collector.addEntityBinding( persistentClass );
 		// process secondary tables and complementary definitions (ie o.h.a.Table)
 		collector.addSecondPass( new SecondaryTableFromAnnotationSecondPass( entityBinder, holder ) );

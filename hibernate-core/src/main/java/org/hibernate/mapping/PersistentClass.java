@@ -1230,4 +1230,7 @@ public abstract sealed class PersistentClass
 		}
 		properties.remove( property );
 	}
+
+	public void createConstraints(MetadataBuildingContext context) {
+	}
 }

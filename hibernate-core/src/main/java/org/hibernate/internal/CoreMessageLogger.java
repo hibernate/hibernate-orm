@@ -71,10 +71,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Second-level cache disabled", id = 26)
 	void noRegionFactory();
 
-	@LogMessage(level = WARN)
-	@Message(value = "Calling joinTransaction() on a non JTA EntityManager", id = 27)
-	void callingJoinTransactionOnNonJtaEntityManager();
-
 	@LogMessage(level = DEBUG)
 	@Message(value = "Instantiating factory [%s] with settings: %s", id = 30)
 	void instantiatingFactory(String uuid, Map<String, Object> settings);

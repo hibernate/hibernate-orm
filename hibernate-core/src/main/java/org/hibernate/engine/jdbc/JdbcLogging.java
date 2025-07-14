@@ -138,4 +138,8 @@ public interface JdbcLogging extends BasicLogger {
 				JDBC version: %s.%s""",
 			id = 100018)
 	void logDriverInfo(String name, String version, int major, int minor, int jdbcMajor, int jdbcMinor);
+
+	@LogMessage(level = WARN)
+	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100020)
+	void callingJoinTransactionOnNonJtaEntityManager();
 }

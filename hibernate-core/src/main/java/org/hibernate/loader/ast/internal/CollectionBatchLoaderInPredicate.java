@@ -23,6 +23,7 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * {@link CollectionBatchLoader} for batch fetching using a SQL {@code IN} predicate.
@@ -50,9 +51,9 @@ public class CollectionBatchLoaderInPredicate
 				.getDialect()
 				.getBatchLoadSizingStrategy()
 				.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
-		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Using IN-predicate batch fetching strategy for collection `%s` : %s (%s)",
+					"Batch fetching enabled for collection '%s' using IN-predicate with batch size %s (%s)",
 					attributeMapping.getNavigableRole().getFullPath(),
 					sqlBatchSize,
 					domainBatchSize
@@ -91,9 +92,8 @@ public class CollectionBatchLoaderInPredicate
 		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
 		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
-					getLoadable().getNavigableRole().getFullPath(),
-					key,
+					"Collection keys to initialize via batch fetching (%s) %s",
+					collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
 					keysToInitialize
 			);
 		}
@@ -127,9 +127,8 @@ public class CollectionBatchLoaderInPredicate
 				(startIndex) -> {
 					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.tracef(
-								"Processing collection batch-fetch chunk (`%s#%s`) %s - %s",
-								getLoadable().getNavigableRole().getFullPath(),
-								key,
+								"Processing collection batch-fetch chunk (%s) %s - %s",
+								collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
 								startIndex,
 								startIndex + (sqlBatchSize-1)
 						);
@@ -138,9 +137,8 @@ public class CollectionBatchLoaderInPredicate
 				(startIndex, nonNullElementCount) -> {
 					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.tracef(
-								"Finishing collection batch-fetch chunk (`%s#%s`) %s - %s (%s)",
-								getLoadable().getNavigableRole().getFullPath(),
-								key,
+								"Finishing collection batch-fetch chunk (%s) %s - %s (%s)",
+								collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ),
 								startIndex,
 								startIndex + (sqlBatchSize-1),
 								nonNullElementCount

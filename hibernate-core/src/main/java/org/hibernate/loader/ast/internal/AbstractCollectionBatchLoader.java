@@ -24,6 +24,7 @@ import java.lang.reflect.Array;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * @author Steve Ebersole
@@ -80,8 +81,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Batch fetching collection: %s.%s",
-					getLoadable().getNavigableRole().getFullPath(), key );
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching collection: "
+					+ collectionInfoString( getLoadable().getNavigableRole().getFullPath(), key ) );
 		}
 
 		final Object[] keys = resolveKeysToInitialize( key, session );
@@ -106,8 +107,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		}
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Finishing initializing batch-fetched collection: %s.%s",
-					attributeMapping.getNavigableRole().getFullPath(), key );
+			MULTI_KEY_LOAD_LOGGER.trace( "Finishing initializing batch-fetched collection: "
+					+ collectionInfoString( attributeMapping.getNavigableRole().getFullPath(), key ) );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();

@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 public abstract class AbstractEntityBatchLoader<T>
 		extends SingleIdEntityLoaderSupport<T>
@@ -45,7 +46,8 @@ public abstract class AbstractEntityBatchLoader<T>
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching entity: "
+					+ infoString( getLoadable().getEntityName(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
@@ -59,7 +61,8 @@ public abstract class AbstractEntityBatchLoader<T>
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
+			MULTI_KEY_LOAD_LOGGER.trace( "Batch fetching entity: "
+					+ infoString( getLoadable().getEntityName(), id ) );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );

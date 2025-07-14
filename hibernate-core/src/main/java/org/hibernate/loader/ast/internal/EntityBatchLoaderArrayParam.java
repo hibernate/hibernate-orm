@@ -29,6 +29,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import static org.hibernate.loader.ast.internal.LoaderHelper.loadByArrayParameter;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
+import static org.hibernate.pretty.MessageHelper.infoString;
 
 /**
  * {@link SingleIdEntityLoaderSupport} implementation based on using a single
@@ -69,7 +70,7 @@ public class EntityBatchLoaderArrayParam<T>
 
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.tracef(
-					"Batch fetching enabled for `%s` (entity) using ARRAY strategy : %s",
+					"Batch fetching enabled for entity '%s' using ARRAY strategy with batch size %s",
 					entityDescriptor.getEntityName(),
 					domainBatchSize
 			);
@@ -127,8 +128,9 @@ public class EntityBatchLoaderArrayParam<T>
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
-			MULTI_KEY_LOAD_LOGGER.tracef( "Ids to batch-fetch initialize (`%s#%s`) %s",
-					getLoadable().getEntityName(), id, Arrays.toString(idsToInitialize) );
+			MULTI_KEY_LOAD_LOGGER.tracef( "Entity ids to initialize via batch fetching (%s) %s",
+					infoString( getLoadable().getEntityName(), id),
+					Arrays.toString( idsToInitialize ) );
 		}
 
 		removeBatchLoadableEntityKeys( idsToInitialize, session );

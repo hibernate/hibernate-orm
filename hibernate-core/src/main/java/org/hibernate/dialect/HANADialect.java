@@ -106,6 +106,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.Serial;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
@@ -887,16 +888,6 @@ public class HANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTableCheck() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return true;
-	}
-
-	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
@@ -1413,17 +1404,17 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public long length() throws SQLException {
+		public long length() {
 			return this.getBytes().length;
 		}
 
 		@Override
-		public byte[] getBytes(long pos, int length) throws SQLException {
+		public byte[] getBytes(long pos, int length) {
 			return Arrays.copyOfRange( this.bytes, (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
 		}
 
 		@Override
-		public InputStream getBinaryStream() throws SQLException {
+		public InputStream getBinaryStream() {
 			return new ByteArrayInputStream( this.getBytes() );
 		}
 
@@ -1438,7 +1429,7 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public int setBytes(long pos, byte[] bytes) throws SQLException {
+		public int setBytes(long pos, byte[] bytes) {
 			int bytesSet = 0;
 			if ( this.bytes.length < pos - 1 + bytes.length ) {
 				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + bytes.length ) );
@@ -1450,7 +1441,7 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+		public int setBytes(long pos, byte[] bytes, int offset, int len) {
 			int bytesSet = 0;
 			if ( this.bytes.length < pos - 1 + len ) {
 				this.bytes = Arrays.copyOf( this.bytes, (int) ( pos - 1 + len ) );
@@ -1472,17 +1463,17 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public void truncate(long len) throws SQLException {
+		public void truncate(long len) {
 			this.setBytes( Arrays.copyOf( this.getBytes(), (int) len ) );
 		}
 
 		@Override
-		public void free() throws SQLException {
+		public void free() {
 			this.setBytes( null );
 		}
 
 		@Override
-		public InputStream getBinaryStream(long pos, long length) throws SQLException {
+		public InputStream getBinaryStream(long pos, long length) {
 			return new ByteArrayInputStream( this.getBytes(), (int) ( pos - 1 ), (int) length );
 		}
 
@@ -1505,19 +1496,19 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public void truncate(long len) throws SQLException {
+		public void truncate(long len) {
 			this.data = "";
 		}
 
 		@Override
-		public int setString(long pos, String str, int offset, int len) throws SQLException {
+		public int setString(long pos, String str, int offset, int len) {
 			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str.substring( offset, offset + len )
 					+ this.data.substring( (int) ( pos - 1 + len ) );
 			return len;
 		}
 
 		@Override
-		public int setString(long pos, String str) throws SQLException {
+		public int setString(long pos, String str) {
 			this.data = this.data.substring( 0, (int) ( pos - 1 ) ) + str + this.data.substring( (int) ( pos - 1 + str.length() ) );
 			return str.length();
 		}
@@ -1533,32 +1524,32 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public long position(Clob searchstr, long start) throws SQLException {
+		public long position(Clob searchstr, long start) {
 			return this.data.indexOf( extractString( searchstr ), (int) ( start - 1 ) );
 		}
 
 		@Override
-		public long position(String searchstr, long start) throws SQLException {
+		public long position(String searchstr, long start) {
 			return this.data.indexOf( searchstr, (int) ( start - 1 ) );
 		}
 
 		@Override
-		public long length() throws SQLException {
+		public long length() {
 			return this.data.length();
 		}
 
 		@Override
-		public String getSubString(long pos, int length) throws SQLException {
+		public String getSubString(long pos, int length) {
 			return this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) );
 		}
 
 		@Override
-		public Reader getCharacterStream(long pos, long length) throws SQLException {
+		public Reader getCharacterStream(long pos, long length) {
 			return new StringReader( this.data.substring( (int) ( pos - 1 ), (int) ( pos - 1 + length ) ) );
 		}
 
 		@Override
-		public Reader getCharacterStream() throws SQLException {
+		public Reader getCharacterStream() {
 			return new StringReader( this.data );
 		}
 
@@ -1568,7 +1559,7 @@ public class HANADialect extends Dialect {
 		}
 
 		@Override
-		public void free() throws SQLException {
+		public void free() {
 			this.data = null;
 		}
 	}
@@ -1616,6 +1607,7 @@ public class HANADialect extends Dialect {
 
 	private static class HANAStreamBlobType implements JdbcType {
 
+		@Serial
 		private static final long serialVersionUID = -2476600722093442047L;
 
 		final int maxLobPrefetchSize;
@@ -1698,6 +1690,7 @@ public class HANADialect extends Dialect {
 		}
 
 		/** serial version uid. */
+		@Serial
 		private static final long serialVersionUID = -379042275442752102L;
 
 		final int maxLobPrefetchSize;
@@ -1801,6 +1794,7 @@ public class HANADialect extends Dialect {
 	private static class HANANClobJdbcType extends NClobJdbcType {
 
 		/** serial version uid. */
+		@Serial
 		private static final long serialVersionUID = 5651116091681647859L;
 
 		final int maxLobPrefetchSize;
@@ -1899,6 +1893,7 @@ public class HANADialect extends Dialect {
 
 	public static class HANABlobType implements JdbcType {
 
+		@Serial
 		private static final long serialVersionUID = 5874441715643764323L;
 		public static final JdbcType INSTANCE = new HANABlobType( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE );
 

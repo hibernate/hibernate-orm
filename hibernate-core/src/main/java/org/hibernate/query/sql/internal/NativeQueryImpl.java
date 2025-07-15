@@ -95,6 +95,10 @@ import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -486,11 +490,18 @@ public class NativeQueryImpl<R>
 
 	private static ParameterInterpretationImpl parameterInterpretation(
 			String sqlString, SharedSessionContractImplementor session) {
-		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl();
-		session.getFactory().getServiceRegistry()
+		final ServiceRegistryImplementor serviceRegistry = session.getFactory().getServiceRegistry();
+		final ParameterMarkerStrategy parameterMarkerStrategy = getNullSafeParameterMarkerStrategy( serviceRegistry );
+		final ParameterRecognizerImpl parameterRecognizer = new ParameterRecognizerImpl( parameterMarkerStrategy );
+		serviceRegistry
 				.requireService( NativeQueryInterpreter.class )
 				.recognizeParameters( sqlString, parameterRecognizer );
 		return new ParameterInterpretationImpl( parameterRecognizer );
+	}
+
+	private static ParameterMarkerStrategy getNullSafeParameterMarkerStrategy(ServiceRegistry serviceRegistry) {
+		final ParameterMarkerStrategy parameterMarkerStrategy = serviceRegistry.getService( ParameterMarkerStrategy.class );
+		return parameterMarkerStrategy == null ? ParameterMarkerStrategyStandard.INSTANCE : parameterMarkerStrategy;
 	}
 
 	protected void applyOptions(NamedNativeQueryMemento<?> memento) {
@@ -882,37 +893,55 @@ public class NativeQueryImpl<R>
 
 		StringBuilder sql = null;
 
+		final ParameterMarkerStrategy parameterMarkerStrategy = getNullSafeParameterMarkerStrategy( factory.getServiceRegistry() );
+
 		// Handle parameter lists
 		int offset = 0;
-		for ( ParameterOccurrence occurrence : parameterOccurrences ) {
+		int expandedParameterPosition = 1;
+		for ( int originalParameterPosition = 1; originalParameterPosition <= parameterOccurrences.size(); originalParameterPosition++ ) {
+			final ParameterOccurrence occurrence = parameterOccurrences.get( originalParameterPosition - 1 );
 			final QueryParameterImplementor<?> queryParameter = occurrence.parameter();
 			final QueryParameterBinding<?> binding = parameterBindings.getBinding( queryParameter );
+			String occurenceReplacement = null;
+			int expandedParameterPositionIncrement = 1;
 			if ( binding.isMultiValued() ) {
 				final int bindValueCount = binding.getBindValues().size();
 				logTooManyExpressions( inExprLimit, bindValueCount, dialect, queryParameter );
-				final int sourcePosition = occurrence.sourcePosition();
-				if ( sourcePosition >= 0 ) {
+				if ( occurrence.sourcePosition() >= 0 ) {
 					// check if placeholder is already immediately enclosed in parentheses
 					// (ignoring whitespace)
-					final boolean isEnclosedInParens = isEnclosedInParens( sourcePosition );
+					final boolean isEnclosedInParens = isEnclosedInParens( occurrence );
 					// short-circuit for performance when only 1 value and the
 					// placeholder is already enclosed in parentheses...
-					if ( bindValueCount != 1 || !isEnclosedInParens ) {
-						if ( sql == null ) {
-							sql = new StringBuilder( sqlString.length() + 20 );
-							sql.append( sqlString );
-						}
+					if ( bindValueCount != 1 || !isEnclosedInParens || expandedParameterPosition != originalParameterPosition) {
 						final int bindValueMaxCount =
 								determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
-						final String expansionListAsString =
-								expandList( bindValueMaxCount, isEnclosedInParens );
-						final int start = sourcePosition + offset;
-						final int end = start + 1;
-						sql.replace( start, end, expansionListAsString );
-						offset += expansionListAsString.length() - 1;
+						occurenceReplacement =
+								expandList( bindValueMaxCount, isEnclosedInParens, parameterMarkerStrategy, expandedParameterPosition );
+						expandedParameterPositionIncrement = bindValueCount;
 					}
 				}
 			}
+			else if ( expandedParameterPosition != originalParameterPosition ) {
+				final String oldParameterMarker = parameterMarkerStrategy.createMarker( originalParameterPosition,
+						null );
+				final String newParameterMarker = parameterMarkerStrategy.createMarker( expandedParameterPosition,
+						null );
+				if ( !oldParameterMarker.equals( newParameterMarker ) ) {
+					occurenceReplacement = newParameterMarker;
+				}
+			}
+			if (occurenceReplacement != null) {
+				final int start = occurrence.sourcePosition() + offset;
+				final int end = start + occurrence.length();
+				if ( sql == null ) {
+					sql = new StringBuilder( sqlString.length() + 20 );
+					sql.append( sqlString );
+				}
+				sql.replace( start, end, occurenceReplacement );
+				offset += occurenceReplacement.length() - occurrence.length();
+			}
+			expandedParameterPosition += expandedParameterPositionIncrement;
 		}
 		return sql == null ? sqlString : sql.toString();
 	}
@@ -932,41 +961,32 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private static String expandList(int bindValueMaxCount, boolean isEnclosedInParens) {
+	private static String expandList(int bindValueMaxCount, boolean isEnclosedInParens, ParameterMarkerStrategy parameterMarkerStrategy, int parameterStartPosition) {
 		// HHH-8901
 		if ( bindValueMaxCount == 0 ) {
 			return isEnclosedInParens ? "null" : "(null)";
 		}
 		else {
-			// Shift 1 bit instead of multiplication by 2
-			final char[] chars;
-			if ( isEnclosedInParens ) {
-				chars = new char[(bindValueMaxCount << 1) - 1];
-				chars[0] = '?';
-				for ( int i = 1; i < bindValueMaxCount; i++ ) {
-					final int index = i << 1;
-					chars[index - 1] = ',';
-					chars[index] = '?';
-				}
+			final String firstParameterMarker = parameterMarkerStrategy.createMarker( parameterStartPosition, null );
+			final int estimatedLength = bindValueMaxCount * ( firstParameterMarker.length() + 1 ) - 1 + ( isEnclosedInParens ? 0 : 2 );
+			final StringBuilder stringBuilder = new StringBuilder( estimatedLength );
+			if ( ! isEnclosedInParens ) {
+				stringBuilder.append( '(' );
 			}
-			else {
-				chars = new char[(bindValueMaxCount << 1) + 1];
-				chars[0] = '(';
-				chars[1] = '?';
-				for ( int i = 1; i < bindValueMaxCount; i++ ) {
-					final int index = i << 1;
-					chars[index] = ',';
-					chars[index + 1] = '?';
-				}
-				chars[chars.length - 1] = ')';
+			stringBuilder.append( firstParameterMarker );
+			for ( int i = 1; i < bindValueMaxCount; i++ ) {
+				stringBuilder.append( ',' ).append( parameterMarkerStrategy.createMarker( parameterStartPosition + i, null ) );
 			}
-			return new String( chars );
+			if ( ! isEnclosedInParens ) {
+				stringBuilder.append( ')' );
+			}
+			return stringBuilder.toString();
 		}
 	}
 
-	private boolean isEnclosedInParens(int sourcePosition) {
+	private boolean isEnclosedInParens(ParameterOccurrence occurrence) {
 		boolean isEnclosedInParens = true;
-		for ( int i = sourcePosition - 1; i >= 0; i-- ) {
+		for ( int i = occurrence.sourcePosition() - 1; i >= 0; i-- ) {
 			final char ch = sqlString.charAt( i );
 			if ( !isWhitespace( ch ) ) {
 				isEnclosedInParens = ch == '(';
@@ -974,7 +994,7 @@ public class NativeQueryImpl<R>
 			}
 		}
 		if ( isEnclosedInParens ) {
-			for ( int i = sourcePosition + 1; i < sqlString.length(); i++ ) {
+			for ( int i = occurrence.sourcePosition() + occurrence.length(); i < sqlString.length(); i++ ) {
 				final char ch = sqlString.charAt( i );
 				if ( !isWhitespace( ch ) ) {
 					isEnclosedInParens = ch == ')';

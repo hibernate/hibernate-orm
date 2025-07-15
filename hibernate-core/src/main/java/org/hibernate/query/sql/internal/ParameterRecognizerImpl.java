@@ -18,6 +18,7 @@ import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * @author Steve Ebersole
@@ -36,11 +37,17 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 
 	private int ordinalParameterImplicitPosition;
 
+	private int nextParameterMarkerPosition;
+	private final ParameterMarkerStrategy parameterMarkerStrategy;
+
 	private List<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
-	public ParameterRecognizerImpl() {
+	public ParameterRecognizerImpl(ParameterMarkerStrategy parameterMarkerStrategy) {
+		assert parameterMarkerStrategy != null;
 		ordinalParameterImplicitPosition = 1;
+		nextParameterMarkerPosition = 1;
+		this.parameterMarkerStrategy = parameterMarkerStrategy;
 	}
 
 	@Override
@@ -57,13 +64,13 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 					if ( first ) {
 						throw new ParameterLabelException(
 								"Ordinal parameter labels start from '?" + position + "'"
-										+ " (ordinal parameters must be labelled from '?1')"
+								+ " (ordinal parameters must be labelled from '?1')"
 						);
 					}
 					else {
 						throw new ParameterLabelException(
 								"Gap between '?" + previous + "' and '?" + position + "' in ordinal parameter labels"
-										+ " (ordinal parameters must be labelled sequentially)"
+								+ " (ordinal parameters must be labelled sequentially)"
 						);
 					}
 				}
@@ -117,12 +124,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			positionalQueryParameters.put( implicitPosition, parameter );
 		}
 
-		if ( parameterList == null ) {
-			parameterList = new ArrayList<>();
-		}
-
-		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		recognizeParameter( parameter );
 	}
 
 	@Override
@@ -148,12 +150,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			namedQueryParameters.put( name, parameter );
 		}
 
-		if ( parameterList == null ) {
-			parameterList = new ArrayList<>();
-		}
-
-		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		recognizeParameter( parameter );
 	}
 
 	@Override
@@ -183,16 +180,21 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 			positionalQueryParameters.put( position, parameter );
 		}
 
-		if ( parameterList == null ) {
-			parameterList = new ArrayList<>();
-		}
-
-		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() ) );
-		sqlStringBuffer.append( "?" );
+		recognizeParameter( parameter );
 	}
 
 	@Override
 	public void other(char character) {
 		sqlStringBuffer.append( character );
+	}
+
+	private void recognizeParameter(QueryParameterImplementor<?> parameter) {
+		final String marker = parameterMarkerStrategy.createMarker( nextParameterMarkerPosition++, null );
+		final int markerLength = marker.length();
+		if ( parameterList == null ) {
+			parameterList = new ArrayList<>();
+		}
+		sqlStringBuffer.append( marker );
+		parameterList.add( new ParameterOccurrence( parameter, sqlStringBuffer.length() - markerLength, markerLength ) );
 	}
 }

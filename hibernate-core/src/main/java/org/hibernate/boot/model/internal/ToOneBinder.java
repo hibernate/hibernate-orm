@@ -71,6 +71,7 @@ public class ToOneBinder {
 
 	static void bindManyToOne(
 			PropertyHolder propertyHolder,
+			Nullability nullability,
 			PropertyData inferredData,
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
@@ -102,6 +103,7 @@ public class ToOneBinder {
 				aggregateCascadeTypes( manyToOne.cascade(), hibernateCascade, false, context ),
 				joinColumns,
 				propertyHolder,
+				nullability,
 				inferredData,
 				manyToOne.fetch(),
 				manyToOne.optional(),
@@ -140,6 +142,7 @@ public class ToOneBinder {
 			EnumSet<CascadeType> cascadeStrategy,
 			AnnotatedJoinColumns joinColumns,
 			PropertyHolder propertyHolder,
+			Nullability nullability,
 			PropertyData inferredData,
 			FetchType fetchType,
 			boolean explicitlyOptional,
@@ -172,7 +175,7 @@ public class ToOneBinder {
 		manyToOne.setNotFoundAction( notFoundAction );
 		manyToOne.setOnDeleteAction( onDeleteAction );
 		//value.setLazy( fetchMode != FetchMode.JOIN );
-		if ( !optional ) {
+		if ( !optional && nullability != Nullability.FORCED_NULL ) {
 			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
 				column.setNullable( false );
 			}
@@ -413,6 +416,7 @@ public class ToOneBinder {
 
 	static void bindOneToOne(
 			PropertyHolder propertyHolder,
+			Nullability nullability,
 			PropertyData inferredData,
 			boolean isIdentifierMapper,
 			boolean inSecondPass,
@@ -449,6 +453,7 @@ public class ToOneBinder {
 				oneToOne.optional(),
 				oneToOne.fetch(),
 				propertyHolder,
+				nullability,
 				inferredData,
 				nullIfEmpty( oneToOne.mappedBy() ),
 				trueOneToOne,
@@ -465,6 +470,7 @@ public class ToOneBinder {
 			boolean explicitlyOptional,
 			FetchType fetchMode,
 			PropertyHolder propertyHolder,
+			Nullability nullability,
 			PropertyData inferredData,
 			String mappedBy,
 			boolean trueOneToOne,
@@ -492,6 +498,7 @@ public class ToOneBinder {
 					cascadeStrategy,
 					joinColumns,
 					propertyHolder,
+					nullability,
 					inferredData,
 					fetchMode,
 					explicitlyOptional,

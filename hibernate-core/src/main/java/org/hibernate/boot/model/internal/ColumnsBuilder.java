@@ -129,7 +129,7 @@ class ColumnsBuilder {
 		else if ( joinColumns == null
 				&& ( property.hasDirectAnnotationUsage( OneToMany.class )
 						|| property.hasDirectAnnotationUsage( ElementCollection.class ) ) ) {
-			OneToMany oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
+			final OneToMany oneToMany = property.getDirectAnnotationUsage( OneToMany.class );
 			joinColumns = AnnotatedJoinColumns.buildJoinColumns(
 					null,
 					oneToMany == null ? null : nullIfEmpty( oneToMany.mappedBy() ),

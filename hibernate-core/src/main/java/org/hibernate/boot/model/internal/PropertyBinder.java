@@ -859,6 +859,7 @@ public class PropertyBinder {
 		else if ( isManyToOne( property ) ) {
 			bindManyToOne(
 					propertyHolder,
+					nullability,
 					inferredData,
 					isIdentifierMapper,
 					inSecondPass,
@@ -870,6 +871,7 @@ public class PropertyBinder {
 		else if ( isOneToOne( property ) ) {
 			bindOneToOne(
 					propertyHolder,
+					nullability,
 					inferredData,
 					isIdentifierMapper,
 					inSecondPass,

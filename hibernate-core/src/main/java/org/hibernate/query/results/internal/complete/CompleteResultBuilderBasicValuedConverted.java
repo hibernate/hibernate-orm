@@ -46,14 +46,14 @@ public class CompleteResultBuilderBasicValuedConverted<O,R> implements CompleteR
 			BasicValuedMapping underlyingMapping) {
 		this.explicitColumnName = explicitColumnName;
 		this.underlyingMapping = underlyingMapping;
-		@SuppressWarnings("unchecked")
-		final JavaType<R> relationalType =
-				underlyingMapping.getJdbcMapping().getJavaTypeDescriptor();
-		this.valueConverter = new AttributeConverterBean<>(
+		final JavaType<?> relationalType =
+				underlyingMapping.getJdbcMapping()
+						.getJavaTypeDescriptor();
+		this.valueConverter = new JpaAttributeConverterImpl<>(
 				converterBean,
 				converterJtd,
 				domainJavaType,
-				relationalType
+				(JavaType<R>) relationalType
 		);
 	}
 

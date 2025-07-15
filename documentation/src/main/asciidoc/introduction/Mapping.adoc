@@ -57,7 +57,7 @@ Let's put them in a table, so we can more easily compare the points of differenc
 | `SINGLE_TABLE`
 | Map every class in the hierarchy to the same table, and uses the value of a _discriminator column_ to determine which concrete class each row represents.
 | To retrieve instances of a given class, we only need to query the one table.
-| Attributes declared by subclasses map to columns without `NOT NULL` constraints. 💀
+| Attributes declared by subclasses map to columns without `NOT NULL` constraints, and so their non-nullability is enforced via a `CHECK` constraint.
 
   Any association may have a `FOREIGN KEY` constraint. 🤓
 | Subclass data is denormalized. 🧐

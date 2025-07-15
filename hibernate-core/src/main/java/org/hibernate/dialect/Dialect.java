@@ -10,6 +10,7 @@ import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.Length;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -6031,36 +6032,46 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
 		final String constraintName = checkConstraint.getName();
-		final String constraint = isBlank( constraintName )
-				? " check (" + checkConstraint.getConstraint() + ")"
-				: " constraint " + constraintName + " check (" + checkConstraint.getConstraint() + ")";
+		final String checkWithName =
+				isBlank( constraintName )
+						? " check"
+						: " constraint " + constraintName + " check";
+		final String constraint = checkWithName + " (" + checkConstraint.getConstraint() + ")";
 		return appendCheckConstraintOptions( checkConstraint, constraint );
 	}
 
 	/**
-	 * Append the {@link CheckConstraint} options to SQL check sqlCheckConstraint
+	 * Append the {@linkplain CheckConstraint#getOptions() options} to the given DDL
+	 * string declaring a SQL {@code check} constraint.
 	 *
 	 * @param checkConstraint an instance of {@link CheckConstraint}
 	 * @param sqlCheckConstraint the SQL to append the {@link CheckConstraint} options
 	 *
 	 * @return a SQL expression
+	 *
+	 * @since 7.0
 	 */
+	@Internal @Incubating
 	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
 		return sqlCheckConstraint;
 	}
 
 	/**
-	 * Does this dialect support appending table options SQL fragment at the end of the SQL Table creation statement?
+	 * Does this dialect support appending table options SQL fragment at the end of the SQL table creation statement?
 	 *
 	 * @return {@code true} indicates it does; {@code false} indicates it does not;
+	 *
+	 * @since 7.0
 	 */
+	@Deprecated(since = "7.1", forRemoval = true)
 	public boolean supportsTableOptions() {
 		return false;
 	}
 
 	/**
 	 * Does this dialect support binding {@link Types#NULL} for {@link PreparedStatement#setNull(int, int)}?
-	 * if it does, then call of {@link PreparedStatement#getParameterMetaData()} could be eliminated for better performance.
+	 * If it does, then the call to {@link PreparedStatement#getParameterMetaData()} may be skipped for
+	 * better performance.
 	 *
 	 * @return {@code true} indicates it does; {@code false} indicates it does not;
 	 * @see org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType

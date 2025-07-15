@@ -51,7 +51,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Column;
@@ -98,6 +97,8 @@ import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.query.common.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.*;
@@ -1234,19 +1235,22 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		// The only useful option is 'NOT FOR REPLICATION'
+		// and it comes before the constraint expression
 		final String constraintName = checkConstraint.getName();
-		return constraintName == null
-				?
-				" check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")"
-				:
-				" constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint ) + "(" + checkConstraint.getConstraint() + ")";
+		final String checkWithName =
+				isBlank( constraintName )
+						? " check"
+						: " constraint " + constraintName + " check";
+		return appendCheckConstraintOptions( checkConstraint, checkWithName )
+			+ " (" + checkConstraint.getConstraint() + ")";
 	}
 
-	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
-		if ( StringHelper.isNotEmpty( checkConstraint.getOptions() ) ) {
-			return checkConstraint.getOptions() + " ";
-		}
-		return "";
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		return isNotEmpty( checkConstraint.getOptions() )
+				? sqlCheckConstraint + " " + checkConstraint.getOptions()
+				: sqlCheckConstraint;
 	}
 
 	@Override

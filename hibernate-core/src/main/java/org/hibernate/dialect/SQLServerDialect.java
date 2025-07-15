@@ -1219,16 +1219,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getCheckConstraintString(CheckConstraint checkConstraint) {
+		// The only useful option is 'NOT FOR REPLICATION'
+		// and it comes before the constraint expression
 		final String constraintName = checkConstraint.getName();
-		return isBlank( constraintName )
-				? " check " + getCheckConstraintOptions( checkConstraint )
-						+ "(" + checkConstraint.getConstraint() + ")"
-				: " constraint " + constraintName + " check " + getCheckConstraintOptions( checkConstraint )
-						+ "(" + checkConstraint.getConstraint() + ")";
+		final String checkWithName =
+				isBlank( constraintName )
+						? " check"
+						: " constraint " + constraintName + " check";
+		return appendCheckConstraintOptions( checkConstraint, checkWithName )
+			+ " (" + checkConstraint.getConstraint() + ")";
 	}
 
-	private String getCheckConstraintOptions(CheckConstraint checkConstraint) {
-		return isNotEmpty( checkConstraint.getOptions() ) ? checkConstraint.getOptions() + " " : "";
+	@Override
+	public String appendCheckConstraintOptions(CheckConstraint checkConstraint, String sqlCheckConstraint) {
+		return isNotEmpty( checkConstraint.getOptions() )
+				? sqlCheckConstraint + " " + checkConstraint.getOptions()
+				: sqlCheckConstraint;
 	}
 
 	@Override

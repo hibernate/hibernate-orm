@@ -407,7 +407,9 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final FunctionalDependencyAnalysisSupport analysisSupport = dialect.getFunctionalDependencyAnalysisSupport();
 		if ( analysisSupport.supportsAnalysis() ) {
 			if ( entityMappingType.getSqmMultiTableMutationStrategy() == null ) {
-				return true;
+				// A subquery may be used to render a single-table inheritance subtype, in which case
+				// we cannot use functional dependency analysis unless the dialect supports table groups
+				return analysisSupport.supportsTableGroups() || entityMappingType.getSuperMappingType() == null;
 			}
 			else {
 				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||

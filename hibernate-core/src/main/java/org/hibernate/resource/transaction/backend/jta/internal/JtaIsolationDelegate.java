@@ -182,6 +182,9 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 				// do the actual work
 				return work.accept( new WorkExecutor<>(), connection );
 			}
+			catch (SQLException sqle) {
+				throw sqlExceptionConverter().apply( sqle, "Error performing isolated work" );
+			}
 			catch ( HibernateException e ) {
 				throw e;
 			}

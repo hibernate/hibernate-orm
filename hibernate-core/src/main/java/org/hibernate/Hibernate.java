@@ -118,7 +118,7 @@ public final class Hibernate {
 		throw new UnsupportedOperationException();
 	}
 
-	private static final LobHelperImpl lobHelper = new LobHelperImpl();
+	private static final LobHelper lobHelper = new LobHelperImpl();
 
 	/**
 	 * Force initialization of a proxy or persistent collection. In the case of a
@@ -601,6 +601,8 @@ public final class Hibernate {
 	 * and {@link java.sql.Clob}.
 	 *
 	 * @return an instance of {@link LobHelper}
+	 *
+	 * @since 7.1
 	 */
 	public static LobHelper getLobHelper() {
 		return lobHelper;

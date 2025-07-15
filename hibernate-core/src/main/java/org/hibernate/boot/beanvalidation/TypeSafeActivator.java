@@ -311,7 +311,7 @@ class TypeSafeActivator {
 
 				// Apply Hibernate Validator specific constraints - we cannot import any HV specific classes though!
 				// No need to check explicitly for @Range. @Range is a composed constraint using @Min and @Max which
-				// will be taken care later.
+				// will be taken care of later.
 				applyLength( property, descriptor, propertyDesc );
 
 				// Composing constraints
@@ -360,7 +360,7 @@ class TypeSafeActivator {
 			return false;
 		}
 
-		final Class<? extends Annotation> composedAnnotation = descriptor.getAnnotation().annotationType();
+		final var composedAnnotation = descriptor.getAnnotation().annotationType();
 		return constraintCompositionTypeCache.computeIfAbsent( composedAnnotation, value -> {
 			for ( Annotation annotation : value.getAnnotations() ) {
 				if ( "org.hibernate.validator.constraints.ConstraintComposition"
@@ -383,7 +383,7 @@ class TypeSafeActivator {
 	private static void applyMin(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Min.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Min> minConstraint = (ConstraintDescriptor<Min>) descriptor;
+			final var minConstraint = (ConstraintDescriptor<Min>) descriptor;
 			final long min = minConstraint.getAnnotation().value();
 			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
@@ -396,7 +396,7 @@ class TypeSafeActivator {
 	private static void applyMax(Property property, ConstraintDescriptor<?> descriptor, Dialect dialect) {
 		if ( Max.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Max> maxConstraint = (ConstraintDescriptor<Max>) descriptor;
+			final var maxConstraint = (ConstraintDescriptor<Max>) descriptor;
 			final long max = maxConstraint.getAnnotation().value();
 			for ( Selectable selectable : property.getSelectables() ) {
 				if ( selectable instanceof Column column ) {
@@ -420,8 +420,8 @@ class TypeSafeActivator {
 	private static boolean isNotNullDescriptor(ConstraintDescriptor<?> descriptor) {
 		final Class<? extends Annotation> annotationType = descriptor.getAnnotation().annotationType();
 		return NotNull.class.equals(annotationType)
-				|| NotEmpty.class.equals(annotationType)
-				|| NotBlank.class.equals(annotationType);
+			|| NotEmpty.class.equals(annotationType)
+			|| NotBlank.class.equals(annotationType);
 	}
 
 	private static void markNotNull(Property property) {
@@ -429,6 +429,7 @@ class TypeSafeActivator {
 		if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 			// composite should not add not-null on all columns
 			if ( !property.isComposite() ) {
+				property.setOptional( false );
 				for ( Selectable selectable : property.getSelectables() ) {
 					if ( selectable instanceof Column column ) {
 						column.setNullable( false );
@@ -449,7 +450,7 @@ class TypeSafeActivator {
 	private static void applyDigits(Property property, ConstraintDescriptor<?> descriptor) {
 		if ( Digits.class.equals( descriptor.getAnnotation().annotationType() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Digits> digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
+			final var digitsConstraint = (ConstraintDescriptor<Digits>) descriptor;
 			final int integerDigits = digitsConstraint.getAnnotation().integer();
 			final int fractionalDigits = digitsConstraint.getAnnotation().fraction();
 			for ( Selectable selectable : property.getSelectables() ) {
@@ -466,7 +467,7 @@ class TypeSafeActivator {
 		if ( Size.class.equals( descriptor.getAnnotation().annotationType() )
 				&& String.class.equals( propertyDescriptor.getElementClass() ) ) {
 			@SuppressWarnings("unchecked")
-			final ConstraintDescriptor<Size> sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
+			final var sizeConstraint = (ConstraintDescriptor<Size>) descriptor;
 			final int max = sizeConstraint.getAnnotation().max();
 			for ( Column col : property.getColumns() ) {
 				if ( max < Integer.MAX_VALUE ) {
@@ -520,11 +521,11 @@ class TypeSafeActivator {
 						property = associatedClass.getProperty( element );
 					}
 					else {
-						if ( !property.isComposite() ) {
-							return null;
+						if ( property.isComposite() ) {
+							property = ( (Component) property.getValue() ).getProperty( element );
 						}
 						else {
-							property = ( (Component) property.getValue() ).getProperty( element );
+							return null;
 						}
 					}
 				}
@@ -532,7 +533,7 @@ class TypeSafeActivator {
 		}
 		catch ( MappingException e ) {
 			try {
-				//if we do not find it try to check the identifier mapper
+				//if we do not find it, try to check the identifier mapper
 				if ( associatedClass.getIdentifierMapper() == null ) {
 					return null;
 				}
@@ -544,11 +545,11 @@ class TypeSafeActivator {
 							property = associatedClass.getIdentifierMapper().getProperty( element );
 						}
 						else {
-							if ( !property.isComposite() ) {
-								return null;
+							if ( property.isComposite() ) {
+								property = ( (Component) property.getValue() ).getProperty( element );
 							}
 							else {
-								property = ( (Component) property.getValue() ).getProperty( element );
+								return null;
 							}
 						}
 					}
@@ -562,8 +563,9 @@ class TypeSafeActivator {
 	}
 
 	private static ValidatorFactory getValidatorFactory(ActivationContext context) {
-		// IMPL NOTE : We can either be provided a ValidatorFactory or make one.  We can be provided
-		// a ValidatorFactory in 2 different ways.  So here we "get" a ValidatorFactory in the following order:
+		// IMPL NOTE: We can either be provided a ValidatorFactory or make one. We can be provided
+		//            a ValidatorFactory in 2 different ways. So here we "get" a ValidatorFactory
+		//            in the following order:
 		//		1) Look into SessionFactoryOptions.getValidatorFactoryReference()
 		//		2) Look into ConfigurationService
 		//		3) build a new ValidatorFactory

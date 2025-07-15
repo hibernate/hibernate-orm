@@ -1773,7 +1773,8 @@ public class EntityBinder {
 
 		@Override
 		public Identifier handleExplicitName(String explicitName, MetadataBuildingContext buildingContext) {
-			return jdbcEnvironment( buildingContext ).getIdentifierHelper().toIdentifier( explicitName );
+			return jdbcEnvironment( buildingContext ).getIdentifierHelper()
+					.toIdentifier( explicitName, false, true );
 		}
 
 		@Override

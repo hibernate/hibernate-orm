@@ -1326,8 +1326,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 *
 	 * @return an instance of {@link LobHelper}
 	 *
-	 * @deprecated 	This method will be removed.
-	 * 				use {@link Hibernate#getLobHelper()} instead
+	 * @deprecated Use {@link Hibernate#getLobHelper()} instead.
 	 */
 	@Deprecated(since="7.0", forRemoval = true)
 	LobHelper getLobHelper();

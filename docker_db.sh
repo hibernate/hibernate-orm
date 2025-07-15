@@ -1092,7 +1092,6 @@ if [ -z ${1} ]; then
     echo -e "\tcockroachdb_23_1"
     echo -e "\tdb2"
     echo -e "\tdb2_11_5"
-    echo -e "\tdb2_10_5"
     echo -e "\tdb2_spatial"
     echo -e "\tedb"
     echo -e "\tedb_17"

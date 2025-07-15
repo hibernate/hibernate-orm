@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.id.hhh12973;
 
-import java.lang.invoke.MethodHandles;
 import java.util.EnumSet;
 import java.util.Map;
 import jakarta.persistence.Entity;
@@ -18,8 +17,6 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
@@ -35,8 +32,7 @@ import org.junit.Rule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 
-import org.jboss.logging.Logger;
-
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -48,15 +44,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SequenceMismatchStrategyLogTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger(
-					MethodHandles.lookup(),
-					CoreMessageLogger.class,
-					SequenceStyleGenerator.class.getName()
-			)
-	);
+	public LoggerInspectionRule logInspection = new LoggerInspectionRule( SEQUENCE_GENERATOR_MESSAGE_LOGGER );
 
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000497:" );
+	private final Triggerable triggerable = logInspection.watchForLogMessages( "HHH090202:" );
 
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;

@@ -4,7 +4,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Set;
@@ -30,20 +29,19 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceMismatchStrategy;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
 
 import jakarta.persistence.SequenceGenerator;
 
 import static java.util.Collections.singleton;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
+import static org.hibernate.id.enhanced.SequenceGeneratorLogger.SEQUENCE_GENERATOR_MESSAGE_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -113,13 +111,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  */
 public class SequenceStyleGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, BeforeExecutionGenerator {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			SequenceStyleGenerator.class.getName()
-	);
-
 
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -228,7 +219,7 @@ public class SequenceStyleGenerator
 				&& optimizationStrategy.isPooled()
 				&& !dialect.getSequenceSupport().supportsPooledSequences() ) {
 			forceTableUse = true;
-			LOG.forcingTableUse();
+			SEQUENCE_GENERATOR_MESSAGE_LOGGER.forcingTableUse();
 		}
 
 		this.databaseStructure = buildDatabaseStructure(
@@ -295,7 +286,7 @@ public class SequenceStyleGenerator
 						incrementSize = dbIncrementValue;
 					case LOG:
 						//TODO: the log message is correct for the case of FIX, but wrong for LOG
-						LOG.sequenceIncrementSizeMismatch( databaseSequenceName, incrementSize, dbIncrementValue );
+						SEQUENCE_GENERATOR_MESSAGE_LOGGER.sequenceIncrementSizeMismatch( databaseSequenceName, incrementSize, dbIncrementValue );
 						break;
 				}
 			}
@@ -434,7 +425,7 @@ public class SequenceStyleGenerator
 	protected int determineAdjustedIncrementSize(OptimizerDescriptor optimizationStrategy, int incrementSize) {
 		if ( optimizationStrategy == StandardOptimizerDescriptor.NONE  ) {
 			if ( incrementSize < -1 ) {
-				LOG.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_MESSAGE_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,
@@ -444,7 +435,7 @@ public class SequenceStyleGenerator
 				return -1;
 			}
 			else if ( incrementSize > 1 ) {
-				LOG.honoringOptimizerSetting(
+				SEQUENCE_GENERATOR_MESSAGE_LOGGER.honoringOptimizerSetting(
 						StandardOptimizerDescriptor.NONE.getExternalName(),
 						INCREMENT_PARAM,
 						incrementSize,

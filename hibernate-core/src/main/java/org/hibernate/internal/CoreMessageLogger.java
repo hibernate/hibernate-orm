@@ -146,11 +146,6 @@ public interface CoreMessageLogger extends BasicLogger {
 			+ " to unsafe use of the session): %s", id = 99)
 	void failed(Throwable throwable);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Forcing table use for sequence-style generator due to pooled optimizer selection where db does not support pooled sequences",
-			id = 107)
-	void forcingTableUse();
-
 	@LogMessage(level = WARN)
 	@Message(value = "GUID identifier generated: %s", id = 113)
 	void guidGenerated(String result);
@@ -158,15 +153,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = DEBUG)
 	@Message(value = "Handling transient entity in delete processing", id = 114)
 	void handlingTransientEntity();
-
-	@LogMessage(level = WARN)
-	@Message(value = "Config specified explicit optimizer of [%s], but [%s=%s]; using optimizer [%s] increment default of [%s].", id = 116)
-	void honoringOptimizerSetting(
-			String none,
-			String incrementParam,
-			int incrementSize,
-			String positiveOrNegative,
-			int defaultIncrementSize);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "HQL: %s, time: %sms, rows: %s", id = 117)
@@ -421,16 +407,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToObtainConnectionToQueryMetadata(@Cause Exception e);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Could not read or init a hi value", id = 351)
-	void unableToReadOrInitHiValue(@Cause SQLException e);
-
-	@LogMessage(level = ERROR)
 	@Message(value = "Could not release a cache lock: %s", id = 353)
 	void unableToReleaseCacheLock(CacheException ce);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Unable to release isolated connection [%s]", id = 356)
-	void unableToReleaseIsolatedConnection(Throwable ignore);
 
 	@LogMessage(level = WARN)
 	@Message(value = "Unable to release type info result set", id = 357)
@@ -444,21 +422,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Unable to retrieve type info result set: %s", id = 362)
 	void unableToRetrieveTypeInfoResultSet(String string);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Unable to rollback connection on exception [%s]", id = 363)
-	void unableToRollbackConnection(Exception ignore);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Unable to rollback isolated transaction on error [%s]: [%s]", id = 364)
-	void unableToRollbackIsolatedTransaction(Exception e, Exception ignore);
-
 	@LogMessage(level = ERROR)
 	@Message(value = "Error running schema update", id = 366)
 	void unableToRunSchemaUpdate(@Cause Exception e);
-
-	@LogMessage(level = ERROR)
-	@Message(value = "Could not updateQuery hi value in: %s", id = 376)
-	void unableToUpdateQueryHiValue(String tableName, @Cause SQLException e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "I/O reported error writing cached file: %s: %s", id = 378)
@@ -468,10 +434,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "The %s.%s.%s version of H2 implements temporary table creation such that it commits current transaction; multi-table, bulk HQL/JPQL will not work properly",
 			id = 393)
 	void unsupportedMultiTableBulkHqlJpaql(int majorVersion, int minorVersion, int buildId);
-
-	@LogMessage(level = INFO)
-	@Message(value = "Explicit segment value for id generator [%s.%s] suggested; using default [%s]", id = 398)
-	void usingDefaultIdGeneratorSegmentValue(String tableName, String segmentColumnName, String defaultToUse);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
@@ -629,10 +591,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "Detaching an uninitialized collection with queued operations from a session: %s", id = 496)
 	void queuedOperationWhenDetachFromSession(String collectionInfoString);
-
-	@LogMessage(level = WARN)
-	@Message(value = "The increment size of the [%s] sequence is set to [%d] in the entity mapping while the associated database sequence increment size is [%d]. The database sequence increment size will take precedence to avoid identifier allocation conflicts.", id = 497)
-	void sequenceIncrementSizeMismatch(String sequenceName, int incrementSize, int databaseIncrementSize);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Detaching an uninitialized collection with queued operations from a session due to rollback: %s", id = 498)

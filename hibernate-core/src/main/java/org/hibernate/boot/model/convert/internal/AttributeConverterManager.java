@@ -49,7 +49,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 
 	public void addConverter(ConverterDescriptor<?,?> descriptor) {
 		if ( log.isTraceEnabled() ) {
-			log.tracef( "Starting AttributeConverterManager#addConverter : `%s`",
+			log.tracef( "Registering AttributeConverter '%s'",
 					descriptor.getAttributeConverterClass().getName() );
 		}
 
@@ -59,7 +59,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 			if ( registeredConversion != null ) {
 				// we can skip registering the converter, the RegisteredConversion will always take precedence
 				if ( log.isDebugEnabled() ) {
-					log.debugf( "Skipping registration of discovered AttributeConverter `%s` for auto-apply",
+					log.debugf( "Skipping registration of discovered AttributeConverter '%s' for auto-apply",
 							descriptor.getAttributeConverterClass().getName() );
 				}
 				return;
@@ -114,7 +114,7 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		if ( attributeConverterDescriptorsByClass != null ) {
 			final var removed = attributeConverterDescriptorsByClass.remove( conversion.getConverterType() );
 			if ( removed != null && log.isDebugEnabled() ) {
-				log.debugf( "Removed potentially auto-applicable converter `%s` due to @ConverterRegistration",
+				log.debugf( "Removed potentially auto-applicable converter '%s' due to @ConverterRegistration",
 						removed.getAttributeConverterClass().getName() );
 			}
 		}

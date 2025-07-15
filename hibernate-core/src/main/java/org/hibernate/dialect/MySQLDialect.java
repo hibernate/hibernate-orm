@@ -983,6 +983,7 @@ public class MySQLDialect extends Dialect {
 				case 1451, 1452 -> extractUsingTemplate( " CONSTRAINT `", "`", sqle.getMessage() );
 				case 3819-> extractUsingTemplate( " constraint '", "'", sqle.getMessage() );
 				case 1048 -> extractUsingTemplate( "Column '", "'", sqle.getMessage() );
+				case 1364 -> extractUsingTemplate( "Field '", "'", sqle.getMessage() );
 				default -> null;
 			} );
 
@@ -1273,7 +1274,7 @@ public class MySQLDialect extends Dialect {
 					// Unique constraint violation
 					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
 							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
-				case 1048:
+				case 1048, 1364:
 					// Null constraint violation
 					return new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
 							getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );

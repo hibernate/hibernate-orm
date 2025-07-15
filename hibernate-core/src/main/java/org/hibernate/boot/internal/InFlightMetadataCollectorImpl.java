@@ -1757,7 +1757,7 @@ public class InFlightMetadataCollectorImpl
 
 			processFkSecondPassesInOrder();
 
-			processSecondPasses(createKeySecondPassList);
+			processSecondPasses( createKeySecondPassList );
 			processSecondPasses( secondaryTableSecondPassList );
 
 			processSecondPasses( querySecondPassList );

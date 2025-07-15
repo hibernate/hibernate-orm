@@ -220,12 +220,11 @@ public class EntityBinder {
 			superEntity.addSubclass( subclass );
 		}
 
-		persistentClass.createConstraints( context );
-
 		collector.addEntityBinding( persistentClass );
 		// process secondary tables and complementary definitions (ie o.h.a.Table)
 		collector.addSecondPass( new SecondaryTableFromAnnotationSecondPass( entityBinder, holder ) );
 		collector.addSecondPass( new SecondaryTableSecondPass( entityBinder, holder ) );
+		collector.addSecondPass( ignored -> persistentClass.createConstraints( context ) );
 		// comment, checkConstraint, and indexes are processed here
 		entityBinder.processComplementaryTableDefinitions();
 		resolveLifecycleCallbacks( clazzToProcess, persistentClass, context.getMetadataCollector() );

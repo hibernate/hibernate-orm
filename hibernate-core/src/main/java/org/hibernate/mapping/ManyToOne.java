@@ -19,6 +19,7 @@ import org.hibernate.type.ManyToOneType;
  */
 public final class ManyToOne extends ToOne {
 	private boolean isLogicalOneToOne;
+	private boolean hasJoinTable;
 	private NotFoundAction notFoundAction;
 
 	private transient ManyToOneType resolvedType;
@@ -139,6 +140,14 @@ public final class ManyToOne extends ToOne {
 
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
+	}
+
+	public void markAsJoinTable() {
+		hasJoinTable = true;
+	}
+
+	public boolean hasJoinTable() {
+		return hasJoinTable;
 	}
 
 	@Override

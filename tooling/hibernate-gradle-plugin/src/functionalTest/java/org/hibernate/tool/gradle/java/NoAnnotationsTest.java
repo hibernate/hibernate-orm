@@ -137,6 +137,7 @@ public class NoAnnotationsTest {
 		String generatedPersonJavaFileContents = new String(
 				Files.readAllBytes(generatedPersonJavaFile.toPath()));
 		assertFalse(generatedPersonJavaFileContents.contains("import jakarta.persistence.Entity;"));
+		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
 	}
 	
 	private void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {

@@ -13,17 +13,16 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.IsolationDelegate;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
  * @author Andrea Boriero
  */
 public class JdbcIsolationDelegate implements IsolationDelegate {
-	private static final CoreMessageLogger log = CoreLogging.messageLogger( JdbcIsolationDelegate.class );
 
 	private final JdbcConnectionAccess connectionAccess;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -77,11 +76,11 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 					}
 				}
 				catch ( Exception exception ) {
-					log.unableToRollbackConnection( exception );
+					JDBC_MESSAGE_LOGGER.unableToRollBackIsolatedConnection( exception );
 				}
 
 				if ( e instanceof HibernateException ) {
-					throw (HibernateException) e;
+					throw e;
 				}
 				else if ( e instanceof SQLException sqle ) {
 					throw sqlExceptionHelper().convert( sqle, "Error performing isolated work" );
@@ -96,14 +95,14 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 						connection.setAutoCommit( true );
 					}
 					catch ( Exception ignore ) {
-						log.trace( "Unable to reset connection back to auto-commit" );
+						JDBC_MESSAGE_LOGGER.unableToResetAutoCommit();
 					}
 				}
 				try {
 					jdbcConnectionAccess().releaseConnection( connection );
 				}
-				catch ( Exception ignore ) {
-					log.unableToReleaseIsolatedConnection( ignore );
+				catch ( Exception ignored ) {
+					JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( ignored );
 				}
 			}
 		}

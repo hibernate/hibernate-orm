@@ -75,7 +75,8 @@ public class HiLoOptimizer extends AbstractOptimizer {
 			throw new HibernateException( "increment size cannot be less than 1" );
 		}
 		if ( log.isTraceEnabled() ) {
-			log.tracev( "Creating hilo optimizer with [incrementSize={0}; returnClass={1}]", incrementSize, returnClass.getName() );
+			log.tracev( "Creating hilo optimizer with [incrementSize={0}; returnClass={1}]",
+					incrementSize, returnClass.getName() );
 		}
 	}
 

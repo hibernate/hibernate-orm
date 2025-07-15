@@ -21,6 +21,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import java.lang.invoke.MethodHandles;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -139,7 +140,27 @@ public interface JdbcLogging extends BasicLogger {
 			id = 100018)
 	void logDriverInfo(String name, String version, int major, int minor, int jdbcMajor, int jdbcMinor);
 
+	@LogMessage(level = TRACE)
+	@Message(value = "Unable to reset connection back to auto-commit", id = 100019)
+	void unableToResetAutoCommit();
+
+	@LogMessage(level = INFO)
+	@Message(value = "Unable to release isolated connection", id = 100020)
+	void unableToReleaseIsolatedConnection(@Cause Throwable ignored);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Unable to roll back isolated connection on exception ", id = 100021)
+	void unableToRollBackIsolatedConnection(@Cause Exception ignored);
+
 	@LogMessage(level = WARN)
-	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100020)
+	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100025)
 	void callingJoinTransactionOnNonJtaEntityManager();
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Current timestamp retrieved from database: %s (nanos=%s, time=%s)", id = 100031)
+	void currentTimestampRetrievedFromDatabase(Object timestamp, int nanos, long time);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Sequence value retrieved from database: %s", id = 100032)
+	void sequenceValueRetrievedFromDatabase(Number sequenceValue);
 }

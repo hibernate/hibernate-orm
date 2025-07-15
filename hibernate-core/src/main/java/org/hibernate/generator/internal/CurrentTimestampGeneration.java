@@ -216,24 +216,23 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 						context.getDatabase().getDialect(),
 						basicValue.getMetadata()
 				);
-				final Clock baseClock = context.getServiceRegistry()
-						.requireService( ConfigurationService.class )
-						.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
+				final Clock baseClock =
+						context.getServiceRegistry().requireService( ConfigurationService.class )
+								.getSetting( CLOCK_SETTING_NAME, value -> (Clock) value );
 				final Key key = new Key( propertyType, baseClock, size.getPrecision() == null ? 0 : size.getPrecision() );
 				final CurrentTimestampGeneratorDelegate delegate = GENERATOR_DELEGATES.get( key );
 				if ( delegate != null ) {
 					return delegate;
 				}
-				final BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate> producer = GENERATOR_PRODUCERS.get( key.clazz );
+				final var producer = GENERATOR_PRODUCERS.get( key.clazz );
 				if ( producer == null ) {
 					return null;
 				}
-				final CurrentTimestampGeneratorDelegate generatorDelegate = producer.apply( key.clock, key.precision );
-				final CurrentTimestampGeneratorDelegate old = GENERATOR_DELEGATES.putIfAbsent(
-						key,
-						generatorDelegate
-				);
-				return old != null ? old : generatorDelegate;
+				else {
+					final var generatorDelegate = producer.apply( key.clock, key.precision );
+					final var old = GENERATOR_DELEGATES.putIfAbsent( key, generatorDelegate );
+					return old != null ? old : generatorDelegate;
+				}
 			case DB:
 				return null;
 			default:
@@ -280,40 +279,6 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		Object generate();
 	}
 
-	private static class Key {
-		private final Class<?> clazz;
-		private final @Nullable Clock clock;
-		private final int precision;
-
-		public Key(Class<?> clazz, @Nullable Clock clock, int precision) {
-			this.clazz = clazz;
-			this.clock = clock;
-			this.precision = precision;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
-				return true;
-			}
-			if ( o == null || getClass() != o.getClass() ) {
-				return false;
-			}
-
-			Key key = (Key) o;
-
-			if ( precision != key.precision ) {
-				return false;
-			}
-			return clock == key.clock && clazz.equals( key.clazz );
-		}
-
-		@Override
-		public int hashCode() {
-			int result = clazz.hashCode();
-			result = 31 * result + ( clock == null ? 0 : clock.hashCode() );
-			result = 31 * result + precision;
-			return result;
-		}
+	private record Key(Class<?> clazz, @Nullable Clock clock, int precision) {
 	}
 }

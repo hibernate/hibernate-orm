@@ -4,7 +4,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -41,7 +40,6 @@ import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
@@ -54,10 +52,10 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-import org.jboss.logging.Logger;
 
 import static java.util.Collections.singletonMap;
 import static org.hibernate.boot.model.internal.GeneratorBinder.applyIfNotEmpty;
+import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_MESSAGE_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getNamingStrategy;
 import static org.hibernate.id.enhanced.OptimizerFactory.determineImplicitOptimizerName;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -136,11 +134,6 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
  * @author Steve Ebersole
  */
 public class TableGenerator implements PersistentIdentifierGenerator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			TableGenerator.class.getName()
-	);
 
 	/**
 	 * By default, in the absence of a {@value #SEGMENT_VALUE_PARAM} setting, we use a single row for all
@@ -468,7 +461,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	protected String determineDefaultSegmentValue(Properties params) {
 		final boolean preferSegmentPerEntity = getBoolean( CONFIG_PREFER_SEGMENT_PER_ENTITY, params );
 		final String defaultToUse = preferSegmentPerEntity ? params.getProperty( TABLE ) : DEF_SEGMENT_VALUE;
-		LOG.usingDefaultIdGeneratorSegmentValue( qualifiedTableName.render(), segmentColumnName, defaultToUse );
+		TABLE_GENERATOR_MESSAGE_LOGGER.usingDefaultIdGeneratorSegmentValue( qualifiedTableName.render(), segmentColumnName, defaultToUse );
 		return defaultToUse;
 	}
 
@@ -567,7 +560,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		final IntegralDataTypeHolder value = makeValue();
 		int rows;
 		do {
-
+			TABLE_GENERATOR_MESSAGE_LOGGER.retrievingCurrentValueForSegment( segmentValue );
 			try ( PreparedStatement selectPS = prepareStatement( connection, selectQuery, logger, listener, session ) ) {
 				selectPS.setString( 1, segmentValue );
 				final ResultSet selectRS = executeQuery( selectPS, listener, selectQuery, session );
@@ -575,8 +568,8 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					final long initializationValue = storeLastUsedValue ? initialValue - 1 : initialValue;
 					value.initialize( initializationValue );
 
+					TABLE_GENERATOR_MESSAGE_LOGGER.insertingInitialValueForSegment( value, segmentValue );
 					try ( PreparedStatement statement = prepareStatement( connection, insertQuery, logger, listener, session ) ) {
-						LOG.tracef( "binding parameter [%s] - [%s]", 1, segmentValue );
 						statement.setString( 1, segmentValue );
 						value.bind( statement, 2 );
 						executeUpdate( statement, listener, insertQuery, session);
@@ -587,33 +580,34 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 					value.initialize( selectRS, defaultValue );
 					if ( selectRS.wasNull() ) {
 						throw new HibernateException(
-								String.format( "%s for %s '%s' is null", valueColumnName, segmentColumnName,
+								String.format( "%s for %s '%s' is null",
+										valueColumnName, segmentColumnName,
 										segmentValue ) );
 					}
 				}
 				selectRS.close();
 			}
 			catch (SQLException e) {
-				LOG.unableToReadOrInitHiValue( e );
+				TABLE_GENERATOR_MESSAGE_LOGGER.unableToReadOrInitializeHiValue( physicalTableName.render(), e );
 				throw e;
 			}
 
-
+			final IntegralDataTypeHolder updateValue = value.copy();
+			if ( optimizer.applyIncrementSizeToSourceValues() ) {
+				updateValue.add( incrementSize );
+			}
+			else {
+				updateValue.increment();
+			}
+			TABLE_GENERATOR_MESSAGE_LOGGER.updatingCurrentValueForSegment( updateValue, segmentValue );
 			try ( PreparedStatement statement = prepareStatement( connection, updateQuery, logger, listener, session ) ) {
-				final IntegralDataTypeHolder updateValue = value.copy();
-				if ( optimizer.applyIncrementSizeToSourceValues() ) {
-					updateValue.add( incrementSize );
-				}
-				else {
-					updateValue.increment();
-				}
 				updateValue.bind( statement, 1 );
 				value.bind( statement, 2 );
 				statement.setString( 3, segmentValue );
 				rows = executeUpdate( statement, listener, updateQuery, session );
 			}
 			catch (SQLException e) {
-				LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
+				TABLE_GENERATOR_MESSAGE_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
 				throw e;
 			}
 		}

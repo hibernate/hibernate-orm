@@ -4,7 +4,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,10 +17,8 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
 
-import org.jboss.logging.Logger;
-
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
 
 /**
@@ -30,11 +27,6 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHold
  * @author Steve Ebersole
  */
 public class SequenceStructure implements DatabaseStructure {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			SequenceStructure.class.getName()
-	);
 
 	private final String contributor;
 	private final QualifiedName logicalQualifiedSequenceName;
@@ -123,8 +115,8 @@ public class SequenceStructure implements DatabaseStructure {
 							rs.next();
 							final IntegralDataTypeHolder value = getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
-							if ( LOG.isTraceEnabled() ) {
-								LOG.tracef( "Sequence value obtained: %s", value.makeValue() );
+							if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
+								JDBC_MESSAGE_LOGGER.sequenceValueRetrievedFromDatabase( value.makeValue() );
 							}
 							return value;
 						}

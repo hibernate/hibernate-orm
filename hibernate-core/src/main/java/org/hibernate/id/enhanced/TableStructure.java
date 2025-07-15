@@ -4,7 +4,6 @@
  */
 package org.hibernate.id.enhanced;
 
-import java.lang.invoke.MethodHandles;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +27,6 @@ import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.mapping.Column;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IntegralDataTypeHolder;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -36,10 +34,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.type.spi.TypeConfiguration;
-import org.jboss.logging.Logger;
 
 import static org.hibernate.LockMode.PESSIMISTIC_WRITE;
 import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHolder;
+import static org.hibernate.id.enhanced.TableGeneratorLogger.TABLE_GENERATOR_MESSAGE_LOGGER;
 
 /**
  * Describes a table used to mimic sequence behavior
@@ -47,11 +45,6 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getIntegralDataTypeHold
  * @author Steve Ebersole
  */
 public class TableStructure implements DatabaseStructure {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			TableStructure.class.getName()
-	);
 
 	private final QualifiedName logicalQualifiedTableName;
 	private final Identifier logicalValueColumnNameIdentifier;
@@ -184,15 +177,15 @@ public class TableStructure implements DatabaseStructure {
 												session
 										);
 										if ( !selectRS.next() ) {
-											final String err = "could not read a hi value - you need to populate the table: " + physicalTableName;
-											LOG.error( err );
-											throw new IdentifierGenerationException( err );
+											throw new IdentifierGenerationException(
+													"Could not read a hi value, populate the table: "
+															+ physicalTableName );
 										}
 										value.initialize( selectRS, 1 );
 										selectRS.close();
 									}
 									catch (SQLException sqle) {
-										LOG.error( "could not read a hi value", sqle );
+										TABLE_GENERATOR_MESSAGE_LOGGER.unableToReadHiValue( physicalTableName.render(), sqle );
 										throw sqle;
 									}
 
@@ -211,7 +204,7 @@ public class TableStructure implements DatabaseStructure {
 										rows = executeUpdate( updatePS, statsCollector, updateQuery, session );
 									}
 									catch (SQLException e) {
-										LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
+										TABLE_GENERATOR_MESSAGE_LOGGER.unableToUpdateHiValue( physicalTableName.render(), e );
 										throw e;
 									}
 								} while ( rows == 0 );

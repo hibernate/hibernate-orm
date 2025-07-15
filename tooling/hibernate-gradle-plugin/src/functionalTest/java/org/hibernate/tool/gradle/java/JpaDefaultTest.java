@@ -1,4 +1,4 @@
-package org.hibernate.tool.gradle.tutorial;
+package org.hibernate.tool.gradle.java;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -17,7 +17,7 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class TutorialTest {
+public class JpaDefaultTest {
 	
 	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
 			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
@@ -125,7 +125,7 @@ public class TutorialTest {
 		assertTrue(buildResult.getOutput().contains("BUILD SUCCESSFUL"));
 	}
 	
-	private void verifyProject() {
+	private void verifyProject() throws Exception {
 		File generatedOutputFolder = new File(projectDir, "app/generated-sources");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());
@@ -133,6 +133,9 @@ public class TutorialTest {
 		File generatedPersonJavaFile = new File(generatedOutputFolder, "Person.java");
 		assertTrue(generatedPersonJavaFile.exists());
 		assertTrue(generatedPersonJavaFile.isFile());
+		String generatedPersonJavaFileContents = new String(
+				Files.readAllBytes(generatedPersonJavaFile.toPath()));
+		assertTrue(generatedPersonJavaFileContents.contains("import jakarta.persistence.Entity;"));
 	}
 	
 	private void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {

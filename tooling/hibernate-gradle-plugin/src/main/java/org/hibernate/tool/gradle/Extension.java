@@ -27,6 +27,7 @@ public class Extension {
 	public String packageName = "";
 	public String revengStrategy = null;
 	public Boolean generateAnnotations = true;
+	public Boolean useGenerics = true;
 	
 	public Extension(Project project) {}
 	

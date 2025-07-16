@@ -36,6 +36,7 @@ public class GenerateJavaTask extends AbstractTask {
 		getLogger().lifecycle("Creating Java exporter");
 		Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.JAVA);
         pojoExporter.getProperties().setProperty("ejb3", String.valueOf(getExtension().generateAnnotations));
+		pojoExporter.getProperties().setProperty("jdk5", String.valueOf(getExtension().useGenerics));
 		File outputFolder = getOutputFolder();
 		pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
 		pojoExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);

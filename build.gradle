@@ -23,8 +23,8 @@ plugins {
 	id 'org.hibernate.orm.database-service' apply false
 	id 'biz.aQute.bnd' version '7.1.0' apply false
 
-	id "com.diffplug.spotless" version "7.0.4"
-	id 'org.checkerframework' version '0.6.55'
+	id "com.diffplug.spotless" version "7.1.0"
+	id 'org.checkerframework' version '0.6.56'
 	id 'org.hibernate.orm.build.jdks'
 
 	id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'

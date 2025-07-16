@@ -47,8 +47,6 @@ public class JavaExporter extends GenericExporter {
 		if(!getProperties().containsKey("jdk5")) {
 			getProperties().put("jdk5", "false");
 		}	
-		System.out.println("value of 'ejb3' is : " + getProperties().getProperty("ejb3"));
-		System.out.println("value of 'jdk5' is : " + getProperties().getProperty("jdk5"));
 		super.setupContext();
 	}
 }

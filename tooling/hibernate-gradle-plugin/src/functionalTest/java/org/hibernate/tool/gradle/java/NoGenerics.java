@@ -16,7 +16,7 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class UseGenerics {
+public class NoGenerics {
 	
 	private static final List<String> GRADLE_INIT_PROJECT_ARGUMENTS = List.of(
 			"init", "--type", "java-application", "--dsl", "groovy", "--test-framework", "junit-jupiter", "--java-version", "17");
@@ -65,6 +65,7 @@ public class UseGenerics {
 				new String(Files.readAllBytes(gradleBuildFile.toPath())));
 		addHibernateToolsPluginLine(gradleBuildFileContents);
 		addH2DatabaseDependencyLine(gradleBuildFileContents);
+		addHibernateToolsExtension(gradleBuildFileContents);
 		Files.writeString(gradleBuildFile.toPath(), gradleBuildFileContents.toString());
 	}
 	
@@ -130,7 +131,7 @@ public class UseGenerics {
 		String generatedPersonJavaFileContents = new String(
 				Files.readAllBytes(generatedPersonJavaFile.toPath()));
 		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
-		assertTrue(generatedPersonJavaFileContents.contains("Set<Item>"));
+		assertFalse(generatedPersonJavaFileContents.contains("Set<Item>"));
 		File generatedItemJavaFile = new File(generatedOutputFolder, "Item.java");
 		assertTrue(generatedItemJavaFile.exists());
 		assertTrue(generatedItemJavaFile.isFile());
@@ -149,6 +150,19 @@ public class UseGenerics {
 		int pos = gradleBuildFileContents.indexOf("dependencies {");
 		pos = gradleBuildFileContents.indexOf("}", pos);
 		gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + "\n");		
+	}
+	
+	private void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
+		int pos = gradleBuildFileContents.indexOf("dependencies {");
+		pos = gradleBuildFileContents.indexOf("}", pos);
+		StringBuffer hibernateToolsExtension = new StringBuffer();
+		hibernateToolsExtension
+			.append("\n")
+			.append("\n")
+			.append("hibernateTools { \n")
+			.append("  useGenerics=false \n")
+			.append("}");
+		gradleBuildFileContents.insert(pos + 1, hibernateToolsExtension.toString());
 	}
 	
 	private String constructJdbcConnectionString() {

@@ -1047,6 +1047,11 @@ public class H2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsPartitionBy() {
+		return getVersion().isSameOrAfter( 1, 4, 200 );
+	}
+
+	@Override
 	public boolean supportsCaseInsensitiveLike() {
 		return getVersion().isSameOrAfter( 1, 4, 194 );
 	}

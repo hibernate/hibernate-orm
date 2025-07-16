@@ -82,6 +82,7 @@ public class FormulaWithPartitionByTest {
 	public static class DisplayItem implements Serializable {
 
 		@Id
+		@Column(name = "DISPLAY_ITEM_ID")
 		private Integer id;
 
 		@Column(name = "DISCOUNT_CODE")
@@ -90,7 +91,7 @@ public class FormulaWithPartitionByTest {
 		@Column(name = "DISCOUNT_VALUE")
 		private Double discountValue;
 
-		@Formula("ROW_NUMBER() OVER( PARTITION BY DISCOUNT_CODE ORDER BY SIGN(DISCOUNT_VALUE) DESC )")
+		@Formula("ROW_NUMBER() OVER(PARTITION BY DISCOUNT_CODE ORDER BY DISPLAY_ITEM_ID)")
 		private Integer itemsByCode;
 
 		public Integer getId() {

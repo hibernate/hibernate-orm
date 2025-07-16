@@ -1056,6 +1056,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsPartitionBy() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsBindingNullSqlTypeForSetNull() {
 		return true;
 	}

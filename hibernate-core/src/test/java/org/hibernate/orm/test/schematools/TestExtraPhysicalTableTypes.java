@@ -176,7 +176,7 @@ public class TestExtraPhysicalTableTypes {
 		metadata.validate();
 	}
 
-	public class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
+	public static class InformationExtractorJdbcDatabaseMetaDataImplTest extends InformationExtractorJdbcDatabaseMetaDataImpl {
 
 		private final ExtractionContext extractionContext;
 
@@ -194,7 +194,7 @@ public class TestExtraPhysicalTableTypes {
 		}
 	}
 
-	class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
+	static class DdlTransactionIsolatorImpl implements  DdlTransactionIsolator{
 
 		@Override
 		public JdbcContext getJdbcContext() {

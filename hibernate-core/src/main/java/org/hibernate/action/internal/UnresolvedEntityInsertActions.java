@@ -7,7 +7,6 @@ package org.hibernate.action.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.lang.invoke.MethodHandles;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,10 +20,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 
-import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptySet;
 import static org.hibernate.pretty.MessageHelper.infoString;
@@ -43,11 +42,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * @author Gail Badner
  */
 public class UnresolvedEntityInsertActions {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			UnresolvedEntityInsertActions.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UnresolvedEntityInsertActions.class );
 
 	private static final int INIT_SIZE = 5;
 

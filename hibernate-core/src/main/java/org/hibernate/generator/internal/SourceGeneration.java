@@ -15,12 +15,9 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.generator.BeforeExecutionGenerator;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import org.jboss.logging.Logger;
 
-import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Member;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -30,6 +27,7 @@ import java.sql.Timestamp;
 import java.util.EnumSet;
 
 import static java.sql.Types.TIMESTAMP;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 
 /**
@@ -51,12 +49,6 @@ import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
 @Deprecated(since = "6.2")
 @Internal
 public class SourceGeneration implements BeforeExecutionGenerator {
-
-	private static final CoreMessageLogger log = Logger.getMessageLogger(
-			MethodHandles.lookup(),
-			CoreMessageLogger.class,
-			SourceGeneration.class.getName()
-	);
 
 	private final JavaType<?> propertyType;
 	private final CurrentTimestampGeneration.CurrentTimestampGeneratorDelegate valueGenerator;
@@ -97,7 +89,9 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 			final Timestamp ts = callable
 					? extractCalledResult( statement, coordinator, timestampSelectString )
 					: extractResult( statement, coordinator, timestampSelectString );
-			logResult( ts );
+			if ( JDBC_MESSAGE_LOGGER.isTraceEnabled() ) {
+				JDBC_MESSAGE_LOGGER.currentTimestampRetrievedFromDatabase( ts, ts.getNanos(), ts.getTime() );
+			}
 			return ts;
 		}
 		catch (SQLException e) {
@@ -130,14 +124,4 @@ public class SourceGeneration implements BeforeExecutionGenerator {
 		return callable.getTimestamp( 1 );
 	}
 
-	private static void logResult(Timestamp ts) {
-		if ( log.isTraceEnabled() ) {
-			log.tracev(
-					"Current timestamp retrieved from db : {0} (nanos={1}, time={2})",
-					ts,
-					ts.getNanos(),
-					ts.getTime()
-			);
-		}
-	}
 }

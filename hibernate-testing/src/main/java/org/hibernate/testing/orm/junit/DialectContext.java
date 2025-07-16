@@ -78,11 +78,11 @@ public final class DialectContext {
 			dialect = constructor.newInstance( new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() ) );
 		}
 		catch (SQLException sqle) {
-			throw new JDBCConnectionException( "Could not connect to database with JDBC URL: '"
+			throw new JDBCConnectionException( "Could not connect to database with JDBC URL '"
 					+ jdbcUrl + "' [" + sqle.getMessage() + "]", sqle );
 		}
 		catch (Exception e) {
-			throw new HibernateException( "Could not connect to database with dialect class: " + dialectClass, e );
+			throw new HibernateException( "Could not connect to database with dialect class: " + dialectClass.getName(), e );
 		}
 	}
 

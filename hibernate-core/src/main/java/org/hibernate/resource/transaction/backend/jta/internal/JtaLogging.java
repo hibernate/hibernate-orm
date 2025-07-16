@@ -157,10 +157,10 @@ public interface JtaLogging extends BasicLogger {
 
 	@LogMessage(level = Logger.Level.INFO)
 	@Message(
-			value = "Unable to roll back isolated transaction on error [%s] : [%s]",
+			value = "Unable to roll back isolated transaction on error [%s]",
 			id = NAMESPACE + 17
 	)
-	void unableToRollbackIsolatedTransaction(Exception e, Exception ignore);
+	void unableToRollBackIsolatedTransaction(Exception original, @Cause Exception ignore);
 
 	@LogMessage(level = Logger.Level.INFO)
 	@Message(

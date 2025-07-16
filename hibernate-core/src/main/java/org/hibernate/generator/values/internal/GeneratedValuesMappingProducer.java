@@ -49,6 +49,7 @@ public class GeneratedValuesMappingProducer implements JdbcValuesMappingProducer
 				null,
 				sqlSelections::add,
 				loadQueryInfluencers,
+				false,
 				sessionFactory
 		);
 

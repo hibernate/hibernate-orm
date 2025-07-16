@@ -22,7 +22,7 @@ import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 /**
  * @author Andrea Boriero
  */
-public class JdbcIsolationDelegate implements IsolationDelegate {
+public final class JdbcIsolationDelegate implements IsolationDelegate {
 
 	private final JdbcConnectionAccess connectionAccess;
 	private final SqlExceptionHelper sqlExceptionHelper;
@@ -40,79 +40,108 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 		this.sqlExceptionHelper = sqlExceptionHelper;
 	}
 
-	protected JdbcConnectionAccess jdbcConnectionAccess() {
-		return this.connectionAccess;
-	}
-
-	protected SqlExceptionHelper sqlExceptionHelper() {
-		return this.sqlExceptionHelper;
-	}
-
 	@Override
-	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted) throws HibernateException {
-		boolean wasAutoCommit = false;
+	public <T> T delegateWork(WorkExecutorVisitable<T> work, boolean transacted)
+			throws HibernateException {
+		final Connection connection;
 		try {
-			final Connection connection = jdbcConnectionAccess().obtainConnection();
+			connection = connectionAccess.obtainConnection();
+		}
+		catch ( SQLException sqle ) {
+			throw sqlExceptionHelper.convert( sqle, "Unable to obtain isolated JDBC connection" );
+		}
+
+		try {
+			final boolean wasAutoCommit;
 			try {
-				if ( transacted ) {
-					if ( connection.getAutoCommit() ) {
-						wasAutoCommit = true;
-						connection.setAutoCommit( false );
-					}
-				}
-
-				T result = work.accept( new WorkExecutor<>(), connection );
-
-				if ( transacted ) {
-					connection.commit();
-				}
-
-				return result;
+				wasAutoCommit = disableAutoCommit( transacted, connection );
 			}
-			catch ( Exception e ) {
-				try {
-					if ( transacted && !connection.isClosed() ) {
-						connection.rollback();
-					}
-				}
-				catch ( Exception exception ) {
-					JDBC_MESSAGE_LOGGER.unableToRollBackIsolatedConnection( exception );
-				}
+			catch (SQLException sqle) {
+				throw sqlExceptionHelper.convert( sqle, "Unable to manage autocommit on isolated JDBC connection" );
+			}
 
-				if ( e instanceof HibernateException ) {
-					throw e;
+			try {
+				return doWorkAndCommit( work, transacted, connection );
+			}
+			catch (Exception exception) {
+				rollBack( transacted, connection, exception );
+				if ( exception instanceof HibernateException he ) {
+					throw he;
 				}
-				else if ( e instanceof SQLException sqle ) {
-					throw sqlExceptionHelper().convert( sqle, "Error performing isolated work" );
+				else if ( exception instanceof SQLException sqle ) {
+					throw sqlExceptionHelper.convert( sqle, "Error performing isolated work" );
 				}
 				else {
-					throw new HibernateException( "Error performing isolated work", e );
+					throw new HibernateException( "Error performing isolated work", exception );
 				}
 			}
 			finally {
-				if ( transacted && wasAutoCommit ) {
-					try {
-						connection.setAutoCommit( true );
-					}
-					catch ( Exception ignore ) {
-						JDBC_MESSAGE_LOGGER.unableToResetAutoCommit();
-					}
-				}
-				try {
-					jdbcConnectionAccess().releaseConnection( connection );
-				}
-				catch ( Exception ignored ) {
-					JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( ignored );
-				}
+				resetAutoCommit( transacted, wasAutoCommit, connection );
 			}
 		}
-		catch ( SQLException sqle ) {
-			throw sqlExceptionHelper().convert( sqle, "Unable to obtain isolated JDBC connection" );
+		finally {
+			releaseConnection( connection );
+		}
+	}
+
+	private static <T> T doWorkAndCommit(WorkExecutorVisitable<T> work, boolean transacted, Connection connection)
+			throws SQLException {
+		T result = work.accept( new WorkExecutor<>(), connection );
+		if ( transacted ) {
+			connection.commit();
+		}
+		return result;
+	}
+
+	private void releaseConnection(Connection connection) {
+		try {
+			connectionAccess.releaseConnection( connection );
+		}
+		catch ( Exception exception ) {
+			JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( exception );
+		}
+	}
+
+	private static void rollBack(boolean transacted, Connection connection, Exception original) {
+		try {
+			if ( transacted && !connection.isClosed() ) {
+				connection.rollback();
+			}
+		}
+		catch ( Exception exception ) {
+			JDBC_MESSAGE_LOGGER.unableToRollBackIsolatedConnection( exception );
+			original.addSuppressed( exception );
+		}
+	}
+
+	private static void resetAutoCommit(boolean transacted, boolean wasAutoCommit, Connection connection) {
+		if ( transacted && wasAutoCommit ) {
+			try {
+				connection.setAutoCommit( true );
+			}
+			catch ( Exception exception ) {
+				JDBC_MESSAGE_LOGGER.unableToResetAutoCommit( exception );
+			}
+		}
+	}
+
+	private static boolean disableAutoCommit(boolean transacted, Connection connection)
+			throws SQLException {
+		if ( transacted ) {
+			final boolean wasAutoCommit = connection.getAutoCommit();
+			if ( wasAutoCommit ) {
+				connection.setAutoCommit( false );
+			}
+			return wasAutoCommit;
+		}
+		else {
+			return false;
 		}
 	}
 
 	@Override
-	public <T> T delegateCallable(Callable<T> callable, boolean transacted) throws HibernateException {
+	public <T> T delegateCallable(Callable<T> callable, boolean transacted)
+			throws HibernateException {
 		// No connection, nothing to be suspended
 		try {
 			return callable.call();
@@ -120,8 +149,8 @@ public class JdbcIsolationDelegate implements IsolationDelegate {
 		catch ( HibernateException e ) {
 			throw e;
 		}
-		catch ( Exception e ) {
-			throw new HibernateException( e );
+		catch ( Exception exception ) {
+			throw new HibernateException( exception );
 		}
 	}
 }

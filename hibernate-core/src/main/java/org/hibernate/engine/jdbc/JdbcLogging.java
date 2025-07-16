@@ -142,11 +142,11 @@ public interface JdbcLogging extends BasicLogger {
 
 	@LogMessage(level = TRACE)
 	@Message(value = "Unable to reset connection back to auto-commit", id = 100019)
-	void unableToResetAutoCommit();
+	void unableToResetAutoCommit(@Cause Exception ignored);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Unable to release isolated connection", id = 100020)
-	void unableToReleaseIsolatedConnection(@Cause Throwable ignored);
+	void unableToReleaseIsolatedConnection(@Cause Exception ignored);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Unable to roll back isolated connection on exception ", id = 100021)

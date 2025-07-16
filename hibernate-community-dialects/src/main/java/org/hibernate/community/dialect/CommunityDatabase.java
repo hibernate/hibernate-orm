@@ -185,6 +185,21 @@ public enum CommunityDatabase {
 		}
 	},
 
+	TERADATA {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new TeradataDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			return "Teradata".equals( databaseName );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.teradata.jdbc.TeraDriver";
+		}
+	},
+
 	TIMESTEN {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {

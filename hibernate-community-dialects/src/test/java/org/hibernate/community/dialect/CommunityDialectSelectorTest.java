@@ -24,7 +24,7 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( MimerSQLDialect.class );
 
 		testDialectNamingResolution( SybaseAnywhereDialect.class );
-
+		testDialectNamingResolution( TeradataDialect.class );
 		testDialectNamingResolution( TimesTenDialect.class );
 		testDialectNamingResolution( SingleStoreDialect.class );
 		testDialectNamingResolution( DerbyDialect.class );

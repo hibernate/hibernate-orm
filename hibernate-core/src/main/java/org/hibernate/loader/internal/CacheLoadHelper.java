@@ -77,32 +77,32 @@ public class CacheLoadHelper {
 	 *
 	 * @throws HibernateException Generally indicates problems applying a lock mode.
 	 */
-	public static PersistenceContextEntry loadFromSessionCache(
-			EntityKey keyToLoad, LockOptions lockOptions,
-			LoadEventListener.LoadType options,
-			SharedSessionContractImplementor session) {
+	public static PersistenceContextEntry loadFromSessionCache(EntityKey keyToLoad, LockOptions lockOptions, LoadEventListener.LoadType options, SharedSessionContractImplementor session) {
 		final Object old = session.getEntityUsingInterceptor( keyToLoad );
+		PersistenceContextEntry.EntityStatus entityStatus = MANAGED;
 		if ( old != null ) {
 			// this object was already loaded
 			final EntityEntry oldEntry = session.getPersistenceContext().getEntry( old );
-			if ( options.isCheckDeleted() ) {
-				if ( oldEntry.getStatus().isDeletedOrGone() ) {
-					LOADING_LOGGER.foundEntityScheduledForRemoval();
-					return new PersistenceContextEntry( old, REMOVED_ENTITY_MARKER );
-				}
+			entityStatus = entityStatus( keyToLoad, options, session, oldEntry, old );
+			if ( entityStatus == MANAGED ) {
+				upgradeLock( old, oldEntry, lockOptions, session );
 			}
-			if ( options.isAllowNulls() ) {
-				final EntityPersister persister =
-						session.getFactory().getMappingMetamodel()
-								.getEntityDescriptor( keyToLoad.getEntityName() );
-				if ( !persister.isInstance( old ) ) {
-					LOADING_LOGGER.foundEntityWrongType();
-					return new PersistenceContextEntry( old, INCONSISTENT_RTN_CLASS_MARKER );
-				}
-			}
-			upgradeLock( old, oldEntry, lockOptions, session );
 		}
-		return new PersistenceContextEntry( old, MANAGED );
+		return new PersistenceContextEntry( old, entityStatus );
+	}
+
+	// Used by Hibernate Reactive
+	public static PersistenceContextEntry.EntityStatus entityStatus(EntityKey keyToLoad, LoadEventListener.LoadType options, SharedSessionContractImplementor session, EntityEntry oldEntry, Object old) {
+		if ( options.isCheckDeleted() && oldEntry.getStatus().isDeletedOrGone() ) {
+			LOADING_LOGGER.foundEntityScheduledForRemoval();
+			return REMOVED_ENTITY_MARKER;
+		}
+		if ( options.isAllowNulls() && !session.getFactory().getMappingMetamodel()
+				.getEntityDescriptor( keyToLoad.getEntityName() ).isInstance( old ) ) {
+			LOADING_LOGGER.foundEntityWrongType();
+			return INCONSISTENT_RTN_CLASS_MARKER;
+		}
+		return MANAGED;
 	}
 
 	/**

@@ -8,14 +8,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -31,7 +26,10 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
-public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractBatchEntitySelectFetchInitializer<BatchEntityInsideEmbeddableSelectFetchInitializer.BatchEntityInsideEmbeddableSelectFetchInitializerData> {
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
+
+public class BatchEntityInsideEmbeddableSelectFetchInitializer
+		extends AbstractBatchEntitySelectFetchInitializer<BatchEntityInsideEmbeddableSelectFetchInitializer.BatchEntityInsideEmbeddableSelectFetchInitializerData> {
 	protected final Setter referencedModelPartSetter;
 	protected final AttributeMapping[] rootEmbeddableAttributes;
 	protected final Getter[] rootEmbeddableGetters;
@@ -52,7 +50,8 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		}
 	};
 
-	public static class BatchEntityInsideEmbeddableSelectFetchInitializerData extends AbstractBatchEntitySelectFetchInitializerData {
+	public static class BatchEntityInsideEmbeddableSelectFetchInitializerData
+			extends AbstractBatchEntitySelectFetchInitializerData {
 		private HashMap<EntityKey, List<ParentInfo>> toBatchLoad;
 
 		public BatchEntityInsideEmbeddableSelectFetchInitializerData(
@@ -125,12 +124,12 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 		super.initializeInstance( data );
 		// todo: check why this can't be moved to #registerToBatchFetchQueue
 		if ( data.getInstance() == BATCH_PROPERTY ) {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final var rowProcessingState = data.getRowProcessingState();
 			final InitializerData owningData = owningEntityInitializer.getData( rowProcessingState );
 			final int owningEntitySubclassId = owningEntityInitializer.getConcreteDescriptor( owningData ).getSubclassId();
 			final AttributeMapping rootEmbeddableAttribute = rootEmbeddableAttributes[owningEntitySubclassId];
 			if ( rootEmbeddableAttribute != null ) {
-				HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+				var toBatchLoad = data.toBatchLoad;
 				if ( toBatchLoad == null ) {
 					toBatchLoad = data.toBatchLoad = new HashMap<>();
 				}
@@ -171,14 +170,14 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 	@Override
 	public void endLoading(BatchEntityInsideEmbeddableSelectFetchInitializerData data) {
 		super.endLoading( data );
-		final HashMap<EntityKey, List<ParentInfo>> toBatchLoad = data.toBatchLoad;
+		final var toBatchLoad = data.toBatchLoad;
 		if ( toBatchLoad != null ) {
-			for ( Map.Entry<EntityKey, List<ParentInfo>> entry : toBatchLoad.entrySet() ) {
+			for ( var entry : toBatchLoad.entrySet() ) {
 				final EntityKey entityKey = entry.getKey();
 				final List<ParentInfo> parentInfos = entry.getValue();
-				final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
-				final SessionFactoryImplementor factory = session.getFactory();
-				final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+				final var session = data.getRowProcessingState().getSession();
+				final var factory = session.getFactory();
+				final var persistenceContext = session.getPersistenceContextInternal();
 				final Object loadedInstance = loadInstance( entityKey, toOneMapping, affectedByFilter, session );
 				for ( ParentInfo parentInfo : parentInfos ) {
 					final Object parentEntityInstance = parentInfo.parentEntityInstance;
@@ -194,11 +193,11 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 						The value of RootEmbeddable is needed to update the ParentEntity loaded state
 						 */
 						final int parentEntitySubclassId = parentInfo.parentEntitySubclassId;
-						final Object rootEmbeddable = rootEmbeddableGetters[parentEntitySubclassId].get( parentEntityInstance );
-						loadedState[parentInfo.propertyIndex] = rootEmbeddablePropertyTypes[parentEntitySubclassId].deepCopy(
-								rootEmbeddable,
-								factory
-						);
+						final Object rootEmbeddable =
+								rootEmbeddableGetters[parentEntitySubclassId].get( parentEntityInstance );
+						loadedState[parentInfo.propertyIndex] =
+								rootEmbeddablePropertyTypes[parentEntitySubclassId]
+										.deepCopy( rootEmbeddable, factory );
 					}
 				}
 			}
@@ -223,7 +222,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public String toString() {
-		return "BatchEntityInsideEmbeddableSelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "BatchEntityInsideEmbeddableSelectFetchInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

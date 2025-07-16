@@ -9,9 +9,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.Hibernate;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -30,6 +27,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
@@ -79,14 +77,10 @@ public class DiscriminatedEntityInitializer
 		this.eager = eager;
 		this.resultInitializer = resultInitializer;
 		final Initializer<?> initializer = keyValueAssembler.getInitializer();
-		if ( initializer == null ) {
-			this.keyIsEager = false;
-			this.hasLazySubInitializer = false;
-		}
-		else {
-			this.keyIsEager = initializer.isEager();
-			this.hasLazySubInitializer = !initializer.isEager() || initializer.hasLazySubInitializers();
-		}
+		this.keyIsEager = initializer != null && initializer.isEager();
+		this.hasLazySubInitializer =
+				initializer != null
+				&& ( !initializer.isEager() || initializer.hasLazySubInitializers() );
 	}
 
 	@Override
@@ -116,7 +110,7 @@ public class DiscriminatedEntityInitializer
 
 		// resolve the key and the discriminator, and then use those to load the indicated entity
 
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
 		final Object discriminatorValue = discriminatorValueAssembler.assemble( rowProcessingState );
 
 		if ( discriminatorValue == null ) {
@@ -136,7 +130,7 @@ public class DiscriminatedEntityInitializer
 
 	@Override
 	public void resolveState(DiscriminatedEntityInitializerData data) {
-		final RowProcessingState rowProcessingState = data.getRowProcessingState();
+		final var rowProcessingState = data.getRowProcessingState();
 		discriminatorValueAssembler.resolveState( rowProcessingState );
 		keyValueAssembler.resolveState( rowProcessingState );
 	}
@@ -165,10 +159,10 @@ public class DiscriminatedEntityInitializer
 
 		data.setState( State.INITIALIZED );
 
-		final SharedSessionContractImplementor session = data.getRowProcessingState().getSession();
+		final var session = data.getRowProcessingState().getSession();
 		final EntityKey entityKey = new EntityKey( data.entityIdentifier, data.concreteDescriptor );
 
-		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
+		final var persistenceContext = session.getPersistenceContextInternal();
 		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
 		if ( holder != null ) {
 			final Object instance = holder.getEntity();
@@ -207,12 +201,12 @@ public class DiscriminatedEntityInitializer
 			data.setInstance( null );
 		}
 		else {
-			final RowProcessingState rowProcessingState = data.getRowProcessingState();
+			final var rowProcessingState = data.getRowProcessingState();
 			final LazyInitializer lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer == null ) {
 				data.setState( State.INITIALIZED );
 				if ( keyIsEager ) {
-					final SharedSessionContractImplementor session = rowProcessingState.getSession();
+					final var session = rowProcessingState.getSession();
 					data.concreteDescriptor = session.getEntityPersister( null, instance );
 					data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
 				}
@@ -331,7 +325,7 @@ public class DiscriminatedEntityInitializer
 
 	@Override
 	public String toString() {
-		return "DiscriminatedEntityInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+		return "DiscriminatedEntityInitializer(" + toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

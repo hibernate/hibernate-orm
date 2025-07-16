@@ -408,7 +408,7 @@ public class CacheLoadHelper {
 	}
 
 	public record PersistenceContextEntry(Object entity, EntityStatus status) {
-		enum EntityStatus {
+		public enum EntityStatus {
 			MANAGED,
 			REMOVED_ENTITY_MARKER,
 			INCONSISTENT_RTN_CLASS_MARKER

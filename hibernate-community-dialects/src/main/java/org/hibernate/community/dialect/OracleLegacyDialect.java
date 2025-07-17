@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -119,8 +120,10 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
 import static org.hibernate.query.common.TemporalUnit.MINUTE;
@@ -1273,6 +1276,16 @@ public class OracleLegacyDialect extends Dialect {
 												|| queryOptions.getLimit().getFirstRow() != null
 								)
 				);
+	}
+
+	public String getQueryHintString(String query, List<String> hintList) {
+		if ( hintList.isEmpty() ) {
+			return query;
+		}
+		else {
+			final String hints = join( " ", hintList );
+			return isEmpty( hints ) ? query : getQueryHintString( query, hints );
+		}
 	}
 
 	@Override

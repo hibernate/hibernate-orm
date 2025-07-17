@@ -197,6 +197,41 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyTableCheck(Table table, StringBuilder buf) {
 		if ( dialect.supportsTableCheck() ) {
+			if ( !dialect.supportsColumnCheck() ) {
+				for ( Column column : table.getColumns() ) {
+					// some databases (Maria, SQL Server) don't like multiple 'check' clauses
+					final List<CheckConstraint> checkConstraints = column.getCheckConstraints();
+					long anonConstraints = checkConstraints.stream().filter( CheckConstraint::isAnonymous ).count();
+					if ( anonConstraints == 1 ) {
+						for ( CheckConstraint constraint : checkConstraints ) {
+							buf.append( "," ).append( constraint.constraintString( dialect ) );
+						}
+					}
+					else {
+						boolean first = true;
+						for ( CheckConstraint constraint : checkConstraints ) {
+							if ( constraint.isAnonymous() ) {
+								if ( first ) {
+									buf.append( "," ).append( " check (" );
+									first = false;
+								}
+								else {
+									buf.append( " and " );
+								}
+								buf.append( constraint.getConstraintInParens() );
+							}
+						}
+						if ( !first ) {
+							buf.append( ")" );
+						}
+						for ( CheckConstraint constraint : checkConstraints ) {
+							if ( constraint.isNamed() ) {
+								buf.append( constraint.constraintString( dialect ) );
+							}
+						}
+					}
+				}
+			}
 			for ( CheckConstraint constraint : table.getChecks() ) {
 				buf.append( "," ).append( constraint.constraintString( dialect ) );
 			}

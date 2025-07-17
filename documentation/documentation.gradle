@@ -182,6 +182,7 @@ dependencies {
 	javadocClasspath jakartaLibs.jsonbApi
 	javadocClasspath libs.ant
 	javadocClasspath dbLibs.postgresql
+	javadocClasspath dbLibs.edb
 	javadocClasspath libs.jackson
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml

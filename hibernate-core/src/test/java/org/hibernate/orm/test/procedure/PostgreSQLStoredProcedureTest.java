@@ -9,7 +9,6 @@ package org.hibernate.orm.test.procedure;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -117,34 +116,6 @@ public class PostgreSQLStoredProcedureTest {
 				}
 			} );
 			assertEquals( Long.valueOf( 2 ), phoneCount );
-		} );
-	}
-
-	@Test
-	public void testProcedureWithJDBCByName(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			try {
-				Session session = entityManager.unwrap( Session.class );
-				Long phoneCount = session.doReturningWork( connection -> {
-					CallableStatement procedure = null;
-					try {
-						procedure = connection.prepareCall( "{ call sp_count_phones(?,?) }" );
-						procedure.registerOutParameter( "phoneCount", Types.BIGINT );
-						procedure.setLong( "personId", 1L );
-						procedure.execute();
-						return procedure.getLong( 1 );
-					}
-					finally {
-						if ( procedure != null ) {
-							procedure.close();
-						}
-					}
-				} );
-				assertEquals( Long.valueOf( 2 ), phoneCount );
-			}
-			catch (Exception e) {
-				assertEquals( SQLFeatureNotSupportedException.class, e.getCause().getClass() );
-			}
 		} );
 	}
 

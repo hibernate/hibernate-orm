@@ -7,6 +7,7 @@ import java.time.Duration;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
 import org.hibernate.dialect.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -55,7 +56,7 @@ public class PostgresIntervalSecondTest {
 		assertThat( durationJdbcType ).isEqualTo( NumericJdbcType.INSTANCE );
 
 		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor( SqlTypes.INTERVAL_SECOND );
-		assertThat( intervalType ).isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class );
+		assertThat( intervalType ).isOfAnyClassIn( PostgreSQLIntervalSecondJdbcType.class, PostgreSQLCastingIntervalSecondJdbcType.class );
 
 		// a simple duration field with no overrides - so should be using a default JdbcType
 		assertThat( entityDescriptor.findAttributeMapping( "duration" )

@@ -90,7 +90,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
 		sqlAppender.appendSql( "avg(" );
 		final Expression arg;
 		if ( sqlAstArguments.get( 0 ) instanceof Distinct ) {

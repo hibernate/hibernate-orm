@@ -87,7 +87,7 @@ public class ListaggStringAggEmulation extends AbstractSqmSelfRenderingFunctionD
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
 		sqlAppender.appendSql( functionName );
 		sqlAppender.appendSql( '(' );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );

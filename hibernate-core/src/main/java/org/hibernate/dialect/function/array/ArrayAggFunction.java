@@ -72,7 +72,7 @@ public class ArrayAggFunction extends AbstractSqmSelfRenderingFunctionDescriptor
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && ( !supportsFilter || !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause() );
+		final boolean caseWrapper = filter != null && ( !supportsFilter || !filterClauseSupported( translator ) );
 		sqlAppender.appendSql( functionName );
 		sqlAppender.appendSql( '(' );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );

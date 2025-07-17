@@ -19,7 +19,7 @@ import org.hibernate.type.StandardBasicTypes;
 /**
  * A {@link FunctionArgumentTypeResolver} for {@link SqlTypes#VECTOR} functions.
  */
-public class VectorArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class VectorArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver INSTANCE = new VectorArgumentTypeResolver();
 

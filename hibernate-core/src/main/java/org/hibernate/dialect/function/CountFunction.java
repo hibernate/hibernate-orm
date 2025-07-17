@@ -150,7 +150,7 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
 		final SqlAstNode arg = sqlAstArguments.get( 0 );
 		sqlAppender.appendSql( countFunctionName );
 		sqlAppender.appendSql( '(' );

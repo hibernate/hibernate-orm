@@ -22,19 +22,11 @@ public class NameSpaceTablesInformation {
 	}
 
 	public void addTableInformation(TableInformation tableInformation) {
-		tables.put( tableInformation.getName().getTableName().getText(), tableInformation );
+		tables.put(identifierHelper.toMetaDataObjectName( tableInformation.getName().getTableName()), tableInformation);
 	}
 
 	public TableInformation getTableInformation(Table table) {
-		String tableName = identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() );
-		if ( tables.containsKey( tableName.toLowerCase() ))  {
-			return  tables.get( tableName.toLowerCase() );
-		}
-		else if ( tables.containsKey( tableName.toUpperCase() ) ) {
-			return  tables.get( tableName.toUpperCase() );
-		}
-
-		return null;
+		return tables.get( identifierHelper.toMetaDataObjectName( table.getQualifiedTableName().getTableName() ) );
 	}
 
 	public TableInformation getTableInformation(String tableName) {

@@ -252,7 +252,7 @@ public class ScanningCoordinator {
 			unresolvedListedClassNames.remove( classDescriptor.getName() );
 		}
 
-		// IMPL NOTE : "explicitlyListedClassNames" can contain class or package names...
+		// IMPL NOTE: "explicitlyListedClassNames" can contain class or package names...
 		for ( PackageDescriptor packageDescriptor : scanResult.getLocatedPackages() ) {
 			managedResources.addAnnotatedPackageName( packageDescriptor.getName() );
 			unresolvedListedClassNames.remove( packageDescriptor.getName() );

@@ -11,9 +11,8 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 public class StandardScannerFactory implements ScannerFactory {
 	@Override
 	public Scanner getScanner(ArchiveDescriptorFactory archiveDescriptorFactory) {
-		if ( archiveDescriptorFactory == null ) {
-			return new StandardScanner();
-		}
-		return new StandardScanner( archiveDescriptorFactory );
+		return archiveDescriptorFactory == null
+				? new StandardScanner()
+				: new StandardScanner( archiveDescriptorFactory );
 	}
 }

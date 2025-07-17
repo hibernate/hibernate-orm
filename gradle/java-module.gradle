@@ -99,6 +99,7 @@ dependencies {
 	testRuntimeOnly dbLibs.derbyTools
 	testRuntimeOnly dbLibs.hsqldb
 	testRuntimeOnly dbLibs.postgresql
+	testRuntimeOnly dbLibs.edb
 	testRuntimeOnly dbLibs.mssql
 	testRuntimeOnly dbLibs.informix
 	testRuntimeOnly dbLibs.cockroachdb

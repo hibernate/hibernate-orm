@@ -69,6 +69,7 @@ updates:
           - "org.hsqldb:hsqldb"
           - "org.apache.derby*"
           - "org.postgresql:*"
+          - "com.enterprisedb:*"
           - "com.mysql:mysql-connector-j"
           - "org.mariadb.jdbc:mariadb-java-client"
           - "com.oracle.database.*"

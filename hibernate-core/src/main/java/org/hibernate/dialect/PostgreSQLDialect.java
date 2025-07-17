@@ -206,6 +206,10 @@ public class PostgreSQLDialect extends Dialect {
 		supportsMerge = version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) );
 	}
 
+	public PostgreSQLDriverKind getDriverKind() {
+		return driverKind;
+	}
+
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;

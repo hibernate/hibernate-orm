@@ -231,6 +231,7 @@ dependencyResolutionManagement {
             def oracleVersion = version "oracle", "23.8.0.25.04"
             def oracleJacksonOsonExtension = version "oracleJacksonOsonExtension", "1.0.4"
             def pgsqlVersion = version "pgsql", "42.7.7"
+            def edbVersion = version "edb", "42.7.3.3"
             def gaussdbVersion = version "gaussdb", "506.0.0.b058"
             def sybaseVersion = version "sybase", "1.3.1"
             def tidbVersion = version "tidb", mysqlVersion
@@ -243,6 +244,7 @@ dependencyResolutionManagement {
             library( "derbyTools", "org.apache.derby", "derbytools" ).versionRef( derbyVersion )
             library( "postgresql", "org.postgresql", "postgresql" ).versionRef( pgsqlVersion )
             library( "cockroachdb", "org.postgresql", "postgresql" ).versionRef( pgsqlVersion )
+            library( "edb", "com.enterprisedb", "edb-jdbc" ).versionRef( edbVersion )
             library( "gaussdb", "com.huaweicloud.gaussdb", "gaussdbjdbc" ).versionRef( gaussdbVersion )
             library( "mysql", "com.mysql", "mysql-connector-j" ).versionRef( mysqlVersion )
             library( "tidb", "com.mysql", "mysql-connector-j" ).versionRef( tidbVersion )

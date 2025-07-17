@@ -183,11 +183,6 @@ public class GaussDBDialect extends Dialect {
 		this.optionalTableUpdateStrategy = determineOptionalTableUpdateStrategy( version );
 	}
 
-	@Override
-	public boolean supportsColumnCheck() {
-		return false;
-	}
-
 	private static OptionalTableUpdateStrategy determineOptionalTableUpdateStrategy(DatabaseVersion version) {
 		return version.isSameOrAfter( DatabaseVersion.make( 15, 0 ) )
 				? GaussDBDialect::usingMerge

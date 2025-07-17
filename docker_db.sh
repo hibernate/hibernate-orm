@@ -186,30 +186,42 @@ edb() {
 
 edb_12() {
     $CONTAINER_CLI rm -f edb || true
-    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:12 -f edb12.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:12
+    if [[ -z "${DB_IMAGE_EDB}" ]]; then
+      DB_IMAGE_EDB="edb-test:12"
+      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+      (cd edb; $CONTAINER_CLI build -t edb-test:12 -f edb12.Dockerfile .)
+    fi
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
 }
 
 edb_14() {
     $CONTAINER_CLI rm -f edb || true
-    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:14 -f edb14.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:14
+    if [[ -z "${DB_IMAGE_EDB}" ]]; then
+      DB_IMAGE_EDB="edb-test:14"
+      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+      (cd edb; $CONTAINER_CLI build -t edb-test:14 -f edb14.Dockerfile .)
+    fi
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
 }
 
 edb_15() {
     $CONTAINER_CLI rm -f edb || true
-    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:15 -f edb15.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:15
+    if [[ -z "${DB_IMAGE_EDB}" ]]; then
+      DB_IMAGE_EDB="edb-test:15"
+      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+      (cd edb; $CONTAINER_CLI build -t edb-test:15 -f edb15.Dockerfile .)
+    fi
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
 }
 
 edb_16() {
     $CONTAINER_CLI rm -f edb || true
-    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:16
+    if [[ -z "${DB_IMAGE_EDB}" ]]; then
+      DB_IMAGE_EDB="edb-test:16"
+      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+      (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
+    fi
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
 }
 
 db2() {

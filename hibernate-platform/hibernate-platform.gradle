@@ -13,6 +13,8 @@ dependencies {
 
         api project( ":hibernate-envers" )
         api project( ":hibernate-spatial" )
+        api project( ":hibernate-vector" )
+
         api project( ":hibernate-community-dialects" )
         api project( ":hibernate-scan-jandex" )
 

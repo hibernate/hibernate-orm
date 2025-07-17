@@ -176,4 +176,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		);
 	}
 
+	public static boolean filterClauseSupported(SqlAstTranslator<?> translator) {
+		return translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+	}
 }

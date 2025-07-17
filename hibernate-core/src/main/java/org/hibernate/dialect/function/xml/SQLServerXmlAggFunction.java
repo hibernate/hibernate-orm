@@ -192,7 +192,7 @@ public class SQLServerXmlAggFunction extends XmlAggFunction {
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
 		sqlAppender.appendSql( "cast(string_agg(" );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;

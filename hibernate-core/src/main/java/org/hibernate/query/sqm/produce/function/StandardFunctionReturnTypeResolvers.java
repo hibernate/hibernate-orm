@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -80,7 +79,7 @@ public class StandardFunctionReturnTypeResolvers {
 					@Nullable SqmToSqlAstConverter converter,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
-				ReturnableType<?> argType = extractArgumentType( arguments, argPosition );
+				final var argType = extractArgumentType( arguments, argPosition );
 				return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 			}
 
@@ -88,7 +87,7 @@ public class StandardFunctionReturnTypeResolvers {
 			public BasicValuedMapping resolveFunctionReturnType(
 					Supplier<BasicValuedMapping> impliedTypeAccess,
 					List<? extends SqlAstNode> arguments) {
-				final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
+				final var specifiedArgType = extractArgumentValuedMapping( arguments, argPosition );
 				return useImpliedTypeIfPossible( specifiedArgType, impliedTypeAccess.get() );
 			}
 		};
@@ -117,7 +116,7 @@ public class StandardFunctionReturnTypeResolvers {
 					TypeConfiguration typeConfiguration) {
 				for ( int i = 0; i < arguments.size(); i++ ) {
 					if ( arguments.get( i ) != null ) {
-						final ReturnableType<?> argType = extractArgumentType( arguments, i + 1 );
+						final var argType = extractArgumentType( arguments, i + 1 );
 						if ( argType != null ) {
 							return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 						}
@@ -154,11 +153,11 @@ public class StandardFunctionReturnTypeResolvers {
 		//that is determined by how the function is used in the HQL query. In essence
 		//the types are compatible if the map to the same JDBC type, of if they are
 		//both numeric types.
-		int impliedTypeCode = implied.getJdbcType().getDefaultSqlTypeCode();
-		int definedTypeCode = defined.getJdbcType().getDefaultSqlTypeCode();
+		final int impliedTypeCode = implied.getJdbcType().getDefaultSqlTypeCode();
+		final int definedTypeCode = defined.getJdbcType().getDefaultSqlTypeCode();
 		return impliedTypeCode == definedTypeCode
-				|| isNumericType( impliedTypeCode ) && isNumericType( definedTypeCode )
-				|| isCharacterOrClobType( impliedTypeCode ) && isCharacterOrClobType( definedTypeCode );
+			|| isNumericType( impliedTypeCode ) && isNumericType( definedTypeCode )
+			|| isCharacterOrClobType( impliedTypeCode ) && isCharacterOrClobType( definedTypeCode );
 	}
 
 	@Internal
@@ -252,7 +251,7 @@ public class StandardFunctionReturnTypeResolvers {
 
 	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {
 		final SqlAstNode specifiedArgument = arguments.get( position-1 );
-		final JdbcMappingContainer specifiedArgType =
+		final var specifiedArgType =
 				specifiedArgument instanceof Expression expression
 						? expression.getExpressionType()
 						: null;

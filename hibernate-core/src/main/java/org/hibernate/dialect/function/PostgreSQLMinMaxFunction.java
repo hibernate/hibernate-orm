@@ -60,7 +60,7 @@ public class PostgreSQLMinMaxFunction extends AbstractSqmSelfRenderingFunctionDe
 			Predicate filter,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
 		sqlAppender.appendSql( getName() );
 		sqlAppender.appendSql( '(' );
 		final Expression arg = (Expression) sqlAstArguments.get( 0 );

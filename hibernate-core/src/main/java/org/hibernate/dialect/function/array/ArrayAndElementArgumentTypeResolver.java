@@ -21,7 +21,7 @@ import java.util.List;
  * A {@link FunctionArgumentTypeResolver} that resolves the array argument type based on the element argument type
  * or the element argument type based on the array argument type.
  */
-public class ArrayAndElementArgumentTypeResolver extends AbstractFunctionArgumentTypeResolver {
+public class ArrayAndElementArgumentTypeResolver implements AbstractFunctionArgumentTypeResolver {
 
 	public static final FunctionArgumentTypeResolver DEFAULT_INSTANCE = new ArrayAndElementArgumentTypeResolver( 0, 1 );
 

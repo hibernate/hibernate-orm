@@ -74,7 +74,7 @@ public class ListaggGroupConcatEmulation extends AbstractSqmSelfRenderingFunctio
 			List<SortSpecification> withinGroup,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
-		final boolean caseWrapper = filter != null && !translator.getSessionFactory().getJdbcServices().getDialect().supportsFilterClause();
+		final boolean caseWrapper = filter != null && !filterClauseSupported( translator );
 		sqlAppender.appendSql( "group_concat(" );
 		final SqlAstNode firstArg = sqlAstArguments.get( 0 );
 		final Expression arg;

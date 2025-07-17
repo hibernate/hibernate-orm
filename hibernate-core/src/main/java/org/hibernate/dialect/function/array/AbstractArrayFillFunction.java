@@ -39,7 +39,7 @@ public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRendering
 		return "(OBJECT element, INTEGER elementCount)";
 	}
 
-	private static class ArrayFillArgumentsValidator extends AbstractFunctionArgumentTypeResolver {
+	private static class ArrayFillArgumentsValidator implements AbstractFunctionArgumentTypeResolver {
 
 		public static final FunctionArgumentTypeResolver INSTANCE = new ArrayFillArgumentsValidator();
 

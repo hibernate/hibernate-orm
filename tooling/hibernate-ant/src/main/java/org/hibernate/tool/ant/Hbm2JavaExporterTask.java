@@ -27,7 +27,7 @@ import org.hibernate.tool.api.export.ExporterType;
  */
 public class Hbm2JavaExporterTask extends ExporterTask {
 
-	boolean ejb3 = false;
+	boolean ejb3 = true;
 
 	boolean jdk5 = false;
 

@@ -212,6 +212,10 @@ public class PostgreSQLDialect extends Dialect {
 				: PostgreSQLDialect::withoutMerge;
 	}
 
+	public PostgreSQLDriverKind getDriverKind() {
+		return driverKind;
+	}
+
 	@Override
 	protected DatabaseVersion getMinimumSupportedVersion() {
 		return MINIMUM_VERSION;

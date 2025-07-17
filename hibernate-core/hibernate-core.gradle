@@ -42,6 +42,7 @@ dependencies {
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
     compileOnly jdbcLibs.postgresql
+    compileOnly jdbcLibs.edb
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')

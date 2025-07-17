@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
@@ -25,7 +26,9 @@ import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 import org.hibernate.testing.orm.junit.DialectFilterExtension;
+import org.hibernate.testing.orm.junit.RequiresDialectFeatureGroup;
 import org.hibernate.testing.orm.junit.SkipForDialectGroup;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -442,6 +445,30 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 			}
 		}
 
+		Collection<org.hibernate.testing.orm.junit.RequiresDialectFeature> effectiveRequiresDialectFeatures = Helper.collectAnnotations(
+				org.hibernate.testing.orm.junit.RequiresDialectFeature.class,
+				RequiresDialectFeatureGroup.class,
+				frameworkMethod,
+				getTestClass()
+		);
+
+		for ( org.hibernate.testing.orm.junit.RequiresDialectFeature effectiveRequiresDialectFeature : effectiveRequiresDialectFeatures ) {
+			try {
+				final Class<? extends DialectFeatureCheck> featureClass = effectiveRequiresDialectFeature.feature();
+				final DialectFeatureCheck featureCheck = featureClass.getConstructor().newInstance();
+				boolean testResult = featureCheck.apply( dialect );
+				if ( effectiveRequiresDialectFeature.reverse() ) {
+					testResult = !testResult;
+				}
+				if ( !testResult ) {
+					return buildIgnore( effectiveRequiresDialectFeature );
+				}
+			}
+			catch (ReflectiveOperationException e) {
+				throw new RuntimeException( "Unable to instantiate DialectFeatureCheck class", e );
+			}
+		}
+
 		return null;
 	}
 
@@ -562,6 +589,14 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	private Ignore buildIgnore(RequiresDialectFeature requiresDialectFeature) {
 		return buildIgnore(
 				"@RequiresDialectFeature non-match",
+				requiresDialectFeature.comment(),
+				requiresDialectFeature.jiraKey()
+		);
+	}
+
+	private Ignore buildIgnore(org.hibernate.testing.orm.junit.RequiresDialectFeature requiresDialectFeature) {
+		return buildIgnore(
+				String.format( Locale.ROOT, "Failed @RequiresDialectFeature [%s]", requiresDialectFeature.feature() ),
 				requiresDialectFeature.comment(),
 				requiresDialectFeature.jiraKey()
 		);

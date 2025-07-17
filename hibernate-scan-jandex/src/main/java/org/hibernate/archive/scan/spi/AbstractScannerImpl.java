@@ -28,7 +28,7 @@ import org.hibernate.boot.archive.spi.JarFileEntryUrlAdjuster;
  */
 public abstract class AbstractScannerImpl implements Scanner {
 	private final ArchiveDescriptorFactory archiveDescriptorFactory;
-	private final Map<URL, ArchiveDescriptorInfo> archiveDescriptorCache = new HashMap<>();
+	private final Map<String, ArchiveDescriptorInfo> archiveDescriptorCache = new HashMap<>();
 
 	protected AbstractScannerImpl(ArchiveDescriptorFactory archiveDescriptorFactory) {
 		this.archiveDescriptorFactory = archiveDescriptorFactory;
@@ -62,13 +62,13 @@ public abstract class AbstractScannerImpl implements Scanner {
 			ScanEnvironment environment,
 			boolean isRootUrl) {
 		final ArchiveDescriptor descriptor;
-		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url );
+		final ArchiveDescriptorInfo descriptorInfo = archiveDescriptorCache.get( url.toExternalForm() );
 		if ( descriptorInfo == null ) {
 			if ( !isRootUrl && archiveDescriptorFactory instanceof JarFileEntryUrlAdjuster jarFileEntryUrlAdjuster ) {
 				url = jarFileEntryUrlAdjuster.adjustJarFileEntryUrl( url, environment.getRootUrl() );
 			}
 			descriptor = archiveDescriptorFactory.buildArchiveDescriptor( url );
-			archiveDescriptorCache.put( url, new ArchiveDescriptorInfo( descriptor, isRootUrl ) );
+			archiveDescriptorCache.put( url.toExternalForm(), new ArchiveDescriptorInfo( descriptor, isRootUrl ) );
 		}
 		else {
 			validateReuse( descriptorInfo, isRootUrl );
@@ -135,9 +135,9 @@ public abstract class AbstractScannerImpl implements Scanner {
 				return packageEntryHandler;
 			}
 			else if ( nameWithinArchive.endsWith( "module-info.class" ) ) {
-				//There's two reasons to skip this: the most important one is that Jandex
-				//is unable to analyze them, so we need to dodge it.
-				//Secondarily, we have no use for these so let's save the effort.
+				// There are two reasons to skip this: the most important one is
+				// that Jandex is unable to analyze them, so we need to dodge it.
+				// Secondly, we have no use for these, so let's save the effort.
 				return NoopEntryHandler.NOOP_INSTANCE;
 			}
 			else if ( nameWithinArchive.endsWith( ".class" ) ) {

@@ -55,6 +55,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgreSQLDriverKind;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -967,6 +968,12 @@ abstract public class DialectFeatureChecks {
 	public static class IsJtds implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
+	public static class IsPgJdbc implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof PostgreSQLDialect && ( (PostgreSQLDialect) dialect ).getDriverKind() == PostgreSQLDriverKind.PG_JDBC;
 		}
 	}
 

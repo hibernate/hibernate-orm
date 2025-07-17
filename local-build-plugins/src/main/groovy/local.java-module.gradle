@@ -70,6 +70,7 @@ dependencies {
     testRuntimeOnly jdbcLibs.derbyTools
     testRuntimeOnly jdbcLibs.hsqldb
     testRuntimeOnly jdbcLibs.postgresql
+    testRuntimeOnly jdbcLibs.edb
     testRuntimeOnly jdbcLibs.mssql
     testRuntimeOnly jdbcLibs.informix
     testRuntimeOnly jdbcLibs.cockroachdb

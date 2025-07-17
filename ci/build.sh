@@ -23,13 +23,20 @@ elif [ "$RDBMS" == "oracle" ]; then
 elif [ "$RDBMS" == "oracle_xe" ]; then
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_xe_ci"
-elif [ "$RDBMS" == "oracle_atps" ]; then
+elif [ "$RDBMS" == "oracle_atps_tls" ]; then
   echo "Managing Oracle Autonomous Database..."
   export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')
   export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
   export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_cloud_autonomous_tls -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
+elif [ "$RDBMS" == "oracle_atps" ]; then
+  echo "Managing Oracle Autonomous Database..."
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous2&hostname=`hostname`" -H 'accept: application/json')
+  export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
+  export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
+  # I have no idea why, but these tests don't seem to work on CI...
+  goal="-Pdb=oracle_cloud_autonomous -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
 elif [ "$RDBMS" == "oracle_db19c" ]; then
   echo "Managing Oracle Database 19c..."
   export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=db19c&hostname=`hostname`" -H 'accept: application/json')

@@ -87,6 +87,7 @@ public class DomainResultCreationStateImpl
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
+	private boolean isProcedureOrNativeQuery;
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
@@ -94,6 +95,7 @@ public class DomainResultCreationStateImpl
 			Map<String, Map<String, DynamicFetchBuilderLegacy>> legacyFetchBuilders,
 			Consumer<SqlSelection> sqlSelectionConsumer,
 			LoadQueryInfluencers loadQueryInfluencers,
+			boolean isProcedureOrNativeQuery,
 			SessionFactoryImplementor sessionFactory) {
 		this.stateIdentifier = stateIdentifier;
 		this.jdbcResultsMetadata = jdbcResultsMetadata;
@@ -105,6 +107,8 @@ public class DomainResultCreationStateImpl
 		this.legacyFetchResolver = new LegacyFetchResolverImpl( legacyFetchBuilders );
 
 		this.sessionFactory = sessionFactory;
+
+		this.isProcedureOrNativeQuery = isProcedureOrNativeQuery;
 	}
 
 	public LegacyFetchResolver getLegacyFetchResolver() {
@@ -588,4 +592,8 @@ public class DomainResultCreationStateImpl
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 
+	@Override
+	public boolean isProcedureOrNativeQuery() {
+		return isProcedureOrNativeQuery;
+	}
 }

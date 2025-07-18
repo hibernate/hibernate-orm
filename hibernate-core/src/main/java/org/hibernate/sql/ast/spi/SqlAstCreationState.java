@@ -54,4 +54,8 @@ public interface SqlAstCreationState {
 	@Internal
 	default void applyOrdering(TableGroup tableGroup, OrderByFragment orderByFragment) {
 	}
+
+	default boolean isProcedureOrNativeQuery(){
+		return false;
+	}
 }

@@ -35,8 +35,8 @@ public interface Scanner {
 	/**
 	 * @deprecated (since 7.0) Not used; no replacement.
 	 */
-	@Deprecated
-	default void setArchiveDescriptorFactory(ArchiveDescriptorFactory archiveDescriptorFactory){
+	@Deprecated(since = "7.0", forRemoval = true)
+	default void setArchiveDescriptorFactory(ArchiveDescriptorFactory archiveDescriptorFactory) {
 		throw new UnsupportedOperationException();
 	}
 }

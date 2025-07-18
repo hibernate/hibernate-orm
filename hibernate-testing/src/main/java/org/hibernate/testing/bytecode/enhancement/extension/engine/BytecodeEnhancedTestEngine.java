@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedClassUtils.enhanceTestClass;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,6 +46,7 @@ import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
 import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
 import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
 import org.junit.platform.engine.EngineDiscoveryRequest;
+import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
@@ -214,6 +217,15 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	protected JupiterEngineExecutionContext createExecutionContext(ExecutionRequest request) {
+		try {
+			// Try constructing the JupiterEngineExecutionContext the way it was done in 5.12 and before
+			final Constructor<JupiterEngineExecutionContext> constructorV5_12 = JupiterEngineExecutionContext.class
+					.getConstructor( EngineExecutionListener.class, JupiterConfiguration.class );
+			return constructorV5_12.newInstance( request.getEngineExecutionListener(), this.getJupiterConfiguration( request ) );
+		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e ) {
+			// Ignore errors as they are probably due to version mismatches and try the 5.13 way
+		}
+
 		return new JupiterEngineExecutionContext(
 				request.getEngineExecutionListener(),
 				this.getJupiterConfiguration( request ),

@@ -39,6 +39,9 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 			SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {
+				if ( elementIndex >= arguments.size() ) {
+					continue;
+				}
 				final SqmTypedNode<?> node = function.getArguments().get( elementIndex );
 				if ( node instanceof SqmExpression<?> ) {
 					final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );

@@ -118,7 +118,6 @@ public class JpaDefaultTestIT {
     		"            name='hibernatetool'                                     \n" +
     	    "            classname='org.hibernate.tool.ant.HibernateToolTask'/>   \n" +    		
     		"    <target name='reveng'>                                           \n" +
-    		"        <echo message='hello from hibernate tools' />                \n" +
     		"        <hibernatetool destdir='generated'>                          \n" +
     		"            <jdbcconfiguration propertyfile='hibernate.properties'/> \n" +
     		"            <hbm2java/>                                              \n" +

@@ -1,8 +1,11 @@
-package org.hibernate.tool.ant.tutorial;
+package org.hibernate.tool.ant.hbm2java;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.tools.ant.DefaultLogger;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,14 +15,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
-import org.apache.tools.ant.DefaultLogger;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.ProjectHelper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TutorialTestIT {
+public class NoAnnotationsTestIT {
 	
 	@TempDir
 	private File projectDir;
@@ -87,7 +85,7 @@ public class TutorialTestIT {
    	    project.executeTarget(project.getDefaultTarget());
     }
     
-	private void verifyResult() {
+	private void verifyResult() throws Exception {
 		File generatedOutputFolder = new File(projectDir, "generated");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());
@@ -95,6 +93,10 @@ public class TutorialTestIT {
 		File generatedPersonJavaFile = new File(generatedOutputFolder, "Person.java");
 		assertTrue(generatedPersonJavaFile.exists());
 		assertTrue(generatedPersonJavaFile.isFile());
+		String generatedPersonJavaFileContents = new String(
+				Files.readAllBytes(generatedPersonJavaFile.toPath()));
+		assertFalse(generatedPersonJavaFileContents.contains("import jakarta.persistence.Entity;"));
+		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
 	}
 	
     private DefaultLogger getConsoleLogger() {
@@ -118,7 +120,7 @@ public class TutorialTestIT {
     		"    <target name='reveng'>                                           \n" +
     		"        <hibernatetool destdir='generated'>                          \n" +
     		"            <jdbcconfiguration propertyfile='hibernate.properties'/> \n" +
-    		"            <hbm2java/>                                              \n" +
+    		"            <hbm2java ejb3='false'/>                                 \n" +
     		"        </hibernatetool>                                             \n" +
     		"    </target>                                                        \n" +		
     		"</project>                                                           \n" ;

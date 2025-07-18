@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @MessageKeyInspection(
 		messageKey = "HHH020277",
 		logger = @Logger( loggerName = SessionFactoryRegistryMessageLogger.LOGGER_NAME )
@@ -40,10 +39,6 @@ public class SessionFactoryNamingTests {
 		scope.getSessionFactory();
 		assertThat( logWatcher.wasTriggered() ).isTrue();
 	}
-
-
-
-
 
 	@Test
 	@DomainModel

@@ -33,7 +33,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @MessageKeyInspection(
 		messageKey = "HHH10001005",
 		logger = @Logger( loggerName = ConnectionInfoLogger.LOGGER_NAME )

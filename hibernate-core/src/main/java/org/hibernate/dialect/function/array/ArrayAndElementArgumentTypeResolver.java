@@ -37,6 +37,9 @@ public class ArrayAndElementArgumentTypeResolver implements AbstractFunctionArgu
 	public @Nullable MappingModelExpressible<?> resolveFunctionArgumentType(List<? extends SqmTypedNode<?>> arguments, int argumentIndex, SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {
+				if ( elementIndex >= arguments.size() ) {
+					continue;
+				}
 				final SqmTypedNode<?> node = arguments.get( elementIndex );
 				if ( node instanceof SqmExpression<?> sqmExpression ) {
 					final MappingModelExpressible<?> expressible = converter.determineValueMapping( sqmExpression );

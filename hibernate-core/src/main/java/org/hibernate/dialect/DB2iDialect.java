@@ -6,6 +6,8 @@ package org.hibernate.dialect;
 
 import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -54,6 +56,16 @@ public class DB2iDialect extends DB2Dialect {
 
 	public DB2iDialect(DatabaseVersion version) {
 		super(version);
+	}
+
+	@Override
+	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
+		super.initializeFunctionRegistry( functionContributions );
+		// DB2 for i doesn't allow code units: https://www.ibm.com/docs/en/i/7.1.0?topic=functions-substring
+		functionContributions.getFunctionRegistry().register(
+				"substring",
+				new DB2SubstringFunction( false, functionContributions.getTypeConfiguration() )
+		);
 	}
 
 	@Override

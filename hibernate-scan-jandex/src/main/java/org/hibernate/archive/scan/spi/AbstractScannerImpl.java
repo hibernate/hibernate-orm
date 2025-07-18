@@ -77,16 +77,6 @@ public abstract class AbstractScannerImpl implements Scanner {
 		return descriptor;
 	}
 
-	/**
-	 * Handle &lt;jar-file/&gt; references from a persistence.xml file.
-	 *
-	 * JPA allows for  to be specific
-	 * @return The resolved non-root URL
-	 */
-	protected URL resolveNonRootUrl(URL url) {
-		return null;
-	}
-
 	// This needs to be protected and attributes/constructor visible in case
 	// a custom scanner needs to override validateReuse.
 	protected static class ArchiveDescriptorInfo {

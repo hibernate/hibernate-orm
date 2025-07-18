@@ -29,7 +29,13 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STR
  */
 public class DB2SubstringFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
+	private final boolean needsCodeUnit;
+
 	public DB2SubstringFunction(TypeConfiguration typeConfiguration) {
+		this( true, typeConfiguration );
+	}
+
+	public DB2SubstringFunction(boolean needsCodeUnit, TypeConfiguration typeConfiguration) {
 		super(
 				"substring",
 				new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 4 ), STRING, INTEGER, INTEGER, FunctionParameterType.ANY ),
@@ -37,6 +43,7 @@ public class DB2SubstringFunction extends AbstractSqmSelfRenderingFunctionDescri
 						StandardBasicTypes.STRING ) ),
 				StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, STRING, INTEGER, INTEGER )
 		);
+		this.needsCodeUnit = needsCodeUnit;
 	}
 
 	@Override
@@ -51,7 +58,7 @@ public class DB2SubstringFunction extends AbstractSqmSelfRenderingFunctionDescri
 			sqlAppender.appendSql( ',' );
 			arguments.get( i ).accept( walker );
 		}
-		if ( argumentCount != 4 ) {
+		if ( argumentCount != 4 && needsCodeUnit ) {
 			sqlAppender.appendSql( ",codeunits32" );
 		}
 		sqlAppender.appendSql( ')' );

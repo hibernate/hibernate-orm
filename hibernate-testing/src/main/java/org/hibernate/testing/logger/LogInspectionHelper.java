@@ -32,9 +32,8 @@ public final class LogInspectionHelper {
 	}
 
 	private static Log4J2DelegatingLogger convertType(BasicLogger log) {
-		if ( log instanceof DelegatingBasicLogger) {
+		if ( log instanceof DelegatingBasicLogger wrapper) {
 			//Most loggers generated via the annotation processor are of this type
-			DelegatingBasicLogger wrapper = (DelegatingBasicLogger) log;
 			try {
 				return extractFromWrapper( wrapper );
 			}

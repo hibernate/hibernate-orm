@@ -222,7 +222,8 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 			final Constructor<JupiterEngineExecutionContext> constructorV5_12 = JupiterEngineExecutionContext.class
 					.getConstructor( EngineExecutionListener.class, JupiterConfiguration.class );
 			return constructorV5_12.newInstance( request.getEngineExecutionListener(), this.getJupiterConfiguration( request ) );
-		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e ) {
+		}
+		catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			// Ignore errors as they are probably due to version mismatches and try the 5.13 way
 		}
 

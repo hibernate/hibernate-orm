@@ -13,7 +13,7 @@ import org.hibernate.testing.orm.junit.MessageKeyWatcher;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
  * @author Vlad Mihalcea

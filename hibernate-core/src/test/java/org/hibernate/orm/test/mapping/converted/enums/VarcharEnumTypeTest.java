@@ -23,7 +23,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @MessageKeyInspection(
 		logger = @Logger( loggerName = JdbcBindingLogging.NAME ),

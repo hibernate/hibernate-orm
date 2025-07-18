@@ -29,7 +29,7 @@ public class Hbm2JavaExporterTask extends ExporterTask {
 
 	boolean ejb3 = true;
 
-	boolean jdk5 = false;
+	boolean jdk5 = true;
 
 	public Hbm2JavaExporterTask(HibernateToolTask parent) {
 		super( parent );

@@ -37,7 +37,7 @@ public class NoAnnotationsTestIT {
 	}
 	
     @Test
-    public void testTutorial() throws Exception {
+    public void testNoAnnotations() throws Exception {
     	createBuildXmlFile();
     	createDatabase();
     	createHibernatePropertiesFile();
@@ -56,7 +56,6 @@ public class NoAnnotationsTestIT {
 		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
 		Statement statement = connection.createStatement();
 		statement.execute(CREATE_PERSON_TABLE);
-		statement.execute("insert into PERSON values (1, 'foo')");
 		statement.close();
 		connection.close();	
 		assertTrue(databaseFile.exists());

@@ -1,8 +1,11 @@
-package org.hibernate.tool.ant.tutorial;
+package org.hibernate.tool.ant.hbm2java;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.tools.ant.DefaultLogger;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.ProjectHelper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -12,14 +15,9 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
-import org.apache.tools.ant.DefaultLogger;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.ProjectHelper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class TutorialTestIT {
+public class UseGenericsTestIT {
 	
 	@TempDir
 	private File projectDir;
@@ -39,7 +37,7 @@ public class TutorialTestIT {
 	}
 	
     @Test
-    public void testTutorial() throws Exception {
+    public void testUseGenerics() throws Exception {
     	createBuildXmlFile();
     	createDatabase();
     	createHibernatePropertiesFile();
@@ -55,9 +53,13 @@ public class TutorialTestIT {
     
 	private void createDatabase() throws Exception {
 		String CREATE_PERSON_TABLE = "create table PERSON (ID int not null, NAME varchar(20), primary key (ID))";
+		String CREATE_ITEM_TABLE =
+				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
+						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))";
 		Connection connection = DriverManager.getConnection(constructJdbcConnectionString());
 		Statement statement = connection.createStatement();
 		statement.execute(CREATE_PERSON_TABLE);
+		statement.execute(CREATE_ITEM_TABLE);
 		statement.close();
 		connection.close();	
 		assertTrue(databaseFile.exists());
@@ -86,14 +88,24 @@ public class TutorialTestIT {
    	    project.executeTarget(project.getDefaultTarget());
     }
     
-	private void verifyResult() {
+	private void verifyResult() throws Exception {
 		File generatedOutputFolder = new File(projectDir, "generated");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());
-		assertEquals(1, generatedOutputFolder.list().length);
+		assertEquals(2, generatedOutputFolder.list().length);
 		File generatedPersonJavaFile = new File(generatedOutputFolder, "Person.java");
 		assertTrue(generatedPersonJavaFile.exists());
 		assertTrue(generatedPersonJavaFile.isFile());
+		String generatedPersonJavaFileContents = new String(
+				Files.readAllBytes(generatedPersonJavaFile.toPath()));
+		assertTrue(generatedPersonJavaFileContents.contains("public class Person "));
+		assertTrue(generatedPersonJavaFileContents.contains("Set<Item>"));
+		File generatedItemJavaFile = new File(generatedOutputFolder, "Item.java");
+		assertTrue(generatedItemJavaFile.exists());
+		assertTrue(generatedItemJavaFile.isFile());
+		String generatedItemJavaFileContents = new String(
+				Files.readAllBytes(generatedItemJavaFile.toPath()));
+		assertTrue(generatedItemJavaFileContents.contains("public class Item "));
 	}
 	
     private DefaultLogger getConsoleLogger() {

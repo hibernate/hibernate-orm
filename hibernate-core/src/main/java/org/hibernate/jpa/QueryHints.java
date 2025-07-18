@@ -84,8 +84,15 @@ public final class QueryHints {
 	public static final String JAKARTA_HINT_LOADGRAPH = SpecHints.HINT_SPEC_LOAD_GRAPH;
 
 	/**
-	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 * @see HibernateHints#HINT_FOLLOW_ON_STRATEGY
 	 */
+	public static final String HINT_FOLLOW_ON_STRATEGY = HibernateHints.HINT_FOLLOW_ON_STRATEGY;
+
+	/**
+	 * @see HibernateHints#HINT_FOLLOW_ON_LOCKING
+	 * @deprecated Use {@linkplain #HINT_FOLLOW_ON_STRATEGY} instead.
+	 */
+	@Deprecated(since="7.1")
 	public static final String HINT_FOLLOW_ON_LOCKING = HibernateHints.HINT_FOLLOW_ON_LOCKING;
 
 	/**

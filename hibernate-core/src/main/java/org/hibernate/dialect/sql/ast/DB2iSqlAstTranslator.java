@@ -37,8 +37,4 @@ public class DB2iSqlAstTranslator<T extends JdbcOperation> extends DB2SqlAstTran
 		return DB2_LUW_VERSION;
 	}
 
-	@Override
-	protected String getForUpdate() {
-		return " for update with rs";
-	}
 }

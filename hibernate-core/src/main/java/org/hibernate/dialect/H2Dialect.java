@@ -4,18 +4,11 @@
  */
 package org.hibernate.dialect;
 
-import java.sql.CallableStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
-
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Timeout;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.aggregate.AggregateSupport;
@@ -23,6 +16,8 @@ import org.hibernate.dialect.aggregate.H2AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.H2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.H2V1SequenceSupport;
@@ -48,10 +43,10 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.common.TemporalUnit;
+import org.hibernate.query.sqm.CastType;
+import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -82,7 +77,15 @@ import org.hibernate.type.descriptor.sql.internal.NativeOrdinalEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.CallableStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
@@ -662,6 +665,36 @@ public class H2Dialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return OffsetFetchLimitHandler.INSTANCE;
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return H2LockingSupport.H2_LOCKING_SUPPORT;
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return getForUpdateString() + " nowait";
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return getForUpdateString() + " skip locked";
+	}
+
+	@Override
+	public String getForUpdateString(Timeout timeout) {
+		return withRealTimeout( getForUpdateString(), timeout );
+	}
+
+	private String withRealTimeout(String lockString, Timeout timeout) {
+		assert Timeouts.isRealTimeout( timeout );
+		return lockString + " wait " + Timeouts.getTimeoutInSeconds( timeout );
+	}
+
+	private String withRealTimeout(String lockString, int millis) {
+		assert Timeouts.isRealTimeout( millis );
+		return lockString + " wait " + Timeouts.getTimeoutInSeconds( millis );
 	}
 
 	@Override

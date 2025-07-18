@@ -11,6 +11,8 @@ import org.hibernate.dialect.function.DB2SubstringFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2zIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.internal.DB2LockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -56,6 +58,11 @@ public class DB2iDialect extends DB2Dialect {
 
 	public DB2iDialect(DatabaseVersion version) {
 		super(version);
+	}
+
+	@Override
+	protected LockingSupport buildLockingSupport() {
+		return DB2LockingSupport.forDB2i();
 	}
 
 	@Override
@@ -134,11 +141,6 @@ public class DB2iDialect extends DB2Dialect {
 		return getVersion().isSameOrAfter(7, 3)
 				? DB2IdentityColumnSupport.INSTANCE
 				: DB2zIdentityColumnSupport.INSTANCE;
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
 	}
 
 	@Override

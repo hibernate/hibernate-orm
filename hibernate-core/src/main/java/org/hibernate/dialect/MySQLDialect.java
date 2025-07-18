@@ -19,6 +19,7 @@ import org.hibernate.dialect.aggregate.MySQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.MySQLIdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
@@ -95,6 +96,7 @@ import java.util.TimeZone;
 
 import static java.lang.Integer.parseInt;
 import static org.hibernate.dialect.MySQLServerConfiguration.getBytesPerCharacter;
+import static org.hibernate.dialect.lock.internal.MySQLLockingSupport.MYSQL_LOCKING_SUPPORT;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -1249,15 +1251,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsLockTimeouts() {
-		// yes, we do handle "lock timeout" conditions in the exception conversion delegate,
-		// but that's a hardcoded lock timeout period across the whole entire MySQL database.
-		// MySQL does not support specifying lock timeouts as part of the SQL statement, which is really
-		// what this meta method is asking.
-		return false;
-	}
-
-	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			switch ( sqlException.getErrorCode() ) {
@@ -1532,6 +1525,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public LockingSupport getLockingSupport() {
+		return MYSQL_LOCKING_SUPPORT;
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return supportsNoWait()
 				? " for update nowait"
@@ -1572,27 +1570,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsRecursiveCTE() {
 		return getMySQLVersion().isSameOrAfter( 8, 0, 14 );
-	}
-
-	@Override
-	public boolean supportsSkipLocked() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsWait() {
-		//only supported on MariaDB
-		return false;
-	}
-
-	@Override
-	public RowLockStrategy getWriteRowLockStrategy() {
-		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	@Override

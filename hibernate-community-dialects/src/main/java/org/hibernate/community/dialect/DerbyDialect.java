@@ -4,14 +4,16 @@
  */
 package org.hibernate.community.dialect;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Locale;
-
+import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.community.dialect.function.DerbyLpadEmulation;
+import org.hibernate.community.dialect.function.DerbyRpadEmulation;
+import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
+import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
+import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -23,14 +25,12 @@ import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.ChrLiteralEmulation;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
-import org.hibernate.community.dialect.function.DerbyLpadEmulation;
-import org.hibernate.community.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
+import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
@@ -49,24 +49,25 @@ import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.common.TemporalUnit;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -80,7 +81,10 @@ import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import jakarta.persistence.TemporalType;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Locale;
 
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -572,8 +576,16 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public RowLockStrategy getReadRowLockStrategy() {
-		return RowLockStrategy.NONE;
+	public LockingSupport getLockingSupport() {
+		return NoLockingSupport.NO_LOCKING_SUPPORT;
+	}
+
+	@Override
+	protected LockingClauseStrategy buildLockingClauseStrategy(
+			PessimisticLockKind lockKind,
+			RowLockStrategy rowLockStrategy,
+			LockOptions lockOptions) {
+		return new DerbyLockingClauseStrategy( this, lockKind, rowLockStrategy, lockOptions );
 	}
 
 	@Override
@@ -602,21 +614,8 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsOuterJoinForUpdate() {
-		//TODO: check this!
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
 		//TODO: check this!
-		return false;
-	}
-
-	@Override
-	public boolean supportsLockTimeouts() {
-		// To enable the lock timeout, we need a dedicated call
-		// 'call SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.locks.waitTimeout', '3')'
 		return false;
 	}
 

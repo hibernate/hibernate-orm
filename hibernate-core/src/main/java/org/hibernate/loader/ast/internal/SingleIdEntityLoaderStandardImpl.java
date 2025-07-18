@@ -53,10 +53,10 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		this.loadPlanCreator = loadPlanCreator;
 		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
 		// we should preload a few - maybe LockMode.NONE and LockMode.READ
-		final LockOptions lockOptions = LockOptions.NONE;
-		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( LockOptions.NONE, influencers );
-		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
-			selectByLockMode.put( lockOptions.getLockMode(), plan );
+		final LockOptions noLocking = new LockOptions();
+		final SingleIdLoadPlan<T> plan = loadPlanCreator.apply( noLocking, influencers );
+		if ( isLoadPlanReusable( noLocking, influencers ) ) {
+			selectByLockMode.put( LockMode.NONE, plan );
 		}
 	}
 
@@ -133,8 +133,10 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 	}
 
 	private boolean isLoadPlanReusable(LockOptions lockOptions, LoadQueryInfluencers influencers) {
-		return lockOptions.getTimeOut() == LockOptions.WAIT_FOREVER
-			&& !getLoadable().isAffectedByEntityGraph( influencers )
+		if ( lockOptions.getLockMode().isPessimistic() && lockOptions.hasNonDefaultOptions() ) {
+			return false;
+		}
+		return !getLoadable().isAffectedByEntityGraph( influencers )
 			&& !getLoadable().isAffectedByEnabledFetchProfiles( influencers );
 	}
 

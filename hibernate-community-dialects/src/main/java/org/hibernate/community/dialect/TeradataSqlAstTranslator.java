@@ -6,9 +6,11 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -26,47 +28,44 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+	private final boolean supportsLocking;
 
 	public TeradataSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+		supportsLocking = getDialect().getVersion().isSameOrAfter( 14 );
 	}
 
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
-		if ( querySpec.isRoot() && getDialect().getVersion().isSameOrAfter( 14 ) ) {
-			final ForUpdateClause forUpdateClause = new ForUpdateClause();
-			forUpdateClause.merge( getLockOptions() );
-			super.renderForUpdateClause( querySpec, forUpdateClause );
-		}
 		super.visitQuerySpec( querySpec );
-	}
 
-	@Override
-	protected String getForUpdate() {
-		return "locking row for write ";
-	}
-
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return "locking row for read ";
-	}
-
-	@Override
-	protected String getNoWait() {
-		return "nowait ";
+		if ( querySpec.isRoot() && supportsLocking && needsLocking( querySpec ) ) {
+			final LockingClauseStrategy lockingClauseStrategy = getLockingClauseStrategy();
+			if ( lockingClauseStrategy != null ) {
+				// NOTE: the dialect already adds a trailing space
+				lockingClauseStrategy.render( this::prependSql );
+			}
+		}
 	}
 
 	@Override
 	protected LockStrategy determineLockingStrategy(
 			QuerySpec querySpec,
-			ForUpdateClause forUpdateClause,
-			Boolean followOnLocking) {
-		return LockStrategy.NONE;
+			Locking.FollowOn followOnStrategy) {
+		if ( !supportsLocking ) {
+			return LockStrategy.NONE;
+		}
+
+		if ( followOnStrategy == Locking.FollowOn.FORCE ) {
+			return LockStrategy.FOLLOW_ON;
+		}
+
+		return super.determineLockingStrategy( querySpec, followOnStrategy );
 	}
 
 	@Override
-	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
-		// Teradata does not support the FOR UPDATE clause but has a proprietary LOCKING clause
+	protected void visitForUpdateClause(QuerySpec querySpec) {
+		// do nothing here
 	}
 
 	@Override

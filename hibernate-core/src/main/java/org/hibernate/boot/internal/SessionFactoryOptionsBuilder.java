@@ -86,6 +86,7 @@ import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 import jakarta.persistence.criteria.Nulls;
 
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.*;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
@@ -1667,8 +1668,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		settings.putIfAbsent( HibernateHints.HINT_FLUSH_MODE, FlushMode.AUTO );
 		settings.putIfAbsent( JPA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
 		settings.putIfAbsent( JAKARTA_LOCK_SCOPE, PessimisticLockScope.EXTENDED );
-		settings.putIfAbsent( JPA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
-		settings.putIfAbsent( JAKARTA_LOCK_TIMEOUT, LockOptions.WAIT_FOREVER );
+		settings.putIfAbsent( JPA_LOCK_TIMEOUT, WAIT_FOREVER_MILLI );
+		settings.putIfAbsent( JAKARTA_LOCK_TIMEOUT, WAIT_FOREVER_MILLI );
 		settings.putIfAbsent( JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
 		settings.putIfAbsent( JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.DEFAULT_RETRIEVE_MODE );
 		settings.putIfAbsent( JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.DEFAULT_STORE_MODE );

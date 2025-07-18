@@ -6,8 +6,7 @@ package org.hibernate.orm.test.bootstrap.scanning;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
 import org.hibernate.boot.archive.scan.internal.DisabledScanner;
@@ -16,9 +15,8 @@ import org.hibernate.archive.scan.internal.PackageDescriptorImpl;
 import org.hibernate.archive.scan.internal.ScanResultImpl;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.archive.internal.ByteArrayInputStreamAccess;
+import org.hibernate.boot.archive.scan.internal.ScannerLogger;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
-import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
-import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.ScanParameters;
@@ -46,7 +44,9 @@ import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
+import static java.util.Collections.singleton;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -59,8 +59,8 @@ import static org.mockito.Mockito.when;
  * @author Petteri Pitkanen
  */
 @MessageKeyInspection(
-		messageKey = "Unable to resolve class [a.b.C] named in persistence unit",
-		logger = @Logger( loggerNameClass = ScanningCoordinator.class )
+		messageKey = "HHH060003",
+		logger = @Logger(loggerName = ScannerLogger.NAME)
 )
 public class ScanningCoordinatorTest {
 
@@ -94,8 +94,7 @@ public class ScanningCoordinatorTest {
 
 		when( metadataBuildingOptions.isXmlMappingEnabled() ).thenReturn( true );
 
-		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn(
-				Arrays.asList( "a.b.C" ) );
+		when( scanEnvironment.getExplicitlyListedClassNames() ).thenReturn( List.of( "a.b.C" ) );
 
 		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenThrow( ClassLoadingException.class );
 		when( classLoaderService.locateResource( eq( "a/b/c.class" ) ) ).thenReturn( null );
@@ -111,13 +110,14 @@ public class ScanningCoordinatorTest {
 				bootstrapContext,
 				xmlMappingBinderAccess
 		);
-		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [null]", watcher.getFirstTriggeredMessage() );
+		assertTrue( watcher.wasTriggered() );
 	}
 
 	@Test
 	public void testApplyScanResultsToManagedResourcesWithNotNullRootUrl(MessageKeyWatcher watcher)
 			throws MalformedURLException {
-		when( scanEnvironment.getRootUrl() ).thenReturn( new URL( "http://http://hibernate.org/" ) );
+		when( scanEnvironment.getRootUrl() )
+				.thenReturn( new URL( "http://http://hibernate.org/" ) );
 
 		ScanningCoordinator.INSTANCE.applyScanResultsToManagedResources(
 				managedResources,
@@ -125,14 +125,13 @@ public class ScanningCoordinatorTest {
 				bootstrapContext,
 				xmlMappingBinderAccess
 		);
-		assertEquals( "Unable to resolve class [a.b.C] named in persistence unit [http://http://hibernate.org/]", watcher.getFirstTriggeredMessage() );
+		assertTrue( watcher.wasTriggered() );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-14473")
 	public void testApplyScanResultsToManagedResultsWhileExplicitClassNameLoadable() {
-		Class<Object> expectedClass = Object.class;
-		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenReturn( expectedClass );
+		when( classLoaderService.classForName( eq( "a.b.C" ) ) ).thenReturn( Object.class );
 
 		ScanningCoordinator.INSTANCE.applyScanResultsToManagedResources(
 				managedResources,
@@ -142,7 +141,7 @@ public class ScanningCoordinatorTest {
 		);
 
 		verify( managedResources, times( 0 ) ).addAnnotatedClassName( any() );
-		verify( managedResources, times( 1 ) ).addAnnotatedClassReference( same( expectedClass ) );
+		verify( managedResources, times( 1 ) ).addAnnotatedClassReference( same( Object.class ) );
 		verify( classLoaderService, times( 1 ) ).classForName( eq( "a.b.C" ) );
 	}
 
@@ -155,16 +154,13 @@ public class ScanningCoordinatorTest {
 	@Test
 	@JiraKey(value = "HHH-12505")
 	public void testManagedResourcesAfterCoordinateScanWithCustomEnabledScanner() {
-		final Scanner scanner = new Scanner() {
-			@Override
-			public ScanResult scan(final ScanEnvironment environment, final ScanOptions options, final ScanParameters parameters) {
-				final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
-				return new ScanResultImpl(
-						Collections.<PackageDescriptor>singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
-						Collections.<ClassDescriptor>singleton( new ClassDescriptorImpl( "dummy", ClassDescriptor.Categorization.MODEL, dummyInputStreamAccess ) ),
-						Collections.<MappingFileDescriptor>singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
-				);
-			}
+		final Scanner scanner = (environment, options, parameters) -> {
+			final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
+			return new ScanResultImpl(
+					singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
+					singleton( new ClassDescriptorImpl( "dummy", ClassDescriptor.Categorization.MODEL, dummyInputStreamAccess ) ),
+					singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
+			);
 		};
 		assertManagedResourcesAfterCoordinateScanWithScanner( scanner, false );
 	}
@@ -173,19 +169,20 @@ public class ScanningCoordinatorTest {
 	@JiraKey(value = "HHH-10778")
 	public void testManagedResourcesAfterCoordinateScanWithConverterScanner() {
 
-		when( classLoaderService.classForName( "converter" ) ).thenReturn( (Class) IntegerToVarcharConverter.class );
+		when( (Class) classLoaderService.classForName( "converter" ) )
+				.thenReturn( IntegerToVarcharConverter.class );
 
 		final Scanner scanner = (ScanEnvironment environment, ScanOptions options, ScanParameters parameters) -> {
 			final InputStreamAccess dummyInputStreamAccess = new ByteArrayInputStreamAccess( "dummy", new byte[0] );
 
 			return new ScanResultImpl(
-					Collections.singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
-					Collections.singleton( new ClassDescriptorImpl(
+					singleton( new PackageDescriptorImpl( "dummy", dummyInputStreamAccess ) ),
+					singleton( new ClassDescriptorImpl(
 							"converter",
 							ClassDescriptor.Categorization.CONVERTER,
 							dummyInputStreamAccess
 					) ),
-					Collections.singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
+					singleton( new MappingFileDescriptorImpl( "dummy", dummyInputStreamAccess ) )
 			);
 		};
 
@@ -200,9 +197,8 @@ public class ScanningCoordinatorTest {
 		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get( 0 ) );
 
 		assertEquals( 1, managedResources.getAttributeConverterDescriptors().size() );
-		ConverterDescriptor attributeConverterInfo = managedResources.getAttributeConverterDescriptors()
-				.iterator()
-				.next();
+		ConverterDescriptor<?, ?> attributeConverterInfo =
+				managedResources.getAttributeConverterDescriptors().iterator().next();
 		assertEquals( IntegerToVarcharConverter.class, attributeConverterInfo.getAttributeConverterClass() );
 	}
 
@@ -221,8 +217,8 @@ public class ScanningCoordinatorTest {
 		assertEquals( 1, scanEnvironment.getExplicitlyListedClassNames().size() );
 		assertEquals( "a.b.C", scanEnvironment.getExplicitlyListedClassNames().get( 0 ) );
 
-		assertEquals( true, managedResources.getAttributeConverterDescriptors().isEmpty() );
-		assertEquals( true, managedResources.getAnnotatedClassReferences().isEmpty() );
+		assertTrue( managedResources.getAttributeConverterDescriptors().isEmpty() );
+		assertTrue( managedResources.getAnnotatedClassReferences().isEmpty() );
 		assertEquals( expectedIsManagedResourcesEmpty, managedResources.getAnnotatedClassNames().isEmpty() );
 		assertEquals( expectedIsManagedResourcesEmpty, managedResources.getAnnotatedPackageNames().isEmpty() );
 		assertEquals( expectedIsManagedResourcesEmpty, managedResources.getXmlMappingBindings().isEmpty() );

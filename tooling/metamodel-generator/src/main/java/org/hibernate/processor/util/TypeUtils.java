@@ -565,6 +565,7 @@ public final class TypeUtils {
 	}
 
 	public static boolean isBasicAttribute(Element element, Element returnedElement, Context context) {
+		//TODO: This is extremely incomplete
 		return hasAnnotation( element, BASIC, ONE_TO_ONE, MANY_TO_ONE, EMBEDDED, EMBEDDED_ID, ID )
 			|| hasAnnotation( element, "org.hibernate.annotations.Type") // METAGEN-28
 			|| returnedElement.asType().accept( new BasicAttributeVisitor( context ), returnedElement );

@@ -4,8 +4,6 @@
  */
 package org.hibernate.processor.util;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -189,28 +187,6 @@ public final class Constants {
 					UNI_MUTINY_STATELESS_SESSION,
 					SPRING_STATELESS_SESSION_PROVIDER
 			);
-
-	//TODO: this is not even an exhaustive list of built-in basic types
-	//      so any logic that relies on incomplete this list is broken!
-	public static final Set<String> BASIC_TYPES =  Set.of(
-			String.class.getName(),
-			Boolean.class.getName(),
-			Byte.class.getName(),
-			Character.class.getName(),
-			Short.class.getName(),
-			Integer.class.getName(),
-			Long.class.getName(),
-			Float.class.getName(),
-			Double.class.getName(),
-			BigInteger.class.getName(),
-			BigDecimal.class.getName(),
-			java.util.Date.class.getName(),
-			java.util.Calendar.class.getName(),
-			java.sql.Date.class.getName(),
-			java.sql.Time.class.getName(),
-			java.sql.Timestamp.class.getName(),
-			java.sql.Blob.class.getName()
-	);
 
 	public static final List<String> BASIC_ARRAY_TYPES = List.of(
 			Character.class.getName(),

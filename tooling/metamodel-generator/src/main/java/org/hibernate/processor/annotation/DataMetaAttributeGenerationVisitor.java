@@ -6,7 +6,6 @@ package org.hibernate.processor.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.processor.Context;
-import org.hibernate.processor.util.Constants;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -18,9 +17,8 @@ import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.lang.model.util.Types;
 
-import static org.hibernate.processor.util.NullnessUtil.castNonNull;
 import static org.hibernate.processor.util.TypeUtils.getTargetEntity;
-import static org.hibernate.processor.util.TypeUtils.isBasicAttribute;
+import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.isPropertyGetter;
 import static org.hibernate.processor.util.TypeUtils.toArrayTypeString;
 import static org.hibernate.processor.util.TypeUtils.toTypeString;
@@ -70,19 +68,19 @@ public class DataMetaAttributeGenerationVisitor extends SimpleTypeVisitor8<@Null
 	@Override
 	public @Nullable DataAnnotationMetaAttribute visitDeclared(DeclaredType declaredType, Element element) {
 		final TypeElement returnedElement = (TypeElement) typeUtils().asElement( declaredType );
-		// WARNING: .toString() is necessary here since Name equals does not compare to String
-		final String returnTypeName = castNonNull( returnedElement ).getQualifiedName().toString();
-		final String collection = Constants.COLLECTIONS.get( returnTypeName );
-		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
-		if ( collection != null ) {
+		if ( returnedElement == null ) {
 			return null;
 		}
-		else if ( isBasicAttribute( element, returnedElement, context ) ) {
-			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
-			return new DataAnnotationMetaAttribute( entity, element, type, path );
+		// WARNING: .toString() is necessary here since Name equals does not compare to String
+		final String targetEntity = getTargetEntity( element.getAnnotationMirrors() );
+		if ( isPluralAttribute( element ) ) {
+//			final String returnTypeName = returnedElement.getQualifiedName().toString();
+//			final String collection = Constants.COLLECTIONS.get( returnTypeName );
+			return null;
 		}
 		else {
-			return null;
+			final String type = targetEntity != null ? targetEntity : returnedElement.getQualifiedName().toString();
+			return new DataAnnotationMetaAttribute( entity, element, type, path );
 		}
 	}
 

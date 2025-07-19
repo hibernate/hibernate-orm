@@ -44,10 +44,8 @@ import static java.util.stream.Stream.concat;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.processor.util.AccessTypeInformation.DEFAULT_ACCESS_TYPE;
 import static org.hibernate.processor.util.Constants.ACCESS;
-import static org.hibernate.processor.util.Constants.BASIC;
 import static org.hibernate.processor.util.Constants.ELEMENT_COLLECTION;
 import static org.hibernate.processor.util.Constants.EMBEDDABLE;
-import static org.hibernate.processor.util.Constants.EMBEDDED;
 import static org.hibernate.processor.util.Constants.EMBEDDED_ID;
 import static org.hibernate.processor.util.Constants.ENTITY;
 import static org.hibernate.processor.util.Constants.ID;
@@ -573,10 +571,9 @@ public final class TypeUtils {
 				toTypeString( executable.getReturnType() ) );
 	}
 
-	public static boolean isBasicAttribute(Element element, Element returnedElement, Context context) {
-		return hasAnnotation( element, BASIC, ONE_TO_ONE, MANY_TO_ONE, EMBEDDED, EMBEDDED_ID, ID )
-			|| hasAnnotation( element, "org.hibernate.annotations.Type") // METAGEN-28
-			|| returnedElement.asType().accept( new BasicAttributeVisitor( context ), returnedElement );
+	public static boolean isPluralAttribute(Element element) {
+		// TODO: should MANY_TO_ANY be on this list?
+		return hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION );
 	}
 
 	public static @Nullable String getFullyQualifiedClassNameOfTargetEntity(

@@ -101,6 +101,7 @@ import static org.hibernate.processor.util.TypeUtils.getGeneratedClassFullyQuali
 import static org.hibernate.processor.util.TypeUtils.getInheritedAnnotationMirror;
 import static org.hibernate.processor.util.TypeUtils.hasAnnotation;
 import static org.hibernate.processor.util.TypeUtils.implementsInterface;
+import static org.hibernate.processor.util.TypeUtils.isPluralAttribute;
 import static org.hibernate.processor.util.TypeUtils.primitiveClassMatchesKind;
 import static org.hibernate.processor.util.TypeUtils.propertyName;
 import static org.hibernate.processor.util.TypeUtils.resolveTypeMirror;
@@ -2548,7 +2549,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final boolean idClassRef = isIdRef( path ) && hasAnnotation( entityType, ID_CLASS );
 		final Element member = idClassRef ? null : memberMatchingPath( entityType, path );
 		if ( member != null ) {
-			if ( containsAnnotation( member, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION ) ) {
+			if ( isPluralAttribute( member ) ) {
 				message( param,
 						"matching field is a collection",
 						Diagnostic.Kind.ERROR );

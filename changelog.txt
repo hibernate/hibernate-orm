@@ -3,6 +3,17 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.41.Final (July 20, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34198
+
+** Bug
+    * [HHH-19621] - SUBSTRING function for DB2i Series is broken
+    * [HHH-19550] - Attribute join on correlated from node receives wrong root
+    * [HHH-19497] - Fallback implementation of IN LIST is incorrect with dangerous consequences
+
+
 Changes in 6.2.40.Final (July 06, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

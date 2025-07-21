@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -47,6 +48,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	private final NavigableRole navigableRole;
 	private final String table;
 	private final String column;
+	private final SelectablePath selectablePath;
 	private final DiscriminatedAssociationModelPart anyPart;
 	private final String customReadExpression;
 	private final String customWriteExpression;
@@ -65,6 +67,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			DiscriminatedAssociationModelPart anyPart,
 			String table,
 			String column,
+			SelectablePath selectablePath,
 			String customReadExpression,
 			String customWriteExpression,
 			String columnDefinition,
@@ -79,6 +82,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 		this.navigableRole = navigableRole;
 		this.table = table;
 		this.column = column;
+		this.selectablePath = selectablePath;
 		this.anyPart = anyPart;
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
@@ -101,6 +105,16 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public String getSelectionExpression() {
 		return column;
+	}
+
+	@Override
+	public String getSelectableName() {
+		return selectablePath.getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return selectablePath;
 	}
 
 	@Override

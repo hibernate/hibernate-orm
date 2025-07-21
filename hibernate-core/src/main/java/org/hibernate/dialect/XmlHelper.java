@@ -521,6 +521,10 @@ public class XmlHelper {
 					final String tagName = aggregateMapping.getSelectableName();
 					sb.append( '<' );
 					sb.append( tagName );
+					if ( array[i] == null ) {
+						sb.append( "/>" );
+						continue;
+					}
 					sb.append( '>' );
 					toString(
 							mappingType,

@@ -514,7 +514,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 										quotes + 1,
 										arrayList,
 										(BasicType<Object>) pluralType.getElementType(),
-										returnEmbeddable,
 										options
 								);
 								assert string.charAt( subEnd - 1 ) == '}';
@@ -624,7 +623,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 								quotes + 1,
 								arrayList,
 								(BasicType<Object>) pluralType.getElementType(),
-								returnEmbeddable,
 								options
 						);
 						assert string.charAt( i - 1 ) == '}';
@@ -667,7 +665,6 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 			int quotes,
 			ArrayList<Object> values,
 			BasicType<Object> elementType,
-			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
 		boolean inQuote = false;
 		StringBuilder escapingSb = null;
@@ -860,30 +857,17 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 										i + 1,
 										quotes + 1,
 										subValues,
-										returnEmbeddable,
+										true,
 										options
 								);
-								if ( returnEmbeddable ) {
-									final StructAttributeValues attributeValues = structJdbcType.getAttributeValues(
-											structJdbcType.embeddableMappingType,
-											structJdbcType.orderMapping,
-											subValues,
-											options
-									);
-									final Object subValue = instantiate( structJdbcType.embeddableMappingType, attributeValues, options.getSessionFactory() );
+								final StructAttributeValues attributeValues = structJdbcType.getAttributeValues(
+										structJdbcType.embeddableMappingType,
+										structJdbcType.orderMapping,
+										subValues,
+										options
+								);
+								final Object subValue = instantiate( structJdbcType.embeddableMappingType, attributeValues, options.getSessionFactory() );
 									values.add( subValue );
-								}
-								else {
-									if ( structJdbcType.inverseOrderMapping != null ) {
-										StructHelper.orderJdbcValues(
-												structJdbcType.embeddableMappingType,
-												structJdbcType.inverseOrderMapping,
-												subValues.clone(),
-												subValues
-										);
-									}
-									values.add( subValues );
-								}
 								// The subEnd points to the first character after the '}',
 								// so move forward the index to point to the next char after quotes
 								assert isDoubleQuote( string, subEnd, expectedQuotes );
@@ -1001,40 +985,8 @@ public abstract class AbstractPostgreSQLStructJdbcType implements StructJdbcType
 	}
 
 	private SelectableMapping getJdbcValueSelectable(int jdbcValueSelectableIndex) {
-		if ( orderMapping != null ) {
-			final int numberOfAttributeMappings = embeddableMappingType.getNumberOfAttributeMappings();
-			final int size = numberOfAttributeMappings + ( embeddableMappingType.isPolymorphic() ? 1 : 0 );
-			int count = 0;
-			for ( int i = 0; i < size; i++ ) {
-				final ValuedModelPart modelPart = getEmbeddedPart( embeddableMappingType, orderMapping[i] );
-				final MappingType mappedType = modelPart.getMappedType();
-				if ( mappedType instanceof EmbeddableMappingType ) {
-					final EmbeddableMappingType embeddableMappingType = (EmbeddableMappingType) mappedType;
-					final SelectableMapping aggregateMapping = embeddableMappingType.getAggregateMapping();
-					if ( aggregateMapping == null ) {
-						final SelectableMapping subSelectable = embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex - count );
-						if ( subSelectable != null ) {
-							return subSelectable;
-						}
-						count += embeddableMappingType.getJdbcValueCount();
-					}
-					else {
-						if ( count == jdbcValueSelectableIndex ) {
-							return aggregateMapping;
-						}
-						count++;
-					}
-				}
-				else {
-					if ( count == jdbcValueSelectableIndex ) {
-						return (SelectableMapping) modelPart;
-					}
-					count += modelPart.getJdbcTypeCount();
-				}
-			}
-			return null;
-		}
-		return embeddableMappingType.getJdbcValueSelectable( jdbcValueSelectableIndex );
+		return embeddableMappingType.getJdbcValueSelectable(
+				orderMapping != null ? orderMapping[jdbcValueSelectableIndex] : jdbcValueSelectableIndex );
 	}
 
 	private static boolean repeatsChar(String string, int start, int times, char expectedChar) {

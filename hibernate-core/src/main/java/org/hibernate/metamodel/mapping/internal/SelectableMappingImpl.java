@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
@@ -126,7 +127,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
-			final SelectablePath parentPath,
+			@Nullable final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,
@@ -154,7 +155,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 	public static SelectableMapping from(
 			final String containingTableExpression,
 			final Selectable selectable,
-			final SelectablePath parentPath,
+			@Nullable final SelectablePath parentPath,
 			final JdbcMapping jdbcMapping,
 			final TypeConfiguration typeConfiguration,
 			boolean insertable,

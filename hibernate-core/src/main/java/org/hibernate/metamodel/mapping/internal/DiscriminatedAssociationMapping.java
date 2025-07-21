@@ -25,6 +25,7 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -73,13 +74,18 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		assert !keySelectable.isFormula();
 		final Column metaColumn = (Column) metaSelectable;
 		final Column keyColumn = (Column) keySelectable;
+		final SelectablePath parentSelectablePath = declaringModelPart.asAttributeMapping() != null
+				? MappingModelCreationHelper.getSelectablePath( declaringModelPart.asAttributeMapping().getDeclaringType() )
+				: null;
 
 		final MetaType metaType = (MetaType) anyType.getDiscriminatorType();
 		final AnyDiscriminatorPart discriminatorPart = new AnyDiscriminatorPart(
-				containerRole.append( AnyDiscriminatorPart.ROLE_NAME),
+				containerRole.append( AnyDiscriminatorPart.ROLE_NAME ),
 				declaringModelPart,
 				tableName,
 				metaColumn.getText( dialect ),
+				parentSelectablePath != null ? parentSelectablePath.append( metaColumn.getQuotedName( dialect ) )
+						: new SelectablePath( metaColumn.getQuotedName( dialect ) ),
 				metaColumn.getCustomReadExpression(),
 				metaColumn.getCustomWriteExpression(),
 				metaColumn.getSqlType(),
@@ -101,6 +107,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				declaringModelPart,
 				tableName,
 				keyColumn.getText( dialect ),
+				parentSelectablePath != null ? parentSelectablePath.append( keyColumn.getQuotedName( dialect ) )
+						: new SelectablePath( keyColumn.getQuotedName( dialect ) ),
 				keyColumn.getCustomReadExpression(),
 				keyColumn.getCustomWriteExpression(),
 				keyColumn.getSqlType(),

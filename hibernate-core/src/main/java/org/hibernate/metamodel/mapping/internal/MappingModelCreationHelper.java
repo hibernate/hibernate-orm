@@ -970,6 +970,7 @@ public class MappingModelCreationHelper {
 						( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
 				);
 			}
+			final SelectablePath parentSelectablePath = getSelectablePath( attributeMapping.getDeclaringType() );
 			final SelectableMapping keySelectableMapping;
 			int i = 0;
 			final Value value = bootProperty.getValue();
@@ -977,6 +978,7 @@ public class MappingModelCreationHelper {
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						columnIterator.next(),
+						parentSelectablePath,
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( i ),
@@ -993,6 +995,7 @@ public class MappingModelCreationHelper {
 				keySelectableMapping = SelectableMappingImpl.from(
 						tableExpression,
 						table.getPrimaryKey().getColumn( 0 ),
+						parentSelectablePath,
 						simpleFkTarget.getJdbcMapping(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						value.isColumnInsertable( 0 ),
@@ -1129,6 +1132,7 @@ public class MappingModelCreationHelper {
 			boolean[] updateable,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
+		final SelectablePath parentSelectablePath = getSelectablePath( keyDeclaringType );
 		final boolean hasConstraint;
 		final SelectableMappings keySelectableMappings;
 		if ( bootValueMapping instanceof Collection ) {
@@ -1142,6 +1146,7 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					collectionBootValueMapping.getKey(),
 					getPropertyOrder( bootValueMapping, creationProcess ),
+					parentSelectablePath,
 					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
@@ -1167,6 +1172,7 @@ public class MappingModelCreationHelper {
 					keyTableExpression,
 					bootValueMapping,
 					getPropertyOrder( bootValueMapping, creationProcess ),
+					parentSelectablePath,
 					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					insertable,
@@ -1212,6 +1218,15 @@ public class MappingModelCreationHelper {
 					creationProcess
 			);
 		}
+	}
+
+	public static @Nullable SelectablePath getSelectablePath(ManagedMappingType type) {
+		if ( type instanceof EmbeddableMappingType ) {
+			final EmbeddableMappingType embeddableType = (EmbeddableMappingType) type;
+			return embeddableType.getAggregateMapping() != null
+					? embeddableType.getAggregateMapping().getSelectablePath() : null;
+		}
+		return null;
 	}
 
 	public static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {

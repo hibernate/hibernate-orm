@@ -2453,7 +2453,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							new CriteriaFinderMethod(
 									this, method,
 									methodName,
-									returnType.toString(),
+									typeAsString( returnType, false ),
 									containerType,
 									paramNames,
 									paramTypes,
@@ -3389,25 +3389,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * Workaround for a bug in Java 20/21. Should not be necessary!
 	 */
 	private String typeAsString(TypeMirror type) {
-		String result;
+		return typeAsString( type, true );
+	}
+
+	private String typeAsString(TypeMirror type, boolean includeAnnotations) {
 		if ( type instanceof DeclaredType dt && dt.asElement() instanceof TypeElement te ) {
 			// get the "fqcn" without any type arguments
-			result = te.getQualifiedName().toString();
+			String result = te.getQualifiedName().toString();
 			// add the < ? ,? ....> as necessary:
 			if ( !dt.getTypeArguments().isEmpty() ) {
 				result += dt.getTypeArguments().stream()
-						.map( this::typeAsString )
-						.collect( Collectors.joining( ",", "<", ">" ) );
+						.map( arg -> typeAsString( arg, true ) )
+						.collect( Collectors.joining( ", ", "<", ">" ) );
 			}
+			if ( includeAnnotations ) {
+				for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
+					result = annotation.toString() + ' ' + result;
+				}
+			}
+			return result;
 		}
 		else {
-			result = type.toString();
+			return type.toString();
 		}
-
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			result = annotation.toString() + ' ' + result;
-		}
-		return result;
 	}
 
 	private TypeMirror parameterType(VariableElement parameter) {

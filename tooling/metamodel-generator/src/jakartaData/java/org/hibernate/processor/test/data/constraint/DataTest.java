@@ -19,6 +19,6 @@ class DataTest {
 		System.out.println( getMetaModelSourceAsString( MyEntity.class ) );
 		System.out.println( getMetaModelSourceAsString( MyConstrainedRepository.class ) );
 		assertMetamodelClassGeneratedFor( MyEntity.class );
-//		assertMetamodelClassGeneratedFor( MyConstrainedRepository.class );
+		assertMetamodelClassGeneratedFor( MyConstrainedRepository.class );
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Selectable;
@@ -16,6 +17,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.CompositeType;
@@ -62,18 +64,33 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			Dialect dialect,
 			SqmFunctionRegistry sqmFunctionRegistry,
 			RuntimeModelCreationContext creationContext) {
-		if ( insertable.length == 0 ) {
-			return from(
-					containingTableExpression,
-					value,
-					propertyOrder,
-					mappingContext,
-					typeConfiguration,
-					dialect,
-					sqmFunctionRegistry,
-					creationContext
-			);
-		}
+		return from(
+				containingTableExpression,
+				value,
+				propertyOrder,
+				null,
+				mappingContext,
+				typeConfiguration,
+				insertable,
+				updateable,
+				dialect,
+				sqmFunctionRegistry,
+				creationContext
+		);
+	}
+
+	public static SelectableMappings from(
+			String containingTableExpression,
+			Value value,
+			int[] propertyOrder,
+			@Nullable SelectablePath parentSelectablePath,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			boolean[] insertable,
+			boolean[] updateable,
+			Dialect dialect,
+			SqmFunctionRegistry sqmFunctionRegistry,
+			RuntimeModelCreationContext creationContext) {
 		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
 		resolveJdbcMappings( jdbcMappings, mappingContext, value.getType() );
 
@@ -84,43 +101,11 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
 					containingTableExpression,
 					selectables.get( i ),
+					parentSelectablePath,
 					jdbcMappings.get( propertyOrder[i] ),
 					typeConfiguration,
-					insertable[i],
-					updateable[i],
-					false,
-					dialect,
-					sqmFunctionRegistry,
-					creationContext
-			);
-		}
-
-		return new SelectableMappingsImpl( selectableMappings );
-	}
-
-	private static SelectableMappings from(
-			String containingTableExpression,
-			Value value,
-			int[] propertyOrder,
-			MappingContext mapping,
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			SqmFunctionRegistry sqmFunctionRegistry,
-			RuntimeModelCreationContext creationContext) {
-		final List<JdbcMapping> jdbcMappings = new ArrayList<>();
-		resolveJdbcMappings( jdbcMappings, mapping, value.getType() );
-
-		final List<Selectable> selectables = value.getVirtualSelectables();
-
-		final SelectableMapping[] selectableMappings = new SelectableMapping[jdbcMappings.size()];
-		for ( int i = 0; i < selectables.size(); i++ ) {
-			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
-					containingTableExpression,
-					selectables.get( i ),
-					jdbcMappings.get( propertyOrder[i] ),
-					typeConfiguration,
-					false,
-					false,
+					i < insertable.length && insertable[i],
+					i < updateable.length && updateable[i],
 					false,
 					dialect,
 					sqmFunctionRegistry,

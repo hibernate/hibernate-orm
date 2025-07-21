@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Comment;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -111,7 +112,8 @@ public class AggregateComponentSecondPass implements SecondPass {
 				orderColumns( registeredUdt, originalOrder );
 			}
 			else {
-				addAuxiliaryObjects = false;
+				addAuxiliaryObjects =
+						isAggregateArray() && namespace.locateUserDefinedArrayType( Identifier.toIdentifier( aggregateColumn.getSqlType() ) ) == null;
 				validateEqual( registeredUdt, udt );
 			}
 		}

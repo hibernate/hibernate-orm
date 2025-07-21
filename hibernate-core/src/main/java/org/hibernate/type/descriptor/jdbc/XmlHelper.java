@@ -788,6 +788,10 @@ public class XmlHelper {
 				if ( tagName != null ) {
 					sb.append( '<' );
 					sb.append( tagName );
+					if ( attributeValue == null ) {
+						sb.append( "/>" );
+						continue;
+					}
 					sb.append( '>' );
 				}
 				toString(
@@ -920,21 +924,22 @@ public class XmlHelper {
 						final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 						for ( int i = 0; i < length; i++ ) {
 							final Object arrayElement = Array.get( value, i );
-							final Object[] arrayElementValues = arrayElement == null
-									? null
-									: embeddableMappingType.getValues( arrayElement );
-							appender.append( START_TAG );
-							toString( embeddableMappingType, arrayElementValues, options, appender );
-							appender.append( END_TAG );
+							if ( arrayElement == null ) {
+								appender.append( NULL_TAG );
+							}
+							else {
+								final Object[] arrayElementValues = embeddableMappingType.getValues( arrayElement );
+								appender.append( START_TAG );
+								toString( embeddableMappingType, arrayElementValues, options, appender );
+								appender.append( END_TAG );
+							}
 						}
 					}
 					else {
 						for ( int i = 0; i < length; i++ ) {
 							final Object arrayElement = Array.get( value, i );
 							if ( arrayElement == null ) {
-								appender.append( '<' );
-								appender.append( ROOT_TAG );
-								appender.append( "/>" );
+								appender.append( NULL_TAG );
 							}
 							else {
 								appender.append( START_TAG );

@@ -22,6 +22,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -58,6 +59,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 
 	protected final DomainResultAssembler<?>[][] assemblers;
 	protected final BasicResultAssembler<?> discriminatorAssembler;
+	protected final @Nullable DomainResultAssembler<Boolean> nullIndicatorAssembler;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializers;
 	protected final @Nullable Initializer<InitializerData>[][] subInitializersForResolveFromInitialized;
 	protected final @Nullable Initializer<InitializerData>[][] collectionContainingSubInitializers;
@@ -99,6 +101,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 	public EmbeddableInitializerImpl(
 			EmbeddableResultGraphNode resultDescriptor,
 			BasicFetch<?> discriminatorFetch,
+			@Nullable DomainResult<Boolean> nullIndicatorResult,
 			InitializerParent<?> parent,
 			AssemblerCreationState creationState,
 			boolean isResultInitializer) {
@@ -184,6 +187,8 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		this.discriminatorAssembler = discriminatorFetch != null
 				? (BasicResultAssembler<?>) discriminatorFetch.createAssembler( this, creationState )
 				: null;
+		this.nullIndicatorAssembler =
+				nullIndicatorResult == null ? null : nullIndicatorResult.createResultAssembler( this, creationState );
 		this.subInitializers = subInitializers;
 		this.subInitializersForResolveFromInitialized = isEnhancedForLazyLoading( embeddableMappingType )
 				? subInitializers
@@ -471,7 +476,7 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 //		EMBEDDED_LOAD_LOGGER.tracef( "Created composite instance [%s]", navigablePath );
 	}
 
-	private void extractRowState(EmbeddableInitializerData data) {
+	protected void extractRowState(EmbeddableInitializerData data) {
 		boolean stateAllNull = true;
 		final DomainResultAssembler<?>[] subAssemblers = assemblers[data.getSubclassId()];
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
@@ -496,8 +501,13 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 			}
 		}
 		if ( stateAllNull ) {
-			data.setState( State.MISSING );
+			data.setState( isNull( data ) ? State.MISSING : State.RESOLVED );
 		}
+	}
+
+	protected boolean isNull(EmbeddableInitializerData data) {
+		return nullIndicatorAssembler == null
+			|| Boolean.TRUE == nullIndicatorAssembler.assemble( data.getRowProcessingState() );
 	}
 
 	@Override

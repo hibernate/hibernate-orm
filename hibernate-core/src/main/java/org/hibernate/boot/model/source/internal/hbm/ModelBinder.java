@@ -155,6 +155,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
@@ -1877,11 +1878,14 @@ public class ModelBinder {
 		// Resolves whether the property is LOB based on the type attribute on the attribute property source.
 		// Essentially this expects the type to map to a CLOB/NCLOB/BLOB sql type internally and compares.
 		if ( !value.isLob() && value.getTypeName() != null ) {
-			final BasicType<?> basicType = attributeSource.getBuildingContext()
-					.getMetadataCollector()
-					.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.getRegisteredType( value.getTypeName() );
+			final String typeName = value.getTypeName();
+			final MetadataBuildingContext context = attributeSource.getBuildingContext();
+			final BasicType<?> basicType =
+					typeName.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX )
+							? context.getBootstrapContext().resolveAdHocBasicType( typeName )
+							: context.getMetadataCollector().getTypeConfiguration()
+									.getBasicTypeRegistry().getRegisteredType( typeName );
+
 			if ( basicType instanceof AbstractSingleColumnStandardBasicType ) {
 				if ( isLob( basicType.getJdbcType().getDdlTypeCode(), null ) ) {
 					value.makeLob();

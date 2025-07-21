@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.persistence.AccessType;
@@ -2065,7 +2064,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				new CriteriaFinderMethod(
 						this, method,
 						methodName,
-						returnType.toString(),
+						typeAsString( returnType, false ),
 						containerType,
 						paramNames,
 						paramTypes,
@@ -2378,7 +2377,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					new CriteriaFinderMethod(
 							this, method,
 							methodName,
-							returnType.toString(),
+							typeAsString( returnType, false ),
 							containerType,
 							paramNames,
 							paramTypes,
@@ -2482,7 +2481,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							new CriteriaFinderMethod(
 									this, method,
 									methodName,
-									returnType.toString(),
+									typeAsString( returnType, false ),
 									containerType,
 									paramNames,
 									paramTypes,
@@ -3426,25 +3425,35 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * Workaround for a bug in Java 20/21. Should not be necessary!
 	 */
 	private String typeAsString(TypeMirror type) {
-		String result;
+		return typeAsString( type, true );
+	}
+
+	private String typeAsString(TypeMirror type, boolean includeAnnotations) {
 		if ( type instanceof DeclaredType dt && dt.asElement() instanceof TypeElement te ) {
+			StringBuilder result = new StringBuilder();
+			if ( includeAnnotations ) {
+				for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
+					result.append( annotation.toString() ).append( ' ' );
+				}
+			}
 			// get the "fqcn" without any type arguments
-			result = te.getQualifiedName().toString();
+			result.append( te.getQualifiedName().toString() );
 			// add the < ? ,? ....> as necessary:
 			if ( !dt.getTypeArguments().isEmpty() ) {
-				result += dt.getTypeArguments().stream()
-						.map( this::typeAsString )
-						.collect( Collectors.joining( ",", "<", ">" ) );
+				result.append( "<" );
+				int index = 0;
+				for ( ; index < dt.getTypeArguments().size() - 1; index++ ) {
+					result.append( typeAsString( dt.getTypeArguments().get( index ), true ) )
+							.append( ", " );
+				}
+				result.append( typeAsString( dt.getTypeArguments().get( index ), true ) );
+				result.append( ">" );
 			}
+			return result.toString();
 		}
 		else {
-			result = type.toString();
+			return type.toString();
 		}
-
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			result = annotation.toString() + ' ' + result;
-		}
-		return result;
 	}
 
 	private TypeMirror parameterType(VariableElement parameter) {

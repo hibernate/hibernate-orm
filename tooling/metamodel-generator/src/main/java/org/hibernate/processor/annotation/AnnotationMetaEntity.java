@@ -60,6 +60,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import jakarta.persistence.AccessType;
@@ -3388,15 +3389,21 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * Workaround for a bug in Java 20/21. Should not be necessary!
 	 */
 	private String typeAsString(TypeMirror type) {
-		String result = type.toString();
-		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
-			final String annotationString = annotation.toString();
-			result = result
-					// if it has a space after it, we need to remove that too
-					.replace(annotationString + ' ', "")
-					// just in case it did not have a space after it
-					.replace(annotationString, "");
+		String result;
+		if ( type instanceof DeclaredType dt && dt.asElement() instanceof TypeElement te ) {
+			// get the "fqcn" without any type arguments
+			result = te.getQualifiedName().toString();
+			// add the < ? ,? ....> as necessary:
+			if ( !dt.getTypeArguments().isEmpty() ) {
+				result += dt.getTypeArguments().stream()
+						.map( this::typeAsString )
+						.collect( Collectors.joining( ",", "<", ">" ) );
+			}
 		}
+		else {
+			result = type.toString();
+		}
+
 		for ( AnnotationMirror annotation : type.getAnnotationMirrors() ) {
 			result = annotation.toString() + ' ' + result;
 		}

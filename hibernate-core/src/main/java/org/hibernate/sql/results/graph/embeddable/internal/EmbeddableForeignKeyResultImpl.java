@@ -123,7 +123,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 	public EmbeddableInitializer<?> createInitializer(InitializerParent<?> parent, AssemblerCreationState creationState) {
 		return getReferencedModePart() instanceof NonAggregatedIdentifierMapping
 				? new NonAggregatedIdentifierMappingInitializer( this, null, creationState, true )
-				: new EmbeddableInitializerImpl( this, null, null, creationState, true );
+				: new EmbeddableInitializerImpl( this, null, null, null, creationState, true );
 	}
 
 	@Override

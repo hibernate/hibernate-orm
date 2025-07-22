@@ -67,7 +67,7 @@ elif [ "$RDBMS" == "sybase" ]; then
   goal="-Pdb=sybase_ci -PexcludeTests=**.GenerateSeriesTest*"
 elif [ "$RDBMS" == "sybase_jconn" ]; then
   goal="-Pdb=sybase_jconn_ci -PexcludeTests=**.GenerateSeriesTest*"
-elif [ "$RDBMS" == "teradata" ] 
+elif [ "$RDBMS" == "teradata" ]; then 
   goal="-Pdb=teradata"
 elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"

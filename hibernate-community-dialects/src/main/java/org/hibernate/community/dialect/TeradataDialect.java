@@ -112,6 +112,7 @@ public class TeradataDialect extends Dialect {
 		registerKeyword( "role" );
 		registerKeyword( "account" );
 		registerKeyword( "class" );
+		registerKeyword( "title" );
 	}
 
 	@Override
@@ -653,6 +654,14 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public boolean supportsRowValueConstructorSyntax() {
 		return false;
+	}
+
+	/**
+	 * Teradata uses the syntax DELETE FROM <tablename> ALL instead of TRUNCATE <tablename>
+	 * @param tableName the name of the table
+	 */
+	public String getTruncateTableStatement(String tableName) {
+		return "delete from " + tableName + " all";
 	}
 
 	@Override

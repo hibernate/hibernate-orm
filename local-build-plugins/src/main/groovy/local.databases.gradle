@@ -119,6 +119,15 @@ ext {
 //                        'jdbc.datasource' : 'com.sybase.jdbc4.jdbc.SybDataSource',
                     'connection.init_sql' : 'set ansinull on set quoted_identifier on'
             ],
+            teradata: [
+                    'db.dialect' : 'org.hibernate.community.dialect.TeradataDialect',
+                    'jdbc.driver': 'com.teradata.jdbc.TeraDriver',
+                    'jdbc.user'  : 'hibernate_orm_test',
+                    'jdbc.pass'  : 'hibernate_orm_test',
+                    'jdbc.url'   : 'jdbc:teradata://' + dbHost + '/STRICT_NAMES=OFF,DATABASE=hibernate_orm_test',
+                    'jdbc.datasource' : 'com.teradata.jdbc.TeraDriver',
+                    'connection.init_sql' : ''
+            ],
             mysql : [
                     'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
                     'jdbc.driver': 'com.mysql.cj.jdbc.Driver',

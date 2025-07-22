@@ -17,6 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import static org.hibernate.collection.spi.AbstractPersistentCollection.checkPersister;
 import static org.hibernate.loader.internal.CacheLoadHelper.initializeCollectionFromCache;
 import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
@@ -41,6 +42,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		}
 		if ( !collection.wasInitialized() ) {
 			final CollectionPersister loadedPersister = ce.getLoadedPersister();
+			checkPersister(collection, loadedPersister);
 			final Object loadedKey = ce.getLoadedKey();
 			if ( LOG.isTraceEnabled() ) {
 				LOG.trace( "Initializing collection "

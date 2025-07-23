@@ -5,11 +5,16 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
+
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -19,6 +24,30 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
  * @author Steve Ebersole
  */
 public class PersistentTableInsertStrategy extends PersistentTableStrategy implements SqmMultiTableInsertStrategy {
+
+	public PersistentTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				rootEntityDescriptor,
+				runtimeModelCreationContext.getDialect().getPersistentTemporaryTableStrategy(),
+				runtimeModelCreationContext
+		);
+	}
+
+	private PersistentTableInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			TemporaryTableStrategy temporaryTableStrategy,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ENTITY_TABLE_PREFIX + basename ),
+						TemporaryTableKind.PERSISTENT,
+						runtimeModelCreationContext.getDialect(),
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
 
 	public PersistentTableInsertStrategy(
 			TemporaryTable entityTable,
@@ -35,7 +64,8 @@ public class PersistentTableInsertStrategy extends PersistentTableStrategy imple
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
-				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
+				getTemporaryTableStrategy(),
+				false,
 				session -> session.getSessionIdentifier().toString(),
 				getSessionFactory()
 		).execute( context );

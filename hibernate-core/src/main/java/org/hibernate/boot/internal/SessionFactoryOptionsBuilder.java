@@ -30,7 +30,7 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -641,7 +641,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
 						}
-						else if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class &&  parameterTypes[1] == MappingModelCreationProcess.class ) {
+						else if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
 							entityBasedConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
 						}
 					}
@@ -686,7 +686,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategySelector.selectStrategyImplementor( SqmMultiTableMutationStrategy.class, strategyName );
 		for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
 			final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
-			if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class &&  parameterTypes[1] == MappingModelCreationProcess.class ) {
+			if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
 				return (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
 			}
 		}
@@ -710,6 +710,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategyClass -> {
 					Constructor<SqmMultiTableInsertStrategy> dialectConstructor = null;
 					Constructor<SqmMultiTableInsertStrategy> emptyConstructor = null;
+					Constructor<SqmMultiTableInsertStrategy> entityBasedConstructor = null;
 					// todo (6.0) : formalize the allowed constructor parameterizations
 					for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
 						final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
@@ -720,25 +721,35 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						else if ( parameterTypes.length == 0 ) {
 							emptyConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
 						}
+						else if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
+							entityBasedConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
+						}
 					}
 
-					try {
-						if ( dialectConstructor != null ) {
-							return dialectConstructor.newInstance(
-									serviceRegistry.requireService( JdbcServices.class ).getDialect()
+					if ( entityBasedConstructor == null ) {
+						try {
+							if ( dialectConstructor != null ) {
+								return dialectConstructor.newInstance(
+										serviceRegistry.requireService( JdbcServices.class ).getDialect()
+								);
+							}
+							else if ( emptyConstructor != null ) {
+								return emptyConstructor.newInstance();
+							}
+						}
+						catch (Exception e) {
+							throw new StrategySelectionException(
+									String.format( "Could not instantiate named strategy class [%s]",
+											strategyClass.getName() ),
+									e
 							);
 						}
-						else if ( emptyConstructor != null ) {
-							return emptyConstructor.newInstance();
-						}
+						throw new IllegalArgumentException(
+								"Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 					}
-					catch (Exception e) {
-						throw new StrategySelectionException(
-								String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
-								e
-						);
+					else {
+						return null;
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}
@@ -755,7 +766,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategySelector.selectStrategyImplementor( SqmMultiTableInsertStrategy.class, strategyName );
 		for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
 			final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
-			if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class &&  parameterTypes[1] == MappingModelCreationProcess.class ) {
+			if ( parameterTypes.length == 2 && parameterTypes[0] == EntityMappingType.class && parameterTypes[1] == RuntimeModelCreationContext.class ) {
 				return (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
 			}
 		}
@@ -984,10 +995,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, MappingModelCreationProcess creationProcess) {
+	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableMutationStrategyConstructor != null ) {
 			try {
-				return sqmMultiTableMutationStrategyConstructor.newInstance( rootEntityDescriptor, creationProcess );
+				return sqmMultiTableMutationStrategyConstructor.newInstance( rootEntityDescriptor, creationContext );
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException(
@@ -1000,10 +1011,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, MappingModelCreationProcess creationProcess) {
+	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext creationContext) {
 		if ( sqmMultiTableInsertStrategyConstructor != null ) {
 			try {
-				return sqmMultiTableInsertStrategyConstructor.newInstance( rootEntityDescriptor, creationProcess );
+				return sqmMultiTableInsertStrategyConstructor.newInstance( rootEntityDescriptor, creationContext );
 			}
 			catch (Exception e) {
 				throw new StrategySelectionException(

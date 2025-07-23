@@ -43,6 +43,8 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.StandardLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.PgJdbcHelper;
 import org.hibernate.dialect.type.PostgreSQLArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.PostgreSQLCastingInetJdbcType;
@@ -1023,6 +1025,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return StandardLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override

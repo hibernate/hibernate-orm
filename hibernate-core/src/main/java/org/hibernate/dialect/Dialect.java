@@ -55,10 +55,13 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.LegacyTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.AlterTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -2190,7 +2193,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Does this database have some sort of support for temporary tables?
 	 *
 	 * @return true by default, since most do
+	 * @deprecated Use {@link #getLocalTemporaryTableStrategy()} and {@link #getGlobalTemporaryTableStrategy()} to check instead
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public boolean supportsTemporaryTables() {
 		// Most databases do
 		return true;
@@ -2200,7 +2205,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * Does this database support primary keys for temporary tables?
 	 *
 	 * @return true by default, since most do
+	 * @deprecated Moved to {@link TemporaryTableStrategy#supportsTemporaryTablePrimaryKey()}
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public boolean supportsTemporaryTablePrimaryKey() {
 		// Most databases do
 		return true;
@@ -3190,15 +3197,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new PersistentTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new PersistentTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	/**
@@ -3900,8 +3899,40 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * The strategy to use for persistent temporary tables.
+	 *
+	 * @since 7.1
+	 */
+	public TemporaryTableStrategy getPersistentTemporaryTableStrategy() {
+		return getSupportedTemporaryTableKind() == TemporaryTableKind.PERSISTENT
+				? new LegacyTemporaryTableStrategy( this )
+				: PersistentTemporaryTableStrategy.INSTANCE;
+	}
+
+	/**
+	 * The strategy to use for local temporary tables.
+	 *
+	 * @since 7.1
+	 */
+	public @Nullable TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return getSupportedTemporaryTableKind() == TemporaryTableKind.LOCAL ? new LegacyTemporaryTableStrategy( this )
+				: null;
+	}
+
+	/**
+	 * The strategy to use for global temporary tables.
+	 *
+	 * @since 7.1
+	 */
+	public @Nullable TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return getSupportedTemporaryTableKind() == TemporaryTableKind.GLOBAL ? new LegacyTemporaryTableStrategy( this )
+				: null;
+	}
+
+	/**
 	 * The kind of temporary tables that are supported on this database.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
 		return TemporaryTableKind.PERSISTENT;
 	}
@@ -3911,6 +3942,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * create a temporary table, specifying dialect-specific options, or
 	 * {@code null} if there are no options to specify.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public String getTemporaryTableCreateOptions() {
 		return null;
 	}
@@ -3918,6 +3950,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The command to create a temporary table.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public String getTemporaryTableCreateCommand() {
 		return switch ( getSupportedTemporaryTableKind() ) {
 			case PERSISTENT -> "create table";
@@ -3929,6 +3962,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The command to drop a temporary table.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public String getTemporaryTableDropCommand() {
 		return "drop table";
 	}
@@ -3936,6 +3970,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The command to truncate a temporary table.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public String getTemporaryTableTruncateCommand() {
 		return "delete from";
 	}
@@ -3946,6 +3981,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param sqlTypeCode The SQL type code
 	 * @return The annotation to be appended, for example, {@code COLLATE DATABASE_DEFAULT} in SQL Server
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
 		return "";
 	}
@@ -3964,6 +4000,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The action to take after finishing use of a temporary table.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public AfterUseAction getTemporaryTableAfterUseAction() {
 		return AfterUseAction.CLEAN;
 	}
@@ -3971,6 +4008,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	/**
 	 * The action to take before beginning use of a temporary table.
 	 */
+	@Deprecated(forRemoval = true, since = "7.1")
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
 		return BeforeUseAction.NONE;
 	}

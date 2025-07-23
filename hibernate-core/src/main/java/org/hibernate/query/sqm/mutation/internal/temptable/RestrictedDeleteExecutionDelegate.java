@@ -12,6 +12,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,7 +32,6 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.internal.TableKeyExpressionCollector;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -64,7 +64,8 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 	public RestrictedDeleteExecutionDelegate(
 			EntityMappingType entityDescriptor,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
@@ -75,7 +76,8 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		super(
 				entityDescriptor,
 				idTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				sqmDelete,
 				domainParameterXref,
 				queryOptions,
@@ -442,6 +444,7 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 
 		ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
 				getIdTable(),
+				getTemporaryTableStrategy(),
 				executionContext
 		);
 

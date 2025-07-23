@@ -5,10 +5,13 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 
@@ -18,6 +21,30 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
  * @author Steve Ebersole
  */
 public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrategy implements SqmMultiTableInsertStrategy {
+
+	public LocalTemporaryTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				rootEntityDescriptor,
+				requireLocalTemporaryTableStrategy( runtimeModelCreationContext.getDialect() ),
+				runtimeModelCreationContext
+		);
+	}
+
+	private LocalTemporaryTableInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			TemporaryTableStrategy temporaryTableStrategy,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ENTITY_TABLE_PREFIX + basename ),
+						TemporaryTableKind.LOCAL,
+						runtimeModelCreationContext.getDialect(),
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
 
 	public LocalTemporaryTableInsertStrategy(
 			TemporaryTable entityTable,
@@ -34,9 +61,8 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
-				isDropIdTables()
-						? AfterUseAction.DROP
-						: getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
+				getTemporaryTableStrategy(),
+				isDropIdTables(),
 				session -> {
 					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
 				},

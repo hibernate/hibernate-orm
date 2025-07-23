@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -18,6 +19,8 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -52,9 +55,13 @@ public abstract class PersistentTableStrategy {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
 
-		if ( sessionFactory.getJdbcServices().getDialect().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
+		if ( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Persistent ID tables cannot use AfterUseAction.DROP : " + temporaryTable.getTableExpression() );
 		}
+	}
+
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return castNonNull( sessionFactory.getJdbcServices().getDialect().getPersistentTemporaryTableStrategy() );
 	}
 
 	public EntityMappingType getEntityDescriptor() {

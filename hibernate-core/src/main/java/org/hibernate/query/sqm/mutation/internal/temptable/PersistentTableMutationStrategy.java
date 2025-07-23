@@ -5,12 +5,17 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+
 
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
@@ -20,6 +25,30 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
  * @author Steve Ebersole
  */
 public class PersistentTableMutationStrategy extends PersistentTableStrategy implements SqmMultiTableMutationStrategy {
+
+	public PersistentTableMutationStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				rootEntityDescriptor,
+				runtimeModelCreationContext.getDialect().getPersistentTemporaryTableStrategy(),
+				runtimeModelCreationContext
+		);
+	}
+
+	private PersistentTableMutationStrategy(
+			EntityMappingType rootEntityDescriptor,
+			TemporaryTableStrategy temporaryTableStrategy,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				TemporaryTable.createIdTable(
+						rootEntityDescriptor,
+						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ID_TABLE_PREFIX + basename ),
+						TemporaryTableKind.PERSISTENT,
+						runtimeModelCreationContext.getDialect(),
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
 
 	public PersistentTableMutationStrategy(
 			TemporaryTable idTable,
@@ -36,7 +65,8 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 				sqmUpdate,
 				domainParameterXref,
 				getTemporaryTable(),
-				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
+				getTemporaryTableStrategy(),
+				false,
 				session -> session.getSessionIdentifier().toString(),
 				getSessionFactory()
 		).execute( context );
@@ -51,7 +81,8 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 				sqmDelete,
 				domainParameterXref,
 				getTemporaryTable(),
-				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
+				getTemporaryTableStrategy(),
+				false,
 				session -> session.getSessionIdentifier().toString(),
 				getSessionFactory()
 		).execute( context );

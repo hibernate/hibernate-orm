@@ -33,7 +33,7 @@ public class SqmMultiTableMutationStrategyProviderStandard implements SqmMultiTa
 			return specifiedStrategy;
 		}
 		final SqmMultiTableMutationStrategy specifiedEntityBaseStrategy =
-				options.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationProcess );
+				options.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationContext );
 		if ( specifiedEntityBaseStrategy != null ) {
 			return specifiedEntityBaseStrategy;
 		}
@@ -52,7 +52,7 @@ public class SqmMultiTableMutationStrategyProviderStandard implements SqmMultiTa
 			return specifiedStrategy;
 		}
 		final SqmMultiTableInsertStrategy specifiedEntityBaseStrategy =
-				options.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationProcess );
+				options.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationContext );
 		if ( specifiedEntityBaseStrategy != null ) {
 			return specifiedEntityBaseStrategy;
 		}

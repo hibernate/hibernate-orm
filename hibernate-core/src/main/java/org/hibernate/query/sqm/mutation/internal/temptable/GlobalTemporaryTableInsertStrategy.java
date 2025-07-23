@@ -5,7 +5,11 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -17,6 +21,30 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
  * @author Steve Ebersole
  */
 public class GlobalTemporaryTableInsertStrategy extends GlobalTemporaryTableStrategy implements SqmMultiTableInsertStrategy {
+
+	public GlobalTemporaryTableInsertStrategy(EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				rootEntityDescriptor,
+				requireGlobalTemporaryTableStrategy( runtimeModelCreationContext.getDialect() ),
+				runtimeModelCreationContext
+		);
+	}
+
+	private GlobalTemporaryTableInsertStrategy(
+			EntityMappingType rootEntityDescriptor,
+			TemporaryTableStrategy temporaryTableStrategy,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		this(
+				TemporaryTable.createEntityTable(
+						rootEntityDescriptor,
+						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ENTITY_TABLE_PREFIX + basename ),
+						TemporaryTableKind.GLOBAL,
+						runtimeModelCreationContext.getDialect(),
+						runtimeModelCreationContext
+				),
+				runtimeModelCreationContext.getSessionFactory()
+		);
+	}
 
 	public GlobalTemporaryTableInsertStrategy(
 			TemporaryTable entityTable,
@@ -33,7 +61,8 @@ public class GlobalTemporaryTableInsertStrategy extends GlobalTemporaryTableStra
 				sqmInsertStatement,
 				domainParameterXref,
 				getTemporaryTable(),
-				getSessionFactory().getJdbcServices().getDialect().getTemporaryTableAfterUseAction(),
+				getTemporaryTableStrategy(),
+				false,
 				// generally a global temp table should already track a Connection-specific uid,
 				// but just in case a particular env needs it...
 				session -> session.getSessionIdentifier().toString(),

@@ -21,7 +21,6 @@ buildscript {
 
 plugins {
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
-	id 'nu.studer.credentials' version '2.2'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
 	id 'biz.aQute.bnd' version '5.1.1' apply false
 }

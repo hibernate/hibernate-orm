@@ -204,6 +204,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 		return this;
 	}
 
+	// Used by Hibernate Reactive
 	protected BasicFetch<?> getDiscriminatorFetch() {
 		return discriminatorFetch;
 	}

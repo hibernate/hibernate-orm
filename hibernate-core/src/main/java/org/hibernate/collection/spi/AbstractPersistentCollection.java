@@ -195,8 +195,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 			if ( entry == null ) {
 				throwLazyInitializationExceptionIfNotConnected();
-				throwLazyInitializationException("collection not associated with session");
-				throw new AssertionFailure("impossible");
+				throwLazyInitializationException( "collection not associated with session" );
+				throw new AssertionFailure( "impossible" );
 			}
 			else {
 				if ( hasQueuedOperations() ) {
@@ -233,7 +233,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				tempSession = openTemporarySessionForLoading();
 			}
 			else {
-				throwLazyInitializationException( "could not initialize proxy - no Session" );
+				throwLazyInitializationException( "no session" );
 			}
 		}
 		else if ( !session.isOpenOrWaitingForAutoClose() ) {
@@ -241,7 +241,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				tempSession = openTemporarySessionForLoading();
 			}
 			else {
-				throwLazyInitializationException( "could not initialize proxy - the owning Session was closed" );
+				throwLazyInitializationException( "the owning session was closed" );
 			}
 		}
 		else if ( !session.isConnected() ) {
@@ -249,7 +249,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				tempSession = openTemporarySessionForLoading();
 			}
 			else {
-				throwLazyInitializationException( "could not initialize proxy - the owning Session is disconnected" );
+				throwLazyInitializationException( "the owning session is disconnected" );
 			}
 		}
 
@@ -273,8 +273,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				}
 
 				final CollectionPersister collectionDescriptor =
-						session.getSessionFactory()
-								.getMappingMetamodel()
+						session.getSessionFactory().getMappingMetamodel()
 								.getCollectionDescriptor( getRole() );
 				session.getPersistenceContextInternal()
 						.addUninitializedDetachedCollection( collectionDescriptor, this );
@@ -301,20 +300,22 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			else {
 				// Whenever the collection lazy loading is triggered during the loading process,
 				// closing the connection will cause an error when RowProcessingStateStandardImpl#next() will be called.
-				final PersistenceContext persistenceContext = session.getPersistenceContext();
-				if ( !session.isTransactionInProgress()
-						&& ( !persistenceContext.hasLoadContext()
-							|| persistenceContext.hasLoadContext()
-								&& persistenceContext.getLoadContexts().isLoadingFinished() ) ) {
+				if ( !session.isTransactionInProgress() && !unfinishedLoading() ) {
 					session.getJdbcCoordinator().afterTransaction();
 				}
 			}
 		}
 	}
 
+	private boolean unfinishedLoading() {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		return persistenceContext.hasLoadContext()
+			&& !persistenceContext.getLoadContexts().isLoadingFinished();
+	}
+
 	private SharedSessionContractImplementor openTemporarySessionForLoading() {
 		if ( sessionFactoryUuid == null ) {
-			throwLazyInitializationException( "SessionFactory UUID not known to create temporary Session for loading" );
+			throwLazyInitializationException( "SessionFactory UUID not known; cannot create temporary session for loading" );
 		}
 
 		final SessionImplementor session =
@@ -373,8 +374,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-			throw new AssertionFailure("impossible");
+			throwLazyInitializationException( "collection not associated with session" );
+			throw new AssertionFailure( "impossible" );
 		}
 		else {
 			if ( hasQueuedOperations() ) {
@@ -427,8 +428,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 		if ( entry == null ) {
 			throwLazyInitializationExceptionIfNotConnected();
-			throwLazyInitializationException("collection not associated with session");
-			throw new AssertionFailure("impossible");
+			throwLazyInitializationException( "collection not associated with session" );
+			throw new AssertionFailure( "impossible" );
 		}
 		else {
 			if ( hasQueuedOperations() ) {
@@ -646,9 +647,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	private void throwLazyInitializationException(String message) {
 		throw new LazyInitializationException(
-				"failed to lazily initialize a collection" +
-						(role == null ? "" : " of role: " + role) +
-						": " + message
+				String.format( "Cannot lazily initialize collection%s (%s)",
+						role == null ? "" : " of role '" + role + "'", message )
 		);
 	}
 
@@ -1305,11 +1305,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					currentSaving.add( current );
 				}
 				else {
-					final Object currentId = getEntityIdentifierIfNotUnsaved(
-							entityName,
-							current,
-							session
-					);
+					final Object currentId = getEntityIdentifierIfNotUnsaved( entityName, current, session );
 					currentIds.add( useIdDirect ? currentId : new TypedValue( idType, currentId ) );
 				}
 			}

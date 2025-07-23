@@ -52,6 +52,9 @@ public class EmbeddableForeignKeyResultImpl<T>
 		resetFetches( creationState.visitFetches( this ) );
 	}
 
+	/*
+	 * Used by Hibernate Reactive
+	 */
 	protected EmbeddableForeignKeyResultImpl(EmbeddableForeignKeyResultImpl<T> original) {
 		super( original );
 		this.resultVariable = original.resultVariable;

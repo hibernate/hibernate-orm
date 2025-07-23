@@ -1,4 +1,4 @@
-= What's New in 7.0
+= What's New in 7.1
 :toc:
 :toclevels: 4
 :docsBase: https://docs.jboss.org/hibernate/orm

@@ -721,7 +721,7 @@ public class SessionImpl
 			}
 		}
 		if ( originalException != null ) {
-			ExceptionHelper.doThrow( originalException );
+			ExceptionHelper.rethrow( originalException );
 		}
 	}
 

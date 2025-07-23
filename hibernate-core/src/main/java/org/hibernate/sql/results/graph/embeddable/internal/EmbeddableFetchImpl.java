@@ -210,4 +210,9 @@ public class EmbeddableFetchImpl extends AbstractFetchParent
 	protected BasicFetch<?> getDiscriminatorFetch() {
 		return discriminatorFetch;
 	}
+
+	// Used by Hibernate Reactive
+	protected @Nullable DomainResult<Boolean> getNullIndicatorResult() {
+		return nullIndicatorResult;
+	}
 }

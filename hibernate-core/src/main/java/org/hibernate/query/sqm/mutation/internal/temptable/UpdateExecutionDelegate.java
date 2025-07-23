@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -66,7 +67,8 @@ import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize
 public class UpdateExecutionDelegate implements TableBasedUpdateHandler.ExecutionDelegate {
 	private final MultiTableSqmMutationConverter sqmConverter;
 	private final TemporaryTable idTable;
-	private final AfterUseAction afterUseAction;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final boolean forceDropAfterUse;
 	private final Function<SharedSessionContractImplementor, String> sessionUidAccess;
 	private final TableGroup updatingTableGroup;
 	private final Predicate suppliedPredicate;
@@ -81,7 +83,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	public UpdateExecutionDelegate(
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup updatingTableGroup,
@@ -91,7 +94,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			DomainQueryExecutionContext executionContext) {
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
-		this.afterUseAction = afterUseAction;
+		this.temporaryTableStrategy  = temporaryTableStrategy;
+		this.forceDropAfterUse = forceDropAfterUse;
 		this.sessionUidAccess = sessionUidAccess;
 		this.updatingTableGroup = updatingTableGroup;
 		this.sessionFactory = executionContext.getSession().getFactory();
@@ -169,6 +173,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	public int execute(ExecutionContext executionContext) {
 		ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
 				idTable,
+				temporaryTableStrategy,
 				executionContext
 		);
 
@@ -205,7 +210,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			ExecuteWithTemporaryTableHelper.performAfterTemporaryTableUseActions(
 					idTable,
 					sessionUidAccess,
-					afterUseAction,
+					getAfterUseAction(),
 					executionContext
 			);
 		}
@@ -505,7 +510,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	}
 
 	protected AfterUseAction getAfterUseAction() {
-		return afterUseAction;
+		return forceDropAfterUse ? AfterUseAction.DROP : temporaryTableStrategy.getTemporaryTableAfterUseAction();
 	}
 
 	protected TableGroup getUpdatingTableGroup() {

@@ -34,8 +34,10 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.HSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.HSQLLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -648,28 +650,10 @@ public class HSQLLegacyDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		if ( getVersion().isBefore( 2 ) ) {
-			return new GlobalTemporaryTableMutationStrategy(
-					TemporaryTable.createIdTable(
-							rootEntityDescriptor,
-							basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 		else {
-			return new LocalTemporaryTableMutationStrategy(
-					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
-					// statement (in-case there is a global name beginning with HT_)
-					TemporaryTable.createIdTable(
-							rootEntityDescriptor,
-							basename -> "MODULE." + TemporaryTable.ID_TABLE_PREFIX + basename,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 	}
 
@@ -688,28 +672,10 @@ public class HSQLLegacyDialect extends Dialect {
 		// can happen in the middle of a transaction
 
 		if ( getVersion().isBefore( 2 ) ) {
-			return new GlobalTemporaryTableInsertStrategy(
-					TemporaryTable.createEntityTable(
-							rootEntityDescriptor,
-							name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 		else {
-			return new LocalTemporaryTableInsertStrategy(
-					// With HSQLDB 2.0, the table name is qualified with MODULE to assist the drop
-					// statement (in-case there is a global name beginning with HT_)
-					TemporaryTable.createEntityTable(
-							rootEntityDescriptor,
-							name -> "MODULE." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-			);
+			return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 		}
 	}
 
@@ -719,20 +685,31 @@ public class HSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return HSQLLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateCommand() {
-		return getVersion().isBefore( 2 ) ? super.getTemporaryTableCreateCommand() : "declare local temporary table";
+		return (getVersion().isBefore( 2 ) ? StandardGlobalTemporaryTableStrategy.INSTANCE
+				: HSQLLocalTemporaryTableStrategy.INSTANCE).getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		// Version 1.8 GLOBAL TEMPORARY table definitions persist beyond the end
-		// of the session (by default, data is cleared at commit).
-		return getVersion().isBefore( 2 ) ? AfterUseAction.CLEAN : AfterUseAction.DROP;
+		return (getVersion().isBefore( 2 ) ? StandardGlobalTemporaryTableStrategy.INSTANCE
+				: HSQLLocalTemporaryTableStrategy.INSTANCE).getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return getVersion().isBefore( 2 ) ? BeforeUseAction.NONE : BeforeUseAction.CREATE;
+		return (getVersion().isBefore( 2 ) ? StandardGlobalTemporaryTableStrategy.INSTANCE
+				: HSQLLocalTemporaryTableStrategy.INSTANCE).getTemporaryTableBeforeUseAction();
 	}
 
 	// current timestamp support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

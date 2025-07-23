@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -23,7 +24,6 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -60,7 +60,8 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 	public SoftDeleteExecutionDelegate(
 			EntityMappingType entityDescriptor,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
@@ -71,7 +72,8 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		super(
 				entityDescriptor,
 				idTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				sqmDelete,
 				domainParameterXref,
 				queryOptions,
@@ -183,6 +185,7 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 			SqmJdbcExecutionContextAdapter executionContext) {
 		ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
 				getIdTable(),
+				getTemporaryTableStrategy(),
 				executionContext
 		);
 

@@ -34,8 +34,9 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.MySQLLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.MySQLCastingJsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.MySQLCastingJsonJdbcType;
 import org.hibernate.engine.jdbc.Size;
@@ -1056,32 +1057,19 @@ public class MySQLLegacyDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
 
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return MySQLLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
@@ -1091,22 +1079,22 @@ public class MySQLLegacyDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create temporary table if not exists";
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public String getTemporaryTableDropCommand() {
-		return "drop temporary table";
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.DROP;
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return MySQLLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override

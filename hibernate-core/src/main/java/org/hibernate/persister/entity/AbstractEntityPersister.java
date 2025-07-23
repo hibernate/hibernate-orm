@@ -4823,7 +4823,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void prepareMultiTableMutationStrategy(MappingModelCreationProcess creationProcess) {
-		if ( hasMultipleTables() ) {
+		// No need for multi-table mutation strategy for subselect entity since update/delete don't make sense
+		if ( !isSubselect() && hasMultipleTables() ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableMutationStrategy` interpretation",
 					() -> {
@@ -4842,7 +4843,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void prepareMultiTableInsertStrategy(MappingModelCreationProcess creationProcess) {
-		if ( hasMultipleTables() || generatorNeedsMultiTableInsert() ) {
+		// No need for multi-table insert strategy for subselect entity since insert doesn't make sense
+		if ( !isSubselect() && ( hasMultipleTables() || generatorNeedsMultiTableInsert() ) ) {
 			creationProcess.registerInitializationCallback(
 					"Entity(" + getEntityName() + ") `sqmMultiTableInsertStrategy` interpretation",
 					() -> {
@@ -4858,6 +4860,11 @@ public abstract class AbstractEntityPersister
 					}
 			);
 		}
+	}
+
+	private boolean isSubselect() {
+		// For the lack of a
+		return getRootTableName().charAt( 0 ) == '(';
 	}
 
 	private boolean generatorNeedsMultiTableInsert() {

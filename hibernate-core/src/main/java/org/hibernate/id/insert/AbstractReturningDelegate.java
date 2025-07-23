@@ -62,6 +62,8 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 
 	@Override
 	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
 		try {
 			// prepare and execute the insert
 			final var insert = prepareStatement( sql, session );

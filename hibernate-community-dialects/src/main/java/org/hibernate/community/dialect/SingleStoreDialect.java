@@ -45,8 +45,9 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.community.dialect.temptable.SingleStoreLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -1083,26 +1084,16 @@ public class SingleStoreDialect extends Dialect {
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new LocalTemporaryTableMutationStrategy( TemporaryTable.createIdTable(
-				rootEntityDescriptor,
-				basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-				this,
-				runtimeModelCreationContext
-		), runtimeModelCreationContext.getSessionFactory() );
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType rootEntityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
-
-		return new LocalTemporaryTableInsertStrategy( TemporaryTable.createEntityTable(
-				rootEntityDescriptor,
-				name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-				this,
-				runtimeModelCreationContext
-		), runtimeModelCreationContext.getSessionFactory() );
+			EntityMappingType rootEntityDescriptor,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1111,25 +1102,28 @@ public class SingleStoreDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateCommand() {
-		return "create temporary table if not exists";
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE;
 	}
 
-	//SingleStore throws an error on drop temporary table if there are uncommited statements within transaction.
-	//Just 'drop table' statement causes implicit commit, so using 'delete from'.
+	@Override
+	public String getTemporaryTableCreateCommand() {
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
+	}
+
 	@Override
 	public String getTemporaryTableDropCommand() {
-		return "delete from";
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableDropCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.DROP;
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return SingleStoreLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override

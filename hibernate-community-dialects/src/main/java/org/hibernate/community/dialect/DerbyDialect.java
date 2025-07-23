@@ -32,8 +32,9 @@ import org.hibernate.dialect.lock.internal.NoLockingSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.community.dialect.temptable.DerbyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
@@ -52,10 +53,9 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
@@ -975,46 +975,18 @@ public class DerbyDialect extends Dialect {
 		registerKeyword( "YEAR" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p>
-	 * From Derby docs:
-	 * <pre>
-	 *     The DECLARE GLOBAL TEMPORARY TABLE statement defines a temporary table for the current connection.
-	 * </pre>
-	 * <p>
-	 * {@link DB2Dialect} returns a {@link GlobalTemporaryTableMutationStrategy} that
-	 * will make temporary tables created at startup and hence unavailable for subsequent connections.<br/>
-	 * see HHH-10238.
-	 */
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> "session." + TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> "session." + TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1023,23 +995,28 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String getTemporaryTableCreateOptions() {
-		return "not logged";
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return DerbyLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override
-	public boolean supportsTemporaryTablePrimaryKey() {
-		return false;
+	public String getTemporaryTableCreateOptions() {
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "declare global temporary table";
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
+	}
+
+	@Override
+	public boolean supportsTemporaryTablePrimaryKey() {
+		return DerbyLocalTemporaryTableStrategy.INSTANCE.supportsTemporaryTablePrimaryKey();
 	}
 
 	@Override

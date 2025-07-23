@@ -6,9 +6,12 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -20,6 +23,8 @@ import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * Strategy based on ANSI SQL's definition of a "global temporary table".
@@ -43,11 +48,21 @@ public class GlobalTemporaryTableStrategy {
 	public GlobalTemporaryTableStrategy(TemporaryTable temporaryTable, SessionFactoryImplementor sessionFactory) {
 		this.temporaryTable = temporaryTable;
 		this.sessionFactory = sessionFactory;
+		final TemporaryTableStrategy temporaryTableStrategy = requireGlobalTemporaryTableStrategy( sessionFactory.getJdbcServices().getDialect() );
 
-		if ( sessionFactory.getJdbcServices().getDialect().getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
+		if ( temporaryTableStrategy.getTemporaryTableAfterUseAction() == AfterUseAction.DROP ) {
 			throw new IllegalArgumentException( "Global-temp ID tables cannot use AfterUseAction.DROP : "
 												+ temporaryTable.getTableExpression() );
 		}
+	}
+
+	protected static TemporaryTableStrategy requireGlobalTemporaryTableStrategy(Dialect dialect) {
+		return Objects.requireNonNull( dialect.getGlobalTemporaryTableStrategy(),
+				"Dialect does not define a global temporary table strategy: " + dialect.getClass().getSimpleName() );
+	}
+
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return castNonNull( sessionFactory.getJdbcServices().getDialect().getGlobalTemporaryTableStrategy() );
 	}
 
 	public EntityMappingType getEntityDescriptor() {

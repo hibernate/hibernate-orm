@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 import java.util.function.Function;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -24,7 +25,8 @@ import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 public abstract class AbstractDeleteExecutionDelegate implements TableBasedDeleteHandler.ExecutionDelegate {
 	private final EntityMappingType entityDescriptor;
 	private final TemporaryTable idTable;
-	private final AfterUseAction afterUseAction;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final boolean forceDropAfterUse;
 	private final SqmDeleteStatement<?> sqmDelete;
 	private final DomainParameterXref domainParameterXref;
 	private final SessionFactoryImplementor sessionFactory;
@@ -35,7 +37,8 @@ public abstract class AbstractDeleteExecutionDelegate implements TableBasedDelet
 	public AbstractDeleteExecutionDelegate(
 			EntityMappingType entityDescriptor,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref,
 			QueryOptions queryOptions,
@@ -45,7 +48,8 @@ public abstract class AbstractDeleteExecutionDelegate implements TableBasedDelet
 			SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.idTable = idTable;
-		this.afterUseAction = afterUseAction;
+		this.temporaryTableStrategy = temporaryTableStrategy;
+		this.forceDropAfterUse = forceDropAfterUse;
 		this.sqmDelete = sqmDelete;
 		this.domainParameterXref = domainParameterXref;
 		this.sessionFactory = sessionFactory;
@@ -71,8 +75,12 @@ public abstract class AbstractDeleteExecutionDelegate implements TableBasedDelet
 		return idTable;
 	}
 
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return temporaryTableStrategy;
+	}
+
 	public AfterUseAction getAfterUseAction() {
-		return afterUseAction;
+		return forceDropAfterUse ? AfterUseAction.DROP : temporaryTableStrategy.getTemporaryTableAfterUseAction();
 	}
 
 	public SqmDeleteStatement<?> getSqmDelete() {

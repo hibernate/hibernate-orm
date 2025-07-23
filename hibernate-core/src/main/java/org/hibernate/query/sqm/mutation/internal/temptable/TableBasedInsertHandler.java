@@ -13,6 +13,7 @@ import java.util.function.Function;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.Generator;
@@ -26,8 +27,8 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
+import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -66,7 +67,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final TemporaryTable entityTable;
-	private final AfterUseAction afterUseAction;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final boolean forceDropAfterUse;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 	private final JdbcParameter sessionUidParameter;
@@ -75,11 +77,13 @@ public class TableBasedInsertHandler implements InsertHandler {
 			SqmInsertStatement<?> sqmInsert,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable entityTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SessionFactoryImplementor sessionFactory) {
 		this.sqmInsertStatement = sqmInsert;
-		this.afterUseAction = afterUseAction;
+		this.temporaryTableStrategy = temporaryTableStrategy;
+		this.forceDropAfterUse = forceDropAfterUse;
 		this.sessionFactory = sessionFactory;
 		this.entityTable = entityTable;
 		this.sessionUidAccess = sessionUidAccess;
@@ -142,9 +146,18 @@ public class TableBasedInsertHandler implements InsertHandler {
 		final InsertSelectStatement insertStatement = new InsertSelectStatement( entityTableReference );
 
 		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = converterDelegate.visitInsertionTargetPaths(
-				(assigable, columnReferences) -> {
-					insertStatement.addTargetColumnReferences( columnReferences );
-					targetPathColumns.add( new Assignment( assigable, (Expression) assigable ) );
+				(assignable, columnReferences) -> {
+					final SqmPathInterpretation<?> pathInterpretation = (SqmPathInterpretation<?>) assignable;
+					final List<TemporaryTableColumn> columns =
+							entityTable.findTemporaryTableColumns( entityDescriptor, pathInterpretation.getExpressionType() );
+					for ( TemporaryTableColumn column : columns ) {
+						insertStatement.addTargetColumnReference( new ColumnReference(
+								entityTableReference,
+								column.getColumnName(),
+								column.getJdbcMapping()
+						) );
+					}
+					targetPathColumns.add( new Assignment( assignable, (Expression) assignable ) );
 				},
 				sqmInsertStatement,
 				entityDescriptor,
@@ -302,7 +315,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				sqmInsertStatement,
 				converterDelegate,
 				entityTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				sessionUidAccess,
 				domainParameterXref,
 				insertingTableGroup,
@@ -322,7 +336,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 			SqmInsertStatement<?> sqmInsert,
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable entityTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup insertingTableGroup,
@@ -335,7 +350,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 		return new InsertExecutionDelegate(
 				sqmConverter,
 				entityTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				sessionUidAccess,
 				domainParameterXref,
 				insertingTableGroup,

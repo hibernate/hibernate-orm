@@ -30,6 +30,8 @@ import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.TrimFunction;
+import org.hibernate.community.dialect.temptable.InformixLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -49,7 +51,6 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.Size;
@@ -846,30 +847,14 @@ public class InformixDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new LocalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new LocalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -878,23 +863,28 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return InformixLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "with no log";
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create temp table";
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateCommand();
 	}
 
 	@Override
 	public AfterUseAction getTemporaryTableAfterUseAction() {
-		return AfterUseAction.NONE;
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableAfterUseAction();
 	}
 
 	@Override
 	public BeforeUseAction getTemporaryTableBeforeUseAction() {
-		return BeforeUseAction.CREATE;
+		return InformixLocalTemporaryTableStrategy.INSTANCE.getTemporaryTableBeforeUseAction();
 	}
 
 	@Override

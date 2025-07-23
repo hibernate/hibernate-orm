@@ -11,18 +11,17 @@ import java.util.function.Consumer;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
 
@@ -119,65 +118,30 @@ public class CteTable {
 	}
 
 	public static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
-		if ( modelPart instanceof BasicValuedMapping basicValuedMapping ) {
-			consumer.accept( new CteColumn( prefix, basicValuedMapping.getJdbcMapping() ) );
-		}
-		else if ( modelPart instanceof EntityValuedModelPart entityPart ) {
-			final ModelPart targetPart;
-			if ( modelPart instanceof Association association ) {
-				if ( association.getForeignKeyDescriptor() == null ) {
-					// This is expected to happen when processing a
-					// PostInitCallbackEntry because the callbacks
-					// are not ordered. The exception is caught in
-					// MappingModelCreationProcess.executePostInitCallbacks()
-					// and the callback is re-queued.
-					throw new IllegalStateException( "ForeignKeyDescriptor not ready for [" + association.getPartName() + "] on entity: " + modelPart.findContainingEntityMapping().getEntityName() );
-				}
-				if ( association.getSideNature() != ForeignKeyDescriptor.Nature.KEY ) {
-					// Inverse one-to-one receives no column
-					return;
-				}
-				targetPart = association.getForeignKeyDescriptor().getTargetPart();
-			}
-			else {
-				targetPart = entityPart.getEntityMappingType().getIdentifierMapping();
-			}
-			forEachCteColumn( prefix + "_" + entityPart.getPartName(), targetPart, consumer );
-		}
-		else if ( modelPart instanceof DiscriminatedAssociationModelPart discriminatedPart ) {
-			final String newPrefix = prefix + "_" + discriminatedPart.getPartName() + "_";
-			forEachCteColumn(
-					newPrefix + "discriminator",
-					discriminatedPart.getDiscriminatorPart(),
-					consumer
-			);
-			forEachCteColumn(
-					newPrefix + "key",
-					discriminatedPart.getKeyPart(),
-					consumer
-			);
-		}
-		else {
-			final EmbeddableValuedModelPart embeddablePart = ( EmbeddableValuedModelPart ) modelPart;
-			final AttributeMappingsList attributeMappings = embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				AttributeMapping mapping = attributeMappings.get( i );
-				if ( !( mapping instanceof PluralAttributeMapping ) ) {
-					forEachCteColumn( prefix + "_" + mapping.getAttributeName(), mapping, consumer );
-				}
-			}
-		}
+		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, modelPart, (s, selectableMapping) -> {
+			consumer.accept( new CteColumn( s, selectableMapping.getJdbcMapping() ) );
+		} );
 	}
 
-	public static int determineModelPartStartIndex(EntityPersister entityDescriptor, ModelPart modelPart) {
-		int offset = 0;
-		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		if ( modelPart == identifierMapping ) {
-			return offset;
+	public List<CteColumn> findCteColumns(EntityPersister entityDescriptor, ModelPart modelPart) {
+		final int offset = determineModelPartStartIndex( entityDescriptor, modelPart );
+		if ( offset == -1 ) {
+			throw new IllegalStateException( "Couldn't find matching cte columns for: " + modelPart );
 		}
-		offset += identifierMapping.getJdbcTypeCount();
+		final int end = offset + modelPart.getJdbcTypeCount();
+		// Find a matching cte table column and set that at the current index
+		return getCteColumns().subList( offset, end );
+	}
+
+	private static int determineModelPartStartIndex(EntityPersister entityDescriptor, ModelPart modelPart) {
+		int offset = 0;
+		final int idResult = determineIdStartIndex( offset, entityDescriptor, modelPart );
+		if ( idResult <= 0 ) {
+			return -idResult;
+		}
+		offset = idResult;
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		if ( discriminatorMapping != null ) {
+		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() && !discriminatorMapping.isFormula() ) {
 			if ( modelPart == discriminatorMapping ) {
 				return offset;
 			}
@@ -188,13 +152,28 @@ public class CteTable {
 			AttributeMapping attribute = attributeMappings.get( i );
 			if ( !( attribute instanceof PluralAttributeMapping ) ) {
 				final int result = determineModelPartStartIndex( offset, attribute, modelPart );
-				if ( result < 0 ) {
+				if ( result <= 0 ) {
 					return -result;
 				}
 				offset = result;
 			}
 		}
 		return -1;
+	}
+
+	private static int determineIdStartIndex(int offset, EntityPersister entityDescriptor, ModelPart modelPart) {
+		final int originalOffset = offset;
+		do {
+			final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+			final int result = determineModelPartStartIndex( originalOffset, identifierMapping, modelPart );
+			offset = result;
+			if ( result <= 0 ) {
+				break;
+			}
+			entityDescriptor = (EntityPersister) entityDescriptor.getSuperMappingType();
+		} while ( entityDescriptor != null );
+
+		return offset;
 	}
 
 	private static int determineModelPartStartIndex(int offset, ModelPart modelPart, ModelPart modelPartToFind) {
@@ -214,12 +193,15 @@ public class CteTable {
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping mapping = attributeMappings.get( i );
 				final int result = determineModelPartStartIndex( offset, mapping, modelPartToFind );
-				if ( result < 0 ) {
+				if ( result <= 0 ) {
 					return result;
 				}
 				offset = result;
 			}
 			return offset;
+		}
+		else if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
+			return offset + (basicModelPart.isInsertable() ? modelPart.getJdbcTypeCount() : 0);
 		}
 		return offset + modelPart.getJdbcTypeCount();
 	}

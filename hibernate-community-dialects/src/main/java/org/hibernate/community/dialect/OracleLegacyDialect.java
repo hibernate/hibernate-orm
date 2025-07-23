@@ -29,6 +29,14 @@ import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
+import org.hibernate.dialect.temptable.OracleLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
+import org.hibernate.dialect.type.OracleBooleanJdbcType;
+import org.hibernate.dialect.type.OracleJdbcHelper;
+import org.hibernate.dialect.type.OracleJsonArrayJdbcTypeConstructor;
+import org.hibernate.dialect.type.OracleJsonJdbcType;
+import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.OracleTypes;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.TimeZoneSupport;
@@ -46,13 +54,7 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
-import org.hibernate.dialect.type.OracleBooleanJdbcType;
-import org.hibernate.dialect.type.OracleJdbcHelper;
-import org.hibernate.dialect.type.OracleJsonArrayJdbcTypeConstructor;
-import org.hibernate.dialect.type.OracleJsonJdbcType;
-import org.hibernate.dialect.type.OracleReflectionStructJdbcType;
 import org.hibernate.dialect.type.OracleUserDefinedTypeExporter;
 import org.hibernate.dialect.type.OracleXmlJdbcType;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
@@ -119,18 +121,6 @@ import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.sql.CallableStatement;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
-import java.util.Locale;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -1230,33 +1220,27 @@ public class OracleLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return OracleLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1266,7 +1250,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	/**

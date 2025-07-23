@@ -4,28 +4,21 @@
  */
 package org.hibernate.query.sqm.mutation.internal.cte;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.generator.Generator;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
@@ -42,6 +35,7 @@ import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.InsertHandler;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
+import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
@@ -104,8 +98,16 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.generator.Generator;
 import org.hibernate.type.BasicType;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -200,16 +202,8 @@ public class CteInsertHandler implements InsertHandler {
 		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
 					final SqmPathInterpretation<?> pathInterpretation = (SqmPathInterpretation<?>) assignable;
-					final int offset = CteTable.determineModelPartStartIndex(
-							entityDescriptor,
-							pathInterpretation.getExpressionType()
-					);
-					if ( offset == -1 ) {
-						throw new IllegalStateException( "Couldn't find matching cte column for: " + ( (Expression) assignable ).getExpressionType() );
-					}
-					final int end = offset + pathInterpretation.getExpressionType().getJdbcTypeCount();
-					// Find a matching cte table column and set that at the current index
-					final List<CteColumn> columns = cteTable.getCteColumns().subList( offset, end );
+					final List<CteColumn> columns =
+							cteTable.findCteColumns( entityDescriptor, pathInterpretation.getExpressionType() );
 					targetPathCteColumns.addAll( columns );
 					targetPathColumns.add(
 							new AbstractMap.SimpleEntry<>(
@@ -294,6 +288,15 @@ public class CteInsertHandler implements InsertHandler {
 					);
 				}
 			}
+			querySpec.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							0,
+							SqmInsertStrategyHelper.createRowNumberingExpression(
+									querySpec,
+									sessionFactory
+							)
+					)
+			);
 			final ValuesTableGroup valuesTableGroup = new ValuesTableGroup(
 					navigablePath,
 					entityDescriptor.getEntityPersister(),
@@ -706,8 +709,7 @@ public class CteInsertHandler implements InsertHandler {
 		final ConflictClause conflictClause = sqmConverter.visitConflictClause( sqmStatement.getConflictClause() );
 
 		final int tableSpan = persister.getTableSpan();
-		final String[] rootKeyColumns = persister.getKeyColumns( 0 );
-		final List<CteColumn> keyCteColumns = queryCte.getCteTable().getCteColumns().subList( 0, rootKeyColumns.length );
+		final List<CteColumn> keyCteColumns = findCteColumns( persister.getIdentifierMapping(), queryCte.getCteTable().getCteColumns() );
 		for ( int tableIndex = 0; tableIndex < tableSpan; tableIndex++ ) {
 			final String tableExpression = persister.getTableName( tableIndex );
 			final TableReference updatingTableReference = updatingTableGroup.getTableReference(
@@ -918,7 +920,7 @@ public class CteInsertHandler implements InsertHandler {
 							new SqlSelectionImpl(
 									new ColumnReference(
 											"e",
-											rootKeyColumns[j],
+											keyCteColumns.get( j ).getColumnExpression(),
 											false,
 											null,
 											null
@@ -938,7 +940,7 @@ public class CteInsertHandler implements InsertHandler {
 				for ( Map.Entry<List<CteColumn>, Assignment> entry : assignmentList ) {
 					final Assignment assignment = entry.getValue();
 					// Skip the id mapping here as we handled that already
-					if ( assignment.getAssignedValue().getExpressionType() instanceof EntityIdentifierMapping ) {
+					if ( SqmMutationStrategyHelper.isId( assignment.getAssignedValue().getExpressionType() ) ) {
 						continue;
 					}
 					final List<ColumnReference> assignmentReferences = assignment.getAssignable().getColumnReferences();
@@ -1017,6 +1019,25 @@ public class CteInsertHandler implements InsertHandler {
 			}
 		}
 		return getCteTableName( rootTableName );
+	}
+
+	private List<CteColumn> findCteColumns(ModelPart modelPart, List<CteColumn> cteColumns) {
+		final int numberOfColumns = modelPart.getJdbcTypeCount();
+		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
+		final String prefix;
+		if ( modelPart instanceof AttributeMapping attributeMapping ) {
+			prefix = attributeMapping.getAttributeName();
+		}
+		else {
+			prefix = "id";
+		}
+		CteTable.forEachCteColumn( prefix, modelPart, e -> {
+			columns.add( cteColumns.stream()
+					.filter( cteColumn -> cteColumn.getColumnExpression().equals( e.getColumnExpression() ) )
+					.findFirst()
+					.orElseThrow(() -> new IllegalArgumentException( "Column reference not found: " + e.getColumnExpression() ) ) );
+		} );
+		return columns;
 	}
 
 	private void handleConflictClause(

@@ -44,8 +44,9 @@ import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.StandardGlobalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -1023,30 +1024,14 @@ public class FirebirdDialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		return getVersion().isBefore( 2,1  )
 				? super.getFallbackSqmMutationStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableMutationStrategy(
-					TemporaryTable.createIdTable(
-							entityDescriptor,
-							name -> TemporaryTable.ID_TABLE_PREFIX + name,
-							this,
-							runtimeModelCreationContext
-					),
-					runtimeModelCreationContext.getSessionFactory()
-				);
+				: new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(EntityMappingType entityDescriptor, RuntimeModelCreationContext runtimeModelCreationContext) {
 		return getVersion().isBefore( 2, 1 )
 				? super.getFallbackSqmInsertStrategy( entityDescriptor, runtimeModelCreationContext )
-				: new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+				: new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
@@ -1055,8 +1040,13 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return StandardGlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
+		return StandardGlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	private final FirebirdIndexExporter indexExporter = new FirebirdIndexExporter( this );

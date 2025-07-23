@@ -24,8 +24,10 @@ import org.hibernate.dialect.sequence.H2V1SequenceSupport;
 import org.hibernate.dialect.sequence.H2V2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.H2SqlAstTranslator;
-import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.H2GlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.StandardLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
 import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.H2JsonJdbcType;
@@ -774,40 +776,34 @@ public class H2Dialect extends Dialect {
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableMutationStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new GlobalTemporaryTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	@Override
 	public String getTemporaryTableCreateOptions() {
-		return "TRANSACTIONAL";
+		return H2GlobalTemporaryTableStrategy.INSTANCE.getTemporaryTableCreateOptions();
 	}
 
 	@Override
 	public TemporaryTableKind getSupportedTemporaryTableKind() {
 		return TemporaryTableKind.GLOBAL;
+	}
+
+	@Override
+	public TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		return H2GlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return StandardLocalTemporaryTableStrategy.INSTANCE;
 	}
 
 	@Override

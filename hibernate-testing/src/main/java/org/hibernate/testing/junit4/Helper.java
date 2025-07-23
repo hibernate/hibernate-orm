@@ -162,7 +162,7 @@ public final class Helper {
 		final S[] classAnnotations;
 		if ( methodPluralAnn != null ) {
 			try {
-				methodAnnotations = (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( methodPluralAnn );
+				methodAnnotations = (S[]) pluralAnnotationClass.getDeclaredMethod("value").invoke( methodPluralAnn );
 			}
 			catch (Exception e) {
 				throw new RuntimeException( e );
@@ -173,7 +173,7 @@ public final class Helper {
 		}
 		if ( classPluralAnn != null ) {
 			try {
-				classAnnotations = (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( classPluralAnn );
+				classAnnotations = (S[]) pluralAnnotationClass.getDeclaredMethod("value").invoke( classPluralAnn );
 			}
 			catch (Exception e) {
 				throw new RuntimeException( e );

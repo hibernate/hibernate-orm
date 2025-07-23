@@ -12,6 +12,7 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
 import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableCreationWork;
 import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableDropWork;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -275,12 +276,35 @@ public final class ExecuteWithTemporaryTableHelper {
 		}
 	}
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public static void performBeforeTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			ExecutionContext executionContext) {
+		performBeforeTemporaryTableUseActions(
+				temporaryTable,
+				executionContext.getSession().getDialect().getTemporaryTableBeforeUseAction(),
+				executionContext
+		);
+	}
+
+	public static void performBeforeTemporaryTableUseActions(
+			TemporaryTable temporaryTable,
+			TemporaryTableStrategy temporaryTableStrategy,
+			ExecutionContext executionContext) {
+		performBeforeTemporaryTableUseActions(
+				temporaryTable,
+				temporaryTableStrategy.getTemporaryTableBeforeUseAction(),
+				executionContext
+		);
+	}
+
+	private static void performBeforeTemporaryTableUseActions(
+			TemporaryTable temporaryTable,
+			BeforeUseAction beforeUseAction,
+			ExecutionContext executionContext) {
 		final var factory = executionContext.getSession().getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		if ( dialect.getTemporaryTableBeforeUseAction() == BeforeUseAction.CREATE ) {
+		if ( beforeUseAction == BeforeUseAction.CREATE ) {
 			final var temporaryTableCreationWork =
 					new TemporaryTableCreationWork( temporaryTable, factory );
 			final var ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();

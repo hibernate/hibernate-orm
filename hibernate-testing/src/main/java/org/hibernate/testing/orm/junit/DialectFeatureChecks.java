@@ -451,7 +451,35 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsTemporaryTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsTemporaryTables();
+			return dialect.getLocalTemporaryTableStrategy() != null || dialect.getGlobalTemporaryTableStrategy() != null;
+		}
+	}
+
+	public static class SupportsLocalTemporaryTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getLocalTemporaryTableStrategy() != null;
+		}
+	}
+
+	public static class SupportsGlobalTemporaryTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getGlobalTemporaryTableStrategy() != null;
+		}
+	}
+
+	public static class SupportsLocalTemporaryTableIdentity implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getIdentityColumnSupport().supportsIdentityColumns()
+				&& dialect.getLocalTemporaryTableStrategy() != null
+				&& dialect.getLocalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey();
+		}
+	}
+
+	public static class SupportsGlobalTemporaryTableIdentity implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getIdentityColumnSupport().supportsIdentityColumns()
+				&& dialect.getGlobalTemporaryTableStrategy() != null
+				&& dialect.getGlobalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey();
 		}
 	}
 

@@ -18,6 +18,8 @@ import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.TenantSchemaMapper;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
@@ -143,6 +145,16 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public SqmMultiTableInsertStrategy getCustomSqmMultiTableInsertStrategy() {
 		return delegate.getCustomSqmMultiTableInsertStrategy();
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy resolveCustomSqmMultiTableMutationStrategy(EntityMappingType rootEntityDescriptor, MappingModelCreationProcess creationProcess) {
+		return delegate.resolveCustomSqmMultiTableMutationStrategy( rootEntityDescriptor, creationProcess );
+	}
+
+	@Override
+	public SqmMultiTableInsertStrategy resolveCustomSqmMultiTableInsertStrategy(EntityMappingType rootEntityDescriptor, MappingModelCreationProcess creationProcess) {
+		return delegate.resolveCustomSqmMultiTableInsertStrategy( rootEntityDescriptor, creationProcess );
 	}
 
 	@Override

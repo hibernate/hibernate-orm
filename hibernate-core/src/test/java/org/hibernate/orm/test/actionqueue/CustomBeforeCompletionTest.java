@@ -30,12 +30,7 @@ public class CustomBeforeCompletionTest extends BaseCoreFunctionalTestCase {
 	public void success() {
 		inSession( session -> {
 			AtomicBoolean called = new AtomicBoolean( false );
-			session.getActionQueue().registerProcess( new BeforeTransactionCompletionProcess() {
-				@Override
-				public void doBeforeTransactionCompletion(SessionImplementor session) {
-					called.set( true );
-				}
-			} );
+			session.getActionQueue().registerProcess( s -> called.set( true ) );
 			Assert.assertFalse( called.get() );
 			inTransaction( session, theSession -> {
 				theSession.persist( new SimpleEntity( "jack" ) );

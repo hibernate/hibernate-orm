@@ -385,4 +385,13 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
 	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
+	}
 }

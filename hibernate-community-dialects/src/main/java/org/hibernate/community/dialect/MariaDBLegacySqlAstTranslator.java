@@ -394,4 +394,13 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 		needle.accept( this );
 		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
 	}
+
+	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
+	}
 }

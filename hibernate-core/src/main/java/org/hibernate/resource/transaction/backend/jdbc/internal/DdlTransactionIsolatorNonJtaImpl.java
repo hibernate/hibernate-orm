@@ -122,7 +122,7 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 				}
 			}
 			if ( originalException != null ) {
-				ExceptionHelper.doThrow( originalException );
+				ExceptionHelper.rethrow( originalException );
 			}
 		}
 	}

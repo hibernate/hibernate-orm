@@ -103,6 +103,17 @@ public class EmbeddableInitializerImpl extends AbstractInitializer<EmbeddableIni
 		}
 	}
 
+	// Used by Hibernate Reactive
+	@Deprecated(forRemoval = true)
+	public EmbeddableInitializerImpl(
+			EmbeddableResultGraphNode resultDescriptor,
+			BasicFetch<?> discriminatorFetch,
+			InitializerParent<?> parent,
+			AssemblerCreationState creationState,
+			boolean isResultInitializer) {
+		this( resultDescriptor, discriminatorFetch, null, parent, creationState, isResultInitializer );
+	}
+
 	public EmbeddableInitializerImpl(
 			EmbeddableResultGraphNode resultDescriptor,
 			BasicFetch<?> discriminatorFetch,

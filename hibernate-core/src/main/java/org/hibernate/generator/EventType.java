@@ -4,6 +4,8 @@
  */
 package org.hibernate.generator;
 
+import org.hibernate.Incubating;
+
 /**
  * Enumerates event types that can result in generation of a new value.
  * A {@link Generator} must specify which events it responds to, by
@@ -35,5 +37,12 @@ public enum EventType {
 	 * This indicates, for example, that a version number should be
 	 * incremented.
 	 */
-	UPDATE
+	UPDATE,
+	/**
+	 * An event that occurs during verification of a lock of type
+	 * of {@link org.hibernate.LockMode#OPTIMISTIC_FORCE_INCREMENT}
+	 * or {@link org.hibernate.LockMode#PESSIMISTIC_FORCE_INCREMENT}.
+	 */
+	@Incubating
+	FORCE_INCREMENT
 }

@@ -171,7 +171,7 @@ public final class Nullability {
 		else if ( propertyType instanceof CollectionType collectionType ) {
 			// persistent collections may have components
 			if ( collectionType.getElementType( session.getFactory() ) instanceof CompositeType componentType ) {
-				// check for all components values in the collection
+				// check for all component's values in the collection
 				final Iterator<?> iterator = getLoadedElementsIterator( collectionType, value );
 				while ( iterator.hasNext() ) {
 					final Object compositeElement = iterator.next();

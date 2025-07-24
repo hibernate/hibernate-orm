@@ -75,7 +75,7 @@ public class QualifiedNameParserTests {
 
 	@Test
 	void testIndividualQuotes() {
-		final String name = "`schema2`.`catalog2`.`tbl`";
+		final String name = "`catalog2`.`schema2`.`tbl`";
 		test(
 				name,
 				NO_CATALOG,

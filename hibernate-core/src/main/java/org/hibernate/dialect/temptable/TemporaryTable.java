@@ -21,6 +21,7 @@ import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
@@ -534,6 +535,8 @@ public class TemporaryTable implements Exportable, Contributable {
 	}
 
 	private static Table findTable(RuntimeModelCreationContext runtimeModelCreationContext, String tableName) {
+		final NameQualifierSupport nameQualifierSupport = runtimeModelCreationContext.getJdbcServices()
+				.getJdbcEnvironment().getNameQualifierSupport();
 		final Database database = runtimeModelCreationContext.getMetadata().getDatabase();
 		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( tableName );
 		// Strip off the default catalog and schema names since these are not reflected in the Database#namespaces
@@ -551,6 +554,41 @@ public class TemporaryTable implements Exportable, Contributable {
 			if ( schema != null && catalog == null ) {
 				final Identifier alternativeCatalog = schema.equals( sqlContext.getDefaultCatalog() ) ? null : schema;
 				namespace = database.findNamespace( alternativeCatalog, null );
+
+				if ( namespace == null && nameQualifierSupport == NameQualifierSupport.CATALOG ) {
+					Namespace candidateNamespace = null;
+					for ( Namespace databaseNamespace : database.getNamespaces() ) {
+						if ( schema.equals( databaseNamespace.getName().catalog() ) ) {
+							if ( candidateNamespace != null ) {
+								// Two namespaces with the same catalog, but different schema names
+								candidateNamespace = null;
+								break;
+							}
+							candidateNamespace = databaseNamespace;
+						}
+					}
+					if ( candidateNamespace != null ) {
+						namespace = candidateNamespace;
+					}
+				}
+			}
+			if ( namespace == null ) {
+				if ( nameQualifierSupport == NameQualifierSupport.SCHEMA && schema != null ) {
+					Namespace candidateNamespace = null;
+					for ( Namespace databaseNamespace : database.getNamespaces() ) {
+						if ( schema.equals( databaseNamespace.getName().schema() ) ) {
+							if ( candidateNamespace != null ) {
+								// Two namespaces with the same schema, but different catalog names
+								candidateNamespace = null;
+								break;
+							}
+							candidateNamespace = databaseNamespace;
+						}
+					}
+					if ( candidateNamespace != null ) {
+						namespace = candidateNamespace;
+					}
+				}
 			}
 			if ( namespace == null ) {
 				throw new IllegalArgumentException( "Unable to find namespace for " + tableName );

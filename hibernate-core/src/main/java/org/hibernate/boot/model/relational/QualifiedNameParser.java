@@ -135,8 +135,8 @@ public class QualifiedNameParser {
 			name = tokens[1];
 		}
 		else if ( tokens.length == 3 ) {
-			schemaName = tokens[0];
-			catalogName = tokens[1];
+			catalogName = tokens[0];
+			schemaName = tokens[1];
 			name = tokens[2];
 		}
 		else {

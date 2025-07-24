@@ -8,6 +8,6 @@ plugins {
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
 dependencies {
-    compileOnly libs.ant
+    implementation libs.ant
     implementation project( ':hibernate-core' )
 }

@@ -11,6 +11,7 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Jan Schatteman
  */
+@RequiresDialect(CockroachDialect.class)
 public class CockroachDialectVersionTest {
 
 	private Triggerable triggerable;

@@ -32,6 +32,7 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.junit.Test;
 
@@ -49,6 +50,7 @@ import static org.junit.Assert.fail;
  * @author Bryan Varner
  * @author Christoph Dreis
  */
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLDialectTestCase extends BaseUnitTestCase {
 
 	@Test

@@ -278,7 +278,7 @@ def changeLogFileTask = tasks.register( "changeLogFile" ) {
 
     doFirst {
         logger.lifecycle( "Appending version `${project.releaseVersion}` to changelog..." )
-        ChangeLogFile.update( ormVersion.fullName );
+        ChangeLogFile.update( ormVersion.fullName, rootProject );
     }
 }
 
@@ -423,9 +423,9 @@ static String inputStreamToString(InputStream inputStream) {
 class ChangeLogFile {
 
     // Get the Release Notes from Jira and add them to the Hibernate changelog.txt file
-    static void update(String releaseVersion) {
+    static void update(String releaseVersion, Project project) {
         def text = ""
-        File changelog = new File( "changelog.txt" )
+        File changelog = project.rootProject.layout.projectDirectory.file( "changelog.txt" ).asFile
         def newReleaseNoteBlock = getNewReleaseNoteBlock(releaseVersion)
         changelog.eachLine {
             line ->
@@ -448,24 +448,33 @@ class ChangeLogFile {
         else {
             restReleaseVersion = releaseVersion
         }
-        def apiString = "https://hibernate.atlassian.net/rest/api/2/search/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20order%20by%20issuetype%20ASC"
-        def apiUrl = new URL( apiString )
-        def jsonReleaseNotes = new JsonSlurper().parse( apiUrl )
-        def releaseDate = new Date().format( 'MMMM dd, YYYY' )
-        def versionId = getVersionId( jsonReleaseNotes, restReleaseVersion )
+        def ReleaseNote releaseNotes = null
+        def String nextPageToken = null
+        def issuetype = null
+        do {
+            def apiString = "https://hibernate.atlassian.net/rest/api/3/search/jql/?jql=project=HHH%20AND%20fixVersion=${restReleaseVersion}%20AND%20statusCategory%20%3D%20Done%20order%20by%20issuetype%20ASC&fields=issuetype,summary,fixVersions&maxResults=200${nextPageToken == null ? '' : '&nextPageToken=' + nextPageToken}"
+            def apiUrl = new URI(apiString).toURL()
+            def jsonReleaseNotes = new JsonSlurper().parse(apiUrl)
+            if (releaseNotes == null) {
+                def releaseDate = new Date().format( 'MMMM dd, YYYY' )
+                def versionId = getVersionId(jsonReleaseNotes, restReleaseVersion)
+                releaseNotes = new ReleaseNote(releaseVersion, releaseDate, versionId)
+            }
 
-        ReleaseNote releaseNotes = new ReleaseNote( releaseVersion, releaseDate, versionId )
+            jsonReleaseNotes.issues.each {
+                issue ->
+                    if ( issuetype != issue.fields.issuetype.name ) {
+                        issuetype = issue.fields.issuetype.name
+                        releaseNotes.addEmptyLine();
+                        releaseNotes.addLine( "** ${issue.fields.issuetype.name}" )
+                    }
+                    releaseNotes.addLine( "    * [" + issue.key + "] - " + issue.fields.summary )
+            }
 
-        def issuetype
-        jsonReleaseNotes.issues.each {
-            issue ->
-                if ( issuetype != issue.fields.issuetype.name ) {
-                    issuetype = issue.fields.issuetype.name
-                    releaseNotes.addEmptyLine();
-                    releaseNotes.addLine( "** ${issue.fields.issuetype.name}" )
-                }
-                releaseNotes.addLine( "    * [" + issue.key + "] - " + issue.fields.summary )
-        }
+            nextPageToken = jsonReleaseNotes.nextPageToken
+
+        } while (nextPageToken != null)
+
         releaseNotes.addEmptyLine()
         return releaseNotes.notes
     }

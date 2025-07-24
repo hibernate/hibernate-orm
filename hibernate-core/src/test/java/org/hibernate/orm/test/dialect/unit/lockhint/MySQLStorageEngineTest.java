@@ -9,6 +9,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -17,6 +18,7 @@ import static org.junit.Assert.assertNotNull;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
+@RequiresDialect(MySQLDialect.class)
 public class MySQLStorageEngineTest extends BaseUnitTestCase {
 
 	@Test

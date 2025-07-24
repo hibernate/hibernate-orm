@@ -27,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(standardModels = StandardDomainModel.ANIMAL)
 @SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLTruncRoundFunctionTest {
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {

@@ -10,6 +10,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 import static org.hibernate.Timeouts.NO_WAIT;
@@ -19,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(PostgreSQLDialect.class)
 public class PostgreSQLLockTimeoutTest extends BaseUnitTestCase {
 
 	private final Dialect dialect = new PostgreSQLDialect();

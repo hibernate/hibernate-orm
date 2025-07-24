@@ -538,22 +538,12 @@ public class TemporaryTable implements Exportable, Contributable {
 		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( tableName );
 		// Strip off the default catalog and schema names since these are not reflected in the Database#namespaces
 		final SqlStringGenerationContext sqlContext = runtimeModelCreationContext.getSqlStringGenerationContext();
-		final Identifier catalog;
-		final Identifier schema;
-		if ( nameParts.getCatalogName() != null && nameParts.getSchemaName() != null ) {
-			// For some reason, the QualifiedNameParser thinks a.b.c parses a as schema and b as catalog,
-			// though it renders catalog.schema.object
-			catalog = nameParts.getSchemaName() == null || nameParts.getSchemaName().equals( sqlContext.getDefaultCatalog() )
-					? null : nameParts.getSchemaName();
-			schema = nameParts.getCatalogName() == null || nameParts.getCatalogName().equals( sqlContext.getDefaultSchema() )
-					? null : nameParts.getCatalogName();
-		}
-		else {
-			catalog = nameParts.getCatalogName() == null || nameParts.getCatalogName().equals( sqlContext.getDefaultCatalog() )
-							? null : nameParts.getCatalogName();
-			schema = nameParts.getSchemaName() == null || nameParts.getSchemaName().equals( sqlContext.getDefaultSchema() )
-							? null : nameParts.getSchemaName();
-		}
+		final Identifier catalog =
+				nameParts.getCatalogName() == null || nameParts.getCatalogName().equals( sqlContext.getDefaultCatalog() )
+						? null : nameParts.getCatalogName();
+		final Identifier schema =
+				nameParts.getSchemaName() == null || nameParts.getSchemaName().equals( sqlContext.getDefaultSchema() )
+						? null : nameParts.getSchemaName();
 		final Identifier tableNameIdentifier = nameParts.getObjectName();
 		Namespace namespace = database.findNamespace( catalog, schema );
 		if ( namespace == null ) {

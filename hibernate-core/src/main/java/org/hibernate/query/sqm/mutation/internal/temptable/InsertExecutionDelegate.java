@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
@@ -82,7 +83,6 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.descriptor.ValueBinder;
 
 import static org.hibernate.generator.EventType.INSERT;
-import static org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper.isId;
 
 /**
  * @author Christian Beikov
@@ -116,6 +116,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			TableGroup insertingTableGroup,
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
+			boolean assignsId,
 			InsertSelectStatement insertStatement,
 			ConflictClause conflictClause,
 			JdbcParameter sessionUidParameter,
@@ -156,7 +157,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// segment the assignments by table-reference
 
-		boolean assignsId = false;
 		for ( int i = 0; i < assignments.size(); i++ ) {
 			final Assignment assignment = assignments.get( i );
 			final Assignable assignable = assignment.getAssignable();
@@ -173,9 +173,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				}
 				assignmentTableReference = tableReference;
 			}
-
-			assignsId = assignsId || assignable instanceof SqmPathInterpretation<?> pathInterpretation
-				&& isId( pathInterpretation.getExpressionType() );
 
 			assignmentsByTable.computeIfAbsent(
 					assignmentTableReference == null ? null : assignmentTableReference.getTableId(),
@@ -197,7 +194,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		// NOTE: we could get rid of using a temporary table if the expressions in Values are "stable".
 		// But that is a non-trivial optimization that requires more effort
 		// as we need to split out individual inserts if we have a non-bulk capable optimizer
-		ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
+		final boolean createdTable = ExecuteWithTemporaryTableHelper.performBeforeTemporaryTableUseActions(
 				entityTable,
 				temporaryTableStrategy,
 				executionContext
@@ -225,6 +222,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				final int insertedRows = insertRootTable(
 						persister.getTableName( 0 ),
 						rows,
+						createdTable,
 						persister.getKeyColumns( 0 ),
 						executionContext
 				);
@@ -306,6 +304,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private int insertRootTable(
 			String tableExpression,
 			int rows,
+			boolean rowNumberStartsAtOne,
 			String[] keyColumns,
 			ExecutionContext executionContext) {
 		final TableReference updatingTableReference = updatingTableGroup.getTableReference(
@@ -509,12 +508,15 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					}
 
 					final BeforeExecutionGenerator beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
-					for ( int i = 0; i < rows; i++ ) {
+					final IntStream rowNumberStream = !rowNumberStartsAtOne
+							? IntStream.of( ExecuteWithTemporaryTableHelper.loadInsertedRowNumbers( entityTable, sessionUidAccess, rows, executionContext ) )
+							: IntStream.range( 1, rows + 1 );
+					rowNumberStream.forEach( rowNumberValue -> {
 						updateBindings.addBinding(
 								rowNumber,
 								new JdbcParameterBindingImpl(
 										rowNumberColumn.getJdbcMapping(),
-										i + 1
+										rowNumberValue
 								)
 						);
 						updateBindings.addBinding(
@@ -524,7 +526,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 										beforeExecutionGenerator.generate( session, null, null, INSERT )
 								)
 						);
-						jdbcServices.getJdbcMutationExecutor().execute(
+						final int updateCount = jdbcServices.getJdbcMutationExecutor().execute(
 								jdbcUpdate,
 								updateBindings,
 								sql -> session
@@ -535,7 +537,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 								},
 								executionContext
 						);
-					}
+						assert updateCount == 1;
+					} );
 				}
 
 				identifierMapping.forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
@@ -738,25 +741,11 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final InsertSelectStatement insertStatement = new InsertSelectStatement( dmlTargetTableReference );
 		insertStatement.setSourceSelectStatement( querySpec );
 		applyAssignments( assignments, insertStatement, temporaryTableReference );
-		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
-		final Generator identifierGenerator = entityPersister.getGenerator();
-		final boolean needsKeyInsert;
-		if ( identifierGenerator.generatedOnExecution() ) {
-			needsKeyInsert = true;
-		}
-		else if ( identifierGenerator instanceof OptimizableGenerator ) {
-			final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
-			// If the generator uses an optimizer, we have to generate the identifiers for the new rows
-			needsKeyInsert = optimizer != null && optimizer.getIncrementSize() > 1;
-		}
-		else {
-			needsKeyInsert = true;
-		}
-		if ( needsKeyInsert && insertStatement.getTargetColumns()
+		if ( insertStatement.getTargetColumns()
 				.stream()
 				.noneMatch( c -> keyColumns[0].equals( c.getColumnExpression() ) ) ) {
 			final List<TemporaryTableColumn> primaryKeyTableColumns =
-					getPrimaryKeyTableColumns( entityPersister, entityTable );
+					getPrimaryKeyTableColumns( entityDescriptor.getEntityPersister(), entityTable );
 			entityDescriptor.getIdentifierMapping().forEachSelectable( 0, (selectionIndex, selectableMapping) -> {
 				insertStatement.addTargetColumnReferences(
 						new ColumnReference(

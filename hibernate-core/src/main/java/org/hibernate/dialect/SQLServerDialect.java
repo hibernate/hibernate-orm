@@ -32,6 +32,8 @@ import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sql.ast.SQLServerSqlAstTranslator;
+import org.hibernate.dialect.temptable.SQLServerLocalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.SQLServerCastingXmlArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.SQLServerCastingXmlJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
@@ -1069,12 +1071,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		return SQLServerLocalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
 	public String getCreateTemporaryTableColumnAnnotation(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
-			case Types.CHAR, Types.NCHAR, Types.VARCHAR, Types.NVARCHAR, Types.LONGVARCHAR, Types.LONGNVARCHAR ->
-					"collate database_default";
-			default -> "";
-		};
+		return SQLServerLocalTemporaryTableStrategy.INSTANCE.getCreateTemporaryTableColumnAnnotation( sqlTypeCode );
 	}
 
 	@Override

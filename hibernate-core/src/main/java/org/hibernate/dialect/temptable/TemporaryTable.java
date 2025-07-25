@@ -5,36 +5,33 @@
 package org.hibernate.dialect.temptable;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.QualifiedTableName;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.generator.Generator;
-import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.enhanced.Optimizer;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Contributable;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.Table;
+import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
@@ -44,22 +41,15 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
-import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.boot.model.internal.BinderHelper.findPropertyByName;
 
 /**
  * @author Steve Ebersole
@@ -71,10 +61,11 @@ public class TemporaryTable implements Exportable, Contributable {
 	public static final String ENTITY_TABLE_PREFIX = "HTE_";
 	public static final String DEFAULT_ALIAS = "temptable_";
 	public static final String ENTITY_TABLE_IDENTITY_COLUMN = "HTE_IDENTITY";
+	public static final String ENTITY_ROW_NUMBER_COLUMN = "rn_";
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TemporaryTable.class );
 
-	private final EntityMappingType entityDescriptor;
+	private final String contributor;
 	private final String qualifiedTableName;
 	private final TemporaryTableKind temporaryTableKind;
 
@@ -85,62 +76,44 @@ public class TemporaryTable implements Exportable, Contributable {
 	private final Dialect dialect;
 
 	private TemporaryTable(
-			EntityMappingType entityDescriptor,
+			PersistentClass persistentClass,
 			Function<String, String> temporaryTableNameAdjuster,
 			TemporaryTableKind temporaryTableKind,
 			Dialect dialect,
 			RuntimeModelCreationContext creationContext,
 			Function<TemporaryTable, List<TemporaryTableColumn>> columnInitializer) {
-		this.entityDescriptor = entityDescriptor;
-		final EntityPersister entityPersister = entityDescriptor.getEntityPersister();
-		final EntityPersister rootEntityPersister = entityDescriptor.getRootEntityDescriptor().getEntityPersister();
-		final String persisterQuerySpace = entityPersister.getSynchronizedQuerySpaces()[0];
-		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( persisterQuerySpace );
-		// The table name might be a sub-query, which is inappropriate for a temporary table name
-		final String tableBaseName;
-		if ( rootEntityPersister != entityPersister
-				&& rootEntityPersister instanceof SingleTableEntityPersister singleTableEntityPersister ) {
+		this.contributor = persistentClass.getContributor();
+		final Identifier tableNameIdentifier;
+		if ( persistentClass instanceof SingleTableSubclass ) {
 			// In this case, the descriptor is a subclass of a single table inheritance.
 			// To avoid name collisions, we suffix the table name with the subclass number
-			tableBaseName = nameParts.getObjectName().getText() + ArrayHelper.indexOf(
-					singleTableEntityPersister.getSubclassClosure(),
-					entityPersister.getEntityName()
-			);
-		}
-		else {
-			tableBaseName = nameParts.getObjectName().getText();
-		}
-		final QualifiedNameParser.NameParts adjustedNameParts = QualifiedNameParser.INSTANCE.parse(
-				temporaryTableNameAdjuster.apply( tableBaseName )
-		);
-		final String temporaryTableName = adjustedNameParts.getObjectName().getText();
-		final Identifier tableNameIdentifier;
-		if ( temporaryTableName.length() > dialect.getMaxIdentifierLength() ) {
 			tableNameIdentifier = new Identifier(
-					temporaryTableName.substring( 0, dialect.getMaxIdentifierLength() ),
-					nameParts.getObjectName().isQuoted()
+					persistentClass.getTable().getNameIdentifier().getText() + persistentClass.getSubclassId(),
+					persistentClass.getTable().getNameIdentifier().isQuoted()
 			);
 		}
 		else {
-			tableNameIdentifier = new Identifier( temporaryTableName, nameParts.getObjectName().isQuoted() );
+			tableNameIdentifier = persistentClass.getTable().getNameIdentifier();
 		}
+		// Have to parse the adjusted name, since it could be prepended by a schema
+		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE
+				.parse( temporaryTableNameAdjuster.apply( tableNameIdentifier.getText() ) );
+		final Identifier catalogIdentifier = nameParts.getCatalogName() != null ? nameParts.getCatalogName()
+				: persistentClass.getTable().getCatalogIdentifier();
+		final Identifier schemaIdentifier = nameParts.getSchemaName() != null ? nameParts.getSchemaName()
+				: persistentClass.getTable().getSchemaIdentifier();
+		final String adjustedName = nameParts.getObjectName().getText();
+		final Identifier temporaryTableNameIdentifier = new Identifier(
+				adjustedName.substring( 0, Math.min( dialect.getMaxIdentifierLength(), adjustedName.length() ) ),
+				tableNameIdentifier.isQuoted()
+		);
 		this.qualifiedTableName = creationContext.getSqlStringGenerationContext().format(
-				new QualifiedTableName(
-						adjustedNameParts.getCatalogName() != null
-								? adjustedNameParts.getCatalogName()
-								: nameParts.getCatalogName(),
-						adjustedNameParts.getSchemaName() != null
-								? adjustedNameParts.getSchemaName()
-								: nameParts.getSchemaName(),
-						tableNameIdentifier
-				)
+				new QualifiedTableName( catalogIdentifier, schemaIdentifier, temporaryTableNameIdentifier )
 		);
 		this.temporaryTableKind = temporaryTableKind;
 		this.dialect = dialect;
 		if ( temporaryTableKind == TemporaryTableKind.PERSISTENT ) {
-			final TypeConfiguration typeConfiguration = entityPersister
-					.getFactory()
-					.getTypeConfiguration();
+			final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
 			final BasicType<UUID> uuidType = typeConfiguration.getBasicTypeRegistry().resolve(
 					StandardBasicTypes.UUID_CHAR
 			);
@@ -189,140 +162,12 @@ public class TemporaryTable implements Exportable, Contributable {
 			Dialect dialect,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return createIdTable(
-				entityDescriptor,
+				runtimeModelCreationContext.getBootModel()
+						.getEntityBinding( entityDescriptor.getEntityName() ),
 				temporaryTableNameAdjuster,
 				dialect.getSupportedTemporaryTableKind(),
 				dialect,
 				runtimeModelCreationContext
-		);
-	}
-
-	public static TemporaryTable createIdTable(
-			EntityMappingType entityDescriptor,
-			Function<String, String> temporaryTableNameAdjuster,
-			TemporaryTableKind temporaryTableKind,
-			Dialect dialect,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new TemporaryTable(
-				entityDescriptor,
-				temporaryTableNameAdjuster,
-				temporaryTableKind,
-				dialect,
-				runtimeModelCreationContext,
-				temporaryTable -> {
-					final List<TemporaryTableColumn> columns = new ArrayList<>();
-					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
-							.getEntityBinding( entityDescriptor.getEntityName() );
-
-					final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-					int idIdx = 0;
-					for ( Column column : entityBinding.getKey().getColumns() ) {
-						final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
-						columns.add(
-								new TemporaryTableColumn(
-										temporaryTable,
-										column.getText( dialect ),
-										jdbcMapping,
-										column.getSqlType(
-												runtimeModelCreationContext.getMetadata()
-										),
-										column.getColumnSize(
-												dialect,
-												runtimeModelCreationContext.getMetadata()
-										),
-										column.isNullable(),
-										true
-								)
-						);
-					}
-
-					visitPluralAttributes( entityDescriptor, (pluralAttribute, attributeName) -> {
-						if ( pluralAttribute.getSeparateCollectionTable() != null ) {
-							// Ensure that the FK target columns are available
-							final ForeignKeyDescriptor keyDescriptor = pluralAttribute.getKeyDescriptor();
-							if ( keyDescriptor == null ) {
-								// This is expected to happen when processing a
-								// PostInitCallbackEntry because the callbacks
-								// are not ordered. The exception is caught in
-								// MappingModelCreationProcess.executePostInitCallbacks()
-								// and the callback is re-queued.
-								throw new IllegalStateException( "Not yet ready: " + pluralAttribute );
-							}
-							final ModelPart fkTarget = keyDescriptor.getTargetPart();
-							if ( !fkTarget.isEntityIdentifierMapping() ) {
-								final PersistentClass declaringClass = runtimeModelCreationContext.getBootModel()
-										.getEntityBinding( pluralAttribute.findContainingEntityMapping().getEntityName() );
-								final Property property = findPropertyByName( declaringClass, attributeName );
-								assert property != null;
-								final Collection collection = (Collection) property.getValue();
-								final Iterator<Selectable> columnIterator = collection.getKey().getSelectables().iterator();
-								fkTarget.forEachSelectable(
-										(columnIndex, selection) -> {
-											final Selectable selectable = columnIterator.next();
-											if ( selectable instanceof Column column ) {
-												columns.add(
-														new TemporaryTableColumn(
-																temporaryTable,
-																column.getText( dialect ),
-																selection.getJdbcMapping(),
-																column.getSqlType(
-																		runtimeModelCreationContext.getMetadata()
-																),
-																column.getColumnSize(
-																		dialect,
-																		runtimeModelCreationContext.getMetadata()
-																),
-																column.isNullable()
-														)
-												);
-											}
-										}
-								);
-							}
-						}
-					} );
-					return columns;
-				}
-		);
-	}
-
-	private static void visitPluralAttributes(
-			EntityMappingType entityDescriptor,
-			BiConsumer<PluralAttributeMapping, String> consumer) {
-		entityDescriptor.visitSubTypeAttributeMappings(
-				attribute -> {
-					if ( attribute instanceof PluralAttributeMapping pluralAttributeMapping ) {
-						consumer.accept( pluralAttributeMapping, attribute.getAttributeName() );
-					}
-					else if ( attribute instanceof EmbeddedAttributeMapping embeddedAttributeMapping ) {
-						visitPluralAttributes(
-								embeddedAttributeMapping,
-								attribute.getAttributeName(),
-								consumer
-						);
-					}
-				}
-		);
-	}
-
-	private static void visitPluralAttributes(
-			EmbeddedAttributeMapping attributeMapping,
-			String attributeName,
-			BiConsumer<PluralAttributeMapping, String> consumer) {
-		attributeMapping.visitSubParts(
-				modelPart -> {
-					if ( modelPart instanceof PluralAttributeMapping pluralAttribute ) {
-						consumer.accept( pluralAttribute, attributeName + "." + pluralAttribute.getAttributeName() );
-					}
-					else if ( modelPart instanceof EmbeddedAttributeMapping embeddedAttribute ) {
-						visitPluralAttributes(
-								embeddedAttribute,
-								attributeName + "." + embeddedAttribute.getAttributeName(),
-								consumer
-						);
-					}
-				},
-				null
 		);
 	}
 
@@ -333,7 +178,8 @@ public class TemporaryTable implements Exportable, Contributable {
 			Dialect dialect,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return createIdTable(
-				entityDescriptor,
+				runtimeModelCreationContext.getBootModel()
+						.getEntityBinding( entityDescriptor.getEntityName() ),
 				temporaryTableNameAdjuster,
 				dialect.getSupportedTemporaryTableKind(),
 				dialect,
@@ -341,47 +187,106 @@ public class TemporaryTable implements Exportable, Contributable {
 		);
 	}
 
-	public static TemporaryTable createEntityTable(
-			EntityMappingType entityDescriptor,
+	public static TemporaryTable createIdTable(
+			PersistentClass persistentClass,
 			Function<String, String> temporaryTableNameAdjuster,
 			TemporaryTableKind temporaryTableKind,
 			Dialect dialect,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new TemporaryTable(
-				entityDescriptor,
+				persistentClass,
 				temporaryTableNameAdjuster,
 				temporaryTableKind,
 				dialect,
 				runtimeModelCreationContext,
 				temporaryTable -> {
+					final MetadataImplementor metadata = runtimeModelCreationContext.getMetadata();
 					final List<TemporaryTableColumn> columns = new ArrayList<>();
-					final PersistentClass entityBinding = runtimeModelCreationContext.getBootModel()
-							.getEntityBinding( entityDescriptor.getEntityName() );
 
-					final Generator identifierGenerator = entityDescriptor.getEntityPersister().getGenerator();
-					final boolean identityColumn = identifierGenerator.generatedOnExecution();
-					final boolean hasOptimizer;
+					for ( Column column : persistentClass.getKey().getColumns() ) {
+						columns.add(
+								new TemporaryTableColumn(
+										temporaryTable,
+										column.getText( dialect ),
+										column.getType(),
+										column.getSqlType( metadata ),
+										column.getColumnSize( dialect, metadata ),
+										column.isNullable(),
+										true
+								)
+						);
+					}
+
+					visitPluralAttributes( persistentClass.getPropertyClosure(), collection -> {
+						if ( collection.getCollectionTable() != null && collection.getReferencedPropertyName() != null ) {
+							final KeyValue collectionKey = collection.getKey();
+							for ( Selectable selectable : collectionKey.getSelectables() ) {
+								if ( selectable instanceof Column column ) {
+									columns.add(
+											new TemporaryTableColumn(
+													temporaryTable,
+													column.getText( dialect ),
+													column.getType(),
+													column.getSqlType( metadata ),
+													column.getColumnSize( dialect, metadata ),
+													column.isNullable()
+											)
+									);
+								}
+							}
+						}
+					} );
+					return columns;
+				}
+		);
+	}
+
+	private static void visitPluralAttributes(List<Property> properties, Consumer<Collection> consumer) {
+		for ( Property property : properties ) {
+			final Value value = property.getValue();
+			if ( value instanceof Collection collection ) {
+				consumer.accept( collection );
+			}
+			else if ( value instanceof Component component ) {
+				visitPluralAttributes( component.getProperties(), consumer );
+			}
+		}
+	}
+
+	public static TemporaryTable createEntityTable(
+			PersistentClass persistentClass,
+			Function<String, String> temporaryTableNameAdjuster,
+			TemporaryTableKind temporaryTableKind,
+			Dialect dialect,
+			RuntimeModelCreationContext runtimeModelCreationContext) {
+		return new TemporaryTable(
+				persistentClass,
+				temporaryTableNameAdjuster,
+				temporaryTableKind,
+				dialect,
+				runtimeModelCreationContext,
+				temporaryTable -> {
+					final MetadataImplementor metadata = runtimeModelCreationContext.getMetadata();
+					final List<TemporaryTableColumn> columns = new ArrayList<>();
+					final List<Column> rootKeyColumns = persistentClass.getRootClass().getKey().getColumns();
+					final boolean identityColumn = rootKeyColumns.size() == 1 && rootKeyColumns.get( 0 ).isIdentity();
+					final boolean isExternallyGenerated;
 					if ( identityColumn ) {
-						hasOptimizer = false;
-						final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-						int idIdx = 0;
-						for ( Column column : entityBinding.getKey().getColumns() ) {
-							final JdbcMapping jdbcMapping = identifierMapping.getJdbcMapping( idIdx++ );
+						isExternallyGenerated = false;
+						for ( Column column : persistentClass.getKey().getColumns() ) {
 							String sqlTypeName = "";
 							if ( dialect.getIdentityColumnSupport().hasDataTypeInIdentityColumn() ) {
-								sqlTypeName = column.getSqlType( runtimeModelCreationContext.getMetadata() ) + " ";
+								sqlTypeName = column.getSqlType( metadata ) + " ";
 							}
-							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport().getIdentityColumnString( column.getSqlTypeCode( runtimeModelCreationContext.getMetadata() ) );
+							sqlTypeName = sqlTypeName + dialect.getIdentityColumnSupport()
+									.getIdentityColumnString( column.getSqlTypeCode( metadata ) );
 							columns.add(
 									new TemporaryTableColumn(
 											temporaryTable,
 											ENTITY_TABLE_IDENTITY_COLUMN,
-											jdbcMapping,
+											column.getType(),
 											sqlTypeName,
-											column.getColumnSize(
-													dialect,
-													runtimeModelCreationContext.getMetadata()
-											),
+											column.getColumnSize( dialect, metadata ),
 											// Always report as nullable as the identity column string usually includes the not null constraint
 											true,//column.isNullable()
 											true
@@ -390,23 +295,27 @@ public class TemporaryTable implements Exportable, Contributable {
 						}
 					}
 					else {
-						if ( identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
-							final Optimizer optimizer = optimizableGenerator.getOptimizer();
-							hasOptimizer = optimizer != null && optimizer.getIncrementSize() > 1;
-						}
-						else {
-							hasOptimizer = false;
-						}
+						// This is a bit fishy, because for the generator to exist in this map,
+						// the EntityPersister already has to be built. Currently, we have
+						// no other way to understand what generators do until we have a boot
+						// model representation of the generator information, so this will have
+						// to do
+						final Generator identifierGenerator = runtimeModelCreationContext.getGenerators()
+								.get( persistentClass.getRootClass().getEntityName() );
+						assert identifierGenerator != null;
+
+						isExternallyGenerated = !(identifierGenerator instanceof OnExecutionGenerator generator
+							&& generator.generatedOnExecution());
 					}
-					final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
+					final Property identifierProperty = persistentClass.getIdentifierProperty();
 					final String idName;
-					if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-						idName = identifierMapping.getAttributeName();
+					if ( identifierProperty != null ) {
+						idName = identifierProperty.getName();
 					}
 					else {
 						idName = "id";
 					}
-					forEachTemporaryTableColumn( runtimeModelCreationContext, temporaryTable, idName, identifierMapping, temporaryTableColumn -> {
+					forEachTemporaryTableColumn( metadata, temporaryTable, idName, persistentClass.getIdentifier(), temporaryTableColumn -> {
 						columns.add( new TemporaryTableColumn(
 								temporaryTableColumn.getContainingTable(),
 								temporaryTableColumn.getColumnName(),
@@ -414,14 +323,14 @@ public class TemporaryTable implements Exportable, Contributable {
 								temporaryTableColumn.getSqlTypeDefinition(),
 								temporaryTableColumn.getSize(),
 								// We have to set the identity column after the root table insert
-								identityColumn || hasOptimizer,
-								!identityColumn && !hasOptimizer
+								identityColumn || isExternallyGenerated,
+								!identityColumn && !isExternallyGenerated
 						) );
 					});
 
-					final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-					if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() && !discriminatorMapping.isFormula() ) {
-						forEachTemporaryTableColumn( runtimeModelCreationContext, temporaryTable, "class", discriminatorMapping, temporaryTableColumn -> {
+					final Value discriminator = persistentClass.getDiscriminator();
+					if ( discriminator != null && !discriminator.getSelectables().get( 0 ).isFormula() ) {
+						forEachTemporaryTableColumn( metadata, temporaryTable, "class", discriminator, temporaryTableColumn -> {
 							columns.add( new TemporaryTableColumn(
 									temporaryTableColumn.getContainingTable(),
 									temporaryTableColumn.getColumnName(),
@@ -429,21 +338,25 @@ public class TemporaryTable implements Exportable, Contributable {
 									temporaryTableColumn.getSqlTypeDefinition(),
 									temporaryTableColumn.getSize(),
 									// We have to set the identity column after the root table insert
-									discriminatorMapping.isNullable()
+									discriminator.isNullable()
 							) );
 						} );
 					}
 
 					// Collect all columns for all entity subtype attributes
-					entityDescriptor.visitSubTypeAttributeMappings(
-							attribute -> {
-								if ( !( attribute instanceof PluralAttributeMapping ) ) {
-									forEachTemporaryTableColumn( runtimeModelCreationContext, temporaryTable, attribute.getAttributeName(), attribute, columns::add );
-								}
-							}
-					);
-					if ( hasOptimizer ) {
-						final TypeConfiguration typeConfiguration = runtimeModelCreationContext.getTypeConfiguration();
+					for ( Property property : persistentClass.getPropertyClosure() ) {
+						if ( !property.isSynthetic() ) {
+							forEachTemporaryTableColumn(
+									metadata,
+									temporaryTable,
+									property.getName(),
+									property.getValue(),
+									columns::add
+							);
+						}
+					}
+					if ( isExternallyGenerated ) {
+						final TypeConfiguration typeConfiguration = metadata.getTypeConfiguration();
 						// We add a special row number column that we can use to identify and join rows
 						final BasicType<Integer> integerBasicType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 						final String rowNumberType;
@@ -472,10 +385,10 @@ public class TemporaryTable implements Exportable, Contributable {
 									),
 									integerBasicType
 							) + " " + dialect.getIdentityColumnSupport()
-									.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
+													.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
 						}
 						else {
-							LOG.multiTableInsertNotAvailable( entityBinding.getEntityName() );
+							LOG.multiTableInsertNotAvailable( persistentClass.getEntityName() );
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getDdlTypeCode(),
 									dialect.getSizeStrategy().resolveSize(
@@ -491,7 +404,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						columns.add(
 								new TemporaryTableColumn(
 										temporaryTable,
-										"rn_",
+										ENTITY_ROW_NUMBER_COLUMN,
 										integerBasicType,
 										rowNumberType,
 										Size.nil(),
@@ -505,110 +418,21 @@ public class TemporaryTable implements Exportable, Contributable {
 		);
 	}
 
-	private static void forEachTemporaryTableColumn(RuntimeModelCreationContext runtimeModelCreationContext, TemporaryTable temporaryTable, String prefix, ModelPart modelPart, Consumer<TemporaryTableColumn> consumer) {
-		final Dialect dialect = runtimeModelCreationContext.getDialect();
-		final EntityPersister declaringPersister = modelPart.findContainingEntityMapping().getEntityPersister();
-		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, modelPart, (columnName, selectableMapping) -> {
-			final String tableExpression = selectableMapping.getContainingTableExpression();
-			final String tableName =
-					tableExpression.charAt( 0 ) == '(' && declaringPersister instanceof UnionSubclassEntityPersister
-							? declaringPersister.getRootTableName() : tableExpression;
-			final Table table = findTable( runtimeModelCreationContext, tableName );
-			final Column column = table.getColumn( Identifier.toIdentifier( selectableMapping.getSelectionExpression() ) );
+	private static void forEachTemporaryTableColumn(Metadata metadata, TemporaryTable temporaryTable, String prefix, Value value, Consumer<TemporaryTableColumn> consumer) {
+		final Dialect dialect = metadata.getDatabase().getDialect();
+		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, (columnName, selectable) -> {
 			consumer.accept(
 					new TemporaryTableColumn(
 							temporaryTable,
 							columnName,
-							selectableMapping.getJdbcMapping(),
-							column.getSqlType(
-									runtimeModelCreationContext.getMetadata()
-							),
-							column.getColumnSize(
-									dialect,
-									runtimeModelCreationContext.getMetadata()
-							),
+							selectable.getType(),
+							selectable.getSqlType( metadata ),
+							selectable.getColumnSize( dialect, metadata ),
 							// Treat regular temporary table columns as nullable for simplicity
 							true
 					)
 			);
 		} );
-	}
-
-	private static Table findTable(RuntimeModelCreationContext runtimeModelCreationContext, String tableName) {
-		final NameQualifierSupport nameQualifierSupport = runtimeModelCreationContext.getJdbcServices()
-				.getJdbcEnvironment().getNameQualifierSupport();
-		final Database database = runtimeModelCreationContext.getMetadata().getDatabase();
-		final QualifiedNameParser.NameParts nameParts = QualifiedNameParser.INSTANCE.parse( tableName );
-		// Strip off the default catalog and schema names since these are not reflected in the Database#namespaces
-		final SqlStringGenerationContext sqlContext = runtimeModelCreationContext.getSqlStringGenerationContext();
-		final Identifier catalog =
-				nameParts.getCatalogName() == null || nameParts.getCatalogName().equals( sqlContext.getDefaultCatalog() )
-						? null : nameParts.getCatalogName();
-		final Identifier schema =
-				nameParts.getSchemaName() == null || nameParts.getSchemaName().equals( sqlContext.getDefaultSchema() )
-						? null : nameParts.getSchemaName();
-		final Identifier tableNameIdentifier = nameParts.getObjectName();
-		Namespace namespace = database.findNamespace( catalog, schema );
-		if ( namespace == null ) {
-			// When parsing a name, we assume a qualifier is a schema, but could maybe be a catalog
-			if ( schema != null && catalog == null ) {
-				final Identifier alternativeCatalog = schema.equals( sqlContext.getDefaultCatalog() ) ? null : schema;
-				namespace = database.findNamespace( alternativeCatalog, null );
-
-				if ( namespace == null && nameQualifierSupport == NameQualifierSupport.CATALOG ) {
-					Namespace candidateNamespace = null;
-					for ( Namespace databaseNamespace : database.getNamespaces() ) {
-						if ( schema.equals( databaseNamespace.getName().catalog() ) ) {
-							if ( candidateNamespace != null ) {
-								// Two namespaces with the same catalog, but different schema names
-								candidateNamespace = null;
-								break;
-							}
-							candidateNamespace = databaseNamespace;
-						}
-					}
-					if ( candidateNamespace != null ) {
-						namespace = candidateNamespace;
-					}
-				}
-			}
-			if ( namespace == null ) {
-				if ( nameQualifierSupport == NameQualifierSupport.SCHEMA && schema != null ) {
-					Namespace candidateNamespace = null;
-					for ( Namespace databaseNamespace : database.getNamespaces() ) {
-						if ( schema.equals( databaseNamespace.getName().schema() ) ) {
-							if ( candidateNamespace != null ) {
-								// Two namespaces with the same schema, but different catalog names
-								candidateNamespace = null;
-								break;
-							}
-							candidateNamespace = databaseNamespace;
-						}
-					}
-					if ( candidateNamespace != null ) {
-						namespace = candidateNamespace;
-					}
-				}
-			}
-			if ( namespace == null ) {
-				throw new IllegalArgumentException( "Unable to find namespace for " + tableName );
-			}
-		}
-		final Table table = namespace.locateTable( tableNameIdentifier );
-		// The tableNameIdentifier is a physical name, so double check if it is correct
-		if ( table != null && table.getNameIdentifier().equals( tableNameIdentifier ) ) {
-			return table;
-		}
-		else {
-			// Fallback to searching for table by comparing physical names
-			for ( Table namespaceTable : namespace.getTables() ) {
-				if ( tableNameIdentifier.equals( namespaceTable.getNameIdentifier() ) ) {
-					return namespaceTable;
-				}
-			}
-
-			throw new IllegalArgumentException( "No table with name [" + nameParts.getObjectName() + "] found in namespace [" + namespace.getName() + "]" );
-		}
 	}
 
 	public List<TemporaryTableColumn> findTemporaryTableColumns(EntityPersister entityDescriptor, ModelPart modelPart) {
@@ -696,8 +520,10 @@ public class TemporaryTable implements Exportable, Contributable {
 		return offset + modelPart.getJdbcTypeCount();
 	}
 
-	public EntityMappingType getEntityDescriptor() {
-		return entityDescriptor;
+	public boolean isRowNumberGenerated() {
+		// Only assign a value for the rowNumber column if it isn't using an identity insert
+		return !dialect.supportsWindowFunctions()
+			&& dialect.getIdentityColumnSupport().supportsIdentityColumns();
 	}
 
 	public String getQualifiedTableName() {
@@ -726,7 +552,7 @@ public class TemporaryTable implements Exportable, Contributable {
 
 	@Override
 	public String getContributor() {
-		return entityDescriptor.getContributor();
+		return contributor;
 	}
 
 	@Override

@@ -142,6 +142,21 @@ public abstract class AbstractMutationStrategyCompositeIdTest extends BaseCoreFu
 		});
 	}
 
+	@Test
+	public void testInsertSelect() {
+		doInHibernate( this::sessionFactory, session -> {
+			final int insertCount = session.createQuery( "insert into Engineer(id, companyName, name, employed, fellow) "
+										+ "select d.id + " + (entityCount() * 2) + ", 'Red Hat', 'John Doe', true, false from Doctor d" )
+					.executeUpdate();
+			final Engineer engineer = session.find( Engineer.class,
+					new AbstractMutationStrategyCompositeIdTest_.Person_.Id( entityCount() * 2 + 1, "Red Hat" ) );
+			assertEquals( entityCount(), insertCount );
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
 	//tag::batch-bulk-hql-temp-table-base-class-example[]
 	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)

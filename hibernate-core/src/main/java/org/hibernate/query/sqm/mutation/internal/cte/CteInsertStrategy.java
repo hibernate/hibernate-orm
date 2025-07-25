@@ -8,6 +8,8 @@ import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -126,23 +128,26 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 			);
 		}
 
-		// The table name might be a sub-query, which is inappropriate for a temporary table name
-		final String originalTableName = rootDescriptor.getEntityPersister().getSynchronizedQuerySpaces()[0];
-		final String name;
-		if ( Identifier.isQuoted( originalTableName ) ) {
-			name = dialect.quote( TemporaryTable.ENTITY_TABLE_PREFIX + Identifier.unQuote( originalTableName ) );
+		final PersistentClass persistentClass = runtimeModelCreationContext.getMetadata()
+				.getEntityBinding( rootDescriptor.getEntityName() );
+		final Identifier tableNameIdentifier;
+		if ( persistentClass instanceof SingleTableSubclass ) {
+			// In this case, the descriptor is a subclass of a single table inheritance.
+			// To avoid name collisions, we suffix the table name with the subclass number
+			tableNameIdentifier = new Identifier(
+					persistentClass.getTable().getNameIdentifier().getText() + persistentClass.getSubclassId(),
+					persistentClass.getTable().getNameIdentifier().isQuoted()
+			);
 		}
 		else {
-			name = TemporaryTable.ENTITY_TABLE_PREFIX + originalTableName;
+			tableNameIdentifier = persistentClass.getTable().getNameIdentifier();
 		}
-		final String qualifiedTableName;
-		if ( name.length() > dialect.getMaxIdentifierLength() ) {
-			qualifiedTableName = name.substring( 0, dialect.getMaxIdentifierLength() );
-		}
-		else {
-			qualifiedTableName = name;
-		}
-		this.entityCteTable = CteTable.createEntityTable( qualifiedTableName, rootDescriptor );
+		final String cteName = TemporaryTable.ENTITY_TABLE_PREFIX + tableNameIdentifier.getText();
+		final String qualifiedCteName = new Identifier(
+				cteName.substring( 0, Math.min( dialect.getMaxIdentifierLength(), cteName.length() ) ),
+				tableNameIdentifier.isQuoted()
+		).render( dialect );
+		this.entityCteTable = CteTable.createEntityTable( qualifiedCteName, persistentClass );
 	}
 
 	@Override

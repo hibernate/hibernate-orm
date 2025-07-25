@@ -12,8 +12,10 @@ import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
 import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableCreationWork;
 import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableDropWork;
+import org.hibernate.dialect.temptable.TemporaryTableSessionUidColumn;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -24,6 +26,7 @@ import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
@@ -40,6 +43,9 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -199,7 +205,7 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		querySpec.getFromClause().addRoot( idTableGroup );
 
-		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart );
+		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, entityDescriptor );
 		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidAccess, executionContext );
 
 		return querySpec;
@@ -209,9 +215,10 @@ public final class ExecuteWithTemporaryTableHelper {
 			QuerySpec querySpec,
 			TableReference tableReference,
 			TemporaryTable idTable,
-			ModelPart fkModelPart) {
+			ModelPart fkModelPart,
+			EntityMappingType entityDescriptor) {
 		if ( fkModelPart == null ) {
-			final int size = idTable.getEntityDescriptor().getIdentifierMapping().getJdbcTypeCount();
+			final int size = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 			for ( int i = 0; i < size; i++ ) {
 				final var temporaryTableColumn = idTable.getColumns().get( i );
 				if ( temporaryTableColumn != idTable.getSessionUidColumn() ) {
@@ -287,18 +294,18 @@ public final class ExecuteWithTemporaryTableHelper {
 		);
 	}
 
-	public static void performBeforeTemporaryTableUseActions(
+	public static boolean performBeforeTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			TemporaryTableStrategy temporaryTableStrategy,
 			ExecutionContext executionContext) {
-		performBeforeTemporaryTableUseActions(
+		return performBeforeTemporaryTableUseActions(
 				temporaryTable,
 				temporaryTableStrategy.getTemporaryTableBeforeUseAction(),
 				executionContext
 		);
 	}
 
-	private static void performBeforeTemporaryTableUseActions(
+	private static boolean performBeforeTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			BeforeUseAction beforeUseAction,
 			ExecutionContext executionContext) {
@@ -309,14 +316,79 @@ public final class ExecuteWithTemporaryTableHelper {
 					new TemporaryTableCreationWork( temporaryTable, factory );
 			final var ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
 			if ( ddlTransactionHandling == NONE ) {
-				executionContext.getSession().doWork( temporaryTableCreationWork );
+				return executionContext.getSession().doReturningWork( temporaryTableCreationWork );
 			}
 			else {
 				final var isolationDelegate =
 						executionContext.getSession().getJdbcCoordinator().getJdbcSessionOwner()
 								.getTransactionCoordinator().createIsolationDelegate();
-				isolationDelegate.delegateWork( temporaryTableCreationWork,
+				return isolationDelegate.delegateWork( temporaryTableCreationWork,
 						ddlTransactionHandling == ISOLATE_AND_TRANSACT );
+			}
+		}
+		else {
+			return false;
+		}
+	}
+
+	public static int[] loadInsertedRowNumbers(
+			TemporaryTable temporaryTable,
+			Function<SharedSessionContractImplementor, String> sessionUidAccess,
+			int rows,
+			ExecutionContext executionContext) {
+		final TemporaryTableSessionUidColumn sessionUidColumn = temporaryTable.getSessionUidColumn();
+
+		final TemporaryTableColumn rowNumberColumn = temporaryTable.getColumns()
+				.get( temporaryTable.getColumns().size() - (sessionUidColumn == null ? 1 : 2 ) );
+		assert rowNumberColumn != null;
+
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final SimpleSelect simpleSelect = new SimpleSelect( session.getFactory() )
+				.setTableName( temporaryTable.getQualifiedTableName() )
+				.addColumn( rowNumberColumn.getColumnName() );
+		if ( sessionUidColumn != null ) {
+			simpleSelect.addRestriction( sessionUidColumn.getColumnName() );
+		}
+		final String sqlSelect = simpleSelect.toStatementString();
+
+		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
+		PreparedStatement preparedStatement = null;
+		try {
+			preparedStatement = jdbcCoordinator.getStatementPreparer().prepareStatement( sqlSelect );
+			if ( sessionUidColumn != null ) {
+				//noinspection unchecked
+				sessionUidColumn.getJdbcMapping().getJdbcValueBinder().bind(
+						preparedStatement,
+						UUID.fromString( sessionUidAccess.apply( session ) ),
+						1,
+						session
+				);
+			}
+			final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sqlSelect );
+			final int[] rowNumbers = new int[rows];
+			try {
+				int rowIndex = 0;
+				while (resultSet.next()) {
+					rowNumbers[rowIndex++] = resultSet.getInt( 1 );
+				}
+				return rowNumbers;
+			}
+			catch ( IndexOutOfBoundsException e ) {
+				throw new IllegalArgumentException( "Expected " + rows + " to be inserted but found more", e );
+			}
+		}
+		catch( SQLException ex ) {
+			throw new IllegalStateException( ex );
+		}
+		finally {
+			if ( preparedStatement != null ) {
+				try {
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( preparedStatement );
+				}
+				catch( Throwable ignore ) {
+					// ignore
+				}
+				jdbcCoordinator.afterStatementExecution();
 			}
 		}
 	}

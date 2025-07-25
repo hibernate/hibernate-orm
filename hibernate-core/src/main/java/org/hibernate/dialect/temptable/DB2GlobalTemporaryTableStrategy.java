@@ -17,7 +17,7 @@ public class DB2GlobalTemporaryTableStrategy extends StandardGlobalTemporaryTabl
 	}
 
 	@Override
-	public String getTemporaryTableCreateCommand() {
-		return "declare global temporary table";
+	public boolean supportsTemporaryTablePrimaryKey() {
+		return false;
 	}
 }

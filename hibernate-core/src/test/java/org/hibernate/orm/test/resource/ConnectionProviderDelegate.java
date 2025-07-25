@@ -122,7 +122,7 @@ public class ConnectionProviderDelegate implements
 
 	@Override
 	public void closeConnection(Connection connection) throws SQLException {
-		connectionProvider.closeConnection( connection );
+		connectionProvider.closeConnection( ((ConnectionWrapper) connection).delegate );
 	}
 
 	@Override

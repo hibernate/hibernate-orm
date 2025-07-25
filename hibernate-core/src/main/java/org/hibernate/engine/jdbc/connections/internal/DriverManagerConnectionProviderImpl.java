@@ -471,7 +471,9 @@ public class DriverManagerConnectionProviderImpl
 				}
 			}
 			finally {
-				allConnections.remove( conn );
+				if ( !allConnections.remove( conn ) ) {
+					ConnectionInfoLogger.INSTANCE.debug( "Connection remove failed." );
+				}
 			}
 		}
 

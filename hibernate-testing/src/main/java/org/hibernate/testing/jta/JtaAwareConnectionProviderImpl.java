@@ -218,7 +218,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 			System.err.println( "!!!Error trying to reset synchronization registry!!!" );
 		}
 		try {
-			delegate.closeConnection( connection );
+			delegate.closeConnection( ((ConnectionWrapper) connection).delegate );
 		}
 		catch (SQLException e) {
 			System.err.println( "!!!Error trying to close JDBC connection from delist callbacks!!!" );

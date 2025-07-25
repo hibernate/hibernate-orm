@@ -41,6 +41,7 @@ import static org.hibernate.cfg.C3p0Settings.C3P0_MAX_STATEMENTS;
 import static org.hibernate.cfg.C3p0Settings.C3P0_MIN_SIZE;
 import static org.hibernate.cfg.C3p0Settings.C3P0_TIMEOUT;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
@@ -155,18 +156,31 @@ public class C3P0ConnectionProvider
 		final Map<String, Object> poolSettings = poolSettings( properties );
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 
+		final Integer fetchSize = getFetchSize( dataSource );
 		dbInfoProducer = dialect -> new DatabaseConnectionInfoImpl(
 				C3P0ConnectionProvider.class,
 				jdbcUrl,
 				jdbcDriverClass,
 				dialect.getVersion(),
 				Boolean.toString( autocommit ),
-				isolation == null ? null : ConnectionProviderInitiator.toIsolationNiceName( isolation ),
+				isolation == null ? null : toIsolationNiceName( isolation ),
 				requireNonNullElse( getInteger( C3P0_STYLE_MIN_POOL_SIZE.substring( 5 ), poolSettings ),
 						DEFAULT_MIN_POOL_SIZE ),
 				requireNonNullElse( getInteger( C3P0_STYLE_MAX_POOL_SIZE.substring( 5 ), poolSettings ),
-						DEFAULT_MAX_POOL_SIZE )
+						DEFAULT_MAX_POOL_SIZE ),
+				fetchSize
 		);
+	}
+
+	private static Integer getFetchSize(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			try ( var statement = conn.createStatement() ) {
+				return statement.getFetchSize();
+			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
 	}
 
 	private DataSource createDataSource(String jdbcUrl, Properties connectionProps, Map<String, Object> poolProperties) {

@@ -151,7 +151,7 @@ public interface ExtractedDatabaseMetaData {
 	int getDefaultTransactionIsolation();
 
 	/**
-	 * Retrieve the default JDBC {@link java.sql.Statement#getFetchSize fetch size}.
+	 * Retrieve the default JDBC {@linkplain java.sql.Statement#getFetchSize fetch size}.
 	 */
 	int getDefaultFetchSize();
 

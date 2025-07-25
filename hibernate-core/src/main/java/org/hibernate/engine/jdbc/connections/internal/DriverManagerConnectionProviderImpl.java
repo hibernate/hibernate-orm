@@ -150,7 +150,8 @@ public class DriverManagerConnectionProviderImpl
 				Boolean.toString( autoCommit ),
 				isolation != null ? toIsolationNiceName( isolation ) : null,
 				getInt( MIN_SIZE, configurationValues, 1 ),
-				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 )
+				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ),
+				null
 		);
 
 		return factory.create(
@@ -292,7 +293,8 @@ public class DriverManagerConnectionProviderImpl
 				dbInfo.getAutoCommitMode(),
 				dbInfo.getIsolationLevel(),
 				dbInfo.getPoolMinSize(),
-				dbInfo.getPoolMaxSize()
+				dbInfo.getPoolMaxSize(),
+				dbInfo.getJdbcFetchSize()
 		);
 	}
 

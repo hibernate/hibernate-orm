@@ -181,8 +181,20 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 						? ConnectionProviderInitiator.toIsolationNiceName( acfc.jdbcTransactionIsolation().level() )
 						: null,
 				acpc.minSize(),
-				acpc.maxSize()
+				acpc.maxSize(),
+				getFetchSize( agroalDataSource )
 		);
+	}
+
+	private static Integer getFetchSize(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			try ( var statement = conn.createStatement() ) {
+				return statement.getFetchSize();
+			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
 	}
 
 	private String extractDriverNameFromMetadata() {

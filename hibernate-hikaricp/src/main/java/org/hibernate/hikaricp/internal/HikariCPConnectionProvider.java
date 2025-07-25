@@ -107,8 +107,20 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 				Boolean.toString( hikariConfig.isAutoCommit() ),
 				hikariConfig.getTransactionIsolation(),
 				hikariConfig.getMinimumIdle(),
-				hikariConfig.getMaximumPoolSize()
+				hikariConfig.getMaximumPoolSize(),
+				getFetchSize( hikariDataSource )
 		);
+	}
+
+	private static Integer getFetchSize(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			try ( var statement = conn.createStatement() ) {
+				return statement.getFetchSize();
+			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
 	}
 
 	private String extractDriverNameFromMetadata() {

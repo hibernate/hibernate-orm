@@ -62,6 +62,12 @@ public interface DatabaseConnectionInfo {
 	Integer getPoolMaxSize();
 
 	/**
+	 * The default JDBC fetch size.
+	 */
+	@Nullable
+	Integer getJdbcFetchSize();
+
+	/**
 	 * Collects the information available here as a single String with the intent of using it in logging.
 	 */
 	String toInfoString();

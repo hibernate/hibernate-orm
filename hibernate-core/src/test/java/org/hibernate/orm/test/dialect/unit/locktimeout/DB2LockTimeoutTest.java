@@ -10,6 +10,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 import static org.hibernate.Timeouts.SKIP_LOCKED;
@@ -18,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
+@RequiresDialect(DB2Dialect.class)
 public class DB2LockTimeoutTest extends BaseUnitTestCase {
 
 	private final Dialect dialect = new DB2Dialect( DatabaseVersion.make( 11, 5 ) );

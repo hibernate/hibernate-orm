@@ -9,6 +9,7 @@ import java.sql.Types;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.Before;
@@ -26,6 +27,7 @@ import static org.junit.Assert.assertTrue;
  * @author Hardy Ferentschik
  */
 
+@RequiresDialect(DB2Dialect.class)
 public class DB2DialectTestCase extends BaseUnitTestCase {
 	private final DB2Dialect dialect = new DB2Dialect();
 	private TypeConfiguration typeConfiguration;

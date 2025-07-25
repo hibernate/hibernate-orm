@@ -152,8 +152,24 @@ public interface JdbcLogging extends BasicLogger {
 	@Message(value = "Unable to roll back isolated connection on exception ", id = 100021)
 	void unableToRollBackIsolatedConnection(@Cause Exception ignored);
 
+	@LogMessage(level = TRACE)
+	@Message(value = "JDBC fetch size: %s", id = 100022)
+	void fetchSize(int fetchSize);
+
+	@LogMessage(level = DEBUG)
+	@Message(value = "Low JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100023)
+	void lowFetchSize(int fetchSize);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Setting JDBC fetch size: %s", id = 100024)
+	void settingFetchSize(int fetchSize);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Setting JDBC query timeout: %s", id = 100025)
+	void settingQueryTimeout(int timeout);
+
 	@LogMessage(level = WARN)
-	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100025)
+	@Message(value = "Called joinTransaction() on a non-JTA EntityManager (ignoring)", id = 100026)
 	void callingJoinTransactionOnNonJtaEntityManager();
 
 	@LogMessage(level = TRACE)

@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final String url;
 	private final String driver;
 	private final boolean jdbcMetadataAccessible;
-
+	private final int defaultFetchSize;
 
 	//Lazily initialized: loading all sequence information upfront has been
 	//shown to be too slow in some cases. In this way we only load it
@@ -71,6 +72,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			SQLStateType sqlStateType,
 			int transactionIsolation,
 			int defaultTransactionIsolation,
+			int defaultFetchSize,
 			String url,
 			String driver,
 			boolean jdbcMetadataIsAccessible) {
@@ -88,6 +90,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.sqlStateType = sqlStateType;
 		this.transactionIsolation = transactionIsolation;
 		this.defaultTransactionIsolation = defaultTransactionIsolation;
+		this.defaultFetchSize = defaultFetchSize;
 		this.url = url;
 		this.driver = driver;
 		this.jdbcMetadataAccessible = jdbcMetadataIsAccessible;
@@ -169,6 +172,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
+	public int getDefaultFetchSize() {
+		return defaultFetchSize;
+	}
+
+	@Override
 	public synchronized List<SequenceInformation> getSequenceInformationList() {
 		if ( jdbcMetadataAccessible ) {
 			//Loading the sequence information can take a while on large databases,
@@ -211,6 +219,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private String driver;
 		private int defaultTransactionIsolation;
 		private int transactionIsolation;
+		private int defaultFetchSize;
 
 		public Builder(JdbcEnvironment jdbcEnvironment, boolean jdbcMetadataIsAccessible, JdbcConnectionAccess connectionAccess) {
 			this.jdbcEnvironment = jdbcEnvironment;
@@ -233,6 +242,12 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			driver = databaseMetaData.getDriverName();
 			defaultTransactionIsolation = databaseMetaData.getDefaultTransactionIsolation();
 			transactionIsolation = databaseMetaData.getConnection().getTransactionIsolation();
+			try ( Statement statement = databaseMetaData.getConnection().createStatement() ) {
+				defaultFetchSize = statement.getFetchSize();
+			}
+			catch (SQLException sqle) {
+				defaultFetchSize = -1;
+			}
 			return this;
 		}
 
@@ -302,6 +317,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					sqlStateType,
 					transactionIsolation,
 					defaultTransactionIsolation,
+					defaultFetchSize,
 					url,
 					driver,
 					jdbcMetadataIsAccessible

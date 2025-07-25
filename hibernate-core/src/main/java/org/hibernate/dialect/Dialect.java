@@ -58,7 +58,6 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.LegacyTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.PersistentTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.StandardTemporaryTableExporter;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableExporter;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
@@ -3209,15 +3208,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
 			EntityMappingType entityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new PersistentTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
+		return new PersistentTableInsertStrategy( entityDescriptor, runtimeModelCreationContext );
 	}
 
 	// UDT support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

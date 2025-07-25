@@ -202,7 +202,7 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		querySpec.getFromClause().addRoot( idTableGroup );
 
-		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, executionContext );
+		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, entityDescriptor );
 		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidAccess, executionContext );
 
 		return querySpec;
@@ -213,9 +213,9 @@ public final class ExecuteWithTemporaryTableHelper {
 			TableReference tableReference,
 			TemporaryTable idTable,
 			ModelPart fkModelPart,
-			ExecutionContext executionContext) {
+			EntityMappingType entityDescriptor) {
 		if ( fkModelPart == null ) {
-			final int size = idTable.getEntityDescriptor().getIdentifierMapping().getJdbcTypeCount();
+			final int size = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 			for ( int i = 0; i < size; i++ ) {
 				final TemporaryTableColumn temporaryTableColumn = idTable.getColumns().get( i );
 				if ( temporaryTableColumn != idTable.getSessionUidColumn() ) {

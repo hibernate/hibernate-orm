@@ -40,7 +40,8 @@ public class PersistentTableMutationStrategy extends PersistentTableStrategy imp
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
+						runtimeModelCreationContext.getBootModel()
+								.getEntityBinding( rootEntityDescriptor.getEntityName() ),
 						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ID_TABLE_PREFIX + basename ),
 						TemporaryTableKind.PERSISTENT,
 						runtimeModelCreationContext.getDialect(),

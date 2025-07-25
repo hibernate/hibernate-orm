@@ -37,7 +37,8 @@ public class GlobalTemporaryTableMutationStrategy extends GlobalTemporaryTableSt
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				TemporaryTable.createIdTable(
-						rootEntityDescriptor,
+						runtimeModelCreationContext.getBootModel()
+								.getEntityBinding( rootEntityDescriptor.getEntityName() ),
 						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ID_TABLE_PREFIX + basename ),
 						TemporaryTableKind.GLOBAL,
 						runtimeModelCreationContext.getDialect(),

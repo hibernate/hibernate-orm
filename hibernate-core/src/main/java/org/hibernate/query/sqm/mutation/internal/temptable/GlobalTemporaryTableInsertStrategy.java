@@ -36,7 +36,8 @@ public class GlobalTemporaryTableInsertStrategy extends GlobalTemporaryTableStra
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
+						runtimeModelCreationContext.getMetadata()
+								.getEntityBinding( rootEntityDescriptor.getEntityName() ),
 						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ENTITY_TABLE_PREFIX + basename ),
 						TemporaryTableKind.GLOBAL,
 						runtimeModelCreationContext.getDialect(),

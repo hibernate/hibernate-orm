@@ -40,6 +40,8 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
@@ -185,26 +187,6 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 				acpc.maxSize(),
 				getFetchSize( agroalDataSource )
 		);
-	}
-
-	private static Integer getFetchSize(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			try ( var statement = conn.createStatement() ) {
-				return statement.getFetchSize();
-			}
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
-	}
-
-	private static Integer getIsolation(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			return conn.getTransactionIsolation();
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
 	}
 
 	private String extractDriverNameFromMetadata() {

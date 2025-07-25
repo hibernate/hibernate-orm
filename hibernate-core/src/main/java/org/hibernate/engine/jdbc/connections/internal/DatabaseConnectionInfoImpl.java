@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.sql.SQLException;
 import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -14,6 +15,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import javax.sql.DataSource;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.interpretIsolation;
@@ -78,6 +81,26 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 
 	public DatabaseConnectionInfoImpl(Dialect dialect) {
 		this( null, null, null, dialect.getVersion(), null, null, null, null, null );
+	}
+
+	public static Integer getFetchSize(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			try ( var statement = conn.createStatement() ) {
+				return statement.getFetchSize();
+			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	public static Integer getIsolation(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getTransactionIsolation();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
 	}
 
 	@Override

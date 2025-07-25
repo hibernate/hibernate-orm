@@ -43,6 +43,8 @@ import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderI
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
 
@@ -174,26 +176,6 @@ public class C3P0ConnectionProvider
 						DEFAULT_MAX_POOL_SIZE ),
 				fetchSize
 		);
-	}
-
-	private static Integer getFetchSize(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			try ( var statement = conn.createStatement() ) {
-				return statement.getFetchSize();
-			}
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
-	}
-
-	private static Integer getIsolation(DataSource dataSource) {
-		try ( var conn = dataSource.getConnection() ) {
-			return conn.getTransactionIsolation();
-		}
-		catch ( SQLException ignored ) {
-			return null;
-		}
 	}
 
 	private DataSource createDataSource(String jdbcUrl, Properties connectionProps, Map<String, Object> poolProperties) {

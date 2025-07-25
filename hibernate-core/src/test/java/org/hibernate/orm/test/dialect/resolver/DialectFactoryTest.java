@@ -149,8 +149,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "DB2/SUN", DB2Dialect.class, resolver );
 		testDetermination( "DB2/LINUX390", DB2Dialect.class, resolver );
 		testDetermination( "DB2/AIX64", DB2Dialect.class, resolver );
-		testDetermination( "DB2 UDB for AS/400", DB2Dialect.class, resolver );
-		testDetermination( "DB2 UDB for AS/400", 7, 3, DB2Dialect.class, resolver );
+		testDetermination( "DB2 UDB for AS/400", DB2iDialect.class, resolver );
+		testDetermination( "DB2 UDB for AS/400", 7, 3, DB2iDialect.class, resolver );
 		testDetermination( "Oracle", 8, OracleDialect.class, resolver );
 		testDetermination( "Oracle", 9, OracleDialect.class, resolver );
 		testDetermination( "Oracle", 10, OracleDialect.class, resolver );

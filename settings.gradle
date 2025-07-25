@@ -161,9 +161,9 @@ dependencyResolutionManagement {
             library( "xjc", "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( xjcVersion )
         }
         testLibs {
-            def junit5Version = version "junit5", "5.13.0"
+            def junit5Version = version "junit5", "5.13.4"
             def junit4Version = version "junit4", "4.13.2"
-            def junit5LauncherVersion = version "junit5Launcher", "1.12.0"
+            def junit5LauncherVersion = version "junit5Launcher", "1.13.4"
 
             def assertjVersion = version "assertj", "3.26.3"
             def hamcrestVersion = version "hamcrest", "3.0"

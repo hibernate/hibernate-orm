@@ -37,6 +37,8 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.internal.log.ConnectionInfoLogger;
 
 import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
@@ -134,10 +136,10 @@ public class DriverManagerConnectionProviderImpl
 
 		final String driverList = success ? driverClassName : driverList();
 
-		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
+		final Properties connectionProps = getConnectionProperties( configurationValues );
 
 		final boolean autoCommit = getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
-		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );
+		final Integer isolation = extractIsolation( configurationValues );
 		final String initSql = (String) configurationValues.get( INIT_SQL );
 
 		final ConnectionCreatorFactory factory = getConnectionCreatorFactory( configurationValues, serviceRegistry );
@@ -150,7 +152,8 @@ public class DriverManagerConnectionProviderImpl
 				Boolean.toString( autoCommit ),
 				isolation != null ? toIsolationNiceName( isolation ) : null,
 				getInt( MIN_SIZE, configurationValues, 1 ),
-				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 )
+				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ),
+				null
 		);
 
 		return factory.create(
@@ -292,7 +295,8 @@ public class DriverManagerConnectionProviderImpl
 				dbInfo.getAutoCommitMode(),
 				dbInfo.getIsolationLevel(),
 				dbInfo.getPoolMinSize(),
-				dbInfo.getPoolMaxSize()
+				dbInfo.getPoolMaxSize(),
+				dbInfo.getJdbcFetchSize()
 		);
 	}
 

@@ -4,8 +4,10 @@
  */
 package org.hibernate.engine.jdbc.connections.internal;
 
+import java.sql.SQLException;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -13,6 +15,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.DatabaseConnectionInfo;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+
+import javax.sql.DataSource;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.interpretIsolation;
@@ -37,6 +41,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	protected final String isolationLevel;
 	protected final Integer poolMinSize;
 	protected final Integer poolMaxSize;
+	private final Integer fetchSize;
 
 	public DatabaseConnectionInfoImpl(
 			Class<? extends ConnectionProvider> connectionProviderClass,
@@ -46,7 +51,8 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 			String autoCommitMode,
 			String isolationLevel,
 			Integer poolMinSize,
-			Integer poolMaxSize) {
+			Integer poolMaxSize,
+			Integer fetchSize) {
 		this.connectionProviderClass = connectionProviderClass;
 		this.jdbcUrl = nullIfEmpty( jdbcUrl );
 		this.jdbcDriver = nullIfEmpty( jdbcDriver );
@@ -55,6 +61,7 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		this.isolationLevel = nullIfEmpty( isolationLevel );
 		this.poolMinSize = poolMinSize;
 		this.poolMaxSize = poolMaxSize;
+		this.fetchSize = fetchSize;
 	}
 
 	public DatabaseConnectionInfoImpl(Map<String, Object> settings, Dialect dialect) {
@@ -67,12 +74,33 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				determineIsolationLevel( settings ),
 				// No setting for min. pool size
 				null,
-				determinePoolMaxSize( settings )
+				determinePoolMaxSize( settings ),
+				null
 		);
 	}
 
 	public DatabaseConnectionInfoImpl(Dialect dialect) {
-		this( null, null, null, dialect.getVersion(), null, null, null, null );
+		this( null, null, null, dialect.getVersion(), null, null, null, null, null );
+	}
+
+	public static Integer getFetchSize(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			try ( var statement = conn.createStatement() ) {
+				return statement.getFetchSize();
+			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	public static Integer getIsolation(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getTransactionIsolation();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
 	}
 
 	@Override
@@ -111,15 +139,33 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	@Override
+	public @Nullable Integer getJdbcFetchSize() {
+		return fetchSize;
+	}
+
+	@Override
 	public String toInfoString() {
-		return "\tDatabase JDBC URL [" + handleEmpty( jdbcUrl ) + ']' +
-				"\n\tDatabase driver: " + handleEmpty( jdbcDriver ) +
-				"\n\tDatabase version: " + handleEmpty( dialectVersion ) +
-				"\n\tAutocommit mode: " + handleEmpty( autoCommitMode ) +
-				"\n\tIsolation level: " + handleEmpty( isolationLevel ) +
-				"\n\tPool: " + handleEmpty( connectionProviderClass ) +
-				"\n\tMinimum pool size: " + handleEmpty( poolMinSize ) +
-				"\n\tMaximum pool size: " + handleEmpty( poolMaxSize );
+		return """
+				\tDatabase JDBC URL [%s]
+				\tDatabase driver: %s
+				\tDatabase version: %s
+				\tAutocommit mode: %s
+				\tIsolation level: %s
+				\tJDBC fetch size: %s
+				\tPool: %s
+				\tMinimum pool size: %s
+				\tMaximum pool size: %s"""
+				.formatted(
+						handleEmpty( jdbcUrl ),
+						handleEmpty( jdbcDriver ),
+						handleEmpty( dialectVersion ),
+						handleEmpty( autoCommitMode ),
+						handleEmpty( isolationLevel ),
+						handleEmpty( fetchSize ),
+						handleEmpty( connectionProviderClass ),
+						handleEmpty( poolMinSize ),
+						handleEmpty( poolMaxSize )
+				);
 	}
 
 	private static String handleEmpty(String value) {
@@ -131,6 +177,10 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 	}
 
 	private static String handleEmpty(Integer value) {
+		return value != null ? ( value == 0 ? "none" : value.toString() ) : DEFAULT;
+	}
+
+	private static String handleFetchSize(Integer value) {
 		return value != null ? value.toString() : DEFAULT;
 	}
 

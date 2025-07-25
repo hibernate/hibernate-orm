@@ -160,16 +160,21 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 		final String url;
 		final String driver;
 		final String isolationLevel;
+		final Integer fetchSize;
 		if ( metaData != null ) {
 			url = metaData.getUrl();
 			driver = metaData.getDriver();
-			isolationLevel = toIsolationNiceName( metaData.getTransactionIsolation() )
+			isolationLevel =
+					toIsolationNiceName( metaData.getTransactionIsolation() )
 							+ " [default " + toIsolationNiceName( metaData.getDefaultTransactionIsolation() ) + "]";
+			final int defaultFetchSize = metaData.getDefaultFetchSize();
+			fetchSize = defaultFetchSize == -1 ? null : defaultFetchSize;
 		}
 		else {
 			url = null;
 			driver = null;
 			isolationLevel = null;
+			fetchSize = null;
 		}
 
 		return new DatabaseConnectionInfoImpl(
@@ -180,7 +185,8 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 				null,
 				isolationLevel,
 				null,
-				null
+				null,
+				fetchSize
 		) {
 			@Override
 			public String toInfoString() {

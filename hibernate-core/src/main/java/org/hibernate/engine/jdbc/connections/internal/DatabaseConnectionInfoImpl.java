@@ -138,10 +138,10 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 						handleEmpty( dialectVersion ),
 						handleEmpty( autoCommitMode ),
 						handleEmpty( isolationLevel ),
+						handleEmpty( fetchSize ),
 						handleEmpty( connectionProviderClass ),
 						handleEmpty( poolMinSize ),
-						handleEmpty( poolMaxSize ),
-						handleEmpty( fetchSize )
+						handleEmpty( poolMaxSize )
 				);
 	}
 

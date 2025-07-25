@@ -158,6 +158,21 @@ public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalT
 		});
 	}
 
+	@Test
+	public void testInsertSelect() {
+		doInHibernate( this::sessionFactory, session -> {
+			final int insertCount = session.createQuery( "insert into Engineer(id, name, employed, fellow) "
+														+ "select d.id + " + (entityCount() * 2) + ", 'John Doe', true, false from Doctor d" )
+					.executeUpdate();
+			final AbstractMutationStrategyIdTest.Engineer engineer =
+					session.find( AbstractMutationStrategyIdTest.Engineer.class, entityCount() * 2 + 1 );
+			assertEquals( entityCount(), insertCount );
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
 	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Person {

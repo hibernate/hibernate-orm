@@ -36,7 +36,8 @@ public class LocalTemporaryTableInsertStrategy extends LocalTemporaryTableStrate
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		this(
 				TemporaryTable.createEntityTable(
-						rootEntityDescriptor,
+						runtimeModelCreationContext.getMetadata()
+								.getEntityBinding( rootEntityDescriptor.getEntityName() ),
 						basename -> temporaryTableStrategy.adjustTemporaryTableName( TemporaryTable.ENTITY_TABLE_PREFIX + basename ),
 						TemporaryTableKind.LOCAL,
 						runtimeModelCreationContext.getDialect(),

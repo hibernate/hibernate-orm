@@ -4,26 +4,25 @@
  */
 package org.hibernate.sql.ast.tree.cte;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-
-import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.boot.Metadata;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Describes the table definition for the CTE - its name amd its columns
@@ -31,6 +30,8 @@ import org.hibernate.query.sqm.tuple.internal.CteTupleTableGroupProducer;
  * @author Steve Ebersole
  */
 public class CteTable {
+	public static final String ENTITY_ROW_NUMBER_COLUMN = "rn_";
+
 	private final String cteName;
 	private final AnonymousTupleTableGroupProducer tableGroupProducer;
 	private final List<CteColumn> cteColumns;
@@ -66,6 +67,7 @@ public class CteTable {
 		return new CteTable( name, tableGroupProducer, cteColumns );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public static CteTable createIdTable(String cteName, EntityMappingType entityDescriptor) {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
@@ -78,6 +80,7 @@ public class CteTable {
 		return new CteTable( cteName, columns );
 	}
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public static CteTable createEntityTable(String cteName, EntityMappingType entityDescriptor) {
 		final int numberOfColumns = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
@@ -107,7 +110,7 @@ public class CteTable {
 		// We add a special row number column that we can use to identify and join rows
 		columns.add(
 				new CteColumn(
-						"rn_",
+						ENTITY_ROW_NUMBER_COLUMN,
 						entityDescriptor.getEntityPersister()
 								.getFactory()
 								.getTypeConfiguration()
@@ -117,92 +120,92 @@ public class CteTable {
 		return new CteTable( cteName, columns );
 	}
 
-	public static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
+	public static CteTable createIdTable(String cteName, PersistentClass persistentClass) {
+		final Property identifierProperty = persistentClass.getIdentifierProperty();
+		final String idName;
+		if ( identifierProperty != null ) {
+			idName = identifierProperty.getName();
+		}
+		else {
+			idName = "id";
+		}
+		final List<CteColumn> columns = new ArrayList<>( persistentClass.getIdentifier().getColumnSpan() );
+		final Metadata metadata = persistentClass.getIdentifier().getBuildingContext().getMetadataCollector();
+		forEachCteColumn( idName, persistentClass.getIdentifier(), columns::add );
+		return new CteTable( cteName, columns );
+	}
+
+	public static CteTable createEntityTable(String cteName, PersistentClass persistentClass) {
+		final List<CteColumn> columns = new ArrayList<>( persistentClass.getTable().getColumnSpan() );
+		final Property identifierProperty = persistentClass.getIdentifierProperty();
+		final String idName;
+		if ( identifierProperty != null ) {
+			idName = identifierProperty.getName();
+		}
+		else {
+			idName = "id";
+		}
+		final Metadata metadata = persistentClass.getIdentifier().getBuildingContext().getMetadataCollector();
+		forEachCteColumn( idName, persistentClass.getIdentifier(), columns::add );
+
+		final Value discriminator = persistentClass.getDiscriminator();
+		if ( discriminator != null && !discriminator.getSelectables().get( 0 ).isFormula() ) {
+			forEachCteColumn( "class", persistentClass.getIdentifier(), columns::add );
+		}
+
+		// Collect all columns for all entity subtype attributes
+		for ( Property property : persistentClass.getPropertyClosure() ) {
+			if ( !property.isSynthetic() ) {
+				forEachCteColumn(
+						property.getName(),
+						property.getValue(),
+						columns::add
+				);
+			}
+		}
+		// We add a special row number column that we can use to identify and join rows
+		columns.add(
+				new CteColumn(
+						ENTITY_ROW_NUMBER_COLUMN,
+						metadata.getDatabase().getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
+				)
+		);
+		return new CteTable( cteName, columns );
+	}
+
+	private static void forEachCteColumn(String prefix, Value value, Consumer<CteColumn> consumer) {
+		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, value, (columnName, selectable) -> {
+			consumer.accept( new CteColumn( columnName, selectable.getType() ) );
+		} );
+	}
+
+	private static void forEachCteColumn(String prefix, ModelPart modelPart, Consumer<CteColumn> consumer) {
 		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, modelPart, (s, selectableMapping) -> {
 			consumer.accept( new CteColumn( s, selectableMapping.getJdbcMapping() ) );
 		} );
 	}
 
-	public List<CteColumn> findCteColumns(EntityPersister entityDescriptor, ModelPart modelPart) {
-		final int offset = determineModelPartStartIndex( entityDescriptor, modelPart );
-		if ( offset == -1 ) {
-			throw new IllegalStateException( "Couldn't find matching cte columns for: " + modelPart );
+	public List<CteColumn> findCteColumns(ModelPart modelPart) {
+		final String prefix;
+		if ( modelPart instanceof AttributeMapping attributeMapping ) {
+			prefix = attributeMapping.getAttributeName();
 		}
-		final int end = offset + modelPart.getJdbcTypeCount();
-		// Find a matching cte table column and set that at the current index
-		return getCteColumns().subList( offset, end );
-	}
-
-	private static int determineModelPartStartIndex(EntityPersister entityDescriptor, ModelPart modelPart) {
-		int offset = 0;
-		final int idResult = determineIdStartIndex( offset, entityDescriptor, modelPart );
-		if ( idResult <= 0 ) {
-			return -idResult;
+		else if ( modelPart instanceof DiscriminatorMapping ) {
+			prefix = "class";
 		}
-		offset = idResult;
-		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		if ( discriminatorMapping != null && discriminatorMapping.hasPhysicalColumn() && !discriminatorMapping.isFormula() ) {
-			if ( modelPart == discriminatorMapping ) {
-				return offset;
-			}
-			offset += discriminatorMapping.getJdbcTypeCount();
+		else {
+			prefix = "";
 		}
-		final AttributeMappingsList attributeMappings = entityDescriptor.getAttributeMappings();
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			AttributeMapping attribute = attributeMappings.get( i );
-			if ( !( attribute instanceof PluralAttributeMapping ) ) {
-				final int result = determineModelPartStartIndex( offset, attribute, modelPart );
-				if ( result <= 0 ) {
-					return -result;
+		final int jdbcTypeCount = modelPart.getJdbcTypeCount();
+		final List<CteColumn> columns = new ArrayList<>( jdbcTypeCount );
+		SqmMutationStrategyHelper.forEachSelectableMapping( prefix, modelPart, (s, selectableMapping) -> {
+			for ( CteColumn cteColumn : cteColumns ) {
+				if ( s.equals( cteColumn.getColumnExpression() ) ) {
+					columns.add( cteColumn );
+					break;
 				}
-				offset = result;
 			}
-		}
-		return -1;
-	}
-
-	private static int determineIdStartIndex(int offset, EntityPersister entityDescriptor, ModelPart modelPart) {
-		final int originalOffset = offset;
-		do {
-			final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-			final int result = determineModelPartStartIndex( originalOffset, identifierMapping, modelPart );
-			offset = result;
-			if ( result <= 0 ) {
-				break;
-			}
-			entityDescriptor = (EntityPersister) entityDescriptor.getSuperMappingType();
-		} while ( entityDescriptor != null );
-
-		return offset;
-	}
-
-	private static int determineModelPartStartIndex(int offset, ModelPart modelPart, ModelPart modelPartToFind) {
-		if ( modelPart == modelPartToFind ) {
-			return -offset;
-		}
-		if ( modelPart instanceof EntityValuedModelPart entityValuedModelPart ) {
-			final ModelPart keyPart =
-					modelPart instanceof Association association
-							? association.getForeignKeyDescriptor()
-							: entityValuedModelPart.getEntityMappingType().getIdentifierMapping();
-			return determineModelPartStartIndex( offset, keyPart, modelPartToFind );
-		}
-		else if ( modelPart instanceof EmbeddableValuedModelPart embeddablePart ) {
-			final AttributeMappingsList attributeMappings =
-					embeddablePart.getEmbeddableTypeDescriptor().getAttributeMappings();
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				final AttributeMapping mapping = attributeMappings.get( i );
-				final int result = determineModelPartStartIndex( offset, mapping, modelPartToFind );
-				if ( result <= 0 ) {
-					return result;
-				}
-				offset = result;
-			}
-			return offset;
-		}
-		else if ( modelPart instanceof BasicValuedModelPart basicModelPart ) {
-			return offset + (basicModelPart.isInsertable() ? modelPart.getJdbcTypeCount() : 0);
-		}
-		return offset + modelPart.getJdbcTypeCount();
+		} );
+		return columns;
 	}
 }

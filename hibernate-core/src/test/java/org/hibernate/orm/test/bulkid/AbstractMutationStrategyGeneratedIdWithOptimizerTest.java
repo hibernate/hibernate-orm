@@ -14,6 +14,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -53,6 +54,16 @@ public abstract class AbstractMutationStrategyGeneratedIdWithOptimizerTest exten
 		return true;
 	}
 
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			Doctor doctor = new Doctor();
+			doctor.setName( "Doctor John" );
+			doctor.setEmployed( true );
+			session.persist( doctor );
+		});
+	}
+
 	@Test
 	public void testInsertStatic() {
 		doInHibernate( this::sessionFactory, session -> {
@@ -77,6 +88,37 @@ public abstract class AbstractMutationStrategyGeneratedIdWithOptimizerTest exten
 					.executeUpdate();
 			final Engineer engineer = session.createQuery( "from Engineer e where e.name = 'John Doe'", Engineer.class )
 					.getSingleResult();
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
+	@Test
+	public void testInsertSelectStatic() {
+		doInHibernate( this::sessionFactory, session -> {
+			final int insertCount = session.createQuery( "insert into Engineer(id, name, employed, fellow) "
+														+ "select d.id + 1, 'John Doe', true, false from Doctor d" )
+					.executeUpdate();
+
+			final Engineer engineer = session.createQuery( "from Engineer e where e.name = 'John Doe'", Engineer.class )
+					.getSingleResult();
+			assertEquals( 1, insertCount );
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
+	@Test
+	public void testInsertSelectGenerated() {
+		doInHibernate( this::sessionFactory, session -> {
+			final int insertCount = session.createQuery( "insert into Engineer(name, employed, fellow) "
+														+ "select 'John Doe', true, false from Doctor d" )
+					.executeUpdate();
+			final Engineer engineer = session.createQuery( "from Engineer e where e.name = 'John Doe'", Engineer.class )
+					.getSingleResult();
+			assertEquals( 1, insertCount );
 			assertEquals( "John Doe", engineer.getName() );
 			assertTrue( engineer.isEmployed() );
 			assertFalse( engineer.isFellow() );

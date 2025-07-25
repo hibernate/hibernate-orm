@@ -11,7 +11,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import java.util.Objects;
@@ -61,10 +60,6 @@ public class LocalTemporaryTableStrategy {
 
 	public TemporaryTable getTemporaryTable() {
 		return temporaryTable;
-	}
-
-	public EntityMappingType getEntityDescriptor() {
-		return getTemporaryTable().getEntityDescriptor();
 	}
 
 	public boolean isDropIdTables() {

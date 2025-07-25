@@ -18,6 +18,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -524,6 +525,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/75101")
+	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
 	@RequiresDialectFeature(value = DialectChecks.SupportsTemporaryTableIdentity.class, comment = "The use of the native generator leads to using identity which also needs to be supported on temporary tables")
 	public void testInsertIntoSuperclassPropertiesFails() {
 		TestData data = new TestData();

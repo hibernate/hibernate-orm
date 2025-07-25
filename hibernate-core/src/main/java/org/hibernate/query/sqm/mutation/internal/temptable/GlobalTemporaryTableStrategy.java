@@ -16,7 +16,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
@@ -63,10 +62,6 @@ public class GlobalTemporaryTableStrategy {
 
 	public TemporaryTableStrategy getTemporaryTableStrategy() {
 		return castNonNull( sessionFactory.getJdbcServices().getDialect().getGlobalTemporaryTableStrategy() );
-	}
-
-	public EntityMappingType getEntityDescriptor() {
-		return temporaryTable.getEntityDescriptor();
 	}
 
 	public void prepare(MappingModelCreationProcess mappingModelCreationProcess, JdbcConnectionAccess connectionAccess) {

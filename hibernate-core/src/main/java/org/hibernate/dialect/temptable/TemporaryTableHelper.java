@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.AbstractWork;
 
 /**
@@ -33,7 +34,7 @@ public class TemporaryTableHelper {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Creation
 
-	public static class TemporaryTableCreationWork extends AbstractWork {
+	public static class TemporaryTableCreationWork extends AbstractReturningWork<Boolean> {
 		private final TemporaryTable temporaryTable;
 		private final TemporaryTableExporter exporter;
 		private final SessionFactoryImplementor sessionFactory;
@@ -58,7 +59,7 @@ public class TemporaryTableHelper {
 		}
 
 		@Override
-		public void execute(Connection connection) {
+		public Boolean execute(Connection connection) {
 			final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
 
 			try {
@@ -68,6 +69,7 @@ public class TemporaryTableHelper {
 				try (Statement statement = connection.createStatement()) {
 					statement.executeUpdate( creationCommand );
 					jdbcServices.getSqlExceptionHelper().handleAndClearWarnings( statement, WARNING_HANDLER );
+					return Boolean.TRUE;
 				}
 				catch (SQLException e) {
 					log.debugf(
@@ -81,6 +83,7 @@ public class TemporaryTableHelper {
 			catch( Exception e ) {
 				log.debugf( "Error creating temporary table(s) : %s", e.getMessage() );
 			}
+			return Boolean.FALSE;
 		}
 	}
 

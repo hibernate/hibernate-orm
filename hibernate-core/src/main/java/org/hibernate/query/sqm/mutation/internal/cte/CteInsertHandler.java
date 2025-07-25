@@ -14,11 +14,9 @@ import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
@@ -202,8 +200,7 @@ public class CteInsertHandler implements InsertHandler {
 		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
 					final SqmPathInterpretation<?> pathInterpretation = (SqmPathInterpretation<?>) assignable;
-					final List<CteColumn> columns =
-							cteTable.findCteColumns( entityDescriptor, pathInterpretation.getExpressionType() );
+					final List<CteColumn> columns = cteTable.findCteColumns( pathInterpretation.getExpressionType() );
 					targetPathCteColumns.addAll( columns );
 					targetPathColumns.add(
 							new AbstractMap.SimpleEntry<>(
@@ -288,15 +285,17 @@ public class CteInsertHandler implements InsertHandler {
 					);
 				}
 			}
-			querySpec.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl(
-							0,
-							SqmInsertStrategyHelper.createRowNumberingExpression(
-									querySpec,
-									sessionFactory
-							)
-					)
-			);
+			if ( !assignsId && entityDescriptor.getGenerator().generatedOnExecution() ) {
+				querySpec.getSelectClause().addSqlSelection(
+						new SqlSelectionImpl(
+								0,
+								SqmInsertStrategyHelper.createRowNumberingExpression(
+										querySpec,
+										sessionFactory
+								)
+						)
+				);
+			}
 			final ValuesTableGroup valuesTableGroup = new ValuesTableGroup(
 					navigablePath,
 					entityDescriptor.getEntityPersister(),
@@ -709,7 +708,7 @@ public class CteInsertHandler implements InsertHandler {
 		final ConflictClause conflictClause = sqmConverter.visitConflictClause( sqmStatement.getConflictClause() );
 
 		final int tableSpan = persister.getTableSpan();
-		final List<CteColumn> keyCteColumns = findCteColumns( persister.getIdentifierMapping(), queryCte.getCteTable().getCteColumns() );
+		final List<CteColumn> keyCteColumns = queryCte.getCteTable().findCteColumns( persister.getIdentifierMapping() );
 		for ( int tableIndex = 0; tableIndex < tableSpan; tableIndex++ ) {
 			final String tableExpression = persister.getTableName( tableIndex );
 			final TableReference updatingTableReference = updatingTableGroup.getTableReference(
@@ -1019,25 +1018,6 @@ public class CteInsertHandler implements InsertHandler {
 			}
 		}
 		return getCteTableName( rootTableName );
-	}
-
-	private List<CteColumn> findCteColumns(ModelPart modelPart, List<CteColumn> cteColumns) {
-		final int numberOfColumns = modelPart.getJdbcTypeCount();
-		final List<CteColumn> columns = new ArrayList<>( numberOfColumns );
-		final String prefix;
-		if ( modelPart instanceof AttributeMapping attributeMapping ) {
-			prefix = attributeMapping.getAttributeName();
-		}
-		else {
-			prefix = "id";
-		}
-		CteTable.forEachCteColumn( prefix, modelPart, e -> {
-			columns.add( cteColumns.stream()
-					.filter( cteColumn -> cteColumn.getColumnExpression().equals( e.getColumnExpression() ) )
-					.findFirst()
-					.orElseThrow(() -> new IllegalArgumentException( "Column reference not found: " + e.getColumnExpression() ) ) );
-		} );
-		return columns;
 	}
 
 	private void handleConflictClause(

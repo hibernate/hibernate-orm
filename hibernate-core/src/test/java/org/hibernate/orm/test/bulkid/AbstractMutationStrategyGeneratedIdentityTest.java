@@ -12,10 +12,13 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -55,7 +58,19 @@ public abstract class AbstractMutationStrategyGeneratedIdentityTest extends Base
 		return true;
 	}
 
+	@Before
+	public void setUp() {
+		doInHibernate( this::sessionFactory, session -> {
+			Doctor doctor = new Doctor();
+			doctor.setName( "Doctor John" );
+			doctor.setEmployed( true );
+			session.persist( doctor );
+		});
+	}
+
 	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL ignores a provided value for an auto_increment column if it's lower than the current sequence value")
+	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
 	public void testInsertStatic() {
 		doInHibernate( this::sessionFactory, session -> {
 			session.createQuery( "insert into Engineer(id, name, employed, fellow) values (0, :name, :employed, false)" )
@@ -80,6 +95,40 @@ public abstract class AbstractMutationStrategyGeneratedIdentityTest extends Base
 					.executeUpdate();
 			final Engineer engineer = session.createQuery( "from Engineer e where e.name = 'John Doe'", Engineer.class )
 					.getSingleResult();
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "MySQL ignores a provided value for an auto_increment column if it's lower than the current sequence value")
+	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "T-SQL complains IDENTITY_INSERT is off when a value for an identity column is provided")
+	public void testInsertSelectStatic() {
+		doInHibernate( this::sessionFactory, session -> {
+			final int insertCount = session.createQuery( "insert into Engineer(id, name, employed, fellow) "
+														+ "select d.id + 1, 'John Doe', true, false from Doctor d" )
+					.executeUpdate();
+
+			final Engineer engineer = session.createQuery( "from Engineer e where e.name = 'John Doe'", Engineer.class )
+					.getSingleResult();
+			assertEquals( 1, insertCount );
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle doesn't support insert-select with a returning clause")
+	public void testInsertSelectGenerated() {
+		doInHibernate( this::sessionFactory, session -> {
+			final int insertCount = session.createQuery( "insert into Engineer(name, employed, fellow) "
+														+ "select 'John Doe', true, false from Doctor d" )
+					.executeUpdate();
+			final Engineer engineer = session.createQuery( "from Engineer e where e.name = 'John Doe'", Engineer.class )
+					.getSingleResult();
+			assertEquals( 1, insertCount );
 			assertEquals( "John Doe", engineer.getName() );
 			assertTrue( engineer.isEmployed() );
 			assertFalse( engineer.isFellow() );

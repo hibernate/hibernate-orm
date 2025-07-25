@@ -24,6 +24,9 @@ import org.hibernate.service.spi.Stoppable;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 import static org.hibernate.hikaricp.internal.HikariConfigurationUtil.loadConfiguration;
 import static org.hibernate.internal.util.StringHelper.isBlank;
@@ -105,9 +108,12 @@ public class HikariCPConnectionProvider implements ConnectionProvider, Configura
 						: hikariConfig.getDriverClassName(),
 				dialect.getVersion(),
 				Boolean.toString( hikariConfig.isAutoCommit() ),
-				hikariConfig.getTransactionIsolation(),
+				hikariConfig.getTransactionIsolation() != null
+						? hikariConfig.getTransactionIsolation()
+						: toIsolationNiceName( getIsolation( hikariDataSource ) ),
 				hikariConfig.getMinimumIdle(),
-				hikariConfig.getMaximumPoolSize()
+				hikariConfig.getMaximumPoolSize(),
+				getFetchSize( hikariDataSource )
 		);
 	}
 

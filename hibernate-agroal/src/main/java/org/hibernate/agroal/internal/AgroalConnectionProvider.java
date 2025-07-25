@@ -39,6 +39,9 @@ import io.agroal.api.security.SimplePassword;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.hibernate.cfg.AgroalSettings.AGROAL_CONFIG_PREFIX;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator.allowJdbcMetadataAccess;
 
 /**
@@ -81,7 +84,7 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( properties );
 		return isolation != null ?
 				// Agroal resolves transaction isolation from the 'nice' name
-				ConnectionProviderInitiator.toIsolationNiceName( isolation )
+				toIsolationNiceName( isolation )
 				: null;
 	}
 
@@ -177,11 +180,12 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 						: extractDriverNameFromMetadata(),
 				dialect.getVersion(),
 				Boolean.toString( acfc.autoCommit() ),
-				acfc.jdbcTransactionIsolation() != null
-						? ConnectionProviderInitiator.toIsolationNiceName( acfc.jdbcTransactionIsolation().level() )
-						: null,
+				acfc.jdbcTransactionIsolation() != null && acfc.jdbcTransactionIsolation().isDefined()
+						? toIsolationNiceName( acfc.jdbcTransactionIsolation().level() )
+						: toIsolationNiceName( getIsolation( agroalDataSource ) ),
 				acpc.minSize(),
-				acpc.maxSize()
+				acpc.maxSize(),
+				getFetchSize( agroalDataSource )
 		);
 	}
 

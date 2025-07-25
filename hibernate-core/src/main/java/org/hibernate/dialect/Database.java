@@ -44,10 +44,14 @@ public enum Database {
 						return new DB2zDialect( info );
 					}
 					case "QSQ": {
-						// i
+						// i, this only works if "use drda metadata version" property is set to true in the drivers properties
 						return new DB2iDialect( info );
 					}
 				}
+			}
+			if ("DB2 UDB for AS/400".equals(info.getDatabaseName())) {
+				// i
+				return new DB2iDialect( info );
 			}
 
 			return new DB2Dialect( info );

@@ -9,7 +9,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProviderConfigurationException;
@@ -40,7 +39,9 @@ import static org.hibernate.cfg.C3p0Settings.C3P0_MAX_SIZE;
 import static org.hibernate.cfg.C3p0Settings.C3P0_MAX_STATEMENTS;
 import static org.hibernate.cfg.C3p0Settings.C3P0_MIN_SIZE;
 import static org.hibernate.cfg.C3p0Settings.C3P0_TIMEOUT;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractSetting;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInteger;
@@ -150,13 +151,16 @@ public class C3P0ConnectionProvider
 		// as soon as we obtain a new connection. This maybe isn't ideal,
 		// and it's not what we do with Agroal or Hikari.
 		autocommit = getBoolean( JdbcSettings.AUTOCOMMIT, properties ); // defaults to false
-		isolation = ConnectionProviderInitiator.extractIsolation( properties );
+		isolation = extractIsolation( properties );
 
-		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( properties );
-		final Map<String, Object> poolSettings = poolSettings( properties );
+		final Properties connectionProps = getConnectionProperties( properties );
+		final var poolSettings = poolSettings( properties );
 		dataSource = createDataSource( jdbcUrl, connectionProps, poolSettings );
 
 		final Integer fetchSize = getFetchSize( dataSource );
+		if ( isolation == null ) {
+			isolation = getIsolation( dataSource );
+		}
 		dbInfoProducer = dialect -> new DatabaseConnectionInfoImpl(
 				C3P0ConnectionProvider.class,
 				jdbcUrl,
@@ -177,6 +181,15 @@ public class C3P0ConnectionProvider
 			try ( var statement = conn.createStatement() ) {
 				return statement.getFetchSize();
 			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	private static Integer getIsolation(DataSource dataSource) {
+		try ( var conn = dataSource.getConnection() ) {
+			return conn.getTransactionIsolation();
 		}
 		catch ( SQLException ignored ) {
 			return null;

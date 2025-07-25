@@ -128,10 +128,10 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 				\tDatabase version: %s
 				\tAutocommit mode: %s
 				\tIsolation level: %s
+				\tJDBC fetch size: %s
 				\tPool: %s
 				\tMinimum pool size: %s
-				\tMaximum pool size: %s
-				\tJDBC fetch size: %s"""
+				\tMaximum pool size: %s"""
 				.formatted(
 						handleEmpty( jdbcUrl ),
 						handleEmpty( jdbcDriver ),

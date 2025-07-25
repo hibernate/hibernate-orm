@@ -42,6 +42,7 @@ dependencies {
 	testImplementation testLibs.junit5Api
 
 	testRuntimeOnly testLibs.junit5Engine
+	testRuntimeOnly testLibs.junit5Launcher
 }
 
 gradlePlugin {

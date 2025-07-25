@@ -90,6 +90,7 @@ dependencies {
 
 	testImplementation testLibs.byteman
 
+	testRuntimeOnly testLibs.junit5Launcher
 	testRuntimeOnly testLibs.log4j2
 	testRuntimeOnly libs.byteBuddy
 

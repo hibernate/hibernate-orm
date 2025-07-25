@@ -345,13 +345,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				new SqlExceptionHelper( false ),
 				registry
 		);
-		temporaryJdbcSessionOwner.transactionCoordinator = registry.requireService( TransactionCoordinatorBuilder.class )
-				.buildTransactionCoordinator(
-						new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices ),
-						() -> false
-				);
+		final JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices );
 
 		try {
+			temporaryJdbcSessionOwner.transactionCoordinator = registry.requireService( TransactionCoordinatorBuilder.class )
+					.buildTransactionCoordinator( jdbcCoordinator, () -> false );
 			return temporaryJdbcSessionOwner.transactionCoordinator.createIsolationDelegate().delegateWork(
 					new AbstractReturningWork<>() {
 						@Override
@@ -422,6 +420,10 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		}
 		catch ( Exception e ) {
 			log.unableToObtainConnectionToQueryMetadata( e );
+		}
+		finally {
+			//noinspection resource
+			jdbcCoordinator.close();
 		}
 		// accessing the JDBC metadata failed
 		return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );

@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -201,7 +202,7 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		querySpec.getFromClause().addRoot( idTableGroup );
 
-		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, executionContext );
+		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, entityDescriptor );
 		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidAccess, executionContext );
 
 		return querySpec;
@@ -212,9 +213,9 @@ public final class ExecuteWithTemporaryTableHelper {
 			TableReference tableReference,
 			TemporaryTable idTable,
 			ModelPart fkModelPart,
-			ExecutionContext executionContext) {
+			EntityMappingType entityDescriptor) {
 		if ( fkModelPart == null ) {
-			final int size = idTable.getEntityDescriptor().getIdentifierMapping().getJdbcTypeCount();
+			final int size = entityDescriptor.getIdentifierMapping().getJdbcTypeCount();
 			for ( int i = 0; i < size; i++ ) {
 				final TemporaryTableColumn temporaryTableColumn = idTable.getColumns().get( i );
 				if ( temporaryTableColumn != idTable.getSessionUidColumn() ) {
@@ -279,12 +280,35 @@ public final class ExecuteWithTemporaryTableHelper {
 		}
 	}
 
+	@Deprecated(forRemoval = true, since = "7.1")
 	public static void performBeforeTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			ExecutionContext executionContext) {
+		performBeforeTemporaryTableUseActions(
+				temporaryTable,
+				executionContext.getSession().getDialect().getTemporaryTableBeforeUseAction(),
+				executionContext
+		);
+	}
+
+	public static void performBeforeTemporaryTableUseActions(
+			TemporaryTable temporaryTable,
+			TemporaryTableStrategy temporaryTableStrategy,
+			ExecutionContext executionContext) {
+		performBeforeTemporaryTableUseActions(
+				temporaryTable,
+				temporaryTableStrategy.getTemporaryTableBeforeUseAction(),
+				executionContext
+		);
+	}
+
+	private static void performBeforeTemporaryTableUseActions(
+			TemporaryTable temporaryTable,
+			BeforeUseAction beforeUseAction,
+			ExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
-		if ( dialect.getTemporaryTableBeforeUseAction() == BeforeUseAction.CREATE ) {
+		if ( beforeUseAction == BeforeUseAction.CREATE ) {
 			final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork = new TemporaryTableHelper.TemporaryTableCreationWork(
 					temporaryTable,
 					factory

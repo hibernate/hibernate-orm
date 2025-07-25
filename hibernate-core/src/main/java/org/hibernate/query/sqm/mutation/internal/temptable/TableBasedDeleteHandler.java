@@ -7,6 +7,7 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 import java.util.function.Function;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
@@ -31,7 +32,8 @@ public class TableBasedDeleteHandler
 	}
 
 	private final TemporaryTable idTable;
-	private final AfterUseAction afterUseAction;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final boolean forceDropAfterUse;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 
@@ -40,14 +42,16 @@ public class TableBasedDeleteHandler
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SessionFactoryImplementor sessionFactory) {
 		super( sqmDeleteStatement, sessionFactory );
 		this.idTable = idTable;
 
 		this.domainParameterXref = domainParameterXref;
-		this.afterUseAction = afterUseAction;
+		this.temporaryTableStrategy  = temporaryTableStrategy;
+		this.forceDropAfterUse = forceDropAfterUse;
 
 		this.sessionUidAccess = sessionUidAccess;
 	}
@@ -68,7 +72,8 @@ public class TableBasedDeleteHandler
 			return new SoftDeleteExecutionDelegate(
 					getEntityDescriptor(),
 					idTable,
-					afterUseAction,
+					temporaryTableStrategy,
+					forceDropAfterUse,
 					getSqmDeleteOrUpdateStatement(),
 					domainParameterXref,
 					executionContext.getQueryOptions(),
@@ -82,7 +87,8 @@ public class TableBasedDeleteHandler
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				getSqmDeleteOrUpdateStatement(),
 				domainParameterXref,
 				executionContext.getQueryOptions(),
@@ -99,7 +105,15 @@ public class TableBasedDeleteHandler
 	}
 
 	protected AfterUseAction getAfterUseAction() {
-		return afterUseAction;
+		return forceDropAfterUse ? AfterUseAction.DROP : temporaryTableStrategy.getTemporaryTableAfterUseAction();
+	}
+
+	protected TemporaryTableStrategy getTemporaryTableStrategy() {
+		return temporaryTableStrategy;
+	}
+
+	protected boolean isForceDropAfterUse() {
+		return forceDropAfterUse;
 	}
 
 	protected Function<SharedSessionContractImplementor, String> getSessionUidAccess() {

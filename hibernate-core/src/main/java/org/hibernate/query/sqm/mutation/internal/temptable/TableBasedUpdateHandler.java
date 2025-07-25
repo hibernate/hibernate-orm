@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -16,7 +17,6 @@ import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -45,7 +45,8 @@ public class TableBasedUpdateHandler
 	}
 
 	private final TemporaryTable idTable;
-	private final AfterUseAction afterUseAction;
+	private final TemporaryTableStrategy temporaryTableStrategy;
+	private final boolean forceDropAfterUse;
 	private final Function<SharedSessionContractImplementor,String> sessionUidAccess;
 	private final DomainParameterXref domainParameterXref;
 
@@ -53,12 +54,14 @@ public class TableBasedUpdateHandler
 			SqmUpdateStatement<?> sqmUpdate,
 			DomainParameterXref domainParameterXref,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SessionFactoryImplementor sessionFactory) {
 		super( sqmUpdate, sessionFactory );
 		this.idTable = idTable;
-		this.afterUseAction = afterUseAction;
+		this.temporaryTableStrategy  = temporaryTableStrategy;
+		this.forceDropAfterUse = forceDropAfterUse;
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 	}
@@ -156,7 +159,8 @@ public class TableBasedUpdateHandler
 		return buildExecutionDelegate(
 				converterDelegate,
 				idTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				sessionUidAccess,
 				domainParameterXref,
 				updatingTableGroup,
@@ -170,7 +174,8 @@ public class TableBasedUpdateHandler
 	protected UpdateExecutionDelegate buildExecutionDelegate(
 			MultiTableSqmMutationConverter sqmConverter,
 			TemporaryTable idTable,
-			AfterUseAction afterUseAction,
+			TemporaryTableStrategy temporaryTableStrategy,
+			boolean forceDropAfterUse,
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			DomainParameterXref domainParameterXref,
 			TableGroup updatingTableGroup,
@@ -181,7 +186,8 @@ public class TableBasedUpdateHandler
 		return new UpdateExecutionDelegate(
 				sqmConverter,
 				idTable,
-				afterUseAction,
+				temporaryTableStrategy,
+				forceDropAfterUse,
 				sessionUidAccess,
 				domainParameterXref,
 				updatingTableGroup,

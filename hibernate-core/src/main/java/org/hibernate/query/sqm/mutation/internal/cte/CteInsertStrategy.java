@@ -142,7 +142,8 @@ public class CteInsertStrategy implements SqmMultiTableInsertStrategy {
 		else {
 			qualifiedTableName = name;
 		}
-		this.entityCteTable = CteTable.createEntityTable( qualifiedTableName, rootDescriptor );
+		this.entityCteTable = CteTable.createEntityTable( qualifiedTableName,
+				runtimeModelCreationContext.getMetadata().getEntityBinding( rootDescriptor.getEntityName() ) );
 	}
 
 	@Override

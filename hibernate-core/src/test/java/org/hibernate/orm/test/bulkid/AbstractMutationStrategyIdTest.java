@@ -6,7 +6,6 @@ package org.hibernate.orm.test.bulkid;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -16,6 +15,7 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -25,6 +25,8 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -43,17 +45,20 @@ public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalT
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		final Class<? extends SqmMultiTableMutationStrategy> multiTableBulkIdStrategyClass = getMultiTableBulkIdStrategyClass();
-		if ( multiTableBulkIdStrategyClass != null ) {
-			configuration.setProperty(
-					AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
-					multiTableBulkIdStrategyClass
-			);
+		final Class<? extends SqmMultiTableMutationStrategy> mutationStrategyClass = getMultiTableMutationStrategyClass();
+		if ( mutationStrategyClass != null ) {
+			configuration.setProperty( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, mutationStrategyClass );
+		}
+		Class<? extends SqmMultiTableInsertStrategy> insertStrategyClass = getMultiTableInsertStrategyClass();
+		if ( insertStrategyClass != null ) {
+			configuration.setProperty( AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY, insertStrategyClass );
 		}
 	}
 
 
-	protected abstract Class<? extends SqmMultiTableMutationStrategy> getMultiTableBulkIdStrategyClass();
+	protected abstract Class<? extends SqmMultiTableMutationStrategy> getMultiTableMutationStrategyClass();
+
+	protected abstract Class<? extends SqmMultiTableInsertStrategy> getMultiTableInsertStrategyClass();
 
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -70,12 +75,14 @@ public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalT
 		doInHibernate( this::sessionFactory, session -> {
 			for ( int i = 0; i < entityCount(); i++ ) {
 				Doctor doctor = new Doctor();
+				doctor.setId( i + 1 );
 				doctor.setEmployed( ( i % 2 ) == 0 );
 				session.persist( doctor );
 			}
 
 			for ( int i = 0; i < entityCount(); i++ ) {
 				Engineer engineer = new Engineer();
+				engineer.setId( i + 1 + entityCount() );
 				engineer.setEmployed( ( i % 2 ) == 0 );
 				engineer.setFellow( ( i % 2 ) == 1 );
 				session.persist( engineer );
@@ -136,23 +143,37 @@ public abstract class AbstractMutationStrategyIdTest extends BaseCoreFunctionalT
 		});
 	}
 
+	@Test
+	public void testInsert() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.createQuery( "insert into Engineer(id, name, employed, fellow) values (0, :name, :employed, false)" )
+					.setParameter( "name", "John Doe" )
+					.setParameter( "employed", true )
+					.executeUpdate();
+
+			final Engineer engineer = session.find( Engineer.class, 0 );
+			assertEquals( "John Doe", engineer.getName() );
+			assertTrue( engineer.isEmployed() );
+			assertFalse( engineer.isFellow() );
+		});
+	}
+
 	@Entity(name = "Person")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class Person {
 
 		@Id
-		@GeneratedValue
-		private Long id;
+		private Integer id;
 
 		private String name;
 
 		private boolean employed;
 
-		public Long getId() {
+		public Integer getId() {
 			return id;
 		}
 
-		public void setId(Long id) {
+		public void setId(Integer id) {
 			this.id = id;
 		}
 

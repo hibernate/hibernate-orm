@@ -38,7 +38,7 @@ public class QualifiedNameParserTest {
 	@Test
 	public void testStringSplittingWithCatalogAndSchema() {
 		QualifiedNameParser.NameParts nameParts = PARSER.parse(
-				"schema.catalog.MyEntity",
+				"catalog.schema.MyEntity",
 				DEFAULT_CATALOG,
 				DEFAULT_SCHEMA
 		);

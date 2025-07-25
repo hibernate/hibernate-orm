@@ -6,10 +6,12 @@ package org.hibernate.community.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.LegacyDB2SequenceSupport;
+import org.hibernate.community.dialect.temptable.DB2LegacyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.DB2GetObjectExtractor;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -33,6 +35,8 @@ import org.hibernate.dialect.pagination.LegacyDB2LimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.temptable.DB2GlobalTemporaryTableStrategy;
+import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.dialect.type.DB2StructJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.SkipNullableUniqueDelegate;
@@ -1039,6 +1043,21 @@ public class DB2LegacyDialect extends Dialect {
 			EntityMappingType rootEntityDescriptor,
 			RuntimeModelCreationContext runtimeModelCreationContext) {
 		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
+	}
+
+	@Override
+	public @Nullable TemporaryTableStrategy getGlobalTemporaryTableStrategy() {
+		// Starting in DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are supported; (obviously) data is not shared between sessions.
+		return getDB2Version().isBefore( 9, 7 ) ? null : DB2GlobalTemporaryTableStrategy.INSTANCE;
+	}
+
+	@Override
+	public @Nullable TemporaryTableStrategy getLocalTemporaryTableStrategy() {
+		// Prior to DB2 9.7, "real" global temporary tables that can be shared between sessions
+		// are *not* supported; even though the DB2 command says to declare a "global" temp table
+		// Hibernate treats it as a "local" temp table.
+		return getDB2Version().isBefore( 9, 7 ) ? DB2LegacyLocalTemporaryTableStrategy.INSTANCE : null;
 	}
 
 	@Override

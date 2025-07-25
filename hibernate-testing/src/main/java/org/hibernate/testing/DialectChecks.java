@@ -242,7 +242,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsTemporaryTable implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsTemporaryTables();
+			return dialect.getLocalTemporaryTableStrategy() != null || dialect.getGlobalTemporaryTableStrategy() != null;
 		}
 	}
 
@@ -260,7 +260,13 @@ abstract public class DialectChecks {
 
 	public static class SupportsTemporaryTableIdentity implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsTemporaryTablePrimaryKey();
+			return dialect.getLocalTemporaryTableStrategy() != null
+				&& dialect.getLocalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				|| dialect.getGlobalTemporaryTableStrategy() != null
+					&& dialect.getGlobalTemporaryTableStrategy().supportsTemporaryTablePrimaryKey()
+				// Persistent tables definitely support identity
+				|| dialect.getLocalTemporaryTableStrategy() == null
+					&& dialect.getGlobalTemporaryTableStrategy() == null;
 		}
 	}
 

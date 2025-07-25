@@ -163,6 +163,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 									session.getPersistenceContextInternal().getCollectionEntry( this );
 							if ( entry != null ) {
 								final CollectionPersister persister = entry.getLoadedPersister();
+								checkPersister( this, persister );
 								if ( persister.isExtraLazy() ) {
 									// TODO: support for extra-lazy collections was
 									//       dropped so this code should be obsolete
@@ -331,6 +332,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					() -> {
 						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 						final CollectionPersister persister = entry.getLoadedPersister();
+						checkPersister( this, persister );
 						if ( persister.isExtraLazy() ) {
 							if ( hasQueuedOperations() ) {
 								session.flush();
@@ -353,6 +355,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 					() -> {
 						final CollectionEntry entry = session.getPersistenceContextInternal().getCollectionEntry( this );
 						final CollectionPersister persister = entry.getLoadedPersister();
+						checkPersister( this, persister );
 						if ( persister.isExtraLazy() ) {
 							if ( hasQueuedOperations() ) {
 								session.flush();
@@ -399,6 +402,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 							session.getPersistenceContextInternal()
 									.getCollectionEntry( AbstractPersistentCollection.this );
 					final CollectionPersister persister = entry.getLoadedPersister();
+					checkPersister( AbstractPersistentCollection.this, persister );
 					isExtraLazy = persister.isExtraLazy();
 					if ( isExtraLazy ) {
 						if ( hasQueuedOperations() ) {
@@ -646,10 +650,20 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	private void throwLazyInitializationException(String message) {
+		throwLazyInitializationException( role, message);
+	}
+
+	private static void throwLazyInitializationException(String role, String message) {
 		throw new LazyInitializationException(
 				String.format( "Cannot lazily initialize collection%s (%s)",
 						role == null ? "" : " of role '" + role + "'", message )
 		);
+	}
+
+	public static void checkPersister(PersistentCollection collection, CollectionPersister persister) {
+		if ( !collection.wasInitialized() && persister == null ) {
+			throwLazyInitializationException( null, "collection is being removed" );
+		}
 	}
 
 	protected final void setInitialized() {

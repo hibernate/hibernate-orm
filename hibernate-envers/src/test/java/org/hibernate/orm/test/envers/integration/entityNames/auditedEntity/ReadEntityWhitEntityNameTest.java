@@ -10,14 +10,17 @@ import java.net.URL;
 import java.util.List;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.orm.test.envers.AbstractOneSessionTest;
 import org.hibernate.orm.test.envers.Priority;
 
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.Test;
 
 /**
  * @author Hern&aacute;n Chanfreau
  */
+@RequiresDialect(H2Dialect.class)
 public class ReadEntityWhitEntityNameTest extends AbstractOneSessionTest {
 
 	private long id_pers1;

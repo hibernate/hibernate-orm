@@ -122,7 +122,7 @@ The default fetch size can be overridden for a given query by calling link:{doc-
 [WARNING]
 ====
 The Oracle JDBC driver defaults to a JDBC fetch size of 10.
-You should _always_ set explicitly `hibernate.jdbc.fetch_size` if you're using Oracle, or, even better, specify the parameter `defaultRowPrefetch` in the JDBC connection URL.
+You should _always_ set `hibernate.jdbc.fetch_size` explicitly if you're using Oracle, or, even better, specify the parameter `defaultRowPrefetch` in the JDBC connection URL.
 ====
 
 [[statement-batching]]

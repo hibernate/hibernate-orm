@@ -16,6 +16,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.GaussDBIdentityColumnSupport;
+import org.hibernate.community.dialect.lock.internal.GaussDBLockingSupport;
 import org.hibernate.community.dialect.sequence.GaussDBSequenceSupport;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.Dialect;
@@ -29,6 +30,7 @@ import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -148,6 +150,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * <a href="https://support.huaweicloud.com/function-gaussdb/index.html">GaussDB documentation</a>.
  *
  * @author liubao
+ * @author chen zhida
  *
  * Notes: Original code of this class is based on PostgreSQLDialect.
  */
@@ -1119,6 +1122,11 @@ public class GaussDBDialect extends Dialect {
 	@Override
 	public String getReadLockString(String aliases, int timeout) {
 		return withTimeout(" for share of " + aliases, timeout );
+	}
+
+	@Override
+	public LockingSupport getLockingSupport() {
+		return GaussDBLockingSupport.LOCKING_SUPPORT;
 	}
 
 	@Override

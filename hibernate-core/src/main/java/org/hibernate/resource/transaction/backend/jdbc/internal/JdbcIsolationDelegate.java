@@ -120,7 +120,7 @@ public final class JdbcIsolationDelegate implements IsolationDelegate {
 				connection.setAutoCommit( true );
 			}
 			catch ( Exception exception ) {
-				JDBC_MESSAGE_LOGGER.unableToResetAutoCommit( exception );
+				JDBC_MESSAGE_LOGGER.unableToResetAutoCommitEnabled( exception );
 			}
 		}
 	}

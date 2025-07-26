@@ -9,9 +9,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -22,7 +20,9 @@ import org.hibernate.engine.jdbc.env.spi.SQLStateType;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.StreamSupport.stream;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
  * Standard implementation of {@link ExtractedDatabaseMetaData}
@@ -189,7 +189,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			return sequenceInformationList;
 		}
 		else {
-			return Collections.emptyList();
+			return emptyList();
 		}
 	}
 
@@ -335,7 +335,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		try {
 			connection = connectionAccess.obtainConnection();
 			return stream( sequenceInformation( connection, jdbcEnvironment ).spliterator(), false )
-					.collect( Collectors.toList() );
+					.toList();
 		}
 		catch (SQLException e) {
 			throw new HibernateException( "Could not fetch the SequenceInformation from the database", e );
@@ -346,7 +346,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					connectionAccess.releaseConnection( connection );
 				}
 				catch (SQLException exception) {
-					//ignored
+					JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 				}
 			}
 		}

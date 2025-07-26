@@ -19,6 +19,8 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+
 /**
  * Strategy based on ANSI SQL's definition of a "global temporary table".
  *
@@ -91,7 +93,8 @@ public class GlobalTemporaryTableStrategy {
 				try {
 					connectionAccess.releaseConnection( connection );
 				}
-				catch (SQLException ignore) {
+				catch (SQLException exception) {
+					JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 				}
 			}
 		}
@@ -132,7 +135,8 @@ public class GlobalTemporaryTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

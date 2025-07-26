@@ -4,11 +4,13 @@
  */
 package org.hibernate.generator;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.io.Serializable;
 import java.util.EnumSet;
 
+import static org.hibernate.generator.EventType.FORCE_INCREMENT;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 
@@ -183,7 +185,8 @@ public interface Generator extends Serializable {
 	}
 
 	default boolean generatesSometimes() {
-		return !getEventTypes().isEmpty();
+		return generatesOnInsert()
+			|| generatesOnUpdate();
 	}
 
 	default boolean generatesOnInsert() {
@@ -192,5 +195,10 @@ public interface Generator extends Serializable {
 
 	default boolean generatesOnUpdate() {
 		return getEventTypes().contains(UPDATE);
+	}
+
+	@Incubating
+	default boolean generatesOnForceIncrement() {
+		return getEventTypes().contains(FORCE_INCREMENT);
 	}
 }

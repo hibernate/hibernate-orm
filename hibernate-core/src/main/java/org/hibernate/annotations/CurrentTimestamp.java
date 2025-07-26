@@ -14,6 +14,7 @@ import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import static org.hibernate.generator.EventType.FORCE_INCREMENT;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 
@@ -75,7 +76,7 @@ public @interface CurrentTimestamp {
 	 * If it should be generated just once, on the initial SQL {@code insert},
 	 * explicitly specify {@link EventType#INSERT event = INSERT}.
 	 */
-	EventType[] event() default {INSERT, UPDATE};
+	EventType[] event() default {INSERT, UPDATE, FORCE_INCREMENT};
 
 	/**
 	 * Specifies how the timestamp is generated. By default, it is generated

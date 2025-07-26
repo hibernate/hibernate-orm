@@ -14,7 +14,7 @@ import java.util.EnumSet;
 import static org.hibernate.engine.internal.Versioning.increment;
 import static org.hibernate.engine.internal.Versioning.seed;
 import static org.hibernate.generator.EventType.INSERT;
-import static org.hibernate.generator.EventTypeSets.INSERT_AND_UPDATE;
+import static org.hibernate.generator.EventTypeSets.ALL;
 
 /**
  * A default {@link org.hibernate.generator.Generator} for {@link jakarta.persistence.Version @Version}
@@ -39,7 +39,7 @@ public class VersionGeneration implements BeforeExecutionGenerator {
 
 	@Override
 	public EnumSet<EventType> getEventTypes() {
-		return INSERT_AND_UPDATE;
+		return ALL;
 	}
 
 	@Override

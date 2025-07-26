@@ -283,6 +283,7 @@ import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDele
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.processIfPersistentAttributeInterceptable;
+import static org.hibernate.generator.EventType.FORCE_INCREMENT;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
@@ -2062,7 +2063,8 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object currentVersion,
 			boolean batching,
-			SharedSessionContractImplementor session) throws HibernateException {
+			SharedSessionContractImplementor session)
+					throws HibernateException {
 		assert getMappedTableDetails().getTableName().equals( getVersionedTableName() );
 		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
 		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
@@ -2070,35 +2072,47 @@ public abstract class AbstractEntityPersister
 	}
 
 	private Object calculateNextVersion(Object id, Object currentVersion, SharedSessionContractImplementor session) {
-		if ( !isVersioned() ) {
-			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
-		}
-
-		if ( isVersionGeneratedOnExecution() ) {
-			// the difficulty here is exactly what we update in order to
-			// force the version to be incremented in the db...
-			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
-
-		}
-
-		final EntityVersionMapping versionMapping = getVersionMapping();
-		final Object nextVersion = getVersionJavaType().next(
-				currentVersion,
-				versionMapping.getLength(),
-				versionMapping.getTemporalPrecision() != null
-						? versionMapping.getTemporalPrecision()
-						: versionMapping.getPrecision(),
-				versionMapping.getScale(),
-				session
-		);
+		assert isVersioned();
+		final Object nextVersion =
+				generatorForForceIncrement()
+						// TODO: pass in owner entity
+						.generate( session, null, currentVersion, FORCE_INCREMENT );
 		if ( LOG.isTraceEnabled() ) {
+			final var versionType = getVersionType();
 			LOG.trace(
-					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
-							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
-							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+					"Forcing version increment [" + infoString( this, id, factory ) + "; "
+					+ versionType.toLoggableString( currentVersion, factory ) + " -> "
+					+ versionType.toLoggableString( nextVersion, factory ) + "]"
 			);
 		}
 		return nextVersion;
+	}
+
+	private BeforeExecutionGenerator generatorForForceIncrement() {
+		if ( versionPropertyGenerator() instanceof BeforeExecutionGenerator generator
+				&& generator.generatesOnForceIncrement() ) {
+			// Special case to accommodate the fact that we don't yet
+			// allow OnExecutionGenerators with force-increment locking.
+			// When possible, falls back to treating the generator as a
+			// BeforeExecutionGenerator. In particular, this works for
+			// CurrentTimestampGeneration. But it requires an additional
+			// request to the database to generate the timestamp. This
+			// solution is neither particularly elegant nor efficient.
+			return generator;
+		}
+		else if ( isVersionGeneratedOnExecution() ) {
+			// TODO: Ideally, we would allow this case, producing an
+			//       UPDATE statement which sets the version column.
+			//       Then we could remove the previous special case.
+			throw new HibernateException( "Force-increment lock not supported for '@Version' property with OnExecutionGenerator" );
+		}
+		else {
+			final var generator = getVersionGenerator();
+			if ( !generator.generatesOnForceIncrement() ) {
+				throw new HibernateException( "Force-increment lock not supported for '@Version' generator" );
+			}
+			return generator;
+		}
 	}
 
 	/**
@@ -2154,11 +2168,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	private LockingStrategy getLocker(LockMode lockMode, Locking.Scope lockScope) {
-		if ( lockScope != Locking.Scope.ROOT_ONLY ) {
-			// be sure to not use the cached form if any form of extended locking is requested
-			return generateLocker( lockMode, lockScope );
-		}
-		return lockers.computeIfAbsent( lockMode, (l) -> generateLocker( lockMode, lockScope ) );
+		return lockScope != Locking.Scope.ROOT_ONLY
+				// be sure to not use the cached form if any form of extended locking is requested
+				? generateLocker( lockMode, lockScope )
+				: lockers.computeIfAbsent( lockMode, (l) -> generateLocker( lockMode, lockScope ) );
 	}
 
 	@Override
@@ -2167,8 +2180,10 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockMode lockMode,
-			SharedSessionContractImplementor session) throws HibernateException {
-		getLocker( lockMode, Locking.Scope.ROOT_ONLY ).lock( id, version, object, Timeouts.WAIT_FOREVER, session );
+			SharedSessionContractImplementor session)
+					throws HibernateException {
+		getLocker( lockMode, Locking.Scope.ROOT_ONLY )
+				.lock( id, version, object, Timeouts.WAIT_FOREVER, session );
 	}
 
 	@Override
@@ -2182,8 +2197,10 @@ public abstract class AbstractEntityPersister
 			Object version,
 			Object object,
 			LockOptions lockOptions,
-			SharedSessionContractImplementor session) throws HibernateException {
-		getLocker( lockOptions.getLockMode(), lockOptions.getScope() ).lock( id, version, object, lockOptions.getTimeout(), session );
+			SharedSessionContractImplementor session)
+					throws HibernateException {
+		getLocker( lockOptions.getLockMode(), lockOptions.getScope() )
+				.lock( id, version, object, lockOptions.getTimeout(), session );
 	}
 
 	@Override
@@ -3816,9 +3833,8 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public BasicType<?> getVersionType() {
-		return entityMetamodel.getVersionProperty() == null
-				? null
-				: (BasicType<?>) entityMetamodel.getVersionProperty().getType();
+		final var versionProperty = entityMetamodel.getVersionProperty();
+		return versionProperty == null ? null : (BasicType<?>) versionProperty.getType();
 	}
 
 	@Override

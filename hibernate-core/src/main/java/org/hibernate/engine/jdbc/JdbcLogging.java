@@ -140,40 +140,48 @@ public interface JdbcLogging extends BasicLogger {
 			id = 100018)
 	void logDriverInfo(String name, String version, int major, int minor, int jdbcMajor, int jdbcMinor);
 
-	@LogMessage(level = TRACE)
-	@Message(value = "Unable to reset connection back to auto-commit", id = 100019)
-	void unableToResetAutoCommit(@Cause Exception ignored);
-
 	@LogMessage(level = INFO)
 	@Message(value = "Unable to release isolated connection", id = 100020)
 	void unableToReleaseIsolatedConnection(@Cause Exception ignored);
 
+	@LogMessage(level = DEBUG)
+	@Message(value = "Unable to release connection", id = 100021)
+	void unableToReleaseConnection(@Cause Exception ignored);
+
 	@LogMessage(level = INFO)
-	@Message(value = "Unable to roll back isolated connection on exception ", id = 100021)
+	@Message(value = "Unable to roll back isolated connection on exception ", id = 100022)
 	void unableToRollBackIsolatedConnection(@Cause Exception ignored);
 
+	@LogMessage(level = TRACE)
+	@Message(value = "Unable to reset connection back to auto-commit enabled", id = 100040)
+	void unableToResetAutoCommitEnabled(@Cause Exception ignored);
+
+	@LogMessage(level = TRACE)
+	@Message(value = "Unable to reset connection back to auto-commit disabled", id = 100041)
+	void unableToResetAutoCommitDisabled(@Cause Exception ignored);
+
 	@LogMessage(level = DEBUG)
-	@Message(value = "Using default JDBC fetch size: %s", id = 100022)
+	@Message(value = "Using default JDBC fetch size: %s", id = 100122)
 	void usingFetchSize(int fetchSize);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Low default JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100023)
+	@Message(value = "Low default JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100123)
 	void warnLowFetchSize(int fetchSize);
 
 	@LogMessage(level = TRACE)
-	@Message(value = "JDBC fetch size: %s", id = 100024)
+	@Message(value = "JDBC fetch size: %s", id = 100124)
 	void fetchSize(int fetchSize);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Low JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100025)
+	@Message(value = "Low JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100125)
 	void lowFetchSize(int fetchSize);
 
 	@LogMessage(level = TRACE)
-	@Message(value = "Setting JDBC fetch size: %s", id = 100026)
+	@Message(value = "Setting JDBC fetch size: %s", id = 100126)
 	void settingFetchSize(int fetchSize);
 
 	@LogMessage(level = TRACE)
-	@Message(value = "Setting JDBC query timeout: %s", id = 100027)
+	@Message(value = "Setting JDBC query timeout: %s", id = 100127)
 	void settingQueryTimeout(int timeout);
 
 	@LogMessage(level = WARN)

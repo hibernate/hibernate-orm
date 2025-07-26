@@ -12,6 +12,8 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+
 /**
  * Implementation of JdbcConnectionAccess for cases where we are provided
  * a JDBC Connection to use.
@@ -34,14 +36,14 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 				try {
 					jdbcConnection.setAutoCommit( true );
 				}
-				catch (SQLException e) {
+				catch (SQLException exception) {
 					throw new PersistenceException(
 							String.format(
 									"Could not set provided connection [%s] to auto-commit mode" +
 											" (needed for schema generation)",
 									jdbcConnection
 							),
-							e
+							exception
 					);
 				}
 			}
@@ -61,7 +63,8 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
-		// NOTE : reset auto-commit, but *do not* close the Connection.  The application handed us this connection
+		// NOTE: reset auto-commit, but *do not* close the Connection.
+		//       The application handed us this connection.
 
 		if ( !wasInitiallyAutoCommit ) {
 			try {
@@ -69,8 +72,8 @@ public class JdbcConnectionAccessProvidedConnectionImpl implements JdbcConnectio
 					jdbcConnection.setAutoCommit( false );
 				}
 			}
-			catch (SQLException e) {
-				log.info( "Was unable to reset JDBC connection to no longer be in auto-commit mode" );
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToResetAutoCommitDisabled( exception );
 			}
 		}
 	}

@@ -68,8 +68,8 @@ class DdlTransactionIsolatorProvidedConnectionImpl implements DdlTransactionIsol
 			// and we don't have access to it upon releasing via the DdlTransactionIsolatorProvidedConnectionImpl.
 			connectionAccess.releaseConnection( null );
 		}
-		catch (SQLException ignored) {
-			JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( ignored );
+		catch (SQLException exception) {
+			JDBC_MESSAGE_LOGGER.unableToReleaseIsolatedConnection( exception );
 		}
 	}
 }

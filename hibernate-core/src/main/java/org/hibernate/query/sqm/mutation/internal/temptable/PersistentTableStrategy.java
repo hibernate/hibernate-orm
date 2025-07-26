@@ -19,6 +19,8 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
+
 /**
  * This is a strategy that mimics temporary tables for databases which do not support
  * temporary tables.  It follows a pattern similar to the ANSI SQL definition of global
@@ -116,7 +118,8 @@ public abstract class PersistentTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}
@@ -156,7 +159,8 @@ public abstract class PersistentTableStrategy {
 			try {
 				connectionAccess.releaseConnection( connection );
 			}
-			catch (SQLException ignore) {
+			catch (SQLException exception) {
+				JDBC_MESSAGE_LOGGER.unableToReleaseConnection( exception );
 			}
 		}
 	}

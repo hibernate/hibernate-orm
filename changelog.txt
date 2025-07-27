@@ -3,6 +3,25 @@ Hibernate 7 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 7.0.8.Final (July 27, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34429
+
+** Bug
+    * [HHH-19655] - Connection leak with PhysicalConnectionHandlingMode.IMMEDIATE_ACQUISITION_AND_HOLD
+    * [HHH-19651] - DB2 for i detection not working reliably
+    * [HHH-19575] - empty Struct should be fetched intact or not null
+    * [HHH-19524] - @OneToOne relationship unnecessary joins in nativeQuery
+    * [HHH-16253] - [Envers] Schema Validation Failure With Audited (N)Clob Column with Hibernate 6 on H2
+
+** Improvement
+    * [HHH-19654] - Upgrade hibernate-models to 1.0.1
+
+** Task
+    * [HHH-19639] - Add getter for EmbeddableFetchImpl#nullIndicatorResult
+
+
 Changes in 7.0.7.Final (July 23, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

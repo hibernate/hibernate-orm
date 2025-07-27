@@ -64,7 +64,7 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = prepareStatement( sql, session );
+			final var insert = prepareStatement( sql, session );
 			try {
 				binder.bindValues( insert );
 				return executeAndExtractReturning( sql, insert, session );

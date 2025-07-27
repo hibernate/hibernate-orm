@@ -10,14 +10,12 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.monitor.spi.DiagnosticEvent;
 import org.hibernate.event.monitor.spi.EventMonitor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
-import org.hibernate.stat.spi.StatisticsImplementor;
 
 public final class OptimisticLockHelper {
 
@@ -76,7 +74,7 @@ public final class OptimisticLockHelper {
 			final Object cacheEntry = persister.getCacheEntryStructure().structure( ce );
 			final boolean put = updateCache( persister, cacheEntry, previousVersion, nextVersion, ck, session );
 
-			final StatisticsImplementor statistics = session.getFactory().getStatistics();
+			final var statistics = session.getFactory().getStatistics();
 			if ( put && statistics.isStatisticsEnabled() ) {
 				statistics.entityCachePut(
 						StatsHelper.getRootEntityRole( persister ),
@@ -92,9 +90,10 @@ public final class OptimisticLockHelper {
 		final EventMonitor eventMonitor = session.getEventMonitor();
 		final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
+		final var eventListenerManager = session.getEventListenerManager();
 		boolean update = false;
 		try {
-			session.getEventListenerManager().cachePutStart();
+			eventListenerManager.cachePutStart();
 			update = cacheAccessStrategy.update( session, ck, cacheEntry, nextVersion, previousVersion );
 			return update;
 		}
@@ -107,7 +106,7 @@ public final class OptimisticLockHelper {
 					update,
 					EventMonitor.CacheActionDescription.ENTITY_UPDATE
 			);
-			session.getEventListenerManager().cachePutEnd();
+			eventListenerManager.cachePutEnd();
 		}
 	}
 
@@ -155,7 +154,7 @@ public final class OptimisticLockHelper {
 		}
 
 		protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
-			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final var eventListenerManager = session.getEventListenerManager();
 			final EventMonitor eventMonitor = session.getEventMonitor();
 			final DiagnosticEvent cachePutEvent = eventMonitor.beginCachePutEvent();
 			boolean put = false;
@@ -172,7 +171,7 @@ public final class OptimisticLockHelper {
 						put,
 						EventMonitor.CacheActionDescription.ENTITY_AFTER_UPDATE
 				);
-				final StatisticsImplementor statistics = session.getFactory().getStatistics();
+				final var statistics = session.getFactory().getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut(
 							StatsHelper.getRootEntityRole( persister ),

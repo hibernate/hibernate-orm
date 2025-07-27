@@ -9,16 +9,17 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
-import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
  * @author Marco Belladelli
  */
-public class TableUpdateReturningBuilder<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
+public class TableUpdateReturningBuilder
+		extends AbstractTableUpdateBuilder<JdbcMutationOperation> {
 	final List<ColumnReference> generatedColumns;
 
 	public TableUpdateReturningBuilder(
@@ -36,9 +37,8 @@ public class TableUpdateReturningBuilder<O extends MutationOperation> extends Ab
 	}
 
 	@Override
-	@SuppressWarnings( "unchecked" )
-	public RestrictedTableMutation<O> buildMutation() {
-		return (RestrictedTableMutation<O>) new TableUpdateStandard(
+	public RestrictedTableMutation<JdbcMutationOperation> buildMutation() {
+		return new TableUpdateStandard(
 				getMutatingTable(),
 				getMutationTarget(),
 				getSqlComment(),

@@ -10,12 +10,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.internal.TableUpdateReturningBuilder;
@@ -48,16 +45,15 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 				persister,
 				timing,
 				true,
-				persister.getFactory().getJdbcServices().getDialect().supportsInsertReturningRowId()
+				persister.getFactory().getJdbcServices().getDialect()
+						.supportsInsertReturningRowId()
 		);
-		this.tableReference = new MutatingTableReference( persister.getIdentifierTableMapping() );
-		final List<GeneratedValueBasicResultBuilder> resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
-		this.generatedColumns = new ArrayList<>( resultBuilders.size() );
-		for ( GeneratedValueBasicResultBuilder resultBuilder : resultBuilders ) {
-			generatedColumns.add( new ColumnReference(
-					tableReference,
-					getActualGeneratedModelPart( resultBuilder.getModelPart() )
-			) );
+		tableReference = new MutatingTableReference( persister.getIdentifierTableMapping() );
+		final var resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
+		generatedColumns = new ArrayList<>( resultBuilders.size() );
+		for ( var resultBuilder : resultBuilders ) {
+			generatedColumns.add( new ColumnReference( tableReference,
+					getActualGeneratedModelPart( resultBuilder.getModelPart() ) ) );
 		}
 	}
 
@@ -65,12 +61,9 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 	public TableMutationBuilder<?> createTableMutationBuilder(
 			Expectation expectation,
 			SessionFactoryImplementor sessionFactory) {
-		if ( getTiming() == EventType.INSERT ) {
-			return new TableInsertReturningBuilder( persister, tableReference, generatedColumns, sessionFactory );
-		}
-		else {
-			return new TableUpdateReturningBuilder<>( persister, tableReference, generatedColumns, sessionFactory );
-		}
+		return getTiming() == EventType.INSERT
+				? new TableInsertReturningBuilder( persister, tableReference, generatedColumns, sessionFactory )
+				: new TableUpdateReturningBuilder( persister, tableReference, generatedColumns, sessionFactory );
 	}
 
 	@Override
@@ -78,16 +71,15 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 			String sql,
 			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
-		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		final JdbcServices jdbcServices = session.getJdbcServices();
-
-		final ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
+		final ResultSet resultSet =
+				session.getJdbcCoordinator().getResultSetReturn()
+						.execute( preparedStatement, sql );
 		try {
 			return getGeneratedValues( resultSet, preparedStatement, persister, getTiming(), session );
 		}
-		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
+		catch (SQLException sqle) {
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
+					sqle,
 					"Unable to extract generated key(s) from generated-keys ResultSet",
 					sql
 			);
@@ -96,14 +88,16 @@ public class InsertReturningDelegate extends AbstractReturningDelegate {
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
-		final BasicEntityIdentifierMapping identifierMapping =
-				(BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping();
+		final var identifierMapping =
+				(BasicEntityIdentifierMapping)
+						persister.getRootEntityDescriptor().getIdentifierMapping();
 		return dialect().getIdentityColumnSupport()
 				.appendIdentitySelectToInsert( identifierMapping.getSelectionExpression(), insertSQL );
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, SharedSessionContractImplementor session) {
-		return session.getJdbcCoordinator().getMutationStatementPreparer().prepareStatement( sql, NO_GENERATED_KEYS );
+		return session.getJdbcCoordinator().getMutationStatementPreparer()
+				.prepareStatement( sql, NO_GENERATED_KEYS );
 	}
 }

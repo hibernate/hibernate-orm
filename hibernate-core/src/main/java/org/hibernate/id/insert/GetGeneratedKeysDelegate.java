@@ -15,11 +15,9 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
-import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
@@ -30,6 +28,7 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
+import static org.hibernate.internal.util.StringHelper.EMPTY_STRINGS;
 import static org.hibernate.internal.util.StringHelper.unquote;
 
 /**
@@ -53,14 +52,16 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			columnNames = null;
 		}
 		else {
-			final List<GeneratedValueBasicResultBuilder> resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
+			final var resultBuilders = jdbcValuesMappingProducer.getResultBuilders();
 			final List<String> columnNamesList = new ArrayList<>( resultBuilders.size() );
 			final boolean unquote = dialect().unquoteGetGeneratedKeys();
-			for ( GeneratedValueBasicResultBuilder resultBuilder : resultBuilders ) {
-				final String col = getActualGeneratedModelPart( resultBuilder.getModelPart() ).getSelectionExpression();
-				columnNamesList.add( unquote ? unquote( col, dialect() ) : col );
+			for ( var resultBuilder : resultBuilders ) {
+				final String columnName =
+						getActualGeneratedModelPart( resultBuilder.getModelPart() )
+								.getSelectionExpression();
+				columnNamesList.add( unquote ? unquote( columnName, dialect() ) : columnName );
 			}
-			columnNames = columnNamesList.toArray( new String[0] );
+			columnNames = columnNamesList.toArray( EMPTY_STRINGS );
 		}
 	}
 
@@ -68,17 +69,15 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 	public TableMutationBuilder<?> createTableMutationBuilder(
 			Expectation expectation,
 			SessionFactoryImplementor factory) {
-		if ( getTiming() == EventType.INSERT ) {
-			return new TableInsertBuilderStandard( persister, persister.getIdentifierTableMapping(), factory );
-		}
-		else {
-			return new TableUpdateBuilderStandard<>( persister, persister.getIdentifierTableMapping(), factory );
-		}
+		final var identifierTableMapping = persister.getIdentifierTableMapping();
+		return getTiming() == EventType.INSERT
+				? new TableInsertBuilderStandard( persister, identifierTableMapping, factory )
+				: new TableUpdateBuilderStandard<>( persister, identifierTableMapping, factory );
 	}
 
 	@Override
 	public PreparedStatement prepareStatement(String sql, SharedSessionContractImplementor session) {
-		MutationStatementPreparer preparer = session.getJdbcCoordinator().getMutationStatementPreparer();
+		var preparer = session.getJdbcCoordinator().getMutationStatementPreparer();
 		return columnNames == null
 				? preparer.prepareStatement( sql, RETURN_GENERATED_KEYS )
 				: preparer.prepareStatement( sql, columnNames );
@@ -98,7 +97,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 		jdbcServices.getSqlStatementLogger().logStatement( sql );
 
 		try {
-			final PreparedStatement preparedStatement = statementDetails.resolveStatement();
+			final var preparedStatement = statementDetails.resolveStatement();
 			jdbcValueBindings.beforeStatement( statementDetails );
 
 			jdbcCoordinator.getResultSetReturn().executeUpdate( preparedStatement, sql );
@@ -121,9 +120,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 				}
 				finally {
 					if ( resultSet != null ) {
-						jdbcCoordinator
-								.getLogicalConnection()
-								.getResourceRegistry()
+						jdbcCoordinator.getLogicalConnection().getResourceRegistry()
 								.release( resultSet, preparedStatement );
 					}
 				}
@@ -168,7 +165,8 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			}
 			finally {
 				if ( resultSet != null ) {
-					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, preparedStatement );
+					jdbcCoordinator.getLogicalConnection().getResourceRegistry()
+							.release( resultSet, preparedStatement );
 				}
 			}
 		}

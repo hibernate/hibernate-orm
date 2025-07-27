@@ -14,7 +14,6 @@ import org.hibernate.generator.values.GeneratedValueBasicResultBuilder;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.query.results.internal.DomainResultCreationStateImpl;
 import org.hibernate.query.results.internal.JdbcValuesMappingImpl;
-import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
@@ -41,9 +40,8 @@ public class GeneratedValuesMappingProducer implements JdbcValuesMappingProducer
 		final int rowSize = jdbcResultsMetadata.getColumnCount();
 
 		final List<SqlSelection> sqlSelections = new ArrayList<>( rowSize );
-		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );
 
-		final DomainResultCreationStateImpl creationState = new DomainResultCreationStateImpl(
+		final var creationState = new DomainResultCreationStateImpl(
 				null,
 				jdbcResultsMetadata,
 				null,
@@ -53,18 +51,14 @@ public class GeneratedValuesMappingProducer implements JdbcValuesMappingProducer
 				sessionFactory
 		);
 
+		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );
 		for ( int i = 0; i < numberOfResults; i++ ) {
-			final ResultBuilder resultBuilder = resultBuilders.get( i );
-			final DomainResult<?> domainResult = resultBuilder.buildResult(
-					jdbcResultsMetadata,
-					domainResults.size(),
-					creationState
-			);
-
+			final var domainResult =
+					resultBuilders.get( i )
+							.buildResult( jdbcResultsMetadata, i, creationState );
 			if ( domainResult.containsAnyNonScalarResults() ) {
 				creationState.disallowPositionalSelections();
 			}
-
 			domainResults.add( domainResult );
 		}
 

@@ -4,31 +4,26 @@
  */
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
-import java.util.UUID;
-import java.util.function.Function;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableColumn;
 import org.hibernate.dialect.temptable.TemporaryTableHelper;
+import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableCreationWork;
+import org.hibernate.dialect.temptable.TemporaryTableHelper.TemporaryTableDropWork;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
-import org.hibernate.resource.transaction.spi.IsolationDelegate;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -38,11 +33,17 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+
+import java.util.UUID;
+import java.util.function.Function;
+
+import static org.hibernate.boot.TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT;
+import static org.hibernate.boot.TempTableDdlTransactionHandling.NONE;
 
 /**
  * @author Steve Ebersole
@@ -58,12 +59,8 @@ public final class ExecuteWithTemporaryTableHelper {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
-
-		assert mutatingTableGroup.getModelPart() instanceof EntityMappingType;
-		final EntityMappingType mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
+		final var mutatingEntityDescriptor = (EntityMappingType) mutatingTableGroup.getModelPart();
 
 		final NamedTableReference idTableReference = new NamedTableReference(
 				idTable.getTableExpression(),
@@ -92,15 +89,14 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		mutatingEntityDescriptor.getIdentifierMapping().forEachSelectable(
 				(selectionIndex, selection) -> {
-					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
-							mutatingTableGroup.getNavigablePath(),
-							selection.getContainingTableExpression()
-					);
 					matchingIdSelection.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									selectionIndex,
 									sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
-											tableReference,
+											mutatingTableGroup.resolveTableReference(
+													mutatingTableGroup.getNavigablePath(),
+													selection.getContainingTableExpression()
+											),
 											selection
 									)
 							)
@@ -129,22 +125,23 @@ public final class ExecuteWithTemporaryTableHelper {
 			InsertSelectStatement temporaryTableInsert,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final var factory = executionContext.getSession().getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
 		final LockMode lockMode = lockOptions.getLockMode();
 		// Acquire a WRITE lock for the rows that are about to be modified
 		lockOptions.setLockMode( LockMode.WRITE );
 		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
-		if ( temporaryTableInsert.getSourceSelectStatement() != null
+		final QueryPart sourceSelectStatement = temporaryTableInsert.getSourceSelectStatement();
+		if ( sourceSelectStatement != null
 				&& !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
-			temporaryTableInsert.getSourceSelectStatement().visitQuerySpecs(
+			sourceSelectStatement.visitQuerySpecs(
 					querySpec -> {
 						querySpec.getFromClause().visitTableJoins(
 								tableJoin -> {
-									if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+									if ( tableJoin.isInitialized()
+											&& tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
 										lockOptions.setLockMode( lockMode );
 									}
 								}
@@ -152,17 +149,17 @@ public final class ExecuteWithTemporaryTableHelper {
 					}
 			);
 		}
-		final JdbcOperationQueryMutation jdbcInsert = sqlAstTranslatorFactory.buildMutationTranslator( factory, temporaryTableInsert )
-				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		final var jdbcInsert =
+				jdbcEnvironment.getSqlAstTranslatorFactory()
+						.buildMutationTranslator( factory, temporaryTableInsert )
+						.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		lockOptions.setLockMode( lockMode );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcInsert,
 				jdbcParameterBindings,
-				sql -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
+				sql -> executionContext.getSession().getJdbcCoordinator()
+						.getStatementPreparer().prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
 				executionContext
 		);
@@ -201,7 +198,7 @@ public final class ExecuteWithTemporaryTableHelper {
 
 		querySpec.getFromClause().addRoot( idTableGroup );
 
-		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart, executionContext );
+		applyIdTableSelections( querySpec, idTableReference, idTable, fkModelPart );
 		applyIdTableRestrictions( querySpec, idTableReference, idTable, sessionUidAccess, executionContext );
 
 		return querySpec;
@@ -211,12 +208,11 @@ public final class ExecuteWithTemporaryTableHelper {
 			QuerySpec querySpec,
 			TableReference tableReference,
 			TemporaryTable idTable,
-			ModelPart fkModelPart,
-			ExecutionContext executionContext) {
+			ModelPart fkModelPart) {
 		if ( fkModelPart == null ) {
 			final int size = idTable.getEntityDescriptor().getIdentifierMapping().getJdbcTypeCount();
 			for ( int i = 0; i < size; i++ ) {
-				final TemporaryTableColumn temporaryTableColumn = idTable.getColumns().get( i );
+				final var temporaryTableColumn = idTable.getColumns().get( i );
 				if ( temporaryTableColumn != idTable.getSessionUidColumn() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
@@ -282,25 +278,21 @@ public final class ExecuteWithTemporaryTableHelper {
 	public static void performBeforeTemporaryTableUseActions(
 			TemporaryTable temporaryTable,
 			ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final var factory = executionContext.getSession().getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		if ( dialect.getTemporaryTableBeforeUseAction() == BeforeUseAction.CREATE ) {
-			final TemporaryTableHelper.TemporaryTableCreationWork temporaryTableCreationWork = new TemporaryTableHelper.TemporaryTableCreationWork(
-					temporaryTable,
-					factory
-			);
-
-			final TempTableDdlTransactionHandling ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
-			if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
+			final var temporaryTableCreationWork =
+					new TemporaryTableCreationWork( temporaryTable, factory );
+			final var ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
+			if ( ddlTransactionHandling == NONE ) {
 				executionContext.getSession().doWork( temporaryTableCreationWork );
 			}
 			else {
-				final IsolationDelegate isolationDelegate = executionContext.getSession()
-						.getJdbcCoordinator()
-						.getJdbcSessionOwner()
-						.getTransactionCoordinator()
-						.createIsolationDelegate();
-				isolationDelegate.delegateWork( temporaryTableCreationWork, ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT );
+				final var isolationDelegate =
+						executionContext.getSession().getJdbcCoordinator().getJdbcSessionOwner()
+								.getTransactionCoordinator().createIsolationDelegate();
+				isolationDelegate.delegateWork( temporaryTableCreationWork,
+						ddlTransactionHandling == ISOLATE_AND_TRANSACT );
 			}
 		}
 	}
@@ -310,7 +302,7 @@ public final class ExecuteWithTemporaryTableHelper {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			AfterUseAction afterUseAction,
 			ExecutionContext executionContext) {
-		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
+		final var factory = executionContext.getSession().getFactory();
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		switch ( afterUseAction ) {
 			case CLEAN:
@@ -322,25 +314,17 @@ public final class ExecuteWithTemporaryTableHelper {
 				);
 				break;
 			case DROP:
-				final TemporaryTableHelper.TemporaryTableDropWork temporaryTableDropWork = new TemporaryTableHelper.TemporaryTableDropWork(
-						temporaryTable,
-						factory
-				);
-
-				final TempTableDdlTransactionHandling ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
-				if ( ddlTransactionHandling == TempTableDdlTransactionHandling.NONE ) {
+				final var temporaryTableDropWork = new TemporaryTableDropWork( temporaryTable, factory );
+				final var ddlTransactionHandling = dialect.getTemporaryTableDdlTransactionHandling();
+				if ( ddlTransactionHandling == NONE ) {
 					executionContext.getSession().doWork( temporaryTableDropWork );
 				}
 				else {
-					final IsolationDelegate isolationDelegate = executionContext.getSession()
-							.getJdbcCoordinator()
-							.getJdbcSessionOwner()
-							.getTransactionCoordinator()
-							.createIsolationDelegate();
-					isolationDelegate.delegateWork(
-							temporaryTableDropWork,
-							ddlTransactionHandling == TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT
-					);
+					final var isolationDelegate =
+							executionContext.getSession().getJdbcCoordinator().getJdbcSessionOwner()
+									.getTransactionCoordinator().createIsolationDelegate();
+					isolationDelegate.delegateWork( temporaryTableDropWork,
+							ddlTransactionHandling == ISOLATE_AND_TRANSACT );
 				}
 		}
 	}

@@ -102,6 +102,7 @@ import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
 import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
 import static org.hibernate.cfg.QuerySettings.XML_FUNCTIONS_ENABLED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -132,6 +133,13 @@ import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJa
  */
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static final CoreMessageLogger log = messageLogger( SessionFactoryOptionsBuilder.class );
+
+	/**
+	 * A lower bound on the {@link java.sql.Statement#getFetchSize JDBC fetch size}.
+	 *
+	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_FETCH_SIZE
+	 */
+	public static final int MIN_FETCH_SIZE = 128;
 
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
@@ -490,6 +498,16 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				getBoolean( USE_GET_GENERATED_KEYS, settings, meta.supportsGetGeneratedKeys() );
 
 		jdbcFetchSize = getInteger( STATEMENT_FETCH_SIZE, settings );
+		if ( jdbcFetchSize == null ) {
+			final int defaultFetchSize = meta.getDefaultFetchSize();
+			if ( defaultFetchSize > 0 && defaultFetchSize < MIN_FETCH_SIZE ) {
+				JDBC_MESSAGE_LOGGER.forcingFetchSize( defaultFetchSize, MIN_FETCH_SIZE );
+				jdbcFetchSize = MIN_FETCH_SIZE;
+			}
+			else {
+				JDBC_MESSAGE_LOGGER.usingFetchSize( defaultFetchSize );
+			}
+		}
 
 		connectionHandlingMode = interpretConnectionHandlingMode( settings, serviceRegistry );
 

@@ -10,7 +10,6 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
@@ -39,7 +38,6 @@ import org.jboss.logging.Logger;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_CATALOG;
 import static org.hibernate.cfg.MappingSettings.DEFAULT_SCHEMA;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
-import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 import static org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl.makeLobCreatorBuilder;
 
 /**
@@ -107,8 +105,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport, dialect.getCatalogSeparator() );
 
 		lobCreatorBuilder = makeLobCreatorBuilder( dialect );
-
-		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
 	}
 
 	private static ConfigurationService configurationService(ServiceRegistryImplementor serviceRegistry) {
@@ -321,8 +317,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				new QualifiedObjectNameFormatterStandardImpl( nameQualifierSupport, databaseMetaData );
 
 		lobCreatorBuilder = makeLobCreatorBuilder( dialect, cfgService.getSettings(), databaseMetaData.getConnection() );
-
-		logJdbcFetchSize( extractedMetaDataSupport.getDefaultFetchSize(), cfgService );
 	}
 
 	private static IdentifierHelper identifierHelper(
@@ -424,16 +418,5 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public LobCreatorBuilder getLobCreatorBuilder() {
 		return lobCreatorBuilder;
-	}
-
-	private static void logJdbcFetchSize(int defaultFetchSize, ConfigurationService cfgService) {
-		if ( !cfgService.getSettings().containsKey( JdbcSettings.STATEMENT_FETCH_SIZE ) ) {
-			if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
-				JDBC_MESSAGE_LOGGER.warnLowFetchSize( defaultFetchSize );
-			}
-			else {
-				JDBC_MESSAGE_LOGGER.usingFetchSize( defaultFetchSize );
-			}
-		}
 	}
 }

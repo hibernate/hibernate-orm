@@ -164,9 +164,9 @@ public interface JdbcLogging extends BasicLogger {
 	@Message(value = "Using default JDBC fetch size: %s", id = 100122)
 	void usingFetchSize(int fetchSize);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Low default JDBC fetch size: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100123)
-	void warnLowFetchSize(int fetchSize);
+	@LogMessage(level = INFO)
+	@Message(value = "Low default JDBC fetch size: %s, forcing to: %s (consider setting 'hibernate.jdbc.fetch_size')", id = 100123)
+	void forcingFetchSize(int defaultFetchSize, int forcedFetchSize);
 
 	@LogMessage(level = TRACE)
 	@Message(value = "JDBC fetch size: %s", id = 100124)

@@ -9,11 +9,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.hibernate.CacheMode;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.QueryKey;
-import org.hibernate.cache.spi.QueryResultsCache;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.TupleTransformer;
@@ -22,7 +18,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
@@ -42,7 +37,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
-import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -94,7 +88,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			int resultCountEstimate,
 			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
-		final PersistenceContext persistenceContext = executionContext.getSession().getPersistenceContext();
+		final var persistenceContext = executionContext.getSession().getPersistenceContext();
 		final boolean defaultReadOnlyOrig = persistenceContext.isDefaultReadOnly();
 		final Boolean readOnly = executionContext.getQueryOptions().isReadOnly();
 		if ( readOnly != null ) {
@@ -131,7 +125,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 
-		final DeferredResultSetAccess deferredResultSetAccess = new DeferredResultSetAccess(
+		final var deferredResultSetAccess = new DeferredResultSetAccess(
 				jdbcSelect,
 				jdbcParameterBindings,
 				executionContext,
@@ -150,11 +144,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			rowTransformer = getRowTransformer( executionContext, jdbcValues );
 		}
 
-		final SharedSessionContractImplementor session = executionContext.getSession();
+		final var session = executionContext.getSession();
 
 		final boolean stats;
 		long startTime = 0;
-		final StatisticsImplementor statistics = session.getFactory().getStatistics();
+		final var statistics = session.getFactory().getStatistics();
 		if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
 				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
 			stats = statistics.isStatisticsEnabled();
@@ -191,7 +185,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 
-		final JdbcValuesSourceProcessingStateStandardImpl valuesProcessingState =
+		final var valuesProcessingState =
 				new JdbcValuesSourceProcessingStateStandardImpl( executionContext, processingOptions );
 
 		final RowReader<R> rowReader = ResultsHelper.createRowReader(
@@ -201,12 +195,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				jdbcValues
 		);
 
-		final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
-				valuesProcessingState,
-				executionContext,
-				rowReader,
-				jdbcValues
-		);
+		final var rowProcessingState =
+				new RowProcessingStateStandardImpl( valuesProcessingState, executionContext, rowReader, jdbcValues );
 
 		final T result = resultsConsumer.consume(
 				jdbcValues,
@@ -233,13 +223,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	private static <R> RowTransformer<R> getRowTransformer(ExecutionContext executionContext, JdbcValues jdbcValues) {
 		@SuppressWarnings("unchecked")
-		final TupleTransformer<R> tupleTransformer =
-				(TupleTransformer<R>) executionContext.getQueryOptions().getTupleTransformer();
+		final var tupleTransformer =
+				(TupleTransformer<R>)
+						executionContext.getQueryOptions().getTupleTransformer();
 		if ( tupleTransformer == null ) {
 			return RowTransformerStandardImpl.instance();
 		}
 		else {
-			final List<DomainResult<?>> domainResults = jdbcValues.getValuesMapping().getDomainResults();
+			final var domainResults = jdbcValues.getValuesMapping().getDomainResults();
 			final String[] aliases = new String[domainResults.size()];
 			for ( int i = 0; i < domainResults.size(); i++ ) {
 				aliases[i] = domainResults.get( i ).getResultVariable();
@@ -258,12 +249,12 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			boolean canBeCached,
 			ExecutionContext executionContext,
 			DeferredResultSetAccess resultSetAccess) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
+		final var session = executionContext.getSession();
+		final var factory = session.getFactory();
 		final boolean queryCacheEnabled = factory.getSessionFactoryOptions().isQueryCacheEnabled();
 
 		final CacheMode cacheMode = resolveCacheMode( executionContext );
-		final JdbcValuesMappingProducer mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
+		final var mappingProducer = jdbcSelect.getJdbcValuesMappingProducer();
 		final QueryOptions queryOptions = executionContext.getQueryOptions();
 		final boolean cacheable =
 				queryCacheEnabled
@@ -282,8 +273,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				SQL_EXEC_LOGGER.tracef( "Affected query spaces %s", querySpaces );
 			}
 
-			final QueryResultsCache queryCache = factory.getCache()
-					.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
+			final var queryCache =
+					factory.getCache()
+							.getQueryResultsCache( queryOptions.getResultCacheRegionName() );
 
 			queryResultsCacheKey = QueryKey.from(
 					jdbcSelect.getSqlString(),
@@ -308,7 +300,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			// todo (6.0) : if we go this route (^^), still beneficial to have an abstraction over different UpdateTimestampsCache-based
 			//		invalidation strategies - QueryCacheInvalidationStrategy
 
-			final StatisticsImplementor statistics = factory.getStatistics();
+			final var statistics = factory.getStatistics();
 			if ( statistics.isStatisticsEnabled() ) {
 				if ( cachedResults == null ) {
 					statistics.queryCacheMiss( queryIdentifier, queryCache.getRegion().getName() );
@@ -358,7 +350,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcValuesMappingProducer mappingProducer,
 			SharedSessionContractImplementor session,
 			SessionFactoryImplementor factory) {
-		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
+		final var loadQueryInfluencers = session.getLoadQueryInfluencers();
 		if ( cachedResults == null ) {
 			final CachedJdbcValuesMetadata metadataForCache;
 			final JdbcValuesMapping jdbcValuesMapping;
@@ -368,7 +360,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 			else {
 				// If we need to put the values into the cache, we need to be able to capture the JdbcValuesMetadata
-				final CapturingJdbcValuesMetadata capturingMetadata = new CapturingJdbcValuesMetadata( resultSetAccess );
+				final var capturingMetadata = new CapturingJdbcValuesMetadata( resultSetAccess );
 				jdbcValuesMapping = mappingProducer.resolve( capturingMetadata, loadQueryInfluencers, factory );
 				metadataForCache = capturingMetadata.resolveMetadataForCache();
 			}
@@ -384,7 +376,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			);
 		}
 		else {
-			final JdbcValuesMetadata valuesMetadata =
+			final var valuesMetadata =
 					!cachedResults.isEmpty()
 						&& cachedResults.get( 0 ) instanceof JdbcValuesMetadata jdbcValuesMetadata
 							? jdbcValuesMetadata
@@ -395,8 +387,8 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 	}
 
 	private static CacheMode resolveCacheMode(ExecutionContext executionContext) {
-		final QueryOptions queryOptions = executionContext.getQueryOptions();
-		final SharedSessionContract session = executionContext.getSession();
+		final var queryOptions = executionContext.getQueryOptions();
+		final var session = executionContext.getSession();
 		return coalesceSuppliedValues(
 				() -> queryOptions == null ? null : queryOptions.getCacheMode(),
 				session::getCacheMode,

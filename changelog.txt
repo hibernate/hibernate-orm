@@ -3,6 +3,21 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.6.23.Final (July 27, 2025)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/34397
+
+** Bug
+    * [HHH-19575] - empty Struct should be fetched intact or not null
+    * [HHH-19524] - @OneToOne relationship unnecessary joins in nativeQuery
+    * [HHH-19261] - OracleDialect getQueryHintString incorrectly joins supplied hints
+    * [HHH-16253] - [Envers] Schema Validation Failure With Audited (N)Clob Column with Hibernate 6 on H2
+
+** Task
+    * [HHH-19639] - Add getter for EmbeddableFetchImpl#nullIndicatorResult
+
+
 Changes in 6.6.22.Final (July 20, 2025)
 ------------------------------------------------------------------------------------------------------------------------
 

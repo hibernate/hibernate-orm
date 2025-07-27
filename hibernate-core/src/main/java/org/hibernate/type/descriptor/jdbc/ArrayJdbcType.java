@@ -128,13 +128,18 @@ public class ArrayJdbcType implements JdbcType {
 				.getSizeStrategy()
 				.resolveSize( elementJdbcType, elementJavaType, null, null, null );
 		final DdlTypeRegistry ddlTypeRegistry = session.getTypeConfiguration().getDdlTypeRegistry();
-		final String typeName = ddlTypeRegistry.getDescriptor( elementJdbcType.getDdlTypeCode() )
-				.getTypeName( size, new BasicTypeImpl<>( elementJavaType, elementJdbcType), ddlTypeRegistry );
-		int cutIndex = typeName.indexOf( '(' );
-		if ( cutIndex > 0 ) {
+		final String typeName =
+				ddlTypeRegistry.getDescriptor( elementJdbcType.getDdlTypeCode() )
+						.getTypeName( size, new BasicTypeImpl<>( elementJavaType, elementJdbcType), ddlTypeRegistry );
+
+		final int cutIndexBegin = typeName.indexOf( '(' );
+		if ( cutIndexBegin > 0 ) {
+			final int cutIndexEnd = typeName.lastIndexOf( ')' );
+			assert cutIndexEnd > cutIndexBegin;
 			// getTypeName for this case required length, etc, parameters.
 			// Cut them out and use database defaults.
-			return typeName.substring( 0, cutIndex );
+			// e.g. "timestamp($p) with timezone" becomes "timestamp with timezone"
+			return typeName.substring( 0, cutIndexBegin ) + typeName.substring( cutIndexEnd + 1 );
 		}
 		else {
 			return typeName;

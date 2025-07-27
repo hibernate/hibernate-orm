@@ -119,10 +119,19 @@ public class ArrayJdbcType implements JdbcType {
 		final String typeName =
 				ddlTypeRegistry.getDescriptor( elementJdbcType.getDdlTypeCode() )
 						.getTypeName( size, new BasicTypeImpl<>( elementJavaType, elementJdbcType), ddlTypeRegistry );
-		// getTypeName for this case required length, etc, parameters.
-		// Cut them out and use database defaults.
-		final int cutIndex = typeName.indexOf( '(' );
-		return cutIndex > 0 ? typeName.substring( 0, cutIndex ) : typeName;
+
+		final int cutIndexBegin = typeName.indexOf( '(' );
+		if ( cutIndexBegin > 0 ) {
+			final int cutIndexEnd = typeName.lastIndexOf( ')' );
+			assert cutIndexEnd > cutIndexBegin;
+			// getTypeName for this case required length, etc, parameters.
+			// Cut them out and use database defaults.
+			// e.g. "timestamp($p) with timezone" becomes "timestamp with timezone"
+			return typeName.substring( 0, cutIndexBegin ) + typeName.substring( cutIndexEnd + 1 );
+		}
+		else {
+			return typeName;
+		}
 	}
 
 	protected <T> Object[] getArray(BasicBinder<?> binder, ValueBinder<T> elementBinder, T value, WrapperOptions options)

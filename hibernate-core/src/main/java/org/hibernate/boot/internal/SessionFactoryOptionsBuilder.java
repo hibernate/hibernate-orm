@@ -44,7 +44,6 @@ import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -53,7 +52,6 @@ import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.BaselineSessionEventsListenerBuilder;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.EmptyInterceptor;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -87,22 +85,8 @@ import jakarta.persistence.criteria.Nulls;
 import static java.util.Collections.unmodifiableMap;
 import static org.hibernate.Timeouts.WAIT_FOREVER_MILLI;
 import static org.hibernate.cfg.AvailableSettings.*;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
-import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
-import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_STORE_MODE;
-import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
 import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_OSON_DISABLED;
-import static org.hibernate.cfg.PersistenceSettings.UNOWNED_ASSOCIATION_TRANSIENT_CHECK;
-import static org.hibernate.cfg.QuerySettings.DEFAULT_NULL_ORDERING;
-import static org.hibernate.cfg.QuerySettings.JSON_FUNCTIONS_ENABLED;
-import static org.hibernate.cfg.QuerySettings.PORTABLE_INTEGER_DIVISION;
-import static org.hibernate.cfg.QuerySettings.XML_FUNCTIONS_ENABLED;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
-import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.LockOptionsHelper.applyPropertiesToLockOptions;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.PropertiesHelper.map;
@@ -131,7 +115,6 @@ import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJa
  * @author Steve Ebersole
  */
 public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
-	private static final CoreMessageLogger log = messageLogger( SessionFactoryOptionsBuilder.class );
 
 	private final String uuid = LocalObjectUuidHelper.generateLocalObjectUuid();
 	private final StandardServiceRegistry serviceRegistry;
@@ -291,35 +274,34 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		settings.putAll( configurationService.getSettings() );
 
 		beanManagerReference = NullnessHelper.coalesceSuppliedValues(
-				() -> settings.get( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER ),
+				() -> settings.get( JAKARTA_CDI_BEAN_MANAGER ),
 				() -> {
-					final Object value = settings.get( AvailableSettings.CDI_BEAN_MANAGER );
+					final Object value = settings.get( CDI_BEAN_MANAGER );
 					if ( value != null ) {
-						DEPRECATION_LOGGER.deprecatedSetting(
-								AvailableSettings.CDI_BEAN_MANAGER,
-								AvailableSettings.JAKARTA_CDI_BEAN_MANAGER
-						);
+						DEPRECATION_LOGGER.deprecatedSetting( CDI_BEAN_MANAGER,
+								JAKARTA_CDI_BEAN_MANAGER );
 					}
 					return value;
 				}
 		);
 
 		validatorFactoryReference = settings.getOrDefault(
-				AvailableSettings.JPA_VALIDATION_FACTORY,
-				settings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
+				JPA_VALIDATION_FACTORY,
+				settings.get( JAKARTA_VALIDATION_FACTORY )
 		);
 
 		jsonFormatMapper = jsonFormatMapper(
-				settings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
-				!getBoolean( ORACLE_OSON_DISABLED ,settings),
+				settings.get( JSON_FORMAT_MAPPER ),
+				!getBoolean( ORACLE_OSON_DISABLED, settings),
 				strategySelector
 		);
 
 		xmlFormatMapper = xmlFormatMapper(
-				settings.get( AvailableSettings.XML_FORMAT_MAPPER ),
+				settings.get( XML_FORMAT_MAPPER ),
 				strategySelector,
 				xmlFormatMapperLegacyFormatEnabled =
-						context.getMetadataBuildingOptions().isXmlFormatMapperLegacyFormatEnabled()
+						context.getMetadataBuildingOptions()
+								.isXmlFormatMapperLegacyFormatEnabled()
 		);
 
 		sessionFactoryName = (String) settings.get( SESSION_FACTORY_NAME );
@@ -395,19 +377,19 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		jtaTrackByThread = configurationService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
 
 		final String hqlTranslatorImplFqn =
-				extractPropertyValue( AvailableSettings.SEMANTIC_QUERY_PRODUCER, settings );
+				extractPropertyValue( SEMANTIC_QUERY_PRODUCER, settings );
 		hqlTranslator = resolveHqlTranslator( hqlTranslatorImplFqn, serviceRegistry, strategySelector );
 
 		final String sqmTranslatorFactoryImplFqn =
-				extractPropertyValue( AvailableSettings.SEMANTIC_QUERY_TRANSLATOR, settings );
+				extractPropertyValue( SEMANTIC_QUERY_TRANSLATOR, settings );
 		sqmTranslatorFactory = resolveSqmTranslator( sqmTranslatorFactoryImplFqn, strategySelector );
 
 		final String sqmMutationStrategyImplName =
-				extractPropertyValue( AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY, settings );
+				extractPropertyValue( QUERY_MULTI_TABLE_MUTATION_STRATEGY, settings );
 		sqmMultiTableMutationStrategy =
 				resolveSqmMutationStrategy( sqmMutationStrategyImplName, serviceRegistry, strategySelector );
 		final String sqmInsertStrategyImplName =
-				extractPropertyValue( AvailableSettings.QUERY_MULTI_TABLE_INSERT_STRATEGY, settings );
+				extractPropertyValue( QUERY_MULTI_TABLE_INSERT_STRATEGY, settings );
 		sqmMultiTableInsertStrategy =
 				resolveSqmInsertStrategy( sqmInsertStrategyImplName, serviceRegistry, strategySelector );
 
@@ -461,25 +443,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			autoEvictCollectionCache = false;
 		}
 
-		// deprecated
+		// deprecated, delete this:
 		try {
-			schemaAutoTooling = SchemaAutoTooling.interpret( (String) settings.get( AvailableSettings.HBM2DDL_AUTO ) );
+			schemaAutoTooling = SchemaAutoTooling.interpret( (String) settings.get( HBM2DDL_AUTO ) );
 		}
 		catch (Exception e) {
-			log.warn( e.getMessage() + "  Ignoring" );
+			// ignore, since this member is deprecated and ignored
 		}
 
+		final var meta = jdbcServices.getExtractedMetaDataSupport();
+
 		// deprecated
-		final ExtractedDatabaseMetaData meta = jdbcServices.getExtractedMetaDataSupport();
-		if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
-			tempTableDdlTransactionHandling =
-					meta.supportsDataDefinitionInTransaction()
-							? TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT
-							: TempTableDdlTransactionHandling.ISOLATE;
-		}
-		else {
-			tempTableDdlTransactionHandling = TempTableDdlTransactionHandling.NONE;
-		}
+		tempTableDdlTransactionHandling = getTempTableDdlTransactionHandling( meta );
 
 		jdbcBatchSize = disallowBatchUpdates( dialect, meta ) ? 0
 				: getInt( STATEMENT_BATCH_SIZE, settings, 1 );
@@ -494,7 +469,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		connectionHandlingMode = interpretConnectionHandlingMode( settings, serviceRegistry );
 
 		connectionProviderDisablesAutoCommit =
-				getBoolean( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, settings, false );
+				getBoolean( CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, settings, false );
 
 		commentsEnabled = getBoolean( USE_SQL_COMMENTS, settings );
 
@@ -510,11 +485,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		jdbcTimeZone = getJdbcTimeZone( settings.get( JDBC_TIME_ZONE ) );
 
 		criteriaValueHandlingMode = ValueHandlingMode.interpret( settings.get( CRITERIA_VALUE_HANDLING_MODE ) );
-		criteriaCopyTreeEnabled = getBoolean( AvailableSettings.CRITERIA_COPY_TREE, settings, jpaBootstrap );
-		criteriaPlanCacheEnabled = getBoolean( AvailableSettings.CRITERIA_PLAN_CACHE_ENABLED, settings, false );
+		criteriaCopyTreeEnabled = getBoolean( CRITERIA_COPY_TREE, settings, jpaBootstrap );
+		criteriaPlanCacheEnabled = getBoolean( CRITERIA_PLAN_CACHE_ENABLED, settings, false );
 
 		nativeJdbcParametersIgnored =
-				getBoolean( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, settings, false );
+				getBoolean( NATIVE_IGNORE_JDBC_PARAMETERS, settings, false );
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
 		jpaCompliance = context.getJpaCompliance();
@@ -542,10 +517,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				getBoolean( UNOWNED_ASSOCIATION_TRANSIENT_CHECK, settings, isJpaBootstrap() );
 
 		passProcedureParameterNames =
-				getBoolean( AvailableSettings.QUERY_PASS_PROCEDURE_PARAMETER_NAMES, settings, false );
+				getBoolean( QUERY_PASS_PROCEDURE_PARAMETER_NAMES, settings, false );
 
 		preferJdbcDatetimeTypes =
-				getBoolean( AvailableSettings.NATIVE_PREFER_JDBC_DATETIME_TYPES, settings, false );
+				getBoolean( NATIVE_PREFER_JDBC_DATETIME_TYPES, settings, false );
 
 		defaultSessionProperties = initializeDefaultSessionProperties( configurationService );
 
@@ -555,6 +530,18 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		defaultLockOptions = defaultLockOptions( defaultSessionProperties );
 		initialSessionFlushMode = defaultFlushMode( defaultSessionProperties );
+	}
+
+	@Deprecated(forRemoval = true)
+	private static TempTableDdlTransactionHandling getTempTableDdlTransactionHandling(ExtractedDatabaseMetaData meta) {
+		if ( meta.doesDataDefinitionCauseTransactionCommit() ) {
+			return meta.supportsDataDefinitionInTransaction()
+					? TempTableDdlTransactionHandling.ISOLATE_AND_TRANSACT
+					: TempTableDdlTransactionHandling.ISOLATE;
+		}
+		else {
+			return TempTableDdlTransactionHandling.NONE;
+		}
 	}
 
 	private TimeZone getJdbcTimeZone(Object jdbcTimeZoneValue) {

@@ -25,6 +25,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.boot.internal.SessionFactoryOptionsBuilder.MIN_FETCH_SIZE;
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
 
 /**
@@ -234,7 +235,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		else {
 			if ( JDBC_MESSAGE_LOGGER.isDebugEnabled() ) {
 				final int defaultFetchSize = statement.getFetchSize();
-				if ( defaultFetchSize > 0 && defaultFetchSize < 100 ) {
+				if ( defaultFetchSize > 0 && defaultFetchSize < MIN_FETCH_SIZE ) {
 					JDBC_MESSAGE_LOGGER.lowFetchSize( defaultFetchSize );
 				}
 			}

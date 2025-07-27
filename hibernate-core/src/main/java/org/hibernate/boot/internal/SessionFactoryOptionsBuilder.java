@@ -80,7 +80,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.format.FormatMapper;
-import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
 
 import jakarta.persistence.criteria.Nulls;
@@ -118,6 +117,7 @@ import static org.hibernate.jpa.internal.util.ConfigurationHelper.getFlushMode;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getJsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getOsonJacksonFormatMapperOrNull;
 import static org.hibernate.type.format.jackson.JacksonIntegration.getXMLJacksonFormatMapperOrNull;
+import static org.hibernate.type.format.jackson.JacksonIntegration.isJacksonOsonExtensionAvailable;
 import static org.hibernate.type.format.jakartajson.JakartaJsonIntegration.getJakartaJsonBFormatMapperOrNull;
 
 /**
@@ -309,13 +309,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				settings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
 		);
 
-		jsonFormatMapper = determineJsonFormatMapper(
+		jsonFormatMapper = jsonFormatMapper(
 				settings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
 				!getBoolean( ORACLE_OSON_DISABLED ,settings),
 				strategySelector
 		);
 
-		xmlFormatMapper = determineXmlFormatMapper(
+		xmlFormatMapper = xmlFormatMapper(
 				settings.get( AvailableSettings.XML_FORMAT_MAPPER ),
 				strategySelector,
 				xmlFormatMapperLegacyFormatEnabled =
@@ -620,17 +620,20 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategyName,
 				(SqmMultiTableMutationStrategy) null,
 				strategyClass -> {
-					Constructor<SqmMultiTableMutationStrategy> dialectConstructor = null;
-					Constructor<SqmMultiTableMutationStrategy> emptyConstructor = null;
+					Constructor<? extends SqmMultiTableMutationStrategy> dialectConstructor = null;
+					Constructor<? extends SqmMultiTableMutationStrategy> emptyConstructor = null;
 					// todo (6.0) : formalize the allowed constructor parameterizations
-					for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
-						final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+					for ( var declaredConstructor : strategyClass.getDeclaredConstructors() ) {
+						final var parameterTypes = declaredConstructor.getParameterTypes();
+						final var constructor =
+								(Constructor<? extends SqmMultiTableMutationStrategy>)
+										declaredConstructor;
 						if ( parameterTypes.length == 1 && parameterTypes[0] == Dialect.class ) {
-							dialectConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+							dialectConstructor = constructor;
 							break;
 						}
 						else if ( parameterTypes.length == 0 ) {
-							emptyConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+							emptyConstructor = constructor;
 						}
 					}
 
@@ -646,11 +649,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					}
 					catch (Exception e) {
 						throw new StrategySelectionException(
-								String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+								"Could not instantiate named strategy class [" + strategyClass.getName() + "]",
 								e
 						);
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
+					throw new IllegalArgumentException( "Cannot instantiate the class ["
+								+ strategyClass.getName()
+								+ "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}
@@ -669,17 +674,20 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				strategyName,
 				(SqmMultiTableInsertStrategy) null,
 				strategyClass -> {
-					Constructor<SqmMultiTableInsertStrategy> dialectConstructor = null;
-					Constructor<SqmMultiTableInsertStrategy> emptyConstructor = null;
+					Constructor<? extends SqmMultiTableInsertStrategy> dialectConstructor = null;
+					Constructor<? extends SqmMultiTableInsertStrategy> emptyConstructor = null;
 					// todo (6.0) : formalize the allowed constructor parameterizations
-					for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
-						final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+					for ( var declaredConstructor : strategyClass.getDeclaredConstructors() ) {
+						final var parameterTypes = declaredConstructor.getParameterTypes();
+						final var constructor =
+								(Constructor<? extends SqmMultiTableInsertStrategy>)
+										declaredConstructor;
 						if ( parameterTypes.length == 1 && parameterTypes[0] == Dialect.class ) {
-							dialectConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
+							dialectConstructor = constructor;
 							break;
 						}
 						else if ( parameterTypes.length == 0 ) {
-							emptyConstructor = (Constructor<SqmMultiTableInsertStrategy>) declaredConstructor;
+							emptyConstructor = constructor;
 						}
 					}
 
@@ -695,11 +703,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 					}
 					catch (Exception e) {
 						throw new StrategySelectionException(
-								String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+								"Could not instantiate named strategy class [" + strategyClass.getName() + "]",
 								e
 						);
 					}
-					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor" );
+					throw new IllegalArgumentException( "Cannot instantiate the class ["
+								+ strategyClass.getName()
+								+ "] because it does not have a constructor that accepts a dialect or an empty constructor" );
 				}
 		);
 	}
@@ -708,23 +718,15 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			String producerName,
 			StandardServiceRegistry serviceRegistry,
 			StrategySelector strategySelector) {
-		if ( isEmpty( producerName ) ) {
-			return null;
-		}
-		else {
-			//noinspection Convert2Lambda
-			return strategySelector.resolveDefaultableStrategy(
-					HqlTranslator.class,
-					producerName,
-					new Callable<>() {
-						@Override
-						public HqlTranslator call() throws Exception {
-							return (HqlTranslator) serviceRegistry.requireService( ClassLoaderService.class )
-									.classForName( producerName ).newInstance();
-						}
-					}
-			);
-		}
+		return isEmpty( producerName )
+				? null
+				: strategySelector.<HqlTranslator>resolveDefaultableStrategy(
+						HqlTranslator.class,
+						producerName,
+						() -> (HqlTranslator)
+								serviceRegistry.requireService( ClassLoaderService.class )
+										.classForName( producerName ).newInstance()
+				);
 	}
 
 	private SqmTranslatorFactory resolveSqmTranslator(
@@ -754,8 +756,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
 			Map<String,Object> configurationSettings,
 			StrategySelector strategySelector) {
-		Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-
+		final Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
 		if ( setting == null ) {
 			return null;
 		}
@@ -782,7 +783,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				return clazz.newInstance();
 			}
 			catch (InstantiationException | IllegalAccessException e) {
-				throw new HibernateException( "Could not supply session-scoped SessionFactory Interceptor", e );
+				throw new org.hibernate.InstantiationException( "Could not instantiate session-scoped Interceptor", clazz, e );
 			}
 		};
 	}
@@ -798,30 +799,39 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 						.getDefaultConnectionHandlingMode();
 	}
 
-	private static FormatMapper determineJsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector strategySelector) {
-		return strategySelector.resolveDefaultableStrategy(
-				FormatMapper.class,
+	private static FormatMapper jsonFormatMapper(Object setting, boolean osonExtensionEnabled, StrategySelector selector) {
+		return formatMapper(
 				setting,
-				(Callable<FormatMapper>) () -> {
+				selector,
+				() -> {
 					// Prefer the OSON Jackson FormatMapper by default if available
 					final FormatMapper jsonJacksonFormatMapper =
-							(osonExtensionEnabled && JacksonIntegration.isJacksonOsonExtensionAvailable())
+							osonExtensionEnabled && isJacksonOsonExtensionAvailable()
 									? getOsonJacksonFormatMapperOrNull()
 									: getJsonJacksonFormatMapperOrNull();
-					return jsonJacksonFormatMapper != null ? jsonJacksonFormatMapper : getJakartaJsonBFormatMapperOrNull();
+					return jsonJacksonFormatMapper != null
+							? jsonJacksonFormatMapper
+							: getJakartaJsonBFormatMapperOrNull();
 				}
 		);
 	}
 
-	private static FormatMapper determineXmlFormatMapper(Object setting, StrategySelector strategySelector, boolean legacyFormat) {
-		return strategySelector.resolveDefaultableStrategy(
-				FormatMapper.class,
+	private static FormatMapper xmlFormatMapper(Object setting, StrategySelector selector, boolean legacyFormat) {
+		return formatMapper(
 				setting,
-				(Callable<FormatMapper>) () -> {
-					final FormatMapper jacksonFormatMapper = getXMLJacksonFormatMapperOrNull( legacyFormat );
-					return jacksonFormatMapper != null ? jacksonFormatMapper : new JaxbXmlFormatMapper( legacyFormat );
+				selector,
+				() -> {
+					final FormatMapper jacksonFormatMapper =
+							getXMLJacksonFormatMapperOrNull( legacyFormat );
+					return jacksonFormatMapper != null
+							? jacksonFormatMapper
+							: new JaxbXmlFormatMapper( legacyFormat );
 				}
 		);
+	}
+
+	private static FormatMapper formatMapper(Object setting, StrategySelector selector, Callable<FormatMapper> defaultResolver) {
+		return selector.resolveDefaultableStrategy( FormatMapper.class, setting, defaultResolver );
 	}
 
 
@@ -1601,8 +1611,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	public SessionFactoryOptions buildOptions() {
-		if ( jpaCompliance instanceof MutableJpaCompliance ) {
-			jpaCompliance = mutableJpaCompliance().immutableCopy();
+		if ( jpaCompliance instanceof MutableJpaCompliance mutableJpaCompliance ) {
+			jpaCompliance = mutableJpaCompliance.immutableCopy();
 		}
 		return this;
 	}
@@ -1692,7 +1702,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT
 		};
 
-		final Map<String, Object> configurationServiceSettings = configurationService.getSettings();
+		final var configurationServiceSettings = configurationService.getSettings();
 		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
 			if ( configurationServiceSettings.containsKey( key ) ) {
 				settings.put( key, configurationServiceSettings.get( key ) );

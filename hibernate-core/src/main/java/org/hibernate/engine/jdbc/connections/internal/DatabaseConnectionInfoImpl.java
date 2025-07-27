@@ -103,6 +103,26 @@ public class DatabaseConnectionInfoImpl implements DatabaseConnectionInfo {
 		}
 	}
 
+	static Integer getFetchSize(ConnectionCreator creator) {
+		try ( var conn = creator.createConnection() ) {
+			try ( var statement = conn.createStatement() ) {
+				return statement.getFetchSize();
+			}
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
+	static Integer getIsolation(ConnectionCreator creator) {
+		try ( var conn = creator.createConnection() ) {
+			return conn.getTransactionIsolation();
+		}
+		catch ( SQLException ignored ) {
+			return null;
+		}
+	}
+
 	@Override
 	public String getJdbcUrl() {
 		return jdbcUrl;

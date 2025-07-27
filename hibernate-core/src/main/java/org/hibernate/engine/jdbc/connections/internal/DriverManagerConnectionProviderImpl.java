@@ -8,7 +8,6 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -40,6 +39,8 @@ import static org.hibernate.cfg.JdbcSettings.JAKARTA_JDBC_URL;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.extractIsolation;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.getConnectionProperties;
 import static org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator.toIsolationNiceName;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getFetchSize;
+import static org.hibernate.engine.jdbc.connections.internal.DatabaseConnectionInfoImpl.getIsolation;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getInt;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getLong;
@@ -142,7 +143,20 @@ public class DriverManagerConnectionProviderImpl
 		final Integer isolation = extractIsolation( configurationValues );
 		final String initSql = (String) configurationValues.get( INIT_SQL );
 
-		final ConnectionCreatorFactory factory = getConnectionCreatorFactory( configurationValues, serviceRegistry );
+		final var connectionCreator =
+				getConnectionCreatorFactory( configurationValues, serviceRegistry )
+						.create(
+								driver,
+								serviceRegistry,
+								url,
+								connectionProps,
+								autoCommit,
+								isolation,
+								initSql,
+								configurationValues
+						);
+
+		;
 
 		dbInfo = new DatabaseConnectionInfoImpl(
 				DriverManagerConnectionProviderImpl.class,
@@ -150,35 +164,28 @@ public class DriverManagerConnectionProviderImpl
 				driverList,
 				SimpleDatabaseVersion.ZERO_VERSION,
 				Boolean.toString( autoCommit ),
-				isolation != null ? toIsolationNiceName( isolation ) : null,
+				isolation != null
+						? toIsolationNiceName( isolation )
+						: toIsolationNiceName( getIsolation( connectionCreator ) ),
 				getInt( MIN_SIZE, configurationValues, 1 ),
 				getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ),
-				null
+				getFetchSize( connectionCreator )
 		);
 
-		return factory.create(
-				driver,
-				serviceRegistry,
-				url,
-				connectionProps,
-				autoCommit,
-				isolation,
-				initSql,
-				configurationValues
-		);
+		return connectionCreator;
 	}
 
 	private static String driverList() {
 		//we're hoping that the driver is already loaded
 		ConnectionInfoLogger.INSTANCE.jdbcDriverNotSpecified();
-		final StringBuilder list = new StringBuilder();
-		final Enumeration<Driver> drivers = DriverManager.getDrivers();
-		while ( drivers.hasMoreElements() ) {
-			if ( !list.isEmpty() ) {
-				list.append(", ");
-			}
-			list.append( drivers.nextElement().getClass().getName() );
-		}
+		final var list = new StringBuilder();
+		DriverManager.drivers()
+				.forEach( driver -> {
+					if ( !list.isEmpty() ) {
+						list.append( ", " );
+					}
+					list.append( driver.getClass().getName() );
+				} );
 		return list.toString();
 	}
 

@@ -163,13 +163,8 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				clauseStack.pop();
 			}
 		}
-		else if ( offsetClauseExpression != null && fetchClauseExpression == null ) {
-			throw new UnsupportedOperationException( 
-				"Only passing setFirstResult(m) and not setMaxResults(n) to 'ROWS m TO n' clause not supported." 
-			);
-		}
-		else if ( offsetClauseExpression != null && fetchClauseExpression != null ) {
-			// We have offset and maxRows/limit. We use 'SELECT ROWS offset TO limit' syntax
+		else if ( offsetClauseExpression != null ) {
+			// We have an offset. We use 'SELECT ROWS m TO n' syntax
 			appendSql( "rows " );
       
 			// Render offset parameter
@@ -186,9 +181,14 @@ public class TimesTenSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 			// Render maxRows/limit parameter
 			clauseStack.push( Clause.FETCH );
 			try {
-				// TimesTen includes both m and n rows of 'ROWS m to n'; 
-				// We need to substract 1 row to fit maxRows
-				renderFetchPlusOffsetExpressionAsLiteral( fetchClauseExpression, offsetClauseExpression, -1 );
+				if ( fetchClauseExpression != null ) {
+					// We need to substract 1 row to fit maxRows
+					renderFetchPlusOffsetExpressionAsLiteral( fetchClauseExpression, offsetClauseExpression, -1 );
+				}
+				else{
+					// We dont have a maxRows param, we will just use a MAX_VALUE
+					appendSql( Integer.MAX_VALUE );
+				}
 			}
 			finally {
 				clauseStack.pop();

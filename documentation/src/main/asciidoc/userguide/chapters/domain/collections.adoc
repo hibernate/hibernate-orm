@@ -308,7 +308,7 @@ Hibernate is able to map Object and primitive arrays as collections.  Mapping an
 the same as mapping a <<collection-list,list>>.
 
 There is a major limitation of mapping arrays to be aware of - the array cannot be lazy using
-<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<bytecode-enhancement-guide,bytecode enhancement>>
+<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<BytecodeEnhancement, bytecode enhancement>>
 of its owner.
 
 Note that Jakarta Persistence does not define support for arrays as plural attributes; according to the specification,

@@ -58,6 +58,10 @@ If your application does not need to care about "internal state changing data-ty
 In this approach Hibernate will manipulate the bytecode of your classes to add "dirty tracking" directly to the entity, allowing the entity itself to keep track of which of its attributes have changed.
 During the flush time, Hibernate asks your entity what has changed rather than having to perform the state-diff calculations.
 
+[IMPORTANT]
+Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
+Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
+
 [[BytecodeEnhancement-dirty-tracking-bidirectional]]
 ==== Bidirectional association management
 

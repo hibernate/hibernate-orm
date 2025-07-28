@@ -1055,6 +1055,10 @@ Interception is able to detect writes to the `image` field, that is, replacement
 It's not able to detect modifications made directly to the _elements_ of the array, and so such modifications may be lost.
 ====
 
+[IMPORTANT]
+Hibernate's extended bytecode enhancement feature has been deprecated, primarily because it relies on assumptions and behaviors that often require a broader runtime scope than what Hibernate alone can reliably provide, similar to container-based environments such as Quarkus or WildFly.
+Applications which make use of this feature should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
+
 [[fetch-profiles]]
 === Named fetch profiles
 

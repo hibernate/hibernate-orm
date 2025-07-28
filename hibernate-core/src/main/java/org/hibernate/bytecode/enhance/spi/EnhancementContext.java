@@ -90,7 +90,9 @@ public interface EnhancementContext {
 	 *
 	 * @return {@code true} indicates that any direct access to fields of entities should be routed to the enhanced
 	 *         getter / setter  method.
+	 * @deprecated Will be removed without replacement. See HHH-19661
 	 */
+	@Deprecated(forRemoval = true)
 	boolean doExtendedEnhancement(UnloadedClass classDescriptor);
 
 	/**

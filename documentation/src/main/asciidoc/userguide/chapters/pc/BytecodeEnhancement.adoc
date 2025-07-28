@@ -99,6 +99,9 @@ include::{example-dir-enhancement}/BytecodeEnhancementTest.java[tags=BytecodeEnh
 
 Bytecode-enhanced bi-directional association management makes that first example work by managing the "other side" of a bi-directional association whenever one side is manipulated.
 
+[IMPORTANT]
+Hibernate's bidirectional association management bytecode enhancement feature has been deprecated.  Users should instead manage both sides of such associations directly.
+
 [[BytecodeEnhancement-dirty-tracking-optimizations]]
 ==== Internal performance optimizations
 

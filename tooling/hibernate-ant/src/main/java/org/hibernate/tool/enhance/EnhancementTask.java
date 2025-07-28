@@ -204,6 +204,10 @@ public class EnhancementTask extends Task {
 			DEPRECATION_LOGGER.deprecatedSettingForRemoval("extended enhancement", "false");
 		}
 
+		if ( enableAssociationManagement ) {
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bi-directional association persistent attributes", "false" );
+		}
+
 		final BytecodeProvider bytecodeProvider = buildDefaultBytecodeProvider();
 		try {
 			Enhancer enhancer = bytecodeProvider.getEnhancer( enhancementContext );

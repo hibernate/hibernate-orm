@@ -47,6 +47,9 @@ public class EnhancementHelper {
 		if ( !enhancementDsl.getEnableLazyInitialization().get() ) {
 			logger.warn( "The 'enableLazyInitialization' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}
+		if ( enhancementDsl.getEnableAssociationManagement().get() ) {
+			logger.warn("Management of bi-directional association persistent attributes is deprecated and will be removed. Set the value to 'false' to get rid of this warning" );
+		}
 		if ( !enhancementDsl.getEnableDirtyTracking().get() ) {
 			logger.warn( "The 'enableDirtyTracking' configuration is deprecated and will be removed. Set the value to 'true' to get rid of this warning" );
 		}

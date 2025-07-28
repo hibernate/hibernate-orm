@@ -100,53 +100,38 @@ public class TimesTenDialect extends Dialect {
 			case SqlTypes.BOOLEAN:
 			case SqlTypes.BIT:
 			case SqlTypes.TINYINT:
-				return "TT_TINYINT";
+				return "tt_tinyint";
 			case SqlTypes.SMALLINT:
-				return "TT_SMALLINT";
+				return "tt_smallint";
 			case SqlTypes.INTEGER:
-				return "TT_INTEGER";
+				return "tt_integer";
 			case SqlTypes.BIGINT:
-				return "TT_BIGINT";
+				return "tt_bigint";
 			//note that 'binary_float'/'binary_double' might
 			//be better mappings for Java Float/Double
 
-			case SqlTypes.CHAR:
-				return "CHAR($l)";
 			case SqlTypes.VARCHAR:
 			case SqlTypes.LONGVARCHAR:
-				return "VARCHAR2($l)";
+				return "varchar2($l)";
 
-			case SqlTypes.BINARY:
-				return "BINARY($l)";
-			case SqlTypes.VARBINARY:
 			case SqlTypes.LONGVARBINARY:
-				return "VARBINARY($l)";
+				return "varbinary($l)";
 
 			//'numeric'/'decimal' are synonyms for 'number'
 			case SqlTypes.NUMERIC:
 			case SqlTypes.DECIMAL:
-				return "NUMBER($p,$s)";
+				return "number($p,$s)";
 			case SqlTypes.FLOAT:
-				return "BINARY_FLOAT";
+				return "binary_float";
 			case SqlTypes.DOUBLE:
-				return "BINARY_DOUBLE";
+				return "binary_double";
 
 			case SqlTypes.DATE:
-				return "TT_DATE";
+				return "tt_date";
 			case SqlTypes.TIME:
-				return "TT_TIME";
-			case SqlTypes.TIMESTAMP:
-				return "TIMESTAMP";
-			//`timestamp` has more precision than `tt_timestamp`
+				return "tt_time";
 			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
 				return "timestamp($p)";
-
-			case SqlTypes.BLOB:
-				return "BLOB";
-			case SqlTypes.CLOB:
-				return "CLOB";
-			case SqlTypes.NCLOB:
-				return "NCLOB";
 
 			default:
 				return super.columnType( sqlTypeCode );

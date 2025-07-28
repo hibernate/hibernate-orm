@@ -906,7 +906,7 @@ In fact, Oracle doesn't have `DATE` or `TIME` types--every date or time must be 
 | `OffsetDateTime`, `ZonedDateTime` | `TIMESTAMP WITH TIME ZONE` | `TIMESTAMP` 🙄 | `DATETIMEOFFSET` | `TIMESTAMP WITH TIME ZONE`
 |====
 
-On the other hand, there are no perfectly natural mappings for `Instant` and `Duration` on must databases.
+On the other hand, there are no perfectly natural mappings for `Instant` and `Duration` on most databases.
 By default:
 
 - `Duration` is mapped to a column of type `NUMERIC(21)` holding the length of the duration in nanoseconds, and
@@ -1095,7 +1095,7 @@ We'll explain the effect of these members as we consider the various types of as
 
 It's not a requirement to represent _every_ foreign key relationship as an association at the Java level.
 It's perfectly acceptable to replace a `@ManyToOne` mapping with a basic-typed attribute holding an identifier, if it's inconvenient to think of this relationship as an association at the Java level.
-That said, it's possible to take this idea way to far.
+That said, it's possible to take this idea way too far.
 
 
 .💀 Aggregates 💀

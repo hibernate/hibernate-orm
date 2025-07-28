@@ -165,22 +165,21 @@ public class SQLQueryParser {
 		}
 		else {
 			final String aliasName = token.substring( 0, firstDot );
+			final String propertyName = token.substring( firstDot + 1 );
 			if ( context.isCollectionAlias( aliasName ) ) {
 				// The current alias is referencing the collection to be eagerly fetched
-				String propertyName = token.substring( firstDot + 1 );
-				result.append( resolveCollectionProperties( aliasName, propertyName ) );
+				result.append( resolveCollectionProperties( aliasName, propertyName, token ) );
 				aliasesFound++;
 			}
 			else if ( context.isEntityAlias( aliasName ) ) {
 				// it is a property reference {foo.bar}
-				String propertyName = token.substring( firstDot + 1 );
-				result.append( resolveProperties( aliasName, propertyName ) );
+				result.append( resolveProperties( aliasName, propertyName, token ) );
 				aliasesFound++;
 			}
 			else {
 				// passing through anything we do not know
 				// to support jdbc escape sequences HB-898
-				result.append( '{' ).append(token).append( '}' );
+				result.append( '{' ).append( token ).append( '}' );
 			}
 		}
 	}
@@ -217,22 +216,24 @@ public class SQLQueryParser {
 		}
 	}
 
-	private String resolveCollectionProperties(
-			String aliasName,
-			String propertyName) {
-		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
-		final CollectionPersister collectionPersister = context.getCollectionPersister( aliasName );
+	private String resolveCollectionProperties(String aliasName, String propertyName, String token) {
+		final var fieldResults = context.getPropertyResultsMap( aliasName );
+		final var collectionPersister = context.getCollectionPersister( aliasName );
 		final String collectionSuffix = context.getCollectionSuffix( aliasName );
 		switch ( propertyName ) {
 			case "*":
 				if ( !fieldResults.isEmpty() ) {
-					throw new QueryException( "Using return-property together with * syntax is not supported" );
+					throw new QueryException(
+							"Illegal interpolation '%s' ('%s' is a field alias)"
+									.formatted( token, aliasName ),
+							originalQueryString
+					);
 				}
 				aliasesFound++;
 				return collectionPersister.selectFragment( aliasName, collectionSuffix )
-					+ ", " + resolveProperties( aliasName, propertyName );
+						+ ", " + resolveProperties( aliasName, propertyName, token );
 			case "element.*":
-				return resolveProperties( aliasName, "*" );
+				return resolveProperties( aliasName, "*", token );
 			default:
 				// Let return-properties override whatever the persister has for aliases.
 				String[] columnAliases = fieldResults.get( propertyName );
@@ -240,19 +241,23 @@ public class SQLQueryParser {
 					columnAliases =
 							collectionPersister.getCollectionPropertyColumnAliases( propertyName, collectionSuffix );
 				}
-				validate( aliasName, propertyName, columnAliases );
+				validate( aliasName, propertyName, columnAliases, token );
 				aliasesFound++;
 				return columnAliases[0];
 		}
 	}
 
-	private String resolveProperties(String aliasName, String propertyName) {
-		final Map<String, String[]> fieldResults = context.getPropertyResultsMap( aliasName );
-		final EntityPersister persister = context.getEntityPersister( aliasName );
+	private String resolveProperties(String aliasName, String propertyName, String token) {
+		final var fieldResults = context.getPropertyResultsMap( aliasName );
+		final var persister = context.getEntityPersister( aliasName );
 		final String suffix = context.getEntitySuffix( aliasName );
 		if ( "*".equals( propertyName ) ) {
 			if ( !fieldResults.isEmpty() ) {
-				throw new QueryException( "Using return-property together with * syntax is not supported" );
+				throw new QueryException(
+						"Illegal interpolation '%s' ('%s' is a field alias)"
+								.formatted( token, aliasName ),
+						originalQueryString
+				);
 			}
 			aliasesFound++;
 			return persister.selectFragment( aliasName, suffix ) ;
@@ -263,24 +268,24 @@ public class SQLQueryParser {
 			if ( columnAliases == null ) {
 				columnAliases = persister.getSubclassPropertyColumnAliases( propertyName, suffix );
 			}
-			validate( aliasName, propertyName, columnAliases );
+			validate( aliasName, propertyName, columnAliases, token );
 			aliasesFound++;
 			return columnAliases[0];
 		}
 	}
 
-	private void validate(String aliasName, String propertyName, String[] columnAliases) {
+	private void validate(String aliasName, String propertyName, String[] columnAliases, String token) {
 		if ( columnAliases == null || columnAliases.length == 0 ) {
 			throw new QueryException(
-					"No column name found for property [" + propertyName + "] for alias [" + aliasName + "]",
+					"No column for interpolation '%s'"
+							.formatted( token ),
 					originalQueryString
 			);
 		}
 		if ( columnAliases.length != 1 ) {
-			// TODO: better error message since we actually support composites if names are explicitly listed
 			throw new QueryException(
-					"SQL queries only support properties mapped to a single column - property [" +
-					propertyName + "] is mapped to " + columnAliases.length + " columns.",
+					"Multiple columns for interpolation '%s' ('%s' is mapped to %s columns)"
+							.formatted( token, propertyName, columnAliases.length ),
 					originalQueryString
 			);
 		}

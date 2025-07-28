@@ -68,7 +68,9 @@ public interface EnhancementContext {
 	 * @return {@code true} indicates that the field is enhanced so that for bi-directional persistent fields
 	 * 			the association is managed, i.e. the associations are automatically set; {@code false} indicates that
 	 * 			the management is handled by the user.
+	 * @deprecated Will be removed without replacement. See HHH-19660
 	 */
+	@Deprecated(forRemoval = true)
 	boolean doBiDirectionalAssociationManagement(UnloadedField field);
 
 	/**

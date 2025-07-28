@@ -50,7 +50,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.adjustToPrecision;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(
 		settings = @Setting(name = MappingSettings.JAVA_TIME_USE_DIRECT_JDBC, value = "true")
 )

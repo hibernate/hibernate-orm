@@ -525,4 +525,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		return sessionFactory;
 	}
 
+	// Used by Hibernate Reactive
+	public TemporaryTableStrategy getTemporaryTableStrategy() {
+		return temporaryTableStrategy;
+	}
 }

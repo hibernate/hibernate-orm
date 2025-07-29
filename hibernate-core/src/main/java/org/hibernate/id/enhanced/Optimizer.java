@@ -69,8 +69,10 @@ public interface Optimizer {
 	 * strategy for calculating the starting value of a sequence range.
 	 *
 	 * @param databaseValue The expression representing the next value from database sequence
-	 * @param sessionFactory
+	 * @param sessionFactory The session factory
 	 * @return An expression that calculates the low/base value according to the optimizer strategy
+	 *
+	 * @since 7.1
 	 */
 	Expression createLowValueExpression(Expression databaseValue, SessionFactoryImplementor sessionFactory);
 }

@@ -1,17 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.cte;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -28,12 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @JiraKey("HHH-18818")
 @SessionFactory
-@RequiresDialects({
-		@RequiresDialect(PostgreSQLDialect.class),
-		@RequiresDialect(DB2Dialect.class)
-})
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_POOLED_OPTIMIZER, value = "legacy-hilo"))
 @DomainModel(annotatedClasses = Dummy.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCteInsertStrategy.class)
 public class CteInsertWithLegacyHiLoOptimizerTest {
 	@Test
 	void test(SessionFactoryScope scope) {

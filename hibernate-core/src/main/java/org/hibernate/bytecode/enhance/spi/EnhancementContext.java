@@ -23,7 +23,7 @@ import org.hibernate.Incubating;
  *
  * @author Steve Ebersole
  */
-public interface EnhancementContext {
+public interface EnhancementContext extends EnhancementOptions {
 	/**
 	 * Obtain access to the ClassLoader that can be used to load Class references.  In JPA SPI terms, this
 	 * should be a "temporary class loader" as defined by
@@ -59,43 +59,6 @@ public interface EnhancementContext {
 	 * @return {@code true} if the class is a mapped super class; {@code false} otherwise.
 	 */
 	boolean isMappedSuperclassClass(UnloadedClass classDescriptor);
-
-	/**
-	 * Should we manage association of bidirectional persistent attributes for this field?
-	 *
-	 * @param field The field to check.
-	 *
-	 * @return {@code true} indicates that the field is enhanced so that for bidirectional persistent fields
-	 * 			the association is managed, i.e. the associations are automatically set; {@code false} indicates that
-	 * 			the management is handled by the user.
-	 * @deprecated Will be removed without replacement. See HHH-19660
-	 */
-	@Deprecated(forRemoval = true)
-	boolean doBiDirectionalAssociationManagement(UnloadedField field);
-
-	/**
-	 * Should we in-line dirty checking for persistent attributes for this class?
-	 *
-	 * @param classDescriptor The descriptor of the class to check.
-	 *
-	 * @return {@code true} indicates that dirty checking should be in-lined within the entity; {@code false}
-	 *         indicates it should not.  In-lined is more easily serializable and probably more performant.
-	 * @deprecated Will be removed without replacement. See HHH-15641
-	 */
-	@Deprecated(forRemoval = true)
-	boolean doDirtyCheckingInline(UnloadedClass classDescriptor);
-
-	/**
-	 * Should we enhance field access to entities from this class?
-	 *
-	 * @param classDescriptor The descriptor of the class to check.
-	 *
-	 * @return {@code true} indicates that any direct access to fields of entities should be routed to the enhanced
-	 *         getter / setter  method.
-	 * @deprecated Will be removed without replacement. See HHH-19661
-	 */
-	@Deprecated(forRemoval = true)
-	boolean doExtendedEnhancement(UnloadedClass classDescriptor);
 
 	/**
 	 * Does the given class define any lazy loadable attributes?

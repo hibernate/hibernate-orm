@@ -16,13 +16,10 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 
-import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
-import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -60,17 +57,6 @@ public final class EnhancerImplConstants {
 	//Frequently used annotations, declared as collections as otherwise they get wrapped into them over and over again:
 	final Collection<? extends AnnotationDescription> TRANSIENT_ANNOTATION = List.of(
 			AnnotationDescription.Builder.ofType( Transient.class ).build() );
-	final List<Annotation> HIBERNATE_VERSION_ANNOTATION = List.of( new EnhancementInfo() {
-		@Override
-		public String version() {
-			return Version.getVersionString();
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return EnhancementInfo.class;
-		}
-	} );
 
 	//Frequently used Types for method signatures:
 	final TypeDefinition TypeVoid = TypeDescription.ForLoadedType.of( void.class );

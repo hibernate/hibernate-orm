@@ -47,7 +47,7 @@ final class BiDirectionalAssociationHandler implements Implementation {
 			ByteBuddyEnhancementContext enhancementContext,
 			AnnotatedFieldDescription persistentField,
 			Implementation implementation) {
-		if ( !enhancementContext.doBiDirectionalAssociationManagement( persistentField ) ) {
+		if ( !enhancementContext.doBiDirectionalAssociationManagement() ) {
 			return implementation;
 		}
 

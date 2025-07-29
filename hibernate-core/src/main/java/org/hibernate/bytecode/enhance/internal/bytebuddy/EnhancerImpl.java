@@ -30,7 +30,6 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Version;
@@ -76,15 +75,17 @@ import static net.bytebuddy.matcher.ElementMatchers.isSetter;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.ASSOCIATION_MANAGEMENT;
+import static org.hibernate.bytecode.enhance.internal.bytebuddy.FeatureMismatchException.Feature.DIRTY_CHECK;
 
 public class EnhancerImpl implements Enhancer {
-
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Enhancer.class );
 
 	protected final ByteBuddyEnhancementContext enhancementContext;
 	private final ByteBuddyState byteBuddyState;
 	private final EnhancerClassLocator typePool;
 	private final EnhancerImplConstants constants;
+	private final List<? extends Annotation> infoAnnotationList;
 
 	/**
 	 * Constructs the Enhancer, using the given context.
@@ -109,7 +110,10 @@ public class EnhancerImpl implements Enhancer {
 		this.byteBuddyState = Objects.requireNonNull( byteBuddyState );
 		this.typePool = Objects.requireNonNull( classLocator );
 		this.constants = byteBuddyState.getEnhancerConstants();
+
+		this.infoAnnotationList = List.of( createInfoAnnotation( enhancementContext ) );
 	}
+
 
 	/**
 	 * Performs the enhancement.
@@ -133,7 +137,7 @@ public class EnhancerImpl implements Enhancer {
 			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy -> doEnhance(
 					() -> byteBuddy.ignore( isDefaultFinalizer() )
 							.redefine( typeDescription, typePool.asClassFileLocator() )
-							.annotateType( constants.HIBERNATE_VERSION_ANNOTATION ),
+							.annotateType( infoAnnotationList ),
 					typeDescription
 			) );
 		}
@@ -167,14 +171,17 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private DynamicType.Builder<?> doEnhance(Supplier<DynamicType.Builder<?>> builderSupplier, TypeDescription managedCtClass) {
-		// skip if the class was already enhanced. This is very common in WildFly as classloading is highly concurrent.
-		// We need to ensure that no class is instrumented multiple times as that might result in incorrect bytecode.
-		// N.B. there is a second check below using a different approach: checking for the marker interfaces,
-		// which does not address the case of extended bytecode enhancement
-		// (because it enhances classes that do not end up with these marker interfaces).
-		// I'm currently inclined to keep both checks, as one is safer and the other has better backwards compatibility.
-		if ( managedCtClass.getDeclaredAnnotations().isAnnotationPresent( EnhancementInfo.class ) ) {
-			verifyVersions( managedCtClass, enhancementContext );
+		if ( alreadyEnhanced( managedCtClass ) ) {
+			// the class already implements `Managed`.  there are 2 broad cases -
+			//		1. the user manually implemented `Managed`
+			//		2. the class was previously enhanced
+			// in either case, look for `@EnhancementInfo` and, if found, verify we can "re-enhance" the class
+			final AnnotationDescription.Loadable<EnhancementInfo> infoAnnotation = managedCtClass.getDeclaredAnnotations().ofType( EnhancementInfo.class );
+			if ( infoAnnotation != null ) {
+				// throws an exception if there is a mismatch...
+				verifyReEnhancement( managedCtClass, infoAnnotation.load(), enhancementContext );
+			}
+			// verification succeeded (or not done) - we can simply skip the enhancement
 			log.tracef( "Skipping enhancement of [%s]: it's already annotated with @EnhancementInfo", managedCtClass.getName() );
 			return null;
 		}
@@ -188,14 +195,6 @@ public class EnhancerImpl implements Enhancer {
 		// can't effectively enhance records
 		if ( managedCtClass.isRecord() ) {
 			log.tracef( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
-			return null;
-		}
-
-		// handle already enhanced classes
-		if ( alreadyEnhanced( managedCtClass ) ) {
-			verifyVersions( managedCtClass, enhancementContext );
-
-			log.tracef( "Skipping enhancement of [%s]: it's already implementing 'Managed'", managedCtClass.getName() );
 			return null;
 		}
 
@@ -258,7 +257,7 @@ public class EnhancerImpl implements Enhancer {
 
 			builder = addInterceptorHandling( builder, managedCtClass );
 
-			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
+			if ( enhancementContext.doDirtyCheckingInline() ) {
 				List<AnnotatedFieldDescription> collectionFields = collectCollectionFields( managedCtClass );
 
 				if ( collectionFields.isEmpty() ) {
@@ -390,7 +389,7 @@ public class EnhancerImpl implements Enhancer {
 			builder = builder.implement( ManagedComposite.class );
 			builder = addInterceptorHandling( builder, managedCtClass );
 
-			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
+			if ( enhancementContext.doDirtyCheckingInline() ) {
 				builder = builder.implement( CompositeTracker.class )
 						.defineField(
 								EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME,
@@ -428,7 +427,7 @@ public class EnhancerImpl implements Enhancer {
 			builder = builder.implement( ManagedMappedSuperclass.class );
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
-		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
+		else if ( enhancementContext.doExtendedEnhancement() ) {
 			log.tracef( "Extended enhancement of [%s]", managedCtClass.getName() );
 			return createTransformer( managedCtClass ).applyExtended( builderSupplier.get() );
 		}
@@ -437,6 +436,36 @@ public class EnhancerImpl implements Enhancer {
 			return null;
 		}
 	}
+
+	private void verifyReEnhancement(
+			TypeDescription managedCtClass,
+			EnhancementInfo existingInfo,
+			ByteBuddyEnhancementContext enhancementContext) {
+		// first, make sure versions match
+		final String enhancementVersion = existingInfo.version();
+		if ( "ignore".equals( enhancementVersion ) ) {
+			// for testing
+			log.debugf( "Skipping re-enhancement version check for %s due to `ignore`", managedCtClass.getName() );
+		}
+		else if ( !Version.getVersionString().equals( enhancementVersion ) ) {
+			throw new VersionMismatchException( managedCtClass, enhancementVersion, Version.getVersionString() );
+		}
+
+		FeatureMismatchException.checkFeatureEnablement(
+				managedCtClass,
+				DIRTY_CHECK,
+				enhancementContext.doDirtyCheckingInline(),
+				existingInfo.includesDirtyChecking()
+		);
+
+		FeatureMismatchException.checkFeatureEnablement(
+				managedCtClass,
+				ASSOCIATION_MANAGEMENT,
+				enhancementContext.doBiDirectionalAssociationManagement(),
+				existingInfo.includesAssociationManagement()
+		);
+	}
+
 
 	/**
 	 * Utility that determines the access-type of a mapped class based on an explicit annotation
@@ -627,31 +656,6 @@ public class EnhancerImpl implements Enhancer {
 		final char[] chars = name.toCharArray();
 		chars[0] = Character.toLowerCase( chars[0] );
 		return new String( chars );
-	}
-
-	private static void verifyVersions(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {
-		final AnnotationDescription.Loadable<EnhancementInfo> existingInfo = managedCtClass
-				.getDeclaredAnnotations()
-				.ofType( EnhancementInfo.class );
-		if ( existingInfo == null ) {
-			// There is an edge case here where a user manually adds `implement Managed` to
-			// their domain class, in which case there will most likely not be a
-			// `EnhancementInfo` annotation.  Such cases should simply not do version checking.
-			//
-			// However, there is also ambiguity in this case with classes that were enhanced
-			// with old versions of Hibernate which did not add that annotation as part of
-			// enhancement.  But overall we consider this condition to be acceptable
-			return;
-		}
-
-		final String enhancementVersion = extractVersion( existingInfo );
-		if ( !Version.getVersionString().equals( enhancementVersion ) ) {
-			throw new VersionMismatchException( managedCtClass, enhancementVersion, Version.getVersionString() );
-		}
-	}
-
-	private static String extractVersion(AnnotationDescription.Loadable<EnhancementInfo> annotation) {
-		return annotation.load().version();
 	}
 
 	private PersistentAttributeTransformer createTransformer(TypeDescription typeDescription) {
@@ -871,5 +875,43 @@ public class EnhancerImpl implements Enhancer {
 			}
 		}
 	}
+
+
+	private static EnhancementInfo createInfoAnnotation(EnhancementContext enhancementContext) {
+		return new EnhancementInfoImpl( enhancementContext.doDirtyCheckingInline(), enhancementContext.doBiDirectionalAssociationManagement() );
+	}
+
+	private static class EnhancementInfoImpl implements EnhancementInfo {
+		private final String version;
+		private final boolean includesDirtyChecking;
+		private final boolean includesAssociationManagement;
+
+		public EnhancementInfoImpl(boolean includesDirtyChecking, boolean includesAssociationManagement) {
+			this.version = Version.getVersionString();
+			this.includesDirtyChecking = includesDirtyChecking;
+			this.includesAssociationManagement = includesAssociationManagement;
+		}
+
+		@Override
+		public String version() {
+			return version;
+		}
+
+		@Override
+		public boolean includesDirtyChecking() {
+			return includesDirtyChecking;
+		}
+
+		@Override
+		public boolean includesAssociationManagement() {
+			return includesAssociationManagement;
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return EnhancementInfo.class;
+		}
+	}
+
 
 }

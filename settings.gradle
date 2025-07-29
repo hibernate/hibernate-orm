@@ -77,6 +77,7 @@ dependencyResolutionManagement {
             // WARNING: When upgrading to a version of bytebuddy that supports a new bytecode version,
             // make sure to remove the now unnecessary net.bytebuddy.experimental=true in relevant CI jobs (Jenkinsfile).
             def byteBuddyVersion = version "byteBuddy", "1.17.6"
+            def checkerFrameworkVersion = version "checkerFramework", "3.49.5"
             def classmateVersion = version "classmate", "1.7.0"
             def geolatteVersion = version "geolatte", "1.10"
             def hibernateModelsVersion = version "hibernateModels", "1.0.1"
@@ -101,6 +102,9 @@ dependencyResolutionManagement {
 
             library( "byteBuddy", "net.bytebuddy", "byte-buddy" ).versionRef( byteBuddyVersion )
             library( "byteBuddyAgent", "net.bytebuddy", "byte-buddy-agent" ).versionRef( byteBuddyVersion )
+
+            library( "checkerFramework", "org.checkerframework", "checker-qual" ).versionRef( checkerFrameworkVersion )
+            library( "checkerFrameworkChecker", "org.checkerframework", "checker" ).versionRef( checkerFrameworkVersion )
 
             library( "logging", "org.jboss.logging", "jboss-logging" ).versionRef( jbossLoggingVersion )
             library( "loggingAnnotations", "org.jboss.logging", "jboss-logging-annotations" ).versionRef( jbossLoggingToolVersion )

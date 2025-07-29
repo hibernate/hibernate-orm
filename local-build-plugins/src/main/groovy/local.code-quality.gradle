@@ -105,9 +105,15 @@ spotless {
 
 tasks.compileJava.dependsOn tasks.spotlessJavaApply
 
+dependencies {
+    compileOnly libs.checkerFramework
+    testCompileOnly libs.checkerFramework
+    checkerFramework libs.checkerFrameworkChecker
+}
+
 checkerFramework {
     excludeTests = true
-    skipCheckerFramework = true
+    skipCheckerFramework = !gradle.startParameter.taskNames.contains("ciCheck")
     checkers = [
             'org.checkerframework.checker.nullness.NullnessChecker'
     ]

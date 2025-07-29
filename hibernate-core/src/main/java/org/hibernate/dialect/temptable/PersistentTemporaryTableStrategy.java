@@ -5,6 +5,8 @@
 package org.hibernate.dialect.temptable;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.sqm.mutation.spi.AfterUseAction;
 import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 
@@ -13,7 +15,11 @@ import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
  */
 public class PersistentTemporaryTableStrategy implements TemporaryTableStrategy {
 
-	public static final PersistentTemporaryTableStrategy INSTANCE = new PersistentTemporaryTableStrategy();
+	private final Dialect dialect;
+
+	public PersistentTemporaryTableStrategy(Dialect dialect) {
+		this.dialect = dialect;
+	}
 
 	@Override
 	public String adjustTemporaryTableName(String desiredTableName) {
@@ -27,12 +33,12 @@ public class PersistentTemporaryTableStrategy implements TemporaryTableStrategy 
 
 	@Override
 	public @Nullable String getTemporaryTableCreateOptions() {
-		return null;
+		return StringHelper.nullIfEmpty( dialect.getTableTypeString() );
 	}
 
 	@Override
 	public String getTemporaryTableCreateCommand() {
-		return "create table";
+		return dialect.getCreateTableString();
 	}
 
 	@Override

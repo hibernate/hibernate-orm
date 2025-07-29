@@ -348,6 +348,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	private final Set<String> sqlKeywords = new HashSet<>();
 
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl();
+	private final PersistentTemporaryTableStrategy persistentTemporaryTableStrategy = new PersistentTemporaryTableStrategy( this );
 
 	private final DatabaseVersion version;
 
@@ -3897,7 +3898,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public TemporaryTableStrategy getPersistentTemporaryTableStrategy() {
 		return getSupportedTemporaryTableKind() == TemporaryTableKind.PERSISTENT
 				? new LegacyTemporaryTableStrategy( this )
-				: PersistentTemporaryTableStrategy.INSTANCE;
+				: persistentTemporaryTableStrategy;
 	}
 
 	/**

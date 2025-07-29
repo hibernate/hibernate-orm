@@ -21,6 +21,47 @@ earlier versions, see any other pertinent migration guides as well.
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[lock-options]]
+=== LockOptions
+
+7.0 begins the process of reducing the visibility of `org.hibernate.LockOptions`.
+This class was originally exposed as an API, even though it is more properly an SPI.
+From an API perspective, `FindOption`, `LockOption` and `RefreshOption` are much better ways to specify that information.
+The class itself, as well as API methods which expose it, have been deprecated.
+
+However, 2 aspects of `LockOptions` have been completely removed.
+First, `LockOptions` previously defined a number of constants which have been removed.
+Secondly, the ability to define different LockModes for individual aliases has been removed.
+
+[NOTE]
+----
+ALias-specific LockModes was a very misleading feature, as Hibernate would only ever use the "greatest" LockMode.
+We plan to add the ability to specify a list of aliases to be locked in a later release.
+See https://hibernate.atlassian.net/browse/HHH-19664 for details.
+----
+
+Application code using `org.hibernate.LockOptions` should migrate to using `FindOption`,
+`LockOption` and `RefreshOption` to control the various aspects of locking.  E.g.
+
+[source,java]
+----
+LockOptions lockOptions = new LockOptions();
+lockOptions.setLockMode(PESSIMISTIC_WRITE);
+lockOptions.setTimeout(1000);
+session.refresh(book, lockOptions);
+----
+
+can instead be written as
+
+[source,java]
+----
+session.refresh(book,
+    PESSIMISTIC_WRITE,
+    Timeout.milliseconds(1000));
+----
+
+
+
 [[session-getLobHelper]]
 === Session#getLobHelper
 

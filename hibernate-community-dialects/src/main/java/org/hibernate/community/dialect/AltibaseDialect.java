@@ -19,7 +19,7 @@ import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.OracleTruncFunction;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -587,7 +587,7 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override

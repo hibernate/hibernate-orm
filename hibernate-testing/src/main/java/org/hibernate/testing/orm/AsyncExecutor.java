@@ -14,31 +14,33 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncExecutor {
 	public static void executeAsync(Runnable action) {
-		final ExecutorService executorService = Executors.newSingleThreadExecutor();
-		try {
-			executorService.submit( action ).get();
-		}
-		catch (InterruptedException e) {
-			throw new RuntimeException( "Thread interruption", e );
-		}
-		catch (ExecutionException e) {
-			throw new RuntimeException( "Async execution error", e );
+		try (ExecutorService executorService = Executors.newSingleThreadExecutor()) {
+			try {
+				executorService.submit( action ).get();
+			}
+			catch (InterruptedException e) {
+				throw new RuntimeException( "Thread interruption", e );
+			}
+			catch (ExecutionException e) {
+				throw new RuntimeException( "Async execution error", e );
+			}
 		}
 	}
 
 	public static void executeAsync(int timeout, TimeUnit timeoutUnit, Runnable action) {
-		final ExecutorService executorService = Executors.newSingleThreadExecutor();
-		try {
-			executorService.submit( action ).get( timeout, timeoutUnit );
-		}
-		catch (InterruptedException e) {
-			throw new TimeoutException( "Thread interruption", e );
-		}
-		catch (java.util.concurrent.TimeoutException e) {
-			throw new TimeoutException( "Thread timeout exceeded", e );
-		}
-		catch (ExecutionException e) {
-			throw new RuntimeException( "Async execution error", e.getCause() );
+		try (ExecutorService executorService = Executors.newSingleThreadExecutor()) {
+			try {
+				executorService.submit( action ).get( timeout, timeoutUnit );
+			}
+			catch (InterruptedException e) {
+				throw new TimeoutException( "Thread interruption", e );
+			}
+			catch (java.util.concurrent.TimeoutException e) {
+				throw new TimeoutException( "Thread timeout exceeded", e );
+			}
+			catch (ExecutionException e) {
+				throw new RuntimeException( "Async execution error", e.getCause() );
+			}
 		}
 	}
 

@@ -20,6 +20,7 @@ import java.util.Locale;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface Locking {
 	/**
 	 * When pessimistic locking is requested, this enum defines

@@ -14,6 +14,7 @@ import org.hibernate.community.dialect.function.DerbyRpadEmulation;
 import org.hibernate.community.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.community.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorDerbyDatabaseImpl;
+import org.hibernate.community.dialect.temptable.DerbyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
@@ -28,12 +29,11 @@ import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
-import org.hibernate.community.dialect.temptable.DerbyLocalTemporaryTableStrategy;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
 import org.hibernate.dialect.temptable.TemporaryTableStrategy;
 import org.hibernate.engine.jdbc.Size;
@@ -52,9 +52,9 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableMutationStrategy;
+import org.hibernate.query.sqm.mutation.spi.BeforeUseAction;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
@@ -618,7 +618,7 @@ public class DerbyLegacyDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
+		return LockingSupportSimple.NO_OUTER_JOIN;
 	}
 
 	@Override

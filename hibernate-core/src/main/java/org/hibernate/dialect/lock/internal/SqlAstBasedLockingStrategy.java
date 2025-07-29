@@ -47,6 +47,9 @@ import java.util.List;
 import java.util.Locale;
 
 /**
+ * LockingStrategy implementation which uses Hibernate's SQL AST
+ * mechanism for applying pessimistic locks.
+ *
  * @author Steve Ebersole
  */
 public class SqlAstBasedLockingStrategy implements LockingStrategy {

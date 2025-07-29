@@ -4,6 +4,7 @@
  */
 package org.hibernate.community.dialect;
 
+import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
 
 import static org.junit.Assert.assertEquals;
@@ -39,7 +40,7 @@ public class DerbyDialectTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 fetch first ? rows only";
 
-		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( 0, limit ) );
+		final String actual = withLimit( input, toRowSelection( 0, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -51,7 +52,7 @@ public class DerbyDialectTestCase {
 		final String input = "select * from tablename t where t.cat = 5";
 		final String expected = "select * from tablename t where t.cat = 5 offset ? rows fetch next ? rows only";
 
-		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = withLimit( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -63,7 +64,7 @@ public class DerbyDialectTestCase {
 		final String input = "select c11 as col1, c12 as col2, c13 as col13 from t1 for update of c11, c13";
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 offset ? rows fetch next ? rows only for update of c11, c13";
 
-		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = withLimit( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -75,7 +76,7 @@ public class DerbyDialectTestCase {
 		final String input = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' with rr";
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' offset ? rows fetch next ? rows only with rr";
 
-		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = withLimit( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 
@@ -87,7 +88,7 @@ public class DerbyDialectTestCase {
 		final String input = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' for update of c11,c13 with rr";
 		final String expected = "select c11 as col1, c12 as col2, c13 as col13 from t1 where flight_id between 'AA1111' and 'AA1112' offset ? rows fetch next ? rows only for update of c11,c13 with rr";
 
-		final String actual = new DerbyDialect().getLimitHandler().processSql( input, toRowSelection( offset, limit ) );
+		final String actual = withLimit( input, toRowSelection( offset, limit ) );
 		assertEquals( expected, actual );
 	}
 	@RequiresDialect( DerbyDialect.class )
@@ -96,6 +97,10 @@ public class DerbyDialectTestCase {
 		scope.inTransaction( s -> s.persist(new Constrained()));
 		scope.inTransaction( s -> s.createMutationQuery("insert into Constrained(id, name, count) values (4,'Gavin',69) on conflict on constraint count_name_key do nothing").executeUpdate());
 		scope.inSession( s -> Assertions.assertEquals( 69, s.createSelectionQuery( "select count from Constrained", int.class).getSingleResult()));
+	}
+
+	private String withLimit(String sql, Limit limit) {
+		return new DerbyDialect().getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
 	private Limit toRowSelection(int firstRow, int maxRows) {

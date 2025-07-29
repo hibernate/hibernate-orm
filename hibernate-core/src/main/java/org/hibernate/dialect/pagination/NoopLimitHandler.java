@@ -49,4 +49,9 @@ public class NoopLimitHandler extends AbstractLimitHandler {
 			}
 		}
 	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
+	}
 }

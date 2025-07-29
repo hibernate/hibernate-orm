@@ -8,6 +8,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.orm.test.dialect.LimitQueryOptions;
 import org.hibernate.query.spi.Limit;
 
 import org.junit.After;
@@ -43,7 +44,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
 				input + " offset 0 rows fetch first ? rows only",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
+				withLimit( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
 		);
 	}
 
@@ -53,7 +54,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		final String input = "select distinct f1 as f53245 from table846752 order by f234, f67 desc";
 		assertEquals(
 				input + " offset ? rows fetch next ? rows only",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 5, 25 ) ).toLowerCase( Locale.ROOT )
+				withLimit( input, toRowSelection( 5, 25 ) ).toLowerCase( Locale.ROOT )
 		);
 	}
 
@@ -63,7 +64,7 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		final String input = "select f1 from table";
 		assertEquals(
 				"select f1 from table order by @@version offset 0 rows fetch first ? rows only",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
+				withLimit( input, toRowSelection( 0, 10 ) ).toLowerCase( Locale.ROOT )
 		);
 	}
 
@@ -73,8 +74,12 @@ public class SQLServer2012DialectTestCase extends BaseUnitTestCase {
 		final String input = "select f1 from table";
 		assertEquals(
 				"select f1 from table order by @@version offset ? rows fetch next ? rows only",
-				dialect.getLimitHandler().processSql( input, toRowSelection( 5, 10 ) ).toLowerCase( Locale.ROOT )
+				withLimit( input, toRowSelection( 5, 10 ) ).toLowerCase( Locale.ROOT )
 		);
+	}
+
+	private String withLimit(String sql, Limit limit) {
+		return dialect.getLimitHandler().processSql( sql, -1, null, new LimitQueryOptions( limit ) );
 	}
 
 	private Limit toRowSelection(int firstRow, int maxRows) {

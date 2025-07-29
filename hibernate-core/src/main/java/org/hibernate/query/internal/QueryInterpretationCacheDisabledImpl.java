@@ -61,6 +61,15 @@ public class QueryInterpretationCacheDisabledImpl implements QueryInterpretation
 	}
 
 	@Override
+	public <K extends Key, R> SelectQueryPlan<R> resolveSelectQueryPlan(K key, Function<K, SelectQueryPlan<R>> creator) {
+		final StatisticsImplementor statistics = getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.queryPlanCacheMiss( key.getQueryString() );
+		}
+		return creator.apply( key );
+	}
+
+	@Override
 	public NonSelectQueryPlan getNonSelectQueryPlan(Key key) {
 		return null;
 	}

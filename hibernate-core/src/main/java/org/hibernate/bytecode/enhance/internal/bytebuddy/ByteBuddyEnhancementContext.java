@@ -51,12 +51,12 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.isMappedSuperclassClass( new UnloadedTypeDescription( classDescriptor ) );
 	}
 
-	public boolean doDirtyCheckingInline(TypeDescription classDescriptor) {
-		return enhancementContext.doDirtyCheckingInline( new UnloadedTypeDescription( classDescriptor ) );
+	public boolean doDirtyCheckingInline() {
+		return enhancementContext.doDirtyCheckingInline();
 	}
 
-	public boolean doExtendedEnhancement(TypeDescription classDescriptor) {
-		return enhancementContext.doExtendedEnhancement( new UnloadedTypeDescription( classDescriptor ) );
+	public boolean doExtendedEnhancement() {
+		return enhancementContext.doExtendedEnhancement();
 	}
 
 	public boolean hasLazyLoadableAttributes(TypeDescription classDescriptor) {
@@ -83,8 +83,8 @@ class ByteBuddyEnhancementContext {
 		return enhancementContext.isMappedCollection( field );
 	}
 
-	public boolean doBiDirectionalAssociationManagement(AnnotatedFieldDescription field) {
-		return enhancementContext.doBiDirectionalAssociationManagement( field );
+	public boolean doBiDirectionalAssociationManagement() {
+		return enhancementContext.doBiDirectionalAssociationManagement();
 	}
 
 	public boolean isDiscoveredType(TypeDescription typeDescription) {

@@ -4,21 +4,20 @@
  */
 package org.hibernate.orm.test.bytecode.enhance.version;
 
-import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.ManagedEntity;
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
+import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.ManagedEntity;
 
 /**
  * @author Steve Ebersole
  */
 @Entity(name = "SimpleEntity")
 @Table(name = "SimpleEntity")
-@EnhancementInfo(version = "5.3.0.Final", includesDirtyChecking = false, includesAssociationManagement = false)
-public class SimpleEntity implements ManagedEntity {
+@EnhancementInfo(version = "ignore", includesDirtyChecking = false, includesAssociationManagement = false)
+public class SimpleEntity2 implements ManagedEntity {
 	@Id
 	private Integer id;
 	private String name;

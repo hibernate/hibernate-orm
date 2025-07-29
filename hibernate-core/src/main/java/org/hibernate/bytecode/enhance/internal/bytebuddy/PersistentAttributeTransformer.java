@@ -281,7 +281,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			if ( !compositeOwner
 					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )
 					&& enhancementContext.isCompositeField( enhancedField )
-					&& enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
+					&& enhancementContext.doDirtyCheckingInline() ) {
 				compositeOwner = true;
 			}
 		}
@@ -296,7 +296,7 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 			}
 		}
 
-		if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
+		if ( enhancementContext.doExtendedEnhancement() ) {
 			builder = applyExtended( builder );
 		}
 

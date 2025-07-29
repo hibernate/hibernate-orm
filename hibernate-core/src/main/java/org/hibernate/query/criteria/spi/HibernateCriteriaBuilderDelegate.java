@@ -2576,6 +2576,30 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.arrayToString( arrayExpression, separator );
 	}
 
+	@Incubating
+	@Override
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression) {
+		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression, defaultExpression );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue) {
+		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression, defaultValue );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression) {
+		return criteriaBuilder.arrayToString( arrayExpression, separator, defaultExpression );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue) {
+		return criteriaBuilder.arrayToString( arrayExpression, separator, defaultValue );
+	}
+
 	@Override
 	@Incubating
 	public <T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
@@ -3098,6 +3122,30 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return criteriaBuilder.collectionToString( collectionExpression, separator );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression) {
+		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression, defaultExpression );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue) {
+		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression, defaultValue );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression) {
+		return criteriaBuilder.collectionToString( collectionExpression, separator, defaultExpression );
+	}
+
+	@Incubating
+	@Override
+	public JpaExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue) {
+		return criteriaBuilder.collectionToString( collectionExpression, separator, defaultValue );
 	}
 
 	@Override

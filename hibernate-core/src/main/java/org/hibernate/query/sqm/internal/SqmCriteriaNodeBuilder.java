@@ -4695,6 +4695,30 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 		);
 	}
 
+	@Override
+	public SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, Expression<String> defaultExpression) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) separatorExpression, (SqmExpression<?>) defaultExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression, String defaultValue) {
+		return arrayToString( arrayExpression, separatorExpression, value( defaultValue ) );
+	}
+
+	@Override
+	public SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, Expression<String> defaultExpression) {
+		return arrayToString( arrayExpression, value( separator ), defaultExpression );
+	}
+
+	@Override
+	public SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator, String defaultValue) {
+		return arrayToString( arrayExpression, value( separator ), value( defaultValue ) );
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -5346,6 +5370,30 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 				null,
 				queryEngine
 		);
+	}
+
+	@Override
+	public SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, Expression<String> defaultExpression) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) separatorExpression, (SqmExpression<?>) defaultExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression, String defaultValue) {
+		return collectionToString( collectionExpression, separatorExpression, value( defaultValue ) );
+	}
+
+	@Override
+	public SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, Expression<String> defaultExpression) {
+		return collectionToString( collectionExpression, value( separator ), defaultExpression );
+	}
+
+	@Override
+	public SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator, String defaultValue) {
+		return collectionToString( collectionExpression, value( separator ), value( defaultValue ) );
 	}
 
 	@Override

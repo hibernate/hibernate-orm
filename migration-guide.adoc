@@ -13,6 +13,25 @@ This guide discusses migration to Hibernate ORM version {version}. For migration
 earlier versions, see any other pertinent migration guides as well.
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Requirements
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[requirements]]
+== Requirements
+
+See the link:{releaseSeriesBase}[website] for the list of requirements for the 7.1 series.
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// New Features
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[new-features]]
+== New Features
+
+See the link:{releaseSeriesBase}#whats-new[website] for the list of new features in the 7.1 series.
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // API changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -60,6 +79,16 @@ session.refresh(book,
     Timeout.milliseconds(1000));
 ----
 
+[[enhancement-options]]
+=== Bytecode Enhancement Options
+
+We plan to remove two options of bytecode enhancement and have currently marked them as deprecated.
+
+First is bidirectional association management.
+Applications should instead manage both sides of such associations directly as we have always recommended.
+
+Second is a little-known feature called "extended" enhancement.
+Applications should instead use proper object-oriented encapsulation, exposing managed state via getters and setters.
 
 
 [[session-getLobHelper]]

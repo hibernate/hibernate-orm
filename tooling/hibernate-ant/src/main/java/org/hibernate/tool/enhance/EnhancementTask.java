@@ -205,7 +205,7 @@ public class EnhancementTask extends Task {
 		}
 
 		if ( enableAssociationManagement ) {
-			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bi-directional association persistent attributes", "false" );
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bidirectional association persistent attributes", "false" );
 		}
 
 		final BytecodeProvider bytecodeProvider = buildDefaultBytecodeProvider();

@@ -52,7 +52,7 @@ public abstract class BaseEnversEventListener implements EnversListener {
 		}
 
 		// Checks every property of the entity, if it is an "owned" to-one relation to another entity.
-		// If the value of that property changed, and the relation is bi-directional, a new revision
+		// If the value of that property changed, and the relation is bidirectional, a new revision
 		// for the related entity is generated.
 		final String[] propertyNames = entityPersister.getPropertyNames();
 

@@ -514,7 +514,7 @@ public class OneToManyBidirectionalTest {
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
-			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			//  but joins are created before fetches, thus we don't know about bidirectional fetching/joining
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 
@@ -559,7 +559,7 @@ public class OneToManyBidirectionalTest {
 			 */
 
 			// todo (6.0): this was originally intended to produce only a single SQL join,
-			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			//  but joins are created before fetches, thus we don't know about bidirectional fetching/joining
 			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 

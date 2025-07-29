@@ -4,6 +4,9 @@
  */
 package org.hibernate.dialect.pagination;
 
+import org.hibernate.query.spi.Limit;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+
 /**
  * A {@link LimitHandler} for Transact SQL and similar
  * databases which support the syntax {@code SELECT TOP n}.
@@ -26,6 +29,11 @@ public class TopLimitHandler extends AbstractNoOffsetLimitHandler {
 	}
 
 	@Override
+	protected String limitClause(int jdbcParameterCount, ParameterMarkerStrategy parameterMarkerStrategy) {
+		return " top " + parameterMarkerStrategy.createMarker( 1, null ) + " rows only";
+	}
+
+	@Override
 	protected String insert(String limitClause, String sql) {
 		return insertAfterDistinct( limitClause, sql );
 	}
@@ -35,4 +43,13 @@ public class TopLimitHandler extends AbstractNoOffsetLimitHandler {
 		return true;
 	}
 
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
+	}
+
+	@Override
+	public int getParameterPositionStart(Limit limit) {
+		return hasMaxRows( limit ) && supportsVariableLimit() ? 2 : 1;
+	}
 }

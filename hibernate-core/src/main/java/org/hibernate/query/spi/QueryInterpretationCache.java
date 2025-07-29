@@ -45,6 +45,9 @@ public interface QueryInterpretationCache {
 	<R> void cacheHqlInterpretation(Object cacheKey, HqlInterpretation<R> hqlInterpretation);
 
 	<R> SelectQueryPlan<R> resolveSelectQueryPlan(Key key, Supplier<SelectQueryPlan<R>> creator);
+	default <K extends Key, R> SelectQueryPlan<R> resolveSelectQueryPlan(K key, Function<K, SelectQueryPlan<R>> creator) {
+		return resolveSelectQueryPlan( key, () -> creator.apply( key ) );
+	}
 
 	NonSelectQueryPlan getNonSelectQueryPlan(Key key);
 	void cacheNonSelectQueryPlan(Key key, NonSelectQueryPlan plan);

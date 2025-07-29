@@ -98,4 +98,7 @@ public interface ResultSetMapping extends JdbcValuesMappingProducer {
 		return sessionFactory.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( name, isDynamic, sessionFactory );
 	}
+
+	@Override
+	ResultSetMapping cacheKeyInstance();
 }

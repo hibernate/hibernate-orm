@@ -76,6 +76,13 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	public <R> SelectQueryPlan<R> resolveSelectQueryPlan(
 			Key key,
 			Supplier<SelectQueryPlan<R>> creator) {
+		return resolveSelectQueryPlan( key, k -> creator.get() );
+	}
+
+	@Override
+	public <K extends Key, R> SelectQueryPlan<R> resolveSelectQueryPlan(
+			K key,
+			Function<K, SelectQueryPlan<R>> creator) {
 		log.tracef( "Resolving cached query plan for [%s]", key );
 		final StatisticsImplementor statistics = getStatistics();
 		final boolean stats = statistics.isStatisticsEnabled();
@@ -89,7 +96,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			return cached;
 		}
 
-		final SelectQueryPlan<R> plan = creator.get();
+		final SelectQueryPlan<R> plan = creator.apply( key );
 		queryPlanCache.put( key.prepareForStore(), plan );
 		if ( stats ) {
 			statistics.queryPlanCacheMiss( key.getQueryString() );

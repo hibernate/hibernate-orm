@@ -50,4 +50,9 @@ public class LegacyDB2LimitHandler extends AbstractLimitHandler {
 	public final boolean supportsVariableLimit() {
 		return false;
 	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
+	}
 }

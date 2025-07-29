@@ -20,7 +20,6 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 
@@ -329,7 +328,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
-	public JdbcValuesMappingProducer cacheKeyInstance() {
+	public ResultSetMapping cacheKeyInstance() {
 		return new ResultSetMappingImpl( this );
 	}
 

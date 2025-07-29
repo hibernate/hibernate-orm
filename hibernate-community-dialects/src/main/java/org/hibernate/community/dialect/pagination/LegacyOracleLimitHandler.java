@@ -4,10 +4,14 @@
  */
 package org.hibernate.community.dialect.pagination;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import java.util.regex.Matcher;
 
@@ -23,6 +27,15 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, Limit limit) {
+		return processSql( sql, -1, limit, null );
+	}
+
+	@Override
+	public String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, QueryOptions queryOptions) {
+		return processSql( sql, jdbcParameterCount, queryOptions.getLimit(), parameterMarkerStrategy );
+	}
+
+	private String processSql(String sql, int jdbcParameterCount, @Nullable Limit limit, @Nullable ParameterMarkerStrategy parameterMarkerStrategy) {
 		final boolean hasOffset = hasFirstRow( limit );
 		sql = sql.trim();
 
@@ -36,17 +49,42 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 		}
 
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
-		if ( hasOffset ) {
-			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
-			if ( version.isBefore( 9 ) ) {
-				pagingSelect.append( ") row_) where rownum_<=? and rownum_>?" );
+		if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+			if ( hasOffset ) {
+				pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
+				if ( version.isBefore( 9 ) ) {
+					pagingSelect.append( ") row_) where rownum_<=? and rownum_>?" );
+				}
+				else {
+					pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
+				}
 			}
 			else {
-				pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
+				pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum<=?" );
 			}
 		}
 		else {
-			pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum<=?" );
+			final String firstParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 1, null );
+			if ( hasOffset ) {
+				final String secondParameter = parameterMarkerStrategy.createMarker( jdbcParameterCount + 2, null );
+				pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
+				if ( version.isBefore( 9 ) ) {
+					pagingSelect.append( ") row_) where rownum_<=" );
+					pagingSelect.append( firstParameter );
+					pagingSelect.append( " and rownum_>" );
+					pagingSelect.append( secondParameter );
+				}
+				else {
+					pagingSelect.append( ") row_ where rownum<=" );
+					pagingSelect.append( firstParameter );
+					pagingSelect.append( ") where rownum_>" );
+					pagingSelect.append( secondParameter );
+				}
+			}
+			else {
+				pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum<=" );
+				pagingSelect.append( firstParameter );
+			}
 		}
 
 		if ( forUpdateClause != null ) {
@@ -79,5 +117,10 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 	@Override
 	public boolean useMaxForLimit() {
 		return true;
+	}
+
+	@Override
+	public boolean processSqlMutatesState() {
+		return false;
 	}
 }

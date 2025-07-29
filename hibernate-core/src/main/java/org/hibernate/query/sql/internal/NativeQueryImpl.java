@@ -24,6 +24,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Locking;
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.NativeQueryArrayTransformer;
@@ -78,6 +80,7 @@ import org.hibernate.query.results.internal.implicit.ImplicitModelPartResultBuil
 import org.hibernate.query.results.internal.implicit.ImplicitResultClassBuilder;
 import org.hibernate.query.spi.AbstractQuery;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -97,6 +100,8 @@ import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.ParameterOccurrence;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -793,15 +798,33 @@ public class NativeQueryImpl<R>
 			mapping = resultSetMapping;
 		}
 		checkResultType( resultType, mapping );
-		return isCacheableQuery()
-				? getInterpretationCache()
-						.resolveSelectQueryPlan( selectInterpretationsKey( mapping ), () -> createQueryPlan( mapping ) )
-				: createQueryPlan( mapping );
+		int parameterStartPosition = 1;
+		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
+		if ( !ParameterMarkerStrategyStandard.isStandardRenderer( jdbcServices.getParameterMarkerStrategy() )
+			&& hasLimit( getQueryOptions().getLimit() ) ) {
+			final LimitHandler limitHandler = jdbcServices.getDialect().getLimitHandler();
+			if ( limitHandler.processSqlMutatesState() ) {
+				limitHandler.processSql( sqlString, -1, null, getQueryOptions() );
+			}
+			// A non-standard parameter marker strategy is in use, and the limit handler wants to bind parameters
+			// before the main parameters. This requires recording the start position in the cache key
+			// because the generated SQL depends on this information
+			parameterStartPosition = limitHandler.getParameterPositionStart( getQueryOptions().getLimit() );
+		}
+		if ( isCacheableQuery() ) {
+			return getInterpretationCache().resolveSelectQueryPlan(
+					selectInterpretationsKey( mapping, parameterStartPosition ),
+					key -> createQueryPlan( key.getResultSetMapping(), key.getStartPosition() )
+			);
+		}
+		else {
+			return createQueryPlan( mapping, parameterStartPosition );
+		}
 	}
 
-	private NativeSelectQueryPlan<R> createQueryPlan(ResultSetMapping resultSetMapping) {
+	private NativeSelectQueryPlan<R> createQueryPlan(ResultSetMapping resultSetMapping, int parameterStartPosition) {
 		final NativeSelectQueryDefinition<R> queryDefinition = new NativeSelectQueryDefinition<>() {
-			final String sqlString = expandParameterLists();
+			final String sqlString = expandParameterLists( parameterStartPosition );
 
 			@Override
 			public String getSqlString() {
@@ -837,7 +860,7 @@ public class NativeQueryImpl<R>
 	protected NativeSelectQueryPlan<Long> createCountQueryPlan() {
 		final NativeSelectQueryDefinition<Long> queryDefinition = new NativeSelectQueryDefinition<>() {
 			final BasicType<Long> longType = getTypeConfiguration().getBasicTypeForJavaType(Long.class);
-			final String sqlString = expandParameterLists();
+			final String sqlString = expandParameterLists( 1 );
 
 			@Override
 			public String getSqlString() {
@@ -873,7 +896,7 @@ public class NativeQueryImpl<R>
 		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter();
 	}
 
-	protected String expandParameterLists() {
+	protected String expandParameterLists(int parameterStartPosition) {
 		if ( parameterOccurrences == null || parameterOccurrences.isEmpty() ) {
 			return sqlString;
 		}
@@ -883,11 +906,15 @@ public class NativeQueryImpl<R>
 		final Dialect dialect = factory.getJdbcServices().getDialect();
 		final boolean paddingEnabled = factory.getSessionFactoryOptions().inClauseParameterPaddingEnabled();
 		final int inExprLimit = dialect.getInExpressionCountLimit();
+		final ParameterMarkerStrategy parameterMarkerStrategy = factory.getJdbcServices().getParameterMarkerStrategy();
+		final boolean needsMarker = !ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy );
 
-		StringBuilder sql = null;
+		StringBuilder sql = !needsMarker ? null
+				: new StringBuilder( sqlString.length() + parameterOccurrences.size() * 10 ).append( sqlString );
 
 		// Handle parameter lists
 		int offset = 0;
+		int parameterPosition = parameterStartPosition;
 		for ( ParameterOccurrence occurrence : parameterOccurrences ) {
 			final QueryParameterImplementor<?> queryParameter = occurrence.parameter();
 			final QueryParameterBinding<?> binding = parameterBindings.getBinding( queryParameter );
@@ -908,14 +935,37 @@ public class NativeQueryImpl<R>
 						}
 						final int bindValueMaxCount =
 								determineBindValueMaxCount( paddingEnabled, inExprLimit, bindValueCount );
-						final String expansionListAsString =
-								expandList( bindValueMaxCount, isEnclosedInParens );
+						final String expansionListAsString = expandList(
+								bindValueMaxCount,
+								isEnclosedInParens,
+								parameterPosition,
+								parameterMarkerStrategy,
+								needsMarker
+						);
 						final int start = sourcePosition + offset;
 						final int end = start + 1;
 						sql.replace( start, end, expansionListAsString );
 						offset += expansionListAsString.length() - 1;
+						parameterPosition += bindValueMaxCount;
+					}
+					else if ( needsMarker ) {
+						final int start = sourcePosition + offset;
+						final int end = start + 1;
+						final String parameterMarker = parameterMarkerStrategy.createMarker( parameterPosition, null );
+						sql.replace( start, end, parameterMarker );
+						offset += parameterMarker.length() - 1;
+						parameterPosition++;
 					}
 				}
+			}
+			else if ( needsMarker ) {
+				final int sourcePosition = occurrence.sourcePosition();
+				final int start = sourcePosition + offset;
+				final int end = start + 1;
+				final String parameterMarker = parameterMarkerStrategy.createMarker( parameterPosition, null );
+				sql.replace( start, end, parameterMarker );
+				offset += parameterMarker.length() - 1;
+				parameterPosition++;
 			}
 		}
 		return sql == null ? sqlString : sql.toString();
@@ -936,10 +986,25 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private static String expandList(int bindValueMaxCount, boolean isEnclosedInParens) {
+	private static String expandList(int bindValueMaxCount, boolean isEnclosedInParens, int parameterPosition, ParameterMarkerStrategy parameterMarkerStrategy, boolean needsMarker) {
 		// HHH-8901
 		if ( bindValueMaxCount == 0 ) {
 			return isEnclosedInParens ? "null" : "(null)";
+		}
+		else if ( needsMarker ) {
+			final StringBuilder sb = new StringBuilder( bindValueMaxCount * 4 );
+			if ( !isEnclosedInParens ) {
+				sb.append( '(' );
+			}
+			for ( int i = 0; i < bindValueMaxCount; i++ ) {
+				sb.append( parameterMarkerStrategy.createMarker( parameterPosition + i, null ) );
+				sb.append( ',' );
+			}
+			sb.setLength( sb.length() - 1 );
+			if ( !isEnclosedInParens ) {
+				sb.append( ')' );
+			}
+			return sb.toString();
 		}
 		else {
 			// Shift 1 bit instead of multiplication by 2
@@ -1008,11 +1073,12 @@ public class NativeQueryImpl<R>
 		return bindValueMaxCount;
 	}
 
-	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping resultSetMapping) {
+	private SelectInterpretationsKey selectInterpretationsKey(ResultSetMapping resultSetMapping, int parameterStartPosition) {
 		return new SelectInterpretationsKey(
 				getQueryString(),
 				resultSetMapping,
-				getSynchronizedQuerySpaces()
+				getSynchronizedQuerySpaces(),
+				parameterStartPosition
 		);
 	}
 
@@ -1026,6 +1092,10 @@ public class NativeQueryImpl<R>
 
 		// For now, don't cache plans that have parameter lists
 		return !parameterBindings.hasAnyMultiValuedBindings();
+	}
+
+	private boolean hasLimit(Limit limit) {
+		return limit != null && !limit.isEmpty();
 	}
 
 	@Override
@@ -1054,7 +1124,7 @@ public class NativeQueryImpl<R>
 		}
 
 		if ( queryPlan == null ) {
-			final String sqlString = expandParameterLists();
+			final String sqlString = expandParameterLists( 1 );
 			queryPlan = new NativeNonSelectQueryPlanImpl( sqlString, querySpaces, parameterOccurrences );
 			if ( cacheKey != null ) {
 				getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );

@@ -83,7 +83,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 		Limit rowSelection = new Limit();
 		rowSelection.setFirstRow(1);
 		rowSelection.setMaxRows(Integer.MAX_VALUE);
-		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", rowSelection );
+		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", -1, null, new LimitQueryOptions( rowSelection ) );
 		assertTrue(
 				"Integer overflow for max rows in: " + sql,
 				sql.contains("fetch next ? rows only")

@@ -11,10 +11,14 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
@@ -80,6 +84,15 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	 */
 	@Override
 	public String processSql(String sql, Limit limit) {
+		return processSql( sql, -1, null, limit );
+	}
+
+	@Override
+	public String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, QueryOptions queryOptions) {
+		return processSql( sql, jdbcParameterCount, parameterMarkerStrategy, queryOptions.getLimit() );
+	}
+
+	private String processSql(String sql, int jdbcParameterCount, @Nullable ParameterMarkerStrategy parameterMarkerStrategy, @Nullable Limit limit) {
 		sql = sql.trim();
 		if ( sql.endsWith(";") ) {
 			sql = sql.substring( 0, sql.length()-1 );
@@ -96,7 +109,13 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		final StringBuilder result = new StringBuilder( sql );
 
 		if ( !hasFirstRow || hasOrderBy ) {
-			result.insert( afterSelectOffset, " top(?)" );
+			if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+				result.insert( afterSelectOffset, " top(?)" );
+			}
+			else {
+				final String parameterMarker = parameterMarkerStrategy.createMarker( 1, null );
+				result.insert( afterSelectOffset, " top(" + parameterMarker + ")" );
+			}
 			topAdded = true;
 		}
 
@@ -109,7 +128,16 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			result.insert( selectOffset, ( hasCommonTables ? "," : "with" )
 					+ " query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" )
 					.append( ") row_) select " ).append( aliases )
-					.append( " from query_ where rownumber_>=? and rownumber_<?" );
+					.append( " from query_ where rownumber_>=" );
+			if ( ParameterMarkerStrategyStandard.isStandardRenderer( parameterMarkerStrategy ) ) {
+				result.append( "? and rownumber_<?" );
+			}
+			else {
+				final int firstPosition = jdbcParameterCount + 1 + ( topAdded ? 1 : 0 );
+				result.append( parameterMarkerStrategy.createMarker( firstPosition, null ) );
+				result.append( " and rownumber_<" );
+				result.append( parameterMarkerStrategy.createMarker( firstPosition + 1, null ) );
+			}
 		}
 
 		return result.toString();

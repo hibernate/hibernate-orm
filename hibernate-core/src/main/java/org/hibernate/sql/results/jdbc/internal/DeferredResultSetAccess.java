@@ -91,9 +91,14 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			final String sql = jdbcSelect.getSqlString();
 
 			limit = queryOptions.getLimit();
-			final boolean hasLimit = hasLimit( jdbcSelect );
-			limitHandler = hasLimit ? NoopLimitHandler.NO_LIMIT : dialect.getLimitHandler();
-			final String sqlWithLimit = hasLimit ? sql : limitHandler.processSql( sql, limit, queryOptions );
+			final boolean needsLimitHandler = needsLimitHandler( jdbcSelect );
+			limitHandler = needsLimitHandler ? dialect.getLimitHandler() : NoopLimitHandler.NO_LIMIT;
+			final String sqlWithLimit = !needsLimitHandler ? sql : limitHandler.processSql(
+					sql,
+					jdbcParameterBindings.getBindings().size(),
+					jdbcServices.getParameterMarkerStrategy(),
+					queryOptions
+			);
 
 			final LockOptions lockOptions = queryOptions.getLockOptions();
 			final JdbcLockStrategy jdbcLockStrategy = jdbcSelect.getLockStrategy();
@@ -120,8 +125,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		}
 	}
 
-	private boolean hasLimit(JdbcOperationQuerySelect jdbcSelect) {
-		return limit == null || limit.isEmpty() || jdbcSelect.usesLimitParameters();
+	private boolean needsLimitHandler(JdbcOperationQuerySelect jdbcSelect) {
+		return limit != null && !limit.isEmpty() && !jdbcSelect.usesLimitParameters();
 	}
 
 	private static boolean hasLocking(JdbcLockStrategy jdbcLockStrategy, LockOptions lockOptions) {

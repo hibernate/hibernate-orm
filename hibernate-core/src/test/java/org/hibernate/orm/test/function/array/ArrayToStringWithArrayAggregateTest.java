@@ -1,6 +1,8 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.orm.test.function.array;
 
@@ -11,8 +13,8 @@ import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsArrayToString;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsArrayAgg;
+
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -32,8 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel(
 		annotatedClasses = {ArrayToStringWithArrayAggregateTest.Book.class, ArrayToStringWithArrayAggregateTest.Dummy.class})
 @SessionFactory
-@RequiresDialectFeature(feature = SupportsArrayToString.class)
-@RequiresDialectFeature(feature = SupportsArrayAgg.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @JiraKey("HHH-18981")
 public class ArrayToStringWithArrayAggregateTest {
 

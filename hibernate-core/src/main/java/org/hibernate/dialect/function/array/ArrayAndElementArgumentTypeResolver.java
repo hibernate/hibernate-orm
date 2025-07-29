@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.function.array;
 
+import java.util.List;
+
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -37,12 +39,13 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 			SqmFunction<?> function,
 			int argumentIndex,
 			SqmToSqlAstConverter converter) {
+		final List<? extends SqmTypedNode<?>> arguments = function.getArguments();
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {
 				if ( elementIndex >= arguments.size() ) {
 					continue;
 				}
-				final SqmTypedNode<?> node = function.getArguments().get( elementIndex );
+				final SqmTypedNode<?> node = arguments.get( elementIndex );
 				if ( node instanceof SqmExpression<?> ) {
 					final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
 					if ( expressible != null ) {
@@ -55,7 +58,7 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 			}
 		}
 		else if ( ArrayHelper.contains( elementIndexes, argumentIndex ) ) {
-			final SqmTypedNode<?> node = function.getArguments().get( arrayIndex );
+			final SqmTypedNode<?> node = arguments.get( arrayIndex );
 			if ( node instanceof SqmExpression<?> ) {
 				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
 				if ( expressible != null ) {

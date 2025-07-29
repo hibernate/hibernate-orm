@@ -39,9 +39,10 @@ public enum EventType {
 	 */
 	UPDATE,
 	/**
-	 * An event that occurs during verification of a lock of type
-	 * of {@link org.hibernate.LockMode#OPTIMISTIC_FORCE_INCREMENT}
-	 * or {@link org.hibernate.LockMode#PESSIMISTIC_FORCE_INCREMENT}.
+	 * An event that occurs when attempting to acquire
+	 * {@linkplain org.hibernate.LockMode#OPTIMISTIC_FORCE_INCREMENT optimistic}
+	 * or {@linkplain org.hibernate.LockMode#PESSIMISTIC_FORCE_INCREMENT pessimistic}
+	 * locks which trigger forcing an increment to the {@linkplain jakarta.persistence.Version version}.
 	 */
 	@Incubating
 	FORCE_INCREMENT

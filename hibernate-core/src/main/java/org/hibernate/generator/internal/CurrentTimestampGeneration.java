@@ -87,10 +87,9 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 	public static final String CLOCK_SETTING_NAME = "hibernate.testing.clock";
 
 	private final EnumSet<EventType> eventTypes;
-
 	private final JavaType<Object> propertyType;
-
 	private final CurrentTimestampGeneratorDelegate delegate;
+
 	private static final Map<Class<?>, BiFunction<@Nullable Clock, Integer, CurrentTimestampGeneratorDelegate>> GENERATOR_PRODUCERS = new HashMap<>();
 	private static final Map<Key, CurrentTimestampGeneratorDelegate> GENERATOR_DELEGATES = new ConcurrentHashMap<>();
 
@@ -192,11 +191,6 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		);
 	}
 
-	private static JavaType<Object> getPropertyType(GeneratorCreationContext context) {
-		return context.getDatabase().getTypeConfiguration().getJavaTypeRegistry()
-				.getDescriptor( context.getProperty().getType().getReturnedClass() );
-	}
-
 	public CurrentTimestampGeneration(CurrentTimestamp annotation, Member member, GeneratorCreationContext context) {
 		delegate = getGeneratorDelegate( annotation.source(), member, context );
 		eventTypes = fromArray( annotation.event() );
@@ -268,6 +262,11 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		return (T) sessionFactory.getProperties().get( CLOCK_SETTING_NAME );
 	}
 
+	private static JavaType<Object> getPropertyType(GeneratorCreationContext context) {
+		return context.getDatabase().getTypeConfiguration().getJavaTypeRegistry()
+				.getDescriptor( context.getProperty().getType().getReturnedClass() );
+	}
+
 	@Override
 	public boolean generatedOnExecution() {
 		return delegate == null;
@@ -316,8 +315,17 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 
 	static Timestamp getCurrentTimestamp(SharedSessionContractImplementor session) {
 		final Dialect dialect = session.getJdbcServices().getJdbcEnvironment().getDialect();
-		final boolean callable = dialect.isCurrentTimestampSelectStringCallable();
-		final String timestampSelectString = dialect.getCurrentTimestampSelectString();
+		return getCurrentTimestampFromDatabase(
+				dialect.getCurrentTimestampSelectString(),
+				dialect.isCurrentTimestampSelectStringCallable(),
+				session
+		);
+	}
+
+	static Timestamp getCurrentTimestampFromDatabase(
+			String timestampSelectString,
+			boolean callable,
+			SharedSessionContractImplementor session) {
 		final JdbcCoordinator coordinator = session.getJdbcCoordinator();
 		final StatementPreparer statementPreparer = coordinator.getStatementPreparer();
 		PreparedStatement statement = null;

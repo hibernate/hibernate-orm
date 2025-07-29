@@ -7,20 +7,17 @@ package org.hibernate.orm.test.function.array;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsArrayToString;
-import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsJsonArrayAgg;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsArrayAgg;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,9 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		annotatedClasses = {ArrayToStringWithArrayAggregateTest.Book.class, ArrayToStringWithArrayAggregateTest.Dummy.class})
 @SessionFactory
 @RequiresDialectFeature(feature = SupportsArrayToString.class)
-@RequiresDialectFeature( feature = SupportsJsonArrayAgg.class)
-@SkipForDialect(dialectClass = H2Dialect.class, reason = "Generated SQL query is not correct")
-@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Generated SQL query is not correct")
+@RequiresDialectFeature(feature = SupportsArrayAgg.class)
 @JiraKey("HHH-18981")
 public class ArrayToStringWithArrayAggregateTest {
 

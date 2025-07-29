@@ -103,7 +103,7 @@ dependencyResolutionManagement {
             library( "byteBuddy", "net.bytebuddy", "byte-buddy" ).versionRef( byteBuddyVersion )
             library( "byteBuddyAgent", "net.bytebuddy", "byte-buddy-agent" ).versionRef( byteBuddyVersion )
 
-            library( "checkerFramework", "org.checkerframework", "checker-qual" ).versionRef( checkerFrameworkVersion )
+            library( "checkerFramework", "org.checkerframework", "checker-qual-android" ).versionRef( checkerFrameworkVersion )
             library( "checkerFrameworkChecker", "org.checkerframework", "checker" ).versionRef( checkerFrameworkVersion )
 
             library( "logging", "org.jboss.logging", "jboss-logging" ).versionRef( jbossLoggingVersion )

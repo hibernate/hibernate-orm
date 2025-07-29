@@ -388,11 +388,12 @@ public class CteInsertHandler implements InsertHandler {
 								sessionFactory.getSqlStringGenerationContext()
 						);
 
-				Expression databaseValue = new SelfRenderingSqlFragmentExpression( fragment );
-				rowsWithSequenceQuery.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl( 1,
-								optimizer.createLowValueExpression( databaseValue, sessionFactory ) )
+				final Expression lowValueExpression = optimizer.createLowValueExpression(
+						new SelfRenderingSqlFragmentExpression( fragment ),
+						sessionFactory
 				);
+				rowsWithSequenceQuery.getSelectClause()
+						.addSqlSelection( new SqlSelectionImpl( 1, lowValueExpression ) );
 
 				rowsWithSequenceQuery.applyPredicate(
 						new ComparisonPredicate(

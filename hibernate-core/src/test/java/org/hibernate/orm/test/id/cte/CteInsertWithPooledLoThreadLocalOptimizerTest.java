@@ -1,13 +1,15 @@
 /*
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.id.cte;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.id.enhanced.PooledLoThreadLocalOptimizer;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.Test;
 @SessionFactory
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_POOLED_OPTIMIZER, value = "pooled-lotl"))
 @DomainModel(annotatedClasses = Dummy.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCteInsertStrategy.class)
 public class CteInsertWithPooledLoThreadLocalOptimizerTest {
 	@Test
 	void test(SessionFactoryScope scope) {

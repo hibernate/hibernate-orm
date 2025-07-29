@@ -35,14 +35,14 @@ public class ArrayToStringFunction extends AbstractSqmSelfRenderingFunctionDescr
 				"array_to_string",
 				FunctionKind.NORMAL,
 				StandardArgumentsValidators.composite(
-					new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), ANY, STRING, ANY )
+					new ArgumentTypesValidator( StandardArgumentsValidators.between( 2, 3 ), ANY, STRING, STRING )
 				),
 				StandardFunctionReturnTypeResolvers.invariant(
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
 				),
 				StandardFunctionArgumentTypeResolvers.composite(
 						new ArrayAndElementArgumentTypeResolver( 0, 2 ),
-						StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, ANY, STRING )
+						StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, ANY, STRING, STRING )
 				)
 		);
 	}

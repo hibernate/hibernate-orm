@@ -120,20 +120,18 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 			loadHint = (RootGraphImplementor<?>) properties.get( GraphSemantic.LOAD.getJakartaHintName() );
 		}
 
-		if ( fetchHint != null || loadHint != null ) {
-			if ( fetchHint != null ) {
-				if ( loadHint != null ) {
-					// can't have both
-					throw new IllegalArgumentException(
-							"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
-							"only one should be passed"
-					);
-				}
-				applyGraph( fetchHint, GraphSemantic.FETCH );
+		if ( fetchHint != null ) {
+			if ( loadHint != null ) {
+				// can't have both
+				throw new IllegalArgumentException(
+						"Passed properties contained both a LOAD and a FETCH graph which is illegal - " +
+						"only one should be passed"
+				);
 			}
-			else {
-				applyGraph( loadHint, GraphSemantic.LOAD );
-			}
+			applyGraph( fetchHint, GraphSemantic.FETCH );
+		}
+		else if ( loadHint != null ) {
+			applyGraph( loadHint, GraphSemantic.LOAD );
 		}
 	}
 

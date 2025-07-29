@@ -784,12 +784,12 @@ public final class TypeUtils {
 	public static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
 
-	public static TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
+	public static @Nullable TypeMirror resolveTypeMirror(TypeElement typeElement, Element element, String name) {
 		final var mirrorMap = resolveTypeParameters( typeElement.asType(), element, Map.of(), new HashSet<>() );
 		return mirrorMap == null ? null : mirrorMap.get( name );
 	}
 
-	private static Map<String, TypeMirror> resolveTypeParameters(TypeMirror type, Element element, Map<String, TypeMirror> parametersMap, Collection<Element> visited) {
+	private static @Nullable Map<String, TypeMirror> resolveTypeParameters(TypeMirror type, Element element, Map<String, TypeMirror> parametersMap, Collection<Element> visited) {
 		if ( !(type instanceof DeclaredType declaredType
 			&& declaredType.asElement() instanceof TypeElement typeElement) ) {
 			return null;

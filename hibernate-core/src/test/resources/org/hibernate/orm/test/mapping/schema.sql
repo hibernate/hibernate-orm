@@ -1,7 +1,7 @@
 /*
     Needed because the test model maps a "non standard" schema.
     The test models `User#detail` and `UserDetail#user` as a
-    bi-directional one-to-one, meaning that Hibernate would
+    bidirectional one-to-one, meaning that Hibernate would
     normally (and correctly) create `t_user_details.user_fk` as
     unique.  The test model changes that cardinality by use of
     `@Where`.

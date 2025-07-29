@@ -40,7 +40,7 @@ import org.hibernate.spi.NavigablePath;
  * ```
  *
  *
- * Here we have one root result and 3 fetches.  2 of the fetches are bi-directional:
+ * Here we have one root result and 3 fetches.  2 of the fetches are bidirectional:
  *
  * 		`o`:: The paths `p` and `p.address.owner` (aliased as `o`) are the same table reference in SQL terms
  * 		`oa`:: The paths `p.address` and `p.address.owner.address` (aliased as `oa`) are again the same table reference

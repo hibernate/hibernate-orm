@@ -104,7 +104,7 @@ public class ListMappingTest  {
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Bi-directional model
+	// Bidirectional model
 
 	@Entity( name = "Order" )
 	@Table( name = "t_order" )

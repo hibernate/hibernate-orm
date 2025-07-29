@@ -171,7 +171,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( Hibernate.isInitialized( result.bar ) );
 		assertTrue( Hibernate.isInitialized( result.bar.getFoos()) );
 		assertTrue( Hibernate.isInitialized( result.baz ) );
-		// sanity check -- ensure the only bi-directional fetch was the one identified by the graph
+		// sanity check -- ensure the only bidirectional fetch was the one identified by the graph
 		assertFalse( Hibernate.isInitialized( result.baz.getFoos()) );
 
 		em.getTransaction().commit();

@@ -39,7 +39,7 @@ public class EnhancementContext extends DefaultEnhancementContext {
 	@Override
 	public boolean doBiDirectionalAssociationManagement(UnloadedField field) {
 		if ( enableAssociationManagement ) {
-			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bi-directional persistent association attributes", "false" );
+			DEPRECATION_LOGGER.deprecatedSettingForRemoval( "management of bidirectional persistent association attributes", "false" );
 		}
 		return enableAssociationManagement;
 	}

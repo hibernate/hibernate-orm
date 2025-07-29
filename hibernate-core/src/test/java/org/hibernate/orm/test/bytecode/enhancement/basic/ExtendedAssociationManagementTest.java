@@ -35,7 +35,7 @@ public class ExtendedAssociationManagementTest {
 
 		assertEquals( customer, getFieldByReflection( user, "customer" ) );
 
-		// check dirty tracking is set automatically with bi-directional association management
+		// check dirty tracking is set automatically with bidirectional association management
 		EnhancerTestUtils.checkDirtyTracking( user, "login", "customer" );
 
 		User anotherUser = new User();

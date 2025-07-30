@@ -31,6 +31,7 @@ import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.ExtensionConfigurationException;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstantiationAwareExtension;
 import org.junit.jupiter.api.io.CleanupMode;
@@ -64,61 +65,67 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
-				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
-		);
+        try {
+            final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
+                    (JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
+            );
 
-		for ( TestDescriptor testDescriptor : new HashSet<>( engineDescriptor.getChildren() ) ) {
-			if ( testDescriptor instanceof ClassBasedTestDescriptor ) {
-				try {
-					ClassBasedTestDescriptor descriptor = (ClassBasedTestDescriptor) testDescriptor;
-					// if the test class is annotated with @BytecodeEnhanced
-					// we replace the descriptor with the new one that will point to an enhanced test class,
-					// this also means that we need to add all the child descriptors back as well...
-					// Then on the extension side we set the classloader that contains the enhanced test class
-					// and set it back to the original once the test class is destroyed.
-					Optional<BytecodeEnhanced> bytecodeEnhanced = findAnnotation(
-							descriptor.getTestClass(), BytecodeEnhanced.class );
-					if ( bytecodeEnhanced.isPresent() ) {
-						TestDescriptor parent = descriptor.getParent().orElseThrow( IllegalStateException::new );
-						Class<?> klass = descriptor.getTestClass();
+            for ( TestDescriptor testDescriptor : new HashSet<>( engineDescriptor.getChildren() ) ) {
+                if ( testDescriptor instanceof ClassBasedTestDescriptor ) {
+                    try {
+                        ClassBasedTestDescriptor descriptor = (ClassBasedTestDescriptor) testDescriptor;
+                        // if the test class is annotated with @BytecodeEnhanced
+                        // we replace the descriptor with the new one that will point to an enhanced test class,
+                        // this also means that we need to add all the child descriptors back as well...
+                        // Then on the extension side we set the classloader that contains the enhanced test class
+                        // and set it back to the original once the test class is destroyed.
+                        Optional<BytecodeEnhanced> bytecodeEnhanced = findAnnotation(
+                                descriptor.getTestClass(), BytecodeEnhanced.class );
+                        if ( bytecodeEnhanced.isPresent() ) {
+                            TestDescriptor parent = descriptor.getParent().orElseThrow( IllegalStateException::new );
+                            Class<?> klass = descriptor.getTestClass();
 
-						JupiterConfiguration jc = ( (JupiterEngineDescriptor) parent ).getConfiguration();
+                            JupiterConfiguration jc = ( (JupiterEngineDescriptor) parent ).getConfiguration();
 
-						String[] testEnhancedClasses = Arrays.stream( bytecodeEnhanced.get().testEnhancedClasses() )
-								.map( Class::getName ).toArray( String[]::new );
+                            String[] testEnhancedClasses = Arrays.stream( bytecodeEnhanced.get().testEnhancedClasses() )
+                                    .map( Class::getName ).toArray( String[]::new );
 
-						// NOTE: get children before potentially removing from hierarchy, since after that there will be none.
-						Set<? extends TestDescriptor> children = new HashSet<>( descriptor.getChildren() );
-						if ( !bytecodeEnhanced.get().runNotEnhancedAsWell() ) {
-							descriptor.removeFromHierarchy();
-						}
+                            // NOTE: get children before potentially removing from hierarchy, since after that there will be none.
+                            Set<? extends TestDescriptor> children = new HashSet<>( descriptor.getChildren() );
+                            if ( !bytecodeEnhanced.get().runNotEnhancedAsWell() ) {
+                                descriptor.removeFromHierarchy();
+                            }
 
-						Map<Object, Class<?>> classes = enhanceTestClass( klass );
-						if ( classes.size() == 1 ) {
-							replaceWithEnhanced( classes.values().iterator().next(), descriptor, jc, children, parent, testEnhancedClasses );
-						}
-						else {
-							for ( Map.Entry<Object, Class<?>> entry : classes.entrySet() ) {
-								replaceWithEnhanced(
-										entry.getValue(), descriptor, jc, children, parent, testEnhancedClasses, entry.getKey() );
-							}
-						}
+                            Map<Object, Class<?>> classes = enhanceTestClass( klass );
+                            if ( classes.size() == 1 ) {
+                                replaceWithEnhanced( classes.values().iterator().next(), descriptor, jc, children, parent, testEnhancedClasses );
+                            }
+                            else {
+                                for ( Map.Entry<Object, Class<?>> entry : classes.entrySet() ) {
+                                    replaceWithEnhanced(
+                                            entry.getValue(), descriptor, jc, children, parent, testEnhancedClasses, entry.getKey() );
+                                }
+                            }
 
-						addEnhancementCheck( false, testEnhancedClasses, descriptor, jc );
-					}
-					else {
-						testDescriptor.removeFromHierarchy();
-					}
-				}
-				catch (ClassNotFoundException | NoSuchMethodException e) {
-					throw new RuntimeException( e );
-				}
-			}
+                            addEnhancementCheck( false, testEnhancedClasses, descriptor, jc );
+                        }
+                        else {
+                            testDescriptor.removeFromHierarchy();
+                        }
+                    }
+                    catch (ClassNotFoundException | NoSuchMethodException e) {
+                        throw new RuntimeException( e );
+                    }
+                }
+            }
+
+            return engineDescriptor;
+		} catch (OutOfMemoryError e) {
+			throw e;
+		} catch (Error e) {
+			throw new ExtensionConfigurationException("Encountered a problem when enhancing the test classes. It is highly likely that @BytecodeEnhanced extension is incompatible with the provided version of JUnit.", e);
 		}
-
-		return engineDescriptor;
-	}
+    }
 
 	private void addEnhancementCheck(boolean enhance, String[] testEnhancedClasses,
 			ClassBasedTestDescriptor descriptor, JupiterConfiguration jc) {

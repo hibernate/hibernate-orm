@@ -84,9 +84,7 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 		final Class<?> arrayClass = Array.newInstance( elementType.getJavaType(), 0 ).getClass();
 		@SuppressWarnings("unchecked")
 		final BasicPluralJavaType<T> arrayJavaType =
-				(BasicPluralJavaType<T>)
-						typeConfiguration.getJavaTypeRegistry()
-								.getDescriptor( arrayClass );
+				(BasicPluralJavaType<T>) typeConfiguration.getJavaTypeRegistry().getDescriptor( arrayClass );
 		final JdbcTypeIndicators currentBaseSqlTypeIndicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 		return arrayJavaType.resolveType(
 				typeConfiguration,
@@ -96,7 +94,12 @@ public class JsonArrayViaElementArgumentReturnTypeResolver implements FunctionRe
 				new DelegatingJdbcTypeIndicators( currentBaseSqlTypeIndicators ) {
 					@Override
 					public Integer getExplicitJdbcTypeCode() {
-						return SqlTypes.JSON;
+						return SqlTypes.JSON_ARRAY;
+					}
+
+					@Override
+					public  int getPreferredSqlTypeCodeForArray(int elementSqlTypeCode) {
+						return SqlTypes.JSON_ARRAY;
 					}
 				}
 		);

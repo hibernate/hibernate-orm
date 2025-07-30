@@ -3,6 +3,7 @@ package org.hibernate.tool.ant.hbm2java;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
+import org.hibernate.tool.it.ant.TestTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,10 +18,7 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class NoGenericsTestIT {
-	
-	@TempDir
-	private File projectDir;
+public class NoGenericsTestIT extends TestTemplate {
 	
 	private File buildXmlFile;
 	private ByteArrayOutputStream output;
@@ -30,9 +28,9 @@ public class NoGenericsTestIT {
 	@BeforeEach
 	public void beforeEach() {
 		output = new ByteArrayOutputStream();
-		databaseFile = new File(projectDir, "database/test.mv.db");
+		databaseFile = new File(getProjectDir(), "database/test.mv.db");
 		assertFalse(databaseFile.exists());
-		personFile = new File(projectDir, "generated/Person.java");
+		personFile = new File(getProjectDir(), "generated/Person.java");
 		assertFalse(personFile.exists());
 	}
 	
@@ -46,7 +44,7 @@ public class NoGenericsTestIT {
     }
     
     private void createBuildXmlFile() throws Exception {
-    	buildXmlFile = new File(projectDir, "build.xml");
+    	buildXmlFile = new File(getProjectDir(), "build.xml");
     	assertFalse(buildXmlFile.exists());
     	Files.writeString(buildXmlFile.toPath(), buildXmlFileContents);
     }
@@ -67,7 +65,7 @@ public class NoGenericsTestIT {
 	}
 	
 	private void createHibernatePropertiesFile() throws Exception {
-		File hibernatePropertiesFile = new File(projectDir, "hibernate.properties");
+		File hibernatePropertiesFile = new File(getProjectDir(), "hibernate.properties");
 		StringBuffer hibernatePropertiesFileContents = new StringBuffer();	
 		hibernatePropertiesFileContents
 			.append("hibernate.connection.driver_class=org.h2.Driver\n")
@@ -82,14 +80,14 @@ public class NoGenericsTestIT {
 	
     private void runAntBuild() {
     	Project project = new Project();
-    	project.setBaseDir(projectDir);
+    	project.setBaseDir(getProjectDir());
     	project.addBuildListener(getConsoleLogger());
         ProjectHelper.getProjectHelper().parse(project, buildXmlFile);
    	    project.executeTarget(project.getDefaultTarget());
     }
     
 	private void verifyResult() throws Exception {
-		File generatedOutputFolder = new File(projectDir, "generated");
+		File generatedOutputFolder = new File(getProjectDir(), "generated");
 		assertTrue(generatedOutputFolder.exists());
 		assertTrue(generatedOutputFolder.isDirectory());
 		assertEquals(2, generatedOutputFolder.list().length);
@@ -117,7 +115,7 @@ public class NoGenericsTestIT {
     }
     
 	private String constructJdbcConnectionString() {
-		return "jdbc:h2:" + projectDir.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
 	}
 	    
     private static final String buildXmlFileContents = 

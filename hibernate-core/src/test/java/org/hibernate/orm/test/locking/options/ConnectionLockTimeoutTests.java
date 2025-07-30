@@ -44,16 +44,21 @@ public class ConnectionLockTimeoutTests {
 			final Timeout initialLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
 			assertThat( initialLockTimeout.milliseconds() ).isEqualTo( expectedInitialValue );
 
-			final Timeout timeout = Timeout.milliseconds( 2000 );
-			connectionStrategy.setLockTimeout( timeout, conn, session.getFactory() );
+			try {
+				final Timeout timeout = Timeout.milliseconds( 2000 );
+				connectionStrategy.setLockTimeout( timeout, conn, session.getFactory() );
 
-			final Timeout adjustedLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
-			assertThat( adjustedLockTimeout.milliseconds() ).isEqualTo( 2000 );
+				final Timeout adjustedLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
+				assertThat( adjustedLockTimeout.milliseconds() ).isEqualTo( 2000 );
 
-			connectionStrategy.setLockTimeout( Timeouts.WAIT_FOREVER, conn, session.getFactory() );
+				connectionStrategy.setLockTimeout( Timeouts.WAIT_FOREVER, conn, session.getFactory() );
 
-			final Timeout resetLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
-			assertThat( resetLockTimeout.milliseconds() ).isEqualTo( Timeouts.WAIT_FOREVER_MILLI );
+				final Timeout resetLockTimeout = connectionStrategy.getLockTimeout( conn, session.getFactory() );
+				assertThat( resetLockTimeout.milliseconds() ).isEqualTo( Timeouts.WAIT_FOREVER_MILLI );
+			}
+			finally {
+				connectionStrategy.setLockTimeout( Timeout.milliseconds( expectedInitialValue ), conn, session.getFactory() );
+			}
 		} ) );
 	}
 
@@ -85,6 +90,13 @@ public class ConnectionLockTimeoutTests {
 
 			final ConnectionLockTimeoutStrategy connectionStrategy = lockingSupport.getConnectionLockTimeoutStrategy();
 			final ConnectionLockTimeoutStrategy.Level lockTimeoutType = connectionStrategy.getSupportedLevel();
+			final int initialValue;
+			if ( session.getDialect() instanceof MySQLDialect ) {
+				initialValue = 50;
+			}
+			else {
+				initialValue = Timeouts.WAIT_FOREVER_MILLI;
+			}
 
 			try {
 				connectionStrategy.setLockTimeout( Timeouts.NO_WAIT, conn, session.getFactory() );
@@ -100,6 +112,9 @@ public class ConnectionLockTimeoutTests {
 				if ( lockTimeoutType == ConnectionLockTimeoutStrategy.Level.EXTENDED ) {
 					throw e;
 				}
+			}
+			finally {
+				connectionStrategy.setLockTimeout( Timeout.milliseconds( initialValue ), conn, session.getFactory() );
 			}
 		} ) );
 	}

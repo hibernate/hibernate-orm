@@ -100,7 +100,7 @@ public class FollowOnLockingTest {
 							statementInspector.assertExecutedCount( 1 );
 						}
 
-						TransactionUtil.updateTable( scope, "employees", "salary", true );
+						TransactionUtil.assertRowLock( scope, "employees", "salary", "id", employees.get( 0 ).getId(), true );
 					}
 			);
 		} );

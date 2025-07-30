@@ -98,9 +98,7 @@ In any case, before the release:
 
 #### Performing the release
 
-Once you trigger the CI job, it automatically pushes artifacts to the
-[OSSRH Maven Repository](https://repo1.maven.org/maven2/org/hibernate/orm/),
-and the documentation to [docs.jboss.org](https://docs.jboss.org/hibernate/orm/).
+Trigger the CI release job to automatically publish artifacts and documentation...
 
 * Do *not* mark the Jira Release as "released" or close issues,
   the release job triggers Jira automation that does it for you.
@@ -141,7 +139,7 @@ After the job succeeds:
     make sure to adjust the `status`/`displayed` attributes of the `series.yml` file of the old series.
   * Push to the production branch.
 * Check that the artifacts are available on Maven Central:
-  https://repo1.maven.org/maven2/org/hibernate/orm/hibernate-core/.
+  https://central.sonatype.com/artifact/org.hibernate.orm/hibernate-core.
   They should appear after a few minutes, sometimes a few hours.
 * Make sure a GitHub release got created and that everything looks ok.
 

@@ -128,6 +128,8 @@ import static org.hibernate.internal.util.StringHelper.unqualify;
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.makeCopy;
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
+import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
 import static org.hibernate.internal.util.type.PrimitiveWrapperHelper.getDescriptorByPrimitiveType;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
 import static org.hibernate.query.results.internal.Builders.resultClassBuilder;
@@ -1742,9 +1744,9 @@ public class NativeQueryImpl<R>
 
 		public ParameterInterpretationImpl(ParameterRecognizerImpl parameterRecognizer) {
 			this.sqlString = parameterRecognizer.getAdjustedSqlString();
-			this.parameterList = parameterRecognizer.getParameterList();
-			this.positionalParameters = parameterRecognizer.getPositionalQueryParameters();
-			this.namedParameters = parameterRecognizer.getNamedQueryParameters();
+			this.parameterList = toSmallList( parameterRecognizer.getParameterList() );
+			this.positionalParameters = toSmallMap( parameterRecognizer.getPositionalQueryParameters() );
+			this.namedParameters = toSmallMap( parameterRecognizer.getNamedQueryParameters() );
 		}
 
 		@Override

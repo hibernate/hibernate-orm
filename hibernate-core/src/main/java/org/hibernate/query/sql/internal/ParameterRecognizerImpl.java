@@ -7,7 +7,6 @@ package org.hibernate.query.sql.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.hibernate.QueryException;
@@ -36,7 +35,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 
 	private int ordinalParameterImplicitPosition;
 
-	private List<ParameterOccurrence> parameterList;
+	private ArrayList<ParameterOccurrence> parameterList;
 	private final StringBuilder sqlStringBuffer = new StringBuilder();
 
 	public ParameterRecognizerImpl() {
@@ -81,7 +80,7 @@ public class ParameterRecognizerImpl implements ParameterRecognizer {
 		return positionalQueryParameters;
 	}
 
-	public List<ParameterOccurrence> getParameterList() {
+	public ArrayList<ParameterOccurrence> getParameterList() {
 		return parameterList;
 	}
 

@@ -1,8 +1,170 @@
 [[tooling-ant]]
-=== Ant Plugin
+=== Ant
 
-Hibernate provides https://ant.apache.org/[Ant] support ...
+Hibernate provides https://ant.apache.org/[Ant] support.
+Everything Ant related is available from the
+https://central.sonatype.com/artifact/org.hibernate.orm/hibernate-ant[hibernate-ant]
+library.
 
+[[tooling-ant-enhancement]]
+==== Bytecode Enhancement ====
+
+Hibernate provides an https://ant.apache.org/[Ant] task implementation
+that you can use to do build-time bytecode enhancement of your domain
+model. You can visit <<BytecodeEnhancement>> for discussion of the capabilities
+of an enhanced model.
+
+[[ant-enhance-task]]
+===== *Enhance Task* =====
+
+The task implementation is in class `org.hibernate.tool.enhance.EnhancementTask`,
+so you will need to include a `taskdef` in your `build.xml` that uses this class
+to define your task. Below is a minimal Ant `build.xml` file that shows the use
+of the enhancement task.
+
+[[enhance-task-example]]
+.Enhance Task Example
+====
+[source, XML]]
+----
+include::extras/ant-enhance-example.xml[]
+----
+====
+
+As you can see above, https://ant.apache.org/ivy[Apache Ivy] was used to
+handle the dependency on the
+https://central.sonatype.com/artifact/org.hibernate.orm/hibernate-ant[hibernate-ant]
+library. Now let's dive a little deeper in the configuration possibilities for the
+enhancement task.
+
+[[ant-enhance-configuration]]
+===== *Enhance Configuration* =====
+
+[[ant-enhance-base-attribute]]
+====== `*base*` ======
+This attribute is mandatory. It points to the base folder where the enhancement task will look
+to discover classes that have to be enhanced. It is either combined with the `dir`
+attribute that specifies a subfolder of `base` where the classes are located (or of course
+the entire `base` folder) or else with a `<fileset>` child element that has a similar role.
+If neither `dir` nor `<fileset>` are used, no classes will be enhanced.
+
+====
+[source, XML]]
+----
+<enhance base='${basedir}/dest' .../>
+----
+====
+
+[[ant-enhance-dir-attribute]]
+====== `*dir*` ======
+This attribute is combined with the (mandatory) `base` attribute described above. It points to
+a subfolder of `base` where the enhancement task will look to discover the classes to be enhanced.
+If the `dir` attribute is specified, the use of a `<fileset>` child element will be ignored.
+If neither `dir` nor `<fileset>` are used, no classes will be enhanced.
+
+====
+[source, XML]]
+----
+<enhance
+   base='...'
+   dir='some subfolder of base'/>
+----
+====
+
+[[ant-enhance-fileset-element]]
+===== `*<fileset>*` =====
+This child element is combined with the (mandatory) `base` attribute described above. It can be used
+to detail which classes should be selected for enhancement. The use of `<fileset>` is well documented on the
+https://ant.apache.org/manual/Types/fileset.html[Ant FileSet documentation page]. If the `dir` attribute
+described above is specified, the `<fileset>` element will be ignored.
+If neither `dir` nor `<fileset>` are used, no classes will be enhanced.
+
+====
+[source, XML]]
+----
+<enhance base='${basedir}/dest'>
+   <fileset dir="some subfolder of base">
+      <exclude name='Baz.class' />
+   </fileset>
+</enhance>
+----
+====
+
+[[ant-enhance-enableLazyInitialization-attribute]]
+===== `*enableLazyInitialization*` =====
+This attribute has a default value of `true`. It indicates that the enhance task should perform the changes
+to enable lazy loading. To disable, set the value of this attribute to `false`.
+
+====
+[source, XML]]
+----
+<enhance
+   ...
+   enableLazyInitialization='false'/>
+----
+====
+
+
+[[ant-enhance-enableDirtyTracking-attribute]]
+===== `*enableDirtyTracking*` =====
+This attribute has a default value of `true`. It indicates that the enhance task should perform the changes
+to enable dirty tracking. To disable, set the value of this attribute to `false`.
+
+====
+[source, XML]]
+----
+<enhance
+   ...
+   enableDirtyTracking='false'/>
+----
+====
+
+[[ant-enhance-enableAssociationManagement-attribute]]
+===== `*enableAssociationManagement*` =====
+This attribute has a default value of `false`. It indicates that the enhance task should not perform the changes
+to enable association management. To enable, set the value of this attribute to `true`.
+
+====
+[source, XML]]
+----
+<enhance
+   ...
+   enableAssociationManagement='true'/>
+----
+====
+
+[[ant-enhance-enableExtendedEnhancement-attribute]]
+===== `*enableExtendedEnhancement*` =====
+This attribute has a default value of `false`. It indicates that the enhance task should not perform the changes
+to enable the extended enhancement (i.e. even on non-entities).
+To enable this, set the value of this attribute to `true`.
+
+====
+[source, XML]]
+----
+<enhance
+   ...
+   enableExtendedEnhancement='true'/>
+----
+====
+
+[[ant-enhance-failOnError-attribute]]
+===== `*failOnError*` =====
+This attribute has a default value of `true`. It indicates that the enhance task will throw an Ant BuildException
+when it encounters a problem. If you prefer the build to continue, you can set the value to `false`.
+
+====
+[source, XML]]
+----
+<enhance
+   ...
+   failOnError='false'/>
+----
+====
+
+===== *Final Remark* =====
+If the values of the four attributes `enableLazyInitialization`, `enableDirtyTracking`, `enableAssociationManagement`,
+`enableExtendedEnhancement` are all `false`, the enhancement task is not executed.
 
 [[tooling-ant-modelgen]]
 ==== Static Metamodel Generation in Ant
